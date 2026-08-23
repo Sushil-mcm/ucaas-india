@@ -1,18 +1,23 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* MCM Unified Console typeface pair. Plus Jakarta Sans for UI, IBM Plex
+   Mono for anything numeric — durations, counts, timestamps — so digits
+   stay tabular and stop jittering as they tick. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 @theme {
   --color-ucass-gray: oklch(0.9612 0 0);
   --color-ucass-orange: oklch(0.7652 0.1752 62.57);
   --color-ucass-black: oklch(0.23 0 0);
   /* --color-ucass-primary-100: oklch(0.92 0.06 215.08); blue*/
-  --color-ucass-primary-100: oklch(0.5527 0.2053 259.03 / 0.46);
+  --color-ucass-primary-100: #e8efff;
   /* --color-ucass-primary-200: set dynamically from mainSiteInfo.secondary_color (fallback below) */
-  --color-ucass-primary-200: oklch(0.5527 0.2053 259.03 / 0.46);
+  --color-ucass-primary-200: #2563eb;
   /* --color-ucass-active: set dynamically from mainSiteInfo.active_sidebar_color (fallback below) */
-  --color-ucass-active: oklch(0.18 0 0);
-  --color-ucass-active-bg: oklch(0.5527 0.2053 259.03 / 0.46);
-  --color-ucass-login-bg: oklch(0.97 0.04 180.25 / 0.46);
+  --color-ucass-active: #1d4ed8;
+  --color-ucass-active-bg: #e8efff;
+  --color-ucass-login-bg: #eef1f8;
   --color-ucass-green: oklch(0.96 0.1 125.78);
   --color-ucass-red: oklch(0.6 0.22 25);
 
@@ -28,6 +33,50 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* MCM Unified Console design system. Values live on :root/.dark below so
+     dark mode swaps them; these aliases are what turn them into utilities
+     (bg-mcm-surface, text-mcm-ink-3, border-mcm-line, shadow-mcm, ...). */
+  --color-mcm-ground: var(--mcm-ground);
+  --color-mcm-surface: var(--mcm-surface);
+  --color-mcm-surface-2: var(--mcm-surface-2);
+  --color-mcm-surface-3: var(--mcm-surface-3);
+  --color-mcm-ink: var(--mcm-ink);
+  --color-mcm-ink-2: var(--mcm-ink-2);
+  --color-mcm-ink-3: var(--mcm-ink-3);
+  --color-mcm-ink-4: var(--mcm-ink-4);
+  --color-mcm-line: var(--mcm-line);
+  --color-mcm-line-2: var(--mcm-line-2);
+
+  --color-mcm-accent: var(--mcm-accent);
+  --color-mcm-accent-ink: var(--mcm-accent-ink);
+  --color-mcm-accent-wash: var(--mcm-accent-wash);
+  --color-mcm-accent-edge: var(--mcm-accent-edge);
+
+  --color-mcm-ai: var(--mcm-ai);
+  --color-mcm-ai-ink: var(--mcm-ai-ink);
+  --color-mcm-ai-wash: var(--mcm-ai-wash);
+  --color-mcm-ai-edge: var(--mcm-ai-edge);
+
+  --color-mcm-live: var(--mcm-live);
+  --color-mcm-live-wash: var(--mcm-live-wash);
+  --color-mcm-warn: var(--mcm-warn);
+  --color-mcm-warn-wash: var(--mcm-warn-wash);
+  --color-mcm-crit: var(--mcm-crit);
+  --color-mcm-crit-wash: var(--mcm-crit-wash);
+  --color-mcm-hold: var(--mcm-hold);
+  --color-mcm-hold-wash: var(--mcm-hold-wash);
+
+  --shadow-mcm-sm: var(--mcm-shadow-sm);
+  --shadow-mcm: var(--mcm-shadow);
+  --shadow-mcm-lg: var(--mcm-shadow-lg);
+
+  --radius-mcm-sm: var(--mcm-r-sm);
+  --radius-mcm: var(--mcm-r);
+  --radius-mcm-lg: var(--mcm-r-lg);
+
+  --font-sans: var(--mcm-sans);
+  --font-mono: var(--mcm-mono);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -66,6 +115,50 @@
 }
 
 :root {
+  /* ---- MCM Unified Console tokens (light is the base) ---------------- */
+  --mcm-ground: #eef1f8;
+  --mcm-surface: #ffffff;
+  --mcm-surface-2: #f6f8fc;
+  --mcm-surface-3: #eaeef7;
+  --mcm-ink: #0d1526;
+  --mcm-ink-2: #3d4a63;
+  --mcm-ink-3: #6b7891;
+  --mcm-ink-4: #93a0b8;
+  --mcm-line: #dfe5f0;
+  --mcm-line-2: #eaeef6;
+
+  --mcm-accent: #2563eb;
+  --mcm-accent-ink: #1d4ed8;
+  --mcm-accent-wash: #e8efff;
+  --mcm-accent-edge: #c3d6ff;
+
+  /* AI gets its own hue on purpose: machine output must never be mistaken
+     for system truth. Violet reads as "generated, verify me". */
+  --mcm-ai: #7c3aed;
+  --mcm-ai-ink: #6428d4;
+  --mcm-ai-wash: #f2ecff;
+  --mcm-ai-edge: #ddccff;
+
+  --mcm-live: #0d9488;
+  --mcm-live-wash: #dcf5f1;
+  --mcm-warn: #c2670a;
+  --mcm-warn-wash: #fdf0dc;
+  --mcm-crit: #d32f2f;
+  --mcm-crit-wash: #fde9e9;
+  --mcm-hold: #0e7490;
+  --mcm-hold-wash: #dcf1f7;
+
+  --mcm-shadow-sm: 0 1px 2px rgba(13, 21, 38, 0.06), 0 1px 1px rgba(13, 21, 38, 0.04);
+  --mcm-shadow: 0 4px 14px rgba(13, 21, 38, 0.07), 0 1px 3px rgba(13, 21, 38, 0.05);
+  --mcm-shadow-lg: 0 18px 44px rgba(13, 21, 38, 0.14), 0 3px 10px rgba(13, 21, 38, 0.07);
+
+  --mcm-r: 12px;
+  --mcm-r-sm: 8px;
+  --mcm-r-lg: 18px;
+
+  --mcm-sans: 'Plus Jakarta Sans', 'Twemoji Country Flags', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mcm-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -102,6 +195,41 @@
 }
 
 .dark {
+  /* ---- MCM Unified Console tokens (dark redefines values only) ------- */
+  --mcm-ground: #0a0f1a;
+  --mcm-surface: #111827;
+  --mcm-surface-2: #161f31;
+  --mcm-surface-3: #1e293e;
+  --mcm-ink: #eef2f9;
+  --mcm-ink-2: #c3cddf;
+  --mcm-ink-3: #93a1ba;
+  --mcm-ink-4: #6b7a96;
+  --mcm-line: #26314a;
+  --mcm-line-2: #1c2537;
+
+  --mcm-accent: #5b8dff;
+  --mcm-accent-ink: #87aaff;
+  --mcm-accent-wash: #16223d;
+  --mcm-accent-edge: #2c3f68;
+
+  --mcm-ai: #a97fff;
+  --mcm-ai-ink: #c0a3ff;
+  --mcm-ai-wash: #231a3d;
+  --mcm-ai-edge: #3c2d66;
+
+  --mcm-live: #2dd4bf;
+  --mcm-live-wash: #0f2f2c;
+  --mcm-warn: #f0a24b;
+  --mcm-warn-wash: #33240f;
+  --mcm-crit: #f87171;
+  --mcm-crit-wash: #361618;
+  --mcm-hold: #38bdf8;
+  --mcm-hold-wash: #0d2a3a;
+
+  --mcm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --mcm-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --mcm-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6);
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -142,7 +270,7 @@
 
   body {
     height: 100%;
-    font-family: 'Twemoji Country Flags', 'Inter', sans-serif;
+    font-family: var(--mcm-sans);
     @apply bg-background text-foreground;
   }
 
