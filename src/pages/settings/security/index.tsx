@@ -1,0 +1,240 @@
+import { Button } from '@/components/ui/button';
+import { useUser } from '@/hooks/use-user';
+import { handleAlert, capitalizeFirstLetter } from '@/lib/utils';
+import { deviceSecurityList, logout } from '@/services/api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { LucideMonitor, LucideShieldCheck, LucideTablet, LogOut } from 'lucide-react';
+import CustomAvatar from '@/components/custom/custom-avatar';
+import Loader from '@/components/custom/loader';
+import { Input } from '@/components/ui/input';
+import { SearchLine } from '@/assets/icons';
+import { useState, useMemo } from 'react';
+import useDebounce from '@/hooks/use-debounce';
+import CustomSelect from '@/components/custom/custom-select';
+
+const Security = () => {
+  const { user } = useUser();
+  const [search, setSearch] = useState('');
+  const [selectedUserUuid, setSelectedUserUuid] = useState<string>('');
+  const [selectedUserExtension, setSelectedUserExtension] = useState<string>('');
+  const debouncedSearch = useDebounce(search || '', 1000);
+
+  const {
+    data: loggedInUsers = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['deviceSecurityList', debouncedSearch, selectedUserExtension],
+    queryFn: () =>
+      deviceSecurityList({
+        search: debouncedSearch,
+        filter: selectedUserExtension ? [{ key: 'extension', value: [selectedUserExtension] }] : [],
+      }),
+    select: (data) => {
+      const result = data?.data?.data?.result || [];
+      // Sort to show current device first
+      return result.sort((a: any, b: any) => {
+        if (user?.device_token === a?.uuid) return -1;
+        if (user?.device_token === b?.uuid) return 1;
+        return 0;
+      });
+    },
+  });
+
+  const uniqueUsers = useMemo(() => {
+    const userMap = new Map();
+    loggedInUsers.forEach((item: any) => {
+      const uuid = item?.user_uuid;
+      if (uuid && !userMap.has(uuid)) {
+        userMap.set(uuid, {
+          label:
+            `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''} (${item?.user_detail?.extension || 'No Ext'})`.trim(),
+          value: uuid,
+          extension: item?.user_detail?.extension || '',
+        });
+      }
+    });
+    return Array.from(userMap.values());
+  }, [loggedInUsers]);
+
+  const { mutate: logoutMutate } = useMutation({
+    mutationFn: logout,
+    onSuccess: (data) => {
+      handleAlert({ text: data?.data?.data?.message, type: 'success' });
+      setSelectedUserExtension('');
+      setSelectedUserUuid('');
+
+      refetch();
+    },
+  });
+
+  const logoutDevice = (type: string = 'single', item: any) => {
+    const payload = {
+      type,
+      device_securities: item?.uuid ? [item?.uuid] : [],
+      user_uuid: item?.user_uuid || selectedUserUuid,
+    };
+    logoutMutate(payload);
+  };
+
+  const handleLogoutAll = () => {
+    if (!selectedUserUuid) {
+      handleAlert({ text: 'Please select a user first', type: 'error' });
+      return;
+    }
+    logoutDevice('all', { user_uuid: selectedUserUuid });
+  };
+
+  const handleLogoutExcept = () => {
+    if (!selectedUserUuid) {
+      handleAlert({ text: 'Please select a user first', type: 'error' });
+      return;
+    }
+    logoutDevice('except_himself', { user_uuid: selectedUserUuid });
+  };
+
+  return (
+    <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+        <p className="text-gray-900 font-semibold text-lg">Security & Privacy</p>
+      </div>
+      <div className="gap-3 flex flex-col w-full h-full p-3">
+        <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex flex-col gap-1 sm:w-1/2 w-full">
+            <p className="text-gray-900 font-semibold text-sm">Force Logout User</p>
+            <p className="text-gray-500 text-xs">
+              Select a user to sign them out from all active sessions across all devices.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 sm:flex-row flex-col sm:w-auto w-full">
+            <CustomSelect
+              className="min-w-[240px] flex-1"
+              options={uniqueUsers}
+              value={selectedUserUuid}
+              handleChange={(val: any) => {
+                setSelectedUserUuid(val?.value || '');
+                setSelectedUserExtension(val?.extension || '');
+              }}
+              placeholder="Select User"
+              isLoading={isLoading}
+              isClearable
+            />
+            <Button
+              variant="destructiveOutline"
+              onClick={handleLogoutAll}
+              disabled={!selectedUserUuid}
+              className="whitespace-nowrap transition-all duration-200"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout All Devices
+            </Button>
+
+            {selectedUserUuid === user?.uuid && (
+              <Button
+                variant="destructiveOutline"
+                onClick={handleLogoutExcept}
+                disabled={!selectedUserUuid}
+                className="whitespace-nowrap transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout Except This Device
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="w-full flex sm:flex-row flex-col items-center justify-between gap-5">
+          <p className="text-gray-800 text-sm">
+            These are sessions from devices and browsers that are successfully signed into your
+            account. You can sign out of any session you don't recognize or that's from a public
+            computer.
+          </p>
+          <div className="flex items-end sm:w-auto w-full">
+            <Input
+              placeholder="Search"
+              className="max-w-64  pl-10"
+              IconPosition="left-0 pl-2 inset-y-0"
+              value={search}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.startsWith(' ')) return;
+                setSearch(e.target.value);
+              }}
+              Icon={<SearchLine className="text-gray-700" />}
+            />
+          </div>
+        </div>
+        <div className="gap-3 flex flex-col w-full md:h-[calc(100vh-18.5rem)]  overflow-y-auto pr-1">
+          {isLoading ? (
+            <div className="flex justify-center h-full items-center">
+              <Loader variant="blue" />
+            </div>
+          ) : (
+            loggedInUsers &&
+            loggedInUsers?.map((item: any) => {
+              return (
+                <div
+                  className="border cursor-pointer p-3 flex sm:flex-row flex-col  gap-2 rounded-lg sm:justify-between bg-white  
+                  "
+                >
+                  <div className="flex sm:items-center xs:justify-start xs:items-start gap-3 w-full">
+                    <div className="flex flex-col items-center  gap-2">
+                      <CustomAvatar
+                        name={
+                          `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim() ||
+                          'Unknown User'
+                        }
+                        showPresence={true}
+                        size="40"
+                        image={item?.user_detail?.profile}
+                        extension={item?.user_detail?.extension}
+                      />
+                      <span className="w-8 min-w-8 h-8 rounded-sm bg-ucass-primary-200 text-primary p-1.5 flex items-center justify-center">
+                        {item?.device_type === 'W' ? (
+                          <LucideMonitor className="w-4 h-4" />
+                        ) : (
+                          <LucideTablet className="w-4 h-4" />
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex flex-col w-full gap-1">
+                      <div className="flex flex-col items-start">
+                        <p className="text-gray-900 font-medium text-sm">
+                          {capitalizeFirstLetter(
+                            `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim(),
+                          ) || 'Unknown User'}
+                        </p>
+                        <p className="text-gray-500 text-xs">{item?.user_detail?.email || ''}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-gray-600 text-xs">User Agent: {item?.user_agent}</p>
+                        <p className="text-gray-600 text-xs">IP Address: {item?.ip_address}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    {user?.device_token === item?.uuid ? (
+                      <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg whitespace-nowrap">
+                        <LucideShieldCheck className="text-green-600 w-4 h-4" />
+                        <span className="text-green-700 text-sm font-medium">Current Device</span>
+                      </div>
+                    ) : (
+                      <Button
+                        variant={'outline'}
+                        onClick={() => logoutDevice('single', item)}
+                        className="flex items-center justify-center"
+                      >
+                        Logout
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Security;

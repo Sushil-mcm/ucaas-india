@@ -1,0 +1,47 @@
+import { Note } from '../activity-list/activity-list';
+
+export interface RawCallLog {
+  id: number;
+  xml_cdr_uuid: string;
+  domain_name: string;
+  accountcode: string;
+  context: string;
+  direction: string;
+  contact_uuid: string;
+  contact_name: string | null;
+  caller_id_number: string;
+  caller_destination: string;
+  destination_number: string;
+  forward_type: string;
+  forward_value: string;
+  forward_name: string;
+  sipcall_id: string;
+  extension: string;
+  did_name: string;
+  members: string;
+  is_voicemail: boolean;
+  start_stamp: string;
+  answer_stamp: string | null;
+  end_stamp: string;
+  recording_file_url: string;
+  duration: number;
+  recording_duration: number;
+  billsec: number;
+  bridge_uuid: string;
+  remote_media_ip: string;
+  waitsec: string;
+  digits_dialed: string;
+  hangup_cause: string;
+  cost: string;
+  charge: string;
+  destination_name: string;
+  recording_file: string;
+  size: string;
+  is_deleted: 'Y' | 'N';
+  push_status: 'Y' | 'N';
+  status: string;
+  call_flow: any;
+  transcript_file: string | null;
+  seen_at: string | null;
+  note: Note[];
+}

@@ -1,0 +1,91 @@
+import * as React from 'react';
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
+import { ChevronDownIcon } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+
+function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
+  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
+}
+
+function AccordionItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  return (
+    <AccordionPrimitive.Item
+      data-slot="accordion-item"
+      className={cn('border-b last:border-b-0', className)}
+      {...props}
+    />
+  );
+}
+
+function AccordionTrigger({
+  className,
+  children,
+  isActive,
+  variant = 'sidebar',
+  triggerIcon = true,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
+  isActive?: boolean;
+  variant?: 'default' | 'sidebar';
+  triggerIcon?: boolean;
+}) {
+  const isSidebar = variant === 'sidebar';
+
+  return (
+    <AccordionPrimitive.Header
+      className={cn(
+        'flex',
+        isSidebar &&
+          'text-gray-900/80 [&>button[data-state=open]]:bg-ucass-primary-200/50 [&>button[data-state=open]]:text-primary [&>button[data-state=open]]:border-r-primary [&>button[data-state=open]]:border-r-2',
+      )}
+    >
+      <AccordionPrimitive.Trigger
+        data-slot="accordion-trigger"
+        className={cn(
+          isSidebar
+            ? 'focus-visible:border-ring rounded-none focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium transition-all outline-none hover:underline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180'
+            : 'focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {triggerIcon && (
+          <ChevronDownIcon
+            className={cn(
+              'transition-transform duration-200 size-4 shrink-0 translate-y-0.5',
+              isSidebar ? 'mr-3' : '',
+              isSidebar
+                ? isActive
+                  ? 'text-primary'
+                  : 'text-gray-400'
+                : 'text-muted-foreground pointer-events-none',
+            )}
+          />
+        )}
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  );
+}
+
+function AccordionContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+  return (
+    <AccordionPrimitive.Content
+      data-slot="accordion-content"
+      className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+      {...props}
+    >
+      <div className={cn('pt-0 pb-4', className)}>{children}</div>
+    </AccordionPrimitive.Content>
+  );
+}
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };

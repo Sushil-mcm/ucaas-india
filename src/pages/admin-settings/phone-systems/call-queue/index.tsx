@@ -1,0 +1,316 @@
+import CustomSelect from '@/components/custom/custom-select';
+import TableManager from '@/components/custom/table-manager';
+import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { useGetSite } from '@/hooks/common';
+import { ISELECTVALUE } from '@/interfaces/api-interfaces';
+import { convertDateFormateApis, getInitials, handleAlert } from '@/lib/utils';
+import { callQueueList, deleteCallQueue } from '@/services/api';
+import { ColumnDef } from '@tanstack/react-table';
+import { FC, useEffect, useState } from 'react';
+import AddCallQueue from './add-edit-call-queue';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import AlertConfirm from '@/components/custom/alert-confirm';
+import { Plus } from '@/assets/icons';
+import SideDrawer from '@/components/custom/side-drawer';
+import CustomTooltip from '@/components/custom/custom-tooltip';
+import { Icon, IconName } from '@/assets/icons/icon';
+import { Input } from '@/components/ui/input';
+import useDebounce from '@/hooks/use-debounce';
+import { useCompanyFeatures } from '@/hooks/rbac';
+import AgentDetailsModal from '@/pages/auto-dialer/campaign/modal/agent-details-modal';
+import { ModalState } from '@/pages/auto-dialer/campaign';
+
+interface ICALLQUEUE {
+  created_at: string;
+  name: string;
+  extension: string;
+  _id: string;
+  site: {
+    name: string;
+  };
+  settings: {
+    operational_hours: {
+      type: string;
+    };
+  };
+}
+
+const CallQueues: FC = () => {
+  const { data: dataSiteList = [] } = useGetSite();
+  const [searchedText, setSearchedText] = useState('');
+  const [selectedSite, setSelectedSite] = useState<any>('');
+  const [drawerState, setDrawerState] = useState<boolean>(false);
+  const [selectedCallQueue, setSelectedCallQueue] = useState<any>(null);
+  const [deleteCallQueueDetails, setDeleteCallQueue] = useState<ICALLQUEUE | null>(null);
+  const queryClient: any = useQueryClient();
+  const debouncedSearch = useDebounce(searchedText || '', 1000);
+  const { features } = useCompanyFeatures();
+  const phoneSystem = features?.plan_features?.phone_system_action;
+
+  const hasQueueAccess = Boolean(phoneSystem?.access?.QUEUE);
+  const queueActions = phoneSystem?.action;
+
+  const [modalState, setModalState] = useState<ModalState>({
+    open: false,
+    type: null,
+    data: [],
+  });
+  const { mutate: mutateDeleteCallQueue, isPending: isPendingDeleteCallQueue } = useMutation({
+    mutationFn: deleteCallQueue,
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        queryClient.invalidateQueries(['callQueueListQueryFn'], { exact: true });
+        handleAlert({
+          text: data?.data?.message || 'Call Queue Deleted Successfully!',
+          type: 'success',
+        });
+        setDeleteCallQueue(null);
+      }
+    },
+  });
+
+  const columns: ColumnDef<ICALLQUEUE>[] = [
+    {
+      header: 'Date',
+      accessorKey: 'created_at',
+      cell: ({ row }) => {
+        const data = row?.original;
+        return <div>{convertDateFormateApis(data?.created_at, 'LL')}</div>;
+      },
+    },
+    {
+      header: 'Name',
+      accessorKey: 'name',
+      cell: ({ row }) => {
+        const name = row?.original?.name;
+        return (
+          <div className="flex flex-col gap-1.5">
+            <span>{name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Site',
+      accessorKey: 'site_uuid',
+      cell: ({ row }: any) => <> {row?.original?.site_uuid?.name || ''}</>,
+    },
+    {
+      header: 'Extension',
+      accessorKey: 'extension',
+    },
+    {
+      header: 'Members',
+      accessorKey: 'members',
+      cell: ({ getValue }: any) => {
+        let members = [];
+        try {
+          const parsed =
+            typeof getValue() === 'string' ? JSON.parse(getValue() || '[]') : getValue();
+          members = Array.isArray(parsed)
+            ? Array.from(new Map(parsed.map((item: any) => [item.user_uuid, item])).values())
+            : [];
+        } catch (error) {
+          console.error('Error parsing members JSON:', error);
+        }
+        return Array.isArray(members) ? (
+          <div className="flex -space-x-2">
+            {members.slice(0, 5).map((item: any, index: number) => {
+              const username = item?.name || 'Unknown';
+              const imageUrl = item?.imageUrl || '';
+              return (
+                <CustomTooltip text={username} side="top">
+                  <div
+                    key={index}
+                    className="w-9 h-9 flex items-center justify-center border border-white rounded-full bg-gray-200 dark:border-gray-800 capitalizes cursor-pointer"
+                  >
+                    {imageUrl ? (
+                      <img
+                        className="w-9 h-9 rounded-full"
+                        src={imageUrl}
+                        alt={username}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center rounded-full border border-gray-400 bg-gray-100 text-gray-600 text-xs capitalize">
+                        {getInitials(username)}
+                      </div>
+                    )}
+                  </div>
+                </CustomTooltip>
+              );
+            })}
+            {members?.length > 5 && (
+              <div
+                onClick={() => {
+                  setModalState({ open: true, data: members || [], type: 'Total Members' });
+                }}
+                className="w-9 h-9 flex items-center justify-center border border-gray-500 !space-x-10 rounded-full bg-gray-500 text-white font-medium cursor-pointer"
+              >
+                +{members?.length - 5}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div>No members</div>
+        );
+      },
+    },
+    {
+      header: 'Actions',
+      accessorKey: 'action',
+      cell: ({ row }) => {
+        const data = row?.original;
+        const actions = [
+          hasQueueAccess &&
+            queueActions?.edit && {
+              icon: 'EditStrokIcon',
+              onClick: () => {
+                setSelectedCallQueue(data);
+                setDrawerState(true);
+              },
+              className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+              tooltipText: 'Edit',
+            },
+          hasQueueAccess &&
+            queueActions?.delete && {
+              icon: 'TrashBin',
+              onClick: () => setDeleteCallQueue(row?.original),
+              className: 'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+              tooltipText: 'Delete',
+            },
+        ].filter(Boolean);
+
+        if (!actions.length) return '---';
+
+        return (
+          <div className="flex items-center gap-2">
+            {actions?.map((action, index) => (
+              <CustomTooltip text={action.tooltipText} side="top">
+                <div
+                  key={index}
+                  className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8 ${action.className}`}
+                  onClick={() => {
+                    action.onClick();
+                  }}
+                >
+                  <Icon name={action.icon as IconName} className="w-5 h-5" />
+                </div>
+              </CustomTooltip>
+            ))}
+          </div>
+        );
+      },
+    },
+  ];
+
+  useEffect(() => {
+    if (!drawerState) setSelectedCallQueue(null);
+  }, [drawerState]);
+
+  return (
+    <>
+      <AdminPage
+        section="Phone System"
+        title="Call queues"
+        description="Where incoming calls wait, and which people answer them. Queues can be company-wide or tied to one location."
+        actions={
+          hasQueueAccess && queueActions?.add ? (
+            <button type="button" className="btn primary" onClick={() => setDrawerState(true)}>
+              <Plus className="w-3 h-3" />
+              New queue
+            </button>
+          ) : null
+        }
+        filters={
+          <>
+            <Input
+              type="search"
+              placeholder="Search queues"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.startsWith(' ')) return;
+                setSearchedText(e.target.value);
+              }}
+              className="w-full min-h-9 rounded-lg"
+            />
+            <CustomSelect
+              className="w-full min-w-36"
+              options={
+                dataSiteList?.map((site: { name: string; uuid: string }) => ({
+                  label: site?.name,
+                  value: site?.uuid,
+                })) || []
+              }
+              handleChange={(e: ISELECTVALUE | null) => {
+                setSelectedSite(e || '');
+              }}
+              value={selectedSite}
+            />
+          </>
+        }
+      >
+        <div className="flex flex-col gap-2">
+          <p className="text-gray-900 text-sm">
+            Set up call queues at the Company level or for Individual Site locations. This allows
+            you to organize incoming traffic for specific branches, ensuring callers are held
+            professionally until a user from that site is ready to answer.
+          </p>
+          <TableManager
+            {...{
+              columns,
+              fetcherKey: 'callQueueListQueryFn',
+              fetcherFn: callQueueList,
+              extraParams: {
+                filters: [
+                  {
+                    key: 'name',
+                    value: debouncedSearch,
+                  },
+                  {
+                    key: 'site_uuid',
+                    value: selectedSite.value || '',
+                  },
+                ],
+              },
+            }}
+          />
+        </div>
+      </AdminPage>
+
+      {drawerState && (
+        <SideDrawer
+          isOpen={drawerState}
+          title={
+            selectedCallQueue ? `Update Call Queue (${selectedCallQueue?.name})` : 'Add Call Queue'
+          }
+          isTab={false}
+          enableResponsive
+          handleClose={() => setDrawerState(false)}
+          content={
+            <AddCallQueue {...{ drawerState, setDrawerState, queueDetails: selectedCallQueue }} />
+          }
+        />
+      )}
+      {modalState?.open && (
+        <AgentDetailsModal modalState={modalState} setModalState={setModalState} />
+      )}
+      {!!deleteCallQueueDetails && (
+        <AlertConfirm
+          {...{
+            apiLoading: isPendingDeleteCallQueue,
+            onConfirm: () => {
+              mutateDeleteCallQueue(deleteCallQueueDetails?._id);
+            },
+            open: !!deleteCallQueueDetails,
+            setOpen: () => {
+              setDeleteCallQueue(null);
+            },
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+export default CallQueues;

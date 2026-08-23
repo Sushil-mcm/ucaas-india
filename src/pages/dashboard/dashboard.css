@@ -1,0 +1,52 @@
+/* ============================================================
+   Dashboard shell — the frame around Home and the wallboards.
+
+   Home is already built from the MCM Unified Console platform
+   components (`components/mcm/mcm-page.css`); this puts the chrome
+   around it into the same language rather than leaving a Tailwind
+   header bolted on top of a console page.
+
+   The artifact's pattern for a page that carries tabs is
+   `page-head` then `ptabstrip` then the body (see its Performance
+   view). Here the tab labels already name the view, so the strip
+   stands on its own without a second title above it.
+   ============================================================ */
+
+.dash-shell {
+  /* .mcm-page supplies the tokens, the flex column and the height */
+  background: var(--ground);
+}
+
+/* the tab bar reads as chrome: surface coloured, hairline underneath */
+.dash-shell .dash-bar {
+  flex: none;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 0 16px;
+}
+
+/* .ptabstrip is written for use inside a .page, where it needs to pull up
+   and push down. In the chrome bar it carries its own border instead. */
+.dash-shell .dash-bar .ptabstrip {
+  margin: 0;
+  border-bottom: 0;
+}
+
+/* Home fills this and scrolls inside its own .page, the way the console
+   pages do. */
+.dash-shell .dash-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The wallboards predate the console language and bring their own layout
+   and padding, so they get a plain scroll container and are left alone. */
+.dash-shell .dash-legacy {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--ground);
+}

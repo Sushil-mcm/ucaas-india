@@ -1,0 +1,366 @@
+import { useRef, useState, type FC } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { formInitialState } from '../../constants';
+import AddUserInfo from './add-user-info';
+import SetupOption from './setup-options';
+import Stepper from '@/components/custom/stepper';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addMember } from '@/services/api';
+import Loader from '@/components/custom/loader';
+import { useUser } from '@/hooks/use-user';
+import {
+  passwordValidationSchema,
+  schemaValidationForAddIndividualPassword,
+  schemaValidationForAddUser,
+} from './schema';
+import { yupResolver } from '@hookform/resolvers/yup';
+import AlertConfirm from '@/components/custom/alert-confirm';
+import MultipleAssignNumber from './multiple-assign-number';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useGetMyPlanDetails } from '@/hooks/common';
+import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { handleAlert } from '@/lib/utils';
+
+interface AddUsersProps {
+  setDrawerState: (state: boolean) => void;
+}
+
+const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
+  const { data: dataGetMyPlanDetails } = useGetMyPlanDetails();
+  const { refetch: refetchUserApi } = useUser();
+
+  const [isPaymentRequired, setIspaymentRequired] = useState<any>(false);
+  const [orderSummary, setOrderSummary] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [typeOfPassword, setTypeOfPassword] = useState('common');
+  const [isUserValidatorError, setIsUserValidatorError] = useState(false);
+  const [alertAssignNumber, setAlertAssignNumber] = useState(false);
+  const [showAssignNumber, setShowAssignNumber] = useState(false);
+  const [newUsers, setNewUsers] = useState([]);
+
+  const [status, setStatus] = useState('');
+  const queryClient: any = useQueryClient();
+  const paymentRef = useRef<any>(null);
+  const paymentData = useRef<any>(null);
+
+  const [paymentCalculation, setPaymentCalculation] = useState<{
+    total_amount: number;
+    tax_calculation_id: string | null;
+  } | null>(null);
+
+  const { mutate: mutateAddMember, isPending: isPendingAddMember } = useMutation({
+    mutationFn: addMember,
+    onSuccess: ({ data }) => {
+      if (data?.data?.result?.requires_action) {
+        paymentRef.current.handle3DSPayment(data?.data?.result?.client_secret);
+        return;
+      }
+
+      handleSuccess(data);
+    },
+  });
+
+  const handleSuccess = (data: any) => {
+    paymentRef.current?.resetPaymentState();
+    paymentData.current = null;
+    setStatus('');
+    setPaymentCalculation(null);
+    queryClient.invalidateQueries(['fetchUsersList'], { exact: true });
+    queryClient.invalidateQueries(['getMyPlanDetails'], { exact: true });
+    invalidateGlobalUsersDirectory(queryClient);
+
+    refetchUserApi();
+    handleAlert({
+      text: data?.data?.message || 'Member created successfully',
+      type: 'success',
+    });
+
+    const users = data?.data?.result?.createdUsers || [];
+    if (users?.length > 0) {
+      setAlertAssignNumber(true);
+      setNewUsers(users);
+    }
+  };
+
+  const getResolver = (currentStep: any, typeOfPassword: any) => {
+    if (currentStep === 1) {
+      return yupResolver(schemaValidationForAddUser);
+    }
+
+    if (currentStep === 2) {
+      if (typeOfPassword === 'common') {
+        return yupResolver(passwordValidationSchema);
+      }
+
+      if (typeOfPassword === 'individual') {
+        return yupResolver(schemaValidationForAddIndividualPassword);
+      }
+    }
+    return undefined;
+  };
+
+  const formInstance = useForm<any>({
+    defaultValues: formInitialState,
+    resolver: getResolver(currentStep, typeOfPassword),
+    mode: 'onChange',
+  });
+
+  const { handleSubmit, watch } = formInstance;
+
+  const [watchPasswordType, watchPassword, watchUsers, watchSite] = watch([
+    'password_type',
+    'password',
+    'users',
+    'site',
+  ]);
+
+  const StepContent = [
+    {
+      number: 1,
+      title: 'Add User Info',
+    },
+    {
+      number: 2,
+      title: 'Setup Options',
+    },
+  ];
+
+  const onSubmit = (data: any) => {
+    const { password_type, users, site } = data || {};
+
+    if (currentStep === 1) {
+      setCurrentStep((p) => p + 1);
+    } else {
+      if (isPaymentRequired) {
+        setStatus('show_payment');
+      } else {
+        mutateAddMember({
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          users: users?.map(({ confirm_password, password, role, ...item }: any) => ({
+            ...item,
+            role: role?.value,
+            password: password_type === 'common' ? data?.password : password,
+          })),
+          site_uuid: site?.value,
+        });
+      }
+    }
+  };
+
+  const onSuccessPayment = (paymentMethod: any) => {
+    // const planCost = dataGetMyPlanDetails?.current_plan_details?.discount_enabled
+    //   ? dataGetMyPlanDetails?.current_plan_details?.discount_price
+    //   : dataGetMyPlanDetails?.current_plan_details?.original_price;
+    // const proratedCost = getLicenseCalculatedPlanCost({
+    //   planCost,
+    //   plan_expiration_date: dataGetMyPlanDetails?.current_plan_details?.plan_expiration_date,
+    // });
+    // const available =
+    //   (dataGetMyPlanDetails?.license_detail?.free_licenses || 0) +
+    //   (dataGetMyPlanDetails?.license_detail?.free_revoked_licenses || 0);
+
+    // const totalAmountPayable = (watchUsers?.length - available) * +proratedCost;
+
+    // const taxPercentage = Number(
+    //   dataGetMyPlanDetails?.last_billing?.tax_detail?.tax_percentage ?? 0,
+    // );
+
+    // const totalTax = (taxPercentage * (totalAmountPayable ?? 0)) / 100;
+
+    const payload = {
+      payment: {
+        amount: paymentCalculation?.total_amount,
+        tax_calculation_id: paymentCalculation?.tax_calculation_id,
+        payment_method_id: paymentMethod?.id || paymentMethod?.payment_method_id,
+        save: paymentMethod?.isSavedCard,
+      },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      users: watchUsers?.map(({ confirm_password, role, password, ...item }: any) => ({
+        ...item,
+        role: role?.value,
+        password: watchPasswordType === 'common' ? watchPassword : password,
+      })),
+      site_uuid: watchSite?.value,
+    };
+
+    paymentMethod.setLoader(false);
+    mutateAddMember(payload);
+
+    paymentData.current = payload;
+  };
+
+  const handle3DSSuccess = () => {
+    mutateAddMember({
+      ...paymentData?.current,
+      payment: {
+        ...paymentData?.current?.payment,
+        status: 'confirmed',
+      },
+    });
+    paymentData.current = null;
+  };
+
+  const handle3DSFailure = () => {
+    paymentData.current = null;
+    setStatus('');
+  };
+
+  const stepLookUp: any = {
+    1: (
+      <AddUserInfo
+        {...{
+          setIspaymentRequired,
+          setOrderSummary,
+          setIsUserValidatorError,
+          dataGetMyPlanDetails,
+          setPaymentCalculation,
+        }}
+      />
+    ),
+    2: (
+      <SetupOption
+        {...{
+          isPaymentRequired,
+          orderSummary,
+          status,
+          dataGetMyPlanDetails,
+          paymentProps: {
+            onSuccessPayment,
+            paymentRef,
+            isApiLoad: isPendingAddMember,
+            handle3DSSuccess,
+            handle3DSFailure,
+          },
+          setTypeOfPassword,
+        }}
+      />
+    ),
+  };
+  return (
+    <>
+      <FormProvider {...formInstance}>
+        <div className="mcm-page mcm-invite w-full h-full min-h-0 overflow-hidden flex flex-col justify-between">
+          <Stepper steps={StepContent} currentStep={currentStep} mobileHorizontal />
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
+          >
+            <div className="min-h-0 flex-1 overflow-y-auto">{stepLookUp?.[currentStep]}</div>
+            <div className="mt-2 shrink-0 border-t border-gray-200 bg-white pt-4 lg:mt-0 lg:border-t-0 lg:bg-transparent lg:pt-0">
+              <div className="flex min-w-max flex-nowrap justify-start gap-2 overflow-x-auto overflow-y-hidden sm:justify-end lg:min-w-0 lg:justify-end lg:overflow-visible">
+                <button
+                  onClick={() => {
+                    if (currentStep === 1) {
+                      setDrawerState(false);
+                    } else {
+                      setCurrentStep((prev) => prev - 1);
+                    }
+                    setStatus('');
+                  }}
+                  type="button"
+                  className="btn ghost shrink-0"
+                >
+                  {currentStep === 1 ? 'Cancel' : 'Back'}
+                </button>
+                {status !== 'show_payment' && (
+                  <button
+                    type="submit"
+                    disabled={isPendingAddMember || isUserValidatorError}
+                    className="btn primary shrink-0"
+                  >
+                    {isPendingAddMember ? (
+                      /* white, not `blue`: this button is filled with the
+                         accent now, and a --primary spinner can vanish into it
+                         on tenants whose brand colour is close to it. */
+                      <Loader variant="white" />
+                    ) : currentStep === 2 ? (
+                      'Submit'
+                    ) : (
+                      'Save & Continue'
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+
+          <AlertConfirm
+            {...{
+              apiLoading: false,
+              onConfirm: () => {
+                setShowAssignNumber(true);
+                setAlertAssignNumber(false);
+                // setDrawerState(false);
+              },
+              onCancel: () => {
+                setDrawerState(false);
+              },
+              onClose: () => {
+                setDrawerState(false);
+              },
+              open: alertAssignNumber,
+              setOpen: setAlertAssignNumber,
+              singleButton: true,
+              singleButtonText: 'Go Now',
+              singleButtonHandler: () => {
+                setDrawerState(false);
+              },
+              descriptionTextComp: (
+                <div className=" text-md">
+                  Member created successfully. Please go to Extensions to assign the DID number.
+                </div>
+              ),
+              closeBtnText: 'Assign Later',
+              confirmBtnText: 'Assign Now',
+            }}
+          />
+        </div>
+      </FormProvider>
+      {showAssignNumber && (
+        <Dialog open={showAssignNumber} onOpenChange={setShowAssignNumber}>
+          <DialogContent
+            className="md:w-3/6 p-3 max-h-[99%] overflow-y-auto w-full"
+            showCloseButton={false}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()}
+          >
+            <MultipleAssignNumber
+              {...{
+                users: newUsers,
+                handleClose: () => {
+                  setShowAssignNumber(false);
+                  setDrawerState(false);
+                },
+                showAssignNumber,
+                setShowAssignNumber,
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+      {/* {showAssignNumber && (
+        <SideDrawer
+          isOpen={showAssignNumber}
+          handleClose={() => setShowAssignNumber(false)}
+          isHeader={true}
+          width="45%"
+          content={
+            <MultipleAssignNumber
+              {...{
+                users: newUsers,
+                handleClose: () => {
+                  setShowAssignNumber(false);
+                  setDrawerState(false);
+                },
+                showAssignNumber,
+                setShowAssignNumber,
+              }}
+            />
+          }
+        />
+      )} */}
+    </>
+  );
+};
+
+export default AddUsers;
