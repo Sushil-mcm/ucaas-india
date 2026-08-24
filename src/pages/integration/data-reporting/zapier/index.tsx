@@ -3,7 +3,6 @@ import ZapierViewModal from '../modal/ZapierViewModal';
 import { ChevronIcon } from '@/assets/icons';
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import { reportingData } from '../../constant';
-import { Icon } from '@/assets/icons/icon';
 
 // const breadcrumbData = [{ label: 'Data & Reporting' }, { label: 'Zapier' }];
 
@@ -15,14 +14,10 @@ const Zapier = () => {
   return (
     <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
       {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-      <div className="flex min-h-[65px] items-center justify-between border-b border-gray-200 bg-white p-3">
-        <div className="flex min-w-0 items-center gap-1 text-lg font-semibold text-gray-900">
-          Data & Reporting
-          <div className="shrink-0 -rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
-          </div>
-          <span className="text-primary text-md truncate">Zapier</span>
-        </div>
+      <div className="mcm-intpage-head">
+        <div className="mcm-intpage-eyebrow">Integration</div>
+        <h1>Zapier</h1>
+        <p>Send console events into Zapier so they can trigger workflows in your other tools.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 p-3 overflow-y-auto xs:max-h-[62vh] md:max-h-full">
         {zapierItems?.map((item, index) => (

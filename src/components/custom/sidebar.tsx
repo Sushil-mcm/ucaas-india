@@ -112,14 +112,6 @@ export const navList = (features: any, IS_ADMIN: boolean): NavItem[] =>
       enabled: Boolean(features?.plan_features?.reports?.IS_SHOW),
       visible: true,
     },
-    {
-      id: 11,
-      name: 'Integration',
-      link: '/integration',
-      icon: 'IntegrationIcon',
-      enabled: Boolean(features?.plan_features?.integration?.IS_SHOW),
-      visible: Boolean(features?.plan_features?.integration?.action?.view),
-    },
   ]
     ?.filter(Boolean)
     ?.filter((item) => {
@@ -231,10 +223,14 @@ const Sidebar = () => {
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
-        <div className="flex flex-col items-center">
+        {/* This wrapper had no height, so the scroller's `h-full` below
+            resolved against auto and never constrained anything — the views
+            past the fold simply overflowed the rail with no way to reach
+            them. */}
+        <div className="flex h-full min-h-0 flex-col items-center">
           {/* The brand moved into the top bar, so the rail is nav only. */}
-          <div className="flex h-full flex-col justify-between gap-1 overflow-y-auto px-2 w-full py-2">
-            <div className="flex flex-col gap-1 items-center">
+          <div className="rail-scroll flex h-full min-h-0 flex-col justify-between gap-1 overflow-y-auto px-2 w-full pt-4 pb-3">
+            <div className="flex flex-col gap-1.5 items-center">
               {visibleNavList?.map((navItem: any, index: number) => {
                 const { id, link, icon, name, enabled, viewKey, sep } = navItem;
                 // A view item shares its path with every sibling, so the `?view=`
@@ -260,15 +256,18 @@ const Sidebar = () => {
                       }}
                       aria-disabled={!isEnabled}
                       tabIndex={isEnabled ? 0 : -1}
-                      className={({ isActive }) =>
-                        `h-14 w-17 flex items-center justify-center rounded-lg relative ${
-                          activeLink || isActive
-                            ? 'bg-ucass-active-bg text-ucass-active'
-                            : 'bg-white'
-                        } hover:bg-ucass-active-bg  hover:text-ucass-active ${
+                      className={({ isActive }) => {
+                        /* `isActive` compares pathnames only, so every
+                           `/directory?view=…` sibling reads as active and the
+                           whole rail lights up. A view item is lit by
+                           `activeLink`, which checks the view, and nothing else. */
+                        const lit = viewKey ? activeLink : activeLink || isActive;
+                        return `h-13 w-16 flex items-center justify-center rounded-lg relative ${
+                          lit ? 'bg-ucass-active-bg text-ucass-active' : 'bg-transparent'
+                        } hover:bg-ucass-active-bg hover:text-ucass-active ${
                           !isEnabled ? 'text-gray-400' : 'text-gray-700'
-                        } ${!isEnabled ? 'cursor-not-allowed' : ''}`
-                      }
+                        } ${!isEnabled ? 'cursor-not-allowed' : ''}`;
+                      }}
                       // className={({ isActive }) =>
                       //   `h-14 w-17 flex items-center justify-center rounded-lg hover:bg-ucass-primary-200 relative ${
                       //     activeLink || isActive
@@ -286,7 +285,9 @@ const Sidebar = () => {
                           name={`${icon}` as IconType}
                           className="h-[1.15rem] w-[1.15rem] relative"
                         />
-                        <small className="text-[11px] leading-none">{name}</small>
+                        <small className="w-full truncate px-0.5 text-center text-[10.5px] leading-none">
+                          {name}
+                        </small>
                       </div>
                       {isEnabled && navItem?.name === 'Chat' && totalUnreadCount > 0 && (
                         <span className="bg-primary absolute text-white font-normal me-2  rounded-full -top-[2px] left-[20px] px-1  border-white border-2 text-xs  min-w-5 min-h-5 flex items-center justify-center ">

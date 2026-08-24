@@ -95,7 +95,13 @@ const Reseller = () => {
       <section className="w-full overflow-x-auto overflow-y-hidden">
         <div className="w-full  flex flex-col gap-3">
           <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-            <p className="text-gray-900 font-semibold text-lg">10DLC Reseller</p>
+            <div>
+              <p className="text-gray-900 font-semibold text-lg">10DLC Reseller</p>
+              <p className="text-gray-500 text-xs">
+                Reseller records used when you register brands and campaigns on behalf of your own
+                customers.
+              </p>
+            </div>
             <div className="flex gap-2 filters">
               <Button className="min-h-9" variant={'outline'} onClick={() => setModalOpen(true)}>
                 Create 10DLC Reseller

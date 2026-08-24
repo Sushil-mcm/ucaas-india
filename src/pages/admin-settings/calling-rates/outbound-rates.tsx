@@ -121,13 +121,18 @@ const OutboundRates = () => {
   return (
     <section className="w-full overflow-x-auto overflow-y-hidden">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-          SMS/Calling Rates
-          <div className="-rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
-          </div>
-          <span className="text-primary text-md">Outbound Rates</span>
-        </p>
+        <div>
+          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+            SMS/Calling Rates
+            <div className="-rotate-90 text-gray-800">
+              <Icon name="ChevronIcon" className="w-5 h-5" />
+            </div>
+            <span className="text-primary text-md">Outbound Rates</span>
+          </p>
+          <p className="text-gray-500 text-xs">
+            What each destination costs to call or text, per minute or per message.
+          </p>
+        </div>
       </div>
       <div className="w-full flex justify-center gap-3 p-3">
         <div className="md:w-2/3 w-full">

@@ -1,6 +1,5 @@
 import { SearchLine } from '@/assets/icons';
 import TableManager from '@/components/custom/table-manager';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import AddPathModal from '../modal/AddPathModal';
@@ -37,31 +36,29 @@ const ManageWebhook = () => {
   return (
     <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
       {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-      <div className="flex min-h-[65px] flex-col gap-3 border-b border-gray-200 bg-white p-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-1 text-lg font-semibold text-gray-900">
-          Data & Reporting
-          <div className="shrink-0 -rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
-          </div>
-          <span className="text-primary text-md truncate">Manage Webhook</span>
+      <div className="mcm-intpage-head mcm-intpage-head-row">
+        <div>
+          <div className="mcm-intpage-eyebrow">Integration</div>
+          <h1>Manage Webhook</h1>
+          <p>Endpoints the console posts to when calls, messages or contacts change.</p>
         </div>
-        <div className="filters flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+        <div className="flex items-center gap-2">
           <Input
-            placeholder="Search"
-            className="min-h-9 min-w-0 rounded-lg pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search webhooks"
+            className="pl-10 min-h-9 rounded-lg"
             IconPosition="left-0 pl-2 inset-y-0"
-            Icon={<SearchLine className=" text-gray-700" />}
+            value={search}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value.startsWith(' ')) return;
+              setSearch(value);
+            }}
+            Icon={<SearchLine className="text-gray-700" />}
           />
-          <Button
-            type="button"
-            variant={'outline'}
-            onClick={handleOpen}
-            className="min-h-9 shrink-0"
-          >
-            Add Zapier Trigger Webhook
-          </Button>
+          <button type="button" className="btn primary" onClick={handleOpen}>
+            <Icon name="PlusIcon" className="w-3 h-3" />
+            New webhook
+          </button>
         </div>
       </div>
 

@@ -321,13 +321,18 @@ const Plan = () => {
     <>
       <section className="w-full bg-gray-200/15 overflow-x-auto overflow-y-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            Billing
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">Plan Summary</span>
-          </p>
+          <div>
+            <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+              Billing
+              <div className="-rotate-90 text-gray-800">
+                <Icon name="ChevronIcon" className="w-5 h-5" />
+              </div>
+              <span className="text-primary text-md">Plan Summary</span>
+            </p>
+            <p className="text-gray-500 text-xs">
+              Your current plan, what it includes, and the licences and numbers counting against it.
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             {requestedPlanInfo?.action_type === 'CANCEL' ? (
               <>

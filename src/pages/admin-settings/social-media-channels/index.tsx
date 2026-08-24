@@ -11,9 +11,14 @@ const SocialMediaChannels = () => {
   return (
     <section className="w-full flex flex-col bg-gray-200/15">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-          Social Media Channels
-        </p>
+        <div>
+          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+            Social Media Channels
+          </p>
+          <p className="text-gray-500 text-xs">
+            The WhatsApp, Instagram, Facebook and Telegram accounts connected to this workspace.
+          </p>
+        </div>
         {/* <div className="flex gap-2">
           <Button type="button" variant={'outline'}>
             <Plus className="w-3 h-3" />

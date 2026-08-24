@@ -200,9 +200,9 @@ const AvatarContent = ({ setProfileState }: any) => {
       <div className="flex flex-col gap-2 mt-2">
         <div
           className="text-sm text-gray-700 cursor-pointer hover:text-primary"
-          {...getRoutePrefetchHandlers('/settings/basic-info')}
+          {...getRoutePrefetchHandlers('/admin-settings/account/basic-info')}
           onClick={() => {
-            navigate('/settings/basic-info');
+            navigate('/admin-settings/account/basic-info');
             setProfileState(false);
           }}
         >

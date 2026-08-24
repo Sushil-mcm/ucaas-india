@@ -64,7 +64,11 @@
   --r-sm: 8px;
   --r-lg: 18px;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Keep 'Twemoji Country Flags' in the stack — without it flag emoji fall
+     back to their letter pair ('IN' instead of the flag). */
+  --sans:
+    'Plus Jakarta Sans', 'Twemoji Country Flags', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
 }
 .dark .mcm-page {
   --ground: #0a0f1a;
@@ -2018,7 +2022,9 @@
       belongs to. Enterprise consoles cap form content; this does the same
       and keeps the header, steps, body and footer on one shared column so
       their left edges line up. */
-.mcm-page .mcm-userform > * {
+/* Compound, not descendant: both classes sit on the same <form>, so
+   `.mcm-page .mcm-userform` matched nothing and the form ran full-bleed. */
+.mcm-page.mcm-userform > * {
   width: 100%;
   max-width: 1040px;
   margin-left: auto;
@@ -2225,8 +2231,9 @@
 }
 
 /* ---- the note strip above Admin tables ---- */
-.mcm-admin .bg-ucass-primary-200\/20,
-.mcm-admin [class*='bg-ucass-primary-200'] {
+/* Deliberately scoped away from the nav: painting whole accordion groups in
+   accent-wash turned the sidebar into stacked blue blocks. */
+.mcm-admin .mcm-adminpage [class*='bg-ucass-primary-200'] {
   background: var(--accent-wash);
 }
 
@@ -2309,25 +2316,31 @@
   padding: 20px 22px 32px;
 }
 
+/* Columns, not grid rows. In a grid every card in a row stretches to the
+   tallest one, so a one-item section left a tall empty box beside a seven-item
+   one — which is what made the page look scattered. Columns let each card take
+   only the height it needs and pack up the page. */
 .mcm-admingrid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr;
-  align-items: start;
+  column-gap: 16px;
+  column-count: 1;
+}
+.mcm-admingrid > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
 }
 @media (min-width: 700px) {
   .mcm-admingrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-count: 2;
   }
 }
 @media (min-width: 1120px) {
   .mcm-admingrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-count: 3;
   }
 }
-@media (min-width: 1500px) {
+@media (min-width: 1560px) {
   .mcm-admingrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-count: 4;
   }
 }
 
@@ -2502,7 +2515,10 @@
    The bare title must stay the page title — the earlier rule muted it to 13px
    grey along with the breadcrumb parent, which made those pages look unheaded.
    `:has()` separates the two. */
-.mcm-admin .min-h-\[65px\] p.text-lg {
+.mcm-admin .min-h-\[65px\] p.text-lg,
+.mcm-admin .min-h-\[65px\] > div.text-lg,
+.mcm-admin .min-h-\[65px\] > div > p.text-lg,
+.mcm-admin .min-h-\[65px\] > div > div.text-lg {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2511,19 +2527,20 @@
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-.mcm-admin .min-h-\[65px\] p.text-lg:has(.text-md) {
+.mcm-admin .min-h-\[65px\] p.text-lg:has(.text-md),
+.mcm-admin .min-h-\[65px\] div.text-lg:has(.text-md) {
   color: var(--ink-3);
   font-size: 13px;
   font-weight: 700;
 }
-.mcm-admin .min-h-\[65px\] p.text-lg .text-md,
-.mcm-admin .min-h-\[65px\] p.text-lg .text-primary {
+.mcm-admin .min-h-\[65px\] .text-lg .text-md,
+.mcm-admin .min-h-\[65px\] .text-lg .text-primary {
   color: var(--ink);
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-.mcm-admin .min-h-\[65px\] p.text-lg svg {
+.mcm-admin .min-h-\[65px\] .text-lg svg {
   color: var(--ink-4);
   width: 15px;
   height: 15px;
@@ -2738,4 +2755,276 @@
   color: var(--ink-2);
   font-size: 12.5px;
   line-height: 1.5;
+}
+
+/* ==================================================================
+   Admin nav — the console's list, not stacked cards.
+   Rows were 56px with a 24px icon and a tinted block behind every
+   accordion group. This makes it a quiet, dense list where the only
+   emphasis is the page you are on.
+   ================================================================== */
+.mcm-admin .mcm-adminnav {
+  padding: 4px 8px 14px;
+}
+
+/* No dividers between sections — the type carries the grouping. */
+.mcm-admin .mcm-adminnav.divide-y > * + * {
+  border-top: 0;
+}
+
+/* Every row: section triggers and leaf tiles alike. */
+.mcm-admin .mcm-adminnav .h-14,
+.mcm-admin .mcm-adminnav .min-h-14 {
+  height: 38px;
+  min-height: 38px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  gap: 10px;
+}
+.mcm-admin .mcm-adminnav .h-14:hover,
+.mcm-admin .mcm-adminnav .min-h-14:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* Icons sized to the text, not to the row. */
+.mcm-admin .mcm-adminnav svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.mcm-admin .mcm-adminnav .w-6 {
+  width: 17px;
+}
+.mcm-admin .mcm-adminnav .h-6 {
+  height: 17px;
+}
+
+/* No tinted blocks behind groups, and no stray borders. */
+.mcm-admin .mcm-adminnav [class*='bg-ucass-primary-200'] {
+  background: transparent;
+}
+.mcm-admin .mcm-adminnav [data-slot='accordion-content'],
+.mcm-admin .mcm-adminnav [class*='border'] {
+  border: 0;
+}
+
+/* Children sit under their section, indented once. */
+.mcm-admin .mcm-adminnav .pl-10 {
+  padding-left: 34px;
+}
+
+/* The current page: accent text on a soft wash, with a left rail. The old
+   treatment put a 2px rail on the RIGHT, which read as a scrollbar. */
+.mcm-admin .mcm-adminnav .text-primary {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.mcm-admin .mcm-adminnav .border-r-primary {
+  border-right: 0 !important;
+  background: var(--accent-wash);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Section labels stay quiet until you are inside them. */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'] p,
+.mcm-admin .mcm-adminnav .font-medium {
+  font-weight: 600;
+}
+
+/* The sidebar's own title ("Admin Hub"). It sat at page-title scale, competing
+   with the actual page title beside it. */
+.mcm-admin .mcm-adminnav-search ~ *,
+.mcm-admin h4.text-lg {
+  letter-spacing: -0.01em;
+}
+.mcm-admin h4.text-lg {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+/* ---- Side drawer carrying a console form ----
+   The drawer is a platform component shared everywhere, so this styles only
+   the case where console content is inside it. */
+.mcm-page.mcm-userform {
+  padding: 6px 20px 18px;
+}
+
+/* Its title sat flush against the drawer's top edge with no breathing room. */
+#drawer-example:has(.mcm-userform) > div:first-child,
+#drawer-example:has(.mcm-invite) > div:first-child {
+  /* The drawer opens directly under the app header, so its title landed hard
+     against the top edge with nothing above it. This gives the title room to
+     sit in. */
+  min-height: 66px;
+  padding-top: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+#drawer-example:has(.mcm-userform) h5,
+#drawer-example:has(.mcm-invite) h5 {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* The drawer itself gets the console ground so the form's white sections read
+   as cards rather than merging into one sheet. */
+#drawer-example:has(.mcm-userform) {
+  background: var(--ground);
+}
+
+/* "All admin screens" — the way back to the Admin landing page. It sits above
+   the sections because it is not one of them. */
+.mcm-admin .mcm-adminnav-all {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 8px 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.mcm-admin .mcm-adminnav-all:hover {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-admin .mcm-adminnav-all.on {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-admin .mcm-adminnav-all svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+/* ==================================================================
+   Integration
+   ------------------------------------------------------------------
+   A catalogue of things you can connect. Cards were ragged because
+   they stretched to the tallest in each grid row and their internals
+   had no shared rhythm; this gives them one.
+   ================================================================== */
+.mcm-admin .mcm-intpage {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.mcm-admin .mcm-intpage-head {
+  flex: none;
+  padding: 18px 22px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.mcm-admin .mcm-intpage-eyebrow {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mcm-admin .mcm-intpage-head h1 {
+  margin: 3px 0 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.mcm-admin .mcm-intpage-head p {
+  margin: 4px 0 0;
+  max-width: 68ch;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.mcm-admin .mcm-intgrid {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  gap: 14px;
+  padding: 18px 22px 26px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  align-content: start;
+}
+
+/* Equal-height cards with the action pinned to the bottom, so a two-line
+   description and a one-line one still line their Connect links up. */
+.mcm-admin .mcm-intcard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.mcm-admin .mcm-intcard:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The logo tile. */
+.mcm-admin .mcm-intcard .h-16.w-16 {
+  height: 46px;
+  width: 46px;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+}
+.mcm-admin .mcm-intcard .h-16.w-16 img {
+  width: 26px;
+  height: 26px;
+}
+
+.mcm-admin .mcm-intcard h3,
+.mcm-admin .mcm-intcard .text-primary {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mcm-admin .mcm-intcard p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* Connect / Coming soon sits on the floor of the card. */
+.mcm-admin .mcm-intcard > :last-child {
+  margin-top: auto;
+}
+
+/* Integration heads that also carry actions. */
+.mcm-admin .mcm-intpage-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
 }

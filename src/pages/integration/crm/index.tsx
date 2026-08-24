@@ -103,26 +103,22 @@ const CRMIntegration = () => {
   };
 
   return (
-    <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
-      <div className="flex min-h-[65px] items-center justify-between border-b border-gray-200 bg-white p-3">
-        <div className="flex min-w-0 items-center gap-1 text-lg font-semibold text-gray-900">
-          Integration
-          <div className="shrink-0 -rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
-          </div>
-          <span className="text-primary text-md truncate">CRM</span>
-        </div>
+    <section className="mcm-intpage">
+      <div className="mcm-intpage-head">
+        <div className="mcm-intpage-eyebrow">Integration</div>
+        <h1>CRM</h1>
+        <p>
+          Connect the system your team already works in, so calls, contacts and activity flow both
+          ways.
+        </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 p-3 overflow-y-auto xs:max-h-[62vh] md:max-h-full">
+      <div className="mcm-intgrid">
         {crmList?.map((crm) => {
           const isConnected = getConnectionStatus(crm.id);
           console.log(isConnected, 'isConnectedisConnectedd');
 
           return (
-            <div
-              key={crm?.name}
-              className="flex flex-col items-baseline justify-between border border-gray-200 rounded-lg bg-white p-3 w-full gap-5 h-full"
-            >
+            <div key={crm?.name} className="mcm-intcard">
               <div className="flex flex-col gap-5 w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-start w-full">
@@ -285,7 +281,7 @@ const CRMIntegration = () => {
           </Dialog>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

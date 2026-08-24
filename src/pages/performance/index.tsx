@@ -406,7 +406,7 @@ const Performance = () => {
             layout, so they get a plain scroll container. */}
         {activeTab === 'live-wallboard' && (
           <div className="dash-legacy">
-            <LiveDashboard />
+            <LiveDashboard selectedRange={selectedRange} />
           </div>
         )}
         {activeTab === 'ai-wallboard' && (

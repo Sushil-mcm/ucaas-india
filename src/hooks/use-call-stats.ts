@@ -84,6 +84,7 @@ export const useCallStats = (selectedRange: { from: string; to: string }) => {
       };
     },
     refetchInterval: REFRESH_MS,
+    enabled: Boolean(selectedRange?.from && selectedRange?.to),
   });
 
   const rows = data?.rows;
@@ -164,6 +165,8 @@ export const useCallStats = (selectedRange: { from: string; to: string }) => {
       totalCalls,
       missedCalls,
       answeredCalls,
+      inboundCalls: Number(stats?.inbound_calls ?? 0) || 0,
+      outboundCalls: Number(stats?.outbound_calls ?? 0) || 0,
       voicemailCalls: Number(stats?.voicemail ?? 0) || 0,
       abandonRate: totalCalls ? (missedCalls / totalCalls) * 100 : null,
       avgWaitSec: waitCount ? waitTotal / waitCount : null,

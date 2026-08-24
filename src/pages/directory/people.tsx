@@ -595,10 +595,14 @@ const People = () => {
         onClose={() => setAssigningCallerId(null)}
       />
 
+      {/* An explicit width matters: without one SideDrawer falls back to
+          `calc(100% - 21rem)`, which is ~1660px on a wide screen — far more
+          than a four-step form needs, and it buries the page behind it. */}
       {editing ? (
         <SideDrawer
           isOpen={Boolean(editing)}
-          title={`Update Forwarding (${editing.name})`}
+          title={`Edit ${editing.name}`}
+          width="min(1080px, 82vw)"
           enableResponsive
           responsiveWidth="96vw"
           responsiveBreakpoint={1024}

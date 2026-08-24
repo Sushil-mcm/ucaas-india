@@ -9,7 +9,7 @@ import {
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useUser } from '@/hooks/use-user';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
 
@@ -31,6 +31,38 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       icon: 'CompayIcon',
       visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
       enabled: true,
+    },
+    {
+      /* Named for whose settings these are. "Settings" alone sat ambiguously
+         next to the company-wide screens; these are the signed-in person's own
+         profile, phone, notifications and security. */
+      title: 'My Account',
+      type: 'accordion',
+      value: 'account',
+      icon: 'UserCircleIcon',
+      visible: true,
+      enabled: true,
+      children: [
+        { title: 'Profile', icon: 'ExtensionIcon', path: '/admin-settings/account/basic-info' },
+        { title: 'Preferences', icon: 'SettingIcon', path: '/admin-settings/account/general' },
+        { title: 'My Phone', icon: 'PhoneIcon', path: '/admin-settings/account/phone' },
+        {
+          title: 'Notifications',
+          icon: 'NotificationIcon',
+          path: '/admin-settings/account/notification',
+        },
+        {
+          title: 'Greetings',
+          icon: 'GreetingIcon',
+          path: '/admin-settings/account/greetings',
+        },
+        { title: 'Media Files', icon: 'MediaIcon', path: '/admin-settings/account/media' },
+        {
+          title: 'Security & Privacy',
+          icon: 'ShieldIcon',
+          path: '/admin-settings/account/security',
+        },
+      ].filter(Boolean),
     },
     {
       title: 'Users',
@@ -191,6 +223,38 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: Boolean(features?.plan_features?.ai?.IS_SHOW),
         },
       ].filter(Boolean),
+    },
+    {
+      key: 'admin-settings.integration',
+      id: 'integration',
+      title: 'Integration',
+      type: 'accordion',
+      value: 'integration',
+      icon: 'IntegrationIcon',
+      visible: Boolean(features?.plan_features?.integration?.action?.view),
+      enabled: Boolean(features?.plan_features?.integration?.IS_SHOW),
+      /* All four screens listed flat. The original nav nested Zapier, General
+         Settings and Manage Webhook one level deeper under "Data & Reporting",
+         but this nav is two levels only — collapsing them to a single link left
+         Zapier and Manage Webhook with no way in. */
+      children: [
+        { title: 'CRM', icon: 'IntegrationIcon', path: '/admin-settings/integration/crm' },
+        {
+          title: 'General Settings',
+          icon: 'SettingIcon',
+          path: '/admin-settings/integration/data-reporting/general-settings',
+        },
+        {
+          title: 'Zapier',
+          icon: 'IntegrationIcon',
+          path: '/admin-settings/integration/data-reporting/zapier',
+        },
+        {
+          title: 'Manage Webhook',
+          icon: 'AnalyticsIcon',
+          path: '/admin-settings/integration/data-reporting/manage-webhook',
+        },
+      ],
     },
     {
       key: 'admin-settings.social_media_channels',
@@ -505,6 +569,16 @@ const Sidebar = () => {
             aria-label="Filter admin sections"
           />
         </div>
+        {/* Once you are on a screen there was no way back to the Admin landing
+            page — the nav lists sections but never the overview itself. */}
+        <NavLink
+          to="/admin-settings"
+          end
+          className={({ isActive }) => `mcm-adminnav-all ${isActive ? 'on' : ''}`}
+        >
+          <Icon name={'Grid' as IconType} className="h-4 w-4" />
+          All admin screens
+        </NavLink>
         <div className="mcm-adminnav h-full min-h-0 divide-y divide-gray-200">
           {!searchedItems?.length ? (
             <p className="mcm-adminnav-empty">No section matches that.</p>

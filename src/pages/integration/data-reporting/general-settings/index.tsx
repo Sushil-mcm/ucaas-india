@@ -10,14 +10,10 @@ const GeneralSettings = () => {
 
   return (
     <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
-      <div className="flex min-h-[65px] items-center justify-between border-b border-gray-200 bg-white p-3">
-        <div className="flex min-w-0 items-center gap-1 text-lg font-semibold text-gray-900">
-          Data & Reporting
-          <div className="shrink-0 -rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
-          </div>
-          <span className="text-primary text-md truncate">General Settings</span>
-        </div>
+      <div className="mcm-intpage-head">
+        <div className="mcm-intpage-eyebrow">Integration</div>
+        <h1>General Settings</h1>
+        <p>How call and message data is shared with the systems you have connected.</p>
       </div>
       <div className="w-full p-3 overflow-y-auto xs:max-h-[62vh] md:max-h-full">
         <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-6">

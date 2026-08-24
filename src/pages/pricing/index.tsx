@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import Loader from '@/components/custom/loader';
+import Loader from '@/components/custom/loader'; 
 import { useGetPlans } from '@/hooks/common';
 import { durationMap, PlanDurationMap, PRICE_FEATURES } from '../admin-settings/billing/constants';
 import { Check, InfoIcon } from '@/assets/icons';

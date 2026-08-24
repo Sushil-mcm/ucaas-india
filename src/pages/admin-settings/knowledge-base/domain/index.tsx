@@ -295,39 +295,44 @@ function AIDomain() {
     <>
       <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-              className="text-slate-500 transition-colors hover:text-primary"
-            >
-              AI Agents
-            </button>
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">Domain</span>
-          </div>
-          <div className="flex gap-2 filters">
-            <Input
-              placeholder="Search"
-              className="pl-10 w-full min-h-9 rounded-lg"
-              IconPosition="left-0 pl-2 inset-y-0"
-              value={search}
-              onChange={(e) => setSearch(e?.target?.value)}
-              Icon={<SearchLine className=" text-gray-700" />}
-            />
-            {domainAccess?.add && (
-              <Button
+          <div>
+            <div className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+              <button
                 type="button"
-                variant="outline"
-                className="min-h-9"
-                onClick={() => setModalState((prev) => ({ ...prev, addDomain: true }))}
+                onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
+                className="text-slate-500 transition-colors hover:text-primary"
               >
-                <Icon name="Plus" className="w-3 h-3" /> Add Domain
-              </Button>
-            )}
+                AI Agents
+              </button>
+              <div className="-rotate-90 text-gray-800">
+                <Icon name="ChevronIcon" className="w-5 h-5" />
+              </div>
+              <span className="text-primary text-md">Domain</span>
+            </div>
+            <div className="flex gap-2 filters">
+              <Input
+                placeholder="Search"
+                className="pl-10 w-full min-h-9 rounded-lg"
+                IconPosition="left-0 pl-2 inset-y-0"
+                value={search}
+                onChange={(e) => setSearch(e?.target?.value)}
+                Icon={<SearchLine className=" text-gray-700" />}
+              />
+              {domainAccess?.add && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-9"
+                  onClick={() => setModalState((prev) => ({ ...prev, addDomain: true }))}
+                >
+                  <Icon name="Plus" className="w-3 h-3" /> Add Domain
+                </Button>
+              )}
+            </div>
           </div>
+          <p className="text-gray-500 text-xs">
+            Domains your AI agents are allowed to read from when building answers.
+          </p>
         </div>
         <div className="w-full h-full  p-3 flex flex-col  gap-2 max-h-[calc(100vh-130px)]">
           <TableManager

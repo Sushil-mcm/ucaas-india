@@ -53,7 +53,13 @@
   --r-sm: 8px;
   --r-lg: 18px;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* 'Twemoji Country Flags' is what renders flag emoji as flags rather than
+     the bare letter pair ('IN', 'US'). The app's body stack includes it for
+     exactly that reason; the console defined its own stack and dropped it,
+     so the dialler's country flag showed as text. */
+  --sans:
+    'Plus Jakarta Sans', 'Twemoji Country Flags', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
 }
 .dark .mcm-console {
   --ground: #0a0f1a;

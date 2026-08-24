@@ -130,19 +130,24 @@ function AISettings() {
   return (
     <form className="w-full bg-gray-200/15 flex flex-col">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-            className="text-slate-500 transition-colors hover:text-primary"
-          >
-            AI Agents
-          </button>
-          <div className="-rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
+        <div>
+          <div className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
+              className="text-slate-500 transition-colors hover:text-primary"
+            >
+              AI Agents
+            </button>
+            <div className="-rotate-90 text-gray-800">
+              <Icon name="ChevronIcon" className="w-5 h-5" />
+            </div>
+            <span className="text-primary text-md">Settings</span>
           </div>
-          <span className="text-primary text-md">Settings</span>
         </div>
+        <p className="text-gray-500 text-xs">
+          How your AI tools behave — models, limits and what they may act on.
+        </p>
       </div>
 
       <div className="w-full h-full flex  flex-col sm:flex-row gap-4 justify-between p-3">

@@ -6,7 +6,6 @@ import {
   Headphones,
   Monitor,
   // PauseCircle,
-  SettingsIcon,
 } from '@/assets/icons';
 import { useUser } from '@/hooks/use-user';
 import { useDialpad } from '@/hooks/use-dialpad';
@@ -20,14 +19,11 @@ import ChangePassword from '@/pages/change-password';
 import CustomTooltip from '../custom-tooltip';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import AvatarContent from './AvatarContent';
-import HeaderDialerButton from './HeaderDialerButton';
 import NotificationContent from './NotificationContent';
 // import { useCampaign } from '@/hooks/use-campaign';
 import GlobalSearch from './GlobalSearch';
-import { useMyPresence } from '@/hooks/use-my-presence';
 import AreaNav from '@/components/custom/area-nav';
 import ThemeToggle from '@/components/custom/theme-toggle';
-import LogoIcon from '@/assets/images/LogoIcon.svg';
 import { useOrganization } from '@/hooks/use-organisation';
 import PendingChatRequestsDrawer from './PendingChatRequestsDrawer';
 import { List, Menu, Plus, Wallet, X } from 'lucide-react';
@@ -53,8 +49,6 @@ const Header = () => {
     BASIC_INFO: 'basic-info',
   };
   const {
-    isRegistered,
-    openDialpad,
     activeCampaign,
     setActiveCampaign,
     setCampaignContactCards,
@@ -68,10 +62,6 @@ const Header = () => {
     disconnectSocket,
     socketEventsManager,
   } = useSocketEvents();
-
-  // Both chips below run on state the app already maintains: SIP registration
-  // from the dialpad, presence from the socket.
-  const { status: presenceStatus, label: presenceLabel } = useMyPresence();
 
   const [notificationState, setNotificationState] = useState<any>(false);
   const [pendingChatState, setPendingChatState] = useState<boolean>(false);
@@ -124,7 +114,6 @@ const Header = () => {
     role !== 'ADMIN' || !monitoringAccess?.view
       ? '/monitoring/department'
       : '/monitoring/all-calls';
-  const settingsRoute = '/settings/basic-info';
   const addFundsRoute = '/admin-settings/billing/purchase';
   // const { isCampaignCall, isStartCampaign, selectedCampaign, setIsStopCampaign, isStopCampaign } =
   //   useCampaign();
@@ -147,11 +136,6 @@ const Header = () => {
     }),
     [navigateToLazyRoute],
   );
-
-  const handleOpenDialer = () => {
-    openDialpad('mini');
-    setIsMobileMenuOpen(false);
-  };
 
   const clearCampaignSystemEventsInterval = useCallback(() => {
     if (campaignSystemEventsIntervalRef.current) {
@@ -372,21 +356,30 @@ const Header = () => {
                 className="mcm-brand"
                 aria-label="Go to Home"
               >
+                {/* The customer's own mark. When they have not uploaded one we
+                    show their initial rather than falling back to the vendor's
+                    logo — this bar belongs to whoever is running the console. */}
                 <span className="mcm-brand-mark">
-                  <img
-                    src={
-                      mainSiteInfo?.small_logo
-                        ? `${getEnv().VITE_API_BASE_URL}/${mainSiteInfo?.small_logo}`
-                        : LogoIcon
-                    }
-                    alt=""
-                  />
+                  {mainSiteInfo?.small_logo ? (
+                    <img src={`${getEnv().VITE_API_BASE_URL}/${mainSiteInfo?.small_logo}`} alt="" />
+                  ) : (
+                    <span className="mcm-brand-initial">
+                      {(siteBrand.site_name || siteBrand.company_name || 'C')
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
+                  )}
                 </span>
                 <span className="mcm-brand-text">
-                  <span className="mcm-brand-name">{siteBrand.site_name || 'Unified'}</span>
-                  <span className="mcm-brand-sub">
-                    {String(siteBrand.company_name || 'MyCountryMobile').toUpperCase()}
-                  </span>
+                  <span className="mcm-brand-name">{siteBrand.site_name || 'Console'}</span>
+                  {/* Only rendered when the customer has set one — no vendor
+                      name is hardcoded here. */}
+                  {siteBrand.company_name ? (
+                    <span className="mcm-brand-sub">
+                      {String(siteBrand.company_name).toUpperCase()}
+                    </span>
+                  ) : null}
                 </span>
               </a>
               <AreaNav />
@@ -480,11 +473,11 @@ const Header = () => {
                   .hdr-quick.open > * { opacity: 1; pointer-events: auto; }
 
                   /* a quarter arc sweeping left then down, clear of the edge */
-                  .hdr-quick.open > *:nth-child(1) { transform: translate(-104px,   0px) scale(1); transition-delay: .02s; }
-                  .hdr-quick.open > *:nth-child(2) { transform: translate( -96px,  40px) scale(1); transition-delay: .06s; }
-                  .hdr-quick.open > *:nth-child(3) { transform: translate( -74px,  74px) scale(1); transition-delay: .10s; }
-                  .hdr-quick.open > *:nth-child(4) { transform: translate( -40px,  96px) scale(1); transition-delay: .14s; }
-                  .hdr-quick.open > *:nth-child(5) { transform: translate(   0px, 104px) scale(1); transition-delay: .18s; }
+                  .hdr-quick.open > *:nth-child(1) { transform: translate(-152px,   0px) scale(1); transition-delay: .02s; }
+                  .hdr-quick.open > *:nth-child(2) { transform: translate(-140px,  58px) scale(1); transition-delay: .06s; }
+                  .hdr-quick.open > *:nth-child(3) { transform: translate(-107px, 107px) scale(1); transition-delay: .10s; }
+                  .hdr-quick.open > *:nth-child(4) { transform: translate( -58px, 140px) scale(1); transition-delay: .14s; }
+                  .hdr-quick.open > *:nth-child(5) { transform: translate(   0px, 152px) scale(1); transition-delay: .18s; }
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -507,41 +500,41 @@ const Header = () => {
                   className={`hdr-quick ${isQuickMenuOpen ? 'open' : ''}`}
                   aria-hidden={!isQuickMenuOpen}
                 >
-              <div className="inline-flex items-center justify-center font-medium">
-                <CustomTooltip text={'Tasks'} side="bottom">
-                  <span
-                    className={`cursor-pointer relative flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg transition-all ${activePath === ACTIVE_PATH.CALENDAR && currentView === 'task-list' ? 'bg-ucass-primary-200 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-ucass-primary-200 hover:text-primary'}`}
-                    {...getHeaderRouteHandlers(taskRoute)}
-                  >
-                    {unreadTaskCount > 0 ? (
-                      <span className="bg-primary absolute text-white font-normal rounded-full -top-1 -right-1 border-white border-2 text-[10px] min-w-[20px] h-5 flex items-center justify-center shadow-sm z-10">
-                        {unreadTaskCount > 9 ? '9+' : unreadTaskCount}
+                  <div className="inline-flex items-center justify-center font-medium">
+                    <CustomTooltip text={'Tasks'} side="bottom">
+                      <span
+                        className={`cursor-pointer relative flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg transition-all ${activePath === ACTIVE_PATH.CALENDAR && currentView === 'task-list' ? 'bg-ucass-primary-200 text-primary' : 'bg-gray-100 text-gray-700 hover:bg-ucass-primary-200 hover:text-primary'}`}
+                        {...getHeaderRouteHandlers(taskRoute)}
+                      >
+                        {unreadTaskCount > 0 ? (
+                          <span className="bg-primary absolute text-white font-normal rounded-full -top-1 -right-1 border-white border-2 text-[10px] min-w-[20px] h-5 flex items-center justify-center shadow-sm z-10">
+                            {unreadTaskCount > 9 ? '9+' : unreadTaskCount}
+                          </span>
+                        ) : null}
+                        <List className="w-4.5 h-4.5" />
                       </span>
-                    ) : null}
-                    <List className="w-4.5 h-4.5" />
-                  </span>
-                </CustomTooltip>
-              </div>
+                    </CustomTooltip>
+                  </div>
 
-              <CustomTooltip text={'Calendar'} side="bottom">
-                <span
-                  className={`cursor-pointer ${ACTIVE_PATH?.CALENDAR === activePath && currentView === 'calendar' ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
-                  {...getHeaderRouteHandlers(calendarRoute)}
-                >
-                  <CalendarIcon className="w-4.5 h-4.5" />
-                </span>
-              </CustomTooltip>
-              {campaignAccess && (
-                <CustomTooltip text={'My Campaigns'} side="bottom">
-                  <span
-                    className={`cursor-pointer ${ACTIVE_PATH?.RUNNING_CAMPAIGN === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
-                    {...getHeaderRouteHandlers(myCampaignsRoute)}
-                  >
-                    <Headphones className="w-4.5 h-4.5" />
-                  </span>
-                </CustomTooltip>
-              )}
-              {/* <CustomTooltip text={'Running Campaigns'} side="bottom">
+                  <CustomTooltip text={'Calendar'} side="bottom">
+                    <span
+                      className={`cursor-pointer ${ACTIVE_PATH?.CALENDAR === activePath && currentView === 'calendar' ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
+                      {...getHeaderRouteHandlers(calendarRoute)}
+                    >
+                      <CalendarIcon className="w-4.5 h-4.5" />
+                    </span>
+                  </CustomTooltip>
+                  {campaignAccess && (
+                    <CustomTooltip text={'My Campaigns'} side="bottom">
+                      <span
+                        className={`cursor-pointer ${ACTIVE_PATH?.RUNNING_CAMPAIGN === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
+                        {...getHeaderRouteHandlers(myCampaignsRoute)}
+                      >
+                        <Headphones className="w-4.5 h-4.5" />
+                      </span>
+                    </CustomTooltip>
+                  )}
+                  {/* <CustomTooltip text={'Running Campaigns'} side="bottom">
               <span
                 className={`cursor-pointer ${ACTIVE_PATH?.RUNNING_CAMPAIGN === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-white text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
                 onClick={() => openPowerCampaign()}
@@ -549,65 +542,35 @@ const Header = () => {
                 <CallForwardLine className="w-4.5 h-4.5" />
               </span>
             </CustomTooltip> */}
-              <CustomTooltip text={'Activity'} side="bottom">
-                <span
-                  className={`cursor-pointer ${ACTIVE_PATH?.ACTIVITY === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
-                  {...getHeaderRouteHandlers(activityRoute)}
-                >
-                  <ActivityIcon className="w-4.5 h-4.5" />
-                </span>
-              </CustomTooltip>
-              {monitoringAccess?.view && (
-                <div className="inline-flex items-center justify-center font-medium">
-                  <CustomTooltip text={'Monitoring'} side="bottom">
+                  <CustomTooltip text={'Activity'} side="bottom">
                     <span
-                      className={`cursor-pointer ${ACTIVE_PATH?.ALL_CALLS === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
-                      {...getHeaderRouteHandlers(monitoringRoute)}
+                      className={`cursor-pointer ${ACTIVE_PATH?.ACTIVITY === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
+                      {...getHeaderRouteHandlers(activityRoute)}
                     >
-                      <Monitor className="w-4.5 h-4.5" />
+                      <ActivityIcon className="w-4.5 h-4.5" />
                     </span>
                   </CustomTooltip>
-                </div>
-              )}
+                  {monitoringAccess?.view && (
+                    <div className="inline-flex items-center justify-center font-medium">
+                      <CustomTooltip text={'Monitoring'} side="bottom">
+                        <span
+                          className={`cursor-pointer ${ACTIVE_PATH?.ALL_CALLS === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
+                          {...getHeaderRouteHandlers(monitoringRoute)}
+                        >
+                          <Monitor className="w-4.5 h-4.5" />
+                        </span>
+                      </CustomTooltip>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <span
-                className="hidden items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-semibold text-gray-600 lg:inline-flex"
-                title={
-                  isRegistered
-                    ? 'Softphone registered in this browser'
-                    : 'Softphone is not registered — calls cannot be placed from here'
-                }
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${isRegistered ? 'bg-emerald-500' : 'bg-red-500'}`}
-                />
-                WebRTC · Chrome
-              </span>
-
-              <span
-                className={`hidden items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold lg:inline-flex ${
-                  presenceStatus === 'online'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : presenceStatus === 'busy'
-                      ? 'border-amber-200 bg-amber-50 text-amber-700'
-                      : 'border-red-200 bg-red-50 text-red-700'
-                }`}
-                title={`You are ${presenceLabel} — change it from your avatar menu`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    presenceStatus === 'online'
-                      ? 'bg-emerald-500'
-                      : presenceStatus === 'busy'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
-                  }`}
-                />
-                {presenceLabel}
-              </span>
-              <HeaderDialerButton isRegistered={isRegistered} onClick={handleOpenDialer} />
+              {/* The WebRTC and presence chips lived here. Registration state is
+                  already on the dialer button beside this, and presence is on the
+                  avatar menu — two more always-on chips just crowded the bar. */}
+              {/* The dialer button lived here. Calls are placed from
+                  Activity ▸ Phone; the header keeps only notifications and
+                  account controls. */}
               {/* AI Chat Requests */}
               {/* <div className="inline-flex items-center justify-center font-medium">
                 <CustomTooltip text={'AI Chat Requests'} side="bottom">
@@ -658,16 +621,8 @@ const Header = () => {
                 </CustomTooltip>
               </div>
 
-              <div className="inline-flex items-center justify-center font-medium">
-                <CustomTooltip text={'Settings'} side="bottom">
-                  <span
-                    className={`cursor-pointer ${ACTIVE_PATH?.BASIC_INFO === activePath ? 'bg-ucass-primary-200 text-primary hover:text-primary' : 'bg-gray-100 text-gray-700'} relative bg-gray-100 flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary`}
-                    {...getHeaderRouteHandlers(settingsRoute)}
-                  >
-                    <SettingsIcon className="w-4.5 h-4.5" />
-                  </span>
-                </CustomTooltip>
-              </div>
+              {/* The gear lived here. Personal settings are now Admin ▸ My
+                  Account, and the avatar menu still links straight to them. */}
             </div>
             <div className="hidden md:order-4 md:flex md:items-center">
               <ThemeToggle />

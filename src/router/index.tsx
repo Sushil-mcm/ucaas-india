@@ -518,6 +518,62 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            /* Integrations are set up once for the whole account, so they belong
+               with the other administered settings rather than as a top-level
+               destination of their own. */
+            path: 'integration',
+            id: 'admin-integration',
+            children: [
+              { index: true, element: <CRMIntegration /> },
+              { path: 'crm', element: <CRMIntegration /> },
+              {
+                path: 'data-reporting',
+                element: <Outlet />,
+                children: [
+                  { index: true, element: <GeneralSettings /> },
+                  { path: 'zapier', element: <Zapier /> },
+                  { path: 'manage-webhook', element: <ManageWebhook /> },
+                  { path: 'general-settings', element: <GeneralSettings /> },
+                ],
+              },
+            ],
+          },
+          {
+            /* The signed-in person's own settings. They used to be a separate
+               top-level area with its own sidebar, reachable only from the
+               avatar menu — which put personal settings and company settings in
+               two different places. Nested here, they render inside the Admin
+               shell alongside everything else you administer. */
+            path: 'account',
+            id: 'account',
+            children: [
+              { path: 'basic-info', element: <BasicInfoSettings /> },
+              { path: 'general', element: <General /> },
+              { path: 'phone', element: <ProtectedRoute element={<IncomingCalls />} /> },
+              { path: 'notification', element: <SettingsNotification /> },
+              {
+                path: 'greetings',
+                element: (
+                  <ProtectedRoute
+                    element={<Greetings />}
+                    guard={{ permission: 'settings.action.greeting.view' }}
+                  />
+                ),
+              },
+              {
+                path: 'media',
+                element: <Outlet />,
+                children: [
+                  { index: true, element: <GreetingContent /> },
+                  { path: 'type-greeting', element: <GreetingContent /> },
+                  { path: 'type-prompt', element: <GreetingContent /> },
+                  { path: 'type-voicemail', element: <GreetingContent /> },
+                ],
+              },
+              { path: 'security', element: <Security /> },
+            ],
+          },
+          {
             path: 'users',
             id: 'users',
             children: [

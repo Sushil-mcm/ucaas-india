@@ -145,7 +145,12 @@ const DLCCampaigns = () => {
       <section className="w-full overflow-x-auto overflow-y-hidden">
         <div className="w-full  flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-            <p className="text-gray-900 font-semibold text-lg">10DLC Campaigns</p>
+            <div>
+              <p className="text-gray-900 font-semibold text-lg">10DLC Campaigns</p>
+              <p className="text-gray-500 text-xs">
+                What each registered brand is allowed to text about, and the numbers attached to it.
+              </p>
+            </div>
             <div className="flex gap-2 filters">
               <Input
                 placeholder="Search"

@@ -1147,12 +1147,17 @@ const AiReceptionist = () => {
       <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
           <div className="text-gray-900 font-semibold text-lg flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              AI Tools
-              <div className="-rotate-90 text-gray-800">
-                <Icon name="ChevronIcon" className="w-5 h-5" />
+            <div>
+              <div className="flex items-center gap-1">
+                AI Tools
+                <div className="-rotate-90 text-gray-800">
+                  <Icon name="ChevronIcon" className="w-5 h-5" />
+                </div>
+                <span className="text-primary text-md">AI Receptionist</span>
               </div>
-              <span className="text-primary text-md">AI Receptionist</span>
+              <p className="text-gray-500 text-xs font-medium">
+                An AI that answers calls, understands what the caller wants, and routes them.
+              </p>
             </div>
             {!!editData && (
               <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary border border-primary/20 shadow-sm">

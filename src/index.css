@@ -156,7 +156,9 @@
   --mcm-r-sm: 8px;
   --mcm-r-lg: 18px;
 
-  --mcm-sans: 'Plus Jakarta Sans', 'Twemoji Country Flags', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mcm-sans:
+    'Plus Jakarta Sans', 'Twemoji Country Flags', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
   --mcm-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --radius: 0.625rem;
@@ -1535,9 +1537,22 @@
    Area nav — the console's top-level areas in the header.
    The sidebar below narrows to whichever area is lit here.
    ============================================================ */
+/* The area rail scrolls when an area has more views than fit, but a visible
+   track down a 80px-wide column is all chrome and no value — the rail still
+   scrolls by wheel, trackpad, touch and keyboard. */
+.rail-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 .mcm-areanav {
   display: none;
-  align-items: stretch;
+  align-items: center;
   gap: 2px;
   height: 100%;
   min-width: 0;
@@ -1553,9 +1568,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  /* 13px left the active tab's tint hugging its label. */
-  padding: 0 18px;
-  height: 100%;
+  padding: 9px 20px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -1579,7 +1592,8 @@
 .mcm-areanav-btn.is-active {
   color: var(--primary);
   border-bottom-color: var(--primary);
-  background: color-mix(in oklab, var(--primary) 8%, transparent);
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  border-radius: 8px 8px 0 0;
 }
 
 /* Below the widest breakpoint the labels go and the icons carry it. */
@@ -1589,7 +1603,7 @@
   }
   /* icon-only at this width, so the tint needs to sit evenly around it */
   .mcm-areanav-btn {
-    padding: 0 13px;
+    padding: 9px 13px;
   }
 }
 
@@ -1720,4 +1734,19 @@
 }
 .mcm-newbuild button:hover {
   background: #1d4ed8;
+}
+
+/* Customer initial, shown when they have not uploaded a logo. Never the
+   vendor's mark — the brand bar belongs to whoever runs the console. */
+.mcm-brand-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: #e8efff;
+  color: #1d4ed8;
+  font-size: 15px;
+  font-weight: 800;
 }

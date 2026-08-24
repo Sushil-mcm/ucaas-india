@@ -63,6 +63,7 @@ import {
 } from '@/pages/monitoring/live-call-helpers';
 import { CallPathCell, CallPathDialog } from '@/pages/monitoring/call-path-cell';
 import CallHistory from '@/pages/reports/call-logs/call-history';
+import { useCallStats } from '@/hooks/use-call-stats';
 
 type MetricTone = 'neutral' | 'success' | 'warning' | 'danger' | 'primary';
 type Trend = 'up' | 'down' | 'flat';
@@ -263,7 +264,14 @@ const ActionButtons = ({
   );
 };
 
-const LiveDashboard = () => {
+const EMPTY_RANGE = { from: '', to: '' };
+
+/**
+ * `selectedRange` is optional: mounted on its own the board stays a live,
+ * right-now wallboard. Mounted inside Performance, which has a date filter,
+ * the volume figures follow that filter instead of silently ignoring it.
+ */
+const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: string } } = {}) => {
   const {
     liveCalls,
     eventLiveCallsData,
@@ -562,6 +570,18 @@ const LiveDashboard = () => {
 
   const summary = campaignLiveCallsData?.data?.summary;
 
+  // The live summary is a right-now snapshot and reads 0 outside active
+  // traffic, so it cannot answer "how many calls in this range". The call log
+  // can, and is the same source the rest of Performance now uses.
+  const rangeStats = useCallStats(selectedRange || EMPTY_RANGE);
+  const useRange = Boolean(selectedRange?.from && selectedRange?.to);
+  const totalCalls = useRange ? rangeStats.totalCalls : Number(summary?.total_call || 0);
+  const inboundCalls = useRange
+    ? rangeStats.inboundCalls
+    : Number(summary?.inbound_call || 0);
+  const outboundCalls = useRange ? rangeStats.outboundCalls : Number(summary?.outbound_call || 0);
+  const missedCalls = useRange ? rangeStats.missedCalls : Number(summary?.missed_call || 0);
+
   const formatSecs = (val: number | string) => {
     const s = Number(val || 0);
     if (!s) return '0s';
@@ -777,7 +797,7 @@ const LiveDashboard = () => {
   const dashboardMetrics: MetricCard[] = [
     {
       label: 'Total Today',
-      value: String(summary?.total_call || 0),
+      value: String(totalCalls),
       icon: PhoneCall,
       trend: 'flat',
       tone: 'neutral',
@@ -785,7 +805,7 @@ const LiveDashboard = () => {
     },
     {
       label: 'Inbound',
-      value: String(summary?.inbound_call || 0),
+      value: String(inboundCalls),
       icon: PhoneIncoming,
       trend: 'flat',
       tone: 'primary',
@@ -793,7 +813,7 @@ const LiveDashboard = () => {
     },
     {
       label: 'Outbound',
-      value: String(summary?.outbound_call || 0),
+      value: String(outboundCalls),
       icon: PhoneOutgoing,
       trend: 'flat',
       tone: 'neutral',
@@ -832,7 +852,7 @@ const LiveDashboard = () => {
     },
     {
       label: 'Missed',
-      value: String(summary?.missed_call || 0),
+      value: String(missedCalls),
       icon: AlertTriangle,
       trend: 'flat',
       tone: 'danger',

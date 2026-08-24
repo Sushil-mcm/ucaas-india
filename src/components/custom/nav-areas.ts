@@ -12,7 +12,7 @@
  * the surviving items belong to it, and hides itself when none do.
  */
 
-export type AreaId = 'home' | 'directory' | 'activity' | 'performance' | 'integration' | 'admin';
+export type AreaId = 'home' | 'directory' | 'activity' | 'performance' | 'admin';
 
 export type NavArea = {
   id: AreaId;
@@ -43,7 +43,6 @@ export const NAV_AREAS: NavArea[] = [
     items: ['Performance', 'Reports'],
   },
   { id: 'admin', label: 'Admin', icon: 'AdminIcon', items: ['Admin'] },
-  { id: 'integration', label: 'Integration', icon: 'IntegrationIcon', items: ['Integration'] },
 ];
 
 /** Which area a nav item belongs to. */
