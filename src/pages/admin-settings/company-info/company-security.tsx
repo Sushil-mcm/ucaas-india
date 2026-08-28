@@ -11,7 +11,6 @@ import { handleAlert } from '@/lib/utils';
 import { getUserList } from '@/services/api';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
@@ -270,7 +269,7 @@ const toRosterPerson = (person: any): RosterPerson | null => {
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700">
@@ -538,7 +537,7 @@ const CompanySecurity = () => {
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
       <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-lg font-semibold text-gray-900">Company security</p>
+        <p className="text-lg font-semibold text-gray-900">Security</p>
         <p className="text-xs text-gray-500">
           Security rules for everyone in the company. The Security &amp; Privacy page under My
           Account covers only your own password and devices — this one is company-wide.
@@ -579,8 +578,7 @@ const CompanySecurity = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No security settings saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the values below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -590,7 +588,7 @@ const CompanySecurity = () => {
             title="Require multi-factor authentication"
             summary="Whether everyone signing in with a password must also pass a second check."
             enforced={false}
-            enforcementNote="Saved only, and this is the one to be clearest about: turning this on does not make anyone get an MFA prompt. There is no second factor in the sign-in flow at all — no enrolment, no codes, no authenticator. Someone with a valid password gets in exactly as they do today. Until the auth layer reads this key, an account is protected by its password alone."
+            enforcementNote="Not active yet. Signing in does not ask for a second step."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -617,7 +615,7 @@ const CompanySecurity = () => {
             title="MFA exception list"
             summary="The named people who would be allowed to sign in without the second check."
             enforced={false}
-            enforcementNote="Saved only. Nothing reads this list, so being on it changes nothing today — and neither does being off it, because MFA is not running in the first place. The admin rule below is applied here in the browser, which stops the list being built wrongly; it is not a guarantee, since nothing stops the underlying record being written another way."
+            enforcementNote="Not active yet."
           >
             {!form.mfa_required && (
               <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
@@ -704,7 +702,7 @@ const CompanySecurity = () => {
             title="Idle timeout"
             summary="How long someone can leave the console untouched before they are signed out."
             enforced
-            enforcementNote="In effect. The console watches for typing, clicking and scrolling, warns for the last minute with a way to stay signed in, then signs the person out. It waits while somebody is on a call or in a video room, and starts counting again when that ends. Two limits worth knowing: it only signs out the browser, so it protects an unattended screen rather than stopping a determined user, and the server has no idle concept of its own."
+            enforcementNote="Active. People are signed out after this long without activity, with a warning first and a chance to stay signed in. It waits while someone is on a call."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -755,7 +753,7 @@ const CompanySecurity = () => {
             title="IP allowlist"
             summary="The networks people are allowed to sign in from, written as IPv4 CIDR blocks."
             enforced={false}
-            enforcementNote="Saved only — and this is the setting most likely to be misread as protection. There is no IP check anywhere: not at sign-in, not on API requests. Someone on any network can sign in exactly as they can today, whatever is in this box. Note also that this platform's backend has no authorisation middleware at all right now, so an IP rule enforced in the browser would be no rule at all. This list is a record of intent for whoever builds the check."
+            enforcementNote="Not active yet. Signing in is not restricted by network."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -829,7 +827,7 @@ const CompanySecurity = () => {
             title="Single sign-on (SAML)"
             summary="Where your identity provider lives, so sign-in can be handed over to it."
             enforced={false}
-            enforcementNote="Saved only, and further from working than the rest. There is no SAML anywhere in this product — no assertion handling, no metadata endpoint, no redirect to an identity provider. Filling these in does not create an SSO login and does not change how anyone signs in. Treat this card as somewhere to keep the values until SSO is actually built."
+            enforcementNote="Not active yet. People sign in with their email address and password."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -969,11 +967,7 @@ const CompanySecurity = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.company_security</span>. Everything else in
-              that record is left untouched. Saving records the policy; it does not switch anything
-              on.
-            </p>
+              Saved for your whole company. Your other settings are not affected.</p>
             <Button
               type="button"
               variant="primary"

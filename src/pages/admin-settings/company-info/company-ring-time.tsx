@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
@@ -175,11 +174,11 @@ const buildRingTimePayload = (form: RingTimeForm) => ({
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Saved, not enforced yet
+      Not active yet
     </span>
   );
 
@@ -343,8 +342,7 @@ const CompanyRingTime = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No ring time saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the value below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -354,7 +352,7 @@ const CompanyRingTime = () => {
             title="Default ring time"
             summary="How many seconds a phone rings before the call gives up and moves on."
             enforced={IS_ENFORCED}
-            enforcementNote="Used as the starting point, not applied to everyone. A person whose phone has no ring time set gets this one, and it is saved the next time their settings are saved. It does NOT change anyone already set up — they keep the time they have, and nothing is rewritten behind your back. Queue members and departments still use their own ring times."
+            enforcementNote="Used as the starting point. Someone with no ring time of their own gets this one. People already set up keep the time they have."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -407,7 +405,7 @@ const CompanyRingTime = () => {
             title="Who it applies to"
             summary="Whether people added after today start with this ring time."
             enforced={IS_ENFORCED}
-            enforcementNote="Saved only. New people are still created with the built-in ring time, because the code that creates them does not look at this record. Existing people are never touched either way — this switch has never edited anyone's phone and is not intended to."
+            enforcementNote="Used when someone is set up who has no ring time of their own."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -473,10 +471,7 @@ const CompanyRingTime = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.company_ring_time</span>. Everything else in
-              that record is left untouched.
-            </p>
+              Saved for your whole company. Your other settings are not affected.</p>
             <Button
               type="button"
               variant="primary"

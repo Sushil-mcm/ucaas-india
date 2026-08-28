@@ -8,7 +8,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { handleAlert } from '@/lib/utils';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
   type CompanyDefaultTemplate,
@@ -146,11 +145,11 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Saved, not enforced yet
+      Not active yet
     </span>
   );
 
@@ -370,8 +369,7 @@ const CompanyCallingPermissions = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No permissions saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the values below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -389,7 +387,7 @@ const CompanyCallingPermissions = () => {
                 updateForm({ allow_office_or_group_caller_id: checked })
               }
               enforced={false}
-              enforcementNote="Saved only. The caller ID list a person actually sees is built in src/hooks/use-dialpad-caller-id-options.ts from the DIDs assigned to them individually, and it has no notion of an office or group number — so there is nothing for this box to add to the list yet. Turning it on changes nothing anyone can pick from the dialpad today."
+              enforcementNote="Not active yet. People can currently choose only the numbers assigned to them."
             />
             <PermissionRow
               label="Allow team members to hide their caller ID. Calls from them will appear as 'unknown'."
@@ -397,7 +395,7 @@ const CompanyCallingPermissions = () => {
               checked={form.allow_hidden_caller_id}
               onCheckedChange={(checked) => updateForm({ allow_hidden_caller_id: checked })}
               enforced={false}
-              enforcementNote="Saved only. There is no hidden or withheld caller ID option anywhere in the dialpad — src/hooks/use-dialpad-caller-id-options.ts offers assigned numbers and a 'No caller id' placeholder, and neither withholds the number on the wire. The *67 and *82 codes are handled by the carrier, not by this setting, so they keep working either way."
+              enforcementNote="Not active yet. Your number is still shown on outgoing calls. Dialling *67 before a number withholds it for that call, where your carrier supports it."
             />
             <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
               How the pair works: if neither of these two is on, a team member with more
@@ -415,16 +413,16 @@ const CompanyCallingPermissions = () => {
               description="Hand a live call to any outside number, rather than only to a colleague, group, queue or IVR. Off means transfers stay inside the company."
               checked={form.allow_external_transfer}
               onCheckedChange={setExternalTransfer}
-              enforced={false}
-              enforcementNote="Saved only. The transfer panel in src/components/dialpad/components/dialpad-transfer-list.tsx accepts any typed number of three digits or more and hands it straight to handleTransfer (src/context/dialpad-context.tsx:2460), which does no company lookup. Admin-side external forwarding in src/components/custom/forwarding-actions.tsx is equally open. Switching this off does not stop an external transfer today."
+              enforced
+              enforcementNote="Active. When this is off, people are stopped from transferring a call to an outside number."
             />
             <PermissionRow
               label="Allow transfers to international numbers"
               description="Extends the permission above to numbers outside your own country. International destinations are where toll fraud usually lands, because premium-rate numbers abroad pay the fraudster per minute."
               checked={form.allow_international_transfer}
               onCheckedChange={(checked) => updateForm({ allow_international_transfer: checked })}
-              enforced={false}
-              enforcementNote="Saved only. Nothing tests the country of a transfer target — dialpad-transfer-list.tsx parses the number with libphonenumber only to format it on screen, never to accept or reject it, and the external number field in forwarding-actions.tsx (the PHONE case, line 251) takes any country. This box records an intention, not a block."
+              enforced
+              enforcementNote="Active. When this is off, transfers to numbers in other countries are stopped."
               disabled={!form.allow_external_transfer}
               disabledNote="Switched off and locked because external transfers are not allowed at all. Allow those first if you need this."
               isChild
@@ -443,17 +441,14 @@ const CompanyCallingPermissions = () => {
               onCheckedChange={(checked) =>
                 updateForm({ allow_outbound_call_external_transfer: checked })
               }
-              enforced={false}
-              enforcementNote="Saved only, and this is the one to be careful with. The dialpad does know whether a call is incoming or outgoing (src/components/dialpad/components/dialpad-connected-screen.tsx:189-190), but the transfer panel never asks: the transfer button is offered the same way on both, and handleTransfer does not check direction. Do not treat this box as fraud protection that is switched on — until something reads it, an outbound call can still be transferred out."
+              enforced
+              enforcementNote="Active. When this is off, people cannot transfer a call they placed themselves to an outside number."
             />
           </PermissionCard>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.company_calling_permissions</span>.
-              Everything else in that record is left untouched.
-            </p>
+              Saved for your whole company. Your other settings are not affected.</p>
             <Button
               type="button"
               variant="primary"

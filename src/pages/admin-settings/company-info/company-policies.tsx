@@ -14,7 +14,6 @@ import {
 } from '@/lib/recording-announcement';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
@@ -273,11 +272,11 @@ const selectedOption = (options: { label: string; value: string }[], value: stri
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Saved, not enforced yet
+      Not active yet
     </span>
   );
 
@@ -460,7 +459,7 @@ const CompanyPolicies = () => {
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
       <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-lg font-semibold text-gray-900">Company policies</p>
+        <p className="text-lg font-semibold text-gray-900">Policies</p>
         <p className="text-xs text-gray-500">
           One set of rules for the whole company — prompt language, voicemail, call recording, how
           long we keep files and who may dial abroad.
@@ -485,8 +484,7 @@ const CompanyPolicies = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No policies saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the values below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -496,7 +494,7 @@ const CompanyPolicies = () => {
             title="Default language"
             summary="The language used for voicemail prompts and IVR menus when nothing more specific is set."
             enforced={false}
-            enforcementNote="Saved only. Prompts and IVR menus still play in whatever language their own recording or voice was built in — this choice does not change them. It gives the platform a company answer for when prompt language becomes selectable."
+            enforcementNote="Used when you record a new greeting — it opens in this language. Greetings and menus you already have keep the language they were made in."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -523,7 +521,7 @@ const CompanyPolicies = () => {
             title="Voicemail policy"
             summary="PIN strength, how long a caller may talk, and whether messages are transcribed for new users."
             enforced={false}
-            enforcementNote="Saved only. Voicemail PINs are not checked against this minimum anywhere yet, and a caller can still record for as long as the carrier allows. Transcription is set per user under User settings today; this value is the intended default for new users, not a switch that turns transcription on for anyone."
+            enforcementNote="Not active yet. These are recorded as your company's preference."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -583,7 +581,7 @@ const CompanyPolicies = () => {
             title="Call recording policy"
             summary="Whether calls are recorded across the company, and whether callers are told."
             enforced={false}
-            enforcementNote="Saved only — and this is the one to be careful with. Setting this to Off does NOT stop any recording: recording is still driven entirely by the per-user and per-template Automatic Call Recording settings, and by anyone pressing record during a call. Do not treat this card as proof that recording is off. The announcement toggle likewise plays nothing yet."
+            enforcementNote="Important: this does not switch recording off. Recording is turned on for each person under their own settings."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -676,7 +674,7 @@ const CompanyPolicies = () => {
             title="Data retention"
             summary="How long call recordings and voicemail messages are kept before deletion."
             enforced={false}
-            enforcementNote="Saved only. Nothing deletes recordings or voicemails on this schedule today — there is no retention job behind it, so files stay until someone removes them by hand. Do not rely on this card to answer a compliance or data-deletion question."
+            enforcementNote="Not active yet. Nothing is deleted automatically — recordings and messages are kept until someone removes them."
           >
             {renderRetention(
               'retention_recordings',
@@ -695,7 +693,7 @@ const CompanyPolicies = () => {
             title="International calling"
             summary="Whether a newly created user may dial abroad before an admin says otherwise."
             enforced={false}
-            enforcementNote="Saved only. There is no international-dialling check in the product yet, so a new user can dial abroad regardless of what this says. Blocked is the safer value to record, and it matches the way the safe default ships: off by default, because toll fraud usually shows up as international calls."
+            enforcementNote="Not active yet. Recorded as your preference for new people."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -720,10 +718,7 @@ const CompanyPolicies = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.company_policies</span>. Everything else in
-              that record is left untouched.
-            </p>
+              Saved for your whole company. Your other settings are not affected.</p>
             <Button
               type="button"
               variant="primary"

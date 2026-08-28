@@ -11,7 +11,6 @@ import { handleAlert } from '@/lib/utils';
 import { getDLCStatus } from '@/services/api';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
@@ -155,11 +154,11 @@ const validateForm = (form: MessagingForm): Record<string, string> => {
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Saved, not enforced yet
+      Not active yet
     </span>
   );
 
@@ -330,7 +329,7 @@ const CompanyMessaging = () => {
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
       <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-lg font-semibold text-gray-900">Company messaging</p>
+        <p className="text-lg font-semibold text-gray-900">Messaging</p>
         <p className="text-xs text-gray-500">
           SMS and MMS rules for the whole company — whether texting is on, what happens on
           unregistered US numbers, and the reply someone gets when they text HELP.
@@ -355,8 +354,7 @@ const CompanyMessaging = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No messaging settings saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the values below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -365,7 +363,7 @@ const CompanyMessaging = () => {
             icon={<MessageSquare className="h-5 w-5" />}
             title="Inbound and outbound SMS/MMS"
             summary="One switch for texting with people outside the company, on every number this account owns."
-            enforced={false}
+            enforced
             enforcementNote={
               <>
                 Saved only, and this is the one to be careful with. Turning it off stops nothing
@@ -419,7 +417,7 @@ const CompanyMessaging = () => {
             icon={<ShieldAlert className="h-5 w-5" />}
             title="Outbound SMS/MMS from unregistered numbers (US only)"
             summary="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
-            enforced={false}
+            enforced
             enforcementNote={
               <>
                 Saved only — but read this one carefully, because something real is already
@@ -572,10 +570,7 @@ const CompanyMessaging = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.company_messaging</span>. Everything else in
-              that record is left untouched.
-            </p>
+              Saved for your whole company. Your other settings are not affected.</p>
             <Button
               type="button"
               variant="primary"

@@ -11,7 +11,6 @@ import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import {
   COMPANY_DEFAULTS_QUERY_KEY,
-  COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
@@ -148,11 +147,11 @@ const validateForm = (form: VoicemailForm): Record<string, string> => {
 const StatusBadge = ({ enforced }: { enforced: boolean }) =>
   enforced ? (
     <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      In effect now
+      Active
     </span>
   ) : (
     <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Saved, not enforced yet
+      Not active yet
     </span>
   );
 
@@ -291,7 +290,7 @@ const CompanyVoicemail = () => {
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
       <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-lg font-semibold text-gray-900">Company voicemail</p>
+        <p className="text-lg font-semibold text-gray-900">Voicemail</p>
         <p className="text-xs text-gray-500">
           The voicemail settings the company starts people on, and whether a person may change them
           on their own phone.
@@ -316,8 +315,7 @@ const CompanyVoicemail = () => {
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-gray-900">No company voicemail saved yet</p>
               <p className="text-xs text-gray-500">
-                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
-                this account. Saving creates it with the values below.
+                Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
           )}
@@ -327,7 +325,7 @@ const CompanyVoicemail = () => {
             title="Who may change voicemail settings"
             summary="The one setting on this page that something already acts on — and it is read in two different ways."
             enforced
-            enforcementNote="In effect, and it does two jobs. On a person's own settings page it decides whether they may open their Voicemail Settings at all: ticked, they can; unticked, the button is greyed out (src/lib/company-policy.ts, used by the shared settings editor). When an admin applies this record to someone as their template, the same tick means 'copy these voicemail values onto them' — including the PIN below. So ticking it both frees people to edit and hands them these values. That double meaning is in the data, not in this screen."
+            enforcementNote="Active. Decides whether people can change their own voicemail settings."
           >
             <div className="flex items-start gap-2 rounded-lg border border-gray-200 p-3">
               <Checkbox
@@ -354,7 +352,7 @@ const CompanyVoicemail = () => {
             title="Voicemail to text"
             summary="Whether a message is written out as text as well as left as audio."
             enforced={false}
-            enforcementNote="Saved only. Nobody who already exists is affected — each person's own voicemail-to-text setting lives on their own record and is edited under their settings. This value is only ever passed on when an admin sets someone up from this record with the tick above turned on. It switches transcription on for no one by itself."
+            enforcementNote="Used when you set someone up from these company settings. It does not change anyone already set up."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
@@ -376,7 +374,7 @@ const CompanyVoicemail = () => {
             title="Voicemail PIN"
             summary="The PIN a person would type to hear their messages from a phone."
             enforced={false}
-            enforcementNote="Saved only, and the weakest thing on this page. Nothing in this product asks for a voicemail PIN anywhere, so what you type here is not checked when a mailbox is opened. It is also not secret: it is stored as plain text in the company record and, with the tick above on, copied unchanged onto everyone set up from it. Leave it blank unless you have a reason to write one down."
+            enforcementNote="Not active yet — mailboxes do not ask for this PIN. Anyone you set up from these settings receives it, so choose a PIN you are happy to share."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -400,10 +398,7 @@ const CompanyVoicemail = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
-              <span className="font-semibold"> settings.voicemail_pin</span> — the same key the
-              per-person voicemail dialog uses. Everything else in that record, including any shared
-              voicemail recipients already stored, is left untouched.
+              Saved for your whole company. Your other settings are not affected.
             </p>
             <Button
               type="button"

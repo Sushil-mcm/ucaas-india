@@ -347,7 +347,7 @@ const CompanyEmergencyAddress = () => {
 
   if (!canView) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
         <p className="text-sm font-semibold text-gray-900">
           You do not have permission to view the emergency address
         </p>
@@ -409,7 +409,7 @@ const CompanyEmergencyAddress = () => {
           </div>
         </div>
       ) : isError ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
           <p className="text-sm font-semibold text-gray-900">
             Could not load the saved emergency address
           </p>
@@ -421,7 +421,7 @@ const CompanyEmergencyAddress = () => {
           className="flex flex-col gap-5 rounded-xl bg-white p-4 shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 pb-3">
-            <p className="text-sm font-semibold text-gray-900">Address on record</p>
+            <p className="text-sm font-semibold text-gray-900">Emergency address</p>
             <p className="text-xs text-gray-500">
               {hasSavedAddress && savedAt
                 ? `Last saved ${savedAt.toLocaleString()} - recorded only, not routed`

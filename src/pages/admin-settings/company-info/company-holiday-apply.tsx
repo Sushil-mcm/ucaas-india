@@ -686,7 +686,7 @@ const CompanyHolidayApply = () => {
             <CalendarCheck2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-semibold text-gray-900">Apply holidays to your lines</p>
+            <p className="text-base font-semibold text-gray-900">Put these holidays on your lines</p>
             <p className="mt-0.5 text-xs text-gray-600">
               Put the {companyHolidays.length} holiday
               {companyHolidays.length === 1 ? '' : 's'} above onto your queues, IVR menus, people

@@ -570,7 +570,7 @@ const CompanyHolidays = () => {
             <CalendarDays className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-semibold text-gray-900">Company holidays</p>
+            <p className="text-base font-semibold text-gray-900">Your holiday list</p>
             <p className="mt-0.5 text-xs text-gray-600">
               One list of the days your company is closed, kept in one place instead of typed
               again into every IVR, queue and user.
