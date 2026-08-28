@@ -14,12 +14,13 @@ import { upsertUserSettingsSchema } from './schema';
 import BasicInformation from './basic-information';
 import GreetingNotification from './greetings';
 import CallRules from './call-rules';
-import { RING_TYPE_LABELS, RINGING_OPTIONS } from '@/constants/forwarding-consts';
+import { RING_TYPE_LABELS } from '@/constants/forwarding-consts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRoleList, updateMemberForwading } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { seedDeviceRingTime } from '@/lib/company-ring-time';
 import { getCompanyNewUserDefaults } from '@/lib/company-new-user-defaults';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
@@ -490,7 +491,10 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               type: item?.type || 'web',
               value: {
                 label: item?.label,
-                value: item?.timeout,
+                value: seedDeviceRingTime(
+              { label: item?.label, value: item?.timeout },
+              companyDefaults?.settings,
+            ),
               },
               option: {
                 label: item?.name,
@@ -503,7 +507,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           if (!tempObj.mobile) {
             tempObj.mobile = {
               status: true,
-              value: RINGING_OPTIONS?.[0],
+              value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'mobile',
               option: {
                 label: selectedUser?.name || '',
@@ -516,7 +520,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           if (!tempObj.pstn) {
             tempObj.pstn = {
               status: true,
-              value: RINGING_OPTIONS?.[0],
+              value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'pstn',
               option: {
                 label: selectedUser?.name || '',
@@ -529,7 +533,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           tempObj = {
             web: {
               status: true,
-              value: RINGING_OPTIONS?.[0],
+              value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'web',
               option: {
                 label: selectedUser?.name || '',
@@ -538,7 +542,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             },
             mobile: {
               status: true,
-              value: RINGING_OPTIONS?.[0],
+              value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'mobile',
               option: {
                 label: selectedUser?.name || '',
@@ -547,7 +551,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             },
             pstn: {
               status: true,
-              value: RINGING_OPTIONS?.[0],
+              value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'pstn',
               option: {
                 label: selectedUser?.name || '',

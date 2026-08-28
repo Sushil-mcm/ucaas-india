@@ -64,7 +64,7 @@ const RING_TIME_KEY = 'company_ring_time';
 const RING_TIME_SCHEMA_VERSION = 1;
 
 /* Flip this only when something outside this file genuinely reads the key. */
-const IS_ENFORCED = false;
+const IS_ENFORCED = true;
 
 /* the safe default ships 30 seconds. other established systems ships 12 and refuses anything above 60, so
    60 is the ceiling here too: offering 90 would let an admin save a number that
@@ -354,7 +354,7 @@ const CompanyRingTime = () => {
             title="Default ring time"
             summary="How many seconds a phone rings before the call gives up and moves on."
             enforced={IS_ENFORCED}
-            enforcementNote="Saved only. Changing this does not change how long any phone rings today. Nothing in the product reads it yet: a person's phone still rings for the time set per device in their own Call rules, a queue member for the time set in the queue's ring strategy, and a department member for its Member Ring Timeout. Treat this as the number you want the company to use, written down — not as a change you have made."
+            enforcementNote="Used as the starting point, not applied to everyone. A person whose phone has no ring time set gets this one, and it is saved the next time their settings are saved. It does NOT change anyone already set up — they keep the time they have, and nothing is rewritten behind your back. Queue members and departments still use their own ring times."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">

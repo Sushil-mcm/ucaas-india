@@ -27,6 +27,7 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import { FileAudio2, FileText, FileVideo2, Paperclip, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useSmsRateCredits } from '@/hooks/use-sms-rate-credits';
+import { useMessagingPermissions } from '@/hooks/use-messaging-permissions';
 
 export const validationSchema = yup.object().shape({
   from: yup
@@ -118,6 +119,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
   const [country, setCountry] = useState<string>('');
   // const totalFunds = user?.company_info?.amount ? `$${user?.company_info?.amount}` : '00.00';
   const [dlsStatus, setDlsStatus] = useState(null);
+  const { canSendTo } = useMessagingPermissions();
   const {
     handleSubmit,
     watch,
@@ -275,6 +277,17 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
     if (isUSA && dlsStatus === false) {
       setShowDLCPopup(true);
       return;
+    }
+
+    /* Company messaging rules, after the registration check so a blocked number
+       is refused once rather than twice. */
+    const messagingCheck = canSendTo(toNumberFormatted, { dlcVerified: dlsStatus });
+    if (!messagingCheck.allowed) {
+      handleAlert({ type: 'error', text: messagingCheck.message || 'Texting is switched off.' });
+      return;
+    }
+    if (messagingCheck.warning) {
+      handleAlert({ type: 'warning', text: messagingCheck.warning });
     }
     if (!normalizedText && !mmsFile) {
       handleAlert({ type: 'error', text: 'Message or media attachment is required' });

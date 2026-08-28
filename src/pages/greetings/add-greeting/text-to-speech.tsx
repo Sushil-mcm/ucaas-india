@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { UploadGreetingProps } from '@/interfaces/audio-interface';
 import { Controller, useFormContext } from 'react-hook-form';
 import CustomSelect from '@/components/custom/custom-select';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getGreetingVoiceList } from '@/services/api';
 import ReadyAudio from '@/components/custom/ready-audio';
 
@@ -73,6 +74,18 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
   const selectedVoice = watch('textToSpeechVoice');
   const [voiceOptions, setVoiceOptions] = useState<any[]>([]);
 
+  /* Start in the company's chosen language instead of making every admin pick
+     it again for every greeting. Only pre-selects when that language actually
+     has voices here — the company setting offers more languages than this
+     screen can speak, and silently switching someone to a language they did
+     not choose would be worse than leaving the field empty. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
+  const companyLanguage = companyDefaults?.settings?.company_policies?.default_language;
+
   const { mutate: mutateVoiceList, isPending: isVoiceListLoading } = useMutation({
     mutationFn: getGreetingVoiceList,
     onSuccess: (data, variables) => {
@@ -85,6 +98,16 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
       setValue('textToSpeechVoice', null, { shouldDirty: true });
     },
   });
+
+  /* Pre-selects the company language once, and only if it is empty. */
+  useEffect(() => {
+    if (selectedLocale?.value || !companyLanguage) return;
+    const match = LANGUAGE_OPTIONS.find((option) => option.value === companyLanguage);
+    if (!match) return;
+    setValue('textToSpeechLocale', match, { shouldDirty: false });
+    mutateVoiceList({ locale: match.value });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyLanguage, selectedLocale?.value]);
 
   const audioUrl = useMemo(() => {
     return WatchTextFile ? URL.createObjectURL(WatchTextFile) : null;

@@ -47,6 +47,7 @@ import {
 import SendSMSModal from './send-sms-modal';
 import SendFaxModal from './send-fax-modal';
 import FaxContent from './fax-content';
+import { useMessagingPermissions } from '@/hooks/use-messaging-permissions';
 import {
   ArrowDown,
   ArrowLeft,
@@ -933,6 +934,10 @@ const InboxContent = ({
     enabled: !!(params?.chatId && selectedDID),
   });
 
+  /* Company messaging rules, read alongside the registration status they work
+     with. */
+  const { canSendTo } = useMessagingPermissions();
+
   const { data: dlcStatus } = useQuery({
     queryKey: ['getDLCStatus'],
     queryFn: () => getDLCStatus(),
@@ -1115,6 +1120,20 @@ const InboxContent = ({
     if (isUSA && dlcStatus?.verified === false) {
       setShowDLCPopup(true);
       return;
+    }
+
+    /* The company's messaging rules. Runs after the registration check above so
+       a number blocked there is refused once, with one explanation, rather than
+       twice with two. A guard rail, not a lock: the send endpoint accepts the
+       request regardless, so this tells someone before they send rather than
+       making it impossible. */
+    const messagingCheck = canSendTo(receiverNumber, { dlcVerified: dlcStatus?.verified });
+    if (!messagingCheck.allowed) {
+      handleAlert({ type: 'error', text: messagingCheck.message || 'Texting is switched off.' });
+      return;
+    }
+    if (messagingCheck.warning) {
+      handleAlert({ type: 'warning', text: messagingCheck.warning });
     }
 
     const payload: any = {
