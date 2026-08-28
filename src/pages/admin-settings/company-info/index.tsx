@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import NewSiteSteps from './new-site-steps';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { upsertSite, siteList as fetchSiteList } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
 import { SearchLine } from '@/assets/icons';
 import SideDrawer from '@/components/custom/side-drawer';
@@ -93,6 +94,51 @@ const CompanyInfo = () => {
     setDrawerState(true);
     setRowData(site);
   };
+
+  /* Choosing the main location.
+     
+     Genesys treats this as a real setting and warns that inbound calls fail when
+     it is wrong; ours only ever displayed which location was marked. There is no
+     dedicated endpoint, so the flag is sent through the ordinary site save.
+     
+     Whether the API honours an is_default it has never been sent before is not
+     knowable from here, so the result is checked rather than assumed: the list is
+     re-read and, if the flag did not move, the admin is told it was refused
+     instead of being shown a success message for something that did not happen. */
+  const { mutate: makeMainLocation, isPending: isSettingMain } = useMutation({
+    mutationFn: (site: any) =>
+      upsertSite({
+        siteUUID: site?.uuid,
+        name: site?.name,
+        address: site?.address,
+        country: site?.country,
+        state: site?.state,
+        city: site?.city,
+        postal_code: site?.postal_code,
+        timezone: site?.timezone,
+        is_default: '1',
+      }),
+    onSuccess: async (_response: any, site: any) => {
+      const fresh: any = await fetchSiteList({ page: 1, limit: 200 });
+      const rows: any[] = fresh?.data?.data?.result?.rows || [];
+      const moved = rows.find((row: any) => row?.uuid === site?.uuid)?.is_default === '1';
+
+      queryClient.invalidateQueries({ queryKey: ['siteList'] });
+
+      handleAlert({
+        text: moved
+          ? `${site?.name || 'That location'} is now your main location.`
+          : 'The server did not accept the change, so your main location is unchanged. This needs a change on the API side.',
+        type: moved ? 'success' : 'error',
+      });
+    },
+    onError: () => {
+      handleAlert({
+        text: 'Could not change the main location. Nothing was changed.',
+        type: 'error',
+      });
+    },
+  });
 
   const handleEditSite = (site: any) => {
     if (isTrial || !canEditSites) return;
@@ -362,6 +408,17 @@ const CompanyInfo = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          {!isTrial && canEditSites && !isDefault && (
+                            <button
+                              type="button"
+                              disabled={isSettingMain}
+                              title="Make this the main location"
+                              className="cursor-pointer rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              onClick={() => makeMainLocation(site)}
+                            >
+                              Make main
+                            </button>
+                          )}
                           {!isTrial && canEditSites && (
                             <button
                               type="button"
