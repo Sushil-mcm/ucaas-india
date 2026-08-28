@@ -28,6 +28,7 @@ import IVRDetailsView from '@/components/activity-list/side-drawers/ivr-details-
 import DepartmentDetailsView from '@/components/activity-list/side-drawers/department-details-view';
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
 import TableManager from '@/components/custom/table-manager';
+import { useRecordingAccess } from '@/hooks/use-recording-access';
 
 const timeStringToSeconds = (value: string | null | undefined) => {
   const trimmedValue = String(value || '').trim();
@@ -63,6 +64,9 @@ const Outbound = () => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
   const { makeCall } = useDialpad();
+  /* Whether this person may play this particular recording, on top of the
+     plan permission above. */
+  const { canPlayRecording } = useRecordingAccess();
   const navigate = useNavigate();
 
   const [isFilter, setIsFiltered] = useState(false);
@@ -416,7 +420,7 @@ const Outbound = () => {
 
         return (
           <span className="flex text-center gap-2 items-center">
-            {callLogActionAccess?.call_recording_listen && (
+            {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
               <CustomTooltip text={hasRecording ? 'Play' : 'No recording available'} side="top">
                 <div
                   className={`${

@@ -32,6 +32,7 @@ import { getUserNameByExtension } from '@/lib/extension-utility';
 import { useUsersDirectory } from '@/hooks/use-users-directory';
 import TranscriptInfo from '@/pages/phone/transcript-info';
 import AiSessionDetailDrawer from '@/pages/admin-settings/knowledge-base/components/ai-session-detail-drawer';
+import { useRecordingAccess } from '@/hooks/use-recording-access';
 
 type CallHistoryDateFilter = {
   from?: string;
@@ -167,6 +168,9 @@ const CallHistory = ({
   const callLogActionAccess = features?.plan_features?.reports?.action || {};
   const filterRef = useRef<any>(null);
   const { makeCall, sessions } = useDialpad();
+  /* Whether this person may play this particular recording, on top of the
+     plan permission above. */
+  const { canPlayRecording } = useRecordingAccess();
   const activeDialpadSessions = useMemo(
     () => Object.values(sessions || {}).filter(isLiveDialpadSession),
     [sessions],
@@ -701,7 +705,7 @@ const CallHistory = ({
                   </div>
                 </CustomTooltip>
               )}
-              {callLogActionAccess?.call_recording_listen && (
+              {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
                 <CustomTooltip text={hasRecording ? 'Play' : 'No recording available'} side="top">
                   <div
                     className={`${

@@ -6,6 +6,7 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import GenericKey from './genericKeys';
 import { Button } from '@/components/ui/button';
+import useIvrExternalForwarding from '@/hooks/use-ivr-external-forwarding';
 
 const IvrKeyPresses = ({ initialData = {} }) => {
   const {
@@ -14,6 +15,11 @@ const IvrKeyPresses = ({ initialData = {} }) => {
     control,
     formState: { errors },
   } = useFormContext();
+
+  /* Hides the outside-number option when the company has switched off menu
+     forwarding. A menu already pointed at an outside number keeps working and
+     still shows its number — only the choice is withdrawn. */
+  const { hiddenForwardTypes } = useIvrExternalForwarding();
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'ivrActions',
@@ -85,7 +91,7 @@ const IvrKeyPresses = ({ initialData = {} }) => {
                     forwardTypeClass="w-full lg:w-1/3"
                     forwardValueClass="w-full lg:w-1/3"
                     selectCustomClassSecond="w-full"
-                    // notInclude={['IVR']}
+                    notInclude={hiddenForwardTypes}
                   />
                   <div className="flex w-full justify-end gap-2 lg:w-28">
                     {fields?.length - 1 === index && (

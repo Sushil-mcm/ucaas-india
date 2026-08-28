@@ -20,9 +20,13 @@ export interface ImportableCompanyHoliday {
   /* 'YYYY-MM-DD' as stored on the company record. */
   from: string;
   to: string;
-  /* Carried through so the line can show which dates come back next year and
-     which have to be re-added. The reader used to drop this, so a holiday the
-     admin had marked "repeats every year" arrived on the line as a one-off. */
+  /* Read from the company list so callers can see which dates repeat, but NOT
+     written onto a line. `getHolidaysPayload` in src/lib/utils.ts builds each
+     saved holiday from a fixed set of fields and silently discards anything
+     else, so a tenth key would never reach the server — it would look carried
+     through in the form and be gone after a reload. Marking a holiday as
+     repeating therefore stops at the company list until the holiday record
+     itself can hold the flag. */
   repeats_yearly?: boolean;
 }
 
@@ -155,7 +159,8 @@ export const buildHolidayImport = ({
       type: { ...action.type },
       value: { ...action.value },
       personal: action.personal,
-      repeats_yearly: Boolean(holiday.repeats_yearly),
+      /* Deliberately not copied — see the note on the type above. Writing it
+         here would be discarded on save and read as working. */
     });
   }
 

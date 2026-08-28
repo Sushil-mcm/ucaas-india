@@ -2,8 +2,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import ForwardActionAll from '@/components/custom/forward-action-all';
+import useIvrExternalForwarding from '@/hooks/use-ivr-external-forwarding';
 
 const GenericKey = () => {
+
+  /* Hides the outside-number option when the company has switched off menu
+     forwarding. A menu already pointed at an outside number keeps working and
+     still shows its number — only the choice is withdrawn. */
+  const { hiddenForwardTypes } = useIvrExternalForwarding();
   const {
     setValue,
     watch,
@@ -57,7 +63,7 @@ const GenericKey = () => {
                   forwardValue: 'generic.timeout_action.value',
                   forwardValueError: (errors?.generic as any)?.timeout_action?.value?.value
                     ?.message,
-                  notInclude: ['IVR'],
+                  notInclude: ['IVR', ...hiddenForwardTypes],
                   forwardTypeClass: 'w-full lg:w-3/5',
                   forwardValueClass: 'w-full lg:w-3/5',
                   forwardTypeLabel: 'Forward type',
@@ -112,7 +118,7 @@ const GenericKey = () => {
                   forwardValue: 'generic.failure_action.value',
                   forwardValueError: (errors?.generic as any)?.failure_action?.value?.value
                     ?.message,
-                  notInclude: ['IVR'],
+                  notInclude: ['IVR', ...hiddenForwardTypes],
                   forwardTypeClass: 'w-full lg:w-3/5',
                   forwardValueClass: 'w-full lg:w-3/5',
                   forwardTypeLabel: 'Forward type',

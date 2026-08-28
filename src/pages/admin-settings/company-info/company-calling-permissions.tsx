@@ -57,16 +57,37 @@ interface PermissionsForm {
   allow_external_transfer: boolean;
   allow_international_transfer: boolean;
   allow_outbound_call_external_transfer: boolean;
+  allow_ivr_external_forwarding: boolean;
+  ivr_external_forwarding_domestic_only: boolean;
 }
 
-/* Every default is OFF, matching the way the safe default ships each of these. Off is the
-   value that costs nothing if it is wrong. */
+/* These defaults describe what the product does TODAY, not what we would choose
+   for a brand new account.
+   
+   That distinction became load-bearing the moment the transfer switches started
+   being honoured. This page writes the whole permissions block on save, so if
+   the transfer boxes arrived unticked, an admin who opened this page to look at
+   caller ID and pressed Save would store "external transfer: not allowed" and
+   stop every outside transfer in the company — having decided nothing about
+   transfers at all. The form must therefore open showing what is actually
+   happening, so that saving changes nothing and turning a control off is always
+   a deliberate act.
+   
+   Off-by-default for new accounts is the right posture and belongs at signup,
+   where it can be a real decision rather than a side effect of a Save button.
+   
+   The two caller-ID switches stay off because off IS today's behaviour for
+   them: nothing offers a company or group number unless they are switched on. */
 const DEFAULT_FORM: PermissionsForm = {
   allow_office_or_group_caller_id: false,
   allow_hidden_caller_id: false,
-  allow_external_transfer: false,
-  allow_international_transfer: false,
-  allow_outbound_call_external_transfer: false,
+  allow_external_transfer: true,
+  allow_international_transfer: true,
+  allow_outbound_call_external_transfer: true,
+  /* True because that is what menus do today. Off-by-default belongs at signup,
+     not as a side effect of someone saving this page for another reason. */
+  allow_ivr_external_forwarding: true,
+  ivr_external_forwarding_domestic_only: false,
 };
 
 const toSettingsObject = (rawSettings: any): Record<string, any> => {
@@ -92,7 +113,12 @@ const buildFormFromSettings = (settings: Record<string, any>): PermissionsForm =
   const permissions = settings?.[PERMISSIONS_KEY] || {};
   const callerId = permissions?.caller_id || {};
   const transfers = permissions?.transfers || {};
+  const ivrForwarding = permissions?.ivr_external_forwarding || {};
 
+  const allowIvrForwarding = toBoolean(
+    ivrForwarding?.allowed,
+    DEFAULT_FORM.allow_ivr_external_forwarding,
+  );
   const allowExternalTransfer = toBoolean(
     transfers?.allow_external,
     DEFAULT_FORM.allow_external_transfer,
@@ -118,6 +144,14 @@ const buildFormFromSettings = (settings: Record<string, any>): PermissionsForm =
       transfers?.allow_outbound_call_external,
       DEFAULT_FORM.allow_outbound_call_external_transfer,
     ),
+        allow_ivr_external_forwarding: allowIvrForwarding,
+        /* Never on under a parent that is off, on read as well as on write. */
+        ivr_external_forwarding_domestic_only:
+          allowIvrForwarding &&
+          toBoolean(
+            ivrForwarding?.domestic_only,
+            DEFAULT_FORM.ivr_external_forwarding_domestic_only,
+          ),
   };
 };
 
@@ -135,6 +169,11 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
        a permission that was granted. */
     allow_international: form.allow_external_transfer && form.allow_international_transfer,
     allow_outbound_call_external: form.allow_outbound_call_external_transfer,
+  },
+  ivr_external_forwarding: {
+    allowed: form.allow_ivr_external_forwarding,
+    domestic_only:
+      form.allow_ivr_external_forwarding && form.ivr_external_forwarding_domestic_only,
   },
 });
 
@@ -294,6 +333,14 @@ const CompanyCallingPermissions = () => {
   /* Turning the parent off takes the child with it, in the form as well as in the
      payload, so the screen never shows an international permission sitting under a
      transfer permission that is switched off. */
+  /* Turning the parent off clears the child, so a stored "domestic only" can
+     never sit under a setting that is switched off. */
+  const setIvrExternalForwarding = (checked: boolean) =>
+    updateForm({
+      allow_ivr_external_forwarding: checked,
+      ivr_external_forwarding_domestic_only: checked && form.ivr_external_forwarding_domestic_only,
+    });
+
   const setExternalTransfer = (checked: boolean) =>
     updateForm({
       allow_external_transfer: checked,
@@ -443,6 +490,34 @@ const CompanyCallingPermissions = () => {
               }
               enforced
               enforcementNote="Active. When this is off, people cannot transfer a call they placed themselves to an outside number."
+            />
+          </PermissionCard>
+
+          <PermissionCard
+            icon={<ShieldAlert className="h-5 w-5" />}
+            title="Sending a caller out of a phone menu"
+            summary="Whether a menu key can pass a caller to a number outside your company."
+          >
+            <PermissionRow
+              label="Let a menu key forward to an outside number"
+              description="A caller presses a key and is passed to a number outside your company. Both halves of that call are billed to you, and the caller chooses when it happens, so this is a common route for call fraud."
+              checked={form.allow_ivr_external_forwarding}
+              onCheckedChange={(checked) => setIvrExternalForwarding(checked)}
+              enforced
+              enforcementNote="Active. When this is off, an outside number can no longer be chosen for a menu key. Menus you have already set up keep working exactly as they are."
+            />
+            <PermissionRow
+              isChild
+              label="Only to numbers in your own country"
+              description="Calls abroad are the expensive ones. Leaving this on keeps a menu from dialling out of the country."
+              checked={form.ivr_external_forwarding_domestic_only}
+              disabled={!form.allow_ivr_external_forwarding}
+              disabledNote="Turn the setting above on first."
+              onCheckedChange={(checked) =>
+                updateForm({ ivr_external_forwarding_domestic_only: checked })
+              }
+              enforced
+              enforcementNote="Active. Numbers outside your country cannot be chosen for a menu key."
             />
           </PermissionCard>
 

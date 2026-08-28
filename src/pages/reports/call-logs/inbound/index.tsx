@@ -30,6 +30,7 @@ import DepartmentDetailsView from '@/components/activity-list/side-drawers/depar
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
 import TableManager from '@/components/custom/table-manager';
 import { useDialpad } from '@/hooks/use-dialpad';
+import { useRecordingAccess } from '@/hooks/use-recording-access';
 
 const timeStringToSeconds = (value: string | null | undefined) => {
   const trimmedValue = String(value || '').trim();
@@ -65,6 +66,9 @@ const Inbound = () => {
   const tableRef = useRef<any>(null);
   const [callStats, setCallStats] = useState<any>(null);
   const { makeCall } = useDialpad();
+  /* Whether this person may play this particular recording, on top of the
+     plan permission above. */
+  const { canPlayRecording } = useRecordingAccess();
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const { user } = useUser();
@@ -413,7 +417,7 @@ const Inbound = () => {
 
         return (
           <span className="flex text-center gap-2 items-center">
-            {callLogActionAccess?.call_recording_listen && (
+            {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
               <CustomTooltip text={hasRecording ? 'Play' : 'No recording available'} side="top">
                 <div
                   className={`${

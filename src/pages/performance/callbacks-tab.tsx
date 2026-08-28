@@ -13,9 +13,13 @@ import { useCompanyFeatures } from '@/hooks/rbac';
 import { useDialpad } from '@/hooks/use-dialpad';
 import PerfStatCard from './stat-card';
 import moment from 'moment';
+import { useRecordingAccess } from '@/hooks/use-recording-access';
 
 const CallbacksTab = () => {
   const { user } = useUser();
+  /* Whether this person may play this particular recording, on top of the
+     plan permission above. */
+  const { canPlayRecording } = useRecordingAccess();
   const { features } = useCompanyFeatures();
   const { makeCall } = useDialpad();
   const callLogActionAccess = features?.plan_features?.reports?.action || {};
@@ -120,7 +124,7 @@ const CallbacksTab = () => {
 
         return (
           <span className="flex items-center gap-2">
-            {callLogActionAccess?.call_recording_listen && (
+            {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
               <CustomTooltip text={hasRecording ? 'Play' : 'No recording available'} side="top">
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full ${

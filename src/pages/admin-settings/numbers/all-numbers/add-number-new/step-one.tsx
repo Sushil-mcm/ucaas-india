@@ -16,7 +16,9 @@ import {
   getDidGroup,
   getDidPrefixes,
 } from '@/services/api';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { getCompanyDefaultCountryOption } from '@/lib/company-default-country';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { featuresLookUp, featuresObj } from '../constants';
 import { useUser } from '@/hooks/use-user';
@@ -51,6 +53,15 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
   } = formInstance;
 
   const { data: siteListData, isLoading: siteListLoading } = useGetSite();
+
+  /* The company's default country, used only to open the Location box on
+     something sensible. It never replaces a country the admin has chosen. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
+  const seededForFaxModeRef = useRef<boolean | null>(null);
   const { user } = useUser();
   const { user_info = {} } = user || {};
   const [
@@ -397,6 +408,26 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
           ),
       }));
   }, [isFaxNumber, locationData]);
+
+  /* Opens the Location box on the company's default country. Seeded once per
+     fax mode and only once the country list has arrived, because the seed has
+     to be a country this account can actually buy in. A country the admin has
+     already chosen is never touched. */
+  useEffect(() => {
+    if (seededForFaxModeRef.current === isFaxNumber) return;
+    if (!locationOptions.length) return;
+
+    const seed = getCompanyDefaultCountryOption({
+      companySettings: companyDefaults?.settings,
+      sites: siteListData,
+      options: locationOptions,
+      current: watchLocation,
+    });
+
+    seededForFaxModeRef.current = isFaxNumber;
+    if (seed) setValue('location', seed, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyDefaults, isFaxNumber, locationOptions, siteListData]);
 
   const numberTypeOptions = useMemo(
     () =>

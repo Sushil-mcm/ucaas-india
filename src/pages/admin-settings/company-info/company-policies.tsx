@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Globe, Mic, PhoneOutgoing, Voicemail, Archive } from 'lucide-react';
+import { Flag, Globe, Headphones, Mic, PhoneOutgoing, Voicemail, Archive } from 'lucide-react';
 
 import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
+import { COUNTRY_OPTIONS } from '@/lib/company-default-country';
 import {
   COMPLIANT_RECORDING_ANNOUNCEMENTS,
   validateRecordingAnnouncement,
@@ -96,6 +97,9 @@ interface PoliciesForm {
   recording_mode: string;
   recording_announcement: boolean;
   recording_announcement_text: string;
+  default_country: string;
+  recording_access_own: boolean;
+  recording_access_admins_all: boolean;
   retention_recordings: RetentionForm;
   retention_voicemails: RetentionForm;
   international_new_user_default: string;
@@ -110,6 +114,12 @@ const DEFAULT_FORM: PoliciesForm = {
   // Announcement defaults on: in most places it is the caller's legal notice.
   recording_announcement: true,
   recording_announcement_text: '',
+  /* Both true, matching how the product behaves today, so switching this on
+     changes nothing until an admin decides otherwise. */
+  /* Empty means not chosen, which is exactly today's behaviour. */
+  default_country: '',
+  recording_access_own: true,
+  recording_access_admins_all: true,
   retention_recordings: { mode: 'indefinite', days: '30' },
   retention_voicemails: { mode: 'indefinite', days: '30' },
   // established systems blocks international dialling by default as fraud prevention. Same here.
@@ -175,6 +185,21 @@ const buildFormFromSettings = (settings: Record<string, any>): PoliciesForm => {
         ? recording.announcement_to_caller
         : DEFAULT_FORM.recording_announcement,
     recording_announcement_text: `${recording?.announcement_text || ''}`,
+    /* Only a stored boolean counts as a decision. A tenant that never opened
+       this page has no value here, and reading that as "no" would take away
+       everyone's own recordings the day this ships. */
+    default_country:
+      COUNTRY_OPTIONS.find(
+        (option) => option.value === String(policies?.default_country || '').toUpperCase(),
+      )?.value || DEFAULT_FORM.default_country,
+    recording_access_own:
+      typeof policies?.recording_access?.own === 'boolean'
+        ? policies.recording_access.own
+        : DEFAULT_FORM.recording_access_own,
+    recording_access_admins_all:
+      typeof policies?.recording_access?.admins_all === 'boolean'
+        ? policies.recording_access.admins_all
+        : DEFAULT_FORM.recording_access_admins_all,
     retention_recordings: toRetentionForm(
       retention?.call_recordings,
       DEFAULT_FORM.retention_recordings,
@@ -206,6 +231,11 @@ const buildPoliciesPayload = (form: PoliciesForm) => ({
     mode: form.recording_mode,
     announcement_to_caller: form.recording_announcement,
     announcement_text: form.recording_announcement_text.trim(),
+  },
+  default_country: form.default_country || null,
+  recording_access: {
+    own: form.recording_access_own,
+    admins_all: form.recording_access_admins_all,
   },
   data_retention: {
     call_recordings: buildRetentionPayload(form.retention_recordings),
@@ -513,6 +543,63 @@ const CompanyPolicies = () => {
                   to English.
                 </p>
               </div>
+            </div>
+          </PolicyCard>
+
+          <PolicyCard
+            icon={<Flag className="h-5 w-5" />}
+            title="Default country"
+            summary="The country your number search opens on."
+            enforced
+            enforcementNote="Active. When you buy a number, the country box starts here. You can still choose a different country for any purchase."
+          >
+            <CustomSelect
+              label="Default country"
+              options={COUNTRY_OPTIONS}
+              value={selectedOption(COUNTRY_OPTIONS, form.default_country)}
+              placeholder="No default chosen"
+              handleChange={(option: any) =>
+                updateForm({ default_country: option?.value || '' })
+              }
+            />
+          </PolicyCard>
+
+          <PolicyCard
+            icon={<Headphones className="h-5 w-5" />}
+            title="Who may listen to call recordings"
+            summary="Whether people can play their own calls back, and whether admins can play anyone's."
+            enforced
+            enforcementNote="Active. Turning one off hides the play button for those recordings. It does not stop someone who already has a direct link to the file."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">People can play their own calls</p>
+                <p className="text-xs text-gray-500">
+                  Off means nobody can listen back to their own recorded calls.
+                </p>
+              </div>
+              <Switch
+                checked={form.recording_access_own}
+                onCheckedChange={(checked) => updateForm({ recording_access_own: checked })}
+              />
+            </div>
+            <div className="mt-3 flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Admins can play anyone&rsquo;s calls
+                </p>
+                <p className="text-xs text-gray-500">
+                  Off means an admin sees only their own recordings. Please tell your team before
+                  changing this &mdash; listening to someone&rsquo;s calls is something they expect
+                  to know about.
+                </p>
+              </div>
+              <Switch
+                checked={form.recording_access_admins_all}
+                onCheckedChange={(checked) =>
+                  updateForm({ recording_access_admins_all: checked })
+                }
+              />
             </div>
           </PolicyCard>
 
