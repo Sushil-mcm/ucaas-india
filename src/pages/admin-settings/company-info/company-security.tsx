@@ -1,0 +1,992 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { KeyRound, ShieldCheck, Timer, Network, Info, UserMinus } from 'lucide-react';
+
+import Loader from '@/components/custom/loader';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { handleAlert } from '@/lib/utils';
+import { getUserList } from '@/services/api';
+import {
+  COMPANY_DEFAULTS_QUERY_KEY,
+  COMPANY_DEFAULT_TEMPLATE_NAME,
+  fetchCompanyDefaults,
+  saveCompanyDefaults,
+} from '@/lib/company-defaults';
+
+/**
+ * Company security
+ * -----------------------------------------------------------------------------
+ * This platform already has a "Security & Privacy" page, but it lives under
+ * My Account (src/pages/settings/security/index.tsx) and it is personal: your
+ * own password, your own signed-in devices. There was no place to write down a
+ * rule that applies to the whole company. This page is that place.
+ *
+ * Storage follows the same route as the rest of Company info: the reserved
+ * user_template row called "Company Default", whose `settings` column is a
+ * free-form JSON blob. Everything written from here is namespaced under
+ * `settings.company_security`, and the rest of the blob is spread through
+ * untouched on save.
+ *
+ * ---------------------------------------------------------------------------
+ * READ THIS BEFORE YOU TRUST THIS PAGE
+ * ---------------------------------------------------------------------------
+ * Nothing on this page is enforced. Every control here writes a value into a
+ * JSON blob and stops. Grepped on the date this file was written:
+ *
+ *   grep -rni "mfa|two_factor|2fa"                 --include=*.ts(x) src/  -> 0 hits
+ *   grep -rni "idle_timeout|session_timeout"       --include=*.ts(x) src/  -> 0 hits
+ *   grep -rni "cidr|allowlist|ip_whitelist"        --include=*.ts(x) src/  -> 0 hits
+ *   grep -rni "saml|idp|entity_id"                 --include=*.ts(x) src/  -> 0 hits
+ *   grep -rn  "company_security"                   --include=*.ts(x) src/  -> only this file
+ *
+ * Nothing reads any of these keys. There is no MFA challenge in the sign-in
+ * flow, no inactivity timer, no request-time IP check and no SAML handler.
+ * All five settings need backend / auth-layer work before they do anything.
+ *
+ * A security page that looks live but is not is worse than no page at all,
+ * because an admin reads it and believes they are covered. Every card below
+ * says, in its own words, exactly what is and is not happening. If the backend
+ * ever starts honouring one of these keys, change that card's `enforced` flag
+ * and rewrite its note — do not leave a stale reassurance in place.
+ */
+
+const SECURITY_KEY = 'company_security';
+const SECURITY_SCHEMA_VERSION = 1;
+
+/* Genesys: minimum 300 seconds (5 minutes), maximum 28800 seconds (8 hours).
+   Expressed in minutes here because that is how an admin thinks about it; the
+   value is stored in seconds, which is the unit Genesys itself uses. */
+const IDLE_MIN_MINUTES = 5;
+const IDLE_MAX_MINUTES = 480;
+const IDLE_HIPAA_MINUTES = 15;
+
+/* Genesys caps the allowlist at 150 blocks and accepts IPv4 only. */
+const MAX_CIDR_BLOCKS = 150;
+
+/* Roles this platform treats as administrative. Dialpad's hard rule is that
+   Company, Office and Regional Admins cannot be put on the MFA exception list;
+   this account's nearest equivalents are ADMIN and SUB-ADMIN, plus any custom
+   role someone has named with "admin" in it. Matching on the name as well as
+   the fixed roles is deliberate: a custom role called "Billing Admin" carries
+   admin powers here even though it is not one of the built-in values. */
+const FIXED_ADMIN_ROLES = ['ADMIN', 'SUB-ADMIN', 'SUPER-ADMIN', 'SUPERADMIN'];
+
+interface SecurityForm {
+  mfa_required: boolean;
+  mfa_exempt_user_uuids: string[];
+  idle_timeout_enabled: boolean;
+  idle_timeout_minutes: string;
+  ip_allowlist_enabled: boolean;
+  ip_allowlist_text: string;
+  sso_enabled: boolean;
+  sso_idp_entity_id: string;
+  sso_idp_sso_url: string;
+  sso_idp_certificate: string;
+  sso_single_logout_uri: string;
+}
+
+const DEFAULT_FORM: SecurityForm = {
+  /* On by default, following Dialpad's posture: Dialpad makes MFA mandatory for
+     every user who is not signing in through SSO. Genesys treats it as optional
+     and only ever applies it to native logins. Recording the stricter of the
+     two as the company's intent is the safer default to write down. */
+  mfa_required: true,
+  mfa_exempt_user_uuids: [],
+  idle_timeout_enabled: false,
+  idle_timeout_minutes: '30',
+  ip_allowlist_enabled: false,
+  ip_allowlist_text: '',
+  sso_enabled: false,
+  sso_idp_entity_id: '',
+  sso_idp_sso_url: '',
+  sso_idp_certificate: '',
+  sso_single_logout_uri: '',
+};
+
+const toSettingsObject = (rawSettings: any): Record<string, any> => {
+  if (!rawSettings) return {};
+  if (typeof rawSettings === 'string') {
+    try {
+      const parsed = JSON.parse(rawSettings);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof rawSettings === 'object' ? rawSettings : {};
+};
+
+const toGreetingsObject = (rawGreetings: any): Record<string, any> =>
+  toSettingsObject(rawGreetings);
+
+const toStringValue = (value: any, fallback: string): string =>
+  typeof value === 'string' ? value : typeof value === 'number' ? String(value) : fallback;
+
+const toBoolean = (value: any, fallback: boolean): boolean =>
+  typeof value === 'boolean' ? value : fallback;
+
+const toUuidList = (value: any): string[] =>
+  Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item.trim() !== '') : [];
+
+const buildFormFromSettings = (settings: Record<string, any>): SecurityForm => {
+  const security = settings?.[SECURITY_KEY] || {};
+  const mfa = security?.mfa || {};
+  const idle = security?.idle_timeout || {};
+  const allowlist = security?.ip_allowlist || {};
+  const sso = security?.sso || {};
+
+  const storedSeconds = Number(idle?.seconds);
+  const storedMinutes =
+    Number.isFinite(storedSeconds) && storedSeconds > 0
+      ? String(Math.round(storedSeconds / 60))
+      : DEFAULT_FORM.idle_timeout_minutes;
+
+  return {
+    mfa_required: toBoolean(mfa?.required, DEFAULT_FORM.mfa_required),
+    mfa_exempt_user_uuids: toUuidList(mfa?.exempt_user_uuids),
+    idle_timeout_enabled: toBoolean(idle?.enabled, DEFAULT_FORM.idle_timeout_enabled),
+    idle_timeout_minutes: storedMinutes,
+    ip_allowlist_enabled: toBoolean(allowlist?.enabled, DEFAULT_FORM.ip_allowlist_enabled),
+    ip_allowlist_text: Array.isArray(allowlist?.cidr_blocks)
+      ? allowlist.cidr_blocks.filter((block: any) => typeof block === 'string').join('\n')
+      : DEFAULT_FORM.ip_allowlist_text,
+    sso_enabled: toBoolean(sso?.enabled, DEFAULT_FORM.sso_enabled),
+    sso_idp_entity_id: toStringValue(sso?.idp_entity_id, DEFAULT_FORM.sso_idp_entity_id),
+    sso_idp_sso_url: toStringValue(sso?.idp_sso_url, DEFAULT_FORM.sso_idp_sso_url),
+    sso_idp_certificate: toStringValue(sso?.idp_certificate, DEFAULT_FORM.sso_idp_certificate),
+    sso_single_logout_uri: toStringValue(
+      sso?.single_logout_uri,
+      DEFAULT_FORM.sso_single_logout_uri,
+    ),
+  };
+};
+
+/** Splits the textarea into trimmed, non-empty lines. */
+const parseCidrLines = (text: string): string[] =>
+  text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '');
+
+const buildSecurityPayload = (form: SecurityForm) => ({
+  version: SECURITY_SCHEMA_VERSION,
+  updated_at: new Date().toISOString(),
+  mfa: {
+    required: form.mfa_required,
+    /* Kept empty when MFA is not required, so a later reader can never mistake
+       a leftover exception list for people who are currently being skipped. */
+    exempt_user_uuids: form.mfa_required ? form.mfa_exempt_user_uuids : [],
+  },
+  idle_timeout: {
+    enabled: form.idle_timeout_enabled,
+    // Seconds, matching the unit Genesys stores and validates in.
+    seconds: form.idle_timeout_enabled ? Number(form.idle_timeout_minutes) * 60 : null,
+  },
+  ip_allowlist: {
+    enabled: form.ip_allowlist_enabled,
+    cidr_blocks: form.ip_allowlist_enabled ? parseCidrLines(form.ip_allowlist_text) : [],
+  },
+  sso: {
+    enabled: form.sso_enabled,
+    idp_entity_id: form.sso_idp_entity_id.trim(),
+    idp_sso_url: form.sso_idp_sso_url.trim(),
+    idp_certificate: form.sso_idp_certificate.trim(),
+    single_logout_uri: form.sso_single_logout_uri.trim(),
+  },
+});
+
+const isWholeNumberInRange = (value: string, min: number, max: number) => {
+  if (!/^\d+$/.test(value.trim())) return false;
+  const parsed = Number(value);
+  return parsed >= min && parsed <= max;
+};
+
+/* IPv4 CIDR only, because that is all Genesys accepts. Written out rather than
+   pulled from a library so the rules are visible: four octets of 0-255, then a
+   prefix length of 0-32. An IPv6 block is detected separately so the error can
+   say why it was refused instead of just "invalid". */
+const isIpv4Cidr = (block: string): boolean => {
+  const match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/.exec(block);
+  if (!match) return false;
+  const octets = [match[1], match[2], match[3], match[4]];
+  if (octets.some((octet) => octet.length > 1 && octet.startsWith('0'))) return false;
+  if (octets.some((octet) => Number(octet) > 255)) return false;
+  const prefix = match[5];
+  if (prefix.length > 1 && prefix.startsWith('0')) return false;
+  return Number(prefix) <= 32;
+};
+
+const looksLikeIpv6 = (block: string): boolean => block.includes(':');
+
+const isHttpsUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const isAdminRole = (roleName: string): boolean => {
+  const normalised = roleName.trim().toUpperCase();
+  if (!normalised) return false;
+  return FIXED_ADMIN_ROLES.includes(normalised) || normalised.includes('ADMIN');
+};
+
+interface RosterPerson {
+  uuid: string;
+  name: string;
+  extension: string;
+  email: string;
+  roleName: string;
+  isAdmin: boolean;
+}
+
+const toRosterPerson = (person: any): RosterPerson | null => {
+  const uuid = String(person?.uuid || person?.user_uuid || '');
+  if (!uuid) return null;
+  const roleName = String(
+    person?.custom_role_data?.name || person?.role_data?.name || person?.role || '',
+  );
+  return {
+    uuid,
+    name:
+      `${person?.first_name || ''} ${person?.last_name || ''}`.trim() ||
+      String(person?.email || 'Unnamed user'),
+    extension: String(person?.extension || ''),
+    email: String(person?.email || ''),
+    roleName: roleName || 'No role',
+    isAdmin: isAdminRole(roleName),
+  };
+};
+
+/**
+ * The honesty badge. `enforced` is only ever passed `true` once the auth layer
+ * genuinely acts on that key. Today every card passes `false`.
+ */
+const StatusBadge = ({ enforced }: { enforced: boolean }) =>
+  enforced ? (
+    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
+      In effect now
+    </span>
+  ) : (
+    <span className="rounded-sm bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700">
+      Saved, not enforced
+    </span>
+  );
+
+interface SecurityCardProps {
+  icon: React.ReactNode;
+  title: string;
+  summary: string;
+  enforced: boolean;
+  enforcementNote: string;
+  children: React.ReactNode;
+}
+
+const SecurityCard = ({
+  icon,
+  title,
+  summary,
+  enforced,
+  enforcementNote,
+  children,
+}: SecurityCardProps) => (
+  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
+        {icon}
+      </div>
+      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-base font-semibold text-gray-900">{title}</p>
+          <StatusBadge enforced={enforced} />
+        </div>
+        <p className="text-xs text-gray-500">{summary}</p>
+      </div>
+    </div>
+    <div className="flex flex-col gap-4 p-4">
+      {children}
+      <p
+        className={`rounded-lg border px-3 py-2 text-xs ${
+          enforced
+            ? 'border-green-200 bg-green-50 text-green-800'
+            : 'border-red-200 bg-red-50 text-red-800'
+        }`}
+      >
+        {enforcementNote}
+      </p>
+    </div>
+  </div>
+);
+
+const textareaClass =
+  'w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none placeholder:text-gray-400 hover:border-primary focus:border-primary disabled:bg-gray-100 disabled:text-slate-500';
+
+const CompanySecurity = () => {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<SecurityForm>(DEFAULT_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [peopleSearch, setPeopleSearch] = useState('');
+  /* The lockout acknowledgement is deliberately not stored: it is a decision
+     made at the moment of saving, not a company setting. Re-ticking it on every
+     save is the point. */
+  const [lockoutAcknowledged, setLockoutAcknowledged] = useState(false);
+
+  const {
+    data: companyDefaultTemplate = null,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+  });
+
+  /* The exception list needs real people to choose from, and it needs each
+     person's role so the admin rule can actually be applied rather than merely
+     described. Read-only use of the existing roster endpoint. */
+  const { data: roster = [], isLoading: isRosterLoading } = useQuery({
+    queryKey: ['companySecurityRoster'],
+    queryFn: () => getUserList({ page: 1, limit: 500 }),
+    select: (response: any): RosterPerson[] =>
+      ((response?.data?.data?.result?.rows || []) as any[])
+        .map(toRosterPerson)
+        .filter((person): person is RosterPerson => person !== null),
+  });
+
+  const savedSettings = useMemo(
+    () => toSettingsObject(companyDefaultTemplate?.settings),
+    [companyDefaultTemplate],
+  );
+
+  const savedForm = useMemo(() => buildFormFromSettings(savedSettings), [savedSettings]);
+
+  useEffect(() => {
+    setForm(savedForm);
+    setErrors({});
+    setLockoutAcknowledged(false);
+  }, [savedForm]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(savedForm),
+    [form, savedForm],
+  );
+
+  const { mutate: saveSecurity, isPending: isSaving } = useMutation({
+    mutationFn: saveCompanyDefaults,
+    onSuccess: (response: any) => {
+      handleAlert({
+        text: response?.data?.message || 'Company security settings saved',
+        type: 'success',
+      });
+      /* The whole company record is invalidated, not just this page. Policies,
+         holidays and the emergency address all live in the same row, so a save
+         here must make them re-read — otherwise the next page saves a merge
+         built on a stale blob and silently drops what was just written. */
+      queryClient.invalidateQueries({ queryKey: COMPANY_DEFAULTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['userTemplateList'] });
+      setLockoutAcknowledged(false);
+    },
+  });
+
+  const updateForm = (patch: Partial<SecurityForm>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const rosterByUuid = useMemo(() => {
+    const map = new Map<string, RosterPerson>();
+    roster.forEach((person) => map.set(person.uuid, person));
+    return map;
+  }, [roster]);
+
+  const filteredRoster = useMemo(() => {
+    const needle = peopleSearch.trim().toLowerCase();
+    if (!needle) return roster;
+    return roster.filter((person) =>
+      `${person.name} ${person.extension} ${person.email} ${person.roleName}`
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [roster, peopleSearch]);
+
+  /* Someone can be exempted today and promoted to admin tomorrow. When that
+     happens the stored list quietly breaks Dialpad's rule, so those entries are
+     surfaced rather than hidden — an exception nobody can see is the dangerous
+     kind. */
+  const exemptAdmins = useMemo(
+    () =>
+      form.mfa_exempt_user_uuids
+        .map((uuid) => rosterByUuid.get(uuid))
+        .filter((person): person is RosterPerson => Boolean(person?.isAdmin)),
+    [form.mfa_exempt_user_uuids, rosterByUuid],
+  );
+
+  const cidrBlocks = useMemo(
+    () => parseCidrLines(form.ip_allowlist_text),
+    [form.ip_allowlist_text],
+  );
+
+  const toggleExempt = (person: RosterPerson, checked: boolean) => {
+    // Dialpad's hard rule, enforced rather than merely written in the helper text.
+    if (checked && person.isAdmin) {
+      handleAlert({
+        text: `${person.name} holds the ${person.roleName} role. Admins cannot be exempted from MFA.`,
+        type: 'error',
+      });
+      return;
+    }
+    const next = checked
+      ? Array.from(new Set([...form.mfa_exempt_user_uuids, person.uuid]))
+      : form.mfa_exempt_user_uuids.filter((uuid) => uuid !== person.uuid);
+    updateForm({ mfa_exempt_user_uuids: next });
+  };
+
+  const validateForm = (): Record<string, string> => {
+    const nextErrors: Record<string, string> = {};
+
+    if (form.mfa_required && exemptAdmins.length) {
+      nextErrors.mfa_exempt_user_uuids = `Remove ${exemptAdmins
+        .map((person) => person.name)
+        .join(', ')} from the exception list — admins cannot skip MFA.`;
+    }
+
+    if (
+      form.idle_timeout_enabled &&
+      !isWholeNumberInRange(form.idle_timeout_minutes, IDLE_MIN_MINUTES, IDLE_MAX_MINUTES)
+    ) {
+      nextErrors.idle_timeout_minutes = `Enter a whole number of minutes between ${IDLE_MIN_MINUTES} and ${IDLE_MAX_MINUTES} (8 hours)`;
+    }
+
+    if (form.ip_allowlist_enabled) {
+      if (!cidrBlocks.length) {
+        nextErrors.ip_allowlist_text =
+          'Add at least one CIDR block, or turn the allowlist off. An empty allowlist that is switched on would mean nobody.';
+      } else if (cidrBlocks.length > MAX_CIDR_BLOCKS) {
+        nextErrors.ip_allowlist_text = `${cidrBlocks.length} blocks entered. The limit is ${MAX_CIDR_BLOCKS}.`;
+      } else {
+        const ipv6 = cidrBlocks.filter(looksLikeIpv6);
+        const invalid = cidrBlocks.filter((block) => !looksLikeIpv6(block) && !isIpv4Cidr(block));
+        if (ipv6.length) {
+          nextErrors.ip_allowlist_text = `IPv6 is not supported: ${ipv6.slice(0, 3).join(', ')}${
+            ipv6.length > 3 ? ` and ${ipv6.length - 3} more` : ''
+          }. Use IPv4 blocks such as 203.0.113.0/24.`;
+        } else if (invalid.length) {
+          nextErrors.ip_allowlist_text = `Not valid IPv4 CIDR: ${invalid.slice(0, 3).join(', ')}${
+            invalid.length > 3 ? ` and ${invalid.length - 3} more` : ''
+          }. Each line must look like 203.0.113.0/24.`;
+        } else if (!lockoutAcknowledged) {
+          nextErrors.ip_allowlist_text =
+            'Confirm you have checked that your own public IP falls inside one of these blocks.';
+        }
+      }
+    }
+
+    if (form.sso_enabled) {
+      if (!form.sso_idp_entity_id.trim()) {
+        nextErrors.sso_idp_entity_id = 'Required when SSO is switched on';
+      }
+      if (!form.sso_idp_sso_url.trim()) {
+        nextErrors.sso_idp_sso_url = 'Required when SSO is switched on';
+      } else if (!isHttpsUrl(form.sso_idp_sso_url.trim())) {
+        nextErrors.sso_idp_sso_url = 'Must be a full https:// URL from your identity provider';
+      }
+      if (!form.sso_idp_certificate.trim()) {
+        nextErrors.sso_idp_certificate = 'Required when SSO is switched on';
+      } else if (!form.sso_idp_certificate.includes('BEGIN CERTIFICATE')) {
+        nextErrors.sso_idp_certificate =
+          'Paste the whole PEM certificate, including the BEGIN CERTIFICATE and END CERTIFICATE lines';
+      }
+      if (form.sso_single_logout_uri.trim() && !isHttpsUrl(form.sso_single_logout_uri.trim())) {
+        nextErrors.sso_single_logout_uri = 'Leave blank, or enter a full https:// URL';
+      }
+    }
+
+    return nextErrors;
+  };
+
+  const handleSave = () => {
+    const nextErrors = validateForm();
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      handleAlert({ text: 'Please fix the highlighted fields', type: 'error' });
+      return;
+    }
+
+    // Merge, never replace: the Company Default row carries the rest of the
+    // company defaults blob, and other screens write into it.
+    const nextSettings = {
+      ...savedSettings,
+      [SECURITY_KEY]: buildSecurityPayload(form),
+    };
+
+    saveSecurity({
+      uuid: companyDefaultTemplate?.uuid,
+      settings: nextSettings,
+      greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center py-10">
+        <Loader />
+      </div>
+    );
+  }
+
+  return (
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+        <p className="text-lg font-semibold text-gray-900">Company security</p>
+        <p className="text-xs text-gray-500">
+          Security rules for everyone in the company. The Security &amp; Privacy page under My
+          Account covers only your own password and devices — this one is company-wide.
+        </p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+          {/* Loud, once, at the top — then specifically again on every card. */}
+          <div className="rounded-xl border border-red-300 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-900">
+              None of this is switched on yet. Do not treat this page as protection.
+            </p>
+            <p className="mt-1 text-xs text-red-800">
+              Every setting below is written into a stored record and nothing else reads it. There
+              is no MFA prompt in the sign-in flow, no inactivity timer, no IP check on requests and
+              no SAML handler anywhere in this product. Recording &ldquo;MFA required&rdquo; here
+              does not make anyone get an MFA challenge. All five settings need work in the backend
+              and the sign-in layer before they take effect. Until then this page is a written-down
+              intention — useful for agreeing the policy and for handing the values to whoever
+              builds the enforcement, and useless as a defence.
+            </p>
+          </div>
+
+          {isError && (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-gray-900">
+                We could not load the saved security settings
+              </p>
+              <p className="text-xs text-gray-500">
+                What you see below are the built-in defaults, not your saved values. Reload before
+                you save, or you may overwrite settings you cannot currently see.
+              </p>
+            </div>
+          )}
+
+          {!companyDefaultTemplate && !isError && (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
+              <p className="text-sm font-semibold text-gray-900">No security settings saved yet</p>
+              <p className="text-xs text-gray-500">
+                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
+                this account. Saving creates it with the values below.
+              </p>
+            </div>
+          )}
+
+          <SecurityCard
+            icon={<ShieldCheck className="h-5 w-5" />}
+            title="Require multi-factor authentication"
+            summary="Whether everyone signing in with a password must also pass a second check."
+            enforced={false}
+            enforcementNote="Saved only, and this is the one to be clearest about: turning this on does not make anyone get an MFA prompt. There is no second factor in the sign-in flow at all — no enrolment, no codes, no authenticator. Someone with a valid password gets in exactly as they do today. Until the auth layer reads this key, an account is protected by its password alone."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Require MFA for password sign-in
+                </p>
+                <p className="text-xs text-gray-500">
+                  On by default, which is Dialpad&rsquo;s posture: there MFA is mandatory for every
+                  user who is not signing in through SSO, and cannot be switched off. Genesys treats
+                  it as optional and applies it to native logins only — an SSO user is never
+                  prompted, because the identity provider has already done the checking. Recording
+                  the stricter of the two is the safer intent to write down.
+                </p>
+              </div>
+              <Switch
+                checked={form.mfa_required}
+                onCheckedChange={(checked) => updateForm({ mfa_required: checked })}
+              />
+            </div>
+          </SecurityCard>
+
+          <SecurityCard
+            icon={<UserMinus className="h-5 w-5" />}
+            title="MFA exception list"
+            summary="The named people who would be allowed to sign in without the second check."
+            enforced={false}
+            enforcementNote="Saved only. Nothing reads this list, so being on it changes nothing today — and neither does being off it, because MFA is not running in the first place. The admin rule below is applied here in the browser, which stops the list being built wrongly; it is not a guarantee, since nothing stops the underlying record being written another way."
+          >
+            {!form.mfa_required && (
+              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                MFA is not required, so an exception list has nothing to except anyone from. Turn
+                the requirement on above to edit it. Any names already saved are kept but are
+                cleared from the stored record while the requirement is off.
+              </p>
+            )}
+
+            <p className="text-xs text-gray-500">
+              Dialpad&rsquo;s hard rule: Company, Office and Regional Admins can never be added to
+              the exception list — the accounts with the most power are the ones that must not skip
+              the second factor. This account&rsquo;s equivalents are the Admin and Sub-Admin roles,
+              plus any custom role with &ldquo;admin&rdquo; in its name. Those rows are locked
+              below.
+            </p>
+
+            {Boolean(exemptAdmins.length) && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                {exemptAdmins.map((person) => person.name).join(', ')}{' '}
+                {exemptAdmins.length === 1 ? 'is' : 'are'} on this list but now hold an admin role —
+                most likely promoted after being added. Untick{' '}
+                {exemptAdmins.length === 1 ? 'them' : 'those names'} before saving.
+              </p>
+            )}
+
+            <Input
+              placeholder="Search people by name, extension, email or role"
+              value={peopleSearch}
+              disabled={!form.mfa_required}
+              onChange={(event) => setPeopleSearch(event.target.value)}
+            />
+
+            {errors.mfa_exempt_user_uuids && (
+              <p className="text-xs font-semibold text-red-600">{errors.mfa_exempt_user_uuids}</p>
+            )}
+
+            <div className="max-h-[320px] overflow-y-auto rounded-lg border border-gray-200">
+              {isRosterLoading && (
+                <p className="px-3 py-4 text-xs text-gray-500">Loading people…</p>
+              )}
+              {!isRosterLoading && !filteredRoster.length && (
+                <p className="px-3 py-4 text-xs text-gray-500">
+                  {roster.length
+                    ? 'Nobody matches that search.'
+                    : 'No people were returned for this account.'}
+                </p>
+              )}
+              {filteredRoster.map((person) => {
+                const isChecked = form.mfa_exempt_user_uuids.includes(person.uuid);
+                const isLocked = person.isAdmin || !form.mfa_required;
+                return (
+                  <div
+                    key={person.uuid}
+                    className="flex items-center gap-3 border-b border-gray-100 px-3 py-2 last:border-b-0"
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      disabled={isLocked && !isChecked}
+                      onCheckedChange={(checked) => toggleExempt(person, checked === true)}
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <p className="truncate text-sm text-gray-900">
+                        {person.name}
+                        {person.extension ? (
+                          <span className="text-gray-500"> · ext {person.extension}</span>
+                        ) : null}
+                      </p>
+                      <p className="truncate text-xs text-gray-500">{person.roleName}</p>
+                    </div>
+                    {person.isAdmin && (
+                      <span className="shrink-0 rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                        Admin — cannot be exempted
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </SecurityCard>
+
+          <SecurityCard
+            icon={<Timer className="h-5 w-5" />}
+            title="Idle timeout"
+            summary="How long someone can leave the console untouched before they are signed out."
+            enforced={false}
+            enforcementNote="Saved only. There is no inactivity timer in this app — no activity tracking, no countdown, no automatic sign-out. A session left open on an unlocked laptop stays open. Whatever number you set here, the real behaviour today is unchanged."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">Sign people out when idle</p>
+                <p className="text-xs text-gray-500">
+                  Off by default, matching Genesys, where the timeout is something an org switches
+                  on deliberately.
+                </p>
+              </div>
+              <Switch
+                checked={form.idle_timeout_enabled}
+                onCheckedChange={(checked) => updateForm({ idle_timeout_enabled: checked })}
+              />
+            </div>
+
+            {form.idle_timeout_enabled && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <Input
+                    type="number"
+                    min={IDLE_MIN_MINUTES}
+                    max={IDLE_MAX_MINUTES}
+                    label="Idle timeout (minutes)"
+                    value={form.idle_timeout_minutes}
+                    error={errors.idle_timeout_minutes}
+                    onChange={(event) => updateForm({ idle_timeout_minutes: event.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Between {IDLE_MIN_MINUTES} minutes and {IDLE_MAX_MINUTES} minutes (8 hours) —
+                    the same range Genesys allows, which it stores as 300 to 28800 seconds. Stored
+                    here in seconds too.
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    Genesys forces HIPAA-enabled organisations down to {IDLE_HIPAA_MINUTES} minutes
+                    and does not let them choose. This platform has no HIPAA flag, so nothing is
+                    forced here. If you are handling health data, set {IDLE_HIPAA_MINUTES} yourself
+                    — and remember it will not be applied until the timer is actually built.
+                  </p>
+                </div>
+              </div>
+            )}
+          </SecurityCard>
+
+          <SecurityCard
+            icon={<Network className="h-5 w-5" />}
+            title="IP allowlist"
+            summary="The networks people are allowed to sign in from, written as IPv4 CIDR blocks."
+            enforced={false}
+            enforcementNote="Saved only — and this is the setting most likely to be misread as protection. There is no IP check anywhere: not at sign-in, not on API requests. Someone on any network can sign in exactly as they can today, whatever is in this box. Note also that this platform's backend has no authorisation middleware at all right now, so an IP rule enforced in the browser would be no rule at all. This list is a record of intent for whoever builds the check."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">Restrict sign-in by IP address</p>
+                <p className="text-xs text-gray-500">
+                  When this is off, no network restriction is recorded and the saved list is
+                  cleared.
+                </p>
+              </div>
+              <Switch
+                checked={form.ip_allowlist_enabled}
+                onCheckedChange={(checked) => updateForm({ ip_allowlist_enabled: checked })}
+              />
+            </div>
+
+            {form.ip_allowlist_enabled && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700" htmlFor="ip-allowlist">
+                    CIDR blocks, one per line
+                  </label>
+                  <textarea
+                    id="ip-allowlist"
+                    rows={7}
+                    spellCheck={false}
+                    className={`${textareaClass} font-mono ${
+                      errors.ip_allowlist_text ? 'border-red-500' : ''
+                    }`}
+                    placeholder={'203.0.113.0/24\n198.51.100.14/32'}
+                    value={form.ip_allowlist_text}
+                    onChange={(event) => updateForm({ ip_allowlist_text: event.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — Genesys does
+                    not accept IPv6 here, so neither does this. A single address is written as
+                    /32.
+                  </p>
+                  {errors.ip_allowlist_text && (
+                    <p className="text-xs font-semibold text-red-600">{errors.ip_allowlist_text}</p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-xs font-semibold text-amber-900">
+                    You can lock yourself out with this list.
+                  </p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    Genesys refuses to save an allowlist that does not cover the address the admin
+                    is saving from, precisely because getting it wrong locks you out of your own
+                    account. This page cannot do that check: a browser does not know its own public
+                    IP without asking an outside service, and nothing here does. So the check falls
+                    to you. Find your public IP, confirm it sits inside one of the blocks above, and
+                    remember that a home connection&rsquo;s address usually changes over time.
+                  </p>
+                  <label className="mt-3 flex cursor-pointer items-start gap-2">
+                    <Checkbox
+                      checked={lockoutAcknowledged}
+                      onCheckedChange={(checked) => setLockoutAcknowledged(checked === true)}
+                    />
+                    <span className="text-xs text-amber-900">
+                      I have checked that my own public IP address is inside one of these blocks.
+                    </span>
+                  </label>
+                </div>
+              </>
+            )}
+          </SecurityCard>
+
+          <SecurityCard
+            icon={<KeyRound className="h-5 w-5" />}
+            title="Single sign-on (SAML)"
+            summary="Where your identity provider lives, so sign-in can be handed over to it."
+            enforced={false}
+            enforcementNote="Saved only, and further from working than the rest. There is no SAML anywhere in this product — no assertion handling, no metadata endpoint, no redirect to an identity provider. Filling these in does not create an SSO login and does not change how anyone signs in. Treat this card as somewhere to keep the values until SSO is actually built."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">Record SAML SSO details</p>
+                <p className="text-xs text-gray-500">
+                  Your identity provider gives you these when you add this platform as an
+                  application. The certificate is a public key, not a secret — but this record is
+                  ordinary account data, not a secrets store, so do not paste anything private into
+                  it.
+                </p>
+              </div>
+              <Switch
+                checked={form.sso_enabled}
+                onCheckedChange={(checked) => updateForm({ sso_enabled: checked })}
+              />
+            </div>
+
+            {form.sso_enabled && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="IdP Entity ID (Issuer)"
+                      placeholder="https://idp.example.com/saml/metadata"
+                      value={form.sso_idp_entity_id}
+                      error={errors.sso_idp_entity_id}
+                      onChange={(event) => updateForm({ sso_idp_entity_id: event.target.value })}
+                    />
+                    <p className="text-xs text-gray-500">
+                      The identifier the provider puts in the Issuer field of every assertion.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="IdP SSO URL"
+                      placeholder="https://idp.example.com/saml/sso"
+                      value={form.sso_idp_sso_url}
+                      error={errors.sso_idp_sso_url}
+                      onChange={(event) => updateForm({ sso_idp_sso_url: event.target.value })}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Where people would be sent to sign in. Must be https.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-gray-700" htmlFor="sso-certificate">
+                    IdP signing certificate (PEM)
+                  </label>
+                  <textarea
+                    id="sso-certificate"
+                    rows={6}
+                    spellCheck={false}
+                    className={`${textareaClass} font-mono ${
+                      errors.sso_idp_certificate ? 'border-red-500' : ''
+                    }`}
+                    placeholder={'-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----'}
+                    value={form.sso_idp_certificate}
+                    onChange={(event) => updateForm({ sso_idp_certificate: event.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Paste the whole block, BEGIN and END lines included. It is used to check that an
+                    assertion really came from your provider.
+                  </p>
+                  {errors.sso_idp_certificate && (
+                    <p className="text-xs font-semibold text-red-600">
+                      {errors.sso_idp_certificate}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      label="Single Logout URI (optional)"
+                      placeholder="https://idp.example.com/saml/slo"
+                      value={form.sso_single_logout_uri}
+                      error={errors.sso_single_logout_uri}
+                      onChange={(event) => updateForm({ sso_single_logout_uri: event.target.value })}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Optional. Signing out here would also end the session at the provider. Leave
+                      blank if your provider does not offer one.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </SecurityCard>
+
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                <Info className="h-5 w-5" />
+              </div>
+              <div className="flex min-w-[220px] flex-1 flex-col gap-1">
+                <p className="text-base font-semibold text-gray-900">
+                  Things you cannot change, on the platforms this page follows
+                </p>
+                <p className="text-xs text-gray-500">
+                  Worth knowing when you are comparing, and worth knowing because there is no
+                  setting for them anywhere.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 p-4">
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm font-semibold text-gray-900">Password reuse — Genesys</p>
+                <p className="text-xs text-gray-500">
+                  Genesys blocks reuse of the last 10 passwords. It is fixed: an admin cannot raise,
+                  lower or switch off that history.
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm font-semibold text-gray-900">Failed sign-ins — Genesys</p>
+                <p className="text-xs text-gray-500">
+                  After 6 failed logins Genesys locks the account for 5 minutes. Also fixed — there
+                  is no threshold or duration to set.
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm font-semibold text-gray-900">Session length — Dialpad</p>
+                <p className="text-xs text-gray-500">
+                  Dialpad fixes its session at 30 days and gives admins no way to shorten it. That
+                  is why the idle timeout above is modelled on Genesys, which does let you choose.
+                </p>
+              </div>
+              <p className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                These three describe Genesys and Dialpad, not this platform. What this platform does
+                about password history, failed sign-ins and session length has not been confirmed
+                from the code — the sign-in behaviour lives in the backend, which is not visible
+                from here. Do not read them as descriptions of what is protecting you now.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-gray-500">
+              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
+              <span className="font-semibold"> settings.company_security</span>. Everything else in
+              that record is left untouched. Saving records the policy; it does not switch anything
+              on.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSave}
+              disabled={isSaving || !isDirty}
+            >
+              {isSaving ? 'Saving...' : 'Save security settings'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default CompanySecurity;

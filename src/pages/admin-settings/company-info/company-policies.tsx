@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import {
+  COMPLIANT_RECORDING_ANNOUNCEMENTS,
+  validateRecordingAnnouncement,
+} from '@/lib/recording-announcement';
+import {
   COMPANY_DEFAULTS_QUERY_KEY,
   COMPANY_DEFAULT_TEMPLATE_NAME,
   fetchCompanyDefaults,
@@ -92,6 +96,7 @@ interface PoliciesForm {
   voicemail_transcription_default: boolean;
   recording_mode: string;
   recording_announcement: boolean;
+  recording_announcement_text: string;
   retention_recordings: RetentionForm;
   retention_voicemails: RetentionForm;
   international_new_user_default: string;
@@ -105,6 +110,7 @@ const DEFAULT_FORM: PoliciesForm = {
   recording_mode: 'off',
   // Announcement defaults on: in most places it is the caller's legal notice.
   recording_announcement: true,
+  recording_announcement_text: '',
   retention_recordings: { mode: 'indefinite', days: '30' },
   retention_voicemails: { mode: 'indefinite', days: '30' },
   // Dialpad blocks international dialling by default as fraud prevention. Same here.
@@ -169,6 +175,7 @@ const buildFormFromSettings = (settings: Record<string, any>): PoliciesForm => {
       typeof recording?.announcement_to_caller === 'boolean'
         ? recording.announcement_to_caller
         : DEFAULT_FORM.recording_announcement,
+    recording_announcement_text: `${recording?.announcement_text || ''}`,
     retention_recordings: toRetentionForm(
       retention?.call_recordings,
       DEFAULT_FORM.retention_recordings,
@@ -199,6 +206,7 @@ const buildPoliciesPayload = (form: PoliciesForm) => ({
   call_recording: {
     mode: form.recording_mode,
     announcement_to_caller: form.recording_announcement,
+    announcement_text: form.recording_announcement_text.trim(),
   },
   data_retention: {
     call_recordings: buildRetentionPayload(form.retention_recordings),
@@ -597,6 +605,61 @@ const CompanyPolicies = () => {
                 onCheckedChange={(checked) => updateForm({ recording_announcement: checked })}
               />
             </div>
+
+            {/* Dialpad rejects wording that mentions recording but not that a
+                third party may be doing it — "this call may be recorded for
+                quality purposes" is their own example of a FAILING announcement.
+                The check runs as you type so the wording is fixed here rather
+                than coming back as a compliance problem later. */}
+            {form.recording_announcement && (
+              <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-semibold text-gray-900">Announcement wording</p>
+                  <p className="text-xs text-gray-500">
+                    It must say two things: that the call is recorded or transcribed,{' '}
+                    <strong>and</strong> that a third party may be doing it. Saying only the first
+                    is the most common mistake.
+                  </p>
+                </div>
+
+                <textarea
+                  rows={3}
+                  value={form.recording_announcement_text}
+                  onChange={(event) =>
+                    updateForm({ recording_announcement_text: event.target.value })
+                  }
+                  placeholder="This call may be recorded or transcribed by us, or by a third party acting on our behalf."
+                  className="w-full rounded-lg border border-gray-200 p-2 text-sm text-gray-900 focus:border-primary focus:outline-none"
+                />
+
+                {form.recording_announcement_text.trim() && (
+                  <p
+                    role="status"
+                    className={`text-xs ${
+                      validateRecordingAnnouncement(form.recording_announcement_text).valid
+                        ? 'text-green-700'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {validateRecordingAnnouncement(form.recording_announcement_text).reason}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-1">
+                  <p className="text-[11px] font-semibold text-gray-500">Wording you can use</p>
+                  {COMPLIANT_RECORDING_ANNOUNCEMENTS.map((example) => (
+                    <button
+                      key={example.id}
+                      type="button"
+                      onClick={() => updateForm({ recording_announcement_text: example.text })}
+                      className="cursor-pointer rounded-md border border-gray-200 p-2 text-left text-xs text-gray-700 hover:border-primary hover:bg-ucass-primary-200/30"
+                    >
+                      {example.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </PolicyCard>
 
           <PolicyCard

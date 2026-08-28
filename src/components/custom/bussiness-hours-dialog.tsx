@@ -16,7 +16,10 @@ import moment from 'moment';
 import ForwardingActions from './forwarding-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { useUser } from '@/hooks/use-user';
-import { getHolidaysFormVal } from '@/lib/utils';
+import { getHolidaysFormVal, handleAlert } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { buildHolidayImport, readCompanyHolidays } from '@/lib/company-holiday-import';
 import ForwardingHolidaysActions from './forward-holidays-action';
 import { OPERATIONAL_HOURS } from '../common-settings/constants';
 
@@ -25,6 +28,11 @@ interface IBussinessModalProps extends ModalProps {
   selectedUserExt?: string | null;
   aiMode?: boolean;
 }
+
+/* A line accepts at most this many holiday rows. Worth knowing when importing:
+   the US federal list alone is 11, so a full import will not fit and the user
+   has to be told which dates were left out rather than losing them silently. */
+const MAX_HOLIDAYS = 10;
 
 const TABS = {
   GENERAL_SETTINGS: 'General Settings',
@@ -151,8 +159,65 @@ const BussinessHoursModal: FC<IBussinessModalProps> = ({
 
     setModalState(false);
   };
+  /* Only fetched while the dialog is open — this component is mounted on every
+     queue, IVR, user and number screen, and the company record does not need
+     loading until someone actually opens business hours. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    enabled: Boolean(modalState),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const companyHolidays = readCompanyHolidays(companyDefaults?.settings);
+
+  /* Copies the company's declared dates onto this line and gives each one an
+     action, since a holiday without one will not validate. Existing rows are
+     left exactly as they are: someone who has already tuned Christmas on this
+     queue should not have it overwritten by a bulk import. */
+  const importCompanyHolidays = () => {
+    const existing = watch('settings.operational_hours.holidays') || [];
+    const { toAppend, skippedDuplicate, skippedCapacity, unresolvedAction } = buildHolidayImport({
+      companyHolidays,
+      existingHolidays: existing,
+      closedHourAction: watch('settings.operational_hours.closed_hour_action'),
+      fallbackExtension: selectedUserExt || user_info?.extension,
+      capacity: MAX_HOLIDAYS - existing.length,
+    });
+
+    /* Refused rather than appending rows that cannot validate — that would
+       block saving with an error pointing at a date field, not at the cause. */
+    if (unresolvedAction) {
+      return handleAlert({
+        text: 'Set what happens outside opening hours first. Each holiday needs an action, and company holidays copy that one.',
+        type: 'error',
+      });
+    }
+
+    toAppend.forEach((holiday) => append(holiday));
+
+    const added = toAppend.length;
+    if (!added && !skippedCapacity) {
+      return handleAlert({
+        text: skippedDuplicate
+          ? 'Those company holidays are already on this line.'
+          : 'No company holidays have been set up yet.',
+        type: 'info',
+      });
+    }
+
+    /* The capacity message names the limit, because "3 could not be added" with
+       no reason reads as a bug. */
+    handleAlert({
+      text: skippedCapacity
+        ? `Added ${added}. ${skippedCapacity} did not fit — a line holds ${MAX_HOLIDAYS} holidays. Remove some, or add the rest by hand.`
+        : `Added ${added} company ${added === 1 ? 'holiday' : 'holidays'}. Check the action on each, then save.`,
+      type: skippedCapacity ? 'info' : 'success',
+    });
+  };
+
   const appendCustomDays = () => {
-    if (fields && fields?.length >= 10) return;
+    if (fields && fields?.length >= MAX_HOLIDAYS) return;
     append({
       title: '',
       from: null,
@@ -408,14 +473,34 @@ const BussinessHoursModal: FC<IBussinessModalProps> = ({
                 <div className="font-semibold truncate text-md flex items-center justify-between">
                   Custom Days Settings
                 </div>
-                <Button
-                  variant={'outline'}
-                  type="button"
-                  onClick={() => appendCustomDays()}
-                  className="w-10 h-10"
-                >
-                  <AddCircle className="w-6 h-6" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {/* Only offered when the company has actually declared holidays,
+                      so the button never promises something that does nothing. */}
+                  {companyHolidays.length > 0 && (
+                    <Button
+                      variant={'outline'}
+                      type="button"
+                      onClick={() => importCompanyHolidays()}
+                      disabled={fields?.length >= MAX_HOLIDAYS}
+                      title={
+                        fields?.length >= MAX_HOLIDAYS
+                          ? `This line already holds ${MAX_HOLIDAYS} holidays`
+                          : 'Copy the holidays set up for your company onto this line'
+                      }
+                      className="h-10 text-xs font-semibold"
+                    >
+                      Add company holidays ({companyHolidays.length})
+                    </Button>
+                  )}
+                  <Button
+                    variant={'outline'}
+                    type="button"
+                    onClick={() => appendCustomDays()}
+                    className="w-10 h-10"
+                  >
+                    <AddCircle className="w-6 h-6" />
+                  </Button>
+                </div>
               </div>
 
               {fields.map((field, index) => {

@@ -99,18 +99,10 @@ const readCalendar = (settings: any): CompanyHoliday[] => {
    than used here: wiring it into the dialog means editing that dialog, which
    this change is not allowed to do. It is the whole point of the storage shape,
    so it is written down and typed now rather than guessed at later. */
-export const toBusinessHoursHolidays = (items: CompanyHoliday[]) =>
-  items.map((item) => ({
-    title: item.title,
-    from: item.from,
-    to: item.to,
-    /* The closed-hours action itself — voicemail, forward, a greeting — is
-       chosen per object, because a queue and a single user do not close the same
-       way. Left empty here so the object's own default applies. */
-    type: { label: '', value: '' },
-    value: { label: '', value: '', name: '' },
-    personal: false,
-  }));
+/* Converting this list into rows on a line's business hours lives in
+   src/lib/company-holiday-import.ts. It is not a plain field copy: every holiday
+   on a line must carry an action or it fails validation, so the import has to
+   resolve one from that line's closed-hours behaviour. */
 
 /* ------------------------------------------------------------ date helpers */
 

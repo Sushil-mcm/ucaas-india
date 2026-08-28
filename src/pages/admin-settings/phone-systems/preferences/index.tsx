@@ -45,6 +45,9 @@ import { UPSERT_TEMPLATE_SCHEMA } from '@/pages/admin-settings/templates/user-se
 import CompanyEmergencyAddress from '@/pages/admin-settings/company-info/company-emergency-address';
 import CompanyHolidays from '@/pages/admin-settings/company-info/company-holidays';
 import CompanyPolicies from '@/pages/admin-settings/company-info/company-policies';
+import CompanyCallingPermissions from '@/pages/admin-settings/company-info/company-calling-permissions';
+import CompanyMessaging from '@/pages/admin-settings/company-info/company-messaging';
+import CompanySecurity from '@/pages/admin-settings/company-info/company-security';
 
 import '@/components/mcm/mcm-page.css';
 
@@ -67,7 +70,10 @@ const SECTIONS = [
   { key: 'greetings', label: 'Greetings', tab: TAB_CONSTANT.GREETING_NOTIFICATION },
   { key: 'emergency', label: 'Emergency address', tab: null },
   { key: 'holidays', label: 'Holidays', tab: null },
+  { key: 'calling', label: 'Calling', tab: null },
+  { key: 'messaging', label: 'Messaging', tab: null },
   { key: 'policies', label: 'Policies', tab: null },
+  { key: 'security', label: 'Security', tab: null },
 ] as const;
 
 const Preferences = () => {
@@ -270,7 +276,10 @@ const Preferences = () => {
 
         {activeSection === 'emergency' && <CompanyEmergencyAddress />}
         {activeSection === 'holidays' && <CompanyHolidays />}
+        {activeSection === 'calling' && <CompanyCallingPermissions />}
+        {activeSection === 'messaging' && <CompanyMessaging />}
         {activeSection === 'policies' && <CompanyPolicies />}
+        {activeSection === 'security' && <CompanySecurity />}
 
         {isFormSection && (
         <FormProvider {...formInstance}>
