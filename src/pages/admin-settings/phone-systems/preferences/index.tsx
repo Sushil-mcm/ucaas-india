@@ -6,8 +6,8 @@
  * See src/lib/company-defaults.ts for why the company level is stored as a
  * reserved template rather than a new table.
  *
- * The shape follows how the established platforms present this. Dialpad and
- * Genesys both put the org-wide rules on one page, lead with what happens to an
+ * The shape follows how the established platforms present this. established systems and
+ * other established systems both put the org-wide rules on one page, lead with what happens to an
  * incoming call, and attach an explicit "may this be overridden" decision to each
  * rule rather than leaving inheritance implicit. The settings model here already
  * carries those override flags on every field — the cascade was designed for,

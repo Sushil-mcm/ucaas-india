@@ -1,6 +1,6 @@
 /* The company itself, above the list of places it works from.
  *
- * Genesys and Dialpad both separate the organisation from its locations, and
+ * established business phone systems both separate the organisation from its locations, and
  * both put the organisation first: name, address, and the ID that support asks
  * for. MCM stores all of that on the `companies` record and showed none of it —
  * the page opened straight into the location list, so an admin had no way to see
@@ -29,6 +29,12 @@ import { Input } from '@/components/ui/input';
 import CustomSelect from '@/components/custom/custom-select';
 import countryList from '@/lib/countries.json';
 import { upsertCompany } from '@/services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  COMPANY_DEFAULTS_QUERY_KEY,
+  fetchCompanyDefaults,
+  saveCompanyDefaults,
+} from '@/lib/company-defaults';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 
@@ -66,6 +72,25 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
      work the note would simply be wrong. */
   const [serverRefused, setServerRefused] = useState(false);
   const { refetch } = useUser();
+  const queryClient: any = useQueryClient();
+
+  /* Company identity is kept on the same reserved record as the other
+     company-wide settings, because the console genuinely cannot read the
+     `companies` row: the endpoint that returns it is restricted to platform
+     staff. Until today the name on this card came from the MAIN LOCATION, which
+     signup happens to name after the company — an inherited guess that silently
+     changed if anyone renamed that location.
+     
+     So this is not a second source of truth competing with a first. It replaces
+     a worse proxy with one the customer actually controls. The `companies` row
+     is still what invoices are drawn from, and the card says so plainly rather
+     than implying this edit reaches billing. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
+  const identity = companyDefaults?.settings?.company_identity || {};
 
   const uuid = companyInfo?.uuid || '';
 
@@ -85,7 +110,12 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
      that name is used instead. Verified across every company on the account: the
      two match exactly. It would drift only if somebody renamed their main
      location, which is a visible, reversible action. */
-  const name = record?.name || record?.company_name || defaultSite?.name || '';
+  const name =
+    `${identity?.name || ''}`.trim() ||
+    record?.name ||
+    record?.company_name ||
+    defaultSite?.name ||
+    '';
 
   const {
     register,
@@ -168,26 +198,69 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
     .filter(Boolean)
     .join(', ');
 
+  /* Saving writes two places, deliberately.
+     
+     The console record always succeeds — it is the reserved settings row this
+     product already owns — so an admin can always correct what their company is
+     called and where it is. The billing row is then attempted as well, because
+     on a deployment where that endpoint is open to customers it is the right
+     thing to update, and it costs one request to find out.
+     
+     The two outcomes are reported differently. Claiming "saved" when only half
+     of it landed is how someone discovers months later that their invoices still
+     carry the old name. */
   const { mutate: save, isPending } = useMutation({
-    mutationFn: upsertCompany,
-    onSuccess: (response: any) => {
+    mutationFn: async (values: any) => {
+      const nextIdentity = {
+        version: 1,
+        updated_at: new Date().toISOString(),
+        name: `${values.name || ''}`.trim(),
+        address: `${values.address || ''}`.trim(),
+        postal_code: `${values.postal_code || ''}`.trim(),
+        country: values.country?.value || '',
+        state: values.state?.value || '',
+        city: values.city?.value || '',
+      };
+
+      await saveCompanyDefaults({
+        uuid: companyDefaults?.uuid,
+        settings: { ...(companyDefaults?.settings || {}), company_identity: nextIdentity },
+        greetings: companyDefaults?.greetings || {},
+      });
+
+      /* Attempted, never required. A refusal here is expected on deployments
+         where the billing row is platform-staff only, and it must not turn a
+         successful save into a failure. */
+      let billingUpdated = false;
+      if (uuid) {
+        try {
+          await upsertCompany({ uuid, ...values.changed });
+          billingUpdated = true;
+        } catch {
+          billingUpdated = false;
+        }
+      }
+
+      return { billingUpdated };
+    },
+    onSuccess: ({ billingUpdated }: any) => {
+      if (!billingUpdated) setServerRefused(true);
       handleAlert({
-        text: response?.data?.data?.message || 'Company details saved.',
+        text: billingUpdated
+          ? 'Company details saved, including your billing record.'
+          : 'Saved. Your console is updated — your billing record is held separately and only your provider can change that.',
         type: 'success',
       });
       setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: COMPANY_DEFAULTS_QUERY_KEY });
       refetch();
     },
     onError: (error: any) => {
-      const status = error?.response?.status;
-      if (status === 401 || status === 403) setServerRefused(true);
       handleAlert({
         text:
-          status === 401 || status === 403
-            ? 'The server will not let a company administrator change these details. Your session is fine — this needs a change on the API side. Nothing was saved.'
-            : error?.response?.data?.message ||
-              error?.response?.data?.error?.message ||
-              'Could not save the company details. Nothing was changed.',
+          error?.response?.data?.message ||
+          error?.response?.data?.error?.message ||
+          'Could not save the company details. Nothing was changed.',
         type: 'error',
       });
     },
@@ -207,23 +280,27 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
      
      Omitting untouched fields makes both harmless. */
   const onSubmit = (values: any) => {
-    if (!uuid) return;
-
-    const payload: Record<string, any> = { uuid };
-    if (dirtyFields.name) payload.name = values.name;
-    if (dirtyFields.address) payload.address = values.address;
-    if (dirtyFields.postal_code) payload.postal_code = values.postal_code;
+    /* `changed` carries ONLY the fields the admin actually edited, and is what
+       the billing attempt sends. A field left alone is omitted rather than sent
+       empty, because the session does not carry city, state, country or postal
+       code — sending them anyway would write '' over four columns the admin
+       never saw. The console record gets the full set, since it is the thing
+       this screen owns and displays. */
+    const changed: Record<string, any> = {};
+    if (dirtyFields.name) changed.name = values.name;
+    if (dirtyFields.address) changed.address = values.address;
+    if (dirtyFields.postal_code) changed.postal_code = values.postal_code;
     /* Codes for country and state, matching what signup wrote; cities have no
        code so the name is the value. */
-    if (dirtyFields.country) payload.country = values.country?.value || '';
-    if (dirtyFields.state) payload.state = values.state?.value || '';
-    if (dirtyFields.city) payload.city = values.city?.value || '';
+    if (dirtyFields.country) changed.country = values.country?.value || '';
+    if (dirtyFields.state) changed.state = values.state?.value || '';
+    if (dirtyFields.city) changed.city = values.city?.value || '';
 
-    if (Object.keys(payload).length === 1) {
+    if (!Object.keys(changed).length) {
       return handleAlert({ text: 'Nothing has been changed.', type: 'info' });
     }
 
-    save(payload as any);
+    save({ ...values, changed } as any);
   };
 
   const handleCopyId = async () => {

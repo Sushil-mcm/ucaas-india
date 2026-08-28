@@ -51,7 +51,7 @@ import {
 const EMERGENCY_ADDRESS_KEY = 'emergency_address';
 const EMERGENCY_ADDRESS_SCHEMA_VERSION = 1;
 
-// Dialpad and most E911 address validators reject PO boxes: responders cannot
+// established systems and most E911 address validators reject PO boxes: responders cannot
 // be sent to a mailbox. Catches "PO Box", "P.O. Box", "Post Office Box", "PMB".
 const PO_BOX_PATTERN =
   /(\bp\.?\s*o\.?\s*box\b)|(\bpost\s*office\s*box\b)|(\bpostal\s*box\b)|(\bpo\s*bx\b)|(\bp\.?\s*m\.?\s*b\.?\s*#?\s*\d)/i;
@@ -571,7 +571,7 @@ const CompanyEmergencyAddress = () => {
           <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
             <p className="text-xs font-medium text-amber-900">
               A PO box will be rejected. Emergency responders need a street address they can drive
-              to, so a mailbox is not accepted here - this matches what Dialpad and other providers
+              to, so a mailbox is not accepted here - this matches what carriers and other providers
               require.
             </p>
           </div>

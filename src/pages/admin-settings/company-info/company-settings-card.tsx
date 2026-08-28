@@ -4,7 +4,7 @@
  * edited at Admin > Phone System > Preferences. But an admin opening
  * "Company & Locations" reasonably expects company settings to be there, finds a
  * company name and a list of locations, and concludes the product has none.
- * Dialpad and Genesys both put organisation-wide policy on the company screen.
+ * established business phone systems both put organisation-wide policy on the company screen.
  *
  * This shows the current values and hands off to the existing editor rather than
  * duplicating it: two editors writing the same record is how settings start

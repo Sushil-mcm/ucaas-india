@@ -1,6 +1,7 @@
 import { getUserList } from '@/services/api';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useUser } from '@/hooks/use-user';
+import { useTransferPermissions } from '@/hooks/use-transfer-permissions';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { handleAlert } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -94,7 +95,21 @@ const isSessionConnected = (statusValue?: string) =>
   ['accepted', 'confirmed'].includes(String(statusValue || '').toLowerCase());
 
 const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) => {
-  const { handleTransfer, activeSpeakFirstTarget, sessions } = useDialpad();
+  const { handleTransfer, activeSpeakFirstTarget, sessions, activeSessionId } = useDialpad();
+
+  /* The company's transfer rules. These are toll-fraud controls, so the check
+     runs here AND again in the action handler — a button left enabled by a
+     stale render must not be a way through.
+     
+     Being straight about what this is: a check in the browser is not real
+     protection, because the transfer leaves over SIP and the switch accepts it
+     regardless. What it does is stop an agent transferring somewhere they were
+     never meant to, and make the admin's setting mean something. The enforcing
+     gate has to live in the call switch. */
+  const transferPermissions = useTransferPermissions();
+  const activeCallDirection = activeSessionId
+    ? (sessions as any)?.[activeSessionId]?.direction
+    : undefined;
   const { user } = useUser();
   const [externalTransferNumber, setExternalTransferNumber] = useState('');
   const formattedExternalTransferNumber = formatExternalTransferInput(externalTransferNumber);
@@ -200,6 +215,17 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
     ? activeExternalSpeakFirstTarget
     : normalizedExternalTransferNumber;
   const isExternalNumberValid = effectiveExternalTransferTarget.length >= 3;
+  const externalTransferCheck = transferPermissions.canTransferTo(
+    effectiveExternalTransferTarget,
+    { direction: activeCallDirection },
+  );
+  /* Shown under the field rather than only disabling the button: an agent who
+     cannot transfer needs to know why, mid-call, without asking anyone. */
+  const externalTransferBlockedReason = isExternalNumberValid
+    ? externalTransferCheck.reason
+    : null;
+  const isExternalTransferAllowed = isExternalNumberValid && externalTransferCheck.allowed;
+
 
   const showDuplicateTargetAlert = () => {
     handleAlert({
@@ -224,6 +250,16 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
   const handleExternalTransferAction = (type: 'speak_first' | 'transfer_now') => {
     const nextTarget = effectiveExternalTransferTarget;
     if (nextTarget.length < 3) return;
+
+    /* Re-checked at the moment of action, not just when the button rendered. */
+    const check = transferPermissions.canTransferTo(nextTarget, {
+      direction: activeCallDirection,
+    });
+    if (!check.allowed) {
+      handleAlert({ text: check.reason || 'This transfer is not allowed.', type: 'error' });
+      return;
+    }
+
     if (isDuplicateExternalTarget(nextTarget)) {
       showDuplicateTargetAlert();
       return;
@@ -288,9 +324,9 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
                   type="button"
                   title="Transfer Now"
                   aria-label="Transfer Now"
-                  disabled={!isExternalNumberValid}
+                  disabled={!isExternalTransferAllowed}
                   onClick={() =>
-                    isExternalNumberValid && handleExternalTransferAction('transfer_now')
+                    isExternalTransferAllowed && handleExternalTransferAction('transfer_now')
                   }
                   className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white transition max-[380px]:h-6 max-[380px]:w-6 sm:h-8 sm:w-8 hover:bg-primary disabled:cursor-not-allowed disabled:bg-ucass-active-bg"
                 >
@@ -303,9 +339,9 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
                   type="button"
                   title="Attended Transfer"
                   aria-label="Attended Transfer"
-                  disabled={!isExternalNumberValid || isSpeakFirstLocked}
+                  disabled={!isExternalTransferAllowed || isSpeakFirstLocked}
                   onClick={() =>
-                    isExternalNumberValid && handleExternalTransferAction('speak_first')
+                    isExternalTransferAllowed && handleExternalTransferAction('speak_first')
                   }
                   className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-ucass-active-bg bg-white text-[#2a4a78] transition max-[380px]:h-6 max-[380px]:w-6 sm:h-8 sm:w-8 hover:bg-ucass-active-bg disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -315,9 +351,9 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
                   type="button"
                   title="Blind transfer"
                   aria-label="Blind transfer"
-                  disabled={!isExternalNumberValid || isSpeakFirstLocked}
+                  disabled={!isExternalTransferAllowed || isSpeakFirstLocked}
                   onClick={() =>
-                    isExternalNumberValid && handleExternalTransferAction('transfer_now')
+                    isExternalTransferAllowed && handleExternalTransferAction('transfer_now')
                   }
                   className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white transition max-[380px]:h-6 max-[380px]:w-6 sm:h-8 sm:w-8 hover:bg-primary disabled:cursor-not-allowed disabled:bg-ucass-active-bg"
                 >
@@ -338,6 +374,14 @@ const DialpadTransferList = ({ onBack, onOpenMerge }: DialpadTransferListProps) 
               disabled={isSpeakFirstLocked}
               className="w-full rounded-lg border border-[#d2ddef] bg-white px-2.5 py-1.5 text-[12px] font-medium text-[#1f2f47] outline-none transition placeholder:text-[#90a0b8] max-[380px]:px-2 max-[380px]:py-1 max-[380px]:text-[11px] sm:px-3 sm:py-2 sm:text-sm md:text-[14px] focus:border-[#8ec0ff] focus:ring-2 focus:ring-[#8ec0ff]/30"
             />
+            {/* Says why, rather than only greying the button out. An agent who
+                cannot complete a transfer needs the reason while the caller is
+                still on the line. */}
+            {externalTransferBlockedReason && (
+              <p className="mt-1.5 text-[11px] font-medium text-red-600" role="alert">
+                {externalTransferBlockedReason}
+              </p>
+            )}
           </div>
         </div>
 

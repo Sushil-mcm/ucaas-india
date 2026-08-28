@@ -1,8 +1,8 @@
 /* The panel that opens when an admin clicks a location.
  *
  * It used to print nine stored fields as label/value pairs, which told an admin
- * what had been typed in but nothing about whether the location worked. Dialpad
- * and Genesys both answer a different question first — is this location ready,
+ * what had been typed in but nothing about whether the location worked. established systems
+ * and other established systems both answer a different question first — is this location ready,
  * who is in it, and what does it govern — and only then show the address.
  *
  * Caller ID is spelled out rather than shown as a code — `caller_id_type` is
@@ -212,7 +212,7 @@ const CompanyDetails = ({ data = {} }: any) => {
         <p className="mt-2 text-xs text-gray-500">{CALLER_ID_NOT_LIVE}</p>
       </div>
 
-      {/* Named plainly so an admin comparing this to Dialpad or Genesys knows the
+      {/* Named plainly so an admin comparing this against another system knows the
           setting is absent from the product, not hidden somewhere they missed. */}
       <div className="rounded-xl border border-dashed border-gray-300 p-3">
         <h6 className="text-sm font-semibold text-gray-900">Not available yet</h6>

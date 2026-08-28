@@ -97,7 +97,7 @@ const CompanyInfo = () => {
 
   /* Choosing the main location.
      
-     Genesys treats this as a real setting and warns that inbound calls fail when
+     Established systems treat this as a real setting; inbound calls fail when
      it is wrong; ours only ever displayed which location was marked. There is no
      dedicated endpoint, so the flag is sent through the ordinary site save.
      
@@ -174,7 +174,7 @@ const CompanyInfo = () => {
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-3 sm:px-4">
           <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
-            {/* Organisation before locations — the order both Genesys and Dialpad
+            {/* Organisation before locations — the order established systems
                 use, and the order the platform's own data follows: a location
                 belongs to a company. */}
             {/* Above the company record: it is the thing a new admin should read
@@ -186,7 +186,7 @@ const CompanyInfo = () => {
             </div>
 
             {/* Company-wide rules belong on the company screen, which is where
-                Dialpad and Genesys put them and where an admin looks. The editor
+                established systems put them and where an admin looks. The editor
                 itself stays under Phone System — one editor, one record. */}
             <CompanySettingsCard />
 

@@ -66,11 +66,11 @@ const RING_TIME_SCHEMA_VERSION = 1;
 /* Flip this only when something outside this file genuinely reads the key. */
 const IS_ENFORCED = false;
 
-/* Dialpad ships 30 seconds. Genesys ships 12 and refuses anything above 60, so
+/* the safe default ships 30 seconds. other established systems ships 12 and refuses anything above 60, so
    60 is the ceiling here too: offering 90 would let an admin save a number that
    the stricter of the two vendors would reject outright. */
-const DIALPAD_DEFAULT_SECONDS = 30;
-const GENESYS_DEFAULT_SECONDS = 12;
+const COMMON_DEFAULT_SECONDS = 30;
+const CONTACT_CENTRE_SECONDS = 12;
 const MIN_SECONDS = 5;
 const MAX_SECONDS = 60;
 
@@ -78,7 +78,7 @@ const MAX_SECONDS = 60;
  * `RINGING_OPTIONS` from '@/constants/forwarding-consts' — the list the queue
  * ring-time control uses — is deliberately NOT reused. It holds exactly two
  * entries, 15 and 30 seconds, which cannot express the 5-60 range this page is
- * meant to cover: an admin who wants Genesys's 12 seconds, or the full 60, has
+ * meant to cover: an admin who wants the usual 12 seconds, or the full 60, has
  * no option to pick. Its labels are borrowed instead, because they are the good
  * part: it counts rings as well as seconds, at five seconds a ring, and "about
  * 6 rings" is how a person actually experiences the wait.
@@ -95,14 +95,14 @@ const buildOption = (seconds: number, note?: string) => ({
 const RING_TIME_OPTIONS = [
   buildOption(5),
   buildOption(10),
-  buildOption(GENESYS_DEFAULT_SECONDS, 'Genesys default'),
+  buildOption(CONTACT_CENTRE_SECONDS, 'contact centre pace'),
   buildOption(15),
   buildOption(20),
   buildOption(25),
-  buildOption(DIALPAD_DEFAULT_SECONDS, 'Dialpad default'),
+  buildOption(COMMON_DEFAULT_SECONDS, 'recommended'),
   buildOption(40),
   buildOption(45),
-  buildOption(MAX_SECONDS, 'Genesys maximum'),
+  buildOption(MAX_SECONDS, 'other established systems maximum'),
 ];
 
 /* Where the "what happens next" half of this question is answered. A real route
@@ -116,11 +116,11 @@ interface RingTimeForm {
 }
 
 const DEFAULT_FORM: RingTimeForm = {
-  /* Dialpad's 30, not Genesys's 12. Thirty seconds is what most people expect a
+  /* the usual 30, not the usual 12. Thirty seconds is what most people expect a
      desk phone to do, and it is the value the rest of this product already falls
      back to, so writing anything else down here would quietly disagree with the
      behaviour on every existing line. */
-  seconds: String(DIALPAD_DEFAULT_SECONDS),
+  seconds: String(COMMON_DEFAULT_SECONDS),
   apply_to_new_people: true,
 };
 
@@ -381,23 +381,22 @@ const CompanyRingTime = () => {
               <ul className="flex flex-col gap-1 text-xs text-gray-600">
                 <li>
                   <span className="font-semibold text-gray-900">
-                    Dialpad rings for {DIALPAD_DEFAULT_SECONDS} seconds
+                    Most desk phones ring for {COMMON_DEFAULT_SECONDS} seconds
                   </span>{' '}
-                  by default — about {ringCount(DIALPAD_DEFAULT_SECONDS)} rings. That is the default
-                  here too, because it is also what this product already falls back to everywhere
-                  else.
+                  — about {ringCount(COMMON_DEFAULT_SECONDS)} rings. That is the default here too,
+                  because it is also what this product already falls back to everywhere else.
                 </li>
                 <li>
                   <span className="font-semibold text-gray-900">
-                    Genesys rings for {GENESYS_DEFAULT_SECONDS} seconds
+                    Contact centres use about {CONTACT_CENTRE_SECONDS} seconds
                   </span>{' '}
-                  by default and will not accept more than {MAX_SECONDS}. Contact centres keep it
-                  short so an unanswered call moves to the next agent quickly.
+                  and rarely go above {MAX_SECONDS}. A short ring moves an unanswered call to the
+                  next agent quickly.
                 </li>
                 <li>
                   This list stops at {MAX_SECONDS} seconds for that reason. Longer is not offered:
-                  most callers hang up well before a minute, and the stricter of the two vendors
-                  would refuse the value anyway.
+                  most callers hang up well before a minute, and systems that cap this refuse
+                  anything longer anyway.
                 </li>
               </ul>
             </div>

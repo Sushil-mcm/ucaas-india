@@ -19,6 +19,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRoleList, updateMemberForwading } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { getCompanyNewUserDefaults } from '@/lib/company-new-user-defaults';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
 import Loader from '@/components/custom/loader';
@@ -107,6 +109,14 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     queryKey: ['useRolesList', true],
     queryFn: () => getRoleList(true),
     select: (res) => res?.data?.data?.result?.rows,
+  });
+
+  /* Company policy, read once, used to seed a person the first time they are
+     set up. Shares the cache key with every other company-level screen. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
   });
 
   const formInstance = useForm<FormValues>({
@@ -618,12 +628,27 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
 
         setValue('templateName', data?.name || '');
 
-        setValue(
-          'settings',
-          settingsData?.operational_hours?.regional?.timezone?.value
-            ? settingsData
-            : settingsInitialState,
-        );
+        /* A person with no saved timezone has never been configured, so this is
+           their first-time setup rather than an edit. */
+        const isFirstTimeSetup = !settingsData?.operational_hours?.regional?.timezone?.value;
+
+        setValue('settings', isFirstTimeSetup ? settingsInitialState : settingsData);
+
+        /* Company policy decides what a new person starts with.
+        
+           This also fixes a real bug rather than only adding a feature:
+           `settingsInitialState` hard-codes voicemail-to-text as ON, so a company
+           whose policy said OFF still got every new person switched on. That 'YES'
+           is a shipped placeholder, not anybody's answer, which is why it is safe
+           to replace — a value the admin actually chose is left alone. */
+        if (isFirstTimeSetup) {
+          const seed = getCompanyNewUserDefaults({
+            companySettings: companyDefaults?.settings,
+            formValues: formInstance.getValues(),
+            touchedPaths: Object.keys(formInstance.formState.dirtyFields || {}),
+          });
+          seed.values.forEach(({ path, value }) => setValue(path as any, value));
+        }
         setValue('settings.role', {
           label: selectedRole?.name || '',
           value: selectedRole?.type === 'custom' ? selectedRole?.uuid : selectedRole?.role_uuid,

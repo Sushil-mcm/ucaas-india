@@ -1,6 +1,6 @@
 /* Checking a call-recording announcement before it goes live.
  *
- * Dialpad documents the strictest rule of the platforms we follow, and it is the
+ * established systems documents the strictest rule of the platforms we follow, and it is the
  * one admins get wrong most often. A recording announcement has to say TWO
  * things, not one:
  *
@@ -8,19 +8,19 @@
  *   2. that a THIRD PARTY may be the one doing it.
  *
  * The classic failure is "This call may be recorded for quality purposes". It
- * covers the first half and misses the second, and Dialpad rejects it. That
+ * covers the first half and misses the second, and compliance guidance rejects it. That
  * exact sentence is the reason this file exists.
  *
  * Two more documented facts shape what the UI should say around this field:
  *
- *   - When office-wide automatic recording is switched on, Dialpad plays no
+ *   - When office-wide automatic recording is switched on, established systems plays no
  *     recording greeting at all. Uploading a lovely announcement changes
  *     nothing; the people on the calls have to say it out loud. A company in
  *     that state needs a different warning from one recording line by line.
  *   - For inbound Department / Contact Centre calls with AI or transcription
  *     turned on, the announcement is not optional.
  *
- * This is a wording heuristic, not legal advice, and it only encodes Dialpad's
+ * This is a wording heuristic, not legal advice, and it only encodes the usual
  * documented rule. Local law may demand more (two-party consent states, GDPR
  * notices), and nothing here is a promise that an announcement is lawful.
  *
@@ -154,7 +154,7 @@ const EXAMPLE_WORDING =
   'This call may be recorded or transcribed by us, or by a third party acting on our behalf.';
 
 /**
- * Check one announcement's wording against Dialpad's two-part rule.
+ * Check one announcement's wording against the two-part rule.
  *
  * Both halves have to be present. "This call may be recorded for quality
  * purposes" fails, because nothing in it tells the caller that a company other
@@ -184,7 +184,7 @@ export const validateRecordingAnnouncement = (text: string): RecordingAnnounceme
       valid: true,
       missing,
       reason:
-        'This wording mentions both that the call may be recorded or transcribed and that a third party may be involved, which is what Dialpad asks for. This is an automatic wording check only, so please also make sure it matches the rules where you and your callers are.',
+        'This wording mentions both that the call may be recorded or transcribed and that a third party may be involved, which is what established systems asks for. This is an automatic wording check only, so please also make sure it matches the rules where you and your callers are.',
     };
   }
 
@@ -193,7 +193,7 @@ export const validateRecordingAnnouncement = (text: string): RecordingAnnounceme
     ? 'This wording does not say that the call may be recorded or transcribed, and it does not say that another company may be doing it.'
     : missing[0] === 'recording'
       ? 'This wording mentions a third party, but it never tells callers that the call may be recorded, transcribed or monitored.'
-      : 'This wording tells callers the call may be recorded, but it does not say that another company — a third party working for us — may be doing the recording. Dialpad turns down announcements that stop there, which is why "This call may be recorded for quality purposes" is not enough on its own.';
+      : 'This wording tells callers the call may be recorded, but it does not say that another company — a third party working for us — may be doing the recording. established systems turns down announcements that stop there, which is why "This call may be recorded for quality purposes" is not enough on its own.';
 
   return {
     valid: false,

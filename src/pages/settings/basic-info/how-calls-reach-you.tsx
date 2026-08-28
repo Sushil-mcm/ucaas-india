@@ -2,8 +2,8 @@
  *
  * The page had grown into a name, a job title and a photo, which told somebody
  * what colleagues see but nothing about the thing they actually came to check:
- * which number rings them, and what happens when they miss it. Dialpad and
- * Genesys both put that on the personal page rather than leaving it to be
+ * which number rings them, and what happens when they miss it. established systems and
+ * other established systems both put that on the personal page rather than leaving it to be
  * assembled from three admin screens.
  *
  * Everything here is read from the person's own record. Nothing is assumed: a

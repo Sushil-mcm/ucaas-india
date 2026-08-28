@@ -16,7 +16,16 @@ import { SuspenseOutlet } from '@/components/custom/route-suspense';
 // import PowerDialerCampaign from '@/components/power-dialer-campaign';
 import { useEffect, useMemo } from 'react';
 
+import { useIdleTimeout } from '@/hooks/use-idle-timeout';
+
 const AuthLayout = () => {
+  /* Signs an unattended console out after the idle time the company set. Placed
+     here because this layout sits inside both the call and video providers, so
+     the hook can tell when somebody is actually on a call and hold off — being
+     dropped mid-call would be far worse than the timeout it enforces. Does
+     nothing at all unless a company has switched it on. */
+  useIdleTimeout();
+
   // Same source the rail uses, so the gutter and the rail agree.
   const { hasRail } = useAreaNav();
   // const [isDialerOpen, setIsDialerOpen] = useState(false);

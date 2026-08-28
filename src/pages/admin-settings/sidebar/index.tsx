@@ -26,7 +26,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
     {
       /* Company-wide phone rules used to sit under Phone System, so an admin
          looking for company settings found a name and a list of locations and
-         concluded there were none. Dialpad and Genesys both keep organisation
+         concluded there were none. Established systems keep organisation
          policy on the company screen; this puts it there. */
       title: 'Company',
       type: 'accordion',

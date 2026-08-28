@@ -49,7 +49,7 @@ const BasicInformation: FC<any> = ({
 
   /* A location sets the clock for the people at it.
      
-     Both Dialpad and Genesys work this way — the office or site timezone is what
+     Established systems work this way — the office or site timezone is what
      opening hours are read in — and our own Company & Locations screen tells
      customers a location decides "the clock". It did not: a location's timezone
      was stored, shown, and never used, while opening hours were read from each

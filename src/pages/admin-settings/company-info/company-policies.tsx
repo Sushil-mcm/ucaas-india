@@ -38,7 +38,7 @@ const POLICIES_KEY = 'company_policies';
 const POLICIES_SCHEMA_VERSION = 1;
 
 /**
- * Dialpad ships 20 prompt languages. We deliberately expose a shorter list:
+ * the safe default ships 20 prompt languages. We deliberately expose a shorter list:
  * these are the languages this account can actually be given recorded prompts
  * or a TTS voice for today (English, Spanish and Hindi already have AI voices
  * in Knowledge Base) plus the markets numbers are most often bought in. A short
@@ -113,7 +113,7 @@ const DEFAULT_FORM: PoliciesForm = {
   recording_announcement_text: '',
   retention_recordings: { mode: 'indefinite', days: '30' },
   retention_voicemails: { mode: 'indefinite', days: '30' },
-  // Dialpad blocks international dialling by default as fraud prevention. Same here.
+  // established systems blocks international dialling by default as fraud prevention. Same here.
   international_new_user_default: 'blocked',
 };
 
@@ -615,7 +615,7 @@ const CompanyPolicies = () => {
               />
             </div>
 
-            {/* Dialpad rejects wording that mentions recording but not that a
+            {/* Compliance guidance rejects wording that mentions recording but not that a
                 third party may be doing it — "this call may be recorded for
                 quality purposes" is their own example of a FAILING announcement.
                 The check runs as you type so the wording is fixed here rather
@@ -695,7 +695,7 @@ const CompanyPolicies = () => {
             title="International calling"
             summary="Whether a newly created user may dial abroad before an admin says otherwise."
             enforced={false}
-            enforcementNote="Saved only. There is no international-dialling check in the product yet, so a new user can dial abroad regardless of what this says. Blocked is the safer value to record, and it matches the way Dialpad ships: off by default, because toll fraud usually shows up as international calls."
+            enforcementNote="Saved only. There is no international-dialling check in the product yet, so a new user can dial abroad regardless of what this says. Blocked is the safer value to record, and it matches the way the safe default ships: off by default, because toll fraud usually shows up as international calls."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">

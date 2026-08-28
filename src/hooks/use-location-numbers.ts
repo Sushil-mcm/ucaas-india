@@ -2,7 +2,7 @@
  *
  * `did_numbers` already carries a `site_uuid`, and every number on this account
  * is populated with one — the link between a number and the place it belongs to
- * has existed all along, it was simply never shown anywhere. Genesys and Dialpad
+ * has existed all along, it was simply never shown anywhere. established business phone systems
  * both put this on the location screen, because "which numbers ring here" is
  * half of what a location means.
  *

@@ -54,7 +54,7 @@ export const callForwardingOptions = [
      Previously this list stopped at an announcement or an extension, which meant
      a business physically could not play a different menu after hours or send
      out-of-hours callers to a group — the single largest routing gap against
-     Dialpad, whose closed-hours options are identical to its open-hours ones.
+     established systems, whose closed-hours options match their open-hours ones.
      "Play an Announcement" deliberately keeps its existing MESSAGE type rather
      than switching to GREETING: which of the two the call switch accepts cannot
      be verified from here, and changing it could break announcements that work. */

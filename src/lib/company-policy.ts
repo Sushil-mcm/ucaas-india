@@ -24,6 +24,7 @@ import {
   fetchCompanyDefaults,
   type CompanyDefaultTemplate,
 } from '@/lib/company-defaults';
+import { readRuleFlags } from '@/lib/company-rule-flags';
 
 /* The settings a company rule can be set on, and where the flag sits in the
    stored record. Keys are the names callers use; paths are what the company page
@@ -41,15 +42,14 @@ export const POLICY_FIELDS = {
 
 export type PolicyField = keyof typeof POLICY_FIELDS;
 
-const readPath = (source: any, path: string): any =>
-  path.split('.').reduce((value, key) => (value == null ? value : value[key]), source);
-
 export interface CompanyPolicy {
   /* True once a company record exists and its flags are governing this page. */
   isActive: boolean;
   isLoading: boolean;
   /* Whether the person may change this field on their own phone. */
   allows: (field: PolicyField) => boolean;
+  /* Whether the company value should be copied onto a person. */
+  applies: (field: PolicyField) => boolean;
 }
 
 export const useCompanyPolicy = ({ enabled }: { enabled: boolean }): CompanyPolicy => {
@@ -68,9 +68,22 @@ export const useCompanyPolicy = ({ enabled }: { enabled: boolean }): CompanyPoli
   return {
     isActive,
     isLoading: enabled && isLoading,
+    /* A field is editable unless the company has locked it.
+    
+       This used to read the single `override` flag directly, which carried two
+       contradictory jobs: on this page it meant "the person may change it", and
+       when provisioning a new person it meant "copy this value onto them". One
+       bit could not say both, so "everyone gets this and nobody may change it"
+       — the thing admins actually want — was unsayable. The flags are separate
+       now; a record holding only the old flag still reads exactly as it did. */
     allows: (field: PolicyField) => {
       if (!isActive) return true;
-      return readPath(settings, POLICY_FIELDS[field]) === true;
+      return !readRuleFlags(settings, field).locked;
+    },
+    /* The other half: whether this company value should be put onto a person. */
+    applies: (field: PolicyField) => {
+      if (!isActive) return false;
+      return readRuleFlags(settings, field).apply;
     },
   };
 };

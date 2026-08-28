@@ -1,7 +1,7 @@
 /* How far a new company has got with setting itself up.
  *
- * Dialpad's deployment guide runs offices -> users -> main line routing, and
- * Genesys teaches organisation -> locations -> people -> telephony. Both put
+ * the usual deployment order runs offices -> users -> main line routing, and
+ * the usual guidance is organisation -> locations -> people -> telephony. Both put
  * locations before people, because a person inherits their clock and their
  * address from where they sit. The order below is that order, trimmed to the
  * steps this platform actually has — network testing, desk phones, porting and

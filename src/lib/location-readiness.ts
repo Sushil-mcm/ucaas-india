@@ -1,6 +1,6 @@
 /* What a location still needs before it is safe to put people in it.
  *
- * On Dialpad and Genesys a location is not just a label — it decides which
+ * On established business phone systems a location is not just a label — it decides which
  * address emergency services are sent to, what number people show when they dial
  * out, and which clock the business hours run on. Both platforms refuse to let a
  * location be used until the critical parts are filled in.
@@ -98,13 +98,13 @@ export const evaluateLocation = (site: any): LocationReadiness => {
 };
 
 /* Gaps in the product rather than in the admin's data. Shown once on the page so
-   an admin comparing this against Dialpad or Genesys is not left wondering
+   an admin comparing this against another system is not left wondering
    whether they have missed a setting somewhere. */
 export const PLATFORM_LOCATION_GAPS = [
   {
     label: 'Emergency address (E911)',
     detail:
-      'The address emergency services are sent to when someone here dials them. Required on Dialpad and Genesys before a location can be used.',
+      'The address emergency services are sent to when someone here dials them. Required on established business phone systems before a location can be used.',
   },
   {
     label: 'Main line number',

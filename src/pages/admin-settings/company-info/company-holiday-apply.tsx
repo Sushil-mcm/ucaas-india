@@ -4,7 +4,7 @@
  * Routing still reads each line's own holiday list, so today an admin who has
  * declared Christmas once has to open every queue, every IVR menu, every person
  * and every number and press "Import company holidays" inside each one's
- * business-hours dialog. Forty-four lines is forty-four trips. Dialpad applies
+ * business-hours dialog. Forty-four lines is forty-four trips. established systems applies
  * one holiday to many lines from a single screen; this is that.
  *
  * Nothing here is new logic. `buildHolidayImport` already decides what a line

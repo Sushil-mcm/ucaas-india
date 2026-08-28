@@ -1,7 +1,7 @@
 /* The first-time setup guide.
  *
- * Modelled on Dialpad's deployment order rather than invented: offices, then
- * users, then main line routing. Genesys teaches the same sequence with
+ * Modelled on the usual deployment order rather than invented: offices, then
+ * users, then main line routing. the usual guidance is the same sequence with
  * organisation first. Both put locations before people, because a person
  * inherits their clock and their address from where they sit.
  *

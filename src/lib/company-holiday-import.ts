@@ -1,6 +1,6 @@
 /* Bringing the company holiday list onto one line's business hours.
  *
- * Dialpad's model, which this follows: holidays are declared once for the
+ * the established model, which this follows: holidays are declared once for the
  * company, then each line — a queue, an IVR, a person, a number — decides what
  * actually happens on those dates. Declaring Christmas centrally does not close
  * anything on its own; a line has to take the date and attach an action to it.
@@ -11,7 +11,7 @@
  * empty action does not quietly fall back to anything — it fails validation and
  * blocks the whole business-hours form from saving, on a screen that gives no
  * clue why. So an action is always attached here, copied from the line's own
- * closed-hours behaviour, which is also the semantic Dialpad describes: a
+ * closed-hours behaviour, which is also the semantic established systems describes: a
  * holiday borrows what the line already does when it is shut.
  */
 

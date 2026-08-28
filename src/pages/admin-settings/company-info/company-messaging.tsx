@@ -75,7 +75,7 @@ interface MessagingForm {
 }
 
 const DEFAULT_FORM: MessagingForm = {
-  /* On, like Dialpad ships it: an account that has bought SMS-capable numbers
+  /* On, like the safe default ships it: an account that has bought SMS-capable numbers
      expects to be able to text. */
   sms_mms_enabled: true,
   /* Off, and deliberately so. US A2P 10DLC registration is mandatory, and

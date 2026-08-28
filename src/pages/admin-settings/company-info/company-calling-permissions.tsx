@@ -17,14 +17,14 @@ import {
 /**
  * Company calling permissions
  * -----------------------------------------------------------------------------
- * The Dialpad Office Settings that decide which number a person may show on an
+ * The established systems Office Settings that decide which number a person may show on an
  * outbound call, and where they may send a call once it is connected. They are
  * kept in the reserved user_template row called "Company Default", namespaced
  * under `settings.company_calling_permissions`, so nothing else in that blob is
  * touched on save.
  *
  * These are toll-fraud controls, not conveniences. Every one of them defaults to
- * OFF, which is how Dialpad ships them, because each one is a way of turning a
+ * OFF, which is how the safe default ships them, because each one is a way of turning a
  * call the company already pays for into a second leg the company also pays for —
  * and an outside caller who can reach a transfer prompt can dial a premium-rate
  * number on your bill.
@@ -60,7 +60,7 @@ interface PermissionsForm {
   allow_outbound_call_external_transfer: boolean;
 }
 
-/* Every default is OFF, matching the way Dialpad ships each of these. Off is the
+/* Every default is OFF, matching the way the safe default ships each of these. Off is the
    value that costs nothing if it is wrong. */
 const DEFAULT_FORM: PermissionsForm = {
   allow_office_or_group_caller_id: false,
@@ -345,7 +345,7 @@ const CompanyCallingPermissions = () => {
                 These are fraud controls, not conveniences
               </p>
               <p className="text-xs text-red-800">
-                Every box on this page is off to begin with, which is how Dialpad ships them. Each
+                Every box on this page is off to begin with, which is the safe default. Each
                 one is a way of turning a call you already pay for into a second leg you also pay
                 for. Toll fraud works by getting someone — or something — to transfer a call out to
                 a premium-rate number abroad and leaving it up; the bill arrives days later. Turn a
@@ -400,7 +400,7 @@ const CompanyCallingPermissions = () => {
               enforcementNote="Saved only. There is no hidden or withheld caller ID option anywhere in the dialpad — src/hooks/use-dialpad-caller-id-options.ts offers assigned numbers and a 'No caller id' placeholder, and neither withholds the number on the wire. The *67 and *82 codes are handled by the carrier, not by this setting, so they keep working either way."
             />
             <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-              How Dialpad describes the pair: if neither of these two is on, a team member with more
+              How the pair works: if neither of these two is on, a team member with more
               than one line can only ever call out from their own primary number.
             </p>
           </PermissionCard>
@@ -438,7 +438,7 @@ const CompanyCallingPermissions = () => {
           >
             <PermissionRow
               label="Allow transferring an outbound call to an external number"
-              description="A team member calls out, then hands that call to a third outside number. Dialpad ships this off on purpose, as fraud prevention: it is the shape toll fraud takes. Your system pays for the leg out and the leg on, both legs stay up, and neither party is anyone you employ — so nobody notices until the invoice. Leave it off unless a specific team genuinely needs it."
+              description="A team member calls out, then hands that call to a third outside number. the safe default ships this off on purpose, as fraud prevention: it is the shape toll fraud takes. Your system pays for the leg out and the leg on, both legs stay up, and neither party is anyone you employ — so nobody notices until the invoice. Leave it off unless a specific team genuinely needs it."
               checked={form.allow_outbound_call_external_transfer}
               onCheckedChange={(checked) =>
                 updateForm({ allow_outbound_call_external_transfer: checked })

@@ -56,17 +56,17 @@ import {
 const SECURITY_KEY = 'company_security';
 const SECURITY_SCHEMA_VERSION = 1;
 
-/* Genesys: minimum 300 seconds (5 minutes), maximum 28800 seconds (8 hours).
+/* other established systems: minimum 300 seconds (5 minutes), maximum 28800 seconds (8 hours).
    Expressed in minutes here because that is how an admin thinks about it; the
-   value is stored in seconds, which is the unit Genesys itself uses. */
+   value is stored in seconds, which is the unit other established systems itself uses. */
 const IDLE_MIN_MINUTES = 5;
 const IDLE_MAX_MINUTES = 480;
 const IDLE_HIPAA_MINUTES = 15;
 
-/* Genesys caps the allowlist at 150 blocks and accepts IPv4 only. */
+/* other established systems caps the allowlist at 150 blocks and accepts IPv4 only. */
 const MAX_CIDR_BLOCKS = 150;
 
-/* Roles this platform treats as administrative. Dialpad's hard rule is that
+/* Roles this platform treats as administrative. the usual hard rule is that
    Company, Office and Regional Admins cannot be put on the MFA exception list;
    this account's nearest equivalents are ADMIN and SUB-ADMIN, plus any custom
    role someone has named with "admin" in it. Matching on the name as well as
@@ -89,8 +89,8 @@ interface SecurityForm {
 }
 
 const DEFAULT_FORM: SecurityForm = {
-  /* On by default, following Dialpad's posture: Dialpad makes MFA mandatory for
-     every user who is not signing in through SSO. Genesys treats it as optional
+  /* On by default, following the safer posture: the safer approach makes MFA mandatory for
+     every user who is not signing in through SSO. established systems treat it as optional
      and only ever applies it to native logins. Recording the stricter of the
      two as the company's intent is the safer default to write down. */
   mfa_required: true,
@@ -182,7 +182,7 @@ const buildSecurityPayload = (form: SecurityForm) => ({
   },
   idle_timeout: {
     enabled: form.idle_timeout_enabled,
-    // Seconds, matching the unit Genesys stores and validates in.
+    // Seconds, matching the unit other established systems stores and validates in.
     seconds: form.idle_timeout_enabled ? Number(form.idle_timeout_minutes) * 60 : null,
   },
   ip_allowlist: {
@@ -204,7 +204,7 @@ const isWholeNumberInRange = (value: string, min: number, max: number) => {
   return parsed >= min && parsed <= max;
 };
 
-/* IPv4 CIDR only, because that is all Genesys accepts. Written out rather than
+/* IPv4 CIDR only, because that is all other established systems accepts. Written out rather than
    pulled from a library so the rules are visible: four octets of 0-255, then a
    prefix length of 0-32. An IPv6 block is detected separately so the error can
    say why it was refused instead of just "invalid". */
@@ -411,7 +411,7 @@ const CompanySecurity = () => {
   }, [roster, peopleSearch]);
 
   /* Someone can be exempted today and promoted to admin tomorrow. When that
-     happens the stored list quietly breaks Dialpad's rule, so those entries are
+     happens the stored list quietly breaks the usual rule, so those entries are
      surfaced rather than hidden — an exception nobody can see is the dangerous
      kind. */
   const exemptAdmins = useMemo(
@@ -428,7 +428,7 @@ const CompanySecurity = () => {
   );
 
   const toggleExempt = (person: RosterPerson, checked: boolean) => {
-    // Dialpad's hard rule, enforced rather than merely written in the helper text.
+    // the usual hard rule, enforced rather than merely written in the helper text.
     if (checked && person.isAdmin) {
       handleAlert({
         text: `${person.name} holds the ${person.roleName} role. Admins cannot be exempted from MFA.`,
@@ -598,8 +598,8 @@ const CompanySecurity = () => {
                   Require MFA for password sign-in
                 </p>
                 <p className="text-xs text-gray-500">
-                  On by default, which is Dialpad&rsquo;s posture: there MFA is mandatory for every
-                  user who is not signing in through SSO, and cannot be switched off. Genesys treats
+                  On by default, which is established systems&rsquo;s posture: there MFA is mandatory for every
+                  user who is not signing in through SSO, and cannot be switched off. established systems treat
                   it as optional and applies it to native logins only — an SSO user is never
                   prompted, because the identity provider has already done the checking. Recording
                   the stricter of the two is the safer intent to write down.
@@ -628,7 +628,7 @@ const CompanySecurity = () => {
             )}
 
             <p className="text-xs text-gray-500">
-              Dialpad&rsquo;s hard rule: Company, Office and Regional Admins can never be added to
+              established systems&rsquo;s hard rule: Company, Office and Regional Admins can never be added to
               the exception list — the accounts with the most power are the ones that must not skip
               the second factor. This account&rsquo;s equivalents are the Admin and Sub-Admin roles,
               plus any custom role with &ldquo;admin&rdquo; in its name. Those rows are locked
@@ -703,14 +703,14 @@ const CompanySecurity = () => {
             icon={<Timer className="h-5 w-5" />}
             title="Idle timeout"
             summary="How long someone can leave the console untouched before they are signed out."
-            enforced={false}
-            enforcementNote="Saved only. There is no inactivity timer in this app — no activity tracking, no countdown, no automatic sign-out. A session left open on an unlocked laptop stays open. Whatever number you set here, the real behaviour today is unchanged."
+            enforced
+            enforcementNote="In effect. The console watches for typing, clicking and scrolling, warns for the last minute with a way to stay signed in, then signs the person out. It waits while somebody is on a call or in a video room, and starts counting again when that ends. Two limits worth knowing: it only signs out the browser, so it protects an unattended screen rather than stopping a determined user, and the server has no idle concept of its own."
           >
             <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-semibold text-gray-900">Sign people out when idle</p>
                 <p className="text-xs text-gray-500">
-                  Off by default, matching Genesys, where the timeout is something an org switches
+                  Off by default, matching the usual default, where the timeout is something an org switches
                   on deliberately.
                 </p>
               </div>
@@ -734,13 +734,13 @@ const CompanySecurity = () => {
                   />
                   <p className="text-xs text-gray-500">
                     Between {IDLE_MIN_MINUTES} minutes and {IDLE_MAX_MINUTES} minutes (8 hours) —
-                    the same range Genesys allows, which it stores as 300 to 28800 seconds. Stored
+                    the same range the usual range is, which it stores as 300 to 28800 seconds. Stored
                     here in seconds too.
                   </p>
                 </div>
                 <div className="flex flex-col justify-center">
                   <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-                    Genesys forces HIPAA-enabled organisations down to {IDLE_HIPAA_MINUTES} minutes
+                    other established systems forces HIPAA-enabled organisations down to {IDLE_HIPAA_MINUTES} minutes
                     and does not let them choose. This platform has no HIPAA flag, so nothing is
                     forced here. If you are handling health data, set {IDLE_HIPAA_MINUTES} yourself
                     — and remember it will not be applied until the timer is actually built.
@@ -789,7 +789,7 @@ const CompanySecurity = () => {
                     onChange={(event) => updateForm({ ip_allowlist_text: event.target.value })}
                   />
                   <p className="text-xs text-gray-500">
-                    {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — Genesys does
+                    {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — other established systems does
                     not accept IPv6 here, so neither does this. A single address is written as
                     /32.
                   </p>
@@ -803,7 +803,7 @@ const CompanySecurity = () => {
                     You can lock yourself out with this list.
                   </p>
                   <p className="mt-1 text-xs text-amber-800">
-                    Genesys refuses to save an allowlist that does not cover the address the admin
+                    other established systems refuses to save an allowlist that does not cover the address the admin
                     is saving from, precisely because getting it wrong locks you out of your own
                     account. This page cannot do that check: a browser does not know its own public
                     IP without asking an outside service, and nothing here does. So the check falls
@@ -938,28 +938,28 @@ const CompanySecurity = () => {
             </div>
             <div className="flex flex-col gap-3 p-4">
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Password reuse — Genesys</p>
+                <p className="text-sm font-semibold text-gray-900">Password reuse — other established systems</p>
                 <p className="text-xs text-gray-500">
-                  Genesys blocks reuse of the last 10 passwords. It is fixed: an admin cannot raise,
+                  other established systems blocks reuse of the last 10 passwords. It is fixed: an admin cannot raise,
                   lower or switch off that history.
                 </p>
               </div>
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Failed sign-ins — Genesys</p>
+                <p className="text-sm font-semibold text-gray-900">Failed sign-ins — other established systems</p>
                 <p className="text-xs text-gray-500">
-                  After 6 failed logins Genesys locks the account for 5 minutes. Also fixed — there
+                  After 6 failed logins other established systems locks the account for 5 minutes. Also fixed — there
                   is no threshold or duration to set.
                 </p>
               </div>
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Session length — Dialpad</p>
+                <p className="text-sm font-semibold text-gray-900">Session length — established systems</p>
                 <p className="text-xs text-gray-500">
-                  Dialpad fixes its session at 30 days and gives admins no way to shorten it. That
-                  is why the idle timeout above is modelled on Genesys, which does let you choose.
+                  established systems fixes its session at 30 days and gives admins no way to shorten it. That
+                  is why the idle timeout above is modelled on other established systems, which does let you choose.
                 </p>
               </div>
               <p className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                These three describe Genesys and Dialpad, not this platform. What this platform does
+                These three describe established business phone systems, not this platform. What this platform does
                 about password history, failed sign-ins and session length has not been confirmed
                 from the code — the sign-in behaviour lives in the backend, which is not visible
                 from here. Do not read them as descriptions of what is protecting you now.

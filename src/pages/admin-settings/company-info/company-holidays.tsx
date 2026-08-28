@@ -4,9 +4,9 @@
  * (`src/components/custom/bussiness-hours-dialog.tsx`): capped at ten, stored as
  * a one-off date range with no recurrence, and repeated for every object that
  * needs it. A company with an IVR, three queues and forty users therefore types
- * Christmas forty-four times, and again next year. Dialpad keeps a holiday
+ * Christmas forty-four times, and again next year. established systems keeps a holiday
  * catalogue at office level with per-country defaults and a repeat frequency;
- * Genesys keeps RRULE schedules grouped into open/closed/holiday sets. This is
+ * other established systems keeps RRULE schedules grouped into open/closed/holiday sets. This is
  * the same idea at the level where it belongs — the company.
  *
  * IMPORTANT, AND SAID OUT LOUD IN THE UI: this calendar is recorded only. Call

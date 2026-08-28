@@ -1,6 +1,6 @@
 /* How many people work at each location.
  *
- * Dialpad and Genesys both lead their location screens with this, and for good
+ * established business phone systems both lead their location screens with this, and for good
  * reason: an address on its own does not tell an admin whether a location is real
  * or a leftover. "Head office — 34 people" and "Old warehouse — 0 people" are the
  * same record until you can see the count.
