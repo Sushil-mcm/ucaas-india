@@ -549,7 +549,7 @@ const CompanySecurity = () => {
           {/* Loud, once, at the top — then specifically again on every card. */}
           <div className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-900">
-              None of this is switched on yet. Do not treat this page as protection.
+              Signing people out when idle is active. The rest is recorded as your policy and is not switched on yet.
             </p>
             <p className="mt-1 text-xs text-red-800">
               Every setting below is written into a stored record and nothing else reads it. There
@@ -708,8 +708,7 @@ const CompanySecurity = () => {
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-semibold text-gray-900">Sign people out when idle</p>
                 <p className="text-xs text-gray-500">
-                  Off by default, matching the usual default, where the timeout is something an org switches
-                  on deliberately.
+                  Off by default. Switch it on if you want people signed out after a period of inactivity.
                 </p>
               </div>
               <Switch
@@ -929,8 +928,8 @@ const CompanySecurity = () => {
                   Things you cannot change, on the platforms this page follows
                 </p>
                 <p className="text-xs text-gray-500">
-                  Worth knowing when you are comparing, and worth knowing because there is no
-                  setting for them anywhere.
+                  These are handled for you and there is no setting to change.
+
                 </p>
               </div>
             </div>

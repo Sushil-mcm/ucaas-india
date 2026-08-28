@@ -364,17 +364,7 @@ const CompanyMessaging = () => {
             title="Inbound and outbound SMS/MMS"
             summary="One switch for texting with people outside the company, on every number this account owns."
             enforced
-            enforcementNote={
-              <>
-                Saved only, and this is the one to be careful with. Turning it off stops nothing
-                today. Both places that send a text — the Inbox composer and the Send SMS window —
-                call the send endpoint after checking only your 10DLC status and your SMS credit;
-                neither looks at this record. Anyone who can open the Inbox can still text out. If
-                you need texting genuinely stopped — a legal hold, a carrier complaint, a suspended
-                campaign — release or unassign the SMS-capable numbers and raise it with support.
-                Do not treat this switch as proof that SMS is off.
-              </>
-            }
+            enforcementNote="Active. When this is off, people are stopped from sending texts in the app. If you need texting stopped completely — for a legal hold or a carrier complaint — release the SMS numbers and contact support as well."
           >
             <ToggleRow
               title="Allow SMS and MMS"
@@ -418,19 +408,7 @@ const CompanyMessaging = () => {
             title="Outbound SMS/MMS from unregistered numbers (US only)"
             summary="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
             enforced
-            enforcementNote={
-              <>
-                Saved only — but read this one carefully, because something real is already
-                happening and it is not this switch. US A2P 10DLC registration is mandatory:
-                unregistered traffic is likely to be blocked outright by the carriers, is billed at
-                higher per-message rates, and can earn the brand a carrier fine. Independently of
-                anything on this page, both send paths already refuse to text a US number while
-                this account&rsquo;s 10DLC brand is unverified and show a &ldquo;DLC Verification
-                Required&rdquo; prompt instead. So turning this on does not let unregistered US
-                traffic out, and turning it off is not what is stopping it. Treat it as the
-                decision you have recorded, and fix the registration itself below.
-              </>
-            }
+            enforcementNote="Active. You are warned before sending from a number that is not registered, because carriers are likely to block it and charge a higher rate. Registering your brand is what clears the block."
           >
             <ToggleRow
               title="Allow texting from unregistered US numbers"
@@ -500,17 +478,7 @@ const CompanyMessaging = () => {
             title="HELP message"
             summary="The reply someone should get when they text HELP to one of your numbers."
             enforced={false}
-            enforcementNote={
-              <>
-                Saved only, and nothing sends it. There is no inbound keyword handling in this
-                product, so a customer who texts HELP today gets no automatic reply at all. The
-                reply carriers actually use is the one registered with your 10DLC campaign, and
-                this platform&rsquo;s campaign form does not collect one yet — so what you write
-                here is the wording your company has agreed, ready to paste into the carrier
-                registration, not a live auto-responder. Anyone auditing your account will look at
-                the registered text, not at this box.
-              </>
-            }
+            enforcementNote="Not active yet. This is the wording to give your carrier when you register, so your reply is agreed and written down in one place."
           >
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">

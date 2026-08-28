@@ -438,7 +438,7 @@ const CompanyCallingPermissions = () => {
             />
             <PermissionRow
               label="Allow team members to hide their caller ID. Calls from them will appear as 'unknown'."
-              description="The person being called sees no number at all. Worth knowing: caller ID cannot be hidden on a cold external transfer from a shared line — the shared line's number goes out regardless. Per call, a team member can dial *67 before the number to hide it once, or *82 to unhide it once, whichever way this box is set."
+              description="The person being called sees no number at all. Note that caller ID cannot be hidden on a cold external transfer from a shared line — the shared line's number goes out regardless. Per call, a team member can dial *67 before the number to hide it once, or *82 to unhide it once, whichever way this box is set."
               checked={form.allow_hidden_caller_id}
               onCheckedChange={(checked) => updateForm({ allow_hidden_caller_id: checked })}
               enforced={false}

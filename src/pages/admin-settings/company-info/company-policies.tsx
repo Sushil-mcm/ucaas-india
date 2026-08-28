@@ -537,10 +537,7 @@ const CompanyPolicies = () => {
                   }
                 />
                 <p className="text-xs text-gray-500">
-                  Ten languages, not twenty. These are the ones this account can actually be given a
-                  recorded prompt set or a voice for — English, Spanish and Hindi already have AI
-                  voices here. A shorter list beats a long one where most choices quietly fall back
-                  to English.
+                  New greetings you record will open in this language.
                 </p>
               </div>
             </div>
