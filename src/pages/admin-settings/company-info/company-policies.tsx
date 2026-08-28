@@ -251,6 +251,15 @@ const validateForm = (form: PoliciesForm): Record<string, string> => {
     errors.retention_voicemails = `Enter a whole number of days between ${RETENTION_MIN_DAYS} and ${RETENTION_MAX_DAYS}`;
   }
 
+  /* The announcement check was only rendered, never enforced, so wording that
+     the screen flagged in red still saved without complaint — an admin could
+     reasonably conclude it had been accepted. Blank is allowed (the wording is
+     optional); wording that has been entered must pass. */
+  if (form.recording_announcement && form.recording_announcement_text.trim()) {
+    const check = validateRecordingAnnouncement(form.recording_announcement_text);
+    if (!check.valid) errors.recording_announcement_text = check.reason;
+  }
+
   return errors;
 };
 

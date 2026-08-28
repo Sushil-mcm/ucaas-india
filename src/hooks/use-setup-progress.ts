@@ -16,6 +16,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getUserList, siteList } from '@/services/api';
 import { useLocationNumbers } from '@/hooks/use-location-numbers';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 
 export type SetupStepKey = 'company' | 'locations' | 'people' | 'numbers' | 'handling';
 
@@ -47,6 +48,14 @@ export interface SetupProgress {
 const COUNT_STALE_TIME = 2 * 60 * 1000;
 
 export const useSetupProgress = (companyInfo?: any): SetupProgress => {
+  /* Whether company-wide phone rules have been set up at all. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: COUNT_STALE_TIME,
+  });
+  const hasCompanyRules = Boolean(companyDefaults?.uuid);
+
   /* Deliberately NOT fetched. `/api/admin/company/info/:uuid` sits behind
      AdminMiddleware, which resolves the token against the `admins` table —
      platform staff only, zero tenant users. Every customer got a 401, and the
@@ -142,12 +151,17 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         title: 'Call handling',
         purpose: 'What happens when nobody answers, and outside working hours.',
         path: '/admin-settings/company-info/rules',
-        /* Deliberately never ticked automatically. Whether calls are handled
-           correctly cannot be read off a row count — a number can be configured
-           and still drop every out-of-hours call. Call Coverage is where that is
-           actually checked. */
-        done: false,
-        detail: 'Check what happens to an unanswered call',
+        /* Not ticked from a row count: whether calls are handled correctly
+           cannot be read off one — a number can be configured and still drop
+           every out-of-hours call. It counts as done once company-wide rules
+           exist, which is the point at which there is something to check
+           rather than nothing at all. Leaving it permanently false meant
+           `next` was always set, so the guide could never reach "finished"
+           and never disappeared, contradicting its own design. */
+        done: hasCompanyRules,
+        detail: hasCompanyRules
+          ? 'Company rules are set — check what happens to an unanswered call'
+          : 'Check what happens to an unanswered call',
       },
     ];
 
@@ -163,6 +177,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
     };
   }, [
     company,
+    hasCompanyRules,
     sites,
     peopleTotal,
     bySite,

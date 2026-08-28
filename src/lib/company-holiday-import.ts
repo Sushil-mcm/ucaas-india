@@ -20,6 +20,10 @@ export interface ImportableCompanyHoliday {
   /* 'YYYY-MM-DD' as stored on the company record. */
   from: string;
   to: string;
+  /* Carried through so the line can show which dates come back next year and
+     which have to be re-added. The reader used to drop this, so a holiday the
+     admin had marked "repeats every year" arrived on the line as a one-off. */
+  repeats_yearly?: boolean;
 }
 
 export interface HolidayAction {
@@ -151,6 +155,7 @@ export const buildHolidayImport = ({
       type: { ...action.type },
       value: { ...action.value },
       personal: action.personal,
+      repeats_yearly: Boolean(holiday.repeats_yearly),
     });
   }
 
@@ -170,5 +175,6 @@ export const readCompanyHolidays = (settings: any): ImportableCompanyHoliday[] =
       title: `${item.title}`,
       from: `${item.from}`,
       to: `${item.to || item.from}`,
+      repeats_yearly: Boolean(item.repeats_yearly),
     }));
 };

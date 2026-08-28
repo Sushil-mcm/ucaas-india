@@ -68,7 +68,6 @@ const SettingPermission: FC<any> = ({ data }) => {
     }
   }, [modalState?.regionalModal]);
 
-  console.log(watch('settings.operational_hours.regional'), 'check');
 
   return (
     <>

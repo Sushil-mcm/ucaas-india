@@ -65,10 +65,32 @@ export const hydrateTemplateForm = (
   const greetingsData = parseMaybeJson(data?.greetings);
 
   setValue('name', data?.name || '');
-  setValue(
-    'settings',
-    settingsData?.operational_hours?.regional?.timezone?.value ? settingsData : fallbackSettings,
-  );
+
+  /* A record with no timezone reads as never completed, so the form starts from
+     defaults rather than from half-written values. That is correct for the keys
+     this form owns — and destructive for the ones it does not.
+     
+     The company record holds more than this form edits: the emergency address,
+     holidays, policies, messaging, calling permissions and security all live in
+     the same settings blob, saved by their own screens. Replacing the whole blob
+     with the defaults dropped them from the form, and `buildTemplatePayload`
+     then writes the form's settings back wholesale — so pressing Save here
+     deleted every one of them. It needed no unusual sequence: saving Holidays
+     before ever opening Phone rules creates exactly this state.
+     
+     So the swap is applied only to the keys the defaults describe. Anything else
+     on the record is carried through untouched. */
+  const formOwnedKeys = new Set(Object.keys(fallbackSettings || {}));
+  const carriedThrough: Record<string, any> = {};
+  Object.keys(settingsData || {}).forEach((key) => {
+    if (!formOwnedKeys.has(key)) carriedThrough[key] = settingsData[key];
+  });
+
+  const formOwned = settingsData?.operational_hours?.regional?.timezone?.value
+    ? settingsData
+    : fallbackSettings;
+
+  setValue('settings', { ...formOwned, ...carriedThrough });
 
   setValue('settings.transcription', asToggleWithOverride(settingsData?.transcription));
   setValue('settings.ai_call_monitoring', asToggleWithOverride(settingsData?.ai_call_monitoring));

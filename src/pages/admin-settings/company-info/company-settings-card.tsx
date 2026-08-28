@@ -14,7 +14,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Clock, Mic, ShieldCheck, Voicemail } from 'lucide-react';
+import { ArrowRight, Clock, Mic, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -67,12 +67,12 @@ const CompanySettingsCard = () => {
               : 'Not set',
         staffMayChange: readPath(settings, 'operational_hours.override') === true,
       },
-      {
-        icon: <Voicemail className="h-4 w-4" />,
-        label: 'Voicemail',
-        value: settings?.voicemail_pin?.voicemail_to_text === 'YES' ? 'With transcript' : 'On',
-        staffMayChange: readPath(settings, 'voicemail_pin.override') === true,
-      },
+      /* No voicemail row. The company-level voicemail editor is commented out
+         in the settings tab, so nothing here could ever be set — the card was
+         reading the initial-state default and presenting it as the company's
+         choice, complete with a Locked / Staff can change badge. Showing a
+         setting that cannot be changed, with a value nobody chose, is worse
+         than showing nothing. It belongs back here once that editor returns. */
       {
         icon: <Mic className="h-4 w-4" />,
         label: 'Call recording',

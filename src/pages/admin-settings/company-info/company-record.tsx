@@ -60,6 +60,11 @@ const Field = ({ label, value }: { label: string; value?: string }) => (
 const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  /* Set once the server has actually refused a save. The explanation below is
+     shown only then — stating it up front would be guessing about a deployment
+     we cannot see from the browser, and on an install where the endpoint does
+     work the note would simply be wrong. */
+  const [serverRefused, setServerRefused] = useState(false);
   const { refetch } = useUser();
 
   const uuid = companyInfo?.uuid || '';
@@ -82,7 +87,14 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
      location, which is a visible, reversible action. */
   const name = record?.name || record?.company_name || defaultSite?.name || '';
 
-  const { register, handleSubmit, reset, watch, setValue } = useForm<any>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { dirtyFields },
+  } = useForm<any>({
     defaultValues: {
       name: '',
       address: '',
@@ -168,6 +180,7 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
     },
     onError: (error: any) => {
       const status = error?.response?.status;
+      if (status === 401 || status === 403) setServerRefused(true);
       handleAlert({
         text:
           status === 401 || status === 403
@@ -180,19 +193,37 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
     },
   });
 
+  /* Only the fields the admin actually edited are sent, and a field left alone
+     is omitted rather than sent empty.
+     
+     This matters more than it looks. The session's company_info carries the
+     address but NOT name, city, state, country or postal code, so those seed
+     as blank no matter what the company record holds. Sending them anyway meant
+     an admin correcting one line of the street address also wrote '' over four
+     columns they had never seen — Sequelize strips `undefined` before writing
+     but treats '' as a real value. The name is worse: it seeds from the main
+     location's name, because the company's own name cannot be read, so an
+     untouched save would have written the location name onto the company.
+     
+     Omitting untouched fields makes both harmless. */
   const onSubmit = (values: any) => {
     if (!uuid) return;
-    save({
-      uuid,
-      name: values.name,
-      address: values.address,
-      postal_code: values.postal_code,
-      /* Codes for country and state, matching what signup wrote; cities have no
-         code so the name is the value. */
-      country: values.country?.value || '',
-      state: values.state?.value || '',
-      city: values.city?.value || '',
-    });
+
+    const payload: Record<string, any> = { uuid };
+    if (dirtyFields.name) payload.name = values.name;
+    if (dirtyFields.address) payload.address = values.address;
+    if (dirtyFields.postal_code) payload.postal_code = values.postal_code;
+    /* Codes for country and state, matching what signup wrote; cities have no
+       code so the name is the value. */
+    if (dirtyFields.country) payload.country = values.country?.value || '';
+    if (dirtyFields.state) payload.state = values.state?.value || '';
+    if (dirtyFields.city) payload.city = values.city?.value || '';
+
+    if (Object.keys(payload).length === 1) {
+      return handleAlert({ text: 'Nothing has been changed.', type: 'info' });
+    }
+
+    save(payload as any);
   };
 
   const handleCopyId = async () => {
@@ -252,6 +283,31 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
           )}
         </div>
       </div>
+
+      {/* Where the name on this card actually comes from, and what can be done
+          about it today. Signup names the main location after the company, and
+          the session does not carry the company's own name — so the name above
+          is the main location's. That one IS editable, which is a real fix for
+          a wrong name on screen. It is deliberately not described as renaming
+          the company: invoices and number purchases read the company record,
+          which keeps the old name until the API allows a change. */}
+      {serverRefused && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-semibold text-gray-900">
+            These details cannot be changed from here yet
+          </p>
+          <p className="mt-1 text-xs text-gray-700">
+            The name shown above is your main location&rsquo;s name, and you{' '}
+            <strong>can</strong> change that — edit the main location below and the name here
+            follows. That corrects what everyone sees.
+          </p>
+          <p className="mt-1 text-xs text-gray-700">
+            Your registered address is held on a separate billing record, which only your provider
+            can change today. Invoices and number purchases read that record, so ask them to update
+            it if it is wrong.
+          </p>
+        </div>
+      )}
 
       {isEditing ? (
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col gap-4">
