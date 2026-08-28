@@ -3392,3 +3392,19 @@
   color: var(--ink-3, #6b7280);
   font-size: 12px;
 }
+
+/* Briefly outlines the section a setup-guide step jumped to. Without it the
+   page scrolls and nothing tells you which row you landed on. */
+.mcm-flash {
+  animation: mcm-flash-outline 1.6s ease-out;
+}
+
+@keyframes mcm-flash-outline {
+  0%,
+  60% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #2563eb) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}

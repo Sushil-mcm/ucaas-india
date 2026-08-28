@@ -12,7 +12,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useSetupProgress } from '@/hooks/use-setup-progress';
 
@@ -30,7 +30,25 @@ const readDismissed = (): boolean => {
 
 const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [dismissed, setDismissed] = useState(readDismissed);
+
+  /* Two steps point at the page the guide is already on. Calling navigate() for
+     those is a no-op, so the row looked broken — clicking it did nothing at all.
+     They scroll to their section instead, and flash its outline, because a page
+     that silently jumps leaves you unsure whether anything happened. */
+  const goToStep = (path: string, anchor?: string) => {
+    if (anchor && pathname === path) {
+      const target = document.getElementById(anchor);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('mcm-flash');
+        window.setTimeout(() => target.classList.remove('mcm-flash'), 1600);
+        return;
+      }
+    }
+    navigate(path);
+  };
   const [expanded, setExpanded] = useState(true);
   const { steps, completed, total, next, isLoading, licences } = useSetupProgress(companyInfo);
 
@@ -99,7 +117,7 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
               <li key={step.key}>
                 <button
                   type="button"
-                  onClick={() => navigate(step.path)}
+                  onClick={() => goToStep(step.path, step.anchor)}
                   className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                     isNext
                       ? 'border-primary bg-white'

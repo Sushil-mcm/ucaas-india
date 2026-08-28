@@ -25,6 +25,10 @@ export interface SetupStep {
   /* What the admin gets out of doing it, not what the screen is called. */
   purpose: string;
   path: string;
+  /* Set when the step's destination is on the page the guide itself sits on.
+     Navigating there would appear to do nothing, so the guide scrolls to the
+     section instead. */
+  anchor?: string;
   done: boolean;
   /* Shown under the title — "2 of 3 licences used", "no numbers yet". */
   detail: string;
@@ -90,6 +94,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         title: 'Company details',
         purpose: 'Your name and address, used on bills and when buying numbers.',
         path: '/admin-settings/company-info',
+        anchor: 'setup-company-record',
         /* Judged on the address alone. The session's company_info is built from a
            fixed attribute list that includes `address` but NOT `name`, so testing
            for a name meant this step could never be ticked — it read as "not
@@ -104,6 +109,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         title: 'Locations',
         purpose: 'Each place you work from. Sets the clock and the address for everyone there.',
         path: '/admin-settings/company-info',
+        anchor: 'setup-locations',
         done: completedLocations > 0,
         detail:
           completedLocations > 0
@@ -124,7 +130,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'numbers',
         title: 'Numbers',
         purpose: 'The numbers customers dial, pointed at the right person or menu.',
-        path: '/admin-settings/numbers/numbers-in-use',
+        path: '/admin-settings/numbers/in-use',
         done: numberCount > 0,
         detail:
           numberCount > 0
@@ -135,7 +141,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'handling',
         title: 'Call handling',
         purpose: 'What happens when nobody answers, and outside working hours.',
-        path: '/admin-settings/phone/preferences',
+        path: '/admin-settings/company-info/rules',
         /* Deliberately never ticked automatically. Whether calls are handled
            correctly cannot be read off a row count — a number can be configured
            and still drop every out-of-hours call. Call Coverage is where that is

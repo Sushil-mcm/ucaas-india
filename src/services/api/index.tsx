@@ -1544,7 +1544,12 @@ export const upsertCompany = (data: {
     method: routes.COMPANY_UPSERT.METHOD,
     url: routes.COMPANY_UPSERT.URL,
     data,
-  });
+    /* This route sits under /api/admin. If the deployment gates it to platform
+       staff, a customer admin gets a 401 — which must read as "not permitted"
+       and not end their session. Pressing Save should never log you out. */
+    allowUnauthorized: true,
+    hideToastOnError: true,
+  } as any);
 };
 
 export const changePassword = (data: any) => {

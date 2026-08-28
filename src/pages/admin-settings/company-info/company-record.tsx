@@ -166,6 +166,18 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
       setIsEditing(false);
       refetch();
     },
+    onError: (error: any) => {
+      const status = error?.response?.status;
+      handleAlert({
+        text:
+          status === 401 || status === 403
+            ? 'The server will not let a company administrator change these details. Your session is fine — this needs a change on the API side. Nothing was saved.'
+            : error?.response?.data?.message ||
+              error?.response?.data?.error?.message ||
+              'Could not save the company details. Nothing was changed.',
+        type: 'error',
+      });
+    },
   });
 
   const onSubmit = (values: any) => {
@@ -226,11 +238,18 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
               {copied ? 'Copied' : 'Company ID'}
             </button>
           )}
-          {/* Edit is hidden for the same reason the fetch was removed: the only
-              save endpoint, /api/admin/company/upsert, is behind AdminMiddleware
-              and 401s for every customer — and a 401 force-logs them out. The
-              form below is kept intact and re-enables the moment a tenant-scoped
-              endpoint exists. */}
+          {/* Editing is back. The reason it was hidden was not the form but the
+              consequence of failing: /api/admin/company/upsert may be gated to
+              platform staff, and a 401 used to tear the session down, so pressing
+              Save logged the admin out. That call now opts out of the session
+              teardown (see `allowUnauthorized` in services/api/axios.tsx), so the
+              worst case is a clear message instead of being thrown to the login
+              screen. */}
+          {!isEditing && (
+            <Button type="button" variant="outline" onClick={() => setIsEditing(true)}>
+              Edit details
+            </Button>
+          )}
         </div>
       </div>
 

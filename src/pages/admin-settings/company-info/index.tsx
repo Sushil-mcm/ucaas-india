@@ -135,7 +135,9 @@ const CompanyInfo = () => {
                 first, and it disappears once everything is done. */}
             <SetupGuide companyInfo={user?.company_info} />
 
-            <CompanyRecord companyInfo={user?.company_info} defaultSite={defaultSite} />
+            <div id="setup-company-record" className="rounded-xl">
+              <CompanyRecord companyInfo={user?.company_info} defaultSite={defaultSite} />
+            </div>
 
             {/* Company-wide rules belong on the company screen, which is where
                 Dialpad and Genesys put them and where an admin looks. The editor
@@ -166,7 +168,7 @@ const CompanyInfo = () => {
                 </li>
               </ul>
             </div>
-            <div className="flex items-center gap-3">
+            <div id="setup-locations" className="flex items-center gap-3 rounded-xl">
               <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-gray-900">
                 <Briefcase className="h-4.5 w-4.5 text-primary" />
                 Default location

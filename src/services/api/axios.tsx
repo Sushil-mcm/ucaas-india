@@ -3,6 +3,14 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   hideToastOnError?: boolean;
+  /* Set on calls where a 401 means "you are not allowed to do this", not "your
+     session has expired". Some /api/admin routes sit behind middleware that
+     resolves the token against the platform staff table, so every ordinary
+     customer gets a 401 from them no matter how valid their session is. Tearing
+     the session down on that answer logs a customer out for pressing a button.
+     Only set this where the 401 is genuinely about permission — everywhere else
+     the logout is correct. */
+  allowUnauthorized?: boolean;
 }
 
 const ORG_ID_HEADER = 'X-ORG-ID';
@@ -128,7 +136,7 @@ apiClient.interceptors.response.use(
 
     }
 
-    if (error?.response?.status === 401) {
+    if (error?.response?.status === 401 && !config?.allowUnauthorized) {
       if (typeof window !== 'undefined') {
         (window as any).isSessionTerminated = true;
       }
