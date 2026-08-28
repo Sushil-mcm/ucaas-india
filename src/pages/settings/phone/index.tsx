@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 const IncomingCalls = () => {
   const [schemaContext, setSchemaContext] = useState(null);
@@ -22,7 +23,6 @@ const IncomingCalls = () => {
     queryFn: getUserDetails,
     select: (data) => data?.data?.data?.result || [],
   });
-  console.log('userDetails', userDetails);
   const methods = useForm<any>({
     mode: 'all',
     defaultValues: { CallRules },
@@ -155,8 +155,11 @@ const IncomingCalls = () => {
         region: callRules?.outgoingCall?.region,
       },
     };
+    /* Only the keys above belong to this screen. Everything else already on the
+       record — the person's do-not-disturb among them — is carried through, so
+       saving here does not delete what another screen owns. */
     const payload = {
-      value: callRuleRequest,
+      value: mergeCallForwarding(userDetails?.call_forwarding, callRuleRequest),
       key: 'call_forwarding',
     };
 
@@ -209,16 +212,13 @@ const IncomingCalls = () => {
           timeObj,
         },
       },
-      (response: any) => {
-        console.log('User-presence-update:', response);
-      },
+      () => {},
     );
   }
 
   const { mutate: mutateUserUpdateStatus } = useMutation({
     mutationFn: userUpdateStatus,
-    onSuccess: (data, variables) => {
-      console.log('data', data);
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries(['getUsersDetails']);
       statusChangeEvent(variables?.socket_status, {
         holiday_start_date: null,
@@ -424,16 +424,23 @@ const IncomingCalls = () => {
       });
 
       setValue('callRules.failureAction.value', {
-        lable: fallbackLabel,
+        label: fallbackLabel,
         value: fallbackValue,
       });
       setValue('callRules.failureAction.type', { label: 'Send to Voicemail', value: 'VOICEMAIL' });
       setValue('callRules.failureAction.personal', true);
       setValue('callRules.forwardCall.value', {
-        lable: fallbackLabel,
+        label: fallbackLabel,
         value: fallbackValue,
       });
       setValue('callRules.forwardCall.type', { label: 'Send to Voicemail', value: 'VOICEMAIL' });
+
+      /* Presence is not edited on this screen, but it is part of the payload it
+         saves. With no stored rules there is nothing to hydrate it from, so it
+         stayed undefined and Submit broadcast an undefined status and posted one
+         to update-status. The person's current availability is the truthful
+         value for a record that has never stored one. */
+      setValue('callRules.status', user?.socket_status || 'online');
     }
   }, [userDetails]);
 

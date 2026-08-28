@@ -10,14 +10,12 @@ import { Input } from '@/components/ui/input';
 import { SearchLine } from '@/assets/icons';
 import { useState, useMemo } from 'react';
 import useDebounce from '@/hooks/use-debounce';
-import CustomSelect from '@/components/custom/custom-select';
 import ChangePassword from '@/pages/change-password';
 import { KeyRound } from 'lucide-react';
 
 const Security = () => {
   const { user } = useUser();
   const [search, setSearch] = useState('');
-  const [selectedUserUuid, setSelectedUserUuid] = useState<string>('');
   const [selectedUserExtension, setSelectedUserExtension] = useState<string>('');
   /* The change-password dialog was written and then never mounted anywhere, so
      there has been no way to change a password from inside the console. */
@@ -46,28 +44,32 @@ const Security = () => {
     },
   });
 
-  const uniqueUsers = useMemo(() => {
-    const userMap = new Map();
-    loggedInUsers.forEach((item: any) => {
-      const uuid = item?.user_uuid;
-      if (uuid && !userMap.has(uuid)) {
-        userMap.set(uuid, {
-          label:
-            `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''} (${item?.user_detail?.extension || 'No Ext'})`.trim(),
-          value: uuid,
-          extension: item?.user_detail?.extension || '',
-        });
-      }
-    });
-    return Array.from(userMap.values());
-  }, [loggedInUsers]);
+  /* This page is titled "your password, and every device signed in as you", and
+     that is what it should show. The endpoint behind it returns every device in
+     the COMPANY, and the picker below let anyone choose a colleague and end
+     their sessions — the server takes the target from the request and does not
+     check it is you.
+     
+     Scoped here to the signed-in person. Ending someone else's session is an
+     administrative act and belongs on an admin screen, not on a page about your
+     own account. The server-side check is the real fix and is still needed;
+     this stops the product offering it. */
+  const currentUserUuid = `${user?.uuid || user?.user_info?.uuid || ''}`.trim();
+
+  const ownDevices = useMemo(
+    () =>
+      currentUserUuid
+        ? loggedInUsers.filter((item: any) => `${item?.user_uuid || ''}`.trim() === currentUserUuid)
+        : loggedInUsers,
+    [loggedInUsers, currentUserUuid],
+  );
+
 
   const { mutate: logoutMutate } = useMutation({
     mutationFn: logout,
     onSuccess: (data) => {
       handleAlert({ text: data?.data?.data?.message, type: 'success' });
       setSelectedUserExtension('');
-      setSelectedUserUuid('');
 
       refetch();
     },
@@ -77,25 +79,19 @@ const Security = () => {
     const payload = {
       type,
       device_securities: item?.uuid ? [item?.uuid] : [],
-      user_uuid: item?.user_uuid || selectedUserUuid,
+      user_uuid: item?.user_uuid || currentUserUuid,
     };
     logoutMutate(payload);
   };
 
   const handleLogoutAll = () => {
-    if (!selectedUserUuid) {
-      handleAlert({ text: 'Please select a user first', type: 'error' });
-      return;
-    }
-    logoutDevice('all', { user_uuid: selectedUserUuid });
+    if (!currentUserUuid) return;
+    logoutDevice('all', { user_uuid: currentUserUuid });
   };
 
   const handleLogoutExcept = () => {
-    if (!selectedUserUuid) {
-      handleAlert({ text: 'Please select a user first', type: 'error' });
-      return;
-    }
-    logoutDevice('except_himself', { user_uuid: selectedUserUuid });
+    if (!currentUserUuid) return;
+    logoutDevice('except_himself', { user_uuid: currentUserUuid });
   };
 
   return (
@@ -125,47 +121,34 @@ const Security = () => {
           </Button>
         </div>
         <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
-          <div className="flex flex-col gap-1 sm:w-1/2 w-full">
-            <p className="text-gray-900 font-semibold text-sm">Force Logout User</p>
-            <p className="text-gray-500 text-xs">
-              Select a user to sign them out from all active sessions across all devices.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 sm:flex-row flex-col sm:w-auto w-full">
-            <CustomSelect
-              className="min-w-[240px] flex-1"
-              options={uniqueUsers}
-              value={selectedUserUuid}
-              handleChange={(val: any) => {
-                setSelectedUserUuid(val?.value || '');
-                setSelectedUserExtension(val?.extension || '');
-              }}
-              placeholder="Select User"
-              isLoading={isLoading}
-              isClearable
-            />
-            <Button
-              variant="destructiveOutline"
-              onClick={handleLogoutAll}
-              disabled={!selectedUserUuid}
-              className="whitespace-nowrap transition-all duration-200"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout All Devices
-            </Button>
-
-            {selectedUserUuid === user?.uuid && (
-              <Button
-                variant="destructiveOutline"
-                onClick={handleLogoutExcept}
-                disabled={!selectedUserUuid}
-                className="whitespace-nowrap transition-all duration-200"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout Except This Device
-              </Button>
-            )}
-          </div>
+              <div className="flex flex-col gap-1 sm:w-1/2 w-full">
+                <p className="text-gray-900 font-semibold text-sm">Sign out everywhere</p>
+                <p className="text-gray-500 text-xs">
+                  Ends every session signed in as you &mdash; useful if you have lost a phone or
+                  used a shared computer. To sign someone else out, an administrator does that
+                  from Users.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 sm:flex-row flex-col sm:w-auto w-full">
+                <Button
+                  variant="destructiveOutline"
+                  onClick={handleLogoutExcept}
+                  disabled={!currentUserUuid}
+                  className="whitespace-nowrap transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out my other devices
+                </Button>
+                <Button
+                  variant="destructiveOutline"
+                  onClick={handleLogoutAll}
+                  disabled={!currentUserUuid}
+                  className="whitespace-nowrap transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out everywhere
+                </Button>
+              </div>
         </div>
         <div className="w-full flex sm:flex-row flex-col items-center justify-between gap-5">
           <p className="text-gray-800 text-sm">
@@ -194,8 +177,8 @@ const Security = () => {
               <Loader variant="blue" />
             </div>
           ) : (
-            loggedInUsers &&
-            loggedInUsers?.map((item: any) => {
+            ownDevices &&
+            ownDevices?.map((item: any) => {
               return (
                 <div
                   className="border cursor-pointer p-3 flex sm:flex-row flex-col  gap-2 rounded-lg sm:justify-between bg-white  

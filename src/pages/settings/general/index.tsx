@@ -1,7 +1,7 @@
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import CommonSettingPermission from '@/components/common-settings';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/hooks/use-user';
+import { POLICY_FIELDS, useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
 import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
@@ -24,15 +24,27 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
   // const breadcrumbData = [{ label: 'Settings' }, { label: 'General' }];
   const queryClient: any = useQueryClient();
   const [schemaContext, setSchemaContext] = useState<any>(null);
+
+  /* The same company rule the editor below reads, read once more here so the
+     validation agrees with what is on screen. A setting the company has locked is
+     greyed out, so requiring a value in it would leave this form permanently
+     unsubmittable with an error pointing at a control the person cannot open.
+     The query is shared with the editor, so this costs no extra request. */
+  const companyPolicy = useCompanyPolicy({ enabled: true });
+  const lockedFields = (Object.keys(POLICY_FIELDS) as PolicyField[]).filter(
+    (field) => !companyPolicy.allows(field),
+  );
+
   const methods = useForm({
     mode: 'all',
     defaultValues: { settings: settingsInitialState },
     resolver: yupResolver(upsertUserSettingsSchema[FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS]),
-    context: { activeTab: FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS, schemaContext },
+    context: {
+      activeTab: FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS,
+      schemaContext,
+      lockedFields,
+    },
   });
-  const { user } = useUser();
-  const { user_info } = user || {};
-  const IS_ADMIN = user_info?.role === 'ADMIN';
 
   const { handleSubmit, setValue, watch } = methods;
 
@@ -211,7 +223,8 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
           <div>
             <p className="text-gray-900 font-semibold text-lg">{heading}</p>
             <p className="text-gray-500 text-xs">
-              Your own regional settings, business hours and call handling. Company-wide rules live under Phone System → Preferences.
+              Your own regional settings, business hours and call handling. Company-wide rules live
+              under Phone System → Preferences.
             </p>
           </div>
         </div>
@@ -229,14 +242,28 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
                   origin={'general_settings'}
                   company_info={userInfoData?.company_info}
                   isChooseTemplate={false}
-                  isEditable={IS_ADMIN}
+                  /* These are the person's own settings — their timezone, their
+                     hours, their recording preference — so they may edit them.
+                     This used to be `isEditable={IS_ADMIN}`, which greyed out the
+                     whole page for everyone who was not an admin, including every
+                     tenant that has no company rule at all. Holding people back
+                     from settings the company controls is the company rule's job,
+                     and it does it per setting rather than per job title. */
+                  isEditable={true}
                   // isShowVoicemail={true}
                   customClass="md:min-h-[calc(100vh_-_13rem)]"
                   selectedUserExt={userInfoData?.user_info?.extension}
                 />
               </div>
               <div className="flex justify-end mcm-stickyfoot">
-                <Button variant={'primary'} type="submit" disabled={PendingGeneralSettings}>
+                {/* Saving before the company rule has arrived could write a value the
+                    company does not allow, so the button waits for it. The query has
+                    no retry, so this is one request long either way. */}
+                <Button
+                  variant={'primary'}
+                  type="submit"
+                  disabled={PendingGeneralSettings || companyPolicy.isLoading}
+                >
                   {PendingGeneralSettings ? 'Submiting...' : 'Submit'}
                 </Button>
               </div>

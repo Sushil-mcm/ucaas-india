@@ -18,6 +18,7 @@ import * as yup from 'yup';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import HowCallsReachYou from './how-calls-reach-you';
 import CallSetupGuide from './call-setup-guide';
+import { buildProfileUpdatePayload } from './profile-update-payload';
 
 export const BasicInfoSettingSchema = yup.object().shape({
   basic: yup.object().shape({
@@ -119,6 +120,9 @@ const BasicInfoSettings = () => {
           });
           if (uploadFileResponse.status === 200) {
             setValue('profile', file_name);
+            /* A new picture undoes an earlier removal in the same session —
+               without this the save would still send the removal. */
+            setIsImageRemoved(false);
             setModalState(false);
           }
         }
@@ -130,20 +134,18 @@ const BasicInfoSettings = () => {
   };
 
   const onSubmit = () => {
-    const userProfile = watch('profile');
-    const payload: any = {
-      first_name: watch('basic.first_name'),
-      last_name: watch('basic.last_name'),
-      job_title: watch('basic.job_title'),
-      site_uuid: watch('basic.site')?.value,
-      uuid: userInfoData?.uuid,
-      profile: watch('profile')?.value || '',
-    };
-
-    if (userProfile) {
-      payload.profile = userProfile;
-    }
-    mutateProfileUpdate(payload);
+    mutateProfileUpdate(
+      buildProfileUpdatePayload({
+        userInfoData,
+        basic: {
+          first_name: watch('basic.first_name'),
+          last_name: watch('basic.last_name'),
+          job_title: watch('basic.job_title'),
+        },
+        uploadedProfile: watch('profile'),
+        isImageRemoved,
+      }),
+    );
   };
 
   useEffect(() => {
@@ -188,8 +190,12 @@ const BasicInfoSettings = () => {
         ) : (
           <div className="w-full flex-1 overflow-y-auto p-4">
             <div className="mx-auto mb-4 w-full md:max-w-[80%]">
+              {/* Only the name/extension/location fields live under
+                  `user_info`; the call rules, settings and greetings are its
+                  siblings at the response root, so they are passed from there. */}
               <HowCallsReachYou
                 userInfo={userInfoData?.user_info}
+                callForwarding={userInfoData?.call_forwarding}
                 settings={userInfoData?.settings}
                 greetings={userInfoData?.greetings}
               />

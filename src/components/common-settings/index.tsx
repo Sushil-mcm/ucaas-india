@@ -28,6 +28,14 @@ export const getWeeklyScheduleName = (obj: WeeklySchedule = {}): string =>
     .map((day) => WEEKLY_SCHEDULE_MAP[day])
     .join(', ');
 
+/* The banner at the top of the page says a company rule is in force; this says which
+   control it is on. Without it a greyed-out button is indistinguishable from a broken
+   one, and the person has no way to tell which of the two they are looking at. */
+const CompanyLockNote: FC<{ show: boolean }> = ({ show }) =>
+  show ? (
+    <p className="text-xs text-gray-500">Set by your company, so you cannot change it here.</p>
+  ) : null;
+
 const CommonSettingPermission: FC<any> = ({
   data,
   isEditable = true,
@@ -53,6 +61,12 @@ const CommonSettingPermission: FC<any> = ({
     if (!isOwnSettingsPage || !companyPolicy.isActive) return isEditable;
     return companyPolicy.allows(field);
   };
+
+  /* Greyed out *because of the company rule*, which is the only case worth explaining
+     at the control. A screen that renders this editor read-only for its own reasons
+     says so in its own words, and should not borrow this wording. */
+  const isCompanyLocked = (field: PolicyField): boolean =>
+    isOwnSettingsPage && companyPolicy.isActive && !canEditField(field);
 
   /* Only the settings this screen actually shows count, so the notice does not
      appear because of a locked field that lives on a different page. */
@@ -158,9 +172,8 @@ const CommonSettingPermission: FC<any> = ({
             than in a support ticket. Shown only when something is actually locked. */}
         {isOwnSettingsPage && companyPolicy.isActive && hasCompanyLockedFields && (
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
-            Some settings below are greyed out because they are set for everyone by your
-            company. An administrator can change them under{' '}
-            <strong>Phone System → Preferences</strong>.
+            Some settings below are greyed out because they are set for everyone by your company. An
+            administrator can change them under <strong>Phone System → Preferences</strong>.
           </div>
         )}
         <div className="grid grid-cols-1 gap-3">
@@ -216,6 +229,7 @@ const CommonSettingPermission: FC<any> = ({
                   : ''}
                 {/* : 'Regional settings are not configured.'} */}
               </p>
+              <CompanyLockNote show={isCompanyLocked('regional')} />
             </div>
             <Button
               type="button"
@@ -248,6 +262,7 @@ const CommonSettingPermission: FC<any> = ({
                         .join(', ')
                     : 'Voicemail settings are not configured.'}
                 </p>
+                <CompanyLockNote show={isCompanyLocked('voicemail')} />
               </div>
               <Button
                 type="button"
@@ -297,6 +312,7 @@ const CommonSettingPermission: FC<any> = ({
                         : getWeeklyScheduleName(operational_hours?.value)}
                   </p>
                 )}
+                <CompanyLockNote show={isCompanyLocked('business_hours')} />
               </div>
               <Button
                 type="button"
@@ -325,6 +341,7 @@ const CommonSettingPermission: FC<any> = ({
                       ? `${recording?.automatic?.enabled ? 'Automatic' : ''} ${recording?.automatic?.enabled && recording?.on_demand?.enabled ? '&' : ''} ${recording?.on_demand?.enabled ? 'On Demand' : ''} call recording is enabled.`
                       : 'Automatic & on demand call recording is disabled.'}
                   </p>
+                  <CompanyLockNote show={isCompanyLocked('recording')} />
                 </div>
                 <Button
                   type="button"
@@ -349,6 +366,7 @@ const CommonSettingPermission: FC<any> = ({
                     Automatic transcription is{' '}
                     {readToggle('settings.transcription') ? 'enabled' : 'disabled'}.
                   </p>
+                  <CompanyLockNote show={isCompanyLocked('transcription')} />
                 </div>
                 <Switch
                   checked={readToggle('settings.transcription')}
@@ -372,6 +390,7 @@ const CommonSettingPermission: FC<any> = ({
                     {/* AI Call Monitoring is{' '}
                     {watch('settings.ai_call_monitoring') ? 'enabled' : 'disabled'}. */}
                   </p>
+                  <CompanyLockNote show={isCompanyLocked('ai_call_monitoring')} />
                 </div>
                 <Switch
                   checked={readToggle('settings.ai_call_monitoring')}
@@ -406,6 +425,7 @@ const CommonSettingPermission: FC<any> = ({
                     ? 'Display number is not configured'
                     : `Masking is ${display_number?.masking?.type?.label?.toLowerCase()} with ${display_number?.masking?.value} `}
                 </p>
+                <CompanyLockNote show={isCompanyLocked('display_number')} />
               </div>
               <Button
                 type="button"

@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logout, updateMemberForwading, userUpdateStatus } from '@/services/api';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
+import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 const AvatarContent = ({ setProfileState }: any) => {
   const { user, handleRemoveUser } = useUser();
@@ -70,12 +71,10 @@ const AvatarContent = ({ setProfileState }: any) => {
 
   const handleUserCallRules = (status: string) => {
     const userInfo = user?.user_info || {};
-    const callRuleRequest = {
-      forward_calls: user?.call_forwarding?.forward_calls,
-      incoming_calls: user?.call_forwarding?.incoming_calls,
-      outgoing_calls: user?.call_forwarding?.outgoing_calls,
-      status,
-    };
+    /* Presence is the only key this menu owns. The rest of the record — the
+       forwarding rules and the do-not-disturb flag — is carried through, so
+       changing your availability does not delete it. */
+    const callRuleRequest = mergeCallForwarding(user?.call_forwarding, { status });
     const rolePayloadKey = userInfo?.custom_role_uuid ? 'custom_role_uuid' : 'role_uuid';
     const payload = {
       first_name: userInfo?.first_name || '',

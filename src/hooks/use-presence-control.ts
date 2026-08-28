@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateMemberForwading, userUpdateStatus } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import { useSocketEvents } from '@/hooks/use-socket-events';
+import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 /**
  * Availability — Available / Busy / DND.
@@ -81,7 +82,28 @@ export const useMyPresenceControl = () => {
     const roleKey = userInfo?.custom_role_uuid ? 'custom_role_uuid' : 'role_uuid';
 
     /* The whole record goes back: `/api/user/update` treats a missing field as a
-       cleared one, so forwarding rules, role and location all travel with it. */
+       cleared one, so forwarding rules, role and location all travel with it.
+       
+       Greetings and settings travel too, and they were missing. Presence changes
+       are the most frequent write any person makes — every Busy, Away and back to
+       Available — so leaving them out quietly erased somebody's voicemail
+       greeting and personal settings the first time they marked themselves busy.
+       Both are returned as an object or as JSON text depending on the call, so
+       both are normalised before being sent back untouched. */
+    const asStoredObject = (value: any) => {
+      if (!value) return {};
+      if (typeof value !== 'string') return value;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return {};
+      }
+    };
+    const storedGreetings = asStoredObject(
+      (user as any)?.greetings ?? userInfo?.greetings,
+    );
+    const storedSettings = asStoredObject((user as any)?.settings ?? userInfo?.settings);
+
     updateMember({
       first_name: userInfo?.first_name || '',
       last_name: userInfo?.last_name || '',
@@ -90,12 +112,9 @@ export const useMyPresenceControl = () => {
       site_uuid: userInfo?.site_uuid || '',
       profile: userInfo?.profile || '',
       [roleKey]: userInfo?.custom_role_uuid || userInfo?.role_uuid || null,
-      call_forwarding: {
-        forward_calls: (user as any)?.call_forwarding?.forward_calls,
-        incoming_calls: (user as any)?.call_forwarding?.incoming_calls,
-        outgoing_calls: (user as any)?.call_forwarding?.outgoing_calls,
-        status,
-      },
+      call_forwarding: mergeCallForwarding((user as any)?.call_forwarding, { status }),
+      ...(Object.keys(storedGreetings).length ? { greetings: storedGreetings } : {}),
+      ...(Object.keys(storedSettings).length ? { settings: storedSettings } : {}),
       uuid: user?.uuid,
       userID: user?.uuid,
     });

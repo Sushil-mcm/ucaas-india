@@ -3,6 +3,21 @@ import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 import { FORWARDING_TAB_CONSTANT, holidaySchema, UPDATE_FORWARDING_INITIAL } from '../../constants';
 import { requiredString } from '@/lib/schema';
 
+/* A setting the company has locked is greyed out on the person's own settings page,
+   so requiring a value in it would be asking for something they have no way to give:
+   the form would fail validation for ever on a control they cannot open. The screen
+   passes the locked settings in as `lockedFields`; screens with no company rule pass
+   nothing, so every field there stays required exactly as it was. */
+const isLockedByCompany = (lockedFields: unknown, field: string): boolean =>
+  Array.isArray(lockedFields) && lockedFields.includes(field);
+
+const requiredUnlessLocked = (field: string, message: string) =>
+  yup.string().when('$lockedFields', {
+    is: (lockedFields: unknown) => isLockedByCompany(lockedFields, field),
+    then: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.required(message),
+  });
+
 const greetingSelectionSchema = (requiredMessage: string) =>
   yup.object().shape({
     enabled: yup.boolean(),
@@ -40,19 +55,24 @@ export const upsertUserSettingsSchema: Record<string, yup.ObjectSchema<any>> = {
         regional: yup.object().shape({
           override: yup.boolean(),
           country_code: yup.object().shape({
-            value: yup.string().required('Country code is required'),
+            value: requiredUnlessLocked('regional', 'Country code is required'),
           }),
           timezone: yup.object().shape({
-            value: yup.string().required('Timezone is required'),
+            value: requiredUnlessLocked('regional', 'Timezone is required'),
           }),
           country: yup.object().shape({
-            value: yup.string().required('Country is required'),
+            value: requiredUnlessLocked('regional', 'Country is required'),
           }),
         }),
         closed_hour_action: yup.object().shape({
           value: yup.object().shape({
-            value: yup.string().when(['$schemaContext', '$activeTab'], {
-              is: (schema: any) => {
+            /* `$activeTab` was listed here but never read — the test below only ever
+               used the first value — so it is replaced by the one this needs. */
+            value: yup.string().when(['$schemaContext', '$lockedFields'], {
+              is: (schema: any, lockedFields: unknown) => {
+                /* Business hours carries the closed-hours action, so when the company
+                   locks the hours this cannot be filled in either. */
+                if (isLockedByCompany(lockedFields, 'business_hours')) return false;
                 const isWeekly = schema?.settings?.operational_hours?.type === 'weekly';
                 if (!isWeekly) return false;
                 const closedHoursAction = schema?.settings?.operational_hours?.closed_hour_action;
@@ -81,8 +101,12 @@ export const upsertUserSettingsSchema: Record<string, yup.ObjectSchema<any>> = {
       }),
       display_number: yup.object().shape({
         masking: yup.object().shape({
-          value: yup.string().when('type', {
-            is: (type: any) => type && type.value && type.value !== 'N',
+          value: yup.string().when(['type', '$lockedFields'], {
+            is: (type: any, lockedFields: unknown) =>
+              !isLockedByCompany(lockedFields, 'display_number') &&
+              type &&
+              type.value &&
+              type.value !== 'N',
             then: (schema) => schema.required('Masking value is required'),
             otherwise: (schema) => schema.notRequired(),
             //    value: yup.string().when('$schemaContext', {

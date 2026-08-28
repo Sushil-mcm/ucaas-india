@@ -124,11 +124,51 @@ export const evaluateNumber = (did: any): Coverage => {
 };
 
 /**
+ * A destination only counts if a human ends up hearing something. `HANGUP` is a
+ * real, selectable choice on the call-rules screens, and it is the one
+ * destination that ends the call the same way an empty rule does.
+ */
+const landsSomewhere = (type: string) => Boolean(type) && type !== 'HANGUP';
+
+/** How a stored rule's destination reads inside a sentence. */
+const describeTarget = (rule: any): string => {
+  const type = String(rule?.type || '').trim();
+  const name = String(rule?.label || rule?.name || rule?.value_label || '').trim();
+  const value = String(rule?.value || '').trim();
+
+  if (type === 'VOICEMAIL') {
+    return rule?.personal === false && name ? `${name}'s voicemail` : 'voicemail';
+  }
+  if (type === 'EXTENSION') {
+    if (name) return value ? `${name} (${value})` : name;
+    return value ? `extension ${value}` : 'another extension';
+  }
+  if (type === 'PHONE') return value ? `the number ${value}` : 'an outside number';
+  if (type === 'QUEUE') return name ? `the ${name} queue` : 'a call queue';
+  if (type === 'DEPARTMENT') return name ? `the ${name} group` : 'a group';
+  if (type === 'IVR') return name ? `the ${name} menu` : 'a menu';
+  if (type === 'GREETING' || type === 'MESSAGE') return 'a recorded message';
+  if (type === 'AI') return 'the virtual receptionist';
+  return name || type.toLowerCase() || 'another destination';
+};
+
+/**
  * Whether an extension catches its own unanswered calls.
  *
  * A number forwarding to an extension only lands the call if that extension
  * falls back to voicemail when nobody picks up — otherwise the number looks
  * covered while the call still dies one hop later.
+ *
+ * The rules are read in the order the platform reads them: Forward All Calls is
+ * checked before the devices ring, so while it is on it decides where every
+ * call lands and the fallback below is never reached. Judging the fallback
+ * first would describe a rule that is not being used.
+ *
+ * `enabled` is the switch the platform actually obeys, and it is checked on
+ * every rule. The call-rules form hydrates both dropdowns to "Send to
+ * Voicemail" whenever nothing is stored, and saves that displayed type even
+ * when the rule is switched off — so a stored `type` on its own proves nothing.
+ * Judging on the displayed type alone would reproduce that same lie here.
  */
 export const evaluateUser = (user: any): Coverage => {
   const rules =
@@ -136,31 +176,66 @@ export const evaluateUser = (user: any): Coverage => {
       ? parseForwardActions(user.call_forwarding)
       : user?.call_forwarding;
 
+  const forwardAll = rules?.forward_calls;
+  const forwardTo = String(forwardAll?.type || '').trim();
+  const forwardingAll = forwardAll?.enabled === true && Boolean(forwardTo);
+
+  if (forwardingAll && !landsSomewhere(forwardTo)) {
+    return {
+      state: 'gap',
+      headline: 'Hangs up',
+      detail: 'Forward All Calls is on and set to end the call, so every caller is hung up on.',
+      fixable: false,
+    };
+  }
+
+  if (forwardingAll) {
+    return {
+      state: 'covered',
+      headline: 'Forwarded',
+      detail:
+        forwardTo === 'VOICEMAIL'
+          ? 'Every call goes straight to voicemail without the phone ringing.'
+          : `Every call is forwarded to ${describeTarget(forwardAll)} without the phone ringing, and is handled there.`,
+      fixable: false,
+    };
+  }
+
   const failureAction = rules?.incoming_calls?.failure_action;
   const failure = String(failureAction?.type || '').trim();
-  const forwardTo = String(rules?.forward_calls?.type || '').trim();
+  const failureOn = Boolean(failure) && failureAction?.enabled !== false;
 
-  /* `enabled` is the switch the platform actually obeys. My Phone hydrates the
-     dropdown to "Send to Voicemail" whenever nothing is stored, so the screen
-     can show voicemail while the record holds nothing and the call hangs up.
-     Judging on the displayed type alone would reproduce that same lie here. */
-  if (failure && failureAction?.enabled !== false) {
+  if (failureOn && landsSomewhere(failure)) {
     return {
       state: 'covered',
       headline: 'Covered',
       detail:
         failure === 'VOICEMAIL'
           ? 'Unanswered calls go to voicemail.'
-          : `Unanswered calls fall back to ${failure.toLowerCase()}.`,
+          : `Unanswered calls go to ${describeTarget(failureAction)}.`,
       fixable: false,
     };
   }
 
-  if (forwardTo === 'VOICEMAIL') {
+  if (failureOn) {
     return {
-      state: 'covered',
-      headline: 'Covered',
-      detail: 'Calls go straight to voicemail.',
+      state: 'gap',
+      headline: 'Hangs up',
+      detail:
+        'Unanswered calls are set to be ended, so the caller is hung up on instead of reaching a message.',
+      fixable: false,
+    };
+  }
+
+  /* A stored type with `enabled: false` is a fallback that was switched off,
+     not one that was never chosen — worth saying differently, because the
+     call-rules screen still shows that destination in its dropdown. */
+  if (failure) {
+    return {
+      state: 'gap',
+      headline: 'Hangs up',
+      detail:
+        'The fallback for unanswered calls is switched off, so the caller is hung up on. Switch it back on to use it.',
       fixable: false,
     };
   }
@@ -168,9 +243,7 @@ export const evaluateUser = (user: any): Coverage => {
   return {
     state: 'gap',
     headline: 'Hangs up',
-    detail: failure
-      ? 'Voicemail is shown on this extension but was never saved, so unanswered calls are still hung up. Open it and press Submit.'
-      : 'Nothing catches an unanswered call, so the switch hangs up on the caller.',
+    detail: 'Nothing catches an unanswered call, so the switch hangs up on the caller.',
     fixable: false,
   };
 };

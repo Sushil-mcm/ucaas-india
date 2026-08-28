@@ -29,6 +29,7 @@ import Loader from '@/components/custom/loader';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import CommonSettingPermission from '@/components/common-settings';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 // ========== Types =========
 interface DeviceOption {
@@ -402,7 +403,10 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
       /* Omitted rather than sent empty: a blank value here means we failed to
          resolve the current site, not that the admin cleared it. */
       ...(basic?.site?.value ? { site_uuid: basic.site.value } : {}),
-      call_forwarding: callRuleRequest,
+      /* Only the keys above belong to this drawer. Everything else already on
+         the record — the person's own presence among them — is carried through,
+         so saving here does not delete what another screen owns. */
+      call_forwarding: mergeCallForwarding(data?.call_forwarding, callRuleRequest),
       [['MANAGER', 'ADMIN', 'AGENT', 'SUB-ADMIN'].includes(role?.label)
         ? 'role_uuid'
         : 'custom_role_uuid']: role?.value || null,
