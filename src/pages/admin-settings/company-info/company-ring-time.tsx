@@ -1,0 +1,496 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, PhoneCall, Timer, Users } from 'lucide-react';
+
+import CustomSelect from '@/components/custom/custom-select';
+import Loader from '@/components/custom/loader';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { handleAlert } from '@/lib/utils';
+import {
+  COMPANY_DEFAULTS_QUERY_KEY,
+  COMPANY_DEFAULT_TEMPLATE_NAME,
+  fetchCompanyDefaults,
+  saveCompanyDefaults,
+} from '@/lib/company-defaults';
+
+/**
+ * Company ring time
+ * -----------------------------------------------------------------------------
+ * How long a phone rings before the call gives up is one of the two numbers a
+ * customer changes first, and until now there was nowhere to say it once for the
+ * whole company. It could only be set in three unrelated places:
+ *
+ *   - per queue member, in Call Queue > Ring strategy ("Ring For")
+ *   - per department, as "Member Ring Timeout (Sec)"
+ *   - per device on one person's phone, in their Call rules > device options
+ *
+ * A new person gets whatever the code happens to default to. This page is the
+ * missing top level: one number, written down once, in the same reserved
+ * "Company Default" record the rest of Company info uses. It is namespaced under
+ * `settings.company_ring_time` and the rest of that blob is spread through
+ * untouched on save.
+ *
+ * ---------------------------------------------------------------------------
+ * READ THIS BEFORE YOU TRUST THIS PAGE
+ * ---------------------------------------------------------------------------
+ * Nothing reads this value. Grepped on the date this file was written:
+ *
+ *   grep -rn  "company_ring_time"                --include=*.ts(x) src/ -> only this file
+ *   grep -rn  "RINGING_OPTIONS"                  --include=*.ts(x) src/ -> 8 files, all of
+ *       which use the hardcoded two-item list; none consults the company record
+ *   grep -rn  "fetchCompanyDefaults"             --include=*.ts(x) src/ -> 10 readers,
+ *       none of them a call path — company pages, the setup-progress hook, the
+ *       business-hours dialog and lib/company-policy.ts (override flags only)
+ *   grep -rni "ring_time|ringTime|timeout"       src/context/dialpad-context.tsx ->
+ *       only JS timers (ICE, campaign clearing, AI auth); no ring duration
+ *   grep -rni "ring"                             src/services/ -> nothing
+ *
+ * The number that actually decides how long a phone rings is sent per device as
+ * `call_handling.incoming_calls.device_options[].timeout` from
+ * src/pages/admin-settings/users/extension/update-forwarding/index.tsx, and it
+ * falls back to a hardcoded `RINGING_OPTIONS[0]` — not to anything saved here.
+ * The switch never sees this record at all.
+ *
+ * So: saving on this page changes nothing about how long any phone rings today.
+ * The card says exactly that, in those words. If the backend ever starts reading
+ * the key, flip `IS_ENFORCED` and rewrite the note — do not leave a stale
+ * reassurance behind, because an admin who believes they have shortened the ring
+ * and has not will read every missed call as a fault somewhere else.
+ */
+
+const RING_TIME_KEY = 'company_ring_time';
+const RING_TIME_SCHEMA_VERSION = 1;
+
+/* Flip this only when something outside this file genuinely reads the key. */
+const IS_ENFORCED = false;
+
+/* Dialpad ships 30 seconds. Genesys ships 12 and refuses anything above 60, so
+   60 is the ceiling here too: offering 90 would let an admin save a number that
+   the stricter of the two vendors would reject outright. */
+const DIALPAD_DEFAULT_SECONDS = 30;
+const GENESYS_DEFAULT_SECONDS = 12;
+const MIN_SECONDS = 5;
+const MAX_SECONDS = 60;
+
+/**
+ * `RINGING_OPTIONS` from '@/constants/forwarding-consts' — the list the queue
+ * ring-time control uses — is deliberately NOT reused. It holds exactly two
+ * entries, 15 and 30 seconds, which cannot express the 5-60 range this page is
+ * meant to cover: an admin who wants Genesys's 12 seconds, or the full 60, has
+ * no option to pick. Its labels are borrowed instead, because they are the good
+ * part: it counts rings as well as seconds, at five seconds a ring, and "about
+ * 6 rings" is how a person actually experiences the wait.
+ */
+const SECONDS_PER_RING = 5;
+
+const ringCount = (seconds: number) => Math.round(seconds / SECONDS_PER_RING);
+
+const buildOption = (seconds: number, note?: string) => ({
+  label: `${seconds} seconds — about ${ringCount(seconds)} rings${note ? ` (${note})` : ''}`,
+  value: String(seconds),
+});
+
+const RING_TIME_OPTIONS = [
+  buildOption(5),
+  buildOption(10),
+  buildOption(GENESYS_DEFAULT_SECONDS, 'Genesys default'),
+  buildOption(15),
+  buildOption(20),
+  buildOption(25),
+  buildOption(DIALPAD_DEFAULT_SECONDS, 'Dialpad default'),
+  buildOption(40),
+  buildOption(45),
+  buildOption(MAX_SECONDS, 'Genesys maximum'),
+];
+
+/* Where the "what happens next" half of this question is answered. A real route
+   from src/router/index.tsx — a number's call handling, including its Business
+   Hours step, is edited from the numbers-in-use list. */
+const NUMBERS_IN_USE_PATH = '/admin-settings/numbers/in-use';
+
+interface RingTimeForm {
+  seconds: string;
+  apply_to_new_people: boolean;
+}
+
+const DEFAULT_FORM: RingTimeForm = {
+  /* Dialpad's 30, not Genesys's 12. Thirty seconds is what most people expect a
+     desk phone to do, and it is the value the rest of this product already falls
+     back to, so writing anything else down here would quietly disagree with the
+     behaviour on every existing line. */
+  seconds: String(DIALPAD_DEFAULT_SECONDS),
+  apply_to_new_people: true,
+};
+
+const toSettingsObject = (rawSettings: any): Record<string, any> => {
+  if (!rawSettings) return {};
+  if (typeof rawSettings === 'string') {
+    try {
+      const parsed = JSON.parse(rawSettings);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof rawSettings === 'object' ? rawSettings : {};
+};
+
+const toGreetingsObject = (rawGreetings: any): Record<string, any> =>
+  toSettingsObject(rawGreetings);
+
+/* A stored value outside 5-60, or one this list does not offer, is kept rather
+   than silently rounded — showing it as-is is the only way an admin can see that
+   it is there and choose to replace it. */
+const toSecondsString = (stored: any): string => {
+  const parsed = Number(stored);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_FORM.seconds;
+  return String(Math.round(parsed));
+};
+
+const buildFormFromSettings = (settings: Record<string, any>): RingTimeForm => {
+  const ringTime = settings?.[RING_TIME_KEY] || {};
+
+  return {
+    seconds: toSecondsString(ringTime?.seconds),
+    apply_to_new_people:
+      typeof ringTime?.apply_to_new_people === 'boolean'
+        ? ringTime.apply_to_new_people
+        : DEFAULT_FORM.apply_to_new_people,
+  };
+};
+
+const buildRingTimePayload = (form: RingTimeForm) => ({
+  version: RING_TIME_SCHEMA_VERSION,
+  updated_at: new Date().toISOString(),
+  seconds: Number(form.seconds),
+  apply_to_new_people: form.apply_to_new_people,
+});
+
+/**
+ * The same honesty badge the other company cards carry. `enforced` is only ever
+ * passed `true` once something outside this file genuinely acts on the value.
+ */
+const StatusBadge = ({ enforced }: { enforced: boolean }) =>
+  enforced ? (
+    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
+      In effect now
+    </span>
+  ) : (
+    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
+      Saved, not enforced yet
+    </span>
+  );
+
+interface RingTimeCardProps {
+  icon: React.ReactNode;
+  title: string;
+  summary: string;
+  enforced: boolean;
+  enforcementNote: string;
+  children: React.ReactNode;
+}
+
+const RingTimeCard = ({
+  icon,
+  title,
+  summary,
+  enforced,
+  enforcementNote,
+  children,
+}: RingTimeCardProps) => (
+  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
+        {icon}
+      </div>
+      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-base font-semibold text-gray-900">{title}</p>
+          <StatusBadge enforced={enforced} />
+        </div>
+        <p className="text-xs text-gray-500">{summary}</p>
+      </div>
+    </div>
+    <div className="flex flex-col gap-4 p-4">
+      {children}
+      <p
+        className={`rounded-lg border px-3 py-2 text-xs ${
+          enforced
+            ? 'border-green-200 bg-green-50 text-green-800'
+            : 'border-amber-200 bg-amber-50 text-amber-800'
+        }`}
+      >
+        {enforcementNote}
+      </p>
+    </div>
+  </div>
+);
+
+const selectedOption = (options: { label: string; value: string }[], value: string) =>
+  options.find((option) => option.value === value) || null;
+
+const CompanyRingTime = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<RingTimeForm>(DEFAULT_FORM);
+
+  const {
+    data: companyDefaultTemplate = null,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+  });
+
+  const savedSettings = useMemo(
+    () => toSettingsObject(companyDefaultTemplate?.settings),
+    [companyDefaultTemplate],
+  );
+
+  const savedForm = useMemo(() => buildFormFromSettings(savedSettings), [savedSettings]);
+
+  useEffect(() => {
+    setForm(savedForm);
+  }, [savedForm]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(savedForm),
+    [form, savedForm],
+  );
+
+  const currentSeconds = Number(form.seconds);
+
+  /* A value that came from somewhere else — an older record, or a number typed
+     straight into the API — is shown rather than hidden, so the list always has
+     an entry matching what is stored. */
+  const options = useMemo(() => {
+    const isKnown = RING_TIME_OPTIONS.some((option) => option.value === form.seconds);
+    if (isKnown) return RING_TIME_OPTIONS;
+    return [...RING_TIME_OPTIONS, buildOption(currentSeconds, 'saved earlier')].sort(
+      (a, b) => Number(a.value) - Number(b.value),
+    );
+  }, [form.seconds, currentSeconds]);
+
+  const { mutate: saveRingTime, isPending: isSaving } = useMutation({
+    mutationFn: saveCompanyDefaults,
+    onSuccess: (response: any) => {
+      handleAlert({
+        text: response?.data?.message || 'Company ring time saved',
+        type: 'success',
+      });
+      /* The whole company record is invalidated, not just this card. Policies,
+         holidays, security and phone rules all read the same row, so a save here
+         must make them re-read — otherwise the next card saves a merge built on
+         a stale blob and silently drops what was just written. */
+      queryClient.invalidateQueries({ queryKey: COMPANY_DEFAULTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['userTemplateList'] });
+    },
+  });
+
+  const updateForm = (patch: Partial<RingTimeForm>) => setForm((prev) => ({ ...prev, ...patch }));
+
+  const handleSave = () => {
+    // Merge, never replace: the Company Default row also carries the rest of the
+    // company defaults blob, and other screens write into it.
+    const nextSettings = {
+      ...savedSettings,
+      [RING_TIME_KEY]: buildRingTimePayload(form),
+    };
+
+    saveRingTime({
+      uuid: companyDefaultTemplate?.uuid,
+      settings: nextSettings,
+      greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center py-10">
+        <Loader />
+      </div>
+    );
+  }
+
+  return (
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+        <p className="text-lg font-semibold text-gray-900">Ring time</p>
+        <p className="text-xs text-gray-500">
+          How long a phone rings before the call stops ringing and moves on. One number for the
+          whole company, so a new person is not set up by hand.
+        </p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-[1040px] flex-col gap-4">
+          {isError && (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-gray-900">
+                We could not load the saved ring time
+              </p>
+              <p className="text-xs text-gray-500">
+                What you see below is the built-in default, not your saved value. Reload before you
+                save, or you may overwrite a setting you cannot currently see.
+              </p>
+            </div>
+          )}
+
+          {!companyDefaultTemplate && !isError && (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
+              <p className="text-sm font-semibold text-gray-900">No ring time saved yet</p>
+              <p className="text-xs text-gray-500">
+                The reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record does not exist for
+                this account. Saving creates it with the value below.
+              </p>
+            </div>
+          )}
+
+          <RingTimeCard
+            icon={<Timer className="h-5 w-5" />}
+            title="Default ring time"
+            summary="How many seconds a phone rings before the call gives up and moves on."
+            enforced={IS_ENFORCED}
+            enforcementNote="Saved only. Changing this does not change how long any phone rings today. Nothing in the product reads it yet: a person's phone still rings for the time set per device in their own Call rules, a queue member for the time set in the queue's ring strategy, and a department member for its Member Ring Timeout. Treat this as the number you want the company to use, written down — not as a change you have made."
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <CustomSelect
+                  label="Ring for"
+                  options={options}
+                  value={selectedOption(options, form.seconds)}
+                  handleChange={(option: any) =>
+                    updateForm({ seconds: option?.value || DEFAULT_FORM.seconds })
+                  }
+                />
+                <p className="text-xs text-gray-500">
+                  Between {MIN_SECONDS} and {MAX_SECONDS} seconds. Rings are counted at about five
+                  seconds each, which is what a caller hears.
+                </p>
+              </div>
+            </div>
+
+            {/* An unlabelled number is worse than a wrong one: an admin cannot
+                judge 30 without knowing what anyone else does. Both vendors'
+                figures are on screen, including why the list stops at 60. */}
+            <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+              <p className="text-sm font-semibold text-gray-900">Where these numbers come from</p>
+              <ul className="flex flex-col gap-1 text-xs text-gray-600">
+                <li>
+                  <span className="font-semibold text-gray-900">
+                    Dialpad rings for {DIALPAD_DEFAULT_SECONDS} seconds
+                  </span>{' '}
+                  by default — about {ringCount(DIALPAD_DEFAULT_SECONDS)} rings. That is the default
+                  here too, because it is also what this product already falls back to everywhere
+                  else.
+                </li>
+                <li>
+                  <span className="font-semibold text-gray-900">
+                    Genesys rings for {GENESYS_DEFAULT_SECONDS} seconds
+                  </span>{' '}
+                  by default and will not accept more than {MAX_SECONDS}. Contact centres keep it
+                  short so an unanswered call moves to the next agent quickly.
+                </li>
+                <li>
+                  This list stops at {MAX_SECONDS} seconds for that reason. Longer is not offered:
+                  most callers hang up well before a minute, and the stricter of the two vendors
+                  would refuse the value anyway.
+                </li>
+              </ul>
+            </div>
+          </RingTimeCard>
+
+          <RingTimeCard
+            icon={<Users className="h-5 w-5" />}
+            title="Who it applies to"
+            summary="Whether people added after today start with this ring time."
+            enforced={IS_ENFORCED}
+            enforcementNote="Saved only. New people are still created with the built-in ring time, because the code that creates them does not look at this record. Existing people are never touched either way — this switch has never edited anyone's phone and is not intended to."
+          >
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Use this for people added from now on
+                </p>
+                <p className="text-xs text-gray-500">
+                  People already set up keep whatever ring time they have. Turning this off means
+                  the number above is recorded as the company&rsquo;s intention but is not offered
+                  as a starting point to anyone.
+                </p>
+              </div>
+              <Switch
+                checked={form.apply_to_new_people}
+                onCheckedChange={(checked) => updateForm({ apply_to_new_people: checked })}
+              />
+            </div>
+          </RingTimeCard>
+
+          {/* The honest other half of the question. Ring time only decides when
+              ringing stops; what happens next is a different setting, in a
+              different place, and an admin who changes one and not the other
+              gets silence at the end of the call. */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
+                <PhoneCall className="h-5 w-5" />
+              </div>
+              <div className="flex min-w-[220px] flex-1 flex-col gap-1">
+                <p className="text-base font-semibold text-gray-900">
+                  Ring time is only half the answer
+                </p>
+                <p className="text-xs text-gray-500">
+                  It says when the ringing stops. It does not say what the caller gets next.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 p-4">
+              <p className="text-sm text-gray-700">
+                When the ring time runs out, the call follows the &ldquo;what happens when nobody
+                answers&rdquo; action set on that particular line — voicemail, another person, a
+                menu, a queue, or simply hanging up. That action is not set here. It is part of each
+                number&rsquo;s call handling, on the Business Hours step, and it can be different
+                for every number you own.
+              </p>
+              <p className="text-sm text-gray-700">
+                So a caller giving up is rarely just the ring time. If people say calls end in
+                silence, check that action first: a line with no action set will stop ringing and
+                then do nothing at all, no matter what number you choose above.
+              </p>
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(NUMBERS_IN_USE_PATH)}
+                >
+                  Open your numbers to check
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-gray-500">
+              Saved to the reserved &ldquo;{COMPANY_DEFAULT_TEMPLATE_NAME}&rdquo; record under
+              <span className="font-semibold"> settings.company_ring_time</span>. Everything else in
+              that record is left untouched.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSave}
+              disabled={isSaving || !isDirty}
+            >
+              {isSaving ? 'Saving...' : 'Save ring time'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default CompanyRingTime;

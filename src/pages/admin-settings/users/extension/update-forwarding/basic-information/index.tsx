@@ -47,6 +47,37 @@ const BasicInformation: FC<any> = ({
     }
   }, [site?.label, site?.value, dataSiteList]);
 
+  /* A location sets the clock for the people at it.
+     
+     Both Dialpad and Genesys work this way — the office or site timezone is what
+     opening hours are read in — and our own Company & Locations screen tells
+     customers a location decides "the clock". It did not: a location's timezone
+     was stored, shown, and never used, while opening hours were read from each
+     person's own regional setting. A London queue could run on Mumbai time.
+     
+     So choosing a location now fills in that person's timezone from it. Only
+     when the person has none: a timezone somebody deliberately set is theirs,
+     and someone who genuinely sits in a different zone from their office must
+     keep it. Country is filled the same way when blank, since the timezone list
+     is derived from it. */
+  const siteValue = site?.value;
+  useEffect(() => {
+    if (!siteValue || !dataSiteList?.length) return;
+
+    const chosen = dataSiteList.find((entry: any) => entry?.uuid === siteValue);
+    const zone = `${chosen?.timezone || ''}`.trim();
+    if (!zone) return;
+
+    if (!watch('settings.operational_hours.regional.timezone')?.value) {
+      setValue('settings.operational_hours.regional.timezone', { label: zone, value: zone });
+    }
+
+    const country = `${chosen?.country || ''}`.trim();
+    if (country && !watch('settings.operational_hours.regional.country')?.value) {
+      setValue('settings.operational_hours.regional.country', { label: country, value: country });
+    }
+  }, [siteValue, dataSiteList]);
+
   const handleTemplateChange = (e: ISELECTVALUE | null) => {
     const tempIndex = templatesList.findIndex((item: { uuid: string }) => item.uuid === e?.value);
     if (tempIndex != -1) {

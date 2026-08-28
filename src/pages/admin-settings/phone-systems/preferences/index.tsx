@@ -46,6 +46,9 @@ import CompanyEmergencyAddress from '@/pages/admin-settings/company-info/company
 import CompanyHolidays from '@/pages/admin-settings/company-info/company-holidays';
 import CompanyPolicies from '@/pages/admin-settings/company-info/company-policies';
 import CompanyCallingPermissions from '@/pages/admin-settings/company-info/company-calling-permissions';
+import CompanyHolidayApply from '@/pages/admin-settings/company-info/company-holiday-apply';
+import CompanyRingTime from '@/pages/admin-settings/company-info/company-ring-time';
+import CompanyVoicemail from '@/pages/admin-settings/company-info/company-voicemail';
 import CompanyMessaging from '@/pages/admin-settings/company-info/company-messaging';
 import CompanySecurity from '@/pages/admin-settings/company-info/company-security';
 
@@ -68,6 +71,7 @@ const CALL_JOURNEY = [
 const SECTIONS = [
   { key: 'rules', label: 'Phone rules', tab: TAB_CONSTANT.SETTING_PERMISSIONS },
   { key: 'greetings', label: 'Greetings', tab: TAB_CONSTANT.GREETING_NOTIFICATION },
+  { key: 'ringvoicemail', label: 'Ringing & voicemail', tab: null },
   { key: 'emergency', label: 'Emergency address', tab: null },
   { key: 'holidays', label: 'Holidays', tab: null },
   { key: 'calling', label: 'Calling', tab: null },
@@ -274,8 +278,23 @@ const Preferences = () => {
           </div>
         </div>
 
+        {/* One section: how long a phone rings, then where the call lands when
+            nobody picks up. Splitting them made an admin set half a rule. */}
+        {activeSection === 'ringvoicemail' && (
+          <div className="flex flex-col gap-4">
+            <CompanyRingTime />
+            <CompanyVoicemail />
+          </div>
+        )}
         {activeSection === 'emergency' && <CompanyEmergencyAddress />}
-        {activeSection === 'holidays' && <CompanyHolidays />}
+        {/* Declaring the dates and putting them on lines are two halves of one
+            job, so they sit together rather than in separate sections. */}
+        {activeSection === 'holidays' && (
+          <div className="flex flex-col gap-4">
+            <CompanyHolidays />
+            <CompanyHolidayApply />
+          </div>
+        )}
         {activeSection === 'calling' && <CompanyCallingPermissions />}
         {activeSection === 'messaging' && <CompanyMessaging />}
         {activeSection === 'policies' && <CompanyPolicies />}
