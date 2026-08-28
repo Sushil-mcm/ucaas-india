@@ -21,7 +21,7 @@ const IVRDetailsView = ({ rowData }: any) => {
   // const [isPlay, setIsPlay] = useState<boolean>(false);
 
   const { data: departmentData = {}, isLoading: isPendingDepartmentList } = useQuery({
-    queryKey: ['getDepartmentAndCallLogs', callID],
+    queryKey: ['getDepartmentAndCallLogs', callID, forward_type],
     queryFn: () => getDepartmentAndCallLogs({ call_id: callID, type: forward_type }),
     select: (data) => data?.data?.data?.result || {},
     enabled: !!callID,

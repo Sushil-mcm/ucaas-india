@@ -1,6 +1,6 @@
 import CustomSelect from '@/components/custom/custom-select';
-import { RINGING_OPTIONS } from '@/constants/forwarding-consts';
 import { useFormContext } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import {
   Table,
   TableBody,
@@ -13,40 +13,25 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import { CALL_DISTRIBUTION_DATA, DEPARTMENT_RING_STRATEGY_DESC } from '../../constant';
 import SelectedMemberList from '@/pages/admin-settings/users/department/new-department/selected-member-list';
-
-const DEFAULT_RING_TIME = RINGING_OPTIONS[0];
-
-const getRingTimeOption = (ringTime: any) => {
-  const rawValue =
-    ringTime && typeof ringTime === 'object' && typeof ringTime?.value !== 'undefined'
-      ? ringTime.value
-      : ringTime;
-
-  if (rawValue === null || typeof rawValue === 'undefined' || rawValue === '') {
-    return DEFAULT_RING_TIME;
-  }
-
-  const matchedOption = RINGING_OPTIONS.find((option) => String(option.value) === String(rawValue));
-
-  if (matchedOption) return matchedOption;
-
-  if (ringTime && typeof ringTime === 'object') {
-    return {
-      label: ringTime?.label || String(rawValue),
-      value: String(rawValue),
-    };
-  }
-
-  return {
-    label: String(rawValue),
-    value: String(rawValue),
-  };
-};
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { getRingTimeOptions, seedDeviceRingTime } from '@/lib/company-ring-time';
 
 const RingStrategy = () => {
   const { setValue, watch } = useFormContext();
   const [watchMembers = [], watchRingStrategy] = watch(['members', 'settings.ring_strategy.value']);
   const isRingAllStrategy = watchRingStrategy?.value === 'ring-all';
+
+  /* Same company record, same cache key as the rest of the drawer, so this
+     costs no extra request. A member who has never been given a ring time
+     starts on the company's number; one who has keeps what was chosen. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
+  const companySettings = companyDefaults?.settings;
+
+  const getRingTimeOption = (ringTime: any) => seedDeviceRingTime(ringTime, companySettings);
 
   const getRingStrategyLabel = () => {
     const index = CALL_DISTRIBUTION_DATA.findIndex(
@@ -79,15 +64,22 @@ const RingStrategy = () => {
     setValue(`members.${index}.ring_time`, nextRingTime, { shouldValidate: true });
   };
 
-  const renderRingTimeSelect = (member: any, index: number) => (
-    <CustomSelect
-      className="w-56"
-      options={RINGING_OPTIONS}
-      handleChange={(value) => handleRingTimeChange(value, index)}
-      value={getRingTimeOption(member?.ring_time ?? member?.timeout)}
-      placeholder="Select time"
-    />
-  );
+  const renderRingTimeSelect = (member: any, index: number) => {
+    const stored = member?.ring_time ?? member?.timeout;
+
+    return (
+      <CustomSelect
+        className="w-56"
+        /* The list carries the company's number when it is not one of the two
+           shipped choices, so a queue sitting on it is a real selection rather
+           than a blank box the first click would silently rewrite. */
+        options={getRingTimeOptions(companySettings, stored)}
+        handleChange={(value) => handleRingTimeChange(value, index)}
+        value={getRingTimeOption(stored)}
+        placeholder="Select time"
+      />
+    );
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
@@ -105,9 +97,7 @@ const RingStrategy = () => {
                   (member: any) => member?.ring_time || member?.timeout,
                 );
                 const firstMemberRingTime =
-                  firstMemberWithRingTime?.ring_time ||
-                  firstMemberWithRingTime?.timeout ||
-                  DEFAULT_RING_TIME;
+                  firstMemberWithRingTime?.ring_time ?? firstMemberWithRingTime?.timeout;
 
                 syncRingAllMemberTimes(firstMemberRingTime);
               }

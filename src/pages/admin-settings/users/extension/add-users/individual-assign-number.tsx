@@ -147,7 +147,13 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
   });
 
   const { data: didAvailableData, isLoading: didAvailableLoading } = useQuery({
-    queryKey: ['getAvailableDid', countryIso, watchState?.value, watchCity?.value],
+    queryKey: [
+      'getAvailableDid',
+      countryIso,
+      watchState?.value,
+      watchCity?.value,
+      watchGroupId?.value,
+    ],
     queryFn: () =>
       getAvailableDid({
         country_iso: countryIso,

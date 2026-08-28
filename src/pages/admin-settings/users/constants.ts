@@ -7,6 +7,7 @@ import {
 } from '@/constants/forwarding-consts';
 import { IADDUSER } from '@/interfaces/extension-interface';
 import { SETTINGS } from '@/components/common-settings/constants';
+import { readCompanyRingTime } from '@/lib/company-ring-time';
 
 export const userInitialState = {
   email: '',
@@ -250,6 +251,85 @@ export const timeOption = [
     value: 30,
   },
 ];
+
+/* A department's member ring timeout is the same idea as a device ring time —
+   how long it rings before the call moves on — but it is held in a different
+   shape: `timeOption` stores plain numbers, and the record it is read back from
+   is matched with `===`, so a string here would blank the select and lose the
+   setting. Everything below therefore converts the company's seconds into the
+   numeric shape this picker expects rather than reusing the string options.
+
+   The department default stays 10. It is only replaced when an admin has
+   actually saved a company ring time, so a tenant that never opened that page
+   sees the same 10 seconds it has always had. */
+export const DEPARTMENT_DEFAULT_TIMEOUT_SECONDS = 10;
+
+const hasTimeoutValue = (current: any) => {
+  const raw = current && typeof current === 'object' ? current?.value : current;
+  if (raw === null || typeof raw === 'undefined' || raw === '') return false;
+  return Number.isFinite(Number(raw)) && Number(raw) > 0;
+};
+
+/* The shipped entry itself comes back when the seconds are one of the six on
+   offer, so the common case is the exact object the picker already holds. */
+export const buildDepartmentTimeoutOption = (seconds: number) =>
+  timeOption.find((option) => option.value === seconds) ?? { label: seconds, value: seconds };
+
+export const DEPARTMENT_DEFAULT_TIMEOUT = buildDepartmentTimeoutOption(
+  DEPARTMENT_DEFAULT_TIMEOUT_SECONDS,
+);
+
+/**
+ * What a brand new department should start on: the company's ring time when one
+ * is saved and switched on for new people, otherwise the shipped 10 seconds.
+ */
+export const getDepartmentTimeoutOption = (companySettings: unknown) => {
+  const companyRingTime = readCompanyRingTime(companySettings);
+  return companyRingTime && companyRingTime.appliesToNewPeople
+    ? buildDepartmentTimeoutOption(companyRingTime.seconds)
+    : DEPARTMENT_DEFAULT_TIMEOUT;
+};
+
+/**
+ * Read a saved department timeout back into the picker. A number the six
+ * choices cannot express — which a company ring time above 30 now makes
+ * possible — is offered as itself instead of coming back as nothing at all.
+ * A department with no timeout saved still reads back as nothing, exactly as
+ * before, so the field stays required rather than being silently filled.
+ */
+export const readDepartmentTimeoutOption = (stored: unknown) =>
+  hasTimeoutValue(stored) ? buildDepartmentTimeoutOption(Math.round(Number(stored))) : undefined;
+
+/**
+ * The list to hand the picker: the six shipped choices, plus the company's
+ * number and whatever this department is already on when either falls outside
+ * them. Without this a department on 45 seconds shows an empty box and the
+ * first click quietly rewrites it.
+ */
+export const getDepartmentTimeoutOptions = (companySettings: unknown, current?: unknown) => {
+  const options = [...timeOption];
+
+  const add = (seconds: number) => {
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    const rounded = Math.round(seconds);
+    if (options.some((option) => option.value === rounded)) return;
+    options.push({ label: rounded, value: rounded });
+  };
+
+  const companyRingTime = readCompanyRingTime(companySettings);
+  if (companyRingTime && companyRingTime.appliesToNewPeople) add(companyRingTime.seconds);
+
+  if (hasTimeoutValue(current)) {
+    add(Number(current && typeof current === 'object' ? (current as any).value : current));
+  }
+
+  /* Nothing extra to show means the shipped list in the shipped order, so a
+     tenant with no company ring time sees the very same picker as before. */
+  if (options.length === timeOption.length) return options;
+
+  return options.sort((a, b) => a.value - b.value);
+};
+
 export const DEVICE_TYPE_NAME_CONST = {
   web: 'Desktop',
   pstn: 'ATA Device',

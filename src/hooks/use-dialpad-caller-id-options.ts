@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isGroupCallerIdOption } from '@/hooks/use-group-caller-id-options';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { useGetAssignedDIDNumbers } from './common';
@@ -139,6 +140,10 @@ export const useDialpadCallerIdOptions = () => {
     isCallerIdUpdating,
     updateCallerIdSelection: async (option: CallerIdOption) => {
       if (!option || option.id === EMPTY_CALLER_ID_OPTION.id) return;
+      /* A shared group number is for one call, never someone's saved default.
+         The dialer already skips this call for those, but the guard lives here
+         too so a future caller cannot persist one by accident. */
+      if (isGroupCallerIdOption(option)) return;
       await mutateCallerId({ caller_id: normalizeDidNumber(option.number) });
     },
   };

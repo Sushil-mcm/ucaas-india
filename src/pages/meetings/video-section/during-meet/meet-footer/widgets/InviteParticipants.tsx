@@ -85,7 +85,7 @@ const InviteParticipants = ({
   };
 
   const { data: meetingDetailInfo, refetch } = useQuery({
-    queryKey: ['meetingDetailInfo'],
+    queryKey: ['meetingDetailInfo', meetState?.meetUniqueKey],
     queryFn: () => meetingDetailList({ meetingId: meetState?.meetUniqueKey }),
     enabled: !!meetState?.meetUniqueKey,
     select: (data) => data?.data?.data?.result,

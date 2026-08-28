@@ -19,7 +19,8 @@ import {
   handleAlert,
 } from '@/lib/utils';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
-import { RINGING_OPTIONS } from '@/constants/forwarding-consts';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { hasStoredRingTime, seedDeviceRingTime } from '@/lib/company-ring-time';
 import CommonSettingPermission from '@/components/common-settings';
 import RingStrategy from './ring-strategy';
 import { useSocketEvents } from '@/hooks/use-socket-events';
@@ -53,36 +54,22 @@ const schemaIndex = {
   [TAB_CONSTANT.ADD_MEMBERS]: 4,
 };
 
-const DEFAULT_MEMBER_RING_TIME = RINGING_OPTIONS[0];
+/* A queue member's ring time is the same setting as a device's ring time — how
+   long one phone rings before the call moves on — so it is read through the same
+   shared reader rather than a second copy of the same matching logic that has to
+   be kept in step by hand. Two near-identical local helpers used to live here and
+   in ring-strategy/index.tsx; both are now `seedDeviceRingTime`.
 
-const getMemberRingTimeOption = (ringTime: any) => {
-  const rawValue =
-    ringTime && typeof ringTime === 'object' && typeof ringTime?.value !== 'undefined'
-      ? ringTime.value
-      : ringTime;
-
-  if (rawValue === null || typeof rawValue === 'undefined' || rawValue === '') {
-    return DEFAULT_MEMBER_RING_TIME;
-  }
-
-  const matchedOption = RINGING_OPTIONS.find((option) => String(option.value) === String(rawValue));
-
-  if (matchedOption) return matchedOption;
-
-  if (ringTime && typeof ringTime === 'object') {
-    return {
-      label: ringTime?.label || String(rawValue),
-      value: String(rawValue),
-    };
-  }
-
-  return {
-    label: String(rawValue),
-    value: String(rawValue),
-  };
-};
-
-const getMemberRingTimeoutValue = (ringTime: any) => getMemberRingTimeOption(ringTime).value;
+   Hydration keeps a value only when the member actually has one. An empty member
+   is deliberately left empty instead of being stamped with a fallback here,
+   because the company record may still be in flight when this runs: seeding at
+   the two places the value is actually read — the select and the payload — means
+   the company number is used the moment it arrives, and a member who already has
+   a ring time is never touched either way. That is also why no company settings
+   are needed here: a stored value is returned exactly as stored, so this cannot
+   depend on whether the company record has loaded yet. */
+const hydrateMemberRingTime = (stored: any) =>
+  hasStoredRingTime(stored) ? seedDeviceRingTime(stored, undefined) : undefined;
 
 const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) => {
   const [modalState, setModalState] = useState<boolean>(false);
@@ -114,6 +101,16 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
     select: (data) =>
       data?.data?.data?.result?.rows?.filter((item: any) => item?.dialMethod === 'QUEUE') || [],
   });
+
+  /* The company record, read once and shared with every other company-level
+     screen through the same cache key. It is only ever used to fill a ring time
+     nobody has chosen, so a tenant that never set one is unaffected. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
+  const companySettings = companyDefaults?.settings;
 
   const queryClient: any = useQueryClient();
   const { socketEventsManager } = useSocketEvents();
@@ -378,7 +375,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
         console.info(label, value);
         return {
           ...rest,
-          timeout: getMemberRingTimeoutValue(ring_time ?? timeout),
+          timeout: seedDeviceRingTime(ring_time ?? timeout, companySettings).value,
         };
       }) || [];
     const uniqueMembers = Array.from(new Map(members.map((m: any) => [m.user_uuid, m])).values());
@@ -429,7 +426,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
             ...m,
             label: m.label || m.name || `${m.first_name} ${m.last_name}`,
             value: m.value || m.extension,
-            ring_time: getMemberRingTimeOption(m.ring_time ?? m.timeout),
+            ring_time: hydrateMemberRingTime(m.ring_time ?? m.timeout),
           }),
         )
       : [];

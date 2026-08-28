@@ -84,6 +84,9 @@ const CommonSettingPermission: FC<any> = ({
     'ai_call_monitoring',
     'display_number',
     ...(isShowVoicemail ? (['voicemail'] as PolicyField[]) : []),
+    /* Business hours is a governed field like the rest; it was simply missing here,
+       so a company that locked it got no notice and no greyed-out control. */
+    ...(isBussinessHours ? (['business_hours'] as PolicyField[]) : []),
   ];
   const hasCompanyLockedFields = shownPolicyFields.some((field) => !canEditField(field));
 
@@ -299,7 +302,11 @@ const CommonSettingPermission: FC<any> = ({
                 type="button"
                 className="w-16"
                 variant={'outline'}
-                onClick={() => openModal('bussinessHoursModal')}
+                onClick={() => {
+                  if (!canEditField('business_hours')) return;
+                  openModal('bussinessHoursModal');
+                }}
+                disabled={!canEditField('business_hours')}
               >
                 Select
               </Button>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import DepartmentInfo from './department-info';
@@ -14,10 +14,18 @@ import {
 } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import AddMembers from './add-members';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createDeparment } from '@/services/api';
 import RingStrategy from './ring-strategy';
-import { ERROR_TYPES, MEMBER_RING_STRATEGY_OPTIONS, timeOption } from '../../constants';
+import {
+  DEPARTMENT_DEFAULT_TIMEOUT,
+  DEPARTMENT_DEFAULT_TIMEOUT_SECONDS,
+  ERROR_TYPES,
+  getDepartmentTimeoutOption,
+  MEMBER_RING_STRATEGY_OPTIONS,
+  readDepartmentTimeoutOption,
+} from '../../constants';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { requiredExtension } from '@/schema/common';
 import { COMMON_SETTINGS_SCHEMA } from '@/components/common-settings/schema';
 import { SETTINGS } from '@/components/common-settings/constants';
@@ -134,6 +142,14 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
   const [schemaContext, setSchemaContext] = useState<any>(null);
   const { forward_call_actions = {} } = rowData || {};
   const { data: dataSiteList, isLoading } = useGetSite();
+
+  /* The company record, on the cache key every other company-level screen
+     shares. Only ever used to start a brand new department off. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
   const greetingsInitialState = {
     welcome: {
       enabled: false,
@@ -168,7 +184,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
       value: { label: '', value: '' },
       personal: false,
     },
-    timeout: { label: 10, value: 10 },
+    timeout: DEPARTMENT_DEFAULT_TIMEOUT,
     media: greetingsInitialState,
     // callerId: {
     //   enabled: false,
@@ -267,6 +283,38 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
     });
     return () => subscription.unsubscribe();
   }, [watch]);
+
+  /* Seeding the ring timeout of a department being created.
+   *
+   * The form's default values are fixed on the first render, and the company
+   * record may not have arrived by then, so the company number is applied here
+   * once it does. Three guards keep it from ever taking a decision away:
+   *
+   *   - editing is left alone entirely; a saved department already has a number,
+   *   - it happens once, so a later refetch cannot walk over a choice made in
+   *     the meantime,
+   *   - and it only writes while the field still holds the shipped 10, which is
+   *     the closest this field has to "nobody has chosen yet" — unlike a queue
+   *     member, it is never empty.
+   *
+   * With no company ring time saved, `getDepartmentTimeoutOption` hands back the
+   * very same default object the form already holds, so nothing is written and
+   * the tenant sees no change at all. */
+  const hasSeededTimeout = useRef(false);
+
+  useEffect(() => {
+    if (isEdit || hasSeededTimeout.current || !companyDefaults) return;
+
+    const seeded = getDepartmentTimeoutOption(companyDefaults?.settings);
+    hasSeededTimeout.current = true;
+
+    if (Number(formInstance.getValues('timeout')?.value) !== DEPARTMENT_DEFAULT_TIMEOUT_SECONDS) {
+      return;
+    }
+    if (Number(seeded?.value) === DEPARTMENT_DEFAULT_TIMEOUT_SECONDS) return;
+
+    setValue('timeout', seeded, { shouldValidate: true });
+  }, [companyDefaults, isEdit, formInstance, setValue]);
 
   const stepLookUp: any = {
     [DEPARTMENT_TAB_CONSTANT.BASIC_INFORMATION]: (
@@ -387,7 +435,9 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
           ...parseJSON(site),
         },
         description: description ?? '',
-        timeout: timeOption.find(({ value }) => value === call_handling?.timeout),
+        /* A saved department keeps its own number, whatever it is. The company
+           value is never applied here: this department already made a choice. */
+        timeout: readDepartmentTimeoutOption(call_handling?.timeout),
         members: uniqueMembers,
         manager: typeof manager === 'string' ? parseJSON(manager) : manager,
         failover: {

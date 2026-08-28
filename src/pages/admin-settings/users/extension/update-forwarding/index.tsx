@@ -22,6 +22,7 @@ import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { seedDeviceRingTime } from '@/lib/company-ring-time';
 import { getCompanyNewUserDefaults } from '@/lib/company-new-user-defaults';
+import { readRuleFlags } from '@/lib/company-rule-flags';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
 import Loader from '@/components/custom/loader';
@@ -440,13 +441,20 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     }));
   }
 
+  /* Company rule flags describe what the company does to a person; they are not
+     part of that person's own settings. `override` was already stripped for that
+     reason, and `apply`/`locked` are the same flag split in two, so all three go.
+     Left in, a copied company value would arrive on the individual record still
+     carrying its rule, and the lock would then be read back from the wrong level. */
+  const RULE_FLAG_KEYS = ['override', 'apply', 'locked'];
+
   function removeOverride<T>(obj: T): T {
     if (Array.isArray(obj)) {
       return obj.map(removeOverride) as unknown as T;
     } else if (typeof obj === 'object' && obj !== null) {
       return Object.fromEntries(
         Object.entries(obj)
-          .filter(([key]) => key !== 'override')
+          .filter(([key]) => !RULE_FLAG_KEYS.includes(key))
           .map(([key, value]) => [key, removeOverride(value)]),
       ) as unknown as T;
     }
@@ -716,13 +724,18 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             },
           },
         });
+        /* Same copy decision as `seSettingsData`, on the non-template path. The
+           question is "should this value be put onto the person", which is the
+           apply half; a record carrying only the old flag reads exactly as before. */
         setValue(
           'settings.transcription',
-          settingsData?.transcription?.override ? settingsData?.transcription?.enabled : false,
+          readRuleFlags(settingsData, 'transcription').apply
+            ? settingsData?.transcription?.enabled
+            : false,
         );
         setValue(
           'settings.ai_call_monitoring',
-          settingsData?.ai_call_monitoring?.override
+          readRuleFlags(settingsData, 'ai_call_monitoring').apply
             ? settingsData?.ai_call_monitoring?.enabled
             : false,
         );
@@ -769,10 +782,19 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     }
   }, [isSelectedTemplate, chooseTemplate?.selectedTemplate]);
 
+  /* Every test below asks the same question — should this company value be put onto
+     the person — which is the `apply` half of the rule, not the `locked` half the raw
+     `override` flag was also being used for. `readRuleFlags` reads a record that only
+     carries the old flag exactly as this code read it before, so nothing changes for
+     existing data; what it adds is the ability for a company to apply a value AND lock
+     it, which one flag could never say. */
   const seSettingsData = (settingsData: any) => {
-    if (settingsData?.operational_hours?.regional?.override)
+    if (readRuleFlags(settingsData, 'regional').apply)
       setValue('settings.operational_hours.regional', settingsData?.operational_hours?.regional);
-    if (settingsData?.display_number?.override || chooseTemplate?.isChooseTemplate === 'Yes') {
+    if (
+      readRuleFlags(settingsData, 'display_number').apply ||
+      chooseTemplate?.isChooseTemplate === 'Yes'
+    ) {
       const maskingType = settingsData?.display_number?.masking?.type;
       const typeValue = typeof maskingType === 'object' ? maskingType?.value : maskingType;
       const typeLabel =
@@ -792,7 +814,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         show_number_if_blocked: settingsData?.display_number?.show_number_if_blocked || 'NO',
       });
     }
-    if (settingsData?.operational_hours?.override) {
+    if (readRuleFlags(settingsData, 'business_hours').apply) {
       setValue('settings.operational_hours', settingsData?.operational_hours);
       const holidays =
         settingsData?.operational_hours?.holidays &&
@@ -813,25 +835,32 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         personal: settingsData?.operational_hours?.closed_hour_action?.personal,
       });
     }
-    if (settingsData?.voicemail_pin?.override) {
+    if (readRuleFlags(settingsData, 'voicemail').apply) {
       setValue('settings.voicemail_pin', settingsData?.voicemail_pin);
     }
-    if (settingsData?.recording?.override) {
+    if (readRuleFlags(settingsData, 'recording').apply) {
       setValue('settings.recording', settingsData?.recording);
     }
-    if (settingsData?.transcription?.override) {
+    if (readRuleFlags(settingsData, 'transcription').apply) {
       setValue('settings.transcription', settingsData?.transcription?.enabled || false);
     }
-    if (settingsData?.ai_call_monitoring?.override) {
+    if (readRuleFlags(settingsData, 'ai_call_monitoring').apply) {
       setValue('settings.ai_call_monitoring', settingsData?.ai_call_monitoring?.enabled || false);
     }
   };
 
+  /* The greetings record has the same one-flag-two-meanings problem as the settings
+     record, so it gets the same treatment. Paths are given with the trailing
+     `.override` because that is literally where the old flag sits, and because the
+     bare name `voicemail` is already a settings rule pointing at `voicemail_pin` —
+     spelling the path out keeps the greeting's own flag from being read from there. */
   const setGreetingsData = (greetingsData: any) => {
+    const welcomeGreetingKey = greetingsData?.welcome_greeting ? 'welcome_greeting' : 'welcome';
+    const onHoldMusicKey = greetingsData?.on_hold_music ? 'on_hold_music' : 'hold';
     const welcomeGreetingData = greetingsData?.welcome_greeting || greetingsData?.welcome;
     const onHoldMusicData = greetingsData?.on_hold_music || greetingsData?.hold;
 
-    if (welcomeGreetingData?.override) {
+    if (readRuleFlags(greetingsData, `${welcomeGreetingKey}.override`).apply) {
       setValue('greetings.welcome_greeting', {
         enabled: welcomeGreetingData?.enabled || false,
         value: {
@@ -840,7 +869,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         },
       });
     }
-    if (greetingsData?.voicemail?.override) {
+    if (readRuleFlags(greetingsData, 'voicemail.override').apply) {
       setValue('greetings.voicemail', {
         enabled: greetingsData?.voicemail?.enabled || false,
         value: {
@@ -849,7 +878,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         },
       });
     }
-    if (greetingsData?.ring_tone?.override) {
+    if (readRuleFlags(greetingsData, 'ring_tone.override').apply) {
       setValue('greetings.ring_tone', {
         enabled: greetingsData?.ring_tone?.enabled || false,
         value: {
@@ -858,7 +887,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         },
       });
     }
-    if (onHoldMusicData?.override) {
+    if (readRuleFlags(greetingsData, `${onHoldMusicKey}.override`).apply) {
       setValue('greetings.on_hold_music', {
         enabled: onHoldMusicData?.enabled || false,
         value: {

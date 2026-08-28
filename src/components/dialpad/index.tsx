@@ -5,6 +5,10 @@ import { isDialpadInput } from './utils';
 import { cn } from '@/lib/utils';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useDialpadCallerIdOptions } from '@/hooks/use-dialpad-caller-id-options';
+import {
+  useGroupCallerIdOptions,
+  isGroupCallerIdOption,
+} from '@/hooks/use-group-caller-id-options';
 import { AppWindow as AppWindowIcon, Minus, Tablet, X } from 'lucide-react';
 import DialpadGuideModal from './components/dialpad-guide-modal';
 import DialpadMaxiSidePanel, { type DialpadMaxiTab } from './components/dialpad-maxi-side-panel';
@@ -80,6 +84,16 @@ const Dialpad = ({
   } = useDialpad();
   const { callerIdOptions, defaultCallerIdOption, updateCallerIdSelection } =
     useDialpadCallerIdOptions();
+
+  /* Numbers belonging to a group this person is in — a queue or department the
+     company has allowed them to present as. Empty unless the company has
+     switched that on, so this is purely additive: a tenant that has not enabled
+     it sees exactly the list it saw before. */
+  const { groupCallerIdOptions } = useGroupCallerIdOptions();
+  const allCallerIdOptions = useMemo(
+    () => [...callerIdOptions, ...groupCallerIdOptions],
+    [callerIdOptions, groupCallerIdOptions],
+  );
   const [typedNumber, setTypedNumber] = useState('');
   const [selectedCallerId, setSelectedCallerId] = useState<CallerIdOption>(defaultCallerIdOption);
   const [isCallerIdOpen, setIsCallerIdOpen] = useState(false);
@@ -244,6 +258,15 @@ const Dialpad = ({
     (option: CallerIdOption) => {
       setSelectedCallerId(option);
       setIsCallerIdOpen(false);
+
+      /* A shared group number applies to this call only and is deliberately not
+         saved. Saving it would make a number belonging to a queue somebody's
+         standing outbound identity, and the server is likely to refuse a number
+         not assigned to them anyway — which would surface as an error on a
+         choice the screen had already applied, leaving the two disagreeing.
+         The call itself reads the selection from state, so nothing is lost. */
+      if (isGroupCallerIdOption(option)) return;
+
       void updateCallerIdSelection(option);
     },
     [updateCallerIdSelection],
@@ -287,11 +310,11 @@ const Dialpad = ({
 
   useEffect(() => {
     setSelectedCallerId((prevSelected) => {
-      const isExistingOption = callerIdOptions.some((option) => option.id === prevSelected.id);
+      const isExistingOption = allCallerIdOptions.some((option) => option.id === prevSelected.id);
       if (isExistingOption) return prevSelected;
       return defaultCallerIdOption;
     });
-  }, [callerIdOptions, defaultCallerIdOption]);
+  }, [allCallerIdOptions, defaultCallerIdOption]);
 
   useEffect(() => {
     if (mode === 'overlay' && !isDialpadOpen) return;
@@ -749,7 +772,7 @@ const Dialpad = ({
                     isManualDialDisabled={isManualDialDisabled}
                     isSipRegistered={isRegistered}
                     sipStatus={uaStatus}
-                    callerIdOptions={callerIdOptions}
+                    callerIdOptions={allCallerIdOptions}
                     selectedCallerId={selectedCallerId}
                     isCallerIdOpen={isCallerIdOpen}
                     isHold={isHold}
@@ -835,7 +858,7 @@ const Dialpad = ({
                   isManualDialDisabled={isManualDialDisabled}
                   isSipRegistered={isRegistered}
                   sipStatus={uaStatus}
-                  callerIdOptions={callerIdOptions}
+                  callerIdOptions={allCallerIdOptions}
                   selectedCallerId={selectedCallerId}
                   isCallerIdOpen={isCallerIdOpen}
                   isHold={isHold}

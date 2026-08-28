@@ -81,7 +81,7 @@ const CreateNewAddress = ({
   });
 
   const { data: addressData = [] } = useQuery({
-    queryKey: ['getSingleAddressList', isEdit],
+    queryKey: ['getSingleAddressList', isEdit, formData?.uuid ?? null],
     queryFn: () =>
       getAddressesList({
         search_filters: [{ uuid: formData?.uuid }],

@@ -3,9 +3,11 @@ import ForwardingActions from '@/components/custom/forwarding-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { generateRandomExtension } from '@/lib/utils';
-import { timeOption } from '../../constants';
+import { getDepartmentTimeoutOptions } from '../../constants';
 import { useFormContext } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { Icon } from '@/assets/icons/icon';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 
 const DepartmentInfo = ({
   isEdit = false,
@@ -22,6 +24,14 @@ const DepartmentInfo = ({
     watch,
     formState: { errors },
   } = useFormContext();
+
+  /* Same company record, same cache key as everywhere else, so the picker can
+     offer the company's number when it is not one of the six shipped choices. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const generateNewExtension = () => {
     const newExtension = generateRandomExtension();
@@ -111,7 +121,10 @@ const DepartmentInfo = ({
                 <div className="relative flex w-full gap-1 sm:max-w-[320px]">
                   <CustomSelect
                     label="Member Ring Timeout (Sec)"
-                    options={timeOption}
+                    options={getDepartmentTimeoutOptions(
+                      companyDefaults?.settings,
+                      watch('timeout'),
+                    )}
                     handleChange={(value) => {
                       setValue('timeout', value, { shouldValidate: true });
                     }}

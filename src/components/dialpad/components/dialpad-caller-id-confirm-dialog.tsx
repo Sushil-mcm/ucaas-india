@@ -14,6 +14,9 @@ type DialpadCallerIdConfirmDialogProps = {
   nextOption: CallerIdOption | null;
   onConfirm: () => void;
   onCancel: () => void;
+  /* True when the number being chosen belongs to a group rather than to this
+     person, in which case it is not saved. */
+  isOneCallOnly?: boolean;
 };
 
 const DialpadCallerIdConfirmDialog = ({
@@ -22,6 +25,7 @@ const DialpadCallerIdConfirmDialog = ({
   nextOption,
   onConfirm,
   onCancel,
+  isOneCallOnly = false,
 }: DialpadCallerIdConfirmDialogProps) => {
   if (!nextOption) return null;
 
@@ -47,6 +51,15 @@ const DialpadCallerIdConfirmDialog = ({
             <span className="font-semibold text-[#1f2f47]">{currentLabel}</span> to{' '}
             <span className="font-semibold text-[#1f2f47]">{nextLabel}</span>?
           </DialogDescription>
+          {/* A shared number is borrowed for one call and is not saved as this
+              person's number. Said here because the rest of this dialog reads
+              like a lasting change, which it is for their own numbers. */}
+          {isOneCallOnly && (
+            <p className="text-xs font-medium text-[#5e7394]">
+              This is a shared number, so it applies to this call only. Your own number stays
+              your default.
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="transparent" onClick={onCancel}>
               Cancel

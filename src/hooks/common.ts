@@ -71,7 +71,11 @@ export const useGetGreetings = (params?: any) => {
 
 export const useGetAssignedDIDNumbers = (uuid?: string) => {
   return useQuery({
-    queryKey: ['getAssignedDIDNumbersQuery'],
+    // The uuid goes into the request body, so it has to go into the key too:
+    // without it every caller shares one cache entry and an admin looking at a
+    // second person's numbers is served the first person's. `null` keeps the
+    // no-argument (own numbers) call on a stable key of its own.
+    queryKey: ['getAssignedDIDNumbersQuery', uuid ?? null],
     queryFn: () =>
       getAssignDidList({
         page: 1,

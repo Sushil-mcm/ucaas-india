@@ -41,7 +41,9 @@ type DialpadMiniFrameProps = {
   isManualDialDisabled?: boolean;
   isSipRegistered: boolean;
   sipStatus: string;
-  callerIdOptions: CallerIdOption[];
+  /* Widened for shared group numbers, which carry a source and group name.
+     Plain options still satisfy it, so existing callers are unaffected. */
+  callerIdOptions: Array<CallerIdOption & { source?: string; groupName?: string }>;
   selectedCallerId: CallerIdOption;
   isCallerIdOpen: boolean;
   isHold: boolean;

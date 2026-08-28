@@ -111,13 +111,20 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
     mutateGeneralSettings(payload);
   };
 
+  /* Company rule flags describe what the company does to a person; they are not
+     part of that person's own settings. `override` was already stripped for that
+     reason, and `apply`/`locked` are the same flag split in two, so all three go.
+     Left in, this page would save the company's rule back onto the individual
+     record, and the lock would then be read from the wrong level. */
+  const RULE_FLAG_KEYS = ['override', 'apply', 'locked'];
+
   function removeOverride<T>(obj: T): T {
     if (Array.isArray(obj)) {
       return obj.map(removeOverride) as unknown as T;
     } else if (typeof obj === 'object' && obj !== null) {
       return Object.fromEntries(
         Object.entries(obj)
-          .filter(([key]) => key !== 'override')
+          .filter(([key]) => !RULE_FLAG_KEYS.includes(key))
           .map(([key, value]) => [key, removeOverride(value)]),
       ) as unknown as T;
     }

@@ -75,7 +75,7 @@ const Logs = ({
   showOnlyDepartmentInfo: boolean;
 }) => {
   const { data: departmentData = {}, isLoading: isPendingDepartmentList } = useQuery({
-    queryKey: ['getDepartmentAndCallLogs', callId],
+    queryKey: ['getDepartmentAndCallLogs', callId, type],
     queryFn: () => getDepartmentAndCallLogs({ call_id: callId, type }),
     select: (data) => data?.data?.data?.result || {},
     enabled: !!callId,

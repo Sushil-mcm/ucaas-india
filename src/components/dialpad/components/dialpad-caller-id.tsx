@@ -1,12 +1,16 @@
 import { ChevronDown, ChevronUp, Info, Phone } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { CallerIdOption } from '../types';
 import DialpadCallerIdConfirmDialog from './dialpad-caller-id-confirm-dialog';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import { handleAlert } from '@/lib/utils';
 
+/* A group option carries `source: 'group'` and the group's name. Widened rather
+   than changed so a caller passing plain options is unaffected. */
+type PickerOption = CallerIdOption & { source?: string; groupName?: string };
+
 type DialpadCallerIdProps = {
-  options: CallerIdOption[];
+  options: PickerOption[];
   selectedOption: CallerIdOption;
   isOpen: boolean;
   onToggle: () => void;
@@ -143,8 +147,25 @@ const DialpadCallerId = ({
           <div className="absolute left-0 right-0 z-20 mt-2 max-h-[min(52vh,260px)] overflow-y-auto overscroll-contain rounded-2xl border border-ucass-active-bg bg-white shadow-[0_16px_28px_rgba(25,42,70,0.18)]">
             {options.map((option, index) => {
               const isSelected = selectedOption.id === option.id;
+              /* A heading before the first shared number. Without it a queue's
+                 number sits in the list looking like one of your own, and
+                 somebody presents the wrong identity without realising. */
+              const isGroup = (option as PickerOption).source === 'group';
+              const isFirstGroup =
+                isGroup && (options[index - 1] as PickerOption)?.source !== 'group';
 
               return (
+                <Fragment key={`${option.id}-group`}>
+                  {index === 0 && options.some((o) => (o as PickerOption).source === 'group') && (
+                    <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[#8fa0b8]">
+                      Your numbers
+                    </p>
+                  )}
+                  {isFirstGroup && (
+                    <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[#8fa0b8]">
+                      Shared numbers &mdash; this call only
+                    </p>
+                  )}
                 <button
                   type="button"
                   key={option.id}
@@ -170,6 +191,7 @@ const DialpadCallerId = ({
                     className={`h-2.5 w-2.5 shrink-0 rounded-full ${isSelected ? 'bg-[#1672f5]' : 'bg-transparent'}`}
                   />
                 </button>
+                </Fragment>
               );
             })}
           </div>
@@ -180,6 +202,7 @@ const DialpadCallerId = ({
         open={Boolean(pendingOption)}
         currentOption={selectedOption}
         nextOption={pendingOption}
+        isOneCallOnly={(pendingOption as PickerOption | null)?.source === 'group'}
         onCancel={handleCancelCallerIdChange}
         onConfirm={handleConfirmCallerIdChange}
       />

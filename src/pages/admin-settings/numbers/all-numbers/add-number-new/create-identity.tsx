@@ -76,7 +76,7 @@ const CreateIdentity = ({ formInstance, className, rowData }: any) => {
     'location',
   ]);
   const { data: identityData = [], isFetching: isIdentityProofLoading } = useQuery({
-    queryKey: ['getSingleIdentityList', isEdit],
+    queryKey: ['getSingleIdentityList', isEdit, formData?.uuid ?? null],
     queryFn: () =>
       getIdentityList({
         search_filters: [{ uuid: formData?.uuid }],
