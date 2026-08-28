@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDialpad } from '@/hooks/use-dialpad';
+import { useDialpadCallerIdOptions } from '@/hooks/use-dialpad-caller-id-options';
+import { isExtensionDialTarget } from '@/lib/extension-utility';
 import type { DialpadMakeCallOptions } from '@/context/dialpad-context';
 import { Ic } from './icons';
 
@@ -13,6 +15,7 @@ import { Ic } from './icons';
  */
 export const useConsoleDialer = () => {
   const dialpad = useDialpad();
+  const { defaultCallerIdOption } = useDialpadCallerIdOptions();
 
   const dial = useCallback(
     (raw: unknown, options?: DialpadMakeCallOptions) => {
@@ -36,11 +39,37 @@ export const useConsoleDialer = () => {
         return false;
       }
 
-      const started = dialpad.makeCall(target, options);
+      /* The switch reads X-CallerId to decide what the person being called
+         sees, and falls back to its own default number when the header is
+         absent. Callers that already set it — call-log redial, campaigns —
+         keep control; everything else inherits the console's caller ID rather
+         than silently presenting whatever the switch picks. */
+      const alreadySetsCallerId = (options?.extraHeaders ?? []).some((header) =>
+        String(header || '')
+          .trim()
+          .toLowerCase()
+          .startsWith('x-callerid:'),
+      );
+
+      const callOptions: DialpadMakeCallOptions = alreadySetsCallerId
+        ? (options ?? {})
+        : {
+            ...(options ?? {}),
+            extraHeaders: [
+              ...(options?.extraHeaders ?? []),
+              `X-CallerId: ${
+                isExtensionDialTarget(target) || defaultCallerIdOption?.id === 'no-caller-id'
+                  ? ''
+                  : defaultCallerIdOption?.number || ''
+              }`,
+            ],
+          };
+
+      const started = dialpad.makeCall(target, callOptions);
       if (!started) toast.error(`Could not start a call to ${target}.`);
       return started;
     },
-    [dialpad],
+    [dialpad, defaultCallerIdOption],
   );
 
   return { dial, isRegistered: dialpad.isRegistered };

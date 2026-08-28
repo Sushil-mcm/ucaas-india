@@ -48,7 +48,7 @@ const IdentitiesAndAddressesPageLayout = () => {
       <AdminPage
         section="Numbers"
         title="Identities & addresses"
-        description="The registered identities and service addresses your numbers are issued against."
+        description="The registered identities and service addresses your numbers are issued against. Records are created while buying a number that requires one — this page is where you review and edit them."
         filters={
           <Input
             placeholder="Search"
@@ -89,6 +89,7 @@ const IdentitiesAndAddressesPageLayout = () => {
       </AdminPage>
       {drawerState.addNewAddress && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           title="Add New Address"
           isOpen={drawerState.addNewAddress}
           isTab={false}

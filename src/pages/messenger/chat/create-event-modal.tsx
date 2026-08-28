@@ -580,7 +580,7 @@ const CreateEvent: FC<CreateEventProps> = ({
             Cancel
           </Button>
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             disabled={isPendingMeeting || isPendingEventAndTask}
           >

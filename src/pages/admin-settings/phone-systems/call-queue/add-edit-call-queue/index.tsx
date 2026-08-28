@@ -27,6 +27,7 @@ import { useUser } from '@/hooks/use-user';
 import QueueSettings from './queue-settings';
 import DispositionModal from '@/pages/auto-dialer/dispositions/add-edit-dispositions';
 import { callForwardingOptions } from '@/components/custom/forwarding-actions';
+import '@/components/mcm/mcm-page.css';
 
 interface AddCallQueueProps {
   drawerState: boolean;
@@ -274,14 +275,40 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
           label: operational_hours?.closed_hour_action?.value?.label || 'Hangup',
           value_label: operational_hours?.closed_hour_action?.value?.label,
         },
+        /* Read from holidays_action, not copied from closed_hour_action. The form
+           hydrates holidays_action from the saved record, but this builder
+           overwrote it with the closed-hours action on every save — so any
+           distinct holiday behaviour was destroyed the next time the queue was
+           touched, which is why all twenty live queues hold identical closed-hours
+           and holiday actions. Closed hours remains the fallback, so a queue that
+           never had a separate holiday action behaves exactly as before. */
         holidays_action: {
-          type: operational_hours?.closed_hour_action?.type?.value || 'HANGUP',
-          value: operational_hours?.closed_hour_action?.value?.value || 'HANGUP',
-          enabled: operational_hours?.closed_hour_action?.enabled || false,
-          personal: operational_hours?.closed_hour_action?.personal || false,
-          type_label: operational_hours?.closed_hour_action?.type?.label,
-          label: operational_hours?.closed_hour_action?.value?.label || 'Hangup',
-          value_label: operational_hours?.closed_hour_action?.value?.label,
+          type:
+            operational_hours?.holidays_action?.type?.value ||
+            operational_hours?.closed_hour_action?.type?.value ||
+            'HANGUP',
+          value:
+            operational_hours?.holidays_action?.value?.value ||
+            operational_hours?.closed_hour_action?.value?.value ||
+            'HANGUP',
+          enabled:
+            operational_hours?.holidays_action?.enabled ??
+            operational_hours?.closed_hour_action?.enabled ??
+            false,
+          personal:
+            operational_hours?.holidays_action?.personal ??
+            operational_hours?.closed_hour_action?.personal ??
+            false,
+          type_label:
+            operational_hours?.holidays_action?.type?.label ||
+            operational_hours?.closed_hour_action?.type?.label,
+          label:
+            operational_hours?.holidays_action?.value?.label ||
+            operational_hours?.closed_hour_action?.value?.label ||
+            'Hangup',
+          value_label:
+            operational_hours?.holidays_action?.value?.label ||
+            operational_hours?.closed_hour_action?.value?.label,
         },
       },
       wrapup_time: parseInt(wrapupTime),
@@ -298,7 +325,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
       ai_call_monitoring: ai_call_monitoring,
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
-        leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent'),
+        leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
         max_wait_time: {
           callers: watch('settings.ring_strategy.max_wait_time.callers').value,
           queue_timeout: watch('settings.ring_strategy.max_wait_time.queue_timeout')?.toString(),
@@ -564,7 +591,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
       },
       ring_strategy: {
         value: { label: ringStrategyLabel || '', value: ring_strategy?.value },
-        leave_room_if_no_agent: ring_strategy?.leave_room_if_no_agent,
+        leave_room_if_no_agent: ring_strategy?.leave_room_if_no_agent ?? true,
         max_wait_time: {
           callers: {
             label: ring_strategy?.max_wait_time?.callers,
@@ -602,7 +629,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
       <FormProvider {...formInstance}>
         <form
           onSubmit={formInstance.handleSubmit(onSubmit)}
-          className="flex h-full min-h-0 w-full flex-col justify-between gap-3 pt-2 sm:gap-4 sm:pt-3"
+          className="mcm-page mcm-userform flex h-full min-h-0 w-full flex-col justify-between gap-3 pt-2 sm:gap-4 sm:pt-3"
         >
           <Tabs
             value={activeTab}
@@ -678,7 +705,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) =
             )}
             {activeTab === TAB_CONSTANT.GREETING_NOTIFICATION && (
               <Button
-                variant={'outline'}
+                variant={'primary'}
                 type="submit"
                 disabled={isPending}
                 className="min-w-0 flex-1 px-3 sm:flex-none"

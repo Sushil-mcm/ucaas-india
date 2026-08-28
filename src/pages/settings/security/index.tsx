@@ -11,12 +11,17 @@ import { SearchLine } from '@/assets/icons';
 import { useState, useMemo } from 'react';
 import useDebounce from '@/hooks/use-debounce';
 import CustomSelect from '@/components/custom/custom-select';
+import ChangePassword from '@/pages/change-password';
+import { KeyRound } from 'lucide-react';
 
 const Security = () => {
   const { user } = useUser();
   const [search, setSearch] = useState('');
   const [selectedUserUuid, setSelectedUserUuid] = useState<string>('');
   const [selectedUserExtension, setSelectedUserExtension] = useState<string>('');
+  /* The change-password dialog was written and then never mounted anywhere, so
+     there has been no way to change a password from inside the console. */
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const debouncedSearch = useDebounce(search || '', 1000);
 
   const {
@@ -96,9 +101,29 @@ const Security = () => {
   return (
     <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg">Security & Privacy</p>
+        <div>
+          <p className="text-gray-900 font-semibold text-lg">Security & Privacy</p>
+          <p className="text-gray-500 text-xs">
+            Your password, and every device currently signed in as you.
+          </p>
+        </div>
       </div>
       <div className="gap-3 flex flex-col w-full h-full p-3">
+        <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex flex-col gap-1 sm:w-1/2 w-full">
+            <p className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
+              <KeyRound className="h-4 w-4 text-primary" />
+              Password
+            </p>
+            <p className="text-gray-500 text-xs">
+              Change the password you sign in with. You will need your current one. Everything
+              already signed in stays signed in — use the device list below to end those.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)}>
+            Change password
+          </Button>
+        </div>
         <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex flex-col gap-1 sm:w-1/2 w-full">
             <p className="text-gray-900 font-semibold text-sm">Force Logout User</p>
@@ -233,6 +258,7 @@ const Security = () => {
           )}
         </div>
       </div>
+      <ChangePassword modalState={isChangePasswordOpen} setModalState={setIsChangePasswordOpen} />
     </section>
   );
 };

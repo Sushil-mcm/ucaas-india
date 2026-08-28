@@ -153,7 +153,7 @@ const ScriptForm = ({
               )}
             />
             <div className="flex justify-end gap-2 border-t border-gray-100 pt-2">
-              <Button type="submit" variant={'outline'} disabled={isPending} className="min-w-24">
+              <Button type="submit" variant={'primary'} disabled={isPending} className="min-w-24">
                 {isPending ? <Loader variant="blue" /> : 'Save'}
               </Button>
             </div>

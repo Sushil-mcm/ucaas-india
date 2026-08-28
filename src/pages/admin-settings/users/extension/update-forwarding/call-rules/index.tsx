@@ -173,14 +173,56 @@ const CallRules: FC<CallRulesProps> = ({
     setValue('callRules.incomingCall.type', 'number');
   };
 
+  /* These three sections read as independent settings but are actually a
+     precedence chain: Do Not Disturb wins, then Forward All Calls, and only if
+     both are off do the devices ring. Someone who turns on Forward All Calls
+     while tuning ring times has silently stopped their phone ringing, and
+     nothing on the page said so. This states the outcome in one sentence. */
+  const describeTarget = (rule: any): string => {
+    const type = String(rule?.type?.value || '');
+    if (!type) return 'nowhere — the call is ended';
+    if (type === 'VOICEMAIL') return rule?.personal ? 'your voicemail' : 'another voicemail';
+    if (type === 'HANGUP') return 'nowhere — the call is ended';
+    if (type === 'EXTENSION') return `extension ${rule?.value?.value || ''}`.trim();
+    if (type === 'PHONE') return `the number ${rule?.value?.value || ''}`.trim();
+    if (type === 'QUEUE') return 'a call queue';
+    if (type === 'DEPARTMENT') return 'a group';
+    if (type === 'IVR') return 'a menu';
+    return String(rule?.type?.label || 'another destination').toLowerCase();
+  };
+
+  const summaryRules: any = watch('callRules') || {};
+  const forwardingAll = Boolean(summaryRules?.forwardCall?.enabled);
+  const dndOn = Boolean(summaryRules?.doNotDisturb);
+  const activeDevices = Object.values(summaryRules?.incomingCall?.deviceOptions || {}).filter(
+    (device: any) => device?.status,
+  ).length;
+
+  const summary = dndOn
+    ? `Do Not Disturb is on, so callers go straight to ${describeTarget(summaryRules?.failureAction)} without your devices ringing.`
+    : forwardingAll
+      ? `Every call goes straight to ${describeTarget(summaryRules?.forwardCall)}. Your devices will not ring, and the rules below are not used.`
+      : activeDevices
+        ? `Your ${activeDevices} active ${activeDevices === 1 ? 'device rings' : 'devices ring'}, and anything you miss goes to ${describeTarget(summaryRules?.failureAction)}.`
+        : `No device is switched on, so nothing rings — callers go to ${describeTarget(summaryRules?.failureAction)}.`;
+
+  const summaryTone = dndOn || forwardingAll ? 'warn' : activeDevices ? 'ok' : 'warn';
+
   return (
     <div className={`flex flex-col gap-4 overflow-y-auto pr-1 pt-2 ${customClass}`}>
       <div className="flex flex-col gap-3">
         <div className="mcm-fsec-h">
           <div className="mcm-fsec-t">Call Rules</div>
           <div className="mcm-fsec-d">
-            How incoming calls ring your apps and devices, and what happens to the ones you miss.
+            These rules are read in order: Do Not Disturb first, then Forward All Calls, and only
+            if both are off do your devices ring. Whatever is still unanswered falls to the last
+            rule.
           </div>
+        </div>
+
+        <div className={`mcm-callsummary ${summaryTone}`} role="status">
+          <span className="mcm-callsummary-l">When someone calls you now</span>
+          <p>{summary}</p>
         </div>
         {/* <div className="border border-gray-200 rounded-xl flex flex-col"> */}
         {/* <div className="divide-y divide-gray-200"> */}
@@ -193,6 +235,7 @@ const CallRules: FC<CallRulesProps> = ({
                 <label htmlFor="forwardCall" className="cursor-pointer truncate">
                   Forward All Calls
                 </label>
+                <span className="mcm-rule-rank">Checked first</span>
                 {(errors.callRules as any)?.forwardCall?.value?.value?.message && (
                   <ErrorTooltip
                     text={(errors.callRules as any)?.forwardCall?.value?.value?.message}
@@ -227,7 +270,7 @@ const CallRules: FC<CallRulesProps> = ({
                 watch={watch}
                 errors={errors}
                 forwardState="callRules.forwardCall"
-                description="Set how you'd like your calls to be forwarded."
+                description="Every call goes here immediately — your devices are not rung at all. Use it when you are away; switch it off to go back to normal ringing."
                 isUser={true}
                 SITE_UUID={watch('basic.site.value')}
                 selectedUserExt={watch('basic.extension')}
@@ -277,6 +320,13 @@ const CallRules: FC<CallRulesProps> = ({
                 <span className={`truncate${errors?.callRules ? ' text-red' : ''}`}>
                   Incoming Calls
                 </span>
+                <span className={`mcm-rule-rank${forwardingAll || dndOn ? ' off' : ''}`}>
+                  {dndOn
+                    ? 'Bypassed by Do Not Disturb'
+                    : forwardingAll
+                      ? 'Bypassed by Forward All Calls'
+                      : 'Used when nothing above applies'}
+                </span>
                 {(errors.callRules as any)?.failureAction?.value?.value?.message && (
                   <ErrorTooltip
                     text={(errors.callRules as any)?.failureAction?.value?.value?.message}
@@ -300,7 +350,7 @@ const CallRules: FC<CallRulesProps> = ({
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col items-start gap-5 px-3 sm:flex-row sm:items-center">
                   <p className="text-gray-800 text-sm w-full">
-                    Set how you'd like to answer calls when conditions are met.{' '}
+                    Which of your devices ring, in what order, and for how long before the call is treated as missed.{' '}
                   </p>
                   <div className="pl-1 w-full max-w-60">
                     <CustomSelect
@@ -515,7 +565,7 @@ const CallRules: FC<CallRulesProps> = ({
                       errors={errors}
                       forwardState="callRules.failureAction"
                       label="If Busy / Unanswered / Unreachable"
-                      description="Set how you'd like your calls to be handled, if Busy / Unanswered / Unreachable."
+                      description="The last stop for a call: you rejected it, nobody picked up, or your devices were offline. Leave this on voicemail — if it is unset the switch simply ends the call and the caller hears silence."
                       isUser={true}
                       SITE_UUID={watch('basic.site.value')}
                       selectedUserExt={watch('basic.extension')}

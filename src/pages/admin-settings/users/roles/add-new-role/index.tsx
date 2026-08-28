@@ -11,6 +11,7 @@ import SelectRole from './select-role';
 import { extractPlanFeatures, useCompanyFeatures } from '@/hooks/rbac';
 import Loader from '@/components/custom/loader';
 import { handleAlert, sanitizePlainTextInput } from '@/lib/utils';
+import '@/components/mcm/mcm-page.css';
 
 interface AddEditRoleProps {
   drawerState: boolean;
@@ -83,7 +84,7 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
       <FormProvider {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex h-full min-h-0 flex-col gap-4 pt-3 sm:pt-4"
+          className="mcm-page mcm-userform flex h-full min-h-0 flex-col gap-4 pt-3 sm:pt-4"
         >
           {isFetched ? (
             <div className="flex h-full min-h-0 w-full flex-col justify-between gap-4">
@@ -113,7 +114,7 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
                 {roleData?.company_uuid === 'PREDEFINED' ? null : (
                   <Button
                     type="submit"
-                    variant={'outline'}
+                    variant={'primary'}
                     disabled={isPendingCustomRole}
                     className="w-full sm:w-auto"
                   >

@@ -69,12 +69,24 @@ export const upsertSiteSchema = yup.object().shape({
         ),
     otherwise: (schema) => schema,
   }),
-  // caller_id_name: yup.string().when(['$currentStep', 'caller_id_type'], {
-  //   is: (currentStep: any, caller_id_type: any) => currentStep === 2 && caller_id_type === 'CUSTOM',
-  //   then: (schema) =>
-  //     schema.required('Caller id name is required').matches(/^\S.*\S$|^\S$/, 'Spaces not allowed'),
-  //   otherwise: (schema) => schema,
-  // }),
+  /* Deliberately not required. Every existing location was saved as CUSTOM with
+     no name — the column default, from the years the caller ID step was
+     commented out — so requiring a name here trapped anyone opening an old
+     location: the save was refused over a field that does nothing to calls, with
+     the error landing beside a Location Name box that often holds the company
+     name. A blank custom name is normalised to the company main number on save
+     instead, which heals the old records as people touch them. */
+  caller_id_name: yup.string().when('$currentStep', {
+    is: 1,
+    then: () =>
+      yup
+        .string()
+        .max(15, 'Caller ID name must not exceed 15 characters')
+        .transform((value) => (value === '' ? undefined : value))
+        .optional(),
+    otherwise: (schema) => schema,
+  }),
+
   timezone: yup.mixed().when('$currentStep', {
     is: 1,
     then: () =>

@@ -31,6 +31,17 @@ export const NAV_AREAS: NavArea[] = [
   { id: 'home', label: 'Home', icon: 'HomeIcon', items: ['Home'] },
   { id: 'directory', label: 'Directory', icon: 'ContactIcon', items: ['Contact', 'Groups'] },
   {
+    /**
+     * Campaign stays here on purpose. `/campaign` is where an agent works a
+     * dialer list, so Activity is the area the running campaign belongs to, and
+     * moving the item to Admin would light the Admin tab while the user is on
+     * the dialer and open a two-icon rail on top of the Admin Hub sidebar.
+     *
+     * The admin's way in is a separate concern and lives where an admin looks:
+     * "Outbound Campaigns" in `pages/admin-settings/sidebar`. Before that entry
+     * existed the only "Campaigns" in Admin was 10DLC SMS registration, which
+     * is a different object.
+     */
     id: 'activity',
     label: 'Activity',
     icon: 'PhoneIcon',
@@ -114,8 +125,8 @@ export const DIRECTORY_VIEWS: AreaView[] = [
   { key: 'groups', label: 'Groups', icon: 'DepartmentIcon' },
   { key: 'roles', label: 'Roles', icon: 'AdminIcon' },
   { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
-  { key: 'external', label: 'Contacts', icon: 'InboxIcon' },
-  { key: 'favourites', label: 'Favourites', icon: 'HomeIcon' },
+  { key: 'external', label: 'External Contacts', icon: 'InboxIcon' },
+  { key: 'favourites', label: 'Favourites', icon: 'Star' },
 ];
 
 export const PERFORMANCE_VIEWS: AreaView[] = [

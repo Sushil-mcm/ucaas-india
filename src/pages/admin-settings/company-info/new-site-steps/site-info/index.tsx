@@ -6,6 +6,26 @@ import { City, State } from 'country-state-city';
 import { useEffect, useMemo, useRef } from 'react';
 import countryList from '@/lib/countries.json';
 
+/* Stored as an enum of three codes. An admin reading "BLANK" cannot tell that it
+   means calls arrive with no number shown, so each is given its plain meaning. */
+const CALLER_ID_OPTIONS = [
+  { label: 'Company main number', value: 'MAIN' },
+  { label: 'Custom name', value: 'CUSTOM' },
+  { label: 'Withheld', value: 'BLANK' },
+];
+
+/* Stored, but not yet acted on. Nothing in the call path reads a location's
+   caller ID — the number a person shows comes from their own record. Saying so
+   is better than describing behaviour that does not happen. */
+const CALLER_ID_HELP: Record<string, string> = {
+  MAIN: 'Recorded against this location. Not applied to calls yet — see the note below.',
+  CUSTOM: 'Recorded against this location. Not applied to calls yet — see the note below.',
+  BLANK: 'Recorded against this location. Not applied to calls yet — see the note below.',
+};
+
+const CALLER_ID_NOTE =
+  'What a person shows when calling out is currently taken from their own record, not from their location. This setting is saved for when location-level caller ID is switched on.';
+
 const SiteInfo = ({ formInstance }: any) => {
   const {
     register,
@@ -14,11 +34,12 @@ const SiteInfo = ({ formInstance }: any) => {
     formState: { errors },
   } = formInstance;
 
-  const [watchedCountry, watchedState, watchedCity, watchedTimezone] = watch([
+  const [watchedCountry, watchedState, watchedCity, watchedTimezone, watchedCallerIdType] = watch([
     'country',
     'state',
     'city',
     'timezone',
+    'caller_id_type',
   ]);
   const shouldShowState = watchedState !== 'N/A';
   const shouldShowCity = watchedCity !== 'N/A';
@@ -58,43 +79,58 @@ const SiteInfo = ({ formInstance }: any) => {
 
   useEffect(() => {
     const currentCountry = watchedCountry?.value || '';
-    if (previousCountryValueRef.current === null) {
-      previousCountryValueRef.current = currentCountry;
-      return;
-    }
-
-    if (previousCountryValueRef.current === currentCountry) return;
+    const previousCountry = previousCountryValueRef.current;
     previousCountryValueRef.current = currentCountry;
 
-    setValue('state', '');
-    setValue('city', '');
+    if (!currentCountry) return;
+
+    /* Distinguishes a person changing the country from the form being filled in
+       with a saved location. The guard used to fire on both, because loading an
+       existing record looks like ''  ->  'India' — which cleared the state and
+       city that had just been loaded, and overwrote the saved timezone with the
+       country's first zone. That is why editing a location showed "Select State"
+       and "Select City" on a record that had both. */
+    const isRealCountryChange = Boolean(previousCountry) && previousCountry !== currentCountry;
+
+    if (isRealCountryChange) {
+      setValue('state', '');
+      setValue('city', '');
+    }
 
     const countryCode =
       countryList?.find((country) => country?.name === currentCountry)?.isoCode || '';
     const timezones =
       countryList?.find((country) => country?.isoCode === countryCode)?.timezones || [];
-    if (timezones.length > 0) {
-      setValue(
-        'timezone',
-        { label: timezones[0].zoneName, value: timezones[0].zoneName },
-        { shouldValidate: true, shouldDirty: true },
-      );
-    } else {
-      setValue('timezone', null);
+
+    /* Only filled in when there is nothing there, or when the country genuinely
+       changed. A saved location keeps the timezone it was given — several
+       countries have more than one, and picking the first would quietly move a
+       branch to the wrong clock. */
+    const hasTimezone = Boolean(watch('timezone')?.value);
+    if (isRealCountryChange || !hasTimezone) {
+      if (timezones.length > 0) {
+        setValue(
+          'timezone',
+          { label: timezones[0].zoneName, value: timezones[0].zoneName },
+          { shouldValidate: true, shouldDirty: true },
+        );
+      } else if (isRealCountryChange) {
+        setValue('timezone', null);
+      }
     }
-  }, [watchedCountry?.value, setValue]);
+  }, [watchedCountry?.value, setValue, watch]);
 
   useEffect(() => {
     const currentState = watchedState || '';
-    if (previousStateValueRef.current === null) {
-      previousStateValueRef.current = currentState;
-      return;
-    }
-
-    if (previousStateValueRef.current === currentState) return;
+    const previousState = previousStateValueRef.current;
     previousStateValueRef.current = currentState;
 
-    if (stateOptions?.length > 0) setValue('city', '');
+    /* Same distinction as the country guard: '' -> 'Maharashtra' is a saved
+       record being loaded, not somebody picking a different state, and clearing
+       the city on load is what emptied it on every edit. */
+    const isRealStateChange = Boolean(previousState) && previousState !== currentState;
+
+    if (isRealStateChange && stateOptions?.length > 0) setValue('city', '');
   }, [watchedState, stateOptions?.length, setValue]);
 
   useEffect(() => {
@@ -123,7 +159,9 @@ const SiteInfo = ({ formInstance }: any) => {
         <div className="flex flex-col gap-1">
           <h5 className="font-semibold text-gray-900 text-md">General Location Info</h5>
           <p className="text-gray-500 text-sm">
-            Enter an identifying name for this specific site or location.
+            The name of this place — <span className="font-medium">Mumbai Office</span>,{' '}
+            <span className="font-medium">London Branch</span>. Not your company name, which is
+            shown at the top of Company &amp; Locations.
           </p>
         </div>
         <div className="flex w-full items-center gap-3">
@@ -260,8 +298,56 @@ const SiteInfo = ({ formInstance }: any) => {
                   menuPlacement="top"
                 />
               </div>
+              <div className="relative flex w-full gap-1 md:w-1/2">
+                <CustomSelect
+                  label="Outbound caller ID"
+                  placeholder="Select caller ID"
+                  options={CALLER_ID_OPTIONS}
+                  handleChange={(option: any) => {
+                    const nextType = option?.value ?? option;
+                    setValue('caller_id_type', nextType, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                    /* A name only means something for CUSTOM. Clearing it on the
+                       way out stops a hidden value being saved against a type
+                       that never shows it. */
+                    if (nextType !== 'CUSTOM') {
+                      setValue('caller_id_name', '', { shouldValidate: true });
+                    }
+                  }}
+                  value={
+                    CALLER_ID_OPTIONS.find((option) => option.value === watchedCallerIdType) || null
+                  }
+                  error={errors?.caller_id_type?.message}
+                  menuPlacement="top"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex w-full items-center gap-3">
+            <div className="flex w-full flex-col gap-4 md:flex-row">
+              <div className="relative flex w-full gap-1 md:w-1/2">
+                {watchedCallerIdType === 'CUSTOM' && (
+                  <Input
+                    label="Name to show"
+                    {...register('caller_id_name')}
+                    error={errors?.caller_id_name?.message}
+                    placeholder="Enter caller ID name"
+                    maxLength={15}
+                  />
+                )}
+              </div>
               <div className="relative flex w-full gap-1 md:w-1/2" />
             </div>
+          </div>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-2.5">
+            <p className="text-xs text-gray-700">
+              {CALLER_ID_HELP[watchedCallerIdType] || CALLER_ID_HELP.MAIN}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">{CALLER_ID_NOTE}</p>
           </div>
         </div>
       </div>

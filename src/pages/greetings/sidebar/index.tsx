@@ -4,46 +4,46 @@ import { Icon } from '@/assets/icons/icon';
 import type { IconType } from '@/assets/icons/type';
 import { Accordion, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
+/* Suffixes rather than absolute paths. This sidebar is mounted under two
+   different bases — the standalone /greetings area and My Account > Greetings —
+   and hard-coded absolute paths meant clicking any item from inside My Account
+   navigated the person out of the admin area entirely. */
 const greetingSidebarArr = [
-  {
-    title: 'All',
-    path: '/greetings',
-    value: 'greetings',
-    type: 'normal',
-    icon: 'MenuLines',
-  },
+  { title: 'All', suffix: '', value: 'greetings', type: 'normal', icon: 'MenuLines' },
   {
     title: 'Voicemail',
-    path: '/greetings/type-voicemail',
+    suffix: '/type-voicemail',
     value: 'voicemail',
     type: 'normal',
     icon: 'VoicemailLineIcon',
   },
   {
     title: 'Greetings',
-    path: '/greetings/type-greeting',
+    suffix: '/type-greeting',
     type: 'normal',
     value: 'greeting',
     icon: 'MusicNote',
   },
-  {
-    title: 'Prompt',
-    path: '/greetings/type-prompt',
-    type: 'normal',
-    value: 'prompt',
-    icon: 'Chat',
-  },
+  { title: 'Prompt', suffix: '/type-prompt', type: 'normal', value: 'prompt', icon: 'Chat' },
 ];
+
+/* This sidebar is mounted only by the standalone /greetings area, so the base is
+   fixed. It is resolved through one function rather than repeated per item so a
+   second mount point stays a one-line change. */
+const resolveBase = (): string => '/greetings';
 
 const Sidebar = () => {
   const [activeItem, setActiveItem] = useState('');
+  const base = resolveBase();
   return (
     <div className="flex flex-col w-full">
       <div className="divide-y divide-gray-200 h-full">
-        {greetingSidebarArr?.map(({ type, icon = '', path, title, value }) => {
+        {greetingSidebarArr?.map(({ type, icon = '', suffix, title, value }) => {
+          const path = `${base}${suffix}`;
           if (type === 'accordion') {
             return (
               <Accordion
+                key={value}
                 type="single"
                 collapsible
                 value={activeItem}
@@ -59,7 +59,7 @@ const Sidebar = () => {
               </Accordion>
             );
           } else {
-            return <Tile {...{ title, path, icon }} />;
+            return <Tile key={value} {...{ title, path, icon }} />;
           }
         })}
       </div>

@@ -9,8 +9,6 @@ import { FC, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 export const ExtensionListView = ({ option }: any) => {
-  console.log(option, 'optionoption');
-
   const { showExtension = true } = option || {};
   return (
     <div className="flex w-full items-center justify-between">

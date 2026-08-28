@@ -1,4 +1,5 @@
 import { SearchLine } from '@/assets/icons';
+import { parseForwardActions } from '@/lib/call-standard';
 import { Icon, IconName } from '@/assets/icons/icon';
 import AlertConfirm from '@/components/custom/alert-confirm';
 // import Breadcrumb from '@/components/custom/breadcrumb';
@@ -20,6 +21,12 @@ import { useState } from 'react';
 import UpsertCallForwarding from '../set-number-forwarding';
 import AssignDIDNumber from '../assign-did';
 import { useCompanyFeatures } from '@/hooks/rbac';
+import {
+  FORWARD_TYPES_WITH_EXTENSION,
+  FORWARD_TYPES_WITH_NAME,
+  FORWARD_TYPES_WITH_PHONE,
+  getDidTypeLabel,
+} from '../utils';
 
 interface IAllNumberState {
   updateForwarding: boolean;
@@ -47,7 +54,8 @@ const NumbersInventory = () => {
   const { mutate: mutateRemoveAssignDID, isPending: isPendingRemoveAssignDID } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['inventoryNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Assigned DID Removed Successfully.',
         type: 'success',
@@ -63,7 +71,8 @@ const NumbersInventory = () => {
   const { mutate: mutateReleaseForwarding, isPending: isPendingReleaseForwarding } = useMutation({
     mutationFn: releaseForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['inventoryNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -78,7 +87,8 @@ const NumbersInventory = () => {
   const { mutate: mutateRemoveForwarding, isPending: isPendingRemovingForwarding } = useMutation({
     mutationFn: removeForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['inventoryNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -137,12 +147,14 @@ const NumbersInventory = () => {
       cell: ({ row }: any) => {
         const data = row?.original || {};
 
-        const parsedForwardTo =
-          data?.forward_call_actions && JSON.parse(data?.forward_call_actions);
+        /* Parsed defensively: an unguarded JSON.parse here throws during render,
+           and one malformed forward_call_actions row would blank the entire
+           table rather than that single cell. */
+        const parsedForwardTo = parseForwardActions(data?.forward_call_actions);
         const forwardedValue = parsedForwardTo?.call_handling?.business_hours || '';
         return (
           <div>
-            {['EXTENSION', 'VOICEMAIL'].includes(forwardedValue?.type) ? (
+            {FORWARD_TYPES_WITH_EXTENSION.includes(forwardedValue?.type) ? (
               <div className="flex flex-col items-start">
                 {capitalizeFirstLetter(forwardedValue?.type)}
                 <small>
@@ -150,10 +162,17 @@ const NumbersInventory = () => {
                   {forwardedValue?.value ? ` (${forwardedValue.value})` : ''}
                 </small>
               </div>
-            ) : ['DEPARTMENT', 'IVR', 'GREETING'].includes(forwardedValue?.type) ? (
+            ) : FORWARD_TYPES_WITH_NAME.includes(forwardedValue?.type) ? (
               <div className="flex flex-col items-start">
                 {capitalizeFirstLetter(forwardedValue?.type)}
                 <small>{forwardedValue?.name}</small>
+              </div>
+            ) : FORWARD_TYPES_WITH_PHONE.includes(forwardedValue?.type) ? (
+              <div className="flex flex-col items-start">
+                {capitalizeFirstLetter(forwardedValue?.type)}
+                <small>
+                  <NumberWithFlag number={`+${forwardedValue?.name}`} />
+                </small>
               </div>
             ) : (
               <>
@@ -179,7 +198,7 @@ const NumbersInventory = () => {
       header: 'Type',
       accessorKey: 'did_type',
       cell: ({ row: { original: _val } }: any) => {
-        return _val?.did_type === 'L' ? 'Local' : 'Toll Free';
+        return getDidTypeLabel(_val?.did_type);
       },
     },
 
@@ -358,6 +377,7 @@ const NumbersInventory = () => {
 
       {allNumberState.updateForwarding && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={allNumberState.updateForwarding}
           title="Update Forwarding"
           isTab={false}

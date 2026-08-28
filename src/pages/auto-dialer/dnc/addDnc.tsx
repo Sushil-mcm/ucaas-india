@@ -139,7 +139,7 @@ const AddDncModal: FC<DispositionProps> = ({ modalState, setModalState, editdata
             >
               Cancel
             </Button>
-            <Button variant={'outline'} type="submit" disabled={isPending}>
+            <Button variant={'primary'} type="submit" disabled={isPending}>
               {isPending ? 'Submitting...' : 'Submit'}
             </Button>
           </div>

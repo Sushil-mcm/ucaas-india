@@ -627,7 +627,7 @@ const SignUp = () => {
                         Back
                       </Button>
                       <Button
-                        variant={'outline'}
+                        variant={'primary'}
                         className="w-full max-w-[calc(100%-80px)]"
                         type="submit"
                         disabled={isPendingAccount || isPending}

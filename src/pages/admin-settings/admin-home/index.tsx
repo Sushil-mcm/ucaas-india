@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useUser } from '@/hooks/use-user';
 import Loader from '@/components/custom/loader';
 import { Ic } from '@/components/mcm/icons';
 import { adminSettingArr, canShowItem } from '../sidebar';
-import { useAdminShortcuts } from './use-admin-shortcuts';
+import { useAdminShortcuts } from '../use-admin-shortcuts';
 import '@/components/mcm/mcm-page.css';
 
 /**
@@ -25,8 +25,8 @@ const AdminHome = () => {
   const { features, user_info } = useCompanyFeatures();
   const { loader } = useUser();
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'all' | 'recent' | 'favourites'>('all');
-  const { recent, favourites, toggleFavourite, isFavourite } = useAdminShortcuts();
+  const [tab, setTab] = useState<'all' | 'recent'>('all');
+  const { recent, clearRecent } = useAdminShortcuts();
 
   const IS_ADMIN = user_info?.role === 'ADMIN';
 
@@ -69,14 +69,41 @@ const AdminHome = () => {
       .filter((group) => group.entries.length > 0);
   }, [groups, search]);
 
-  /* Recent and favourites are lists of paths; resolving them through
-     `allEntries` means a screen you lose access to quietly disappears. */
-  const pickedEntries = useMemo(() => {
-    const paths = tab === 'recent' ? recent : favourites;
-    return paths
-      .map((path) => allEntries.find((entry) => entry.path === path))
-      .filter(Boolean) as Array<Entry & { group: string }>;
-  }, [tab, recent, favourites, allEntries]);
+  /* Recent is a list of paths; resolving each through `allEntries` means a
+     screen you lose access to quietly disappears.
+     A visited path may be a detail screen ("…/users/people/edit/42"), which is
+     not itself a nav entry. Fall back to the longest nav path it sits under, so
+     editing a person still counts as having used People rather than vanishing.
+     Longest wins because "/admin-settings/users" and "/admin-settings/users/people"
+     can both be prefixes and only the more specific one is the screen you saw. */
+  const resolveEntry = useCallback(
+    (path: string) =>
+      allEntries.find((entry) => entry.path === path) ||
+      allEntries
+        .filter((entry) => path.startsWith(`${entry.path}/`))
+        .sort((a, b) => b.path.length - a.path.length)[0],
+    [allEntries],
+  );
+
+  const recentEntries = useMemo(() => {
+    const seen = new Set<string>();
+    const resolved: Array<Entry & { group: string }> = [];
+    recent.forEach((path) => {
+      const entry = resolveEntry(path);
+      /* Two detail routes can collapse onto the same screen, so dedupe after
+         resolving, not before. */
+      if (!entry || seen.has(entry.path)) return;
+      seen.add(entry.path);
+      resolved.push(entry);
+    });
+    /* Recent stores 24 so unresolvable routes cannot push real screens out;
+       only the most recent eight are shown. */
+    return resolved.slice(0, 8);
+  }, [recent, resolveEntry]);
+
+  /* The count comes from what actually resolves, so the tab never promises
+     more than it can show. */
+  const recentCount = recentEntries.length;
 
   if (loader || !user_info) {
     return (
@@ -85,9 +112,6 @@ const AdminHome = () => {
       </div>
     );
   }
-
-  const emptyCopy =
-    tab === 'recent' ? 'Screens you open will show up here.' : 'Star a screen to keep it here.';
 
   return (
     <section className="mcm-adminhome flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -120,15 +144,13 @@ const AdminHome = () => {
           className={tab === 'recent' ? 'on' : ''}
           onClick={() => setTab('recent')}
         >
-          Recently used
+          Recently used{recentCount ? ` (${recentCount})` : ''}
         </button>
-        <button
-          type="button"
-          className={tab === 'favourites' ? 'on' : ''}
-          onClick={() => setTab('favourites')}
-        >
-          Favourites
-        </button>
+        {tab === 'recent' && recentCount ? (
+          <button type="button" className="mcm-adminhome-clear" onClick={clearRecent}>
+            Clear
+          </button>
+        ) : null}
       </div>
 
       <div className="mcm-adminhome-body">
@@ -142,19 +164,6 @@ const AdminHome = () => {
                     {group.entries.map((entry) => (
                       <li key={entry.path}>
                         <Link to={entry.path}>{entry.title}</Link>
-                        <button
-                          type="button"
-                          className="mcm-admincard-star"
-                          aria-label={
-                            isFavourite(entry.path)
-                              ? `Remove ${entry.title} from favourites`
-                              : `Add ${entry.title} to favourites`
-                          }
-                          aria-pressed={isFavourite(entry.path)}
-                          onClick={() => toggleFavourite(entry.path)}
-                        >
-                          <Ic n="star" size={13} fill={isFavourite(entry.path)} />
-                        </button>
                       </li>
                     ))}
                   </ul>
@@ -164,35 +173,24 @@ const AdminHome = () => {
           ) : (
             <p className="mcm-adminhome-empty">Nothing matches “{search}”.</p>
           )
-        ) : pickedEntries.length ? (
+        ) : recentEntries.length ? (
           <div className="mcm-admingrid">
             <div className="mcm-admincard">
-              <div className="mcm-admincard-h">
-                {tab === 'recent' ? 'Recently used' : 'Favourites'}
-              </div>
+              <div className="mcm-admincard-h">Recently used</div>
               <ul>
-                {pickedEntries.map((entry) => (
+                {recentEntries.map((entry) => (
                   <li key={entry.path}>
                     <Link to={entry.path}>
                       {entry.title}
                       <span className="mcm-admincard-group">{entry.group}</span>
                     </Link>
-                    <button
-                      type="button"
-                      className="mcm-admincard-star"
-                      aria-label={`Remove ${entry.title} from favourites`}
-                      aria-pressed={isFavourite(entry.path)}
-                      onClick={() => toggleFavourite(entry.path)}
-                    >
-                      <Ic n="star" size={13} fill={isFavourite(entry.path)} />
-                    </button>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
         ) : (
-          <p className="mcm-adminhome-empty">{emptyCopy}</p>
+          <p className="mcm-adminhome-empty">Screens you open will show up here.</p>
         )}
       </div>
     </section>

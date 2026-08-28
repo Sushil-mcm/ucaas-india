@@ -19,8 +19,11 @@ const createSiteFormInitialState = {
   country: null,
   postal_code: '',
   timezone: null,
-  // caller_id_name: '',
-  // caller_id_type: 'CUSTOM',
+  /* MAIN, not the column default of CUSTOM: showing the company main number is
+     the sensible starting point, and CUSTOM without a name is what left every
+     existing location misconfigured. */
+  caller_id_type: 'MAIN',
+  caller_id_name: '',
 };
 
 const NewSiteSteps = ({ data = {}, handleClose }: any) => {
@@ -82,8 +85,26 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
         ...rest,
         ...(data?.uuid && { siteUUID: data?.uuid }),
       };
-      delete payload.caller_id_name;
-      delete payload.caller_id_type;
+      /* Previously both were deleted here, so every save fell back to the column
+         default (CUSTOM) with no name. They are sent now.
+
+         "Custom name" with no name is not a real setting — it is the state every
+         location was left in while the caller ID step was commented out. Rather
+         than refuse the save, it is normalised to the company main number, so an
+         old record quietly corrects itself the first time anyone edits it. */
+      if (payload.caller_id_type === 'CUSTOM' && !`${payload.caller_id_name || ''}`.trim()) {
+        payload.caller_id_type = 'MAIN';
+      }
+      if (payload.caller_id_type !== 'CUSTOM') {
+        /* Removed, not blanked. The backend validator is
+           `caller_id_name: Joi.string().optional()`, and a Joi string rejects ''
+           unless .allow('') is set — so sending an empty string produced
+           "caller_id_name is not allowed to be empty" and blocked every save
+           where caller ID was not a custom name. Omitting the key leaves the
+           stored value untouched, which is the right behaviour anyway: the name
+           is meaningless for MAIN and BLANK and is not shown for them. */
+        delete payload.caller_id_name;
+      }
       mutate(payload);
     }
   };
@@ -110,8 +131,8 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       country: { value: country, label: country },
       postal_code,
       timezone: timezone ? { value: timezone, label: timezone } : null,
-      caller_id_name,
-      caller_id_type,
+      caller_id_name: caller_id_name || '',
+      caller_id_type: caller_id_type || 'MAIN',
     });
   }, [data]);
 
@@ -155,7 +176,7 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
           {currentStep === 1 ? 'Cancel' : 'Back'}
         </Button>
 
-        <Button variant={'outline'} disabled={isPending} type="submit" className="w-full sm:w-auto">
+        <Button variant={'primary'} disabled={isPending} type="submit" className="w-full sm:w-auto">
           {isPending ? (
             <Loader variant="blue" size="sm" />
           ) : currentStep === 2 ? (

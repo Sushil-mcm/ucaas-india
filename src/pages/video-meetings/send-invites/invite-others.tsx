@@ -188,7 +188,7 @@ const InviteOthersModal: FC<InviteOthersModalProps> = ({
             Cancel
           </Button>
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             onClick={handleInviteClick}
             disabled={

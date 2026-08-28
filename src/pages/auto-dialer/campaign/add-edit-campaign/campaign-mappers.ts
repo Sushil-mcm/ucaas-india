@@ -167,6 +167,15 @@ const buildDialerSettingsPayload = (dialerSetting: any) => {
       typeof retryPeriodType === 'string' ? retryPeriodType : retryPeriodType?.value,
     agent_contact_limit: dialerSetting?.agent_contact_limit ?? null,
     answering_detection_machine: {
+      /* The switch was never sent. The UI writes to `enabled`, the read-back at
+         line ~321 looks for `enabled ?? enable`, and this builder omitted both —
+         so answering machine detection resolved to false on every save and could
+         not be turned on at all. Zero of the twelve live campaigns carry the key.
+         Written as `enabled` to match the read-back and the backend's Joi schema;
+         `enable` is also sent because the sibling `auto_answering` block uses that
+         spelling and it is not knowable from here which one the dialer reads. */
+      enabled: toBoolean(answeringMachine?.enabled ?? answeringMachine?.enable, false),
+      enable: toBoolean(answeringMachine?.enabled ?? answeringMachine?.enable, false),
       type: answeringMachine?.type || 'HANGUP',
       value: normalizedMachine.value,
       label: normalizedMachine.label,
@@ -230,7 +239,11 @@ export const buildCampaignUpsertPayload = ({
     agentDisposition: buildAgentDispositionPayload(formValues?.agentDisposition || []),
     members: uniqueMembers,
     allowSkipping: formValues?.allowSkipping ?? true,
-    agentScripting: formValues?.agentScripting ?? true,
+    /* Defaults to false in all three places (initial value, write, read).
+       The schema makes `script` required whenever agentScripting is true, so
+       defaulting to true would fail validation on every new campaign, and
+       would silently flip legacy campaigns on — then block saving them. */
+    agentScripting: formValues?.agentScripting ?? false,
     script: typeof scriptValue === 'string' ? scriptValue : scriptValue?.value || '',
     settings: settingsPayload,
     dialMethod: dialMethod || formValues?.dialMethod || DIALER_TYPE.PREVIEW,
@@ -338,7 +351,7 @@ export const mapCampaignToFormDefaults = ({
     },
     agentDisposition: selectedCampaign?.agentDisposition || [],
     allowSkipping: toBoolean(selectedCampaign?.allowSkipping, true),
-    agentScripting: toBoolean(selectedCampaign?.agentScripting, true),
+    agentScripting: toBoolean(selectedCampaign?.agentScripting, false),
     members,
     startDate: selectedCampaign?.startDate
       ? moment(selectedCampaign.startDate).format('YYYY-MM-DD')

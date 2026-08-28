@@ -9,6 +9,48 @@ const ORG_ID_HEADER = 'X-ORG-ID';
 const ORG_ID_STORAGE_KEY = 'org_uuid';
 const GET_META_DATA_PATH = '/api/admin/organisation/get-meta-data';
 
+/**
+ * The largest `limit` the list endpoints accept.
+ *
+ * They validate it and reject anything larger — "limit must be less than or
+ * equal to 200" — rather than returning a truncated page. Around ninety call
+ * sites across the app ask for more than that, most of them long-standing code
+ * that predates the rule: pickers and dropdowns passing 1000, and two passing
+ * 99999999 to mean "everything".
+ *
+ * Clamping here turns every one of those from a failed request into a working
+ * one. It is deliberately a request-layer fix rather than ninety edits: the
+ * call sites are not wrong about wanting the whole list, they are wrong about
+ * how to ask, and that is one rule in one place.
+ *
+ * Where a screen genuinely needs more than 200 rows to be correct — the
+ * statement of account, the coverage audit — it walks the pages with
+ * `fetchAllPages` instead of relying on this.
+ */
+const MAX_PAGE_LIMIT = 200;
+
+/** Warn once per endpoint, so the console shows the offenders without flooding. */
+const warnedLimitPaths = new Set<string>();
+
+const clampLimit = (bag: unknown, path: string): void => {
+  if (!bag || typeof bag !== 'object' || Array.isArray(bag)) return;
+  const holder = bag as Record<string, unknown>;
+  const raw = holder.limit;
+  if (raw === undefined || raw === null || raw === '') return;
+
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= MAX_PAGE_LIMIT) return;
+
+  holder.limit = MAX_PAGE_LIMIT;
+  if (!warnedLimitPaths.has(path)) {
+    warnedLimitPaths.add(path);
+    console.warn(
+      `[api] ${path} requested limit=${value}; clamped to ${MAX_PAGE_LIMIT}. ` +
+        'Use fetchAllPages() if this screen needs every row.',
+    );
+  }
+};
+
 const getOrgUuidFromMetaDataResponse = (responseData: any): string => {
   const result = responseData?.data?.result ?? responseData?.result ?? responseData ?? null;
   const uuid = result?.uuid;
@@ -36,6 +78,12 @@ apiClient.interceptors.request.use(
     if (orgId) {
       config.headers[ORG_ID_HEADER] = orgId;
     }
+
+    /* Applies to both shapes these endpoints are called with: a POST body and
+       a GET query string. */
+    const path = config.url || 'unknown';
+    clampLimit(config.data, path);
+    clampLimit(config.params, path);
 
     return config;
   },

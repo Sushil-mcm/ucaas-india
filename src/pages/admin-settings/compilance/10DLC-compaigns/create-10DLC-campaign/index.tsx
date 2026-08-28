@@ -216,7 +216,7 @@ const Create10DLCCampaign = ({ setDrawerState }: { drawerState: boolean; setDraw
                   </Button>
                 )}
                 {currentStep === DLC_CAMPAIGN_CONST.PAYMENT_AND_CONFIRMATION && (
-                  <Button variant={'outline'} type="submit" disabled={isPending} >
+                  <Button variant={'primary'} type="submit" disabled={isPending} >
                     {isPending ? 'Submiting...' : 'Submit'}
                   </Button>
                 )}

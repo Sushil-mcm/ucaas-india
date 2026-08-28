@@ -276,7 +276,7 @@ const UploadContacts: FC<IUploadContactProps> = ({
               <Button type="button" variant={'transparent'} onClick={handleUploadModalClose}>
                 Cancel
               </Button>
-              <Button type="submit" variant={'outline'} disabled={!watch('file') || isPending}>
+              <Button type="submit" variant={'primary'} disabled={!watch('file') || isPending}>
                 {isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>

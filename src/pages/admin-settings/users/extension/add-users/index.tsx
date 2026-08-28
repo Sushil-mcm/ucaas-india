@@ -30,7 +30,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
   const { refetch: refetchUserApi } = useUser();
 
   const [isPaymentRequired, setIspaymentRequired] = useState<any>(false);
-  const [orderSummary, setOrderSummary] = useState(null);
+  const [orderSummary, setOrderSummary] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [typeOfPassword, setTypeOfPassword] = useState('common');
   const [isUserValidatorError, setIsUserValidatorError] = useState(false);
@@ -57,6 +57,38 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
       }
 
       handleSuccess(data);
+    },
+    onError: (error: any) => {
+      /* The API refuses to create users when the company has no licence left,
+         even if this screen believed the seats were free. Without this the
+         admin is dead-ended: the payment step only renders once payment is
+         already known to be required. Open it instead of failing silently. */
+      const response = error?.response;
+      const body = response?.data || {};
+      const errorCode = String(body?.code || body?.error_code || body?.data?.code || '');
+      const errorMessage = String(body?.message || '');
+      const needsPayment =
+        response?.status === 402 ||
+        errorCode.toUpperCase() === 'PAYMENT_REQUIRED' ||
+        /payment[\s_-]*required/i.test(errorMessage);
+
+      // Anything else already surfaces through the shared axios error toast.
+      if (!needsPayment) return;
+
+      paymentRef.current?.resetPaymentState();
+      paymentData.current = null;
+      setIspaymentRequired(true);
+      setOrderSummary((prev: any) => {
+        const watchUserLength = watchUsers?.length || 0;
+        return {
+          ...(prev || {}),
+          watchUserLength,
+          availableLicenses: prev?.availableLicenses ?? 0,
+          totalPayableUnit: prev?.totalPayableUnit || watchUserLength,
+        };
+      });
+      setCurrentStep(2);
+      setStatus('show_payment');
     },
   });
 
@@ -138,7 +170,14 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           users: users?.map(({ confirm_password, password, role, ...item }: any) => ({
             ...item,
-            role: role?.value,
+            /* The name, not the id. `value` is always a uuid (role_uuid, or the
+                   custom role's uuid), and sending it here wrote a uuid into
+                   users.role — the display-name column. Every guard that compares
+                   that column to "ADMIN", "MANAGER" or "AGENT" then silently
+                   stopped working, including the one that prevents an
+                   administrator being deleted. The role ids still travel
+                   separately as role_uuid / custom_role_uuid. */
+                role: role?.label,
             password: password_type === 'common' ? data?.password : password,
           })),
           site_uuid: site?.value,
@@ -177,7 +216,14 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       users: watchUsers?.map(({ confirm_password, role, password, ...item }: any) => ({
         ...item,
-        role: role?.value,
+        /* The name, not the id. `value` is always a uuid (role_uuid, or the
+                   custom role's uuid), and sending it here wrote a uuid into
+                   users.role — the display-name column. Every guard that compares
+                   that column to "ADMIN", "MANAGER" or "AGENT" then silently
+                   stopped working, including the one that prevents an
+                   administrator being deleted. The role ids still travel
+                   separately as role_uuid / custom_role_uuid. */
+                role: role?.label,
         password: watchPasswordType === 'common' ? watchPassword : password,
       })),
       site_uuid: watchSite?.value,
@@ -224,6 +270,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
           orderSummary,
           status,
           dataGetMyPlanDetails,
+          setPaymentCalculation,
           paymentProps: {
             onSuccessPayment,
             paymentRef,

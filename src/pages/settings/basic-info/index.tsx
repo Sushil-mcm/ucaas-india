@@ -16,6 +16,8 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import CustomAvatar from '@/components/custom/custom-avatar';
+import HowCallsReachYou from './how-calls-reach-you';
+import CallSetupGuide from './call-setup-guide';
 
 export const BasicInfoSettingSchema = yup.object().shape({
   basic: yup.object().shape({
@@ -171,7 +173,13 @@ const BasicInfoSettings = () => {
       <section className="flex h-full w-full flex-col overflow-hidden bg-gray-200/15">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <p className="text-gray-900 font-semibold text-lg">Basic Info</p>
+          <div>
+            <p className="text-gray-900 font-semibold text-lg">Basic Info</p>
+            <p className="text-gray-500 text-xs">
+              Your name, job title and location as colleagues see them in the directory — and below,
+              how calls actually reach you.
+            </p>
+          </div>
         </div>
         {PendingUserData ? (
           <div className="flex items-center justify-center p-5">
@@ -179,6 +187,13 @@ const BasicInfoSettings = () => {
           </div>
         ) : (
           <div className="w-full flex-1 overflow-y-auto p-4">
+            <div className="mx-auto mb-4 w-full md:max-w-[80%]">
+              <HowCallsReachYou
+                userInfo={userInfoData?.user_info}
+                settings={userInfoData?.settings}
+                greetings={userInfoData?.greetings}
+              />
+            </div>
             <div className="mx-auto flex w-full flex-col gap-4 rounded-xl bg-white p-6 shadow-xs md:max-w-[80%]">
               <label htmlFor="file-upload" className="w-16 h-16 cursor-pointer mb-6">
                 {imagePreview || watch('profile') ? (
@@ -285,14 +300,19 @@ const BasicInfoSettings = () => {
                       customClass=""
                     />
                     {basicInfoAccess?.edit && (
-                      <div className="flex justify-end border-t border-gray-200 pt-4">
-                        <Button variant={'outline'} type="submit" disabled={PendingProfileUpdate}>
+                      <div className="flex justify-end border-t border-gray-200 pt-4 mcm-stickyfoot">
+                        <Button variant={'primary'} type="submit" disabled={PendingProfileUpdate}>
                           {PendingProfileUpdate ? 'Submiting...' : 'Submit'}
                         </Button>
                       </div>
                     )}
                   </form>
                 </FormProvider>
+
+                {/* The profile above says who you are; this says what happens
+                    when someone calls you, which is the part people arrive on
+                    this page looking for and could not previously see. */}
+                <CallSetupGuide userInfo={userInfoData} />
               </div>
             </div>
           </div>

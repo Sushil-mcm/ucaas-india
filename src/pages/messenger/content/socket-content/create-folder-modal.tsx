@@ -98,7 +98,7 @@ const CreateFolderModal = ({ open, setOpen }: any) => {
             >
               Cancel
             </Button>
-            <Button className="min-w-[120px]" variant={'outline'} type="submit" disabled={!isValid}>
+            <Button className="min-w-[120px]" variant={'primary'} type="submit" disabled={!isValid}>
               Create
             </Button>
           </div>

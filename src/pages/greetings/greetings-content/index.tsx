@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteGreeting, deleteMedia, getGreetings } from '@/services/api';
 import { Icon, IconName } from '@/assets/icons/icon';
 import TableManager from '@/components/custom/table-manager';
@@ -31,6 +31,7 @@ const GreetingContent: FC = () => {
   const [search, setSearch] = useState('');
   const [recordingUrl, serRecordingUrl] = useState<any>('');
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { features } = useCompanyFeatures();
   const greetingAccess = features?.plan_features?.settings?.action?.greeting || {};
   const [modalState, setModalState] = useState<any>({
@@ -42,6 +43,28 @@ const GreetingContent: FC = () => {
   const [greetingData, setGreetingData] = useState<any>(null);
   const type =
     ['voicemail', 'prompt', 'greeting']?.find((t) => pathname?.includes(`type-${t}`)) || 'all';
+
+  /* The four type routes exist under every place this page is mounted, but only
+     the standalone greetings area has a sidebar linking to them — under
+     My Account > Media Files they were reachable by typing a URL and no other
+     way. The base is whatever precedes /type-*, so the tabs follow the mount. */
+  const typeBase = pathname.replace(/\/type-(voicemail|prompt|greeting)\/?$/, '');
+  const TYPE_TABS = [
+    { key: 'all', label: 'All', to: typeBase },
+    { key: 'greeting', label: 'Greetings', to: `${typeBase}/type-greeting` },
+    { key: 'prompt', label: 'Prompts', to: `${typeBase}/type-prompt` },
+    { key: 'voicemail', label: 'Voicemail', to: `${typeBase}/type-voicemail` },
+  ];
+
+  /* One page serves four different libraries, so the description follows the
+     type rather than saying something vague enough to cover all of them. */
+  const typeBlurb: Record<string, string> = {
+    greeting: 'Recordings callers hear when they reach you — welcome messages and hold music.',
+    prompt: 'Recordings played inside IVR menus to tell callers what their options are.',
+    voicemail:
+      'Recordings played when a call goes to voicemail, before the caller leaves a message.',
+    all: 'Audio this account can use for greetings, IVR prompts and voicemail.',
+  };
 
   function handleOpenAudio(src: string) {
     serRecordingUrl(src);
@@ -173,13 +196,32 @@ const GreetingContent: FC = () => {
     // <section className="w-full overflow-auto max-h-[calc(100vh-64px)] ">
     <section className="w-full overflow-auto  ">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-          Media Files{' '}
-          <div className="-rotate-90 text-gray-800">
-            <Icon name="ChevronIcon" className="w-5 h-5" />
+        <div>
+          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+            Media Files{' '}
+            <div className="-rotate-90 text-gray-800">
+              <Icon name="ChevronIcon" className="w-5 h-5" />
+            </div>
+            <span className="text-primary text-md">{capitalizeFirstLetter(type)}</span>
+          </p>
+          <p className="text-gray-500 text-xs">{typeBlurb[type] || typeBlurb.all}</p>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {TYPE_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => navigate(tab.to)}
+                className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  type === tab.key
+                    ? 'bg-ucass-primary-200 text-primary'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <span className="text-primary text-md">{capitalizeFirstLetter(type)}</span>
-        </p>
+        </div>
         <div className="flex gap-2 filters">
           <Input
             placeholder="Search"

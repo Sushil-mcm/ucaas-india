@@ -41,6 +41,16 @@ const DIRECTION_FILTERS: { key: 'all' | 'in' | 'out' | 'miss'; label: string; fi
   { key: 'miss', label: 'Missed', filter: [{ key: 'direction', value: 'Missed' }] },
 ];
 
+/* Sorting key for a call row. Falls back through the stamp fields the API has
+   used, and returns 0 rather than NaN so an unparseable row sinks instead of
+   scrambling the order around it. */
+const sortStamp = (raw: any): number => {
+  const value = raw?.start_stamp || raw?.created_at || raw?.answer_stamp || raw?.end_stamp;
+  if (!value) return 0;
+  const parsed = moment(value as any);
+  return parsed.isValid() ? parsed.valueOf() : 0;
+};
+
 const secondsToClock = (value: unknown) => {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return '—';
@@ -170,8 +180,15 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
   const filterDate = dropdownVal?.value || {};
   const activeDirection =
     DIRECTION_FILTERS.find((f) => f.key === direction) || DIRECTION_FILTERS[0];
+  /* "Missed" is not a direction the switch records — it is derived from the
+     hangup cause, or from an inbound call that never got a talk second. Asking
+     the API to filter on direction='Missed' therefore returns nothing. Inbound
+     and outbound are real values and stay server-side; missed is fetched
+     unfiltered and narrowed below, on the same rule `toCallRow` already uses. */
+  const filterMissedLocally = source !== 'voicemail' && direction === 'miss';
   // Voicemails were never direction-filtered on the old page; keep that.
-  const directionFilter = source === 'voicemail' ? [] : activeDirection.filter;
+  const directionFilter =
+    source === 'voicemail' || filterMissedLocally ? [] : activeDirection.filter;
 
   const { data, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
     useInfiniteQuery({
@@ -203,13 +220,41 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
   const rows = useMemo(() => {
     const flat =
       data?.pages.flatMap((page: any) => page?.data?.data?.result?.rows || []) || ([] as any[]);
-    const mapped = flat.map((raw: any) => toCallRow(raw, contactsByNumber || {}));
+
+    /* The API groups repeat calls: one entry per number, carrying `call_logs`
+       and a `count`. Rendering the entry gave one row however many times
+       somebody rang — five calls from the same number looked like one. Each
+       log becomes its own row instead, so the list is a call history rather
+       than a contact list.
+
+       Log fields win over entry fields, but the entry is spread underneath:
+       a log carries its own time, duration and hangup cause, and inherits
+       direction and caller id from the group when it does not repeat them. */
+    const expanded = flat.flatMap((entry: any) => {
+      const logs = getEntryLogs(entry);
+      if (logs.length <= 1) return [entry];
+      return logs.map((log: any) => ({ ...entry, ...log, call_logs: [log], count: 1 }));
+    });
+
+    const mapped = expanded
+      .map((raw: any, index: number) => {
+        const row = toCallRow(raw, contactsByNumber || {});
+        /* Two calls a second apart can share every field the id is built
+           from. A positional suffix keeps React keys unique so neither row
+           disappears. */
+        return { ...row, id: `${row.id}#${index}` };
+      })
+      /* Expanding breaks the server's ordering, since a group's logs arrive
+         together rather than in time order across groups. */
+      .sort((a, b) => sortStamp(b.raw) - sortStamp(a.raw));
+
+    const visible = filterMissedLocally ? mapped.filter((row) => row.direction === 'miss') : mapped;
     const q = search.trim().toLowerCase();
-    if (!q) return mapped;
-    return mapped.filter((r) =>
+    if (!q) return visible;
+    return visible.filter((r) =>
       `${r.name} ${r.number} ${r.topic}`.toLowerCase().includes(q.replace(/^\+/, '')),
     );
-  }, [data, contactsByNumber, search]);
+  }, [data, contactsByNumber, search, filterMissedLocally]);
 
   const sources: { key: ConsoleLogSource; label: string; show: boolean }[] = [
     { key: 'call', label: 'Calls', show: true },

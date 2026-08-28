@@ -599,7 +599,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
         </Button>
         <Button
           type="submit"
-          variant={'outline'}
+          variant={'primary'}
           disabled={isPending || reserveLoading}
           className="flex-1 sm:w-auto sm:flex-none"
         >

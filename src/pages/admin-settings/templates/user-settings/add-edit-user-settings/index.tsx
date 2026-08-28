@@ -8,12 +8,16 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { upsertTemplate } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
-import { getHolidaysFormVal, getHolidaysPayload, getObjectLength, handleAlert } from '@/lib/utils';
+import { getObjectLength, handleAlert } from '@/lib/utils';
 import { ADD_TEMPLATE_INITIAL, settingsInitialState, TAB_CONSTANT } from './constants';
 import { UPSERT_TEMPLATE_SCHEMA } from './schema';
+import {
+  buildTemplatePayload,
+  hydrateTemplateForm,
+} from '@/lib/user-settings-template-form';
 import SettingPermission from './settings';
 import GreetingNotification from './greetings';
-import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
+import '@/components/mcm/mcm-page.css';
 
 interface UpdateForwardingProps {
   drawerState: boolean;
@@ -93,181 +97,20 @@ const UpsertUserSettingsTemplate: FC<UpdateForwardingProps> = ({ setDrawerState,
 
   const onSubmit = () => {
     const { greetings = {}, settings = {} } = watch();
-    const {
-      display_number: {
-        masking = {},
-        incoming = {},
-        show_number_if_blocked = 'NO',
-        override = false,
-      } = {},
-      operational_hours = {},
-      ...restSettings
-    } = settings;
-    const tempSettings = {
-      ...restSettings,
-      display_number: {
-        incoming,
-        masking: {
-          type: masking?.type?.value,
-          label: masking?.type?.label,
-          value: masking?.value,
-        },
-        show_number_if_blocked,
-        override,
-      },
-
-      operational_hours: {
-        type: operational_hours?.type,
-        value: operational_hours?.value || CUSTOM_HOURS_SCHEDULE_OPTIONS,
-        holidays: operational_hours?.holidays?.length
-          ? getHolidaysPayload(operational_hours.holidays)
-          : [],
-        override: operational_hours?.override,
-        regional: {
-          country: operational_hours?.regional?.country,
-          timezone: operational_hours?.regional?.timezone,
-          time_format: operational_hours?.regional?.time_format,
-          country_code: operational_hours?.regional?.country_code,
-          override: operational_hours?.regional?.override,
-        },
-        closed_hour_action: {
-          type: operational_hours?.closed_hour_action?.type?.value,
-          value: operational_hours?.closed_hour_action?.value?.value,
-          enabled: operational_hours?.closed_hour_action?.enabled,
-          personal: operational_hours?.closed_hour_action?.personal,
-          type_label: operational_hours?.closed_hour_action?.type?.label,
-          value_label: operational_hours?.closed_hour_action?.value?.label,
-        },
-      },
-    };
-
-    const greetingsRequest = {
-      welcome_greeting: getGreetingConfig('welcome_greeting', greetings),
-      voicemail: getGreetingConfig('voicemail', greetings),
-      ring_tone: getGreetingConfig('ring_tone', greetings),
-      on_hold_music: getGreetingConfig('on_hold_music', greetings),
-    };
-
-    const payload = {
-      greetings: greetingsRequest,
-      settings: tempSettings,
-      name: watch('name'),
-      ...(data?.uuid && {
+    mutateUpsertTemplate(
+      buildTemplatePayload({
+        name: watch('name'),
+        settings,
+        greetings,
         uuid: data?.uuid,
-        userID: data?.uuid,
       }),
-    };
-    mutateUpsertTemplate(payload);
+    );
   };
-
-  const getGreetingConfig = (
-    key: string,
-    greetings: Record<
-      string,
-      { enabled?: boolean; value?: { label?: string; value?: string }; override?: boolean }
-    >,
-  ) => ({
-    enabled: greetings?.[key]?.enabled,
-    label: greetings?.[key]?.value?.label,
-    value: greetings?.[key]?.value?.value,
-    override: greetings?.[key]?.override,
-  });
 
   useEffect(() => {
     if (!data?.uuid) return;
     try {
-      if (data?.uuid) {
-        const settingsData =
-          typeof data?.settings === 'string'
-            ? JSON.parse(data?.settings || '{}')
-            : data?.settings || {};
-
-        const greetingsData =
-          typeof data?.greetings === 'string' ? JSON.parse(data?.greetings) : data?.greetings || {};
-
-        setValue('name', data?.name || '');
-        setValue(
-          'settings',
-          settingsData?.operational_hours?.regional?.timezone?.value
-            ? settingsData
-            : settingsInitialState,
-        );
-        const transData = settingsData?.transcription;
-        const isTransObj = typeof transData === 'object' && transData !== null;
-        setValue('settings.transcription', {
-          enabled: isTransObj ? !!transData.enabled : !!transData,
-          override: isTransObj ? !!transData.override : false,
-        });
-
-        const aiData = settingsData?.ai_call_monitoring;
-        const isAiObj = typeof aiData === 'object' && aiData !== null;
-        setValue('settings.ai_call_monitoring', {
-          enabled: isAiObj ? !!aiData.enabled : !!aiData,
-          override: isAiObj ? !!aiData.override : false,
-        });
-        const holidays =
-          settingsData?.operational_hours?.holidays &&
-          settingsData?.operational_hours?.holidays?.length
-            ? getHolidaysFormVal(settingsData?.operational_hours?.holidays)
-            : [];
-
-        setValue('settings.operational_hours.holidays', holidays);
-        setValue('settings.display_number.masking.type', {
-          label: settingsData?.display_number?.masking?.label || '',
-          value: settingsData?.display_number?.masking?.type || '',
-        });
-
-        setValue('settings.operational_hours.closed_hour_action', {
-          type: {
-            label: settingsData?.operational_hours?.closed_hour_action?.type_label || '',
-            value: settingsData?.operational_hours?.closed_hour_action?.type || '',
-          },
-          value: {
-            label: settingsData?.operational_hours?.closed_hour_action?.value_label || '',
-            value: settingsData?.operational_hours?.closed_hour_action?.value || '',
-          },
-          enabled: settingsData?.operational_hours?.closed_hour_action?.enabled,
-          personal: settingsData?.operational_hours?.closed_hour_action?.personal,
-        });
-
-        const welcomeGreetingData = greetingsData?.welcome_greeting || greetingsData?.welcome;
-        const onHoldMusicData = greetingsData?.on_hold_music || greetingsData?.hold;
-
-        setValue('greetings', {
-          welcome_greeting: {
-            enabled: welcomeGreetingData?.enabled || false,
-            override: welcomeGreetingData?.override || false,
-            value: {
-              label: welcomeGreetingData?.label || 'Select',
-              value: welcomeGreetingData?.value || '',
-            },
-          },
-          voicemail: {
-            enabled: greetingsData?.voicemail?.enabled || false,
-            override: greetingsData?.voicemail?.override || false,
-            value: {
-              label: greetingsData?.voicemail?.label || 'Select',
-              value: greetingsData?.voicemail?.value || '',
-            },
-          },
-          ring_tone: {
-            enabled: greetingsData?.ring_tone?.enabled || false,
-            override: greetingsData?.ring_tone?.override || false,
-            value: {
-              label: greetingsData?.ring_tone?.label || 'Select',
-              value: greetingsData?.ring_tone?.value || '',
-            },
-          },
-          on_hold_music: {
-            enabled: onHoldMusicData?.enabled || false,
-            override: onHoldMusicData?.override || false,
-            value: {
-              label: onHoldMusicData?.label || 'Select',
-              value: onHoldMusicData?.value || '',
-            },
-          },
-        });
-      }
+      hydrateTemplateForm(setValue, data, settingsInitialState);
     } catch (error: any) {
       console.error('Something went wrong', error?.message);
     }
@@ -280,7 +123,10 @@ const UpsertUserSettingsTemplate: FC<UpdateForwardingProps> = ({ setDrawerState,
 
   return (
     <FormProvider {...formInstance}>
-      <form onSubmit={formInstance.handleSubmit(onSubmit)} className="user-settings-template-form">
+      <form
+        onSubmit={formInstance.handleSubmit(onSubmit)}
+        className="mcm-page mcm-userform user-settings-template-form"
+      >
         <Tabs
           value={activeTab}
           onValueChange={handleTabChange}
@@ -342,7 +188,7 @@ const UpsertUserSettingsTemplate: FC<UpdateForwardingProps> = ({ setDrawerState,
           )}
           {activeTab === TAB_CONSTANT.GREETING_NOTIFICATION && (
             <Button
-              variant={'outline'}
+              variant={'primary'}
               type="submit"
               disabled={isPendingUpdateMember}
               className="user-settings-template-footer-btn"

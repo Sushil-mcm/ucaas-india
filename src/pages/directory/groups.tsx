@@ -144,6 +144,7 @@ const Groups = () => {
         <SideDrawer
           isOpen={creating}
           title="Create group"
+          width="min(920px, 78vw)"
           isTab={false}
           enableResponsive
           headerClassName="min-h-8 px-4 sm:px-5"

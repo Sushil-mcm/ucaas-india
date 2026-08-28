@@ -2812,16 +2812,22 @@ function NewAiReceptionistPage() {
   return (
     <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f3f4f6] text-[#07142f]">
       <div className="flex min-h-[72px] items-center justify-between border-b border-gray-200 bg-white px-7">
-        <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
-          <button
-            type="button"
-            onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-            className="transition-colors hover:text-primary"
-          >
-            AI Agents
-          </button>
-          <span>/</span>
-          <span className="text-gray-950">AI Receptionists</span>
+        <div>
+          <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
+            <button
+              type="button"
+              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
+              className="transition-colors hover:text-primary"
+            >
+              AI Agents
+            </button>
+            <span>/</span>
+            <span className="text-gray-950">AI Receptionists</span>
+          </div>
+          <p className="mt-0.5 text-[13px] font-normal text-slate-500">
+            An AI that answers calls, works out what the caller needs, and routes them or handles it
+            outright.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button

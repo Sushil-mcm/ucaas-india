@@ -185,7 +185,7 @@ function AttachGlobalKnowledgeBase({
                 filteredKnowledge?.length == 0 ||
                 selectedIds?.length == 0
               }
-              variant={'outline'}
+              variant={'primary'}
               type="submit"
             >
               {(isPendingGetToken || isPending) && <Loader variant="blue" />}Save

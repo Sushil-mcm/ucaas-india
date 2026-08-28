@@ -7,9 +7,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
-import { assignRoleBulkUsers, getUserList } from '@/services/api';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { assignRoleBulkUsers } from '@/services/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import useDebounce from '@/hooks/use-debounce';
+import { usePaginatedUsers } from '@/hooks/use-paginated-users';
 
 interface AssignUsersModalProps {
   open: boolean;
@@ -19,6 +21,8 @@ interface AssignUsersModalProps {
 
 const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }) => {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const queryClient: any = useQueryClient();
 
@@ -33,16 +37,32 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
     ? roleData?.role_uuid || roleData?.role_data?.role_uuid || ''
     : roleData?.uuid || roleData?.role_data?.uuid || roleData?.role_uuid || '';
 
-  const { data: usersList = [], isLoading } = useQuery({
-    queryKey: ['assignRoleUsersList', 1, 999999],
-    queryFn: () =>
-      getUserList({
-        page: 1,
-        limit: 999999,
-      }),
-    select: (data: any) => data?.data?.data?.result?.rows || [],
+  const {
+    users: usersList = [],
+    isLoading,
+    fetchNextPage,
+    hasNextPage = false,
+    isFetchingNextPage,
+  } = usePaginatedUsers({
+    search: debouncedSearch,
     enabled: open,
+    queryKey: ['assignRoleUsersList'],
   });
+
+  // Pull the next page in as the bottom of the list comes into view.
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries?.[0]?.isIntersecting) fetchNextPage();
+      },
+      { rootMargin: '120px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, usersList?.length]);
 
   const { mutate: mutateAssignRoleBulkUsers, isPending: isAssignPending } = useMutation({
     mutationFn: assignRoleBulkUsers,
@@ -81,17 +101,8 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
 
   const isAdminRole = (name: string) => String(name || '').toUpperCase() === 'ADMIN';
 
-  const filteredUsers = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return usersList;
-
-    return usersList?.filter((item: any) => {
-      const fullName = `${item?.first_name || ''} ${item?.last_name || ''}`.trim().toLowerCase();
-      const extension = String(item?.extension || '').toLowerCase();
-      const currentRole = String(getCurrentRoleName(item)).toLowerCase();
-      return fullName.includes(term) || extension.includes(term) || currentRole.includes(term);
-    });
-  }, [search, usersList]);
+  // Filtering is done by the API now, so the list renders exactly what came back.
+  const filteredUsers = usersList;
 
   const allVisibleUserIds = filteredUsers
     ?.filter((item: any) => !isAdminRole(getCurrentRoleName(item)))
@@ -150,15 +161,16 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
   }, [open, alreadyAssignedIds]);
 
   useEffect(() => {
-    const assignableUserIds = new Set(
+    const adminUserIds = new Set(
       usersList
-        ?.filter((item: any) => !isAdminRole(getCurrentRoleName(item)))
+        ?.filter((item: any) => isAdminRole(getCurrentRoleName(item)))
         .map((item: any) => item?.uuid)
         .filter(Boolean),
     );
+    if (adminUserIds.size === 0) return;
 
     setSelectedUserIds((prev) => {
-      const next = prev.filter((id) => assignableUserIds.has(id));
+      const next = prev.filter((id) => !adminUserIds.has(id));
       return next.length === prev.length ? prev : next;
     });
   }, [usersList]);
@@ -210,7 +222,10 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
         <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-gray-700 font-semibold text-sm">
             <Checkbox checked={isAllChecked} onCheckedChange={handleSelectAll} />
-            <span>Select All ({allVisibleUserIds?.length || 0})</span>
+            <span>
+              Select All ({allVisibleUserIds?.length || 0}
+              {hasNextPage ? ' loaded' : ''})
+            </span>
           </div>
           <div className="w-[260px]">
             <Input
@@ -287,6 +302,18 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
               No users found.
             </div>
           )}
+
+          {!isLoading && hasNextPage ? (
+            <div ref={loadMoreRef} className="w-full flex items-center justify-center py-3">
+              {isFetchingNextPage ? (
+                <Loader variant="blue" size="sm" />
+              ) : (
+                <Button type="button" variant="transparent" onClick={() => fetchNextPage()}>
+                  Load more
+                </Button>
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="border-t border-gray-200 bg-gray-50 px-6 text-sm py-4 flex items-center justify-between rounded-b-lg">

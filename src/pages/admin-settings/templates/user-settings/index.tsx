@@ -14,6 +14,8 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
 import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/use-debounce';
+import { useNavigate } from 'react-router-dom';
+import { COMPANY_DEFAULT_TEMPLATE_NAME } from '@/lib/company-defaults';
 
 // const breadcrumbData = [{ label: 'Templates' }, { label: 'User Settings' }];
 
@@ -24,6 +26,7 @@ interface IUserSettingsState {
 }
 
 const UserSettings: FC = () => {
+  const navigate = useNavigate();
   const [drawerState, setDrawerState] = useState<IUserSettingsState>({
     isAddEdit: false,
     tempDetails: null,
@@ -53,20 +56,43 @@ const UserSettings: FC = () => {
     {
       header: 'Name',
       accessorKey: 'name',
-      cell: ({ row }) => (
-        <span
-          onClick={() =>
-            setDrawerState((prev) => ({
-              ...prev,
-              isAddEdit: true,
-              tempDetails: row?.original,
-            }))
-          }
-          className="text-primary hover:text-primary/80  underline-offset-4 cursor-pointer"
-        >
-          {row?.original?.name}
-        </span>
-      ),
+      cell: ({ row }) => {
+        /* The company record is stored as a reserved template row because there
+           is no company-settings table. It is not a template — nobody applies it
+           to a person — so it opens the company page, never the template drawer.
+           Editing it here would let an admin overwrite the company's phone rules,
+           emergency address, holidays and policies while believing they were
+           editing a template. */
+        if (row?.original?.name === COMPANY_DEFAULT_TEMPLATE_NAME) {
+          return (
+            <span className="flex items-center gap-2">
+              <span
+                onClick={() => navigate('/admin-settings/company-info/rules')}
+                className="text-primary hover:text-primary/80 underline-offset-4 cursor-pointer"
+              >
+                {row?.original?.name}
+              </span>
+              <span className="rounded-sm bg-ucass-primary-200 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
+                Company record
+              </span>
+            </span>
+          );
+        }
+        return (
+          <span
+            onClick={() =>
+              setDrawerState((prev) => ({
+                ...prev,
+                isAddEdit: true,
+                tempDetails: row?.original,
+              }))
+            }
+            className="text-primary hover:text-primary/80  underline-offset-4 cursor-pointer"
+          >
+            {row?.original?.name}
+          </span>
+        );
+      },
     },
     {
       header: 'Created',
@@ -84,6 +110,20 @@ const UserSettings: FC = () => {
       accessorKey: 'action',
       cell: ({ row }) => {
         const data = row?.original;
+
+        /* Deleting this row would silently wipe every company-wide setting, with
+           no warning that it was anything other than a spare template. */
+        if (data?.name === COMPANY_DEFAULT_TEMPLATE_NAME) {
+          return (
+            <span
+              onClick={() => navigate('/admin-settings/company-info/rules')}
+              className="cursor-pointer text-xs font-medium text-primary hover:underline"
+            >
+              Open company settings
+            </span>
+          );
+        }
+
         const actions = [
           {
             icon: 'EditStrokIcon',
@@ -180,6 +220,7 @@ const UserSettings: FC = () => {
       </section>
       {drawerState?.isAddEdit && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState?.isAddEdit}
           isTab={false}
           enableResponsive

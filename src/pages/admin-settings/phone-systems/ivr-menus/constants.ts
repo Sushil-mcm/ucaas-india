@@ -15,8 +15,29 @@ export const IVR_ERROR_TYPES_MESSAGES = {
   [IVR_TAB_CONSTANT.KEY_PRESSES]: 'Key pressess is required',
 };
 
+/**
+ * Retry / timeout behaviour for an IVR menu. These were hardcoded in the save
+ * payload; they are now real form fields. The defaults are the values that used
+ * to be sent, so existing IVRs keep behaving exactly the same.
+ */
+export const IVR_RETRY_DEFAULTS = {
+  /** How many times an invalid key press replays the menu before giving up. */
+  max_failures: 3,
+  /** How many times silence replays the menu before giving up. */
+  max_timeouts: 3,
+  /** Seconds to wait for a key press after the menu finishes playing. */
+  timeout: 10,
+};
+
+export const IVR_RETRY_LIMITS = {
+  max_failures: { min: 1, max: 10 },
+  max_timeouts: { min: 1, max: 10 },
+  timeout: { min: 1, max: 60 },
+};
+
 export const INITIAL_IVR_MENU_VLAUES = {
   extension: generateRandomExtension(),
+  ...IVR_RETRY_DEFAULTS,
   name: '',
   description: '',
   language: {},

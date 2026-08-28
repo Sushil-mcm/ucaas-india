@@ -280,6 +280,7 @@ const CallQueues: FC = () => {
 
       {drawerState && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState}
           title={
             selectedCallQueue ? `Update Call Queue (${selectedCallQueue?.name})` : 'Add Call Queue'

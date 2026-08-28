@@ -281,6 +281,24 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
           ...(businessHours?.forwardValue?.extension && {
             extension: businessHours?.forwardValue?.extension || '',
           }),
+          /* What happens when nobody answers. This was read into the form and
+             shown on the Summary tab but never sent, so the setting was
+             discarded on save — and, worse, re-saving a number that already
+             had one silently erased it. That is why a call could ring an
+             extension and then end in silence.
+
+             Only included when a type is set: sending an empty action would
+             overwrite a stored one with nothing, which is the same data loss
+             in a different disguise. */
+          ...(businessHours?.missedCall?.forwardType?.value && {
+            missed_call_action: {
+              type: businessHours.missedCall.forwardType.value,
+              value: businessHours?.missedCall?.forwardValue?.value || '',
+              label: businessHours?.missedCall?.forwardValue?.label || '',
+              /* '0' is the personal mailbox of the extension being rung. */
+              personal: businessHours?.missedCall?.type === '0',
+            },
+          }),
         },
       },
       media: {
@@ -635,7 +653,7 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
           )}
           {activeTab === CALL_FORWARDING_TAB_CONSTANT.MEDIA && (
             <Button
-              variant={'outline'}
+              variant={'primary'}
               type="submit"
               disabled={isPending}
               className={isUpsertTemplate ? 'call-handling-template-footer-btn' : ''}

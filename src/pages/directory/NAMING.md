@@ -13,7 +13,7 @@ Decided 2026-08-23. Add a row here **before** shipping a label for a new concept
 | A team; a person can be in several                   | **Group**           | Department                                      | `/api/tenant/department/list`, `/upsert`, `/delete`, `/role-based-list` | `department`, `members`                 | `Group`      |
 | Someone inside the org                               | **Person** / People | User, Member, Extension (when it meant a human) | `/api/user/list`, `/api/user/update`, `/api/user/add-member`            | `uuid`, `user_uuid`                     | `Person`     |
 | The number a person answers on                       | **Extension**       | — (keeps its name; never means a human)         | —                                                                       | `extension`                             | `Extension`  |
-| Someone outside the org                              | **Contact**         | External, Lead                                  | `/api/contact/list`, `/api/contact/upsert`                              | `_id`                                   | `Contact`    |
+| Someone outside the org                              | **Contact**         | Lead                                  | `/api/contact/list`, `/api/contact/upsert`                              | `_id`                                   | `Contact`    |
 | The tenant — it is the default Location's record     | **Company**         | Account, Organisation                           | `company_info` on the auth user                                         | `company_info.uuid`                     | `Company`    |
 
 ## Rules
@@ -44,3 +44,7 @@ of them touches a request body:
 
 Directory (`src/pages/directory/`) is already consistent with the table; the rename works
 outward from there, one concept per deploy.
+
+**Update 2026-08-24 — the Directory view is titled "External Contacts".** The *record* is
+still a Contact; "external" qualifies which contacts the view lists (people outside the org),
+so this is a view name rather than a second word for the entity. Retired: "Lead".

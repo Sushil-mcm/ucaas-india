@@ -127,7 +127,7 @@ const CreateReseller = ({
                 Cancel
               </Button>
 
-              <Button variant={'outline'} type="submit" disabled={isPending}>
+              <Button variant={'primary'} type="submit" disabled={isPending}>
                 Submit
               </Button>
             </div>

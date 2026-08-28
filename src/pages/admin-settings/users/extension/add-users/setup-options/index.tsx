@@ -12,6 +12,7 @@ const SetupOption = ({
   paymentProps,
   setTypeOfPassword,
   dataGetMyPlanDetails,
+  setPaymentCalculation,
 }: any) => {
   const {
     register,
@@ -43,6 +44,7 @@ const SetupOption = ({
             dataGetMyPlanDetails={dataGetMyPlanDetails}
             customClass="w-full"
             mainCustomClass="w-full xl:w-1/2"
+            onCalculationChange={setPaymentCalculation}
           />
         </div>
       ) : (

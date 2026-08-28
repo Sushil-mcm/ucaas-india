@@ -41,6 +41,23 @@ const IncomingCalls = () => {
 
   const { handleSubmit } = methods;
 
+  /* The dropdown below hydrates to "Send to Voicemail" whenever nothing is
+     stored, so this screen shows voicemail on an account that has never saved
+     one — and the switch, having no rule, hangs up on the caller instead. That
+     mismatch is invisible, so it is called out rather than left to be
+     discovered by someone ringing the number. */
+  const storedRules =
+    typeof userDetails?.call_forwarding === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(userDetails?.call_forwarding || '{}');
+          } catch {
+            return {};
+          }
+        })()
+      : userDetails?.call_forwarding || {};
+  const fallbackSaved = Boolean(storedRules?.incoming_calls?.failure_action?.type);
+
   const { mutate: mutateUpdateMember, isPending: isPendingUpdateMember } = useMutation({
     mutationFn: updateUserSettings,
     onSuccess: (data) => {
@@ -430,16 +447,32 @@ const IncomingCalls = () => {
   return (
     <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg">Phone</p>
+        <div>
+          <p className="text-gray-900 font-semibold text-lg">My Phone</p>
+          <p className="text-gray-500 text-xs">
+            How calls reach you: your devices, forwarding rules and what happens when you do not
+            answer.
+          </p>
+        </div>
       </div>
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="gap-3 flex flex-col justify-between h-full p-3"
         >
+          {!fallbackSaved ? (
+            <div className="mcm-notsaved" role="status">
+              <strong>Voicemail is not saved yet.</strong>
+              <span>
+                “If Busy / Unanswered / Unreachable” shows Send to Voicemail below, but nothing has
+                been stored for this account — so unanswered and rejected calls are hung up on
+                instead. Press Submit to apply it.
+              </span>
+            </div>
+          ) : null}
           <CallRules customClass="md:min-h-[calc(100vh_-_13rem)]" />
           <div className="flex justify-end gap-2">
-            <Button variant={'outline'} type="submit" disabled={isPendingUpdateMember}>
+            <Button variant={'primary'} type="submit" disabled={isPendingUpdateMember}>
               {isPendingUpdateMember ? 'Please wait...' : 'Submit'}
             </Button>
           </div>

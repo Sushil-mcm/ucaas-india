@@ -206,7 +206,7 @@ const UploadDnc: FC<{ drawerState: boolean; setDrawerState: (state: boolean) => 
               <Button type="button" variant={'transparent'} onClick={() => setDrawerState(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant={'outline'} disabled={!watch('file') || isPending}>
+              <Button type="submit" variant={'primary'} disabled={!watch('file') || isPending}>
                 {isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>

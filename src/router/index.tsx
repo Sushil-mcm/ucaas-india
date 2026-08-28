@@ -173,6 +173,10 @@ const Reseller = lazy(() => import('@/pages/admin-settings/compilance/reseller')
 const DLCBrands = lazy(() => import('@/pages/admin-settings/compilance/10DLC-brands'));
 const DNC = lazy(() => import('@/pages/auto-dialer/dnc'));
 const AdminHome = lazy(() => import('@/pages/admin-settings/admin-home'));
+const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
+const StatementOfAccount = lazy(() => import('@/pages/admin-settings/billing/statement'));
+const BillingResources = lazy(() => import('@/pages/admin-settings/billing/resources'));
+const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules'));
 /* Admin ▸ Users reuses the Directory screens rather than keeping a second,
    older implementation of the same lists. Same components, same actions. */
 const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
@@ -518,11 +522,38 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            /* Company-wide phone rules, reachable under Company where an admin
+               looks for them. Same component as /admin-settings/phone/preferences,
+               which is kept so existing links and bookmarks still resolve. */
+            path: 'company-info/rules',
+            element: (
+              <ProtectedRoute
+                element={<Preferences />}
+                guard={{
+                  permission: 'account_setting.access.SITE.action.view',
+                }}
+              />
+            ),
+          },
+          {
             /* Integrations are set up once for the whole account, so they belong
                with the other administered settings rather than as a top-level
                destination of their own. */
             path: 'integration',
             id: 'admin-integration',
+            /* Guarded at the parent, the way the top-level `/integration` twin
+               below already is. Without an element of its own this subtree fell
+               through to a bare Outlet, so every integration screen under Admin
+               was reachable on a plan the sidebar hides the section for. */
+            element: (
+              <ProtectedRoute
+                element={<Outlet />}
+                guard={{
+                  feature: 'integration.IS_SHOW',
+                  permission: 'integration.action.view',
+                }}
+              />
+            ),
             children: [
               { index: true, element: <CRMIntegration /> },
               { path: 'crm', element: <CRMIntegration /> },
@@ -613,6 +644,11 @@ export const router = createBrowserRouter([
             path: 'numbers',
             id: 'numbers',
             children: [
+              {
+                path: 'coverage',
+                id: 'numbers-coverage',
+                element: <CallCoverage />,
+              },
               {
                 path: 'all',
                 id: 'all',
@@ -860,7 +896,15 @@ export const router = createBrowserRouter([
 
               {
                 path: 'browse-templates',
-                element: <ProtectedRoute element={<BrowseTemplates />} />,
+                element: (
+                  <ProtectedRoute
+                    element={<BrowseTemplates />}
+                    guard={{
+                      feature: 'ai.IS_SHOW',
+                      permission: 'ai.action.agent.view',
+                    }}
+                  />
+                ),
               },
               {
                 path: 'configure-ai-agent',
@@ -918,6 +962,21 @@ export const router = createBrowserRouter([
                     }}
                   />
                 ),
+              },
+              {
+                path: 'statement',
+                element: <StatementOfAccount />,
+                id: 'billing-statement',
+              },
+              {
+                path: 'resources',
+                element: <BillingResources />,
+                id: 'billing-resources',
+              },
+              {
+                path: 'modules',
+                element: <BillingModules />,
+                id: 'billing-modules',
               },
               {
                 path: 'invoices',
@@ -1076,7 +1135,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'contact-logs',
-                element: <LeadContactLogs />,
+                element: (
+                  <ProtectedRoute
+                    element={<LeadContactLogs />}
+                    guard={{
+                      feature: 'campaign.IS_SHOW',
+                      permission: 'campaign.action.view',
+                    }}
+                  />
+                ),
               },
             ],
           },
@@ -1117,8 +1184,20 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            /* Every sibling campaign route passes a guard; this one did not, and
+               ProtectedRoute returns the element unconditionally when `guard` is
+               undefined. So /campaign/<anything> rendered the dialer while
+               bypassing both the plan-feature check and the view permission. */
             path: ':type?',
-            element: <ProtectedRoute element={<PowerDialer />} />,
+            element: (
+              <ProtectedRoute
+                element={<PowerDialer />}
+                guard={{
+                  feature: 'campaign.IS_SHOW',
+                  permission: 'campaign.action.view',
+                }}
+              />
+            ),
           },
           {
             path: 'dnc',

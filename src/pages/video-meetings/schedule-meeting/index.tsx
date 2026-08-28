@@ -549,7 +549,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
             Cancel
           </Button>
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             className="flex-1 sm:flex-none"
             disabled={isPendingMeeting || isPendingEventAndTask}

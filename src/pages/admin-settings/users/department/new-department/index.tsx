@@ -520,7 +520,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
                     </Button>
                   )}
                   {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
-                    <Button variant={'outline'} type="submit" disabled={isPending}>
+                    <Button variant={'primary'} type="submit" disabled={isPending}>
                       {isPending ? 'Submiting...' : 'Submit'}
                     </Button>
                   )}
@@ -557,7 +557,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
                   )}
                   {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
                     <Button
-                      variant={'outline'}
+                      variant={'primary'}
                       type="submit"
                       disabled={isPending}
                       className="shrink-0"

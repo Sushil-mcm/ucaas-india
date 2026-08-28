@@ -53,7 +53,7 @@ const TermsModal = ({
                         {closeBtnText || 'Cancel'}
                     </Button> */}
           <Button
-            variant={'outline'}
+            variant={'primary'}
             className="min-w-[120px]"
             type="submit"
             onClick={onConfirm}

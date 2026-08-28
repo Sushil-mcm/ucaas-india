@@ -488,7 +488,7 @@ const Departments = () => {
                     </p>
                     <Button
                       type="submit"
-                      variant={'outline'}
+                      variant={'primary'}
                       className="w-fit mt-3"
                       onClick={() => setDrawerState({ createDepartment: true })}
                     >

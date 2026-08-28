@@ -135,11 +135,6 @@ const Plan = () => {
     (item: any) => item?.uuid === requestedPlanInfo?.plan_uuid,
   );
 
-  console.log(
-    dataGetMyPlanDetails?.current_plan_details,
-    'dataGetMyPlanDetailsdataGetMyPlanDetails',
-  );
-
   const [isPaymentInitiate, setIsPaymentInitiate] = useState(false);
   const [isRenewPaymentInitiate, setIsRenewPaymentInitiate] = useState(false);
   const paymentRef = useRef<any>(null);
@@ -148,23 +143,8 @@ const Plan = () => {
   const planFeatures = features?.plan_features?.billing || {};
   const aiFeatures = features?.plan_features?.ai?.IS_SHOW || false;
   const totalPaybleLicences = dataGetMyPlanDetails?.license_detail?.payable_licenses || 0;
-  let allowedCountry = [];
   const queryClient: any = useQueryClient();
   const [getTaxes, setGetTaxes] = useState<any>({});
-  if (companyInfo?.allow_country) {
-    if (typeof companyInfo?.allow_country === 'string') {
-      try {
-        const parsed = JSON.parse(companyInfo?.allow_country);
-        allowedCountry = Array.isArray(parsed) ? parsed : [];
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        allowedCountry = [];
-      }
-    } else if (Array.isArray(companyInfo?.allow_country)) {
-      allowedCountry = companyInfo?.allow_country;
-    }
-  }
-  console.log(allowedCountry);
 
   function getDaysLeftUntilExpiration() {
     const today = moment().startOf('day');
@@ -330,7 +310,8 @@ const Plan = () => {
               <span className="text-primary text-md">Plan Summary</span>
             </p>
             <p className="text-gray-500 text-xs">
-              Your current plan, what it includes, and the licences and numbers counting against it.
+              What you are paying for today, what changes at the next renewal, and what the plan
+              includes.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -376,6 +357,35 @@ const Plan = () => {
         </div>
 
         <div className="w-full p-3 flex flex-col gap-3">
+          {/* The page showed today's price and next period's price in two
+              separate boxes with nothing joining them, so a plan change read as
+              a contradiction — "$49.99/user" above "$2/user". This states the
+              change once, in words, before either figure appears. */}
+          {(() => {
+            const nowPrice = Number(
+              dataGetMyPlanDetails?.current_plan_details?.discount_enabled
+                ? dataGetMyPlanDetails?.current_plan_details?.discount_price
+                : dataGetMyPlanDetails?.current_plan_details?.original_price,
+            );
+            const nextPrice = Number(dataGetMyPlanDetails?.next_billing_details?.original_price);
+            if (!Number.isFinite(nowPrice) || !Number.isFinite(nextPrice)) return null;
+            if (nowPrice === nextPrice) return null;
+            const cheaper = nextPrice < nowPrice;
+            const renews = dataGetMyPlanDetails?.next_billing_details?.next_billing_date;
+            return (
+              <div className={`mcm-planchange${cheaper ? ' down' : ' up'}`}>
+                <strong>
+                  Your plan changes at the next renewal — ${nowPrice.toFixed(2)} to $
+                  {nextPrice.toFixed(2)} per user
+                </strong>
+                <span>
+                  {cheaper ? 'A downgrade you requested takes effect' : 'The new rate applies'}
+                  {renews ? ` on ${moment(renews).format('D MMM YYYY')}` : ''}. Everything below
+                  reflects today's plan until then.
+                </span>
+              </div>
+            );
+          })()}
           <div className="flex flex-col sm:flex-row gap-3 h-[calc(100vh_-_9.7rem)] overflow-auto">
             <div className="flex flex-col gap-2 sm:w-1/2 h-full">
               <div className="border border-gray-200 rounded-xl w-full h-full p-3 bg-white overflow-y-auto">
@@ -712,7 +722,7 @@ const Plan = () => {
                         Licenses
                       </h4>
 
-                      <span className="relative w-full h-2">
+                      <span className="relative w-full h-2" aria-hidden="true">
                         <span className="rounded-full w-full h-2 flex bg-orange-100"></span>
                         <span
                           className="rounded-full h-2 flex bg-orange-400 absolute top-0 left-0"
@@ -731,6 +741,17 @@ const Plan = () => {
                         <span>Assigned</span>
                       </h4>
                     </div>
+                    {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0) > 0 && (
+                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
+                        You are paying for{' '}
+                        {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0)} seat
+                        {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0) === 1
+                          ? ''
+                          : 's'}{' '}
+                        that nobody is assigned to. Deleting a user does not take their seat off your
+                        bill — open the License tab below to assign or remove them.
+                      </p>
+                    )}
                   </div>
                   {/* <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3">
                     <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">

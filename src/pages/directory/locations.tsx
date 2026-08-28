@@ -277,6 +277,7 @@ const Locations = () => {
         <SideDrawer
           isOpen={creating || Boolean(editing)}
           title={editing ? `Update location (${editing?.name || ''})` : 'New location'}
+          width="min(880px, 76vw)"
           isTab={false}
           enableResponsive
           handleClose={closeForm}

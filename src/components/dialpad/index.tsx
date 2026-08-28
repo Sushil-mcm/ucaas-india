@@ -331,7 +331,23 @@ const Dialpad = ({
     if (!typedNumber) return;
     if (!isRegistered) return;
     if (selectedCallerId?.id === 'no-caller-id') return;
-    const didStartCall = makeCall(typedNumber);
+    /* Manual dials were the one path that sent no X-CallerId. Every other
+       route — call-log redial, campaigns, callbacks, notifications — sets it,
+       and the switch falls back to its own default number when it is absent.
+       So typing a number and pressing Call presented whatever the switch chose,
+       ignoring the caller ID shown right above the keypad.
+
+       Internal extensions get an empty value, matching the callback path: a
+       DID as the caller ID on an extension-to-extension call is meaningless. */
+    const manualCallerId = isExtensionDialTarget(typedNumber)
+      ? ''
+      : selectedCallerId?.id !== 'no-caller-id'
+        ? selectedCallerId?.number || ''
+        : '';
+
+    const didStartCall = makeCall(typedNumber, {
+      extraHeaders: [`X-CallerId: ${manualCallerId}`],
+    });
     if (!didStartCall) return;
     setDialpadScreen('connected');
   }, [

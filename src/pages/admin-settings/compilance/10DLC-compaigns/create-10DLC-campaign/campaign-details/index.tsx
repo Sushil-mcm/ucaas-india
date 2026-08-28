@@ -183,7 +183,7 @@ const CampaignDetails = ({ formInstance }: { formInstance: any }) => {
           </div>
         </div>
         <div className="w-full text-center">
-          <Button variant={'outline'} type="submit">
+          <Button variant={'primary'} type="submit">
             Add Sample Multimeida
           </Button>
         </div>
@@ -270,7 +270,7 @@ Reply HELP for help. Message frequency may vary. Msg&data rates may apply. Conse
             />
           </div>
           {/* <div className="flex items-center gap-1.5 w-full">
-            <Button variant={'outline'} type="submit">
+            <Button variant={'primary'} type="submit">
               Add Sample Message
             </Button>
           </div> */}
@@ -325,7 +325,7 @@ Reply HELP for help. Message frequency may vary. Msg&data rates may apply. Conse
           </div>
         </div>
         <div className="w-full text-center">
-          <Button variant={'outline'} type="submit">
+          <Button variant={'primary'} type="submit">
             Add Sample Multimeida
           </Button>
         </div>

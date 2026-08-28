@@ -86,11 +86,29 @@ const TopUp = () => {
 
   return (
     <>
+      {/* What credit actually pays for. The page offered an amount field with no
+          statement of what the money buys, which is the difference between a
+          subscription (seats, billed per period) and consumption (usage, drawn
+          down as you go). */}
+      <div className="mcm-creditwhat">
+        <strong>Credit covers usage beyond what your plan includes</strong>
+        <ul>
+          <li>Calls to destinations not bundled with your plan, charged per minute</li>
+          <li>SMS and MMS above your monthly allowance, charged per message</li>
+          <li>AI call minutes and message replies once the included pool runs out</li>
+          <li>Fax pages</li>
+        </ul>
+        <span>
+          Seats and your monthly plan fee are billed separately on Plan — credit is never used for
+          those.
+        </span>
+      </div>
+
       <div className="flex sm:flex-row flex-col justify-between  w-full gap-3">
         <div className="border border-gray-200 rounded-xl p-3 gap-1 flex flex-col w-full bg-white">
           <h5 className="text-gray-900 flex items-center gap-1.5 font-semibold">Top-up Now</h5>
           <p className="text-gray-700 flex items-center gap-1.5 text-sm mb-2">
-            Select an amount to add credits to your balance.
+            Add to your balance. Anything unused stays on the account.
           </p>
           <div className="w-full mt-2">
             <AmountSection selectedAmount={selectedAmount} setSelectedAmount={setSelectedAmount} />

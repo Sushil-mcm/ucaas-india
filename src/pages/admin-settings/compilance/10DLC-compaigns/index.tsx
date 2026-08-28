@@ -190,6 +190,7 @@ const DLCCampaigns = () => {
       </section>
       {drawerState?.create10DLCCamapign && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState?.create10DLCCamapign}
           isTab={false}
           enableResponsive

@@ -21,7 +21,29 @@ import {
 } from '@/services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
+import moment from 'moment';
 import { FC, useMemo, useRef, useState } from 'react';
+
+type ConfirmType = 'delete' | 'revert' | 'bulk-idle';
+
+interface ConfirmState {
+  isOpen: boolean;
+  type: ConfirmType | null;
+  selectedUser: any;
+  licenses: { company_license_uuid: string; user_uuid?: string | null }[];
+}
+
+const EMPTY_CONFIRM: ConfirmState = {
+  isOpen: false,
+  type: null,
+  selectedUser: null,
+  licenses: [],
+};
+
+const formatBillingDate = (value: any) =>
+  value && moment(value).isValid() ? moment(value).format('DD MMM YYYY') : 'your next renewal date';
+
+const currency = (value: any) => `$${Number(value || 0).toFixed(2)}`;
 
 const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   const [showCounter, setShowCounter] = useState(false);
@@ -31,16 +53,12 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   const [drawerState, setDrawerState] = useState<any>({
     addUser: false,
   });
-  const [deleteUserState, setDeleteUserState] = useState<any>({
-    isOpen: false,
-    selectedUser: null,
-    type: null,
-  });
+  const [confirmState, setConfirmState] = useState<ConfirmState>(EMPTY_CONFIRM);
   const queryClient: any = useQueryClient();
   const paymentRef = useRef<any>(null);
   const { user: userInfo } = useUser();
   const { data: getTaxes = {}, isLoading } = useQuery({
-    queryKey: ['getDepartmentAndCallLogs', count],
+    queryKey: ['getLicenseTaxesAndFees', count],
     queryFn: () =>
       getTaxesAndFees({
         company_uuid: userInfo?.company_info?.uuid,
@@ -57,33 +75,88 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
       ? null
       : dataGetMyPlanDetails?.current_plan_details?.licenses_limit || 50;
 
-  const totalLicenses = dataGetMyPlanDetails?.license_detail?.total_licenses || 0;
+  const licenseDetail = dataGetMyPlanDetails?.license_detail || {};
+  const totalLicenses = Number(licenseDetail?.total_licenses || 0);
+  const usedLicenses = Number(licenseDetail?.used_licenses || 0);
+  /** Paid for, not revoked, nobody assigned. These are the seats that quietly cost money. */
+  const idleLicenses = Number(licenseDetail?.free_licenses || 0);
+  const revokedLicenses = Number(licenseDetail?.revoked_licenses || 0);
+  const idleRevokedLicenses = Number(licenseDetail?.free_revoked_licenses || 0);
+  const payableLicenses = Number(
+    licenseDetail?.payable_licenses ?? Math.max(0, totalLicenses - revokedLicenses),
+  );
   const availableLicenses = maxLicenses !== null ? Math.max(0, maxLicenses - totalLicenses) : null;
 
-  // const planCost = dataGetMyPlanDetails?.current_plan_details?.discount_enabled
-  //   ? dataGetMyPlanDetails?.current_plan_details?.discount_price
-  //   : dataGetMyPlanDetails?.current_plan_details?.original_price;
-  // const planExpiration = dataGetMyPlanDetails?.current_plan_details?.plan_expiration_date;
+  const perSeatPrice = Number(dataGetMyPlanDetails?.next_billing_details?.original_price || 0);
+  const nextBillingDate = dataGetMyPlanDetails?.next_billing_details?.next_billing_date;
+  const nextBillingDateLabel = formatBillingDate(nextBillingDate);
+  const periodLabel =
+    Number(dataGetMyPlanDetails?.current_plan_details?.plan_duration) === 12 ? 'year' : 'month';
+  const idleSeatCost = idleLicenses * perSeatPrice;
 
-  // const proratedCost = getLicenseCalculatedPlanCost({
-  //   planCost,
-  //   plan_expiration_date: planExpiration,
-  // });
+  /**
+   * Every licence row with no user sorts to the end of the server-side list
+   * (the API orders `CASE WHEN user.uuid IS NULL THEN 1 ELSE 0 END ASC`), so on a
+   * large tenant the unused seats land on the very last page and an admin never
+   * sees them. We fetch just that tail so the wasted seats are always in view.
+   */
+  const unassignedRowCount = idleLicenses + idleRevokedLicenses;
 
-  // const totalAmountPayable = count * +proratedCost;
-  // const taxPercentage = Number(dataGetMyPlanDetails?.last_billing?.tax_detail?.tax_percentage ?? 0);
-  // const totalTax = (taxPercentage * (totalAmountPayable ?? 0)) / 100;
-  // const totalAmountIncludingTax = totalAmountPayable + totalTax;
-  const { mutate: mutateDeleteUser, isPending } = useMutation({
+  const { data: licenseRowTotal = 0 } = useQuery({
+    queryKey: ['getLicenseUserList', 'row-total'],
+    queryFn: () => getLicenseUserList({ page: 1, limit: 1 }),
+    select: (data) => Number(data?.data?.data?.result?.total || 0),
+    enabled: unassignedRowCount > 0,
+  });
+
+  const tailPage =
+    unassignedRowCount > 0 && licenseRowTotal > 0
+      ? Math.ceil(licenseRowTotal / unassignedRowCount)
+      : 0;
+
+  const { data: idleSeats = [], isLoading: isIdleSeatsLoading } = useQuery({
+    queryKey: ['getLicenseUserList', 'idle-seats', tailPage, unassignedRowCount],
+    queryFn: async () => {
+      const pages = tailPage > 1 ? [tailPage - 1, tailPage] : [tailPage];
+      const responses = await Promise.all(
+        pages.map((page) => getLicenseUserList({ page, limit: unassignedRowCount })),
+      );
+      const seen = new Set<string>();
+      const rows: any[] = [];
+      responses.forEach((response) => {
+        (response?.data?.data?.result?.rows || []).forEach((row: any) => {
+          if (row?.user_uuid || row?.is_license_revoked) return;
+          if (!row?.uuid || seen.has(row.uuid)) return;
+          seen.add(row.uuid);
+          rows.push(row);
+        });
+      });
+      return rows;
+    },
+    enabled: unassignedRowCount > 0 && tailPage > 0,
+  });
+
+  const idleSeatRows: any[] = Array.isArray(idleSeats) ? idleSeats : [];
+
+  const invalidateLicenseData = () => {
+    queryClient.invalidateQueries({ queryKey: ['getLicenseUserList'] });
+    queryClient.invalidateQueries({ queryKey: ['getMyPlanDetails'] });
+    queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
+  };
+
+  const { mutate: mutateRevokeLicense, isPending } = useMutation({
     mutationKey: ['revokeLicense'],
     mutationFn: revokeLicense,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries(['getLicenseUserList'], { exact: true });
-      // handleAlert({
-      //   text: data?.data?.message || 'License revoked successfully',
-      //   type: 'success',
-      // });
-      setDeleteUserState({ isOpen: false, selectedUser: data });
+    onSuccess: () => {
+      invalidateLicenseData();
+      handleAlert({
+        text:
+          confirmState?.type === 'revert'
+            ? 'Seat restored. It stays on your plan and on your bill.'
+            : `Seat removal scheduled. It leaves your plan on ${nextBillingDateLabel}.`,
+        type: 'success',
+      });
+      setConfirmState(EMPTY_CONFIRM);
     },
   });
 
@@ -109,7 +182,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
         text: `You can only add ${availableLicenses} more license(s). Your current total is ${totalLicenses} out of ${maxLicenses} maximum.`,
         type: 'error',
       });
-      queryClient.invalidateQueries(['getMyPlanDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['getMyPlanDetails'] });
       setIsPaymentInitiate(false);
       return;
     }
@@ -137,9 +210,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
     setIsPaymentInitiate(false);
     setCount(1);
     setShowCounter(false);
-    queryClient.invalidateQueries(['getUsersDetails', 'getLicenseUserList', 'getMyPlanDetails'], {
-      exact: true,
-    });
+    invalidateLicenseData();
   };
   const handleAddUsers = () => {
     if (isPlanExpired) {
@@ -158,6 +229,31 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
     }
     setDrawerState((prev: any) => ({ ...prev, addUser: true }));
   };
+
+  const openRevokeConfirm = (row: any, type: ConfirmType) => {
+    setConfirmState({
+      isOpen: true,
+      type,
+      selectedUser: row,
+      licenses: [
+        {
+          company_license_uuid: row?.uuid,
+          user_uuid: row?.user_uuid,
+        },
+      ],
+    });
+  };
+
+  const openBulkIdleConfirm = () => {
+    if (!idleSeatRows.length) return;
+    setConfirmState({
+      isOpen: true,
+      type: 'bulk-idle',
+      selectedUser: null,
+      licenses: idleSeatRows.map((row: any) => ({ company_license_uuid: row?.uuid })),
+    });
+  };
+
   const columns: ColumnDef<any>[] = useMemo(() => {
     return [
       {
@@ -171,7 +267,14 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             return (
               <div className="flex items-center justify-between  gap-2">
                 <div className="flex flex-col items-start">
-                  <p className="capitalize font-medium">License</p>
+                  <p className="capitalize font-medium">
+                    Unassigned seat
+                    {!data?.is_license_revoked && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 align-middle">
+                        Paid for, nobody using it
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-gray-600">
                     Purchased At: {data?.createdAt ? getFullFormateDate(data?.createdAt) : 'NA'}
                   </p>
@@ -204,9 +307,9 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                     <div>{data?.user?.extension}</div>
                   </div>
                 </div>
-                <p className="text-gray-500 flex justify-between">
+                <div className="text-gray-500 flex justify-between">
                   <div>{data?.user?.email}</div>
-                </p>
+                </div>
               </div>
             </div>
           );
@@ -218,9 +321,13 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
         cell: ({ row }: any) => {
           const data = row?.original;
           const user_uuid = row?.original?.user_uuid;
+          const revokedNoticeText = user_uuid
+            ? `Scheduled for removal. This seat leaves your plan on ${nextBillingDateLabel}. Until then this person keeps full access — on that date their account is deactivated.`
+            : `Scheduled for removal. This seat leaves your plan on ${nextBillingDateLabel}.`;
+
           if (data?.is_license_revoked && !isDowngradClicked && !user_uuid) {
             return (
-              <CustomTooltip text="Licence will be deleted from next billing." side="top">
+              <CustomTooltip text={revokedNoticeText} side="top">
                 <div className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8">
                   <Icon name={'NoticeLine'} className={`w-5 h-5}`} />
                 </div>
@@ -229,7 +336,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           }
           if (!data?.is_license_revoked && !user_uuid) {
             return (
-              <CustomTooltip text="Assign License" side="top">
+              <CustomTooltip text="Assign this paid seat to a user" side="top">
                 <div
                   className="cursor-pointer bg-green-100 text-green-600 hover:bg-green-600 hover:text-white flex items-center justify-center rounded-full w-8 h-8"
                   onClick={handleAddUsers}
@@ -243,18 +350,18 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           if (data?.is_license_revoked) {
             return (
               <div className="flex items-center justify-end gap-1">
-                <CustomTooltip text="Revert license revoke" side="top">
+                <CustomTooltip text="Keep this seat (cancel the scheduled removal)" side="top">
                   <div
                     onClick={() => {
                       if (userInfo?.uuid === data?.user?.uuid) return;
-                      setDeleteUserState({ isOpen: true, selectedUser: data, type: 'revert' });
+                      openRevokeConfirm(data, 'revert');
                     }}
                     className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8 hover:bg-black hover:text-white"
                   >
                     <Icon name={'UndoIcon'} className={`w-5 h-5}`} />
                   </div>
                 </CustomTooltip>
-                <CustomTooltip text="Licence will be deleted from next billing." side="top">
+                <CustomTooltip text={revokedNoticeText} side="top">
                   <div className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8">
                     <Icon name={'NoticeLine'} className={`w-5 h-5}`} />
                   </div>
@@ -265,12 +372,12 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
 
           if (isDowngradClicked) {
             return (
-              <CustomTooltip text="Delete" side="top">
+              <CustomTooltip text="Remove this seat from the next bill" side="top">
                 <div
                   className={` hover:bg-red-500 ${userInfo?.uuid === data?.user?.uuid ? 'cursor-not-allowed bg-gray-100 text-gray-900/80' : `cursor-pointer bg-red-100 text-red-500`}  hover:text-white flex items-center justify-center rounded-full w-8 h-8`}
                   onClick={() => {
                     if (userInfo?.uuid === data?.user?.uuid) return;
-                    setDeleteUserState({ isOpen: true, selectedUser: data, type: 'delete' });
+                    openRevokeConfirm(data, 'delete');
                   }}
                 >
                   <Icon name={'TrashBin'} className={`w-4 h-4}`} />
@@ -286,35 +393,240 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
         },
       },
     ];
-  }, [isDowngradClicked]);
+  }, [isDowngradClicked, nextBillingDateLabel, userInfo?.uuid]);
+
+  const confirmIsAssigned = Boolean(confirmState?.selectedUser?.user_uuid);
+  const confirmUserName = confirmState?.selectedUser?.user
+    ? `${confirmState.selectedUser.user?.first_name || ''} ${
+        confirmState.selectedUser.user?.last_name || ''
+      }`.trim() || 'This user'
+    : 'This user';
+
+  const renderConfirmBody = () => {
+    if (confirmState?.type === 'revert') {
+      return (
+        <span className="block text-sm text-gray-700">
+          This seat is currently scheduled to be removed on {nextBillingDateLabel}. Keeping it means
+          it stays on your plan and you keep paying {currency(perSeatPrice)} per {periodLabel} for
+          it.
+        </span>
+      );
+    }
+
+    if (confirmState?.type === 'bulk-idle') {
+      return (
+        <span className="block text-sm text-gray-700">
+          <span className="block font-medium text-gray-900">
+            Remove {confirmState.licenses.length} unused seat
+            {confirmState.licenses.length === 1 ? '' : 's'} from your plan?
+          </span>
+          <span className="block mt-2">
+            Nobody is assigned to these seats. Removing them takes{' '}
+            {currency(confirmState.licenses.length * perSeatPrice)} per {periodLabel} off your bill
+            from {nextBillingDateLabel}.
+          </span>
+          <span className="block mt-2 text-gray-500">
+            The current billing period is not refunded. You can undo this at any time before{' '}
+            {nextBillingDateLabel}.
+          </span>
+        </span>
+      );
+    }
+
+    if (confirmIsAssigned) {
+      return (
+        <span className="block text-sm text-gray-700">
+          <span className="block font-medium text-gray-900">
+            {confirmUserName} is still using this seat.
+          </span>
+          <span className="block mt-2">
+            Removing it takes {currency(perSeatPrice)} per {periodLabel} off your bill from{' '}
+            {nextBillingDateLabel}.
+          </span>
+          <span className="block mt-2 rounded-md bg-amber-50 border border-amber-200 p-2 text-amber-900">
+            Until {nextBillingDateLabel}, {confirmUserName} keeps full access to the platform —
+            removing the seat does not lock them out now, and the seat cannot be reassigned to
+            somebody else in the meantime. On {nextBillingDateLabel} the seat is deleted and{' '}
+            {confirmUserName}&apos;s account is deactivated.
+          </span>
+          <span className="block mt-2 text-gray-500">
+            The current billing period is not refunded. You can undo this at any time before{' '}
+            {nextBillingDateLabel}.
+          </span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="block text-sm text-gray-700">
+        <span className="block font-medium text-gray-900">
+          Remove this unused seat from your plan?
+        </span>
+        <span className="block mt-2">
+          Nobody is assigned to it. Removing it takes {currency(perSeatPrice)} per {periodLabel} off
+          your bill from {nextBillingDateLabel}.
+        </span>
+        <span className="block mt-2 text-gray-500">
+          The current billing period is not refunded. You can undo this at any time before{' '}
+          {nextBillingDateLabel}.
+        </span>
+      </span>
+    );
+  };
+
   return (
     <>
       <div className="h-full w-full  flex flex-col gap-2  overflow-y-auto pr-1">
         <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl mt-2 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Used License</h4>
+            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Seats in use</h4>
             <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
-              {dataGetMyPlanDetails?.license_detail?.used_licenses || 0}
+              {usedLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Available License</h4>
-            <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
-              {dataGetMyPlanDetails?.license_detail?.free_licenses || 0}
+            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+              Paid but unassigned
+              <CustomTooltip
+                text="Seats you are paying for that nobody is assigned to. Deleting a user puts their seat here — it does not stop the charge."
+                side="top"
+              >
+                <span>
+                  <Icon name={'NoticeLine'} className="w-4 h-4 cursor-pointer" />
+                </span>
+              </CustomTooltip>
+            </h4>
+            <h4
+              className={`font-semibold flex items-center justify-end gap-2 text-sm w-1/2 ${
+                idleLicenses > 0 ? 'text-amber-700' : 'text-gray-700'
+              }`}
+            >
+              {idleLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Revoked License</h4>
+            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+              Scheduled for removal
+              <CustomTooltip
+                text={`These seats leave your plan on ${nextBillingDateLabel}. They are already excluded from your next bill.`}
+                side="top"
+              >
+                <span>
+                  <Icon name={'NoticeLine'} className="w-4 h-4 cursor-pointer" />
+                </span>
+              </CustomTooltip>
+            </h4>
             <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
-              {dataGetMyPlanDetails?.license_detail?.revoked_licenses || 0}
+              {revokedLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Total License</h4>
+            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Total seats on plan</h4>
             <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
-              {dataGetMyPlanDetails?.license_detail?.total_licenses || 0}
+              {totalLicenses}
             </h4>
           </div>
+          <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
+            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+              Seats you pay for next
+              <CustomTooltip
+                text={`Total seats minus seats scheduled for removal. Billed on ${nextBillingDateLabel}.`}
+                side="top"
+              >
+                <span>
+                  <Icon name={'NoticeLine'} className="w-4 h-4 cursor-pointer" />
+                </span>
+              </CustomTooltip>
+            </h4>
+            <h4 className="font-semibold text-gray-900 flex items-center justify-end gap-2  text-sm w-1/2">
+              {payableLicenses}
+              {perSeatPrice > 0 && (
+                <span className="font-normal text-gray-500">
+                  ({currency(payableLicenses * perSeatPrice)}/{periodLabel})
+                </span>
+              )}
+            </h4>
+          </div>
+
+          <p className="text-xs text-gray-500 leading-relaxed border-t border-gray-200 pt-2">
+            A seat is something you buy, not something a user owns. Deleting a user in{' '}
+            <span className="font-medium text-gray-700">Users</span> frees their seat but keeps it on
+            your bill — you have to remove the seat here as well. Seat removals take effect on{' '}
+            {nextBillingDateLabel}; the current period is never refunded.
+          </p>
+
+          {idleLicenses > 0 && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <Icon name={'NoticeLine'} className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" />
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-semibold text-amber-900">
+                    You are paying for {idleLicenses} seat{idleLicenses === 1 ? '' : 's'} that nobody
+                    is using
+                    {perSeatPrice > 0 ? ` — ${currency(idleSeatCost)} per ${periodLabel}` : ''}.
+                  </p>
+                  <p className="text-xs text-amber-900/90 leading-relaxed">
+                    Seats end up here when you delete a user, or when you buy more seats than you
+                    assign. They stay on your bill until you remove them. Removing them now takes
+                    them off the bill from {nextBillingDateLabel} — you can assign them to new users
+                    instead, and you can undo a removal any time before that date.
+                  </p>
+                </div>
+              </div>
+
+              {isIdleSeatsLoading && <Skeleton className="h-8 w-full bg-amber-100" />}
+
+              {!isIdleSeatsLoading && idleSeatRows.length > 0 && (
+                <div className="flex flex-col gap-1 rounded-lg border border-amber-200 bg-white p-2">
+                  {idleSeatRows.slice(0, 10).map((seat: any) => (
+                    <div
+                      key={seat?.uuid}
+                      className="flex items-center justify-between gap-2 text-xs text-gray-700 py-1"
+                    >
+                      <span>
+                        Unassigned seat
+                        <span className="text-gray-500">
+                          {' '}
+                          · purchased{' '}
+                          {seat?.createdAt ? getFullFormateDate(seat?.createdAt) : 'unknown'}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        className="cursor-pointer text-red-600 hover:underline font-medium"
+                        onClick={() => openRevokeConfirm(seat, 'delete')}
+                      >
+                        Remove from bill
+                      </button>
+                    </div>
+                  ))}
+                  {idleSeatRows.length > 10 && (
+                    <p className="text-[11px] text-gray-500 pt-1">
+                      and {idleSeatRows.length - 10} more.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!isIdleSeatsLoading && idleSeatRows.length < idleLicenses && (
+                <p className="text-[11px] text-amber-900/80">
+                  Showing {idleSeatRows.length} of {idleLicenses} unused seats. Use{' '}
+                  <span className="font-medium">Remove seats</span> below and page to the end of the
+                  list to see the rest.
+                </p>
+              )}
+
+              {idleSeatRows.length > 0 && (
+                <div className="flex justify-end">
+                  <Button variant={'outline'} size={'sm'} onClick={openBulkIdleConfirm}>
+                    Remove {idleSeatRows.length} unused seat
+                    {idleSeatRows.length === 1 ? '' : 's'} from next bill
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           {!showCounter &&
             !isDowngradClicked &&
             dataGetMyPlanDetails?.current_plan_details?.is_trial == 'N' && (
@@ -333,7 +645,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   variant={'outline'}
                   size={'sm'}
                 >
-                  Downgrade
+                  Remove seats
                 </Button>
                 <Button
                   onClick={() => {
@@ -349,7 +661,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   variant={'outline'}
                   size={'sm'}
                 >
-                  Upgrade
+                  Buy seats
                 </Button>
               </div>
             )}
@@ -415,6 +727,13 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   </Button>
                 </div>
               </div>
+              {idleLicenses > 0 && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  You already have {idleLicenses} paid seat{idleLicenses === 1 ? '' : 's'} that
+                  nobody is using. You can assign {idleLicenses === 1 ? 'it' : 'them'} to new users
+                  for free instead of buying more.
+                </p>
+              )}
               <div className="border border-grey-100 bg-white p-3 rounded-xl flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-3 ">
                   <div className="font-medium text-gray-500  text-sm w-1/2">Monthly Cost</div>
@@ -479,10 +798,19 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             </>
           )}
           {isDowngradClicked && (
-            <div className="w-full flex items-center gap-2 justify-end mt-2">
-              <Button onClick={() => setIsDowngradClicked(false)} variant={'secondary'} size="sm">
-                Cancel
-              </Button>
+            <div className="w-full flex flex-col gap-2 mt-2">
+              <p className="text-xs text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-lg p-2">
+                Pick the seats to take off your plan. Removals apply on {nextBillingDateLabel} and
+                the current period is not refunded. Removing a seat that is{' '}
+                <span className="font-medium">still assigned to someone</span> does not lock them out
+                straight away — they keep full access until {nextBillingDateLabel}, when their
+                account is deactivated.
+              </p>
+              <div className="w-full flex items-center gap-2 justify-end">
+                <Button onClick={() => setIsDowngradClicked(false)} variant={'secondary'} size="sm">
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -493,43 +821,41 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             fetcherKey: 'getLicenseUserList',
             fetcherFn: getLicenseUserList,
             isHeightSet: false,
-            extraParams: {
-              limit: 999,
-            },
             customClass: 'h-auto overflow-visible',
-            showPagination: false,
+            emptyTablePlaceholder: 'No seats found',
           }}
         />
       </div>
-      {deleteUserState?.isOpen && (
+      {confirmState?.isOpen && (
         <AlertConfirm
           {...{
             apiLoading: isPending,
-            descriptionTextComp:
-              deleteUserState?.type == 'delete'
-                ? 'Are you sure you want to delete licence(s) from next billing?'
-                : 'Are you sure you want to retrieve this license and make it available again?',
+            descriptionTextComp: renderConfirmBody(),
+            confirmBtnText: confirmState?.type === 'revert' ? 'Keep seat' : 'Remove seat(s)',
             onConfirm: () => {
-              mutateDeleteUser({
-                licenses: [
-                  {
-                    company_license_uuid: deleteUserState?.selectedUser?.uuid,
-                    user_uuid: deleteUserState?.selectedUser?.user_uuid,
-                  },
-                ],
-                revoke: deleteUserState?.type !== 'revert',
+              mutateRevokeLicense({
+                licenses: confirmState.licenses,
+                revoke: confirmState.type !== 'revert',
               });
             },
-            open: deleteUserState?.isOpen,
+            open: confirmState?.isOpen,
             setOpen: () => {
-              setDeleteUserState({ isOpen: false, selectedUser: null });
+              setConfirmState(EMPTY_CONFIRM);
             },
-            headerText: deleteUserState?.type == 'delete' ? 'Delete Licence' : 'Retrieve License',
+            headerText:
+              confirmState?.type === 'revert'
+                ? 'Keep this seat'
+                : confirmState?.type === 'bulk-idle'
+                  ? 'Remove unused seats'
+                  : confirmIsAssigned
+                    ? 'Remove a seat that is still in use'
+                    : 'Remove an unused seat',
           }}
         />
       )}
       {drawerState.addUser && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState.addUser}
           title="Add Users"
           isTab={false}

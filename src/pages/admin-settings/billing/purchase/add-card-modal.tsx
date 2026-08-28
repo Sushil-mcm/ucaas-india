@@ -125,7 +125,7 @@ const AddCardModal = ({ open, setOpen }: { open: any; setOpen: any }) => {
           <div className="flex justify-end w-full mt-3">
             <Button
               type="submit"
-              variant={'outline'}
+              variant={'primary'}
               onClick={handleAddCard}
               disabled={isPending || loader || !cardHolderName}
             >

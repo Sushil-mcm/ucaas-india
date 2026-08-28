@@ -12,11 +12,11 @@ const Purchase = () => {
   const tabArr = [
     {
       value: 'top-up',
-      label: 'Top Up Credits',
+      label: 'Add Credit',
     },
     {
       value: 'manage-cards',
-      label: 'Manage cards',
+      label: 'Payment Methods',
     },
   ];
 
@@ -34,10 +34,11 @@ const Purchase = () => {
             <div className="-rotate-90 text-gray-800">
               <Icon name="ChevronIcon" className="w-5 h-5" />
             </div>
-            <span className="text-primary text-md">Plan</span>
+            <span className="text-primary text-md">Credit &amp; Payment</span>
           </p>
           <p className="text-gray-500 text-xs">
-            Change plan, add licences, or buy numbers and credit.
+            Top up the balance that pays for usage beyond your plan — calls, SMS and AI — and manage
+            the cards it is charged to.
           </p>
         </div>
         <div className="flex gap-2"></div>

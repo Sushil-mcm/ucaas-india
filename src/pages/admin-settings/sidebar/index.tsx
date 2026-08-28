@@ -24,13 +24,32 @@ export const canShowItem = (item: any, isAdmin: boolean) => {
 export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
   [
     {
-      title: 'Company & Locations',
-      path: '/admin-settings/company-info',
+      /* Company-wide phone rules used to sit under Phone System, so an admin
+         looking for company settings found a name and a list of locations and
+         concluded there were none. Dialpad and Genesys both keep organisation
+         policy on the company screen; this puts it there. */
+      title: 'Company',
+      type: 'accordion',
       value: 'company-info',
-      type: 'normal',
       icon: 'CompayIcon',
-      visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
       enabled: true,
+      visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
+      children: [
+        {
+          title: 'Company & Locations',
+          path: '/admin-settings/company-info',
+          icon: 'CompayIcon',
+          enabled: true,
+          visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
+        },
+        {
+          title: 'Company Rules',
+          path: '/admin-settings/company-info/rules',
+          icon: 'SettingsIcon',
+          enabled: true,
+          visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
+        },
+      ].filter(Boolean),
     },
     {
       /* Named for whose settings these are. "Settings" alone sat ambiguously
@@ -102,26 +121,36 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       enabled: true,
       visible: Boolean(features?.plan_features?.virtual_numbers?.action?.view),
       children: [
+        /* Labels are the page titles verbatim. The nav used to say "All Number",
+           "Number In Use", "Unused Number" while the screens they open are
+           titled "All numbers", "Numbers in use", "Unused numbers" — a
+           singular/plural and word-order mismatch that made the nav read as a
+           different set of screens than the ones it leads to. */
         {
-          title: 'All Number',
+          title: 'All numbers',
           path: '/admin-settings/numbers/all',
           icon: 'AllNumberIcon',
         },
         {
-          title: 'Identities & Address',
+          title: 'Identities & addresses',
           path: '/admin-settings/numbers/identities',
           icon: 'AllNumberIcon',
           extraActiveTab: ['addresses', 'verifications'],
         },
         {
-          title: 'Number In Use',
+          title: 'Numbers in use',
           path: '/admin-settings/numbers/in-use',
           icon: 'TickCircleIcon',
         },
         {
-          title: 'Unused Number',
+          title: 'Unused numbers',
           path: '/admin-settings/numbers/inventory',
           icon: 'InventoryIcon',
+        },
+        {
+          title: 'Call Coverage',
+          path: '/admin-settings/numbers/coverage',
+          icon: 'TickCircleIcon',
         },
       ].filter(Boolean),
     },
@@ -139,13 +168,6 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
       children: [
         {
-          title: 'Preferences',
-          path: '/admin-settings/phone/preferences',
-          icon: 'SettingsIcon',
-          enabled: true,
-          visible: true,
-        },
-        {
           title: 'Call Queues',
           path: '/admin-settings/phone/call-queue',
           icon: 'CallQueue',
@@ -159,14 +181,22 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.IVR),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
-        {
-          title: 'Shared Line',
-          path: '/admin-settings/phone/shared-line',
-          icon: 'Share',
-          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
-          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
-        },
       ].filter(Boolean),
+    },
+    {
+      /* The outbound dialer had no entry in Admin at all. The only "Campaigns"
+         this nav carried was the 10DLC SMS registration under Compliance — a
+         different object entirely — so an admin looking for outbound campaigns
+         landed somewhere unrelated. This links the real dialer campaigns, and
+         the 10DLC item below is now named "SMS Campaigns" so the two cannot be
+         read as the same thing. Guards mirror the `/campaign` routes. */
+      key: 'admin-settings.outbound_campaigns',
+      id: 'outbound_campaigns',
+      title: 'Outbound Campaigns',
+      path: '/campaign/all-campaigns',
+      icon: 'DialerIcon',
+      enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
+      visible: Boolean(features?.plan_features?.campaign?.action?.view),
     },
     {
       title: 'AI Tools',
@@ -320,12 +350,29 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       visible: Boolean(features?.plan_features?.billing?.action?.view),
       children: [
         {
+          /* First in the list on purpose: "where do I stand" comes before
+             "what did I buy" and "what did I pay". */
+          title: 'Statement',
+          path: '/admin-settings/billing/statement',
+          icon: 'BillingPlanIcon',
+        },
+        {
           title: 'Plan',
           path: '/admin-settings/billing/plan',
           icon: 'BillingPlanIcon',
         },
         {
-          title: 'Purchase',
+          title: 'Licences & Resources',
+          path: '/admin-settings/billing/resources',
+          icon: 'BillingPlanIcon',
+        },
+        {
+          title: 'Modules & Access',
+          path: '/admin-settings/billing/modules',
+          icon: 'AllNumberIcon',
+        },
+        {
+          title: 'Credit & Payment',
           path: '/admin-settings/billing/purchase',
           icon: 'Cart',
         },
@@ -356,7 +403,9 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         {
           key: 'admin-settings.compliance.10DLCCompaigns',
           id: '10DLCCompaigns',
-          title: 'Campaigns',
+          /* SMS campaign registration, not the outbound dialer. Bare
+             "Campaigns" collided with the dialer entry above. */
+          title: 'SMS Campaigns',
           path: '/admin-settings/compliance/brands/campaigns',
           icon: 'DepartmentIcon',
         },

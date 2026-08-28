@@ -87,7 +87,7 @@ const AddPathModal = ({
         <Button variant={'transparent'} onClick={handleClose} type="button">
           Cancel
         </Button>
-        <Button variant={'outline'} type="submit">
+        <Button variant={'primary'} type="submit">
           {/* {isPending ? 'Loading...' : 'Submit'} */}
           Submit
         </Button>

@@ -711,7 +711,7 @@ const CreateTeamChat = ({
           <div className="mt-3 px-2">
             <Button
               type="submit"
-              variant={'outline'}
+              variant={'primary'}
               className="w-full"
               disabled={isSubmitting || isSendingMessage}
             >

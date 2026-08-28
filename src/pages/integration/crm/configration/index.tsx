@@ -239,7 +239,7 @@ const CRMConfigration: FC<CRMConfigurationProps> = ({ drawerData: crmData, setDr
                   </Button>
                   <Button
                     disabled={isPending}
-                    variant={'outline'}
+                    variant={'primary'}
                     type="submit"
                     className="shrink-0"
                   >

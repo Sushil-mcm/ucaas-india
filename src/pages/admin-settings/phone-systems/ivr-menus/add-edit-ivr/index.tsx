@@ -4,7 +4,12 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
-import { INITIAL_IVR_MENU_VLAUES, IVR_ERROR_TYPES_MESSAGES, IVR_TAB_CONSTANT } from '../constants';
+import {
+  INITIAL_IVR_MENU_VLAUES,
+  IVR_ERROR_TYPES_MESSAGES,
+  IVR_RETRY_DEFAULTS,
+  IVR_TAB_CONSTANT,
+} from '../constants';
 import IvrBasicInfo from './basic-info';
 import { upsertIVRSchemaValidation } from '../schema';
 import IvrKeyPresses from './key-presses';
@@ -24,6 +29,12 @@ interface AddEditIvrProps {
   setDrawerState: (state: boolean) => void;
   initialData?: Record<string, unknown> | null;
 }
+
+/** Inputs give us strings; fall back to the historical default if unusable. */
+const toRetryNumber = (value: unknown, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : fallback;
+};
 
 const TABS_ORDER = [
   IVR_TAB_CONSTANT.BASIC_INFORMATION,
@@ -141,6 +152,9 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
       } = {},
       generic,
       greetings,
+      max_failures,
+      max_timeouts,
+      timeout,
     }: any = watch();
 
     const payload: any = {
@@ -216,9 +230,13 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
           label: generic?.failure_action?.value?.label,
         },
       }),
-      max_failures: 3,
-      max_timeouts: 3,
-      timeout: 10,
+      max_failures: toRetryNumber(max_failures, IVR_RETRY_DEFAULTS.max_failures),
+      max_timeouts: toRetryNumber(max_timeouts, IVR_RETRY_DEFAULTS.max_timeouts),
+      /* `timeout_limit`, not `timeout`. The column is timeout_limit and the
+         repository reads that name; `timeout` matches nothing, so the value was
+         silently discarded on every save. Confirmed against the live dialplan
+         generator, which reads timeout_limit. */
+      timeout_limit: toRetryNumber(timeout, IVR_RETRY_DEFAULTS.timeout),
     };
     if (initialData?.uuid) payload['uuid'] = initialData.uuid;
     mutateUpsertIVR(payload);
@@ -356,6 +374,16 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
 
     setValue('ivrActions', ivrOptionValues);
     setValue('generic', genericValues);
+
+    // These live at the top level of the IVR row. `timeout_limit` is the column
+    // name; some responses expose it as `timeout`, so accept either.
+    const initial: any = initialData;
+    setValue('max_failures', toRetryNumber(initial?.max_failures, IVR_RETRY_DEFAULTS.max_failures));
+    setValue('max_timeouts', toRetryNumber(initial?.max_timeouts, IVR_RETRY_DEFAULTS.max_timeouts));
+    setValue(
+      'timeout',
+      toRetryNumber(initial?.timeout ?? initial?.timeout_limit, IVR_RETRY_DEFAULTS.timeout),
+    );
 
     setValue('greetings', {
       welcome: {

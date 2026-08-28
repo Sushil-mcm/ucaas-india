@@ -275,14 +275,15 @@ const Identities = ({ search }: { search: string }) => {
             search,
             fetcherKey: 'getIdentityList',
             fetcherFn: getIdentityList,
-            emptyTablePlaceholder: 'No identities found',
+            emptyTablePlaceholder: 'No identities yet',
             descriptionEmptyTable:
-              'Set up an identity to enable number verification and compliance',
+              'Identities are created while buying a number that requires verification. Any you register during that flow appear here.',
           }}
         />
       </div>
       {drawerState.editIdentity && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           title="Edit Identity"
           isOpen={drawerState.editIdentity}
           isTab={false}
@@ -299,7 +300,7 @@ const Identities = ({ search }: { search: string }) => {
                 <Button type="button" onClick={handleDrawerClose} variant={'transparent'}>
                   Cancel
                 </Button>
-                <Button disabled={isLoading} variant={'outline'} type="submit" className="min-w-32">
+                <Button disabled={isLoading} variant={'primary'} type="submit" className="min-w-32">
                   {isLoading && <Loader variant="blue" />}Update
                 </Button>
               </div>

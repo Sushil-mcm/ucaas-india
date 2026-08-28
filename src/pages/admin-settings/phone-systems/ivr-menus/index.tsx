@@ -157,6 +157,7 @@ const IvrMenus: FC = () => {
       </AdminPage>
       {drawerState && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState}
           isTab={false}
           enableResponsive

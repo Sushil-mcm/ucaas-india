@@ -28,7 +28,12 @@ const SettingsVideo = () => {
       {/* right content */}
       <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
         <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <p className="text-gray-900 font-semibold text-lg">Video</p>
+          <div>
+            <p className="text-gray-900 font-semibold text-lg">Video</p>
+            <p className="text-gray-500 text-xs">
+              Your camera, microphone and how you join meetings.
+            </p>
+          </div>
         </div>
 
         <div className="gap-3 flex flex-col p-3">

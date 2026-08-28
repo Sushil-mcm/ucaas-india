@@ -64,7 +64,7 @@ const AddUserInfo = ({
   const { data: companySiteList, isLoading } = useGetSite();
 
   const { data: roleList = [], isPending } = useQuery({
-    queryKey: ['useRolesList'],
+    queryKey: ['useRolesList', false],
     queryFn: () => getRoleList(),
     select: (data) => data?.data?.data?.result?.rows || [],
   });
@@ -76,20 +76,35 @@ const AddUserInfo = ({
   const { plan_info, user_info = {}, company_info } = user || {};
   const isPlanExpired = company_info?.plan_status === 'EXPIRED';
   const isTrial = company_info?.is_trial === 'Y';
-  console.log(
-    plan_info?.dataValues?.licenses,
-    dataGetMyPlanDetails?.license_detail?.total_licenses,
-    'plan_info?.dataValues',
-  );
 
   const planCost = dataGetMyPlanDetails?.current_plan_details?.discount_enabled
     ? dataGetMyPlanDetails?.current_plan_details?.discount_price || 0
     : dataGetMyPlanDetails?.current_plan_details?.original_price || 0;
 
   const licenseInfo = useMemo(() => {
-    const available =
-      (dataGetMyPlanDetails?.license_detail?.free_licenses || 0) +
-      (dataGetMyPlanDetails?.license_detail?.free_revoked_licenses || 0);
+    const licenseDetail = dataGetMyPlanDetails?.license_detail || {};
+
+    /* What this screen used to show on its own: spare licences + licences freed
+       by revoked users. */
+    const reportedFree =
+      (licenseDetail?.free_licenses || 0) + (licenseDetail?.free_revoked_licenses || 0);
+
+    /* What the API actually enforces when it decides whether to charge:
+       licences owned minus licences already in use. If either field is missing
+       we fall back to the old number rather than guess. */
+    const totalLicenses = Number(licenseDetail?.total_licenses);
+    const usedLicenses = Number(licenseDetail?.used_licenses);
+    const enforcedFree =
+      Number.isFinite(totalLicenses) && Number.isFinite(usedLicenses)
+        ? Math.max(0, totalLicenses - usedLicenses)
+        : null;
+
+    /* Trust the smaller of the two. Promising a free seat the API then refuses
+       to create is what dead-ends the admin, so we would rather show the
+       payment step they can actually complete. */
+    const available = enforcedFree === null ? reportedFree : Math.min(reportedFree, enforcedFree);
+    const hasLicenseMismatch = enforcedFree !== null && enforcedFree !== reportedFree;
+
     const currentUserCount = users?.length || 0;
     const extraUnits = Math.max(0, currentUserCount - available);
 
@@ -98,6 +113,9 @@ const AddUserInfo = ({
 
     return {
       available,
+      reportedFree,
+      enforcedFree,
+      hasLicenseMismatch,
       currentUserCount,
       extraUnits,
       extraCharge,
@@ -179,8 +197,14 @@ const AddUserInfo = ({
   const MAX_USERS = 10;
 
   const handleUserAddCountChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const sanitizedValue = event.target.value.replace(/[^1-9]/g, '').slice(0, 1);
-    setValue('user_add_count', sanitizedValue ? Number(sanitizedValue) : null, {
+    /* Two digits, so the box can express MAX_USERS. Anything below 1 clears the
+       field, anything above the cap is pinned to the cap. */
+    const sanitizedValue = event.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+    const parsedValue = sanitizedValue ? Number(sanitizedValue) : null;
+    const nextValue =
+      parsedValue === null || parsedValue < 1 ? null : Math.min(parsedValue, MAX_USERS);
+
+    setValue('user_add_count', nextValue, {
       shouldDirty: true,
       shouldTouch: true,
     });
@@ -203,9 +227,9 @@ const AddUserInfo = ({
       return;
     }
 
-    if (userAddCount < 1 || userAddCount > 9) {
+    if (userAddCount < 1 || userAddCount > MAX_USERS) {
       handleAlert({
-        text: 'Please enter a number between 1 and 9.',
+        text: `Please enter a number between 1 and ${MAX_USERS}.`,
         type: 'warning',
       });
       return;
@@ -337,12 +361,15 @@ const AddUserInfo = ({
               <Input
                 type="text"
                 inputMode="numeric"
-                pattern="[1-9]"
+                pattern="[0-9]*"
                 placeholder="Enter no."
                 value={String(userAddCountRaw ?? '')}
                 onChange={handleUserAddCountChange}
+                maxLength={2}
               />
-              <p className="text-[10px] ps-[2px] pt-1 text-gray-500">Enter number between 1-9</p>
+              <p className="text-[10px] ps-[2px] pt-1 text-gray-500">
+                Enter number between 1-{MAX_USERS}
+              </p>
             </div>
             <Button variant={'outline'} type="button" onClick={handleAddUser}>
               <Plus className="w-3 h-3" />
@@ -377,6 +404,13 @@ const AddUserInfo = ({
             <InfoIcon className="w-4 h-4 text-gray-500 cursor-pointer" />
           </CustomTooltip>
         </p>
+        {licenseInfo?.hasLicenseMismatch ? (
+          <p className="text-amber-600 text-center text-xs">
+            Your plan lists {licenseInfo?.reportedFree} unused licence
+            {licenseInfo?.reportedFree === 1 ? '' : 's'}, but billing can only confirm{' '}
+            {licenseInfo?.enforcedFree}. We use the lower number so you are not blocked at checkout.
+          </p>
+        ) : null}
         <p className="text-gray-700 text-center text-sm">
           New licenses purchased: {licenseInfo?.extraUnits || 0}
         </p>
@@ -467,13 +501,24 @@ const AddUserInfo = ({
                   setValue(`users.${index}.role`, e || { label: '', value: '' }, {
                     shouldValidate: true,
                   });
-                  setValue(
-                    `users.${index}.${['MANAGER', 'ADMIN', 'AGENT', 'SUB-ADMIN'].includes(e?.label || '') ? 'role_uuid' : 'custom_role_uuid'}`,
-                    e?.value || { label: '', value: '' },
-                    {
-                      shouldValidate: true,
-                    },
+                  /* Branch on the role's `type`, not on its display name: a custom
+                     role may legitimately be called "ADMIN", and the old test
+                     would then have written it into role_uuid. Both fields are
+                     set every time — one to the id, the other cleared — because
+                     leaving the previous one behind meant switching from a custom
+                     role back to a system role silently kept the custom role, the
+                     backend checking custom_role_uuid first. */
+                  const picked = roleList.find(
+                    (item: any) =>
+                      (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === e?.value,
                   );
+                  const isCustomRole = picked?.type === 'custom';
+                  setValue(`users.${index}.role_uuid`, isCustomRole ? '' : e?.value || '', {
+                    shouldValidate: true,
+                  });
+                  setValue(`users.${index}.custom_role_uuid`, isCustomRole ? e?.value || '' : '', {
+                    shouldValidate: true,
+                  });
                 }}
                 error={errors?.users?.[index]?.role?.value?.message}
                 isLoading={isPending}

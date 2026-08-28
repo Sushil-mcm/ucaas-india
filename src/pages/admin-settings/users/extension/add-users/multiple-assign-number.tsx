@@ -165,7 +165,7 @@ const MultipleAssignNumber = ({ users, handleClose }: { users: any; handleClose:
           </Button>
           <Button
             className="min-w-[138px]"
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             disabled={isPending || reserveLoading}
           >

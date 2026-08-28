@@ -191,6 +191,7 @@ const Roles = () => {
         <SideDrawer
           isOpen={creating || Boolean(editing)}
           title={editing ? `Update role (${editing?.name || ''})` : 'New role'}
+          width="min(980px, 80vw)"
           isTab={false}
           enableResponsive
           handleClose={closeForm}

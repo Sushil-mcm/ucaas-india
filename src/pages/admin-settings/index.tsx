@@ -1,9 +1,14 @@
 import PageSidebarLayout from '@/layout/page-sidebar-layout';
 import Sidebar from './sidebar';
 import { SuspenseOutlet } from '@/components/custom/route-suspense';
+import { useAdminVisitRecorder } from './use-admin-shortcuts';
 import '@/components/mcm/mcm-page.css';
 
 const AdminSettings = () => {
+  /* Every Admin screen renders inside this layout, so this is the one place
+     that sees them all — which is what "Recently used" needs. */
+  useAdminVisitRecorder();
+
   return (
     /* One scope for the whole Admin area: the console tokens and the
        Tailwind compatibility layer retint every page underneath, so each

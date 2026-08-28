@@ -130,7 +130,7 @@ const EndMeetingConfirmation = ({
           </Button>
           {isHost && (
             <Button
-              variant={'outline'}
+              variant={'primary'}
               type="submit"
               onClick={(e) => {
                 e.stopPropagation();

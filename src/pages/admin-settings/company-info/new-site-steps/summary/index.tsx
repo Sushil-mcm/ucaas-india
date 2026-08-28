@@ -11,8 +11,8 @@ const Summary = ({ formInstance }: any) => {
     watchCountry,
     watchPostalCode,
     watchTimezone,
-    // watchCallerIdType,
-    // watchCallerIdName,
+    watchCallerIdType,
+    watchCallerIdName,
   ] = watch([
     'name',
     'address',
@@ -21,9 +21,17 @@ const Summary = ({ formInstance }: any) => {
     'country',
     'postal_code',
     'timezone',
-    // 'caller_id_type',
-    // 'caller_id_name',
+    'caller_id_type',
+    'caller_id_name',
   ]);
+
+  /* The summary is the last chance to catch a wrong setting, so the codes are
+     spelled out here the same way they are on the form. */
+  const callerIdSummary: Record<string, string> = {
+    MAIN: 'Company main number',
+    CUSTOM: watchCallerIdName ? `Custom name — ${watchCallerIdName}` : 'Custom name — none entered',
+    BLANK: 'Withheld — no number shown',
+  };
 
   return (
     // <div className="flex flex-col gap-2 h-[calc(100vh_-_19rem)] overflow-auto pt-4">
@@ -75,22 +83,15 @@ const Summary = ({ formInstance }: any) => {
                   {watchTimezone?.value || '---'}
                 </span>
               </div>
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:gap-2">
+                <h6 className="min-w-32 text-sm font-semibold text-gray-800">Caller ID:</h6>
+                <span className="break-words text-sm text-gray-800">
+                  {callerIdSummary[watchCallerIdType] || '---'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-        {/* <div className="flex flex-col gap-5 border border-gray-400 rounded-xl p-3 w-1/2">
-            <div className="flex gap-1 flex-col">
-              <h6 className="font-semibold">Caller ID</h6>
-              <div className="flex gap-1 items-center">
-                <h6 className="font-medium text-xs">Name:</h6>
-                <span className="text-xs ">{watchCallerIdName}</span>
-              </div>
-              <div className="flex gap-1 items-center">
-                <h6 className="font-medium text-xs">Type:</h6>
-                <span className="text-xs">{watchCallerIdType}</span>
-              </div>
-            </div>
-          </div> */}
       </div>
     </div>
   );

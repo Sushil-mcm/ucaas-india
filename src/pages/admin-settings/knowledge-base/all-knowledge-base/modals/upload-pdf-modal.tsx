@@ -279,7 +279,7 @@ function UploadPdfModal({
             >
               Cancel
             </Button>
-            <Button variant={'outline'} type="submit" disabled={isLoading}>
+            <Button variant={'primary'} type="submit" disabled={isLoading}>
               {isLoading && <Loader variant="blue" />}Save
             </Button>
           </div>

@@ -4,6 +4,7 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { Button } from '@/components/ui/button';
 import RoleModal from './role-dialog';
 import RegionalModal from './regional-dialog';
+import { useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
 import VoiceMailConfigureModal from './voicemail-dialog';
 import AutomaticCallRecordingModal from './automatic-call-recording';
 import DisplayNumberModal from './display-number-dialog';
@@ -40,6 +41,52 @@ const CommonSettingPermission: FC<any> = ({
   isAdminAccount = false,
   selectedUserExt = null,
 }) => {
+  /* Company rules govern a person editing their own phone, and nothing else. The
+     other screens using this editor are an admin configuring a number, department,
+     IVR or queue, where a lock meant for staff would make no sense. */
+  const isOwnSettingsPage = origin === 'general_settings';
+  const companyPolicy = useCompanyPolicy({ enabled: isOwnSettingsPage });
+
+  /* `isEditable` stays in charge everywhere the company rule does not reach —
+     including a tenant that has never saved one, so nothing changes for them. */
+  const canEditField = (field: PolicyField): boolean => {
+    if (!isOwnSettingsPage || !companyPolicy.isActive) return isEditable;
+    return companyPolicy.allows(field);
+  };
+
+  /* Only the settings this screen actually shows count, so the notice does not
+     appear because of a locked field that lives on a different page. */
+  /* `transcription` and `ai_call_monitoring` are stored as {enabled, override}
+     but were plain booleans in older records, so both shapes are in the data.
+     Read as-is, an object is always truthy — which is why a setting saved as
+     {"enabled": false} displayed as switched on, and why turning one on appeared
+     to turn the other on too: it had been showing on all along. */
+  const readToggle = (path: string): boolean => {
+    const value = watch(path);
+    return typeof value === 'object' && value !== null ? !!value.enabled : !!value;
+  };
+
+  /* Writes back in whatever shape the value already had, so flipping a switch on
+     a record that carries an override flag does not flatten it to a bare boolean
+     and drop the company's rule with it. */
+  const writeToggle = (path: string, checked: boolean): void => {
+    const current = watch(path);
+    setValue(
+      path,
+      typeof current === 'object' && current !== null ? { ...current, enabled: checked } : checked,
+    );
+  };
+
+  const shownPolicyFields: PolicyField[] = [
+    'regional',
+    'recording',
+    'transcription',
+    'ai_call_monitoring',
+    'display_number',
+    ...(isShowVoicemail ? (['voicemail'] as PolicyField[]) : []),
+  ];
+  const hasCompanyLockedFields = shownPolicyFields.some((field) => !canEditField(field));
+
   const isUpdatingAdmin =
     ['ADMIN'].includes(data?.role_data?.name) || ['ADMIN'].includes(data?.role);
   const [bussinessHourError, setBussinessHourEror] = useState<string | null>('');
@@ -103,6 +150,16 @@ const CommonSettingPermission: FC<any> = ({
   return (
     <>
       <div className={`flex flex-col gap-4 ${customClass}  pr-1`}>
+        {/* A greyed-out control with no reason given reads as broken. This says who
+            locked it and where it is changed, so the answer is on the page rather
+            than in a support ticket. Shown only when something is actually locked. */}
+        {isOwnSettingsPage && companyPolicy.isActive && hasCompanyLockedFields && (
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
+            Some settings below are greyed out because they are set for everyone by your
+            company. An administrator can change them under{' '}
+            <strong>Phone System → Preferences</strong>.
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-3">
           {/* {IS_ADMIN ? ( */}
           {isShowRole && (
@@ -161,7 +218,9 @@ const CommonSettingPermission: FC<any> = ({
               type="button"
               className="w-16"
               variant={'outline'}
+              disabled={!canEditField('regional')}
               onClick={() => {
+                if (!canEditField('regional')) return;
                 const currentValues = JSON.parse(
                   JSON.stringify(watch('settings.operational_hours.regional')),
                 );
@@ -192,10 +251,10 @@ const CommonSettingPermission: FC<any> = ({
                 className="w-16"
                 variant={'outline'}
                 onClick={() => {
-                  if (!isEditable) return;
+                  if (!canEditField('voicemail')) return;
                   openModal('voicemailModal');
                 }}
-                disabled={!isEditable}
+                disabled={!canEditField('voicemail')}
               >
                 Select
               </Button>
@@ -265,10 +324,10 @@ const CommonSettingPermission: FC<any> = ({
                   className="w-16"
                   variant={'outline'}
                   onClick={() => {
-                    if (!isEditable) return;
+                    if (!canEditField('recording')) return;
                     openModal('automaticRecordingModal');
                   }}
-                  disabled={!isEditable}
+                  disabled={!canEditField('recording')}
                 >
                   Select
                 </Button>
@@ -281,17 +340,19 @@ const CommonSettingPermission: FC<any> = ({
                   <p className="font-semibold truncate text-md">Automatic Transcription</p>
                   <p className="text-gray-800 truncate text-sm">
                     Automatic transcription is{' '}
-                    {watch('settings.transcription') ? 'enabled' : 'disabled'}.
+                    {readToggle('settings.transcription') ? 'enabled' : 'disabled'}.
                   </p>
                 </div>
                 <Switch
-                  checked={watch('settings.transcription')}
-                  disabled={!isEditable}
+                  checked={readToggle('settings.transcription')}
+                  disabled={!canEditField('transcription')}
                   onCheckedChange={(checked) => {
-                    if (!isEditable) return;
-                    setValue('settings.transcription', checked);
+                    if (!canEditField('transcription')) return;
+                    writeToggle('settings.transcription', checked);
+                    /* AI monitoring reads the transcript, so it cannot stay on
+                       once transcription is off. */
                     if (!checked) {
-                      setValue('settings.ai_call_monitoring', false);
+                      writeToggle('settings.ai_call_monitoring', false);
                     }
                   }}
                 />
@@ -306,13 +367,15 @@ const CommonSettingPermission: FC<any> = ({
                   </p>
                 </div>
                 <Switch
-                  checked={watch('settings.ai_call_monitoring')}
-                  disabled={!isEditable}
+                  checked={readToggle('settings.ai_call_monitoring')}
+                  disabled={!canEditField('ai_call_monitoring')}
                   onCheckedChange={(checked) => {
-                    if (!isEditable) return;
-                    setValue('settings.ai_call_monitoring', checked);
+                    if (!canEditField('ai_call_monitoring')) return;
+                    writeToggle('settings.ai_call_monitoring', checked);
+                    /* Monitoring has nothing to read without a transcript, so
+                       switching it on switches transcription on with it. */
                     if (checked) {
-                      setValue('settings.transcription', true);
+                      writeToggle('settings.transcription', true);
                     }
                   }}
                 />
@@ -342,10 +405,10 @@ const CommonSettingPermission: FC<any> = ({
                 className="w-16"
                 variant={'outline'}
                 onClick={() => {
-                  if (!isEditable) return;
+                  if (!canEditField('display_number')) return;
                   openModal('displayNumberModal');
                 }}
-                disabled={!isEditable}
+                disabled={!canEditField('display_number')}
               >
                 Select
               </Button>

@@ -62,7 +62,7 @@ const EditGreeting = ({ modalState, setModalState, initialData = null }: any) =>
             <Button variant={'transparent'} onClick={() => setModalState(false)} type="button">
               Cancel
             </Button>
-            <Button variant={'outline'} type="submit">
+            <Button variant={'primary'} type="submit">
               {isPending ? (
                 <div className="flex items-center justify-center p-5">
                   <Loader variant="blue" size="sm" />

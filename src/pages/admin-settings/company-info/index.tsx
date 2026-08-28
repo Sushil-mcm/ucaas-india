@@ -2,6 +2,10 @@ import { Input } from '@/components/ui/input';
 import { siteDelete, siteList } from '@/services/api';
 import { useMemo, useState } from 'react';
 import CompanyDetails from './company-details';
+import LocationFacts from './location-facts';
+import CompanyRecord from './company-record';
+import CompanySettingsCard from './company-settings-card';
+import SetupGuide from '@/components/mcm/setup-guide';
 import { Button } from '@/components/ui/button';
 import NewSiteSteps from './new-site-steps';
 import AlertConfirm from '@/components/custom/alert-confirm';
@@ -124,11 +128,44 @@ const CompanyInfo = () => {
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-3 sm:px-4">
           <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
-            <p className="text-gray-900 text-sm">
-              Use this feature to add different office locations or branch sites for your company.
-              This allows you to group users by their specific location (e.g., London, Dubai, or
-              Singapore) while keeping everything under one central billing account.
-            </p>
+            {/* Organisation before locations — the order both Genesys and Dialpad
+                use, and the order the platform's own data follows: a location
+                belongs to a company. */}
+            {/* Above the company record: it is the thing a new admin should read
+                first, and it disappears once everything is done. */}
+            <SetupGuide companyInfo={user?.company_info} />
+
+            <CompanyRecord companyInfo={user?.company_info} defaultSite={defaultSite} />
+
+            {/* Company-wide rules belong on the company screen, which is where
+                Dialpad and Genesys put them and where an admin looks. The editor
+                itself stays under Phone System — one editor, one record. */}
+            <CompanySettingsCard />
+
+            {/* A location is not a label — it decides how calls behave for
+                everyone assigned to it. Saying so here saves an admin working it
+                out from the fields. */}
+            <div className="rounded-lg border border-gray-200 bg-white p-3">
+              <p className="text-sm font-semibold text-gray-900">What a location decides</p>
+              <p className="mt-1 text-xs text-gray-600">
+                Add a location for each place your company works from — London, Dubai, Singapore —
+                all under one billing account. For everyone assigned to it, the location sets:
+              </p>
+              <ul className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                <li className="text-xs text-gray-700">
+                  <span className="font-semibold text-gray-900">The clock.</span> Opening and
+                  closing times are read in the location&rsquo;s timezone.
+                </li>
+                <li className="text-xs text-gray-700">
+                  <span className="font-semibold text-gray-900">The number shown.</span> What people
+                  here display when they call out.
+                </li>
+                <li className="text-xs text-gray-700">
+                  <span className="font-semibold text-gray-900">The address on record.</span> Used
+                  when buying local numbers and for regulatory checks.
+                </li>
+              </ul>
+            </div>
             <div className="flex items-center gap-3">
               <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-gray-900">
                 <Briefcase className="h-4.5 w-4.5 text-primary" />
@@ -229,6 +266,7 @@ const CompanyInfo = () => {
                         </p>
                       </div>
                     </div>
+                    <LocationFacts site={defaultSite} />
                   </div>
                 </div>
               </div>
@@ -410,6 +448,7 @@ const CompanyInfo = () => {
                           </p>
                         </div>
                       </div>
+                      <LocationFacts site={site} />
                     </div>
                   );
                 })
@@ -420,6 +459,7 @@ const CompanyInfo = () => {
       )}
       {drawerState && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState}
           isTab={false}
           handleClose={() => setDrawerState(false)}
@@ -428,6 +468,7 @@ const CompanyInfo = () => {
       )}
       {drawerState2 && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState2}
           handleClose={() => setDrawerState2(false)}
           isTab={false}

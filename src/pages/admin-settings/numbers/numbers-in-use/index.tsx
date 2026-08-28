@@ -1,4 +1,5 @@
 import { Plus, SearchLine } from '@/assets/icons';
+import { parseForwardActions } from '@/lib/call-standard';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
@@ -21,7 +22,12 @@ import AssignDIDNumber from '../assign-did';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import AddNumber from '../all-numbers/add-number-new';
-import { FORWARD_TYPES } from '@/constants/forwarding-consts';
+import {
+  FORWARD_TYPES_WITH_EXTENSION,
+  FORWARD_TYPES_WITH_NAME,
+  FORWARD_TYPES_WITH_PHONE,
+  getDidTypeLabel,
+} from '../utils';
 
 interface IAllNumberState {
   updateForwarding: boolean;
@@ -37,7 +43,11 @@ const NumbersInUse = () => {
   const [search, setSearch] = useState<string>('');
   const [openDrawer, setOpenDrawer] = useState(false);
   const { user } = useUser();
-  const isPlanExpired = user?.companyInfo?.plan_status === 'EXPIRED';
+  /* `companyInfo` does not exist on the user object — the field is `company_info`
+     everywhere else in the codebase, including the next line of this same file.
+     So this always read undefined and a customer with an expired subscription
+     could still open the buy-a-number flow. */
+  const isPlanExpired = user?.company_info?.plan_status === 'EXPIRED';
   const { features } = useCompanyFeatures();
   const virtualNumberAccess = features?.plan_features?.virtual_numbers;
   const [allNumberState, setAllNumberState] = useState<IAllNumberState>({
@@ -52,7 +62,8 @@ const NumbersInUse = () => {
   const { mutate: mutateRemoveAssignDID, isPending: isPendingRemoveAssignDID } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['usedNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Assigned DID Removed Successfully.',
         type: 'success',
@@ -68,7 +79,8 @@ const NumbersInUse = () => {
   const { mutate: mutateReleaseForwarding, isPending: isPendingReleaseForwarding } = useMutation({
     mutationFn: releaseForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['usedNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -83,7 +95,8 @@ const NumbersInUse = () => {
   const { mutate: mutateRemoveForwarding, isPending: isPendingRemovingForwarding } = useMutation({
     mutationFn: removeForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['usedNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -158,12 +171,14 @@ const NumbersInUse = () => {
       cell: ({ row }: any) => {
         const data = row?.original || {};
 
-        const parsedForwardTo =
-          data?.forward_call_actions && JSON.parse(data?.forward_call_actions);
+        /* Parsed defensively: an unguarded JSON.parse here throws during render,
+           and one malformed forward_call_actions row would blank the entire
+           table rather than that single cell. */
+        const parsedForwardTo = parseForwardActions(data?.forward_call_actions);
         const forwardedValue = parsedForwardTo?.call_handling?.business_hours || '';
         return (
           <div>
-            {[FORWARD_TYPES.EXTENSION, FORWARD_TYPES.VOICEMAIL].includes(forwardedValue?.type) ? (
+            {FORWARD_TYPES_WITH_EXTENSION.includes(forwardedValue?.type) ? (
               <div className="flex">
                 <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-2.5 py-1 w-auto">
                   <div className="w-7 h-7 rounded-lg border border-primary/30 bg-white flex items-center justify-center text-primary text-base font-semibold leading-none">
@@ -180,17 +195,17 @@ const NumbersInUse = () => {
                   </div>
                 </div>
               </div>
-            ) : [
-                FORWARD_TYPES.DEPARTMENT,
-                FORWARD_TYPES.IVR,
-                FORWARD_TYPES.GREETING,
-                FORWARD_TYPES.HANGUP,
-                FORWARD_TYPES.QUEUE,
-                FORWARD_TYPES.AI,
-              ].includes(forwardedValue?.type) ? (
+            ) : FORWARD_TYPES_WITH_NAME.includes(forwardedValue?.type) ? (
               <div className="flex flex-col items-start">
                 {capitalizeFirstLetter(forwardedValue?.type)}
                 <small>{forwardedValue?.name}</small>
+              </div>
+            ) : FORWARD_TYPES_WITH_PHONE.includes(forwardedValue?.type) ? (
+              <div className="flex flex-col items-start">
+                {capitalizeFirstLetter(forwardedValue?.type)}
+                <small>
+                  <NumberWithFlag number={`+${forwardedValue?.name}`} />
+                </small>
               </div>
             ) : (
               <>
@@ -216,7 +231,7 @@ const NumbersInUse = () => {
       header: 'Type',
       accessorKey: 'did_type',
       cell: ({ row: { original: _val } }: any) => {
-        return _val?.did_type === 'L' ? 'Local' : 'Toll Free';
+        return getDidTypeLabel(_val?.did_type);
       },
     },
 
@@ -398,6 +413,7 @@ const NumbersInUse = () => {
 
         {openDrawer && (
           <SideDrawer
+            width="min(1040px, 84vw)"
             title="Add Number"
             isOpen={openDrawer}
             isTab={false}
@@ -410,6 +426,7 @@ const NumbersInUse = () => {
 
       {allNumberState.updateForwarding && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={allNumberState.updateForwarding}
           title="Update Forwarding"
           isTab={false}

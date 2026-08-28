@@ -131,7 +131,7 @@ const DispositionModal: FC<DispositionProps> = ({ modalState, setModalState, edi
             <Button variant={'transparent'} type="button" onClick={() => setModalState(false)}>
               Cancel
             </Button>
-            <Button variant={'outline'} type="submit" disabled={isPendingAddDisposition}>
+            <Button variant={'primary'} type="submit" disabled={isPendingAddDisposition}>
               {isPendingAddDisposition ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
@@ -141,7 +141,7 @@ const DispositionModal: FC<DispositionProps> = ({ modalState, setModalState, edi
               <Button variant={'transparent'} type="button" onClick={() => setModalState(false)}>
                 Cancel
               </Button>
-              <Button variant={'outline'} type="submit" disabled={isPendingAddDisposition}>
+              <Button variant={'primary'} type="submit" disabled={isPendingAddDisposition}>
                 {isPendingAddDisposition ? 'Submitting...' : 'Submit'}
               </Button>
             </div>

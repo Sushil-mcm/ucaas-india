@@ -345,7 +345,14 @@ const StageColumn = ({
   const [transfer, setTransfer] = useState<null | { conference: boolean }>(null);
   const [dtmfOpen, setDtmfOpen] = useState(false);
   const [panel, setPanel] = useState<null | 'add-user' | 'merge' | 'members' | 'script'>(null);
-  const { defaultCallerIdOption } = useDialpadCallerIdOptions();
+  const {
+    callerIdOptions,
+    defaultCallerIdOption,
+    isCallerIdFallback,
+    isCallerIdUpdating,
+    updateCallerIdSelection,
+  } = useDialpadCallerIdOptions();
+  const [callerIdOpen, setCallerIdOpen] = useState(false);
   const { users } = useUsersDirectory();
   const { dial: dial2 } = useConsoleDialer();
 
@@ -426,10 +433,103 @@ const StageColumn = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="eyebrow">Calling as</span>
-              <span className="chip" style={{ marginLeft: 'auto', height: 26, fontSize: 11 }}>
-                <Ic n="globe" size={12} />
-                {defaultCallerIdOption?.number || 'No caller ID'}
-              </span>
+
+              {/* This was a static chip, so the number shown here could not be
+                  changed without opening the floating dialpad — and when nothing
+                  is stored on the account it shows whichever number happens to
+                  be first. Picking one here writes it, which is the only way it
+                  stops defaulting. */}
+              <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                <button
+                  type="button"
+                  className="chip"
+                  style={{ height: 26, fontSize: 11, cursor: 'pointer' }}
+                  disabled={isCallerIdUpdating || callerIdOptions.length === 0}
+                  aria-haspopup="listbox"
+                  aria-expanded={callerIdOpen}
+                  title="Choose which of your numbers people see"
+                  onClick={() => setCallerIdOpen((open) => !open)}
+                >
+                  <Ic n="globe" size={12} />
+                  {isCallerIdUpdating
+                    ? 'Saving…'
+                    : defaultCallerIdOption?.number || 'No caller ID'}
+                  {callerIdOptions.length > 1 ? <Ic n="chev" size={11} /> : null}
+                </button>
+
+                {callerIdOpen ? (
+                  <>
+                    <div
+                      onClick={() => setCallerIdOpen(false)}
+                      style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                      aria-hidden
+                    />
+                    <div
+                      role="listbox"
+                      aria-label="Caller ID"
+                      className="card"
+                      style={{
+                        position: 'absolute',
+                        top: 32,
+                        right: 0,
+                        zIndex: 41,
+                        minWidth: 232,
+                        padding: 5,
+                        maxHeight: 280,
+                        overflowY: 'auto',
+                      }}
+                    >
+                      {callerIdOptions.map((option) => {
+                        const active = option.id === defaultCallerIdOption?.id;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            role="option"
+                            aria-selected={active}
+                            className="popcell"
+                            style={{
+                              width: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                            }}
+                            onClick={async () => {
+                              setCallerIdOpen(false);
+                              /* No-ops for the placeholder option, and the hook
+                                 refreshes the user so the label follows. */
+                              await updateCallerIdSelection(option);
+                            }}
+                          >
+                            <span className="k" style={{ minWidth: 62 }}>
+                              {option.label}
+                            </span>
+                            <span className="v" style={{ flex: 1 }}>
+                              {option.number}
+                            </span>
+                            {active ? <Ic n="check" size={12} /> : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              {/* Nothing chose this number — it is simply first in the assigned
+                  list. Saying so before the call beats finding out from whoever
+                  answered it. */}
+              {isCallerIdFallback ? (
+                <span
+                  className="chip"
+                  title="No caller ID is saved for you, so the first assigned number is being used. Pick one to save it."
+                  style={{ height: 26, fontSize: 11, color: 'var(--warn, #c2670a)' }}
+                >
+                  default
+                </span>
+              ) : null}
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span className="dial-flag-slot">

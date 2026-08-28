@@ -32,7 +32,7 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
     'Selected user';
 
   const { data, isLoading } = useQuery({
-    queryKey: ['useRolesList'],
+    queryKey: ['useRolesList', false],
     queryFn: () => getRoleList(),
     select: (data) => data?.data?.data?.result?.rows || [],
     enabled: open,

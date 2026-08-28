@@ -139,7 +139,7 @@ const OtpVerification = ({
 
         <div className="flex justify-end w-full">
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             onClick={onConfirm}
             disabled={apiLoading || otp.length !== 6}

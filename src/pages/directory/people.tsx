@@ -8,6 +8,7 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useInstantMeeting } from '@/hooks/use-instant-meeting';
 import { usePeopleRows, type PersonRow } from './people-rows';
+import { useDirectoryFavourites } from './use-directory-favourites';
 import { useUser } from '@/hooks/use-user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMember, removeAssignNumber } from '@/services/api';
@@ -107,6 +108,7 @@ const People = () => {
 
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('All');
+  const { isFavourite, toggleFavourite } = useDirectoryFavourites();
   const [presence, setPresence] = useState('Any');
   const [location, setLocation] = useState('All');
   const [open, setOpen] = useState<PersonRow | null>(null);
@@ -287,6 +289,24 @@ const People = () => {
                   </td>
                   <td>
                     <span className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        className={`mini${isFavourite('person', row.uuid) ? ' mcm-fav-on' : ''}`}
+                        title={
+                          isFavourite('person', row.uuid)
+                            ? `Remove ${row.name} from favourites`
+                            : `Add ${row.name} to favourites`
+                        }
+                        aria-label={
+                          isFavourite('person', row.uuid)
+                            ? `Remove ${row.name} from favourites`
+                            : `Add ${row.name} to favourites`
+                        }
+                        aria-pressed={isFavourite('person', row.uuid)}
+                        onClick={() => toggleFavourite('person', row.uuid)}
+                      >
+                        <Ic n="star" size={12} fill={isFavourite('person', row.uuid)} />
+                      </button>
                       <button
                         type="button"
                         className="mini"
@@ -527,6 +547,7 @@ const People = () => {
         <SideDrawer
           isOpen={inviting}
           title="Invite people"
+          width="min(1180px, 88vw)"
           isTab={false}
           handleClose={() => setInviting(false)}
           content={<AddUsers setDrawerState={() => setInviting(false)} />}

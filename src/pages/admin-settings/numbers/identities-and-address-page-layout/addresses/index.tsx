@@ -208,12 +208,15 @@ const Addresses = ({ search }: { search: string }) => {
             search,
             fetcherKey: 'getAddressesList',
             fetcherFn: getAddressesList,
-            emptyTablePlaceholder: 'No addresses found',
+            emptyTablePlaceholder: 'No addresses yet',
+            descriptionEmptyTable:
+              'Service addresses are created while buying a number that requires one. Any you add during that flow appear here.',
           }}
         />
       </div>
       {drawerState.editAddress && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           title="Edit Address"
           isOpen={drawerState.editAddress}
           isTab={false}

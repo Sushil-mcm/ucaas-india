@@ -144,7 +144,13 @@ const Greetings = () => {
       <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <p className="text-gray-900 font-semibold text-lg">Greetings</p>
+          <div>
+            <p className="text-gray-900 font-semibold text-lg">Greetings</p>
+            <p className="text-gray-500 text-xs">
+              The recordings callers hear on your extension — welcome message, hold music and
+              voicemail.
+            </p>
+          </div>
         </div>
         <div className=" p-4 gap-4 flex flex-col h-full">
           <FormProvider {...methods}>
@@ -154,7 +160,7 @@ const Greetings = () => {
             >
               <GreetingNotification customClass="h-[calc(100vh_-_13rem)]" />
               <div className="flex justify-end">
-                <Button variant={'outline'} type="submit" disabled={PendingGreetingSetting}>
+                <Button variant={'primary'} type="submit" disabled={PendingGreetingSetting}>
                   {PendingGreetingSetting ? 'Please wait...' : 'Submit'}
                 </Button>
               </div>

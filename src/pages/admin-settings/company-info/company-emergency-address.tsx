@@ -1,0 +1,621 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { City, Country, State } from 'country-state-city';
+import { postcodeValidator, postcodeValidatorExistsForCountry } from 'postcode-validator';
+import { AlertTriangle, MapPinIcon, PhoneCall } from 'lucide-react';
+
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import CustomSelect from '@/components/custom/custom-select';
+import Loader from '@/components/custom/loader';
+import { handleAlert } from '@/lib/utils';
+import { useCompanyFeatures } from '@/hooks/rbac';
+import {
+  COMPANY_DEFAULTS_QUERY_KEY,
+  fetchCompanyDefaults,
+  saveCompanyDefaults,
+} from '@/lib/company-defaults';
+
+/**
+ * Emergency address (E911) panel.
+ *
+ * STORAGE
+ * There is no dedicated company-settings endpoint in this app. Company-wide
+ * settings live on a reserved `user_template` row whose `name` is exactly
+ * "Company Default"; its `settings` column is a free-form JSON blob. This panel
+ * reads that row with `templateList` and writes it back with `upsertTemplate`,
+ * touching only the namespaced `settings.emergency_address` key and preserving
+ * every other key untouched. The row is created on first save if it is missing.
+ *
+ * Shape written to `settings.emergency_address`:
+ * {
+ *   schema_version: 1,
+ *   address_line_1: string,
+ *   address_line_2: string,   // suite / floor, optional
+ *   city: string,             // city name
+ *   state: string,            // ISO subdivision code, '' when country has none
+ *   postal_code: string,
+ *   country: string,          // ISO 3166-1 alpha-2 code
+ *   callback_number: string,  // E.164-ish, digits with optional leading +
+ *   routed: false,            // ALWAYS false - nothing consumes this yet
+ *   acknowledged_not_routed: true,
+ *   updated_at: string        // ISO timestamp
+ * }
+ */
+
+const EMERGENCY_ADDRESS_KEY = 'emergency_address';
+const EMERGENCY_ADDRESS_SCHEMA_VERSION = 1;
+
+// Dialpad and most E911 address validators reject PO boxes: responders cannot
+// be sent to a mailbox. Catches "PO Box", "P.O. Box", "Post Office Box", "PMB".
+const PO_BOX_PATTERN =
+  /(\bp\.?\s*o\.?\s*box\b)|(\bpost\s*office\s*box\b)|(\bpostal\s*box\b)|(\bpo\s*bx\b)|(\bp\.?\s*m\.?\s*b\.?\s*#?\s*\d)/i;
+
+const CALLBACK_NUMBER_PATTERN = /^\+?[0-9]{7,15}$/;
+
+const isPoBox = (value?: string | null) => PO_BOX_PATTERN.test(String(value || ''));
+
+const parseJsonBlob = (value: any): Record<string, any> => {
+  if (!value) return {};
+  if (typeof value === 'object') return value as Record<string, any>;
+  try {
+    const parsed = JSON.parse(String(value));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+interface ISelectOption {
+  label: string;
+  value: string;
+}
+
+interface IEmergencyAddressForm {
+  address_line_1: string;
+  address_line_2: string;
+  city: ISelectOption | null;
+  state: ISelectOption | null;
+  postal_code: string;
+  country: ISelectOption | null;
+  callback_number: string;
+}
+
+const DEFAULT_FORM_VALUES: IEmergencyAddressForm = {
+  address_line_1: '',
+  address_line_2: '',
+  city: null,
+  state: null,
+  postal_code: '',
+  country: null,
+  callback_number: '',
+};
+
+const EMERGENCY_ADDRESS_SCHEMA = yup.object({
+  address_line_1: yup
+    .string()
+    .trim()
+    .required('Street address is required')
+    .min(3, 'Enter the full street address')
+    .test('no-po-box', 'A PO box cannot be used. Emergency services need a street address.', (v) =>
+      !isPoBox(v),
+    ),
+  address_line_2: yup
+    .string()
+    .trim()
+    .test('no-po-box', 'A PO box cannot be used. Emergency services need a street address.', (v) =>
+      !isPoBox(v),
+    ),
+  country: yup
+    .object({
+      label: yup.string().required(),
+      value: yup.string().required(),
+    })
+    .nullable()
+    .required('Country is required'),
+  state: yup
+    .object({
+      label: yup.string().required(),
+      value: yup.string().required(),
+    })
+    .nullable()
+    .test('state-required', 'State / province is required', function (value) {
+      const countryCode = String((this.parent as any)?.country?.value || '');
+      if (!countryCode) return true;
+      const hasStates = (State.getStatesOfCountry(countryCode) || []).length > 0;
+      if (!hasStates) return true;
+      return Boolean(value?.value);
+    }),
+  city: yup
+    .object({
+      label: yup.string().required(),
+      value: yup.string().required(),
+    })
+    .nullable()
+    .test('city-required', 'City is required', function (value) {
+      const countryCode = String((this.parent as any)?.country?.value || '');
+      const stateCode = String((this.parent as any)?.state?.value || '');
+      if (!countryCode || !stateCode) return true;
+      const hasCities = (City.getCitiesOfState(countryCode, stateCode) || []).length > 0;
+      if (!hasCities) return true;
+      return Boolean(value?.value);
+    }),
+  postal_code: yup
+    .string()
+    .trim()
+    .required('Postal code is required')
+    .test('valid-postal-code', 'Enter a valid postal code for the selected country', function (v) {
+      const postalCode = String(v || '').trim();
+      if (!postalCode) return false;
+      const countryCode = String((this.parent as any)?.country?.value || '')
+        .trim()
+        .toUpperCase();
+      if (!countryCode) return true;
+      if (!postcodeValidatorExistsForCountry(countryCode)) return postalCode.length >= 3;
+      return postcodeValidator(postalCode, countryCode);
+    }),
+  callback_number: yup
+    .string()
+    .trim()
+    .required('Callback number is required')
+    .test('valid-callback', 'Enter a valid phone number, digits only, e.g. +14155550123', (v) =>
+      CALLBACK_NUMBER_PATTERN.test(String(v || '').replace(/[\s()-]/g, '')),
+    ),
+});
+
+const CompanyEmergencyAddress = () => {
+  const queryClient = useQueryClient();
+  const { features, IS_ADMIN } = useCompanyFeatures();
+  const siteAccess = features?.plan_features?.account_setting?.access?.SITE?.action;
+  const canView = Boolean(siteAccess?.view) || IS_ADMIN;
+  const canEdit = Boolean(siteAccess?.edit) || IS_ADMIN;
+
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  const formInstance = useForm<any>({
+    defaultValues: DEFAULT_FORM_VALUES,
+    resolver: yupResolver(EMERGENCY_ADDRESS_SCHEMA),
+    mode: 'onChange',
+  });
+
+  const {
+    control,
+    register,
+    reset,
+    setValue,
+    watch,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = formInstance;
+
+  const [watchedCountry, watchedState] = watch(['country', 'state']);
+
+  // Reserved company-wide settings row. There is no company-settings endpoint;
+  // the "Company Default" user_template row is the agreed home for these.
+  const {
+    data: companyDefaultRow,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    enabled: canView,
+    queryFn: fetchCompanyDefaults,
+  });
+
+  const storedSettings = useMemo(
+    () => parseJsonBlob(companyDefaultRow?.settings),
+    [companyDefaultRow?.settings],
+  );
+
+  const storedAddress = useMemo(
+    () => parseJsonBlob(storedSettings?.[EMERGENCY_ADDRESS_KEY]),
+    [storedSettings],
+  );
+
+  const countryOptions = useMemo(
+    () =>
+      (Country.getAllCountries() || []).map((country) => ({
+        label: country.name,
+        value: country.isoCode,
+      })),
+    [],
+  );
+
+  const stateOptions = useMemo(() => {
+    const countryCode = watchedCountry?.value;
+    if (!countryCode) return [];
+    return (State.getStatesOfCountry(countryCode) || []).map((stateItem) => ({
+      label: stateItem.name,
+      value: stateItem.isoCode,
+    }));
+  }, [watchedCountry?.value]);
+
+  const cityOptions = useMemo(() => {
+    const countryCode = watchedCountry?.value;
+    const stateCode = watchedState?.value;
+    if (!countryCode || !stateCode) return [];
+    return (City.getCitiesOfState(countryCode, stateCode) || []).map((cityItem) => ({
+      label: cityItem.name,
+      value: cityItem.name,
+    }));
+  }, [watchedCountry?.value, watchedState?.value]);
+
+  const hasStates = stateOptions.length > 0;
+  const hasCities = cityOptions.length > 0;
+
+  // Hydrate the form once the reserved row has loaded.
+  useEffect(() => {
+    if (isLoading) return;
+
+    const countryCode = String(storedAddress?.country || '');
+    const countryOption = countryOptions.find((option) => option.value === countryCode) || null;
+
+    const stateCode = String(storedAddress?.state || '');
+    const stateOption = countryCode
+      ? (State.getStatesOfCountry(countryCode) || [])
+          .map((stateItem) => ({ label: stateItem.name, value: stateItem.isoCode }))
+          .find((option) => option.value === stateCode) || null
+      : null;
+
+    const cityName = String(storedAddress?.city || '');
+
+    reset({
+      address_line_1: storedAddress?.address_line_1 || '',
+      address_line_2: storedAddress?.address_line_2 || '',
+      city: cityName ? { label: cityName, value: cityName } : null,
+      state: stateOption,
+      postal_code: storedAddress?.postal_code || '',
+      country: countryOption,
+      callback_number: storedAddress?.callback_number || '',
+    });
+    setAcknowledged(false);
+  }, [isLoading, storedAddress, countryOptions, reset]);
+
+  const { mutate: saveEmergencyAddress, isPending: isSaving } = useMutation({
+    mutationFn: saveCompanyDefaults,
+    onSuccess: (response: any) => {
+      handleAlert({
+        text: response?.data?.message || 'Emergency address saved. It is recorded, not routed.',
+        type: 'success',
+      });
+      /* Every company-level card reads this one row, so they all re-read after
+         a save. Without this a sibling card would merge onto a stale blob and
+         wipe what was just written here. */
+      queryClient.invalidateQueries({ queryKey: COMPANY_DEFAULTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['userTemplateList'] });
+    },
+    onError: (error: any) => {
+      handleAlert({
+        text: error?.response?.data?.message || 'Could not save the emergency address',
+        type: 'error',
+      });
+    },
+  });
+
+  const onSubmit = (values: IEmergencyAddressForm) => {
+    if (!canEdit) {
+      return handleAlert({
+        text: 'You do not have permission to change the emergency address',
+        type: 'error',
+      });
+    }
+    if (!acknowledged) {
+      return handleAlert({
+        text: 'Please confirm you understand this address does not route emergency calls',
+        type: 'error',
+      });
+    }
+
+    const emergencyAddress = {
+      schema_version: EMERGENCY_ADDRESS_SCHEMA_VERSION,
+      address_line_1: String(values.address_line_1 || '').trim(),
+      address_line_2: String(values.address_line_2 || '').trim(),
+      city: String(values.city?.value || '').trim(),
+      state: String(values.state?.value || '').trim(),
+      postal_code: String(values.postal_code || '').trim(),
+      country: String(values.country?.value || '').trim(),
+      callback_number: String(values.callback_number || '').replace(/[\s()-]/g, ''),
+      // Nothing in the call path reads this yet. Keep it false until the
+      // carrier / switch work lands and something actually routes on it.
+      routed: false,
+      acknowledged_not_routed: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Merge, never replace: the blob holds other company-wide settings.
+    const nextSettings = {
+      ...storedSettings,
+      [EMERGENCY_ADDRESS_KEY]: emergencyAddress,
+    };
+
+    const storedGreetings = parseJsonBlob(companyDefaultRow?.greetings);
+
+    saveEmergencyAddress({
+      uuid: companyDefaultRow?.uuid,
+      settings: nextSettings,
+      greetings: storedGreetings,
+    });
+  };
+
+  const savedAt = storedAddress?.updated_at ? new Date(storedAddress.updated_at) : null;
+  const hasSavedAddress = Boolean(storedAddress?.address_line_1);
+
+  if (!canView) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+        <p className="text-sm font-semibold text-gray-900">
+          You do not have permission to view the emergency address
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="flex w-full flex-col gap-4">
+      <div className="flex items-start gap-3">
+        <MapPinIcon className="mt-0.5 h-4.5 w-4.5 text-primary" />
+        <div className="flex flex-col gap-0.5">
+          <h5 className="text-base font-semibold tracking-wide text-gray-900">
+            Emergency address (E911)
+          </h5>
+          <p className="text-xs font-medium text-gray-700">
+            The street address emergency responders would be sent to, and the number they would
+            call back on.
+          </p>
+        </div>
+      </div>
+
+      {/* The whole point of this panel: say plainly that nothing routes on it. */}
+      <div
+        role="alert"
+        className="rounded-xl border-2 border-red-300 bg-red-50 p-4 text-red-900 shadow-sm"
+      >
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-bold uppercase tracking-wide text-red-700">
+              This address is written down. It is not used to route emergency calls.
+            </p>
+            <p className="text-sm font-medium">
+              If someone dials 911 or another emergency number from a desk phone or from this app,
+              the call is <span className="font-bold">not</span> sent using this address, and this
+              address is <span className="font-bold">not</span> passed to the responders. The part
+              of the system that connects the call does not read this field at all. Building that
+              needs work with our phone carrier and our call switch, and it has not been done yet.
+            </p>
+            <p className="text-sm font-medium">
+              Until that work is finished, keep a normal phone line or a mobile phone available for
+              emergencies, and tell everyone at this address not to rely on this system to call for
+              help.
+            </p>
+            <p className="text-sm font-medium">
+              In the US, Kari&apos;s Law and the RAY BAUM&apos;S Act require emergency calls to
+              work and to carry a usable address. Saving this form does{' '}
+              <span className="font-bold">not</span> make the account compliant with either law.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-10">
+          <div className="flex items-center justify-center">
+            <Loader variant="blue" size="md" />
+          </div>
+        </div>
+      ) : isError ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+          <p className="text-sm font-semibold text-gray-900">
+            Could not load the saved emergency address
+          </p>
+          <p className="text-xs text-gray-600">Refresh the page and try again.</p>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit(onSubmit as any)}
+          className="flex flex-col gap-5 rounded-xl bg-white p-4 shadow-sm"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 pb-3">
+            <p className="text-sm font-semibold text-gray-900">Address on record</p>
+            <p className="text-xs text-gray-500">
+              {hasSavedAddress && savedAt
+                ? `Last saved ${savedAt.toLocaleString()} - recorded only, not routed`
+                : 'Nothing saved yet'}
+            </p>
+          </div>
+
+          <Input
+            label="Street address (line 1)"
+            placeholder="e.g. 100 Market Street"
+            maxLength={120}
+            disabled={!canEdit}
+            error={errors?.address_line_1?.message}
+            {...register('address_line_1')}
+          />
+
+          <Input
+            label="Suite / floor / building (line 2, optional)"
+            placeholder="e.g. Suite 400, 4th floor"
+            maxLength={120}
+            disabled={!canEdit}
+            error={errors?.address_line_2?.message}
+            {...register('address_line_2')}
+          />
+
+          <div className="flex w-full flex-col gap-4 md:flex-row">
+            <div className={`relative flex w-full gap-1 ${hasStates ? 'md:w-1/2' : 'md:w-full'}`}>
+              <Controller
+                control={control}
+                name="country"
+                render={({ field }) => (
+                  <CustomSelect
+                    label="Country"
+                    placeholder="Select country"
+                    options={countryOptions}
+                    value={field.value}
+                    isDisabled={!canEdit}
+                    handleChange={(option) => {
+                      field.onChange(option);
+                      setValue('state', null, { shouldValidate: true, shouldDirty: true });
+                      setValue('city', null, { shouldValidate: true, shouldDirty: true });
+                    }}
+                    error={errors?.country?.message}
+                  />
+                )}
+              />
+            </div>
+            {hasStates && (
+              <div className="relative flex w-full gap-1 md:w-1/2">
+                <Controller
+                  control={control}
+                  name="state"
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="State / province"
+                      placeholder="Select state"
+                      options={stateOptions}
+                      value={field.value}
+                      isDisabled={!canEdit}
+                      handleChange={(option) => {
+                        field.onChange(option);
+                        setValue('city', null, { shouldValidate: true, shouldDirty: true });
+                      }}
+                      error={errors?.state?.message}
+                    />
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex w-full flex-col gap-4 md:flex-row">
+            {hasCities ? (
+              <div className="relative flex w-full gap-1 md:w-1/2">
+                <Controller
+                  control={control}
+                  name="city"
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="City"
+                      placeholder="Select city"
+                      options={cityOptions}
+                      value={field.value}
+                      isDisabled={!canEdit}
+                      handleChange={(option) => field.onChange(option)}
+                      error={errors?.city?.message}
+                      menuPlacement="top"
+                    />
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="relative flex w-full gap-1 md:w-1/2">
+                <Controller
+                  control={control}
+                  name="city"
+                  render={({ field }) => (
+                    <Input
+                      label="City"
+                      placeholder="Enter city"
+                      maxLength={60}
+                      disabled={!canEdit}
+                      value={field.value?.value || ''}
+                      onChange={(event) => {
+                        const cityName = event.target.value;
+                        field.onChange(cityName ? { label: cityName, value: cityName } : null);
+                      }}
+                      error={errors?.city?.message}
+                    />
+                  )}
+                />
+              </div>
+            )}
+            <div className="relative flex w-full gap-1 md:w-1/2">
+              <Input
+                label="Postal code"
+                placeholder="Enter postal code"
+                maxLength={12}
+                disabled={!canEdit}
+                error={errors?.postal_code?.message}
+                {...register('postal_code')}
+              />
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-4 md:flex-row">
+            <div className="relative flex w-full gap-1 md:w-1/2">
+              <Input
+                label="Emergency callback number"
+                placeholder="e.g. +14155550123"
+                maxLength={16}
+                disabled={!canEdit}
+                Icon={<PhoneCall className="h-4 w-4 text-gray-500" />}
+                error={errors?.callback_number?.message}
+                {...register('callback_number')}
+              />
+            </div>
+            <div className="flex w-full items-end md:w-1/2">
+              <p className="text-xs text-gray-500">
+                The number responders would ring if the emergency call drops. Today nothing dials
+                it automatically - it is stored for your records and for whoever you hand this
+                address to.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="text-xs font-medium text-amber-900">
+              A PO box will be rejected. Emergency responders need a street address they can drive
+              to, so a mailbox is not accepted here - this matches what Dialpad and other providers
+              require.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <Checkbox
+              id="emergency-address-acknowledgement"
+              checked={acknowledged}
+              disabled={!canEdit}
+              onCheckedChange={(checked) => setAcknowledged(checked === true)}
+              className="mt-0.5"
+            />
+            <Label
+              htmlFor="emergency-address-acknowledgement"
+              className="cursor-pointer items-start text-xs font-medium leading-5 text-gray-800"
+            >
+              I understand this address is only written down. It does not route emergency calls and
+              it is not sent to emergency responders.
+            </Label>
+          </div>
+
+          {canEdit && (
+            <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isSaving || !isDirty}
+                onClick={() => {
+                  reset();
+                  setAcknowledged(false);
+                }}
+              >
+                Reset
+              </Button>
+              <Button type="submit" variant="primary" disabled={isSaving || !acknowledged}>
+                {isSaving ? <Loader variant="white" size="xs" /> : null}
+                Save emergency address
+              </Button>
+            </div>
+          )}
+        </form>
+      )}
+    </section>
+  );
+};
+
+export default CompanyEmergencyAddress;

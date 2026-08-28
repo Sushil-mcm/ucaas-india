@@ -77,7 +77,12 @@ const SettingsNotification = () => {
     <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
       {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <p className="text-gray-900 font-semibold text-lg">Notifications</p>
+        <div>
+          <p className="text-gray-900 font-semibold text-lg">Notifications</p>
+          <p className="text-gray-500 text-xs">
+            What you get alerted about, and whether it arrives in the browser, by email or both.
+          </p>
+        </div>
       </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -98,16 +103,31 @@ const SettingsNotification = () => {
                   ) : (
                     <Icon name={item?.iconName} className={item?.iconClass} />
                   )}
-                  <p className="font-semibold truncate text-md text-gray-900  ">{item?.name}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate text-md text-gray-900">{item?.name}</p>
+                    {(item as any)?.description && (
+                      <p className="text-xs text-gray-500">{(item as any).description}</p>
+                    )}
+                  </div>
+                  {/* Every channel off means this event reaches the person nowhere.
+                      Nothing said so, so it looked configured rather than silent. */}
+                  {!item?.settingsType?.some(({ value }) => watch(`${item?.value}.${value}`)) && (
+                    <span className="ml-auto shrink-0 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+                      You will not be told
+                    </span>
+                  )}
                 </div>
                 <div className="flex xs:flex-wrap sm:flex-nowrap  justify-between gap-4 px-4 py-3 w-full">
-                  {item?.settingsType?.map(({ label, value }) => {
+                  {item?.settingsType?.map(({ label, value, hint }: any) => {
                     return (
                       <div key={value} className="w-full flex flex-col gap-2">
                         <div
                           className={`w-full flex items-center justify-between gap-2 ${watch(`${item?.value}.${value}`) ? 'bg-ucass-primary-200/50 border-primary/15' : 'border-gray-200 bg-gray-100'}  border  rounded-md p-3`}
                         >
-                          <Label className="text-gray-700 text-sm">{label}:</Label>
+                          <div className="min-w-0">
+                            <Label className="text-gray-700 text-sm">{label}</Label>
+                            {hint && <p className="text-[11px] leading-tight text-gray-500">{hint}</p>}
+                          </div>
                           <Switch
                             disabled={item?.id === 3 && value === 'sms'}
                             className="cursor-pointer"
@@ -141,8 +161,8 @@ const SettingsNotification = () => {
             ))}
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button variant={'outline'} type="submit" disabled={isPending}>
+        <div className="flex justify-end mcm-stickyfoot">
+          <Button variant={'primary'} type="submit" disabled={isPending}>
             {isPending ? 'Submitting...' : 'Submit'}
           </Button>
         </div>

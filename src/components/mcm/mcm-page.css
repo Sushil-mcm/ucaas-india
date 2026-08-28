@@ -2394,34 +2394,6 @@
   color: var(--ink-4);
 }
 
-/* Star sits quiet until the row is hovered or the item is already a
-   favourite, so the list reads as links rather than a row of controls. */
-.mcm-admincard-star {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  margin-right: 6px;
-  border-radius: 999px;
-  color: var(--ink-4);
-  opacity: 0;
-  transition:
-    opacity 0.12s ease,
-    color 0.12s ease;
-}
-.mcm-admincard li:hover .mcm-admincard-star,
-.mcm-admincard-star[aria-pressed='true'] {
-  opacity: 1;
-}
-.mcm-admincard-star[aria-pressed='true'] {
-  color: var(--warn);
-}
-.mcm-admincard-star:hover {
-  color: var(--accent);
-  background: var(--surface-3);
-}
 
 .mcm-adminhome-empty {
   margin: 40px 0 0;
@@ -3027,4 +2999,396 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 14px;
+}
+
+/* ==================================================================
+   Statement of account
+   ================================================================== */
+.mcm-admin .mcm-soa {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* The four figures that answer "where does this account stand". */
+.mcm-admin .mcm-soa-figures {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.mcm-admin .mcm-soa-fig {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.mcm-admin .mcm-soa-fig.warn {
+  border-left-color: var(--warn);
+}
+.mcm-admin .mcm-soa-fig.bad {
+  border-left-color: var(--crit);
+}
+.mcm-admin .mcm-soa-fig-l {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mcm-admin .mcm-soa-fig-v {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-admin .mcm-soa-fig-s {
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+
+.mcm-admin .mcm-soa-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.mcm-admin .mcm-soa-card-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line-2);
+}
+.mcm-admin .mcm-soa-card-h h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mcm-admin .mcm-soa-card-h p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.mcm-admin .mcm-soa-period {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+.mcm-admin .mcm-soa-period-v {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* Allowance meters — what is left of what was bought. */
+.mcm-admin .mcm-soa-meters {
+  display: grid;
+  gap: 18px 24px;
+  padding: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.mcm-admin .mcm-soa-meter-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.mcm-admin .mcm-soa-meter-l {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.mcm-admin .mcm-soa-meter-v {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-admin .mcm-soa-meter-v.over {
+  color: var(--crit);
+}
+.mcm-admin .mcm-soa-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.mcm-admin .mcm-soa-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.mcm-admin .mcm-soa-bar-fill.warm {
+  background: var(--warn);
+}
+.mcm-admin .mcm-soa-bar-fill.hot {
+  background: var(--crit);
+}
+.mcm-admin .mcm-soa-note {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+
+/* Row count under a Directory table. */
+.mcm-page .mcm-tblfoot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--line-2);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Plan-change notice on Billing ▸ Plan. */
+.mcm-admin .mcm-planchange {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 15px;
+  border: 1px solid var(--accent-edge);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r);
+  background: var(--accent-wash);
+}
+.mcm-admin .mcm-planchange.down {
+  border-color: color-mix(in srgb, var(--live) 35%, transparent);
+  border-left-color: var(--live);
+  background: color-mix(in srgb, var(--live) 9%, transparent);
+}
+.mcm-admin .mcm-planchange strong {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mcm-admin .mcm-planchange span {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* What credit buys — on Billing ▸ Credit & Payment. */
+.mcm-admin .mcm-creditwhat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.mcm-admin .mcm-creditwhat strong {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mcm-admin .mcm-creditwhat ul {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mcm-admin .mcm-creditwhat li {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.mcm-admin .mcm-creditwhat span {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* The tab strip is a flex row, so pushing Clear to the far end keeps it from
+   reading as a fourth tab. */
+.mcm-adminhome-tabs {
+  display: flex;
+  align-items: center;
+}
+.mcm-adminhome-clear {
+  margin-left: auto;
+  padding: 0 10px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+.mcm-adminhome-clear:hover {
+  color: var(--crit);
+  background: var(--surface-3);
+}
+
+/* ── Directory favourites ─────────────────────────────────────────────────
+   The star in a table row. `.mini` gives it the shape of the other row
+   actions; this only colours it once it is on, so a list of favourites reads
+   at a glance without the star competing with call/message when it is off. */
+.mcm-page .mini.mcm-fav-on,
+.mcm-page .mini.mcm-fav-on:hover {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, var(--line));
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+}
+
+
+/* ── Call coverage ────────────────────────────────────────────────────────
+   The count chip goes red when numbers are dropping calls, so the headline
+   figure carries its own severity rather than relying on the reader to know
+   that a non-zero count is bad. */
+.mcm-page .fchip.bad {
+  border-color: color-mix(in srgb, var(--crit) 35%, var(--line));
+  background: color-mix(in srgb, var(--crit) 8%, var(--surface));
+  color: var(--crit);
+}
+.mcm-page .fchip.bad .num {
+  color: var(--crit);
+}
+
+/* A call is a path, so what gets written is shown as one — ending on the
+   step that catches the caller. */
+.mcm-flowpath {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+}
+.mcm-flowstep {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mcm-flowpath .chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mcm-flowpath .chip.end {
+  background: color-mix(in srgb, var(--live) 12%, var(--surface));
+  border-color: transparent;
+  color: var(--live);
+}
+.mcm-flowpath .arw {
+  color: var(--ink-4);
+  font-size: 13px;
+}
+
+.mcm-flowfacts {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mcm-flowfacts li {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+.mcm-flowfacts strong {
+  color: var(--ink-2);
+}
+
+/* ── Call Rules: the precedence chain ─────────────────────────────────────
+   Forward All Calls, Incoming Calls and the fallback look like three
+   independent switches but are read in order, so a person can turn on
+   forwarding while tuning ring times and silently stop their phone ringing.
+   The summary states the outcome; the rank labels state the order. */
+.mcm-callsummary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--live);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+.mcm-callsummary.warn {
+  border-left-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 7%, var(--surface));
+}
+.mcm-callsummary-l {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mcm-callsummary p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.mcm-rule-rank {
+  flex: none;
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.mcm-rule-rank.off {
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  color: var(--warn);
+}
+@media (max-width: 720px) {
+  .mcm-rule-rank {
+    display: none;
+  }
+}
+
+/* Sticky action bar for a form whose Submit sits inside the scrolling area.
+   Several pages put the save button at the natural end of a long form, which
+   means it is below the fold until the person scrolls to the bottom — easy to
+   miss entirely, and the most common reason a change is filled in and never
+   saved. Sticking it to the bottom of its own scroll container keeps it on
+   screen without moving it out of the form it belongs to. */
+.mcm-stickyfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 0;
+  background: var(--surface-1, #fff);
+  border-top: 1px solid var(--line, #e5e7eb);
+}
+
+/* Pushes any hint text to the left of the buttons. */
+.mcm-stickyfoot .mcm-stickyfoot-hint {
+  margin-right: auto;
+  color: var(--ink-3, #6b7280);
+  font-size: 12px;
 }

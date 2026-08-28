@@ -9,6 +9,7 @@ import SendWhatsappMessage from '@/pages/messenger/drawers/send-whatsapp-message
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { Ic } from '@/components/mcm/icons';
 import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
+import { useDirectoryFavourites } from './use-directory-favourites';
 
 /**
  * Directory ▸ External — people outside the organisation.
@@ -54,6 +55,7 @@ const tagOf = (row: Contact) => {
 const External = () => {
   const navigate = useNavigate();
   const { dial } = useConsoleDialer();
+  const { isFavourite, toggleFavourite } = useDirectoryFavourites();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState('All');
   const [open, setOpen] = useState<Contact | null>(null);
@@ -116,8 +118,8 @@ const External = () => {
   return (
     <>
       <DirectoryPage
-        title="Contacts"
-        description="Contacts outside the organisation — call, message, WhatsApp and their history."
+        title="External Contacts"
+        description="People outside the organisation — who they work for, how to reach them, and every channel you can use."
         actions={
           <button type="button" className="btn primary" onClick={() => navigate('/contact')}>
             <Ic n="plus" />
@@ -143,8 +145,10 @@ const External = () => {
           <thead>
             <tr>
               <th>Contact</th>
+              <th>Organisation</th>
+              <th>Role</th>
               <th>Phone</th>
-              <th>Company</th>
+              <th>Email</th>
               <th>Groups</th>
               <th>Tag</th>
               <th>Updated</th>
@@ -188,21 +192,25 @@ const External = () => {
                         />
                         <span style={{ minWidth: 0 }}>
                           <span style={{ fontWeight: 700, display: 'block' }}>{name}</span>
-                          {row?.contact?.email ? (
+                          {row?.contact?.webpage ? (
                             <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>
-                              {row.contact.email}
+                              {row.contact.webpage}
                             </span>
                           ) : null}
                         </span>
                       </span>
                     </td>
-                    <td className="num">{phone || '—'}</td>
                     {/* The contact form writes company into `profile`; the
                         top-level key is only a fallback on some responses. */}
                     <td>
                       {row?.profile?.company || row?.company || (
                         <span style={{ color: 'var(--ink-4)' }}>—</span>
                       )}
+                    </td>
+                    <td>{row?.title || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
+                    <td className="num">{phone || '—'}</td>
+                    <td>
+                      {row?.contact?.email || <span style={{ color: 'var(--ink-4)' }}>—</span>}
                     </td>
                     <td>
                       {groups.length ? (
@@ -274,6 +282,24 @@ const External = () => {
                         >
                           <Ic n="clock" size={12} />
                         </button>
+                        <button
+                          type="button"
+                          className={`mini${isFavourite('contact', row?._id) ? ' mcm-fav-on' : ''}`}
+                          title={
+                            isFavourite('contact', row?._id)
+                              ? `Remove ${name} from favourites`
+                              : `Add ${name} to favourites`
+                          }
+                          aria-label={
+                            isFavourite('contact', row?._id)
+                              ? `Remove ${name} from favourites`
+                              : `Add ${name} to favourites`
+                          }
+                          aria-pressed={isFavourite('contact', row?._id)}
+                          onClick={() => toggleFavourite('contact', row?._id)}
+                        >
+                          <Ic n="star" size={12} fill={isFavourite('contact', row?._id)} />
+                        </button>
                       </span>
                     </td>
                   </tr>
@@ -281,12 +307,18 @@ const External = () => {
               })
             ) : (
               <EmptyRow
-                span={7}
+                span={9}
                 message={rows.length ? 'No contacts match those filters.' : 'No contacts yet.'}
               />
             )}
           </tbody>
         </table>
+
+        {rows.length ? (
+          <div className="mcm-tblfoot">
+            Showing {visible.length} of {rows.length} contact{rows.length === 1 ? '' : 's'}
+          </div>
+        ) : null}
 
         {open ? (
           <DirectoryDrawer

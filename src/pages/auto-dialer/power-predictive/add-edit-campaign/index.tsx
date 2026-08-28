@@ -716,7 +716,7 @@ const CreateCampaign = (props: Props) => {
           </div>
         </div>
         <div className="flex items-center justify-end px-3">
-          <Button variant={'outline'} type="submit" disabled={isPendingAddCampaign}>
+          <Button variant={'primary'} type="submit" disabled={isPendingAddCampaign}>
             {isPendingAddCampaign ? 'Saving...' : 'Save'}
           </Button>
         </div>

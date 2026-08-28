@@ -154,7 +154,7 @@ const CustomizePlanModal = ({
         <Button type="button" variant="transparent" onClick={handleClose}>
           Cancel
         </Button>
-        <Button type="submit" variant={'outline'} disabled={isPending}>
+        <Button type="submit" variant={'primary'} disabled={isPending}>
           {isPending && <Loader variant="blue" />} Send Message
         </Button>
       </div>

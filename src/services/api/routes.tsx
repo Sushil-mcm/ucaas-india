@@ -1367,7 +1367,10 @@ export const routes = {
 
   CAMPAIGN_DELETE: {
     METHOD: 'POST',
-    URL: '/api/v1/brand/campaign-delete ',
+    /* Had a trailing space, which encodes to %20 and never matches the backend
+       route — so deleting a 10DLC campaign always 404'd, and the confirm dialog
+       never closed because it only closes on success. */
+    URL: '/api/v1/brand/campaign-delete',
   },
 
   CAMPAIGN_10DLC: {
@@ -1429,6 +1432,21 @@ export const routes = {
     URL: '/api/v1/meeting/detail',
   },
 
+  /* Returns the whole company record. The user-details endpoint builds
+     company_info from a fixed attribute list that leaves out name, city, state,
+     country and postal code — which is why the company name could not be shown
+     from it. This one returns every column. */
+  COMPANY_INFO: {
+    METHOD: 'GET',
+    URL: '/api/admin/company/info',
+  },
+  /* Updates the company's own record — name and postal address. The endpoint
+     existed all along; nothing in the app had ever called it, which is why the
+     company name was set at signup and never editable again. */
+  COMPANY_UPSERT: {
+    METHOD: 'POST',
+    URL: '/api/admin/company/upsert',
+  },
   // MAIN SITE INFO
   MAIN_SITE_INFO: {
     METHOD: 'POST',

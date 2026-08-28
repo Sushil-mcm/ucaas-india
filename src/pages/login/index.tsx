@@ -492,7 +492,7 @@ const Login = () => {
 
                       {canSubmit && (
                         <Button
-                          variant={'outline'}
+                          variant={'primary'}
                           type="submit"
                           className="w-full rounded-xl"
                           disabled={isSendOtpPending || isLoginPending}

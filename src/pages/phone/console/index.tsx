@@ -6,6 +6,7 @@ import CallListColumn, { type ConsoleCallRow, type ConsoleLogSource } from './ca
 import StageColumn from './stage-column';
 import PanelColumn from './panel-column';
 import { useConsoleCall } from './use-console-call';
+import { useCallLogRefresh } from './use-call-log-refresh';
 import {
   checklistState,
   contactDisplayName,
@@ -31,6 +32,10 @@ import './console.css';
 const PhoneConsole = () => {
   const { user } = useUser();
   const { dialpad, session, state, secs, endWrapup } = useConsoleCall();
+
+  /* A call placed from this page did not show up in the list beside it until
+     the query happened to refetch. This watches for hangup and refreshes. */
+  useCallLogRefresh();
   const [selectedCall, setSelectedCall] = useState<ConsoleCallRow | null>(null);
   const [logSource, setLogSource] = useState<ConsoleLogSource>('call');
   // a request from the stage to open a specific panel tab (transcript for a leg)

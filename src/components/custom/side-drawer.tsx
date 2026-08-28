@@ -83,6 +83,8 @@ const SideDrawer: FC<SideDrawerProps> = ({
           <div
             className={cn(
               'flex min-h-11 items-center justify-between gap-1.5 px-5 text-gray-900',
+              /* Room for the close button so a long title cannot run underneath it. */
+              isCloseIcon && 'pr-16',
               headerClassName,
             )}
           >
@@ -95,22 +97,29 @@ const SideDrawer: FC<SideDrawerProps> = ({
           </div>
         )}
         {isCloseIcon && (
+          /* Top-right, one size at every breakpoint. This was a 24px circle
+             holding an 8px glyph at left-[-.8rem] — half of it outside the panel
+             and unclickable — coloured red, which reads as "delete", with a hover
+             class that was not a real Tailwind utility so hovering did nothing.
+             Right rather than left because 56 of the drawers in this app render a
+             left-aligned title along the top, and a button inside the panel on
+             that side would sit on top of the words. */
           <button
             type="button"
             onClick={handleClose}
+            aria-label="Close"
+            title="Close"
             className={cn(
-              'flex absolute justify-center items-center cursor-pointer border rounded-full',
-              enableResponsive && isSmallScreen
-                ? 'left-3 top-3 h-8 w-8 border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50'
-                : 'left-[-.8rem] top-0 h-6 w-6 text-white bg-red-500 hover:bg-red/80',
+              'absolute right-4 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center',
+              'rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors',
+              'hover:bg-gray-100 hover:text-gray-900',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
             )}
           >
-            <Icon
-              name="CloseIcon"
-              className={cn(enableResponsive && isSmallScreen ? 'h-3 w-3' : 'h-2 w-2')}
-            />
+            <Icon name="CloseIcon" className="h-4 w-4" />
           </button>
         )}
+
         <div className="flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto md:overflow-hidden px-4 lg:px-5 pt-0 pb-5">
           {content}
         </div>

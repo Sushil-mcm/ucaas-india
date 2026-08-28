@@ -126,7 +126,7 @@ function AttachAgent({ modalState, setModalState, data }: AddGroupLeadModalProps
             <Button variant={'transparent'} type="button" onClick={() => setModalState(false)}>
               Cancel
             </Button>
-            <Button disabled={isPendingGetToken || isPending} variant={'outline'} type="submit">
+            <Button disabled={isPendingGetToken || isPending} variant={'primary'} type="submit">
               {(isPendingGetToken || isPending) && <Loader variant="blue" />}Save
             </Button>
           </div>

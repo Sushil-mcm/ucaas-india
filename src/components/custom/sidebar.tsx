@@ -262,7 +262,7 @@ const Sidebar = () => {
                            whole rail lights up. A view item is lit by
                            `activeLink`, which checks the view, and nothing else. */
                         const lit = viewKey ? activeLink : activeLink || isActive;
-                        return `h-13 w-16 flex items-center justify-center rounded-lg relative ${
+                        return `min-h-13 w-16 flex items-center justify-center rounded-lg relative py-1.5 ${
                           lit ? 'bg-ucass-active-bg text-ucass-active' : 'bg-transparent'
                         } hover:bg-ucass-active-bg hover:text-ucass-active ${
                           !isEnabled ? 'text-gray-400' : 'text-gray-700'
@@ -285,9 +285,10 @@ const Sidebar = () => {
                           name={`${icon}` as IconType}
                           className="h-[1.15rem] w-[1.15rem] relative"
                         />
-                        <small className="w-full truncate px-0.5 text-center text-[10.5px] leading-none">
-                          {name}
-                        </small>
+                        {/* Two-word labels ("External Contacts") stack rather
+                            than truncate — the tile is 64px wide, so one line
+                            would cut them off mid-word. */}
+                        <small className="mcm-rail-label">{name}</small>
                       </div>
                       {isEnabled && navItem?.name === 'Chat' && totalUnreadCount > 0 && (
                         <span className="bg-primary absolute text-white font-normal me-2  rounded-full -top-[2px] left-[20px] px-1  border-white border-2 text-xs  min-w-5 min-h-5 flex items-center justify-center ">

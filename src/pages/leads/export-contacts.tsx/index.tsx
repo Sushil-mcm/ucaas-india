@@ -219,7 +219,7 @@ const ExportContacts: FC<IExportContactsProps> = ({
               </Button>
               <Button
                 type="submit"
-                variant={'outline'}
+                variant={'primary'}
                 disabled={isPending || !watch('groupId')?.value || !watch('format')?.value}
               >
                 {isPending ? 'Exporting...' : 'Export'}

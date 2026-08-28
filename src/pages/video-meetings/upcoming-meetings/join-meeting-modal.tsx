@@ -84,7 +84,7 @@ const JoinMeetingModal = ({ modalState, setModalState, formInstance }: IJoinMeet
             Cancel
           </Button>
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="submit"
             onClick={handleJoinMeet}
             disabled={isPending || localValue == ''}

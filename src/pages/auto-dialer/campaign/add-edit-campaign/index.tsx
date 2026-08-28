@@ -400,7 +400,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
                     </Button>
                   )}
                   {activeTab === CAMPAIGN_UPSERT_TAB_CONSTANT.MEDIA && (
-                    <Button variant={'outline'} type="submit" disabled={isPendingAddCampaign}>
+                    <Button variant={'primary'} type="submit" disabled={isPendingAddCampaign}>
                       {isPendingAddCampaign ? 'Submitting...' : 'Submit'}
                     </Button>
                   )}

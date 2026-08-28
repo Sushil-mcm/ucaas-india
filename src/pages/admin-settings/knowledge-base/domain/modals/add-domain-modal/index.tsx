@@ -114,7 +114,7 @@ function AddDomainModal({ modalState, setModalState }: AddGroupLeadModalProps) {
             <Button variant={'transparent'} type="button" onClick={() => setModalState(false)}>
               Cancel
             </Button>
-            <Button disabled={isPending} variant={'outline'} type="submit">
+            <Button disabled={isPending} variant={'primary'} type="submit">
               {isPending && <Loader variant="blue" />}Save
             </Button>
           </div>

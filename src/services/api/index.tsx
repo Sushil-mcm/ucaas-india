@@ -1519,6 +1519,34 @@ export const assignNumber = (data: any) => {
   });
 };
 
+export const getCompanyInfo = (uuid: string) => {
+  return apiClient({
+    method: routes.COMPANY_INFO.METHOD,
+    url: `${routes.COMPANY_INFO.URL}/${uuid}`,
+  });
+};
+
+/* Only the fields being changed are sent. Sequelize's static update strips
+   undefined values before writing, so omitting plan_features and allow_country
+   leaves them untouched rather than blanking them — checked against the version
+   installed on the server (6.37.8, lib/model.js line 1906) because the
+   controller builds its update object with those keys always present. */
+export const upsertCompany = (data: {
+  uuid: string;
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+}) => {
+  return apiClient({
+    method: routes.COMPANY_UPSERT.METHOD,
+    url: routes.COMPANY_UPSERT.URL,
+    data,
+  });
+};
+
 export const changePassword = (data: any) => {
   return apiClient({
     method: routes.CHANGE_PASSWORD.METHOD,

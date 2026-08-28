@@ -1,4 +1,5 @@
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,12 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import AddNumber from './add-number-new';
-import { FORWARD_TYPES } from '@/constants/forwarding-consts';
+import {
+  FORWARD_TYPES_WITH_EXTENSION,
+  FORWARD_TYPES_WITH_NAME,
+  FORWARD_TYPES_WITH_PHONE,
+  getDidTypeLabel,
+} from '../utils';
 import { featuresLookUp, featuresObj } from './constants';
 import { useSearchParams } from 'react-router-dom';
 
@@ -39,7 +45,11 @@ const AllNumbers = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useUser();
-  const isPlanExpired = user?.companyInfo?.plan_status === 'EXPIRED';
+  /* `companyInfo` does not exist on the user object — the field is `company_info`
+     everywhere else in the codebase, including the next line of this same file.
+     So this always read undefined and a customer with an expired subscription
+     could still open the buy-a-number flow. */
+  const isPlanExpired = user?.company_info?.plan_status === 'EXPIRED';
   const isTrial = user?.company_info?.is_trial === 'Y';
   const [allNumberState, setAllNumberState] = useState<IAllNumberState>({
     updateForwarding: false,
@@ -78,7 +88,8 @@ const AllNumbers = () => {
   const { mutate: mutateRemoveAssignDID, isPending: isPendingRemoveAssignDID } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Assigned DID Removed Successfully.',
         type: 'success',
@@ -94,7 +105,8 @@ const AllNumbers = () => {
   const { mutate: mutateRemoveForwarding, isPending: isPendingRemovingForwarding } = useMutation({
     mutationFn: removeForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -110,7 +122,8 @@ const AllNumbers = () => {
   const { mutate: mutateReleaseForwarding, isPending: isPendingReleaseForwarding } = useMutation({
     mutationFn: releaseForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -178,12 +191,14 @@ const AllNumbers = () => {
 
         if (data?.is_fax_enabled) return '--';
 
-        const parsedForwardTo =
-          data?.forward_call_actions && JSON.parse(data?.forward_call_actions);
+        /* Parsed defensively: an unguarded JSON.parse here throws during render,
+           and one malformed forward_call_actions row would blank the entire
+           table rather than that single cell. */
+        const parsedForwardTo = parseForwardActions(data?.forward_call_actions);
         const forwardedValue = parsedForwardTo?.call_handling?.business_hours || '';
         return (
           <div>
-            {[FORWARD_TYPES.EXTENSION, FORWARD_TYPES.VOICEMAIL]?.includes(forwardedValue?.type) ? (
+            {FORWARD_TYPES_WITH_EXTENSION.includes(forwardedValue?.type) ? (
               <div className="flex">
                 <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-2.5 py-1 w-auto">
                   <div className="w-7 h-7 rounded-lg border border-primary/30 bg-white flex items-center justify-center text-primary text-base font-semibold leading-none">
@@ -200,19 +215,12 @@ const AllNumbers = () => {
                   </div>
                 </div>
               </div>
-            ) : [
-                FORWARD_TYPES.DEPARTMENT,
-                FORWARD_TYPES.IVR,
-                FORWARD_TYPES.GREETING,
-                FORWARD_TYPES.HANGUP,
-                FORWARD_TYPES.QUEUE,
-                FORWARD_TYPES.AI,
-              ]?.includes(forwardedValue?.type) ? (
+            ) : FORWARD_TYPES_WITH_NAME.includes(forwardedValue?.type) ? (
               <div className="flex flex-col items-start">
                 {capitalizeFirstLetter(forwardedValue?.type)}
                 <small>{forwardedValue?.name}</small>
               </div>
-            ) : [FORWARD_TYPES.PHONE]?.includes(forwardedValue?.type) ? (
+            ) : FORWARD_TYPES_WITH_PHONE.includes(forwardedValue?.type) ? (
               <div className="flex flex-col items-start">
                 {capitalizeFirstLetter(forwardedValue?.type)}
                 <small>
@@ -243,7 +251,7 @@ const AllNumbers = () => {
       header: 'Type',
       accessorKey: 'did_type',
       cell: ({ row: { original: _val } }: any) => {
-        return _val?.did_type === 'L' ? 'Local' : _val?.did_type === 'M' ? 'Mobile' : 'Toll Free';
+        return getDidTypeLabel(_val?.did_type);
       },
     },
     {
@@ -481,6 +489,7 @@ const AllNumbers = () => {
 
           {openDrawer && (
             <SideDrawer
+              width="min(1040px, 84vw)"
               title="Add Number"
               isOpen={openDrawer}
               isTab={false}
@@ -493,6 +502,7 @@ const AllNumbers = () => {
       </AdminPage>
       {allNumberState.updateForwarding && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={allNumberState.updateForwarding}
           title="Update Forwarding"
           handleClose={() =>

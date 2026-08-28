@@ -276,7 +276,6 @@ const AddMembers = () => {
     [currentMembers],
   );
 
-  console.log(errors);
   return (
     <section className="flex h-full min-h-0 w-full flex-col overflow-x-auto overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">

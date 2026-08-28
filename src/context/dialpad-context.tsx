@@ -2095,6 +2095,12 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
         password,
         session_timers: false,
         registrar_server: `sip:${domain}`,
+        /* Puts the caller's name in the SIP From header, so an internal call
+           arrives as `"Umar Ansari" <sip:1010_web@...>` rather than the bare
+           extension. The name was already being sent, but only in the custom
+           remoteMetaData header — and a proxy that strips unknown headers left
+           the other side reading "Unknown". From is standard and survives. */
+        display_name: outboundDisplayName,
       });
 
       uaRef.current = ua;
@@ -2108,7 +2114,7 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       isStartingRef.current = false;
     }
-  }, [disconnectSip, registerUaListeners, sipCredentials]);
+  }, [disconnectSip, outboundDisplayName, registerUaListeners, sipCredentials]);
 
   const registerUa = useCallback(() => {
     try {

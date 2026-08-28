@@ -96,8 +96,6 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     selectedTemplate: null,
   });
 
-  console.log(chooseTemplate, 'chooseTemplatechooseTemplate');
-
   const [schemaContext, setSchemaContext] = useState<any>(null);
 
   const selectedUser = {
@@ -106,7 +104,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
   };
 
   const { data: roleList = [], isFetched } = useQuery({
-    queryKey: ['useRolesList'],
+    queryKey: ['useRolesList', true],
     queryFn: () => getRoleList(true),
     select: (res) => res?.data?.data?.result?.rows,
   });

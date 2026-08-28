@@ -166,6 +166,7 @@ const DLCBrands = () => {
       </section>
       {drawerState?.create10DLCBrand && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState?.create10DLCBrand}
           isTab={false}
           enableResponsive

@@ -983,16 +983,22 @@ function AiChatbotAgents() {
     <>
       <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f4f5f7]">
         <div className="flex min-h-[64px] flex-col gap-3 border-b border-gray-200 bg-white px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3 text-[18px] font-bold text-slate-950">
-            <button
-              type="button"
-              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-              className="font-medium text-slate-500 transition-colors hover:text-primary"
-            >
-              AI Agents
-            </button>
-            <span className="text-slate-400">/</span>
-            <span>AI Chatbot Agents</span>
+          <div>
+            <div className="flex items-center gap-3 text-[18px] font-bold text-slate-950">
+              <button
+                type="button"
+                onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
+                className="font-medium text-slate-500 transition-colors hover:text-primary"
+              >
+                AI Agents
+              </button>
+              <span className="text-slate-400">/</span>
+              <span>AI Chatbot Agents</span>
+            </div>
+            <p className="mt-1 text-[13px] text-slate-500">
+              Agents that answer chats on your behalf, the knowledge they draw on, and how each one
+              is performing.
+            </p>
           </div>
 
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">

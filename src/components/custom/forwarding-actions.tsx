@@ -9,6 +9,11 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
 
+/* IVR and DEPARTMENT were missing from this map while FORWARD_VALUE_OPTIONS below
+   referenced FORWARD_TYPES.IVR and FORWARD_TYPES.DEPARTMENT — both resolved to
+   `undefined`, so the two entries collapsed onto a single "undefined" key and the
+   later one silently won. The lists were already being fetched; only the keys and
+   the dropdown entries were absent. */
 const FORWARD_TYPES: any = {
   VOICEMAIL: 'VOICEMAIL',
   GREETING: 'GREETING',
@@ -17,6 +22,8 @@ const FORWARD_TYPES: any = {
   HANGUP: 'HANGUP',
   MESSAGE: 'MESSAGE',
   QUEUE: 'QUEUE',
+  IVR: 'IVR',
+  DEPARTMENT: 'DEPARTMENT',
 };
 
 export const callForwardAgentAI = [
@@ -42,6 +49,26 @@ export const callForwardingOptions = [
   {
     label: 'Forward to External Number',
     value: 'PHONE',
+  },
+  /* Added so closed hours and holidays can reach the same places an IVR key can.
+     Previously this list stopped at an announcement or an extension, which meant
+     a business physically could not play a different menu after hours or send
+     out-of-hours callers to a group — the single largest routing gap against
+     Dialpad, whose closed-hours options are identical to its open-hours ones.
+     "Play an Announcement" deliberately keeps its existing MESSAGE type rather
+     than switching to GREETING: which of the two the call switch accepts cannot
+     be verified from here, and changing it could break announcements that work. */
+  {
+    label: 'Forward to IVR',
+    value: 'IVR',
+  },
+  {
+    label: 'Forward to Group',
+    value: 'DEPARTMENT',
+  },
+  {
+    label: 'Forward to Call Queue',
+    value: 'QUEUE',
   },
   {
     label: 'Hangup',

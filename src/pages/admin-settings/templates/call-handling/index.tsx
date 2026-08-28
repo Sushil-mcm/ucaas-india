@@ -186,6 +186,7 @@ const CallHandling = () => {
       </section>
       {drawerState?.isAddEdit && (
         <SideDrawer
+          width="min(1040px, 84vw)"
           isOpen={drawerState?.isAddEdit}
           isTab={false}
           enableResponsive
