@@ -199,13 +199,12 @@ const CompanyHolidayApply = () => {
   const [personalFallback, setPersonalFallback] = useState(false);
   const stopped = useRef(false);
 
-  const { data: companyDefaults, isLoading: loadingCompany } = useQuery<CompanyDefaultTemplate | null>(
-    {
+  const { data: companyDefaults, isLoading: loadingCompany } =
+    useQuery<CompanyDefaultTemplate | null>({
       queryKey: COMPANY_DEFAULTS_QUERY_KEY,
       queryFn: fetchCompanyDefaults,
       staleTime: 5 * 60 * 1000,
-    },
-  );
+    });
 
   const companyHolidays = useMemo(
     () => readCompanyHolidays(companyDefaults?.settings),
@@ -240,8 +239,7 @@ const CompanyHolidayApply = () => {
     enabled: open,
   });
 
-  const loadingLines =
-    open && (loadingQueues || loadingIvrs || loadingPeople || loadingNumbers);
+  const loadingLines = open && (loadingQueues || loadingIvrs || loadingPeople || loadingNumbers);
 
   const lines = useMemo<Record<LineType, Line[]>>(() => {
     const queueLines: Line[] = (queues as any[])
@@ -614,9 +612,7 @@ const CompanyHolidayApply = () => {
 
         tally[result.outcome] += 1;
         setResults((previous) => ({ ...previous, [line.key]: result }));
-        setProgress((previous) =>
-          previous ? { ...previous, done: previous.done + 1 } : previous,
-        );
+        setProgress((previous) => (previous ? { ...previous, done: previous.done + 1 } : previous));
 
         if (BATCH_PAUSE_MS) {
           await new Promise((resolve) => setTimeout(resolve, BATCH_PAUSE_MS));
@@ -686,7 +682,9 @@ const CompanyHolidayApply = () => {
             <CalendarCheck2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-semibold text-gray-900">Put these holidays on your lines</p>
+            <p className="text-base font-semibold text-gray-900">
+              Put these holidays on your lines
+            </p>
             <p className="mt-0.5 text-xs text-gray-600">
               Put the {companyHolidays.length} holiday
               {companyHolidays.length === 1 ? '' : 's'} above onto your queues, IVR menus, people
@@ -770,9 +768,7 @@ const CompanyHolidayApply = () => {
                         />
                         <span className="text-sm font-semibold text-gray-900">
                           {group.label}{' '}
-                          <span className="font-normal text-gray-500">
-                            ({groupLines.length})
-                          </span>
+                          <span className="font-normal text-gray-500">({groupLines.length})</span>
                         </span>
                       </label>
                       <span className="text-xs text-gray-600">

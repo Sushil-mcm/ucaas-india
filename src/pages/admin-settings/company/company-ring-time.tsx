@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, PhoneCall, Timer, Users } from 'lucide-react';
@@ -349,22 +349,16 @@ const CompanyRingTime = () => {
             enforced={IS_ENFORCED}
             enforcementNote="Used when someone is set up who has no ring time of their own."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  Use this for people added from now on
-                </p>
-                <p className="text-xs text-gray-500">
-                  People already set up keep whatever ring time they have. Turning this off means
-                  the number above is recorded as the company&rsquo;s intention but is not offered
-                  as a starting point to anyone.
-                </p>
-              </div>
-              <Switch
-                checked={form.apply_to_new_people}
-                onCheckedChange={(checked) => updateForm({ apply_to_new_people: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Use this for people added from now on"
+              description="People already set up keep whatever ring time they have. Turning this off means the number above is recorded as the company's intention but is not offered as a starting point to anyone."
+              control={
+                <Switch
+                  checked={form.apply_to_new_people}
+                  onCheckedChange={(checked) => updateForm({ apply_to_new_people: checked })}
+                />
+              }
+            />
           </SettingCard>
 
           {/* The honest other half of the question. Ring time only decides when
@@ -413,7 +407,8 @@ const CompanyRingTime = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved for your whole company. Your other settings are not affected.</p>
+              Saved for your whole company. Your other settings are not affected.
+            </p>
             <Button
               type="button"
               variant="primary"

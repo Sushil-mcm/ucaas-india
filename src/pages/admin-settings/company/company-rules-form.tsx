@@ -115,17 +115,15 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
     <div className="flex min-h-0 flex-1 flex-col">
       {isError && (
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700 mb-3">
-          Company preferences could not be loaded. Anything saved now would replace them, so
-          saving is best left until the page loads cleanly.
+          Company preferences could not be loaded. Anything saved now would replace them, so saving
+          is best left until the page loads cleanly.
         </div>
       )}
 
       {!isLoading && !hasCompanyDefaults && (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-gray-700 mb-3">
           <p className="font-semibold text-gray-900 mb-1">Not set up yet</p>
-          <p>
-            Nothing has been set for your company yet. Choose what you want below and save.
-          </p>
+          <p>Nothing has been set for your company yet. Choose what you want below and save.</p>
         </div>
       )}
 

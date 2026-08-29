@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flag, Globe, Headphones, Mic, PhoneOutgoing, Voicemail, Archive } from 'lucide-react';
 
@@ -500,9 +500,7 @@ const CompanyPolicies = () => {
               options={COUNTRY_OPTIONS}
               value={selectedOption(COUNTRY_OPTIONS, form.default_country)}
               placeholder="No default chosen"
-              handleChange={(option: any) =>
-                updateForm({ default_country: option?.value || '' })
-              }
+              handleChange={(option: any) => updateForm({ default_country: option?.value || '' })}
             />
           </SettingCard>
 
@@ -513,36 +511,28 @@ const CompanyPolicies = () => {
             enforced
             enforcementNote="Active. Turning one off hides the play button for those recordings. It does not stop someone who already has a direct link to the file."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">People can play their own calls</p>
-                <p className="text-xs text-gray-500">
-                  Off means nobody can listen back to their own recorded calls.
-                </p>
-              </div>
-              <Switch
-                checked={form.recording_access_own}
-                onCheckedChange={(checked) => updateForm({ recording_access_own: checked })}
-              />
-            </div>
-            <div className="mt-3 flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  Admins can play anyone&rsquo;s calls
-                </p>
-                <p className="text-xs text-gray-500">
-                  Off means an admin sees only their own recordings. Please tell your team before
-                  changing this &mdash; listening to someone&rsquo;s calls is something they expect
-                  to know about.
-                </p>
-              </div>
-              <Switch
-                checked={form.recording_access_admins_all}
-                onCheckedChange={(checked) =>
-                  updateForm({ recording_access_admins_all: checked })
-                }
-              />
-            </div>
+            <SettingRow
+              label="People can play their own calls"
+              description="Off means nobody can listen back to their own recorded calls."
+              control={
+                <Switch
+                  checked={form.recording_access_own}
+                  onCheckedChange={(checked) => updateForm({ recording_access_own: checked })}
+                />
+              }
+            />
+            <SettingRow
+              label="Admins can play anyone's calls"
+              description="Off means an admin sees only their own recordings. Please tell your team before changing this — listening to someone's calls is something they expect to know about."
+              control={
+                <Switch
+                  checked={form.recording_access_admins_all}
+                  onCheckedChange={(checked) =>
+                    updateForm({ recording_access_admins_all: checked })
+                  }
+                />
+              }
+            />
           </SettingCard>
 
           <SettingCard
@@ -586,23 +576,18 @@ const CompanyPolicies = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  Transcribe voicemail by default
-                </p>
-                <p className="text-xs text-gray-500">
-                  New users would get voicemail-to-text switched on. Existing users keep whatever
-                  they have now — changing this never edits anyone&rsquo;s current setting.
-                </p>
-              </div>
-              <Switch
-                checked={form.voicemail_transcription_default}
-                onCheckedChange={(checked) =>
-                  updateForm({ voicemail_transcription_default: checked })
-                }
-              />
-            </div>
+            <SettingRow
+              label="Transcribe voicemail by default"
+              description="New users would get voicemail-to-text switched on. Existing users keep whatever they have now — changing this never edits anyone's current setting."
+              control={
+                <Switch
+                  checked={form.voicemail_transcription_default}
+                  onCheckedChange={(checked) =>
+                    updateForm({ voicemail_transcription_default: checked })
+                  }
+                />
+              }
+            />
           </SettingCard>
 
           <SettingCard
@@ -628,19 +613,16 @@ const CompanyPolicies = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">Announce recording to callers</p>
-                <p className="text-xs text-gray-500">
-                  Play a short notice before a recorded call starts. Many countries require it, so
-                  check your local rules before turning it off.
-                </p>
-              </div>
-              <Switch
-                checked={form.recording_announcement}
-                onCheckedChange={(checked) => updateForm({ recording_announcement: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Announce recording to callers"
+              description="Play a short notice before a recorded call starts. Many countries require it, so check your local rules before turning it off."
+              control={
+                <Switch
+                  checked={form.recording_announcement}
+                  onCheckedChange={(checked) => updateForm({ recording_announcement: checked })}
+                />
+              }
+            />
 
             {/* Compliance guidance rejects wording that mentions recording but not that a
                 third party may be doing it — "this call may be recorded for
@@ -747,7 +729,8 @@ const CompanyPolicies = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved for your whole company. Your other settings are not affected.</p>
+              Saved for your whole company. Your other settings are not affected.
+            </p>
             <Button
               type="button"
               variant="primary"

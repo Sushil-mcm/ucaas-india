@@ -110,8 +110,8 @@ const CompanySettingsCard = () => {
         <div className="min-w-0">
           <p className="text-base font-semibold text-gray-900">Company phone rules</p>
           <p className="mt-0.5 text-xs text-gray-600">
-            The settings everyone at your company starts with, and which of them a person may
-            change on their own phone.
+            The settings everyone at your company starts with, and which of them a person may change
+            on their own phone.
           </p>
         </div>
         <Button type="button" variant="outline" onClick={() => navigate(COMPANY_RULES_PATH)}>
@@ -147,7 +147,9 @@ const CompanySettingsCard = () => {
                   shown next to each rule rather than only inside the editor. */}
               <span
                 className={`shrink-0 rounded-sm px-1.5 py-0.5 text-[11px] font-semibold ${
-                  row.staffMayChange ? 'bg-gray-100 text-gray-600' : 'bg-ucass-primary-200 text-primary'
+                  row.staffMayChange
+                    ? 'bg-gray-100 text-gray-600'
+                    : 'bg-ucass-primary-200 text-primary'
                 }`}
               >
                 {row.staffMayChange ? 'Staff can change' : 'Locked'}

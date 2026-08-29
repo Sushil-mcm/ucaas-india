@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, ShieldCheck, Timer, Network, Info, UserMinus } from 'lucide-react';
 
@@ -129,7 +129,9 @@ const toBoolean = (value: any, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback;
 
 const toUuidList = (value: any): string[] =>
-  Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item.trim() !== '') : [];
+  Array.isArray(value)
+    ? value.filter((item) => typeof item === 'string' && item.trim() !== '')
+    : [];
 
 const buildFormFromSettings = (settings: Record<string, any>): SecurityForm => {
   const security = settings?.[SECURITY_KEY] || {};
@@ -494,7 +496,8 @@ const CompanySecurity = () => {
           {/* Loud, once, at the top — then specifically again on every card. */}
           <div className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-900">
-              Signing people out when idle is active. The rest is recorded as your policy and is not switched on yet.
+              Signing people out when idle is active. The rest is recorded as your policy and is not
+              switched on yet.
             </p>
             <p className="mt-1 text-xs text-red-800">
               Every setting below is written into a stored record and nothing else reads it. There
@@ -535,24 +538,16 @@ const CompanySecurity = () => {
             enforced={false}
             enforcementNote="Not active yet. Signing in does not ask for a second step."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  Require MFA for password sign-in
-                </p>
-                <p className="text-xs text-gray-500">
-                  On by default, which is established systems&rsquo;s posture: there MFA is mandatory for every
-                  user who is not signing in through SSO, and cannot be switched off. established systems treat
-                  it as optional and applies it to native logins only — an SSO user is never
-                  prompted, because the identity provider has already done the checking. Recording
-                  the stricter of the two is the safer intent to write down.
-                </p>
-              </div>
-              <Switch
-                checked={form.mfa_required}
-                onCheckedChange={(checked) => updateForm({ mfa_required: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Require MFA for password sign-in"
+              description="On by default, which is established systems's posture: there MFA is mandatory for every user who is not signing in through SSO, and cannot be switched off. established systems treat it as optional and applies it to native logins only — an SSO user is never prompted, because the identity provider has already done the checking. Recording the stricter of the two is the safer intent to write down."
+              control={
+                <Switch
+                  checked={form.mfa_required}
+                  onCheckedChange={(checked) => updateForm({ mfa_required: checked })}
+                />
+              }
+            />
           </SettingCard>
 
           <SettingCard
@@ -571,11 +566,11 @@ const CompanySecurity = () => {
             )}
 
             <p className="text-xs text-gray-500">
-              established systems&rsquo;s hard rule: Company, Office and Regional Admins can never be added to
-              the exception list — the accounts with the most power are the ones that must not skip
-              the second factor. This account&rsquo;s equivalents are the Admin and Sub-Admin roles,
-              plus any custom role with &ldquo;admin&rdquo; in its name. Those rows are locked
-              below.
+              established systems&rsquo;s hard rule: Company, Office and Regional Admins can never
+              be added to the exception list — the accounts with the most power are the ones that
+              must not skip the second factor. This account&rsquo;s equivalents are the Admin and
+              Sub-Admin roles, plus any custom role with &ldquo;admin&rdquo; in its name. Those rows
+              are locked below.
             </p>
 
             {Boolean(exemptAdmins.length) && (
@@ -649,18 +644,16 @@ const CompanySecurity = () => {
             enforced
             enforcementNote="Active. People are signed out after this long without activity, with a warning first and a chance to stay signed in. It waits while someone is on a call."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">Sign people out when idle</p>
-                <p className="text-xs text-gray-500">
-                  Off by default. Switch it on if you want people signed out after a period of inactivity.
-                </p>
-              </div>
-              <Switch
-                checked={form.idle_timeout_enabled}
-                onCheckedChange={(checked) => updateForm({ idle_timeout_enabled: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Sign people out when idle"
+              description="Off by default. Switch it on if you want people signed out after a period of inactivity."
+              control={
+                <Switch
+                  checked={form.idle_timeout_enabled}
+                  onCheckedChange={(checked) => updateForm({ idle_timeout_enabled: checked })}
+                />
+              }
+            />
 
             {form.idle_timeout_enabled && (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -676,16 +669,17 @@ const CompanySecurity = () => {
                   />
                   <p className="text-xs text-gray-500">
                     Between {IDLE_MIN_MINUTES} minutes and {IDLE_MAX_MINUTES} minutes (8 hours) —
-                    the same range the usual range is, which it stores as 300 to 28800 seconds. Stored
-                    here in seconds too.
+                    the same range the usual range is, which it stores as 300 to 28800 seconds.
+                    Stored here in seconds too.
                   </p>
                 </div>
                 <div className="flex flex-col justify-center">
                   <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-                    other established systems forces HIPAA-enabled organisations down to {IDLE_HIPAA_MINUTES} minutes
-                    and does not let them choose. This platform has no HIPAA flag, so nothing is
-                    forced here. If you are handling health data, set {IDLE_HIPAA_MINUTES} yourself
-                    — and remember it will not be applied until the timer is actually built.
+                    other established systems forces HIPAA-enabled organisations down to{' '}
+                    {IDLE_HIPAA_MINUTES} minutes and does not let them choose. This platform has no
+                    HIPAA flag, so nothing is forced here. If you are handling health data, set{' '}
+                    {IDLE_HIPAA_MINUTES} yourself — and remember it will not be applied until the
+                    timer is actually built.
                   </p>
                 </div>
               </div>
@@ -699,19 +693,16 @@ const CompanySecurity = () => {
             enforced={false}
             enforcementNote="Not active yet. Signing in is not restricted by network."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">Restrict sign-in by IP address</p>
-                <p className="text-xs text-gray-500">
-                  When this is off, no network restriction is recorded and the saved list is
-                  cleared.
-                </p>
-              </div>
-              <Switch
-                checked={form.ip_allowlist_enabled}
-                onCheckedChange={(checked) => updateForm({ ip_allowlist_enabled: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Restrict sign-in by IP address"
+              description="When this is off, no network restriction is recorded and the saved list is cleared."
+              control={
+                <Switch
+                  checked={form.ip_allowlist_enabled}
+                  onCheckedChange={(checked) => updateForm({ ip_allowlist_enabled: checked })}
+                />
+              }
+            />
 
             {form.ip_allowlist_enabled && (
               <>
@@ -731,9 +722,9 @@ const CompanySecurity = () => {
                     onChange={(event) => updateForm({ ip_allowlist_text: event.target.value })}
                   />
                   <p className="text-xs text-gray-500">
-                    {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — other established systems does
-                    not accept IPv6 here, so neither does this. A single address is written as
-                    /32.
+                    {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — other
+                    established systems does not accept IPv6 here, so neither does this. A single
+                    address is written as /32.
                   </p>
                   {errors.ip_allowlist_text && (
                     <p className="text-xs font-semibold text-red-600">{errors.ip_allowlist_text}</p>
@@ -745,12 +736,13 @@ const CompanySecurity = () => {
                     You can lock yourself out with this list.
                   </p>
                   <p className="mt-1 text-xs text-amber-800">
-                    other established systems refuses to save an allowlist that does not cover the address the admin
-                    is saving from, precisely because getting it wrong locks you out of your own
-                    account. This page cannot do that check: a browser does not know its own public
-                    IP without asking an outside service, and nothing here does. So the check falls
-                    to you. Find your public IP, confirm it sits inside one of the blocks above, and
-                    remember that a home connection&rsquo;s address usually changes over time.
+                    other established systems refuses to save an allowlist that does not cover the
+                    address the admin is saving from, precisely because getting it wrong locks you
+                    out of your own account. This page cannot do that check: a browser does not know
+                    its own public IP without asking an outside service, and nothing here does. So
+                    the check falls to you. Find your public IP, confirm it sits inside one of the
+                    blocks above, and remember that a home connection&rsquo;s address usually
+                    changes over time.
                   </p>
                   <label className="mt-3 flex cursor-pointer items-start gap-2">
                     <Checkbox
@@ -773,21 +765,16 @@ const CompanySecurity = () => {
             enforced={false}
             enforcementNote="Not active yet. People sign in with their email address and password."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">Record SAML SSO details</p>
-                <p className="text-xs text-gray-500">
-                  Your identity provider gives you these when you add this platform as an
-                  application. The certificate is a public key, not a secret — but this record is
-                  ordinary account data, not a secrets store, so do not paste anything private into
-                  it.
-                </p>
-              </div>
-              <Switch
-                checked={form.sso_enabled}
-                onCheckedChange={(checked) => updateForm({ sso_enabled: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Record SAML SSO details"
+              description="Your identity provider gives you these when you add this platform as an application. The certificate is a public key, not a secret — but this record is ordinary account data, not a secrets store, so do not paste anything private into it."
+              control={
+                <Switch
+                  checked={form.sso_enabled}
+                  onCheckedChange={(checked) => updateForm({ sso_enabled: checked })}
+                />
+              }
+            />
 
             {form.sso_enabled && (
               <>
@@ -851,7 +838,9 @@ const CompanySecurity = () => {
                       placeholder="https://idp.example.com/saml/slo"
                       value={form.sso_single_logout_uri}
                       error={errors.sso_single_logout_uri}
-                      onChange={(event) => updateForm({ sso_single_logout_uri: event.target.value })}
+                      onChange={(event) =>
+                        updateForm({ sso_single_logout_uri: event.target.value })
+                      }
                     />
                     <p className="text-xs text-gray-500">
                       Optional. Signing out here would also end the session at the provider. Leave
@@ -874,44 +863,52 @@ const CompanySecurity = () => {
                 </p>
                 <p className="text-xs text-gray-500">
                   These are handled for you and there is no setting to change.
-
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Password reuse — other established systems</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  Password reuse — other established systems
+                </p>
                 <p className="text-xs text-gray-500">
-                  other established systems blocks reuse of the last 10 passwords. It is fixed: an admin cannot raise,
-                  lower or switch off that history.
+                  other established systems blocks reuse of the last 10 passwords. It is fixed: an
+                  admin cannot raise, lower or switch off that history.
                 </p>
               </div>
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Failed sign-ins — other established systems</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  Failed sign-ins — other established systems
+                </p>
                 <p className="text-xs text-gray-500">
-                  After 6 failed logins other established systems locks the account for 5 minutes. Also fixed — there
-                  is no threshold or duration to set.
+                  After 6 failed logins other established systems locks the account for 5 minutes.
+                  Also fixed — there is no threshold or duration to set.
                 </p>
               </div>
               <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">Session length — established systems</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  Session length — established systems
+                </p>
                 <p className="text-xs text-gray-500">
-                  established systems fixes its session at 30 days and gives admins no way to shorten it. That
-                  is why the idle timeout above is modelled on other established systems, which does let you choose.
+                  established systems fixes its session at 30 days and gives admins no way to
+                  shorten it. That is why the idle timeout above is modelled on other established
+                  systems, which does let you choose.
                 </p>
               </div>
               <p className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-700">
-                These three describe established business phone systems, not this platform. What this platform does
-                about password history, failed sign-ins and session length has not been confirmed
-                from the code — the sign-in behaviour lives in the backend, which is not visible
-                from here. Do not read them as descriptions of what is protecting you now.
+                These three describe established business phone systems, not this platform. What
+                this platform does about password history, failed sign-ins and session length has
+                not been confirmed from the code — the sign-in behaviour lives in the backend, which
+                is not visible from here. Do not read them as descriptions of what is protecting you
+                now.
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved for your whole company. Your other settings are not affected.</p>
+              Saved for your whole company. Your other settings are not affected.
+            </p>
             <Button
               type="button"
               variant="primary"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { count } from 'sms-length';
@@ -148,10 +148,8 @@ const validateForm = (form: MessagingForm): Record<string, string> => {
   return errors;
 };
 
-/**
- * A per-setting honesty badge. `enforced` is only ever passed `true` once the
- * backend genuinely acts on that key — today nothing does.
- */
+/* Kept as a thin name over SettingRow so the call sites below read as they did,
+   while the markup is the same one every other settings screen uses. */
 const ToggleRow = ({
   title,
   description,
@@ -163,13 +161,11 @@ const ToggleRow = ({
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 }) => (
-  <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-    <div className="flex flex-col gap-1">
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
-      <p className="text-xs text-gray-500">{description}</p>
-    </div>
-    <Switch checked={checked} onCheckedChange={onCheckedChange} />
-  </div>
+  <SettingRow
+    label={title}
+    description={description}
+    control={<Switch checked={checked} onCheckedChange={onCheckedChange} />}
+  />
 );
 
 const CompanyMessaging = () => {
@@ -451,8 +447,7 @@ const CompanyMessaging = () => {
                 </p>
                 {helpCount.length > HELP_SINGLE_SEGMENT_CHARS && (
                   <p className="text-xs text-amber-700">
-                    Over one segment. It will arrive as {helpCount.messages} texts and be billed as
-                    {' '}
+                    Over one segment. It will arrive as {helpCount.messages} texts and be billed as{' '}
                     {helpCount.messages}.
                   </p>
                 )}
@@ -466,7 +461,9 @@ const CompanyMessaging = () => {
                 </p>
                 <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-xs text-gray-600">
                   <li>Your business name, spelled the way customers know you.</li>
-                  <li>A line saying what these messages are, so the reply makes sense on its own.</li>
+                  <li>
+                    A line saying what these messages are, so the reply makes sense on its own.
+                  </li>
                   <li>A way to reach a person — a phone number, an email or a website.</li>
                   <li>
                     Any fees, in the usual wording: &ldquo;Msg &amp; data rates may apply&rdquo;.
@@ -483,7 +480,8 @@ const CompanyMessaging = () => {
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved for your whole company. Your other settings are not affected.</p>
+              Saved for your whole company. Your other settings are not affected.
+            </p>
             <Button
               type="button"
               variant="primary"

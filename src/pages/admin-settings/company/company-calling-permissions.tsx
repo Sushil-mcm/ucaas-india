@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRightLeft, PhoneForwarded, PhoneOutgoing, ShieldAlert } from 'lucide-react';
 
@@ -202,47 +202,27 @@ const PermissionRow = ({
   disabledNote,
   isChild = false,
 }: PermissionRowProps) => (
-  <div
-    className={`flex flex-col gap-2 rounded-lg border border-gray-200 p-3 ${
-      isChild ? 'sm:ml-6' : ''
-    } ${disabled ? 'bg-gray-50' : ''}`}
-  >
-    <div className="flex items-start gap-3">
-      <Checkbox
-        className="mt-0.5"
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={(value) => onCheckedChange(value === true)}
-      />
-      <div className="flex flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className={`text-sm font-semibold ${disabled ? 'text-gray-500' : 'text-gray-900'}`}>
-            {label}
-          </p>
-          <span
-            className={`mcm-setcard-badge${enforced ? ' is-on' : ''}`}
-            title={enforced ? 'Enforced on calls' : 'Saved, not yet enforced on calls'}
-          >
-            {enforced ? 'Active' : 'Not active yet'}
-          </span>
-        </div>
-        <p className="text-xs text-gray-500">{description}</p>
-      </div>
-    </div>
-    {disabled && disabledNote && (
-      <p className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600">
-        {disabledNote}
-      </p>
-    )}
-    <p
-      className={`rounded-lg border px-3 py-2 text-xs ${
-        enforced
-          ? 'border-green-200 bg-green-50 text-green-800'
-          : 'border-amber-200 bg-amber-50 text-amber-800'
-      }`}
-    >
-      {enforcementNote}
-    </p>
+  /* Renders through SettingRow so this looks like every other settings screen,
+     while keeping the two things a permission needs and a plain row does not:
+     a child row sits indented under the permission it depends on, and a row that
+     cannot be changed says why rather than just going grey. */
+  <div className={isChild ? 'sm:ml-6' : ''}>
+    <SettingRow
+      label={label}
+      description={description}
+      notActive={!enforced}
+      control={
+        <Checkbox
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={(value) => onCheckedChange(value === true)}
+        />
+      }
+    />
+    {disabled && disabledNote ? <p className="mcm-setrow-note">{disabledNote}</p> : null}
+    {enforcementNote ? (
+      <p className={`mcm-setrow-note${enforced ? ' is-on' : ''}`}>{enforcementNote}</p>
+    ) : null}
   </div>
 );
 

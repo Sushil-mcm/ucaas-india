@@ -187,8 +187,7 @@ const nthWeekdayOf = (year: number, month: number, weekday: number, nth: number)
   return new Date(Date.UTC(year, month - 1, 1 + forward + (nth - 1) * 7));
 };
 
-const addDays = (date: Date, days: number) =>
-  new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
 const ruleDate = (rule: PresetRule, year: number): Date => {
   if (typeof rule.easterOffset === 'number') {
@@ -197,7 +196,7 @@ const ruleDate = (rule: PresetRule, year: number): Date => {
   if (rule.mondayBefore && rule.month && rule.day) {
     const anchor = new Date(Date.UTC(year, rule.month - 1, rule.day));
     /* Strictly before: when the anchor is itself a Monday, step back a week. */
-    const back = ((anchor.getUTCDay() + 6) % 7) || 7;
+    const back = (anchor.getUTCDay() + 6) % 7 || 7;
     return addDays(anchor, -back);
   }
   if (typeof rule.weekday === 'number' && rule.month && rule.nth) {
@@ -360,8 +359,7 @@ const buildPreset = (preset: CountryPreset, year: number): GeneratedHoliday[] =>
 
 /* ------------------------------------------------------------------ the UI */
 
-const makeId = () =>
-  `hol-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const makeId = () => `hol-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 interface Draft {
   id: string | null;
@@ -409,10 +407,7 @@ const CompanyHolidays = () => {
     [items],
   );
 
-  const repeatingCount = useMemo(
-    () => items.filter((item) => item.repeats_yearly).length,
-    [items],
-  );
+  const repeatingCount = useMemo(() => items.filter((item) => item.repeats_yearly).length, [items]);
 
   const selectedPreset = useMemo(
     () => COUNTRY_PRESETS.find((preset) => preset.code === country?.value) || null,
@@ -572,8 +567,8 @@ const CompanyHolidays = () => {
           <div className="min-w-0">
             <p className="text-base font-semibold text-gray-900">Your holiday list</p>
             <p className="mt-0.5 text-xs text-gray-600">
-              One list of the days your company is closed, kept in one place instead of typed
-              again into every IVR, queue and user.
+              One list of the days your company is closed, kept in one place instead of typed again
+              into every IVR, queue and user.
             </p>
           </div>
         </div>
@@ -607,8 +602,8 @@ const CompanyHolidays = () => {
             Calls are still routed from each object&apos;s own holiday list, set inside its
             business-hours dialog. Adding Christmas here does not make your IVR, queues or users
             close on Christmas — you still have to enter it on each of them. This page is the
-            company&apos;s record of the dates; connecting it to routing is a separate piece of
-            work that has not been done.
+            company&apos;s record of the dates; connecting it to routing is a separate piece of work
+            that has not been done.
           </p>
         </div>
       </div>
@@ -803,7 +798,9 @@ const CompanyHolidays = () => {
                 placeholder="Same day"
                 minDate={draft.from ? isoToDate(draft.from) || undefined : undefined}
                 value={draft.to ? isoToDate(draft.to) : null}
-                onChange={(date) => date && setDraft((previous) => ({ ...previous, to: toIso(date) }))}
+                onChange={(date) =>
+                  date && setDraft((previous) => ({ ...previous, to: toIso(date) }))
+                }
               />
             </div>
             <label className="flex h-10 cursor-pointer items-center gap-2">

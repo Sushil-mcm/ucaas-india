@@ -102,14 +102,18 @@ const EMERGENCY_ADDRESS_SCHEMA = yup.object({
     .trim()
     .required('Street address is required')
     .min(3, 'Enter the full street address')
-    .test('no-po-box', 'A PO box cannot be used. Emergency services need a street address.', (v) =>
-      !isPoBox(v),
+    .test(
+      'no-po-box',
+      'A PO box cannot be used. Emergency services need a street address.',
+      (v) => !isPoBox(v),
     ),
   address_line_2: yup
     .string()
     .trim()
-    .test('no-po-box', 'A PO box cannot be used. Emergency services need a street address.', (v) =>
-      !isPoBox(v),
+    .test(
+      'no-po-box',
+      'A PO box cannot be used. Emergency services need a street address.',
+      (v) => !isPoBox(v),
     ),
   country: yup
     .object({
@@ -364,8 +368,8 @@ const CompanyEmergencyAddress = () => {
             Emergency address (E911)
           </h5>
           <p className="text-xs font-medium text-gray-700">
-            The street address emergency responders would be sent to, and the number they would
-            call back on.
+            The street address emergency responders would be sent to, and the number they would call
+            back on.
           </p>
         </div>
       </div>
@@ -394,8 +398,8 @@ const CompanyEmergencyAddress = () => {
               help.
             </p>
             <p className="text-sm font-medium">
-              In the US, Kari&apos;s Law and the RAY BAUM&apos;S Act require emergency calls to
-              work and to carry a usable address. Saving this form does{' '}
+              In the US, Kari&apos;s Law and the RAY BAUM&apos;S Act require emergency calls to work
+              and to carry a usable address. Saving this form does{' '}
               <span className="font-bold">not</span> make the account compliant with either law.
             </p>
           </div>
@@ -561,9 +565,9 @@ const CompanyEmergencyAddress = () => {
             </div>
             <div className="flex w-full items-end md:w-1/2">
               <p className="text-xs text-gray-500">
-                The number responders would ring if the emergency call drops. Today nothing dials
-                it automatically - it is stored for your records and for whoever you hand this
-                address to.
+                The number responders would ring if the emergency call drops. Today nothing dials it
+                automatically - it is stored for your records and for whoever you hand this address
+                to.
               </p>
             </div>
           </div>

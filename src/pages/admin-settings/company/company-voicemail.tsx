@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, ScrollText, Voicemail } from 'lucide-react';
 
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import {
@@ -273,24 +271,16 @@ const CompanyVoicemail = () => {
             enforced
             enforcementNote="Active. Decides whether people can change their own voicemail settings."
           >
-            <div className="flex items-start gap-2 rounded-lg border border-gray-200 p-3">
-              <Checkbox
-                className="mt-0.5"
-                checked={form.override}
-                onCheckedChange={(checked: boolean) => updateForm({ override: checked })}
-              />
-              <div className="flex flex-col gap-1">
-                <Label className="text-sm font-semibold text-gray-900">
-                  Let people change their own voicemail settings
-                </Label>
-                <p className="text-xs text-gray-500">
-                  Leave this unticked and a person cannot open their own voicemail settings — an
-                  admin changes them instead. Tick it and they can. Be aware of the second reading:
-                  a new person set up from this record then also starts with the PIN and the
-                  voicemail-to-text choice below, so everyone set up that way shares one PIN.
-                </p>
-              </div>
-            </div>
+            <SettingRow
+              label="Let people change their own voicemail settings"
+              description="Left off, a person cannot open their own voicemail settings and an admin changes them instead. Be aware of the second reading: a new person set up from this record then also starts with the PIN and the voicemail-to-text choice below, so everyone set up that way shares one PIN."
+              control={
+                <Switch
+                  checked={form.override}
+                  onCheckedChange={(checked: boolean) => updateForm({ override: checked })}
+                />
+              }
+            />
           </SettingCard>
 
           <SettingCard
@@ -300,19 +290,16 @@ const CompanyVoicemail = () => {
             enforced={false}
             enforcementNote="Used when you set someone up from these company settings. It does not change anyone already set up."
           >
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">Write messages out as text</p>
-                <p className="text-xs text-gray-500">
-                  Stored as YES or NO, the same wording the per-person voicemail dialog writes, so
-                  both screens agree on what they are reading.
-                </p>
-              </div>
-              <Switch
-                checked={form.voicemail_to_text}
-                onCheckedChange={(checked) => updateForm({ voicemail_to_text: checked })}
-              />
-            </div>
+            <SettingRow
+              label="Write messages out as text"
+              description="Stored as YES or NO, the same wording the per-person voicemail dialog writes, so both screens agree on what they are reading."
+              control={
+                <Switch
+                  checked={form.voicemail_to_text}
+                  onCheckedChange={(checked) => updateForm({ voicemail_to_text: checked })}
+                />
+              }
+            />
           </SettingCard>
 
           <SettingCard

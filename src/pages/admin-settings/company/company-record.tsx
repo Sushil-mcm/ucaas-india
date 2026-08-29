@@ -193,7 +193,13 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
   const countryName =
     COUNTRY_OPTIONS.find((option) => option.value === record?.country)?.label || record?.country;
 
-  const addressLine = [record?.address, record?.city, record?.state, record?.postal_code, countryName]
+  const addressLine = [
+    record?.address,
+    record?.city,
+    record?.state,
+    record?.postal_code,
+    countryName,
+  ]
     .map((part) => `${part ?? ''}`.trim())
     .filter(Boolean)
     .join(', ');
@@ -374,9 +380,9 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
             These details cannot be changed from here yet
           </p>
           <p className="mt-1 text-xs text-gray-700">
-            The name shown above is your main location&rsquo;s name, and you{' '}
-            <strong>can</strong> change that — edit the main location below and the name here
-            follows. That corrects what everyone sees.
+            The name shown above is your main location&rsquo;s name, and you <strong>can</strong>{' '}
+            change that — edit the main location below and the name here follows. That corrects what
+            everyone sees.
           </p>
           <p className="mt-1 text-xs text-gray-700">
             Your registered address is held on a separate billing record, which only your provider
