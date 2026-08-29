@@ -131,6 +131,35 @@ export const AFTER_CALL_LIMITS = {
   seconds: { min: 1, max: 3600 },
 };
 
+/* Widening the ring instead of failing.
+ *
+ * Established systems ring the best-matched people first and then *add* more
+ * people after a timer, rather than choosing one group and giving up. Ours only
+ * ever rang one set: whoever was on the queue, all at once or in order.
+ *
+ * Their version can also drop a skill requirement as it widens. We have no
+ * skills, so the honest half of the idea is tiers: every member sits in a tier,
+ * calls start at tier 1, and each tier is added after its own delay. A queue
+ * where everyone is tier 1 behaves exactly as it does today, which is why that
+ * is the default for existing members.
+ *
+ * Stored, not yet acted on — same as the rest of the waiting settings. */
+export const MEMBER_TIERS = [
+  { value: 1, label: 'Tier 1 — rings first' },
+  { value: 2, label: 'Tier 2 — added next' },
+  { value: 3, label: 'Tier 3 — added last' },
+];
+
+export const ESCALATION_DEFAULTS = {
+  enabled: false,
+  /* Seconds before the next tier is added. Below about 15 seconds nobody has
+     had a fair chance to answer, so widening that fast just rings more phones
+     for no reason. */
+  widen_after_seconds: 30,
+};
+
+export const ESCALATION_LIMITS = { widen_after_seconds: { min: 15, max: 600 } };
+
 export const CALL_QUEUE_INIITAL_VALUES = {
   name: '',
   extension: '',
@@ -196,6 +225,7 @@ export const CALL_QUEUE_INIITAL_VALUES = {
     transcription: false,
     waiting: WAITING_DEFAULTS,
     after_call: AFTER_CALL_DEFAULTS,
+    escalation: ESCALATION_DEFAULTS,
   },
   greetings: {
     welcome: {

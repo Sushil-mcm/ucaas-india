@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AFTER_CALL_DEFAULTS,
+  ESCALATION_DEFAULTS,
   CALL_DISTRIBUTION_DATA,
   CALL_QUEUE_INIITAL_VALUES,
   DELAY_GREETING_DEFAULT_INTERVAL,
@@ -374,6 +375,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
          to be destroyed on every save. */
       waiting: watch('settings.waiting') || WAITING_DEFAULTS,
       after_call: watch('settings.after_call') || AFTER_CALL_DEFAULTS,
+      escalation: watch('settings.escalation') || ESCALATION_DEFAULTS,
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
         leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
@@ -564,6 +566,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
     const ring_strategy = queueInfo?.settings?.ring_strategy;
     const storedWaiting = queueInfo?.settings?.waiting;
     const storedAfterCall = queueInfo?.settings?.after_call;
+    const storedEscalation = queueInfo?.settings?.escalation;
     const transcription = queueInfo?.settings?.transcription;
     const ai_call_monitoring = queueInfo?.settings?.ai_call_monitoring;
     const wrapup_time = queueInfo?.settings?.wrapup_time;
@@ -697,6 +700,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
         ...(storedWaiting || {}),
         callback: { ...WAITING_DEFAULTS.callback, ...(storedWaiting?.callback || {}) },
       },
+      escalation: { ...ESCALATION_DEFAULTS, ...(storedEscalation || {}) },
       after_call: {
         ...AFTER_CALL_DEFAULTS,
         ...(storedAfterCall || {}),

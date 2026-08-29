@@ -13,6 +13,8 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import {
   AFTER_CALL_LIMITS,
+  ESCALATION_LIMITS,
+  MEMBER_TIERS,
   CALL_DISTRIBUTION_DATA,
   DEPARTMENT_RING_STRATEGY_DESC,
   LAST_AGENT_MODES,
@@ -71,6 +73,21 @@ const RingStrategy = () => {
     setValue(`members.${index}.ring_time`, nextRingTime, { shouldValidate: true });
   };
 
+  /* Only offered while widening is switched on. A tier column sitting there
+     when nothing widens is a control that cannot do anything, and reads as
+     broken rather than as unused. */
+  const renderTierSelect = (member: any, index: number) => (
+    <CustomSelect
+      className="w-44"
+      options={MEMBER_TIERS}
+      handleChange={(value: any) =>
+        setValue(`members.${index}.tier`, value?.value ?? 1, { shouldValidate: true })
+      }
+      value={MEMBER_TIERS.find((tier) => tier.value === (member?.tier ?? 1)) || MEMBER_TIERS[0]}
+      menuPlacement="auto"
+    />
+  );
+
   const renderRingTimeSelect = (member: any, index: number) => {
     const stored = member?.ring_time ?? member?.timeout;
 
@@ -125,6 +142,55 @@ const RingStrategy = () => {
               watch('settings.ring_strategy.value')
                 ?.value as keyof typeof DEPARTMENT_RING_STRATEGY_DESC
             ] || ''}
+          </p>
+        </div>
+      </div>
+
+      {/* Widening the ring rather than failing.
+          Established systems ring the best people first and then add more after
+          a timer. Their version can also drop a skill requirement as it widens;
+          we have no skills, so the honest half is tiers. Everyone on tier 1
+          behaves exactly as the queue does today, which is the default. */}
+      <div className="w-full px-1 sm:px-3">
+        <div className="rounded-lg border border-gray-200 p-3">
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={!!watch('settings.escalation.enabled')}
+              onChange={(event) => setValue('settings.escalation.enabled', event.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-semibold text-gray-900">
+                Widen the ring if nobody answers
+              </span>
+              <span className="block text-xs text-gray-600">
+                Start with tier 1, then bring in the next tier. People are added, never swapped
+                out, so the first group keeps ringing.
+              </span>
+            </span>
+          </label>
+
+          {watch('settings.escalation.enabled') && (
+            <div className="mt-3 max-w-xs">
+              <Input
+                label="Add the next tier after (seconds)"
+                type="number"
+                min={ESCALATION_LIMITS.widen_after_seconds.min}
+                max={ESCALATION_LIMITS.widen_after_seconds.max}
+                value={watch('settings.escalation.widen_after_seconds') ?? ''}
+                onChange={(event) =>
+                  setValue('settings.escalation.widen_after_seconds', Number(event.target.value))
+                }
+              />
+              <p className="mt-1.5 text-xs text-gray-600">
+                Set each member&apos;s tier in the list below. Anyone left on tier 1 rings from the
+                start.
+              </p>
+            </div>
+          )}
+          <p className="mt-2 text-xs font-semibold text-amber-700">
+            Saved, but not yet in effect. The call path still rings one group.
           </p>
         </div>
       </div>
@@ -401,6 +467,9 @@ const RingStrategy = () => {
 
                       <TableHead className="px-4 py-2 font-medium text-left ">Name</TableHead>
                       <TableHead className="px-4 py-2 font-medium text-left ">Ring For</TableHead>
+                      {watch('settings.escalation.enabled') && (
+                        <TableHead className="px-4 py-2 font-medium text-left ">Tier</TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
 
@@ -468,6 +537,11 @@ const RingStrategy = () => {
                         <TableCell className="px-4 py-2 border-b align-middle">
                           {renderRingTimeSelect(data, index)}
                         </TableCell>
+                        {watch('settings.escalation.enabled') && (
+                          <TableCell className="px-4 py-2 border-b align-middle">
+                            {renderTierSelect(data, index)}
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}

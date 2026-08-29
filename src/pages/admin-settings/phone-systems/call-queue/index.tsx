@@ -10,6 +10,7 @@ import { FC, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AddCallQueue from './add-edit-call-queue';
 import { QUEUES_PATH, QUEUE_DEFAULT_TAB } from './queue-tabs';
+import { CALL_DISTRIBUTION_DATA } from './constant';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Plus } from '@/assets/icons';
@@ -36,6 +37,21 @@ interface ICALLQUEUE {
     };
   };
 }
+
+/* A queue row carries its settings as either an object or a JSON string,
+   depending on the endpoint that produced it — the members column already has
+   to cope with the same thing. Reading it in one place means a change of shape
+   breaks one function rather than every column that touches it. */
+const readQueueSettings = (row: any): any => {
+  const raw = row?.settings;
+  if (!raw) return {};
+  if (typeof raw !== 'string') return raw;
+  try {
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+};
 
 const CallQueues: FC = () => {
   const { data: dataSiteList = [] } = useGetSite();
@@ -96,14 +112,11 @@ const CallQueues: FC = () => {
 
   const columns: ColumnDef<ICALLQUEUE>[] = [
     {
-      header: 'Date',
-      accessorKey: 'created_at',
-      cell: ({ row }) => {
-        const data = row?.original;
-        return <div>{convertDateFormateApis(data?.created_at, 'LL')}</div>;
-      },
-    },
-    {
+      /* Name leads. The list used to open on the date a queue was created,
+         which is the least useful thing about it — an admin scanning twenty
+         queues is looking for one by name, then wants to know how it routes and
+         when it is open. Date moved to the end rather than being dropped, since
+         it is occasionally used to find a queue somebody made last week. */
       header: 'Name',
       accessorKey: 'name',
       cell: ({ row }) => {
@@ -123,6 +136,27 @@ const CallQueues: FC = () => {
     {
       header: 'Extension',
       accessorKey: 'extension',
+    },
+    {
+      /* How calls are shared out. This was invisible from the list, so telling
+         a ring-all queue from a top-down one meant opening each in turn. */
+      header: 'How calls are shared',
+      accessorKey: 'ring_strategy',
+      cell: ({ row }: any) => {
+        const strategy = readQueueSettings(row?.original)?.ring_strategy?.value;
+        const label = CALL_DISTRIBUTION_DATA.find((item) => item.value === strategy)?.label;
+        return <span>{label || '---'}</span>;
+      },
+    },
+    {
+      header: 'Hours',
+      accessorKey: 'operational_hours',
+      cell: ({ row }: any) => {
+        const type = readQueueSettings(row?.original)?.operational_hours?.type;
+        if (type === '24_hours') return <span>Open 24 hours</span>;
+        if (type === 'weekly') return <span>Set per weekday</span>;
+        return <span className="text-gray-500">Not set</span>;
+      },
     },
     {
       header: 'Members',
@@ -179,6 +213,14 @@ const CallQueues: FC = () => {
         ) : (
           <div>No members</div>
         );
+      },
+    },
+    {
+      header: 'Created',
+      accessorKey: 'created_at',
+      cell: ({ row }) => {
+        const data = row?.original;
+        return <div>{convertDateFormateApis(data?.created_at, 'LL')}</div>;
       },
     },
     {
