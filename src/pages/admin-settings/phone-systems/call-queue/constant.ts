@@ -9,6 +9,70 @@ export const TAB_CONSTANT = {
   GREETING_NOTIFICATION: 'Media',
 };
 
+/* How many callers may wait, and how long they may wait for.
+ *
+ * This was a hand-written list of 3 to 30, offered in a dropdown. Thirty is an
+ * order of magnitude below what established systems allow — they hold 500 on a
+ * standard plan and 1,000 on their top plan — and a ceiling that low silently
+ * turns callers away on any busy morning, with nothing in the interface saying
+ * it happened.
+ *
+ * A dropdown of 500 entries is unusable, so this is a number field now. The
+ * stored shape is unchanged: still `{ label, value }`, so the payload builder
+ * and the saved records do not move.
+ *
+ * The 1,000 ceiling is deliberately not offered yet. It belongs to the top plan,
+ * and there is no plan flag for queue size to read — inventing a key would read
+ * as `undefined` and quietly give everyone the lower number anyway. */
+export const MAX_WAITING_CALLERS_LIMITS = { min: 1, max: 500 };
+
+/* 10 seconds to 300 minutes, matching what established systems allow. The old
+   floor of 60 seconds ruled out short overflow queues that hand off quickly. */
+export const QUEUE_TIMEOUT_LIMITS = { min: 10, max: 18000 };
+
+/* What happens while a caller waits.
+ *
+ * Three settings that established systems have and we did not: an offer of a
+ * callback when the queue is busy, announcements of position and expected wait,
+ * and a message that repeats on an interval rather than only playing once.
+ *
+ * IMPORTANT — these record the admin's intent. They are stored and read back,
+ * but nothing acts on them yet: the call path needs a queue-depth counter, a
+ * rolling handle time, and a callback scheduler, none of which exist. Every
+ * control is labelled in the interface as not yet in effect, following the same
+ * rule the company security page set — a setting that looks live but is not is
+ * worse than no setting, because an admin reads it and believes they are
+ * covered. Remove those labels in the same change that makes them real.
+ */
+export const WAITING_DEFAULTS = {
+  announce_position: false,
+  announce_wait_time: false,
+  callback: {
+    enabled: false,
+    /* Offer a callback once this many people are already waiting, or once the
+       expected wait passes this many minutes. Either can be turned off by
+       setting it to zero; both off means the offer never goes out. */
+    offer_after_callers: 5,
+    offer_after_minutes: 5,
+    max_attempts: 3,
+    retry_after_minutes: 15,
+    expires_after_hours: 24,
+  },
+};
+
+export const WAITING_LIMITS = {
+  offer_after_callers: { min: 0, max: MAX_WAITING_CALLERS_LIMITS.max },
+  offer_after_minutes: { min: 0, max: 300 },
+  max_attempts: { min: 1, max: 10 },
+  retry_after_minutes: { min: 1, max: 240 },
+  expires_after_hours: { min: 1, max: 168 },
+  /* Established systems will not repeat a delay message more often than every
+     30 seconds, and callers find anything faster than that badgering. */
+  delay_interval_seconds: { min: 30, max: 600 },
+};
+
+export const DELAY_GREETING_DEFAULT_INTERVAL = 60;
+
 export const CALL_QUEUE_INIITAL_VALUES = {
   name: '',
   extension: '',
@@ -72,6 +136,7 @@ export const CALL_QUEUE_INIITAL_VALUES = {
       },
     },
     transcription: false,
+    waiting: WAITING_DEFAULTS,
   },
   greetings: {
     welcome: {
@@ -91,6 +156,15 @@ export const CALL_QUEUE_INIITAL_VALUES = {
     waiting: {
       value: null,
       enabled: true,
+    },
+    /* Repeats while the caller waits, unlike `welcome` which plays once. */
+    delay: {
+      value: {
+        label: '',
+        value: '',
+      },
+      enabled: false,
+      interval_seconds: DELAY_GREETING_DEFAULT_INTERVAL,
     },
     ring_tone: {
       value: {
@@ -164,23 +238,4 @@ export const DEPARTMENT_RING_STRATEGY_DESC = {
   random: 'Rings agents in random order.',
 };
 
-/* How many callers may wait, and how long they may wait for.
- *
- * This was a hand-written list of 3 to 30, offered in a dropdown. Thirty is an
- * order of magnitude below what established systems allow — they hold 500 on a
- * standard plan and 1,000 on their top plan — and a ceiling that low silently
- * turns callers away on any busy morning, with nothing in the interface saying
- * it happened.
- *
- * A dropdown of 500 entries is unusable, so this is a number field now. The
- * stored shape is unchanged: still `{ label, value }`, so the payload builder
- * and the saved records do not move.
- *
- * The 1,000 ceiling is deliberately not offered yet. It belongs to the top plan,
- * and there is no plan flag for queue size to read — inventing a key would read
- * as `undefined` and quietly give everyone the lower number anyway. */
-export const MAX_WAITING_CALLERS_LIMITS = { min: 1, max: 500 };
 
-/* 10 seconds to 300 minutes, matching what established systems allow. The old
-   floor of 60 seconds ruled out short overflow queues that hand off quickly. */
-export const QUEUE_TIMEOUT_LIMITS = { min: 10, max: 18000 };

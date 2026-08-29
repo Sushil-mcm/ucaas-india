@@ -11,7 +11,12 @@ import {
 } from '@/components/ui/table';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
-import { CALL_DISTRIBUTION_DATA, DEPARTMENT_RING_STRATEGY_DESC } from '../../constant';
+import {
+  CALL_DISTRIBUTION_DATA,
+  DEPARTMENT_RING_STRATEGY_DESC,
+  WAITING_LIMITS,
+} from '../../constant';
+import { Input } from '@/components/ui/input';
 import SelectedMemberList from '@/pages/admin-settings/users/department/new-department/selected-member-list';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getRingTimeOptions, seedDeviceRingTime } from '@/lib/company-ring-time';
@@ -119,6 +124,158 @@ const RingStrategy = () => {
                 ?.value as keyof typeof DEPARTMENT_RING_STRATEGY_DESC
             ] || ''}
           </p>
+        </div>
+      </div>
+
+      {/* What happens while somebody waits.
+          Established systems all do three things here that we did not: offer a
+          callback so the caller can hang up and keep their place, tell them
+          where they are in the line, and repeat a message on a timer.
+          These controls store the choice. Nothing acts on them yet — the call
+          path has no queue-depth counter, no rolling handle time and no callback
+          scheduler — so each block says so rather than letting an admin believe
+          it is switched on. */}
+      <div className="w-full px-1 sm:px-3">
+        <p className="font-semibold text-gray-900 text-md mb-1">While the caller waits</p>
+        <p className="text-gray-600 text-xs mb-3">
+          Saved with the queue, but not in effect yet. The call path needs to be able to count the
+          line before any of it can happen.
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg border border-gray-200 p-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={!!watch('settings.waiting.announce_position')}
+                onChange={(event) =>
+                  setValue('settings.waiting.announce_position', event.target.checked)
+                }
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-900">
+                  Tell them their place in the line
+                </span>
+                <span className="block text-xs text-gray-600">
+                  Skipped when the wait is under two minutes — it only delays the answer.
+                </span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 cursor-pointer mt-3">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={!!watch('settings.waiting.announce_wait_time')}
+                onChange={(event) =>
+                  setValue('settings.waiting.announce_wait_time', event.target.checked)
+                }
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-900">
+                  Tell them how long the wait is
+                </span>
+                <span className="block text-xs text-gray-600">
+                  Rounded, and said nothing at all when the estimate cannot be trusted. A wrong
+                  number is worse than no number.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={!!watch('settings.waiting.callback.enabled')}
+                onChange={(event) =>
+                  setValue('settings.waiting.callback.enabled', event.target.checked)
+                }
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-900">
+                  Offer to call them back
+                </span>
+                <span className="block text-xs text-gray-600">
+                  They hang up and keep their place. An agent is found first, then the customer is
+                  dialled, so nobody answers to silence.
+                </span>
+              </span>
+            </label>
+
+            {watch('settings.waiting.callback.enabled') && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Input
+                  label="Offer it once this many are waiting"
+                  type="number"
+                  min={WAITING_LIMITS.offer_after_callers.min}
+                  max={WAITING_LIMITS.offer_after_callers.max}
+                  value={watch('settings.waiting.callback.offer_after_callers') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.waiting.callback.offer_after_callers',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+                <Input
+                  label="Or once the wait passes (minutes)"
+                  type="number"
+                  min={WAITING_LIMITS.offer_after_minutes.min}
+                  max={WAITING_LIMITS.offer_after_minutes.max}
+                  value={watch('settings.waiting.callback.offer_after_minutes') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.waiting.callback.offer_after_minutes',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+                <Input
+                  label="Try this many times"
+                  type="number"
+                  min={WAITING_LIMITS.max_attempts.min}
+                  max={WAITING_LIMITS.max_attempts.max}
+                  value={watch('settings.waiting.callback.max_attempts') ?? ''}
+                  onChange={(event) =>
+                    setValue('settings.waiting.callback.max_attempts', Number(event.target.value))
+                  }
+                />
+                <Input
+                  label="Wait between tries (minutes)"
+                  type="number"
+                  min={WAITING_LIMITS.retry_after_minutes.min}
+                  max={WAITING_LIMITS.retry_after_minutes.max}
+                  value={watch('settings.waiting.callback.retry_after_minutes') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.waiting.callback.retry_after_minutes',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+                <Input
+                  label="Give up after (hours)"
+                  type="number"
+                  min={WAITING_LIMITS.expires_after_hours.min}
+                  max={WAITING_LIMITS.expires_after_hours.max}
+                  value={watch('settings.waiting.callback.expires_after_hours') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.waiting.callback.expires_after_hours',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+                <p className="text-xs text-gray-600 sm:col-span-2">
+                  Set either threshold to zero to ignore it. Both zero means the offer never goes
+                  out. Outside opening hours a callback waits until the queue opens again.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

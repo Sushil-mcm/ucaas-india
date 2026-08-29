@@ -2,7 +2,13 @@ import { useEffect, useState, type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CALL_DISTRIBUTION_DATA, CALL_QUEUE_INIITAL_VALUES, TAB_CONSTANT } from '../constant';
+import {
+  CALL_DISTRIBUTION_DATA,
+  CALL_QUEUE_INIITAL_VALUES,
+  DELAY_GREETING_DEFAULT_INTERVAL,
+  TAB_CONSTANT,
+  WAITING_DEFAULTS,
+} from '../constant';
 import {
   QUEUES_PATH,
   QUEUE_DEFAULT_TAB,
@@ -282,6 +288,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       ring_tone = {},
       no_agent_available = {},
       all_agent_busy = {},
+      delay = {},
     } = greetings;
     const { name: countryName, ...otherValues } = operational_hours.regional.country || {};
     const { name: countryCodeName, ...otherCountryCodeValues } =
@@ -360,6 +367,11 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       },
       transcription: transcription,
       ai_call_monitoring: ai_call_monitoring,
+      /* Sent whole. `settings` is rebuilt from this whitelist on every save
+         rather than spread from what was stored, so anything missing here is
+         dropped from the record — the same way a separate holiday action used
+         to be destroyed on every save. */
+      waiting: watch('settings.waiting') || WAITING_DEFAULTS,
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
         leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
@@ -404,6 +416,13 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
           enabled: all_agent_busy?.enabled || false,
           value: all_agent_busy?.value?.value || '',
           label: all_agent_busy?.value?.label || '',
+        },
+        delay: {
+          enabled: delay?.enabled || false,
+          value: delay?.value?.value || '',
+          label: delay?.value?.label || '',
+          interval_seconds:
+            Number(delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
         },
       },
     };
@@ -527,11 +546,21 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
           value: media?.all_agent_busy?.value,
         },
       },
+      delay: {
+        enabled: media?.delay?.enabled || false,
+        value: {
+          label: media?.delay?.label || '',
+          value: media?.delay?.value,
+        },
+        interval_seconds:
+          Number(media?.delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
+      },
     });
     const operational_hours = queueInfo?.settings?.operational_hours;
     const recording = queueInfo?.settings?.recording;
     const display_number = queueInfo?.settings?.display_number;
     const ring_strategy = queueInfo?.settings?.ring_strategy;
+    const storedWaiting = queueInfo?.settings?.waiting;
     const transcription = queueInfo?.settings?.transcription;
     const ai_call_monitoring = queueInfo?.settings?.ai_call_monitoring;
     const wrapup_time = queueInfo?.settings?.wrapup_time;
@@ -657,6 +686,14 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       transcription: transcription,
       ai_call_monitoring: ai_call_monitoring,
       wrapup_time: wrapup_time,
+      /* Merged over the defaults rather than replacing them, so a queue saved
+         before these settings existed opens with sensible values instead of
+         undefined fields the inputs cannot render. */
+      waiting: {
+        ...WAITING_DEFAULTS,
+        ...(storedWaiting || {}),
+        callback: { ...WAITING_DEFAULTS.callback, ...(storedWaiting?.callback || {}) },
+      },
     };
 
     setValue('settings', settingsValues);

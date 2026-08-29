@@ -50,7 +50,8 @@
       "Bash(timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=8 -T gh-mcm-api)",
       "Bash(timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=8 -T gh-mcm-api-rw)",
       "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
-      "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)"
+      "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)",
+      "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
