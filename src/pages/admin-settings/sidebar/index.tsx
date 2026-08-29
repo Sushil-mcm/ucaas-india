@@ -163,7 +163,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       children: [
         {
           title: 'Call Queues',
-          path: '/admin-settings/phone/call-queue',
+          path: '/admin-settings/phone/queues',
           icon: 'CallQueue',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.QUEUE),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
@@ -179,7 +179,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         },
         {
           title: 'IVR Menus',
-          path: '/admin-settings/phone/ivr-menus',
+          path: '/admin-settings/phone/ivr',
           icon: 'PhoneCallingLine',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.IVR),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),

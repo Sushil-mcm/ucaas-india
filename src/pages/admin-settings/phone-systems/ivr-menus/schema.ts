@@ -23,9 +23,16 @@ export const upsertIVRSchemaValidation = {
       .max(500, 'Description cannot exceed 500 characters.')
       .optional()
       .nullable(),
-    // language: yup.object().shape({
-    //   value: yup.string().required('Language is required')
-    // }),
+    /* No language rule, deliberately. There is no language input on this form —
+       the field is read from the stored IVR and written back unchanged, so an
+       admin has no way to satisfy a required rule and every existing IVR would
+       become unsaveable. It is also why the field is not simply deleted: a new
+       IVR sends nothing, but an existing one round-trips its stored value, and
+       dropping the field would wipe that on the next save.
+
+       A real language picker belongs with text to speech, which is the point at
+       which the language starts to decide anything. Until then this stays a
+       pass-through. */
     site: yup
       .mixed()
       .test(

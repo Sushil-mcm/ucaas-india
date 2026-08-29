@@ -7,7 +7,9 @@ import { convertDateFormateApis, getInitials, handleAlert } from '@/lib/utils';
 import { callQueueList, deleteCallQueue } from '@/services/api';
 import { ColumnDef } from '@tanstack/react-table';
 import { FC, useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AddCallQueue from './add-edit-call-queue';
+import { QUEUES_PATH, QUEUE_DEFAULT_TAB } from './queue-tabs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Plus } from '@/assets/icons';
@@ -39,8 +41,31 @@ const CallQueues: FC = () => {
   const { data: dataSiteList = [] } = useGetSite();
   const [searchedText, setSearchedText] = useState('');
   const [selectedSite, setSelectedSite] = useState<any>('');
-  const [drawerState, setDrawerState] = useState<boolean>(false);
-  const [selectedCallQueue, setSelectedCallQueue] = useState<any>(null);
+  /* The open queue and the open tab both come from the URL rather than from
+     state, so a queue can be linked in a ticket, survives a reload, and the back
+     button steps through the editor instead of leaving the page. `/new` opens
+     the create panel; `/:queueId/:tab` opens that queue on that tab. */
+  const navigate = useNavigate();
+  const { queueId, tab: tabSlug } = useParams();
+  const { pathname } = useLocation();
+  const isCreating = pathname === `${QUEUES_PATH}/new`;
+  const drawerState = Boolean(queueId) || isCreating;
+
+  /* Kept only so the drawer heading can show the queue's name when the row was
+     clicked. A queue opened from a pasted link has no row yet, and the editor
+     loads its own detail from the id, so this is a nicety and never a
+     dependency. */
+  const [clickedRow, setClickedRow] = useState<any>(null);
+  const selectedCallQueue = queueId ? { ...(clickedRow || {}), _id: queueId } : null;
+
+  const openQueue = (row: any) => {
+    setClickedRow(row);
+    navigate(`${QUEUES_PATH}/${row?._id}/${QUEUE_DEFAULT_TAB.slug}`);
+  };
+  const closeQueue = () => {
+    setClickedRow(null);
+    navigate(QUEUES_PATH);
+  };
   const [deleteCallQueueDetails, setDeleteCallQueue] = useState<ICALLQUEUE | null>(null);
   const queryClient: any = useQueryClient();
   const debouncedSearch = useDebounce(searchedText || '', 1000);
@@ -165,10 +190,7 @@ const CallQueues: FC = () => {
           hasQueueAccess &&
             queueActions?.edit && {
               icon: 'EditStrokIcon',
-              onClick: () => {
-                setSelectedCallQueue(data);
-                setDrawerState(true);
-              },
+              onClick: () => openQueue(data),
               className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
               tooltipText: 'Edit',
             },
@@ -204,8 +226,10 @@ const CallQueues: FC = () => {
     },
   ];
 
+  /* The remembered row is cleared when the editor closes, so reopening a
+     different queue never shows the previous queue's name in the heading. */
   useEffect(() => {
-    if (!drawerState) setSelectedCallQueue(null);
+    if (!drawerState) setClickedRow(null);
   }, [drawerState]);
 
   return (
@@ -216,7 +240,7 @@ const CallQueues: FC = () => {
         description="Where incoming calls wait, and which people answer them. Queues can be company-wide or tied to one location."
         actions={
           hasQueueAccess && queueActions?.add ? (
-            <button type="button" className="btn primary" onClick={() => setDrawerState(true)}>
+            <button type="button" className="btn primary" onClick={() => navigate(`${QUEUES_PATH}/new`)}>
               <Plus className="w-3 h-3" />
               New queue
             </button>
@@ -283,13 +307,22 @@ const CallQueues: FC = () => {
           width="min(1040px, 84vw)"
           isOpen={drawerState}
           title={
-            selectedCallQueue ? `Update Call Queue (${selectedCallQueue?.name})` : 'Add Call Queue'
+            selectedCallQueue
+              ? `Update Call Queue${selectedCallQueue?.name ? ` (${selectedCallQueue.name})` : ''}`
+              : 'Add Call Queue'
           }
           isTab={false}
           enableResponsive
-          handleClose={() => setDrawerState(false)}
+          handleClose={closeQueue}
           content={
-            <AddCallQueue {...{ drawerState, setDrawerState, queueDetails: selectedCallQueue }} />
+            <AddCallQueue
+              {...{
+                drawerState,
+                setDrawerState: closeQueue,
+                queueDetails: selectedCallQueue,
+                tabSlug,
+              }}
+            />
           }
         />
       )}

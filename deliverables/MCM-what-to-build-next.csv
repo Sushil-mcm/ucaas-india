@@ -1,0 +1,38 @@
+﻿Verdict,Rank,What to do,Follow,Why it matters,Where the work is,Notes
+MUST DO NOW,1,Split the override switch into two things: 'apply this value' and 'lock this value',Dialpad,"Right now override means opposite things in two places, so there is NO way to say 'everyone gets this and nobody may change it' - the most common thing an admin wants",Website + small API change,Dialpad separates a template (seeds values) from a User Settings Policy (locks them). Copy that. Affects every setting on the company page
+MUST DO NOW,2,"Check permissions on the server, not just in the browser",Both,Today the permission tree only hides buttons. Any signed-in user can send any request - including making themselves an admin,API only,Biggest security item on the list. Nothing else on this sheet matters if this stays open
+MUST DO NOW,3,Actually route the emergency address to the carrier,Dialpad,We collect and validate it properly but it is never attached to an emergency call. This is the only item with legal and safety weight,API + carrier (DIDWW),"Dialpad refuses to let a company go live without this. Also add: who the address applies to, and notification contacts"
+MUST DO NOW,4,Enforce the fraud controls we already store,Dialpad,"External transfer, transferring your own outbound call, and international dialling are all stored and none are enforced. Toll fraud on a new account can be company-ending",API + call switch,Dialpad ships all three OFF by default for exactly this reason. The screens are built - they just need honouring
+MUST DO NOW,5,Give a person a ring time before voicemail,Dialpad (30 sec),There is no setting anywhere for how long a phone rings. Queues have one per member; a person does not. Customers change this in week one,Website + API,"Dialpad uses 30 seconds, Genesys 12 with a 60 max. Pick 30 and allow 5-60"
+MUST DO NOW,6,A company endpoint a customer admin can actually use,Both,A customer cannot correct their own company name or registered address. The only endpoint is restricted to platform staff,API only,"Should read the company from the sign-in token, not from the request body. The screen is already built and waiting"
+SHOULD DO NEXT,7,Make a location set the clock for people there,Dialpad,"A location currently decides nothing. Opening hours read each person's own timezone, so a London queue can run on Mumbai time",Website + API,Our own screen already tells customers a location sets the clock. It does not
+SHOULD DO NEXT,8,An emergency address on each location,Dialpad,A company with two offices has one emergency address. Anyone at the second office sends the wrong address,Database + API + website,Do this together with item 3
+SHOULD DO NEXT,9,Let admins choose which location is the main one,Genesys,It is marked in the list but cannot be changed. Genesys warns that inbound calls fail when this is wrong,Website + API,"Small change, prevents a confusing failure"
+SHOULD DO NEXT,10,Make retention actually delete things,Genesys,The settings save but no job deletes anything. Customers cannot answer a compliance question with it,API + scheduled job,Genesys's model is the better one: keep / archive / delete with a day count
+SHOULD DO NEXT,11,Controls for who can hear recordings,Dialpad,"No way to say whether people hear their own recordings, or whether admins hear everyone's. This is a privacy question customers ask early",API + website,Dialpad emails every non-admin when the admin-access setting changes. Worth copying
+SHOULD DO NEXT,12,"Voicemail email controls: send at all, personal details, transcript",Genesys,Three separate GDPR-relevant switches we do not have at all,API + website,Genesys forces personal details off for healthcare accounts
+SHOULD DO NEXT,13,Split company admins from location admins,Dialpad,One rule prevents most privilege problems: only a company admin may create another admin or change retention,API + website,Needs item 2 done first
+SHOULD DO NEXT,14,Apply one holiday to many lines at once,Dialpad,"We built the holiday list but it has to be applied to each queue, menu and person one at a time",Website only,Cheapest win on this sheet - the import logic already exists
+SHOULD DO NEXT,15,Finish the voicemail PIN screen,Genesys,"The value is stored and shown on the summary card, but the editor is commented out - nobody can set it",Website only,Half-built already. Either finish it or remove the display
+SHOULD DO NEXT,16,Raise the 10-holiday limit on a line,Dialpad,"The US federal list is 11 holidays, so a full US year does not fit",Website + API,Small. Raise to 25
+LATER,17,Enforce two-step sign-in,Dialpad,Screen is built and saves; nothing enforces it,API only,Dialpad makes it mandatory for anyone not on single sign-on. Copy that posture
+LATER,18,Enforce idle sign-out,Genesys,Screen is built and saves; nothing signs anyone out,Website + API,Genesys allows 5 minutes to 8 hours
+LATER,19,Single sign-on (SAML),Both,We record the details but no sign-on uses them. Needed for larger customers,API only,"Blocks enterprise deals, not small ones"
+LATER,20,Restrict sign-in by network,Genesys,Stored and validated; nothing restricts anything,API only,Genesys allows up to 150 ranges
+LATER,21,Being open part of a holiday,Dialpad,A holiday is all-day only today,Website + API,
+LATER,22,Default country code for buying numbers,Genesys,Small quality-of-life item when adding numbers,Website + API,
+LATER,23,Spam call blocking,Dialpad,Dialpad blocks automatically and offers per-person screening,API + call switch,Depends on a spam-score source
+LATER,24,Let a phone menu forward to an outside number,Dialpad,"A company master switch, off by default",API + website,Dialpad restricts this to domestic numbers for good reason
+LATER,25,AI training opt in or out,Dialpad,We have heavy AI features and no way for a customer to opt out. GDPR relevant,API + website,"Dialpad defaults: US and Canada opt out, UK and EU opt in"
+LATER,26,Password rules,Genesys,"Length, characters, expiry",API only,Enterprise RFP material. Not needed until asked
+LATER,27,Reusable schedules shared across queues,Genesys,Genesys's real advantage: one schedule used by hundreds of queues,Architecture change,Only worth it once customers run many queues. Do NOT half-do this
+SKIP FOR NOW,28,Several offices under one account,Dialpad,Large architecture change. Locations already cover most of the need,-,Revisit only if customers ask for separate billing per office
+SKIP FOR NOW,29,Caller ID name (CNAM),Dialpad,"Carrier-dependent, US and Canada only, 7-10 days to take effect",-,Slow and outside our control however well we build it
+SKIP FOR NOW,30,Local area code when calling out,Dialpad,"US only, paid add-on, carrier-dependent",-,
+SKIP FOR NOW,31,Emergency address that follows a travelling user,Dialpad,"US and Canada, desktop app only",-,Do the basic emergency address first (item 3)
+SKIP FOR NOW,32,Cost centres for reporting,Dialpad,Tags for reporting only - changes no invoice or total,-,Pure reporting. No customer is blocked by this
+SKIP FOR NOW,33,Bring your own encryption key,Genesys,Enterprise checkbox item,-,"Build when an RFP demands it, not before"
+SKIP FOR NOW,34,One-off purge of existing data,Dialpad,Cannot be undone. Dangerous before retention itself works,-,"Build after item 10, never before"
+SKIP FOR NOW,35,Support access pairing link,Genesys,This is for a vendor getting into a customer account - you ARE the vendor,-,Not applicable to your position
+SKIP FOR NOW,36,Copy settings from another office / bulk office switches,Dialpad,Both need several offices to exist first,-,Depends on item 28
+SKIP FOR NOW,37,Automated 'delete my data' request pipeline,Genesys,Handle these by hand until the volume justifies a system,-,

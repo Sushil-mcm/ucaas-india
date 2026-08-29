@@ -1,0 +1,87 @@
+﻿Section,Setting,Status,Notes
+Company identity,Company name,WORKING,Editable. Saves to your console record; the billing record is separate
+Company identity,Registered address,WORKING,Same
+Company identity,Company ID for support,WORKING,Copy button
+Company identity,Main location,WORKING,'Make main' button; tells you if the server refuses
+Hours and holidays,Business hours,WORKING,Weekly grid or 24 hours
+Hours and holidays,Timezone,WORKING,Copied to a person when company rules are applied
+Hours and holidays,12/24 hour clock,WORKING,
+Hours and holidays,Company holiday list,WORKING,"Auto-fills US, UK, India, Canada from the real rules"
+Hours and holidays,Put holidays on one line,WORKING,"'Add company holidays' on any queue, menu, person or number"
+Hours and holidays,Put holidays on many lines at once,WORKING,"Pick lines, apply, per-line result"
+Ringing and voicemail,Ring time - a person's devices,WORKING,Starting value for a device with none; never overwrites
+Ringing and voicemail,Ring time - queue members,WORKING,Same
+Ringing and voicemail,Ring time - departments,WORKING,Same
+Ringing and voicemail,What happens when nobody answers,WORKING,Closed-hours action
+Ringing and voicemail,Company voicemail greeting,WORKING,
+Ringing and voicemail,Transcribe voicemail - default for new people,WORKING,Fixed a bug: it was forced on regardless of policy
+Recording,Recording on/off per person,WORKING,
+Recording,Transcription,WORKING,
+Recording,AI call monitoring,WORKING,
+Recording,Recording announcement wording check,WORKING,Blocks a save that names recording but not third-party involvement
+Caller ID,Company number and masking,WORKING,
+Caller ID,Shared group numbers as caller ID,WORKING,"One call only, own heading, never saved as a default"
+Locking and applying,Lock a setting so staff cannot change it,WORKING,The split apply/lock model - this was the top gap
+Locking and applying,Apply a company value to a person,WORKING,Separate from the lock now
+Locking and applying,Business hours lock,WORKING,Previously disabled nothing at all
+Staff permissions,Block external transfer,WORKING,In the app. Not a server block
+Staff permissions,Block international transfer,WORKING,Same
+Staff permissions,Block transfer of your own outbound call,WORKING,Same
+Messaging,Texting on/off,WORKING,Checked in both send paths. Not a server block
+Messaging,Unregistered US numbers,WORKING,Warns before sending
+Language,Prompt language,WORKING,"New greetings open in it, where a voice exists"
+Security,Sign people out when idle,WORKING,Warns for the last minute; waits during a call
+Locations,Location record,WORKING,"Name, address, country, timezone, caller ID"
+Locations,Location sets the clock,WORKING,Fills a person's timezone from their location
+Locations,Numbers and people per location,WORKING,
+Emergency,Emergency address,SAVED ONLY,Collected and validated. NOT routed to emergency services. Needs carrier work
+Emergency,Emergency callback number,SAVED ONLY,Same
+Security,Two-step sign-in (MFA),SAVED ONLY,Never built. Agreed to park
+Security,MFA exception list,SAVED ONLY,Same
+Security,Restrict sign-in by network,SAVED ONLY,Never built. Agreed to park
+Security,Single sign-on,SAVED ONLY,Never built. Agreed to park
+Recording,Company-wide recording on/off,SAVED ONLY,WARNING: Off does not stop recording. Per-person settings drive it
+Recording,How long recordings are kept,SAVED ONLY,Nothing deletes on a schedule. Do not use for a compliance answer
+Recording,How long voicemails are kept,SAVED ONLY,Same
+Voicemail,Voicemail PIN and minimum length,SAVED ONLY,No screen asks for a PIN at the mailbox
+Voicemail,Longest voicemail a caller can leave,SAVED ONLY,"Voicemail server, not the website"
+Messaging,HELP reply,SAVED ONLY,"Investigated: campaign API has no field, and no campaign update route exists"
+Staff permissions,International calling per person,SAVED ONLY,No per-person field exists anywhere in the product
+Caller ID,Let staff hide their number,SAVED ONLY,Needs the call switch and the carrier. Cannot be done in the browser
+Caller ID,Let staff use the main company number,SAVED ONLY,There is no company main number in the product at all
+Emergency,Choose who gets the emergency address,MISSING,Everyone / new people only / those on the default
+Emergency,Notify someone when 911 is dialled,MISSING,
+Emergency,Test call (933),MISSING,
+Emergency,Emergency address per location,MISSING,Locations have no such field
+Emergency,Address that follows a travelling person,MISSING,
+Recording,Let people hear their own recordings,MISSING,
+Recording,Let admins hear anyone's recordings,MISSING,
+Recording,Clear out data you already have,MISSING,Build only after retention actually deletes
+Recording,A hard limit no data may outlive,MISSING,
+Recording,Your own encryption key,MISSING,
+Voicemail,Send voicemails by email at all,MISSING,
+Voicemail,Keep personal details out of those emails,MISSING,GDPR relevant
+Voicemail,Include the transcript in the email,MISSING,
+Caller ID,The name shown with your number (CNAM),MISSING,"Carrier-dependent, slow. Recommended skip"
+Caller ID,Local area code when calling out,MISSING,"US only, paid. Recommended skip"
+Admins,Levels of admin (company vs location),MISSING,
+Admins,Who can make someone an admin,MISSING,
+Admins,Who can set how long data is kept,MISSING,
+Admins,Permissions enforced by the server,MISSING,CRITICAL: today they only hide buttons
+Admins,Letting support into your account,MISSING,Not applicable - you are the provider
+Security,Password rules,MISSING,
+Security,Blocking reused passwords / repeated failures,MISSING,
+Security,'Delete my data' request handling,MISSING,
+Security,Whether your calls train the AI,MISSING,"GDPR relevant, and you have heavy AI"
+Hours and holidays,Being open part of a holiday,MISSING,
+Hours and holidays,Hours attached to a location,MISSING,
+Hours and holidays,Reusable schedules shared across queues,MISSING,Large change. Only worth it at scale
+Company identity,Login short name,MISSING,
+Company identity,Several offices under one account,MISSING,Large change. Recommended skip
+Company identity,Copy settings from another office,MISSING,Needs offices first
+Company identity,Bulk switches across offices,MISSING,Needs offices first
+Language,Default country code for buying numbers,MISSING,
+Language,Turn off staff location tracking,MISSING,
+Staff permissions,Phone menu forwarding to an outside number,MISSING,
+Staff permissions,Hide the staff directory between offices,MISSING,
+Staff permissions,Spam call blocking,MISSING,

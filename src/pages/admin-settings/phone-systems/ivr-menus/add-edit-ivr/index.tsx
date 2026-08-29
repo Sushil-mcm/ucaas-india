@@ -1,4 +1,11 @@
 import { FC, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  IVR_PATH,
+  IVR_DEFAULT_TAB,
+  ivrSlugFromTab,
+  ivrTabFromSlug,
+} from '../ivr-tabs';
 import { Button } from '@/components/ui/button';
 import { FormProvider, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -28,6 +35,8 @@ interface AddEditIvrProps {
   drawerState: boolean;
   setDrawerState: (state: boolean) => void;
   initialData?: Record<string, unknown> | null;
+  /** The tab from the URL. Absent while creating, where the wizard gates forward steps. */
+  tabSlug?: string;
 }
 
 /** Inputs give us strings; fall back to the historical default if unusable. */
@@ -50,8 +59,34 @@ const STEP_COMPONENTS: Record<string, FC<{ initialData?: any; isChooseTemplate?:
   [IVR_TAB_CONSTANT.KEY_PRESSES]: IvrKeyPresses,
 };
 
-const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = null }) => {
-  const [currentStep, setCurrentStep] = useState<string>(IVR_TAB_CONSTANT.BASIC_INFORMATION);
+const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = null, tabSlug }) => {
+  const navigate = useNavigate();
+  const isEditMode = Boolean(initialData?.uuid);
+
+  /* Editing reads the tab from the URL so it can be linked and reloaded.
+     Creating keeps it in state: the create flow refuses to move forward until
+     the current tab validates, and a URL would be an open door past that. */
+  const [wizardStep, setWizardStep] = useState<string>(IVR_TAB_CONSTANT.BASIC_INFORMATION);
+  const stepFromUrl = ivrTabFromSlug(tabSlug);
+  const currentStep = isEditMode
+    ? stepFromUrl || IVR_TAB_CONSTANT.BASIC_INFORMATION
+    : wizardStep;
+
+  const setCurrentStep = (nextStep: string) => {
+    if (!isEditMode) {
+      setWizardStep(nextStep);
+      return;
+    }
+    navigate(`${IVR_PATH}/${initialData?.uuid}/${ivrSlugFromTab(nextStep)}`, { replace: true });
+  };
+
+  /* An unrecognised tab is corrected in the address bar rather than quietly
+     showing the first tab, so the URL never claims to be somewhere it is not. */
+  useEffect(() => {
+    if (isEditMode && tabSlug && !stepFromUrl) {
+      navigate(`${IVR_PATH}/${initialData?.uuid}/${IVR_DEFAULT_TAB.slug}`, { replace: true });
+    }
+  }, [isEditMode, tabSlug, stepFromUrl, initialData?.uuid, navigate]);
   const [validationContext, setValidationContext] = useState<any>(null);
   const queryClient: any = useQueryClient();
   const form = useForm<any>({

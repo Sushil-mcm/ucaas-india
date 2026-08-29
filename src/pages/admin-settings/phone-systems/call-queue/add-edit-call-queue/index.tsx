@@ -1,7 +1,14 @@
 import { useEffect, useState, type FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CALL_DISTRIBUTION_DATA, CALL_QUEUE_INIITAL_VALUES, TAB_CONSTANT } from '../constant';
+import {
+  QUEUES_PATH,
+  QUEUE_DEFAULT_TAB,
+  queueSlugFromTab,
+  queueTabFromSlug,
+} from '../queue-tabs';
 import { FormProvider, useForm } from 'react-hook-form';
 import { upsertCallQueueSchema } from '../schema';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -34,6 +41,8 @@ interface AddCallQueueProps {
   drawerState: boolean;
   setDrawerState: (state: boolean) => void;
   queueDetails: any;
+  /** The tab from the URL. Absent while creating, where the wizard gates forward steps. */
+  tabSlug?: string;
 }
 
 const TABS_ORDER = [
@@ -71,11 +80,42 @@ const schemaIndex = {
 const hydrateMemberRingTime = (stored: any) =>
   hasStoredRingTime(stored) ? seedDeviceRingTime(stored, undefined) : undefined;
 
-const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails }) => {
+const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tabSlug }) => {
   const [modalState, setModalState] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>(TAB_CONSTANT.BASIC_INFORMATION);
   const [schemaContext, setSchemaContext] = useState(null);
   const isEditMode = !!queueDetails?._id;
+  const navigate = useNavigate();
+
+  /* Which tab is open.
+   *
+   * Editing an existing queue reads the tab from the URL, so a colleague can be
+   * sent straight to the tab under discussion and a reload lands back on it.
+   *
+   * Creating one keeps the tab in state on purpose. The create flow is a wizard:
+   * `handleTabChange` refuses to move forward until the current tab validates,
+   * and a URL is an open door past that check. A half-built queue reached by
+   * pasting a link to the last tab would save with empty required fields. */
+  const [wizardTab, setWizardTab] = useState<string>(TAB_CONSTANT.BASIC_INFORMATION);
+  const tabFromUrl = queueTabFromSlug(tabSlug);
+  const activeTab = isEditMode ? tabFromUrl || TAB_CONSTANT.BASIC_INFORMATION : wizardTab;
+
+  const setActiveTab = (nextTab: string) => {
+    if (!isEditMode) {
+      setWizardTab(nextTab);
+      return;
+    }
+    navigate(`${QUEUES_PATH}/${queueDetails?._id}/${queueSlugFromTab(nextTab)}`, {
+      replace: true,
+    });
+  };
+
+  /* A tab nobody recognises is corrected in the address bar rather than quietly
+     showing the first tab, so the URL never claims to be somewhere it is not. */
+  useEffect(() => {
+    if (isEditMode && tabSlug && !tabFromUrl) {
+      navigate(`${QUEUES_PATH}/${queueDetails?._id}/${QUEUE_DEFAULT_TAB.slug}`, { replace: true });
+    }
+  }, [isEditMode, tabSlug, tabFromUrl, queueDetails?._id, navigate]);
   const formInstance = useForm<any>({
     defaultValues: CALL_QUEUE_INIITAL_VALUES,
     resolver: yupResolver(upsertCallQueueSchema[schemaIndex[activeTab]] as yup.ObjectSchema<any>),

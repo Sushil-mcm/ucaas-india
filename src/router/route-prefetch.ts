@@ -169,11 +169,11 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/numbers/numbers-inventory')),
   },
   {
-    prefix: '/admin-settings/phone/ivr-menus',
+    prefix: '/admin-settings/phone/ivr',
     importers: withAdmin(() => import('@/pages/admin-settings/phone-systems/ivr-menus')),
   },
   {
-    prefix: '/admin-settings/phone/call-queue',
+    prefix: '/admin-settings/phone/queues',
     importers: withAdmin(() => import('@/pages/admin-settings/phone-systems/call-queue')),
   },
   {

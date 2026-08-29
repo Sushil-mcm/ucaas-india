@@ -848,8 +848,10 @@ export const router = createBrowserRouter([
                 element: <Navigate to="/admin-settings/company/policies" replace />,
               },
               {
-                path: 'ivr-menus',
-                id: 'ivr-menus',
+                /* Same shape as queues: the list is always rendered and the id
+                   decides whether the editor opens over it. */
+                path: 'ivr',
+                id: 'ivr',
                 element: (
                   <ProtectedRoute
                     element={<IvrMenus />}
@@ -861,7 +863,56 @@ export const router = createBrowserRouter([
                 ),
               },
               {
-                path: 'call-queue',
+                path: 'ivr/new',
+                element: (
+                  <ProtectedRoute
+                    element={<IvrMenus />}
+                    guard={{
+                      feature: 'phone_system_action.access.IVR',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                path: 'ivr/:ivrId',
+                element: (
+                  <ProtectedRoute
+                    element={<IvrMenus />}
+                    guard={{
+                      feature: 'phone_system_action.access.IVR',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                path: 'ivr/:ivrId/:tab',
+                element: (
+                  <ProtectedRoute
+                    element={<IvrMenus />}
+                    guard={{
+                      feature: 'phone_system_action.access.IVR',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                path: 'ivr-menus',
+                element: <Navigate to="/admin-settings/phone/ivr" replace />,
+              },
+              {
+                /* A queue, and the tab inside it, each have their own address.
+                   All four paths render the same screen: the list is always
+                   there, and the id decides whether the editor opens over it.
+
+                   Phase 1 deliberately keeps the EXISTING permission key. A
+                   permission the backend does not return reads as "no
+                   permission" and would lock every admin out, so a queue tab
+                   cannot get its own key until the API ships one. */
+                path: 'queues',
+                id: 'queues',
                 element: (
                   <ProtectedRoute
                     element={<CallQueues />}
@@ -871,6 +922,48 @@ export const router = createBrowserRouter([
                     }}
                   />
                 ),
+              },
+              {
+                path: 'queues/new',
+                element: (
+                  <ProtectedRoute
+                    element={<CallQueues />}
+                    guard={{
+                      feature: 'phone_system_action.access.QUEUE',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                path: 'queues/:queueId',
+                element: (
+                  <ProtectedRoute
+                    element={<CallQueues />}
+                    guard={{
+                      feature: 'phone_system_action.access.QUEUE',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                path: 'queues/:queueId/:tab',
+                element: (
+                  <ProtectedRoute
+                    element={<CallQueues />}
+                    guard={{
+                      feature: 'phone_system_action.access.QUEUE',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                /* Kept for good. Admins bookmark these screens and support
+                   articles link to them. */
+                path: 'call-queue',
+                element: <Navigate to="/admin-settings/phone/queues" replace />,
               },
               {
                 /* A department is a group calls are routed to, not a kind of

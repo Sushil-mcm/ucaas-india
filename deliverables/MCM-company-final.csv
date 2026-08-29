@@ -1,0 +1,87 @@
+﻿Section,Setting,What it does,Dialpad,Genesys,MCM status,MCM notes,How to test
+Company identity,Company name,The name shown across your console,Rename any time,Editable,WORKING,Saves to your console record. Your billing record is separate and only your provider can change that,Admin > Company & Locations > Edit details > change the name > Save. Reload - the new name shows
+Company identity,Registered address,Address on your company record,Billing address,On Location records,WORKING,Same as above,"Same screen, change the address, Save, reload"
+Company identity,Company ID,The ID to quote on a support ticket,—,Shown for support,WORKING,,Admin > Company & Locations > click 'Company ID' - it copies
+Company identity,Main location,Which location is your head office,—,Required; inbound calls fail if wrong,WORKING,Tells you plainly if the server refuses the change,Admin > Company & Locations > on a non-main location click 'Make main' > read the message
+Hours & holidays,Business hours,When you are open,Up to 4 periods a day,Reusable schedules,WORKING,,Company Rules > Phone rules > Business Hours > set a weekly pattern > Save
+Hours & holidays,Timezone,The clock your hours are read in,Per office,On the site,WORKING,Also fills in from a person's location now,Company Rules > Phone rules > Regional Settings
+Hours & holidays,Company holiday list,Holidays declared once for the company,Ready lists for 6 countries,No list,WORKING,"US, UK, India, Canada worked out from the real rules, so they stay right each year",Company Rules > Holidays > pick a country and year > Add > Save
+Hours & holidays,Put holidays on one line,"Apply your dates to a queue, menu, person or number",Per line,Shared schedules,WORKING,Set closed-hours action first or it will tell you to,Open any call queue > Business Hours > Custom Days > 'Add company holidays'
+Hours & holidays,Put holidays on many lines,Apply to many lines at once,Yes,Built in,WORKING,Skips a line with no closed-hours action and tells you which,Company Rules > Holidays > 'Choose lines' > tick some > Apply > read the per-line results
+Ringing & voicemail,Ring time - a person,How long a phone rings before voicemail,30 sec default,"12 sec, 60 max",WORKING,STARTING VALUE ONLY. Someone already set up keeps their own time,Company Rules > Ringing & voicemail > set 45 > Save. Then add a NEW person and open their Call rules - devices show 45
+Ringing & voicemail,Ring time - queue members,"Same, for people in a queue",Per line,Per org,WORKING,Same rule,"Set a company ring time, then create a NEW call queue and add a member - their ring time is your value"
+Ringing & voicemail,Ring time - departments,"Same, for departments",Per line,Per org,WORKING,Same rule,Create a NEW department after setting a company ring time
+Ringing & voicemail,Company voicemail greeting,What callers hear,45 sec max,Yes,WORKING,,Company Rules > Greetings > Voicemail message
+Ringing & voicemail,Transcribe voicemail by default,New people get voicemail-to-text on or off,Per person,Org policy,WORKING,Fixed a real bug: it used to be forced ON regardless of your policy,Company Rules > Policies > turn it OFF > Save. Then set up a NEW person - their voicemail-to-text is off
+Ringing & voicemail,Who may change their own voicemail,Lock a person out of their voicemail settings,Settings policy,Roles,WORKING,,Company Rules > Ringing & voicemail > Voicemail > untick the override > Save. Sign in as that person - their voicemail settings are greyed out
+Recording,Recording per person,Record that person's calls,Office-wide + exclusions,Trunk switch,WORKING,,Company Rules > Phone rules > Automatic Call Recording
+Recording,Transcription,Write calls out as text,Yes,Yes,WORKING,,Company Rules > Phone rules > Automatic Transcription
+Recording,AI call monitoring,AI watches calls,Yes,Yes,WORKING,Turning it on forces transcription on,Company Rules > Phone rules > AI Call Monitoring
+Recording,Recording announcement wording,Checks your wording is compliant,Strict two-part rule,—,WORKING,Blocks the save if the wording is not compliant,Company Rules > Policies > Call recording > type 'This call may be recorded for quality purposes' > it goes red and will not save
+Locking & applying,Lock a setting for everyone,Nobody may change it on their own phone,Separate settings policy,Roles,WORKING,"THE BIG ONE. Apply and lock are now separate, so 'everyone gets this and nobody may change it' finally works",Company Rules > Phone rules > untick an override > Save. Sign in as a normal user - that setting is greyed out
+Locking & applying,Apply a value to a person,Company value copied onto someone,Templates,Policies,WORKING,Separate from the lock now,"Set a company rule, then set up a new person - they receive it"
+Locking & applying,Business hours lock,Lock business hours specifically,Yes,Yes,WORKING,This previously disabled nothing at all,"As above, using the business hours override"
+Staff permissions,Block external transfer,Stop transfers outside the company,OFF by default (fraud),Number plans,WORKING,"Works in the app. NOT a server block - it stops mistakes, not a determined user","Company Rules > Calling > turn it off > Save. Make a call, open Transfer, type an outside number - the button is disabled and says why"
+Staff permissions,Block international transfer,Stop transfers abroad,Separate switch,Number plans,WORKING,Same,"Same, using a number in another country"
+Staff permissions,Block transfer of your own outbound call,The classic toll-fraud route,"OFF, support to unlock",Number plans,WORKING,Same,"Same, but on a call you placed yourself"
+Messaging,Texting on or off,Company-wide texting switch,Also stops API and surveys,—,WORKING,"Works in the app, not a server block",Company Rules > Messaging > turn SMS off > Save. Go to Inbox and try to send - you are stopped
+Messaging,Unregistered US numbers,Warn before sending unregistered,Toggle,—,WORKING,"Warns rather than blocks, because carriers may block and charge more","Company Rules > Messaging, then try a US number from an unregistered brand"
+Language,Prompt language,Language for menus and voicemail,20 languages,Email language only,WORKING,"New greetings open in it, where a voice exists for that language",Company Rules > Policies > set the language > Save. Greetings > Add > Text to speech - the language is pre-selected
+Security,Sign people out when idle,Auto sign-out after inactivity,Fixed 30 days,5 min - 8 hrs,WORKING,Warns for the last minute. Waits while you are on a call. Signs out the browser only,"Company Rules > Security > turn on, set 5 minutes > Save. Leave the tab alone - a warning appears, then you are signed out"
+Caller ID,Company number and masking,What callers see,Global caller ID,On the site,WORKING,,Company Rules > Phone rules > Display Number
+Caller ID,Shared group numbers,Present a queue or department number,Office/group numbers,Site caller ID,WORKING,"One call only, never saved as your default. Own heading in the list",Company Rules > Calling > allow it > Save. Open the dialer caller-ID list - shared numbers appear under their own heading
+Locations,Location record,Each place you work from,An Office,Location + Site,WORKING,,Admin > Company & Locations > add or edit a location
+Locations,Location sets the clock,Timezone for people there,Office timezone,Site timezone,WORKING,Fills a person's timezone from their location when they have none,"Add a NEW person, choose a location - their timezone fills in from it"
+Locations,Numbers and people per location,See who and what is where,Yes,Yes,WORKING,,Admin > Company & Locations > look at a location card
+Emergency,Emergency address,Address sent to emergency services,"Required at signup, PO boxes refused",On a Location,SAVED ONLY,Collected and validated properly. NOT sent with an emergency call. Needs carrier work,Saves correctly. Nothing to test yet - it does not act
+Emergency,Emergency callback number,Number they ring back,Yes,Required,SAVED ONLY,Same,Saves correctly. Nothing to test yet - it does not act
+Security,Two-step sign-in (MFA),Second step at sign-in,Mandatory for non-SSO,Optional switch,SAVED ONLY,Never built. You agreed to park it,Saves correctly. Nothing to test yet - it does not act
+Security,MFA exception list,People who may skip it,Admins cannot be added,—,SAVED ONLY,Same,Saves correctly. Nothing to test yet - it does not act
+Security,Allowed networks (IP),Restrict where people sign in from,—,150 ranges max,SAVED ONLY,Never built. Parked,Saves correctly. Nothing to test yet - it does not act
+Security,Single sign-on,Sign in with your identity provider,"Okta, Google, Microsoft","ADFS, Okta, OneLogin",SAVED ONLY,Never built. Parked,Saves correctly. Nothing to test yet - it does not act
+Recording,Company recording on/off,One switch for the whole company,Office-wide,Trunk switch,SAVED ONLY,WARNING: Off does NOT stop recording. Recording is set per person,Saves correctly. Nothing to test yet - it does not act
+Recording,How long recordings are kept,Retention,3 modes,Policy rules,SAVED ONLY,Nothing deletes on a schedule. Do not use for a compliance answer,Saves correctly. Nothing to test yet - it does not act
+Recording,How long voicemails are kept,Retention,3 modes,Policy rules,SAVED ONLY,Same,Saves correctly. Nothing to test yet - it does not act
+Voicemail,Voicemail PIN,PIN to hear messages,—,Can be required,SAVED ONLY,No mailbox asks for it,Saves correctly. Nothing to test yet - it does not act
+Voicemail,Shortest PIN allowed,Minimum length,—,API only,SAVED ONLY,Same,Saves correctly. Nothing to test yet - it does not act
+Voicemail,Longest voicemail,Max message length,—,"3 min, 3-15 range",SAVED ONLY,Lives in the voicemail server,Saves correctly. Nothing to test yet - it does not act
+Messaging,HELP reply,Auto-reply to a HELP text,Free text,—,SAVED ONLY,"Checked thoroughly: the campaign API has no field for it and there is no campaign update route, so it cannot be done from here",Saves correctly. Nothing to test yet - it does not act
+Staff permissions,International calling per person,Whether one person may dial abroad,Per user,Number plans,SAVED ONLY,No per-person field exists anywhere in the product,Saves correctly. Nothing to test yet - it does not act
+Caller ID,Let staff hide their number,Show as unknown,"Yes, *67",—,SAVED ONLY,Needs the call switch and your carrier. Cannot be done in a browser,Saves correctly. Nothing to test yet - it does not act
+Caller ID,Use the main company number,Present the company number,Yes,—,SAVED ONLY,There is no company main number in the product at all,Saves correctly. Nothing to test yet - it does not act
+Emergency,Who gets the emergency address,Everyone / new only / on the default,Yes,—,MISSING,,Not built
+Emergency,Notify someone when 911 is dialled,Alert named contacts,"Email, text, call",—,MISSING,,Not built
+Emergency,Test call (933),Check it is registered,US and Canada,—,MISSING,,Not built
+Emergency,Emergency address per location,Different address per office,Per office,Per location,MISSING,Important for multi-office customers,Not built
+Emergency,Address that follows a traveller,Updates as someone moves,US/CA desktop,—,MISSING,Recommended skip,Not built
+Recording,People hear their own recordings,Access control,Checkbox,Permissions,MISSING,,Not built
+Recording,Admins hear anyone's recordings,Access control,Checkbox + email to staff,Permissions,MISSING,,Not built
+Recording,Clear out existing data,One-off purge,"Yes, irreversible",Bulk jobs,MISSING,Build only after retention works,Not built
+Recording,A hard retention ceiling,Nothing outlives it,—,90 days to 5 years,MISSING,,Not built
+Recording,Your own encryption key,BYO key,—,Yes,MISSING,Recommended skip,Not built
+Voicemail,Send voicemails by email at all,Master switch,—,Yes,MISSING,,Not built
+Voicemail,Keep personal details out of emails,Privacy,—,Yes,MISSING,GDPR relevant,Not built
+Voicemail,Transcript in the email,Include text,—,Yes,MISSING,,Not built
+Caller ID,Caller name (CNAM),The name shown with your number,CSV upload,—,MISSING,Carrier-dependent. Recommended skip,Not built
+Caller ID,Local area code when calling out,Local presence,Paid add-on,—,MISSING,US only. Recommended skip,Not built
+Admins,Company vs location admins,Levels of admin,6 levels,Roles + divisions,MISSING,,Not built
+Admins,Who can create an admin,Delegation rule,Company Admins only,Permissions,MISSING,,Not built
+Admins,Who can set retention,Delegation rule,Company Admins only,Permissions,MISSING,,Not built
+Admins,Server-side permission checks,Enforce on the server,Yes,Yes,MISSING,CRITICAL: today permissions only hide buttons. Any signed-in user can still call the API,Not built
+Admins,Support access pairing,Let support in,—,7-day link,MISSING,Not applicable - you are the provider,Not built
+Security,Password rules,"Length, characters, expiry",—,8 settings,MISSING,,Not built
+Security,Block reused passwords / lockout,Brute force protection,5 wrong = 20 min,"Last 10, 6 fails = 5 min",MISSING,,Not built
+Security,'Delete my data' requests,GDPR handling,Portal,Tracked requests,MISSING,,Not built
+Security,AI training opt-out,Whether calls train the AI,Company choice,—,MISSING,GDPR relevant and you have heavy AI,Not built
+Hours & holidays,Open part of a holiday,Half-day opening,Yes,Yes,MISSING,,Not built
+Hours & holidays,Hours attached to a location,Location opening hours,Office hours,Site schedule,MISSING,,Not built
+Hours & holidays,Reusable schedules,One schedule for many queues,—,Yes,MISSING,Large change. Only at scale,Not built
+Company identity,Login short name,Short name to sign in,—,Yes,MISSING,,Not built
+Company identity,Several offices,Separate offices with own billing,Yes,Divisions,MISSING,Large change. Recommended skip,Not built
+Company identity,Copy settings from another office,Clone setup,Yes,—,MISSING,Needs offices first,Not built
+Company identity,Bulk switches across offices,Change many at once,Yes,—,MISSING,Needs offices first,Not built
+Language,Default country code,Used when buying numbers,Office country,Yes,MISSING,,Not built
+Language,Turn off staff location tracking,Privacy,—,Yes,MISSING,,Not built
+Staff permissions,Menu forwarding to an outside number,IVR to external,Company switch,—,MISSING,,Not built
+Staff permissions,Hide directory between offices,Restricted search,Yes,Divisions,MISSING,,Not built
+Staff permissions,Spam call blocking,Block robocalls,Automatic,—,MISSING,,Not built

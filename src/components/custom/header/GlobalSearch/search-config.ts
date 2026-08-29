@@ -30,8 +30,8 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'Numbers In Use', path: '/admin-settings/numbers/in-use' },
   { label: 'Numbers Inventory', path: '/admin-settings/numbers/inventory' },
   { label: 'Telephony', path: '/admin-settings/phone' },
-  { label: 'IVR Menus', path: '/admin-settings/phone/ivr-menus' },
-  { label: 'Call Queue', path: '/admin-settings/phone/call-queue' },
+  { label: 'IVR Menus', path: '/admin-settings/phone/ivr' },
+  { label: 'Call Queue', path: '/admin-settings/phone/queues' },
   { label: 'Call Forwarding', path: '/admin-settings/phone/preferences' },
   { label: 'Shared Line', path: '/admin-settings/phone/shared-line' },
   { label: 'Billing Plan', path: '/admin-settings/billing/plan' },
@@ -83,11 +83,11 @@ export function resolveApiResultPath(item: any): string {
     case 'campaign':
       return '/campaign/all-campaigns';
     case 'queue':
-      return '/admin-settings/phone/call-queue';
+      return '/admin-settings/phone/queues';
     case 'department':
       return '/department/extension';
     case 'ivr':
-      return '/admin-settings/phone/ivr-menus';
+      return '/admin-settings/phone/ivr';
     case 'meeting':
       return '/video';
     case 'user':
