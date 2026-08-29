@@ -1,11 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  IVR_PATH,
-  IVR_DEFAULT_TAB,
-  ivrSlugFromTab,
-  ivrTabFromSlug,
-} from '../ivr-tabs';
+import { IVR_PATH, IVR_DEFAULT_TAB, ivrSlugFromTab, ivrTabFromSlug } from '../ivr-tabs';
 import { Button } from '@/components/ui/button';
 import { FormProvider, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -52,7 +47,7 @@ const TABS_ORDER = [
   IVR_TAB_CONSTANT.KEY_PRESSES,
 ];
 
-const STEP_COMPONENTS: Record<string, FC<{ initialData?: any; isChooseTemplate?: boolean }>> = {
+const STEP_COMPONENTS: Record<string, FC<any>> = {
   [IVR_TAB_CONSTANT.BASIC_INFORMATION]: IvrBasicInfo,
   [IVR_TAB_CONSTANT.SETTING_PERMISSIONS]: CommonSettingPermission,
   [IVR_TAB_CONSTANT.GREETING_NOTIFICATION]: Media,
@@ -68,9 +63,7 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
      the current tab validates, and a URL would be an open door past that. */
   const [wizardStep, setWizardStep] = useState<string>(IVR_TAB_CONSTANT.BASIC_INFORMATION);
   const stepFromUrl = ivrTabFromSlug(tabSlug);
-  const currentStep = isEditMode
-    ? stepFromUrl || IVR_TAB_CONSTANT.BASIC_INFORMATION
-    : wizardStep;
+  const currentStep = isEditMode ? stepFromUrl || IVR_TAB_CONSTANT.BASIC_INFORMATION : wizardStep;
 
   const setCurrentStep = (nextStep: string) => {
     if (!isEditMode) {
@@ -96,6 +89,13 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
     context: { validationContext },
   });
   const { user } = useUser();
+
+  /* Set when the admin asks to go back to the previous version. It loads those
+     settings into the form so they can be looked at before anything is saved -
+     a restore that wrote straight to the record would be one wrong click away
+     from replacing a menu that was actually fine. Saving is still the explicit
+     step it always was. */
+  const [restoreRequested, setRestoreRequested] = useState(false);
   const {
     watch,
     setValue,
@@ -192,52 +192,97 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
       timeout,
     }: any = watch();
 
+    const nextSettings: any = {
+      operational_hours: {
+        type: operational_hours?.type,
+        value: operational_hours?.value || CUSTOM_HOURS_SCHEDULE_OPTIONS,
+        holidays: operational_hours?.holidays?.length
+          ? getHolidaysPayload(operational_hours.holidays)
+          : [],
+        regional: {
+          timezone: operational_hours?.regional?.timezone,
+          time_format: operational_hours?.regional?.time_format,
+          country_code: operational_hours?.regional?.country_code,
+          country: operational_hours?.regional?.country,
+        },
+        closed_hour_action: {
+          type: operational_hours?.closed_hour_action?.type?.value,
+          value: operational_hours?.closed_hour_action?.value?.value,
+          enabled: operational_hours?.closed_hour_action?.enabled,
+          personal: operational_hours?.closed_hour_action?.personal,
+          type_label: operational_hours?.closed_hour_action?.type?.label,
+          value_label: operational_hours?.closed_hour_action?.value?.label,
+        },
+      },
+      recording,
+      display_number: {
+        incoming: display_number?.incoming,
+        masking: {
+          type: display_number?.masking?.type?.value || '',
+          label: display_number?.masking?.type?.label || '',
+          value: display_number?.masking?.value || '',
+        },
+      },
+      transcription: transcription,
+      ai_call_monitoring: ai_call_monitoring,
+      media: {
+        welcome: getGreetingConfig('welcome', greetings),
+        menu: getGreetingConfig('menu', greetings),
+        invalid: getGreetingConfig('invalid', greetings),
+      },
+    };
+
+    /* An IVR menu is live the moment it is saved. There is no draft and no publish
+       step, so a wrong turn taken at midday is answering real callers straight
+       away, with nothing to fall back to.
+
+       Two things happen here. Anything the stored menu already had that this
+       builder does not rebuild is carried through - the builder writes every field
+       out by hand, so a key the backend starts storing would otherwise be dropped
+       the next time anybody pressed Save. And the settings as they were before
+       this save are kept under `previous_version`, with who changed them and when,
+       so the edit screen can offer to put them back.
+
+       One step of history, not a full trail. It turns "the main menu is broken and
+       nobody remembers what it said" into one click. The snapshot never nests -
+       the previous version's own snapshot is dropped - so the record cannot grow
+       without limit. */
+    let storedSettings: any = {};
+    try {
+      storedSettings =
+        typeof initialData?.settings === 'string'
+          ? JSON.parse(initialData.settings as string)
+          : (initialData?.settings as any) || {};
+    } catch {
+      storedSettings = {};
+    }
+
+    Object.keys(storedSettings).forEach((key) => {
+      if (key !== 'previous_version' && !(key in nextSettings)) {
+        nextSettings[key] = storedSettings[key];
+      }
+    });
+
+    if (isEditMode && Object.keys(storedSettings).length) {
+      const settingsBeforeThisSave = { ...storedSettings };
+      delete settingsBeforeThisSave.previous_version;
+      nextSettings.previous_version = {
+        settings: settingsBeforeThisSave,
+        changed_at: new Date().toISOString(),
+        changed_by:
+          [user?.user_info?.first_name, user?.user_info?.last_name].filter(Boolean).join(' ') ||
+          user?.user_info?.email ||
+          '',
+      };
+    }
+
     const payload: any = {
       extension,
       name,
       description,
       language: language?.value,
       site: JSON.stringify(site),
-
-      settings: JSON.stringify({
-        operational_hours: {
-          type: operational_hours?.type,
-          value: operational_hours?.value || CUSTOM_HOURS_SCHEDULE_OPTIONS,
-          holidays: operational_hours?.holidays?.length
-            ? getHolidaysPayload(operational_hours.holidays)
-            : [],
-          regional: {
-            timezone: operational_hours?.regional?.timezone,
-            time_format: operational_hours?.regional?.time_format,
-            country_code: operational_hours?.regional?.country_code,
-            country: operational_hours?.regional?.country,
-          },
-          closed_hour_action: {
-            type: operational_hours?.closed_hour_action?.type?.value,
-            value: operational_hours?.closed_hour_action?.value?.value,
-            enabled: operational_hours?.closed_hour_action?.enabled,
-            personal: operational_hours?.closed_hour_action?.personal,
-            type_label: operational_hours?.closed_hour_action?.type?.label,
-            value_label: operational_hours?.closed_hour_action?.value?.label,
-          },
-        },
-        recording,
-        display_number: {
-          incoming: display_number?.incoming,
-          masking: {
-            type: display_number?.masking?.type?.value || '',
-            label: display_number?.masking?.type?.label || '',
-            value: display_number?.masking?.value || '',
-          },
-        },
-        transcription: transcription,
-        ai_call_monitoring: ai_call_monitoring,
-        media: {
-          welcome: getGreetingConfig('welcome', greetings),
-          menu: getGreetingConfig('menu', greetings),
-          invalid: getGreetingConfig('invalid', greetings),
-        },
-      }),
+      settings: JSON.stringify(nextSettings),
       ivr_option: ivrActions?.map((item: any) => ({
         key: item?.key?.value,
         type: item?.forwardType?.value,
@@ -313,6 +358,11 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
     let settingsData, siteData, ivrOptionsData, genericKeysData;
     try {
       settingsData = JSON.parse(settings);
+      /* Restoring reads the stored snapshot instead of the current settings.
+         Everything below then behaves exactly as it does on a normal open. */
+      if (restoreRequested && settingsData?.previous_version?.settings) {
+        settingsData = settingsData.previous_version.settings;
+      }
       siteData = JSON.parse(site);
       ivrOptionsData = ivr_option;
       genericKeysData = JSON.parse(generic_keys);
@@ -443,7 +493,7 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
         },
       },
     });
-  }, [initialData]);
+  }, [initialData, restoreRequested]);
 
   useEffect(() => {
     setValidationContext({ currentStep, fields: watch() });
@@ -485,6 +535,8 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
             <ActiveStep
               initialData={initialData}
               isChooseTemplate={false}
+              onRestorePrevious={() => setRestoreRequested(true)}
+              restoreRequested={restoreRequested}
               // customClass="h-full min-h-0"
             />
           </div>

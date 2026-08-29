@@ -7,7 +7,7 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { generateRandomExtension } from '@/lib/utils';
 import { useFormContext } from 'react-hook-form';
 
-const IvrBasicInfo = ({ initialData }: any) => {
+const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any) => {
   const {
     register,
     setValue,
@@ -22,8 +22,50 @@ const IvrBasicInfo = ({ initialData }: any) => {
     setValue('extension', newExtension);
   };
 
+  /* An IVR menu answers callers the moment it is saved - there is no draft step.
+     If the last change was a mistake, this is the way back to what it said before.
+     Restoring only loads the old settings into the form; nothing is written until
+     Save is pressed, so the admin can see what they are putting back. */
+  let previousVersion: any = null;
+  try {
+    const parsed =
+      typeof initialData?.settings === 'string'
+        ? JSON.parse(initialData.settings)
+        : initialData?.settings;
+    previousVersion = parsed?.previous_version || null;
+  } catch {
+    previousVersion = null;
+  }
+
+  const changedWhen = previousVersion?.changed_at
+    ? new Date(previousVersion.changed_at).toLocaleString()
+    : '';
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 pt-1 sm:pt-2">
+      {previousVersion && !restoreRequested && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-xs text-gray-700">
+            <span className="font-semibold text-gray-900">This menu was changed</span>
+            {changedWhen ? ` on ${changedWhen}` : ''}
+            {previousVersion.changed_by ? ` by ${previousVersion.changed_by}` : ''}. Callers hear
+            changes as soon as they are saved.
+          </p>
+          <Button type="button" variant="outline" onClick={onRestorePrevious}>
+            Go back to the previous version
+          </Button>
+        </div>
+      )}
+
+      {restoreRequested && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+          <p className="text-xs text-gray-700">
+            <span className="font-semibold text-gray-900">Showing the previous version.</span>{' '}
+            Nothing has been changed yet - look through the tabs, then press Save to put this back,
+            or close without saving to leave the menu as it is.
+          </p>
+        </div>
+      )}
       <div className="flex w-full flex-col justify-between gap-4 lg:flex-row">
         <Input
           label="IVR Name"
