@@ -322,15 +322,25 @@ export const CALL_DISTRIBUTION_DATA = [
   },
 ];
 
+/* What choosing each strategy actually means, rather than what it does.
+ *
+ * These read "Rings the agent in position but remember last tried agent" before,
+ * which describes the mechanism to somebody who already knows it and tells an
+ * admin nothing about which to pick. Each one now says the consequence - who
+ * ends up taking the calls, and what that costs - because that is the decision
+ * being made, not the algorithm. */
 export const DEPARTMENT_RING_STRATEGY_DESC = {
-  'ring-all': 'Rings all agent simultaneously',
+  'ring-all':
+    'Everybody\u2019s phone rings at once and the first to pick up gets the call. Quickest to answer, but every call interrupts everybody.',
   'longest-idle-agent':
-    'Rings the agent who has been idle the longest taking into account tier level.',
-  'round-robin': 'Rings the agent in position but remember last tried agent.',
-  'top-down': 'Rings the agent in order position starting from 1 for every member.',
-  'agent-with-least-talk-time': 'Rings the agent with least talk time.',
-  'agent-with-fewest-calls': 'Rings the agent with fewest calls.',
-  random: 'Rings agents in random order.',
+    'Whoever has gone longest without a call is tried first. Spreads the work evenly and stops the same person taking everything.',
+  'round-robin':
+    'Tried one at a time, and the next call starts with the next person rather than going back to the top. Everybody takes a fair turn.',
+  'top-down':
+    'Always starts at the top of the list. Your most experienced people take most of the calls, and the rest only hear the busy ones.',
+  'agent-with-least-talk-time':
+    'Whoever has spent least time on calls today is tried first. Evens out how long people spend talking, not how many calls they take.',
+  'agent-with-fewest-calls':
+    'Whoever has taken fewest calls is tried first. Evens out the number of calls, even if some take much longer than others.',
+  random: 'Tried in a different order each time. No pattern, and no one person favoured.',
 };
-
-

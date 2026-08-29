@@ -3588,3 +3588,9 @@
   color: var(--crit);
   font-weight: 500;
 }
+
+/* Guidance rather than a warning - the sentence that helps somebody choose. */
+.mcm-setrow-note.is-info {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}

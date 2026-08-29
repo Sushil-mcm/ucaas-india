@@ -36,6 +36,8 @@ const ORDER_BY_STRATEGY: Record<string, RingOrder> = {
   'top-down': 'in-order',
   linear: 'in-order',
   'call-linear': 'in-order',
+  'round-robin': 'in-order',
+  random: 'in-order',
   'longest-idle-agent': 'longest-idle-first',
   'longest-idle': 'longest-idle-first',
   'agent-with-fewest-calls': 'fewest-calls-first',
@@ -70,7 +72,7 @@ const RingPreview = () => {
 
     const list: AcdAgent[] = (Array.isArray(members) ? members : []).map((m: any, i: number) => ({
       id: String(m?.value ?? m?.uuid ?? i),
-      name: String(m?.label ?? m?.first_name ?? 'Someone')
+      name: String(m?.label ?? m?.name ?? m?.first_name ?? 'Someone')
         .split('/')[0]
         .trim(),
       state: 'available',

@@ -66,5 +66,20 @@ t('higher priority wins', pickQueueForAgent([{priority:1},{priority:5}]).priorit
 t('equal priority: longer wait wins', pickQueueForAgent([{priority:1,longestWaitSeconds:10},{priority:1,longestWaitSeconds:99}]).longestWaitSeconds === 99);
 t('no queues is null, not a crash', pickQueueForAgent([]) === null);
 
+console.log('  --- the strategy has to be visible ---');
+const named = (n, idle) => ({ id: n, name: n, state: 'available', rating: 100, idleSince: idle });
+const three = [named('Ana', NOW-9), named('Ben', NOW-99), named('Cal', NOW-1)];
+const together = decideAcdRing({ rules:{steps:[{waitSeconds:0}],order:'all-at-once'}, agents:three, waitedSeconds:0, now:NOW });
+const inTurn  = decideAcdRing({ rules:{steps:[{waitSeconds:0}],order:'longest-idle-first'}, agents:three, waitedSeconds:0, now:NOW });
+t('ring-all says they ring together', together.ringsTogether === true && /together/.test(together.reason));
+t('longest-idle says one at a time', inTurn.ringsTogether === false && /one at a time/.test(inTurn.reason));
+t('the two strategies no longer read the same', together.reason !== inTurn.reason);
+t('people are named', /Ana/.test(together.reason) && /Ben/.test(together.reason));
+t('and named in the order they ring', inTurn.reason.indexOf('Ben') < inTurn.reason.indexOf('Ana'));
+
+const many = Array.from({length:7},(_,i)=>named('P'+i, NOW-i));
+const d7 = decideAcdRing({ rules:{steps:[{waitSeconds:0}],order:'all-at-once'}, agents:many, waitedSeconds:0, now:NOW });
+t('a long list is summarised, not dumped', /and 3 more/.test(d7.reason));
+
 console.log(`\n    ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

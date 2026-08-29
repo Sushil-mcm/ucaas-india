@@ -86,6 +86,10 @@ export interface AcdQueueRules {
 export interface AcdDecision {
   /* Who to ring, in the order to ring them. Empty means nobody can take it. */
   ring: AcdAgent[];
+  /* Whether they all ring together, or one after another down the list.
+     This is the difference between the strategies, and leaving it out made
+     every strategy look identical to anything reading a decision. */
+  ringsTogether: boolean;
   /* Which step we are in, counting from 1. */
   step: number;
   /* Seconds until the answer would change - the next step opening, somebody
@@ -170,6 +174,7 @@ export const decideAcdRing = ({
   ) {
     return {
       ring: [],
+      ringsTogether: false,
       step: steps.length,
       changesInSeconds: null,
       reason: `The caller has waited ${waitedSeconds}s, which is the longest this queue holds anybody. They should go to the failover rather than keep ringing.`,
@@ -204,6 +209,8 @@ export const decideAcdRing = ({
   }
   const changesInSeconds = candidates.length ? Math.min(...candidates) : null;
 
+  const ringsTogether = rules.order === 'all-at-once';
+
   let reason: string;
   if (ring.length === 0) {
     const wrapping = agents.filter((a) => a.state === 'wrapping-up').length;
@@ -223,13 +230,22 @@ export const decideAcdRing = ({
     }
   } else {
     const scope = threshold > 0 ? ` rated ${threshold} or above` : '';
-    reason =
-      steps.length > 1
-        ? `Step ${index + 1} of ${steps.length}: ringing ${ring.length} ${ring.length === 1 ? 'person' : 'people'}${scope}.`
-        : `Ringing ${ring.length} ${ring.length === 1 ? 'person' : 'people'}${scope}.`;
+    /* Naming the people, in order, is the only way the choice of strategy is
+       visible. "Ringing 3 people" reads the same whichever strategy is set,
+       which made every option look identical. */
+    const names = ring.map((a) => a.name || 'someone');
+    const who =
+      names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} and ${names.length - 4} more`;
+    const how = ringsTogether
+      ? `Ringing ${ring.length} ${ring.length === 1 ? 'person' : 'people'} together`
+      : ring.length === 1
+        ? 'Ringing 1 person'
+        : `Ringing one at a time, in this order`;
+    const prefix = steps.length > 1 ? `Step ${index + 1} of ${steps.length}: ` : '';
+    reason = `${prefix}${how}${scope}: ${who}.`;
   }
 
-  return { ring, step: index + 1, changesInSeconds, reason };
+  return { ring, ringsTogether, step: index + 1, changesInSeconds, reason };
 };
 
 /* When somebody is in several queues at once, which queue's caller wins.
