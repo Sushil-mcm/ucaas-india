@@ -27,7 +27,11 @@
       "Bash(grep -n \"^\\\\.env$\" .gitignore)",
       "Bash(scp -q ops/patch-logout-tenant-scope.py mcm-new:/tmp/)",
       "Bash(curl -s -o /dev/null -w \"    POST /api/user/device-securities \\(no token\\) → %{http_code}  \\(401 = alive, enforcing auth\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/device-securities)",
-      "Bash(curl -s -o /dev/null -w \"    POST /api/auth/login \\(empty body\\)          → %{http_code}  \\(4xx = alive, not 5xx\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/auth/login)"
+      "Bash(curl -s -o /dev/null -w \"    POST /api/auth/login \\(empty body\\)          → %{http_code}  \\(4xx = alive, not 5xx\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/auth/login)",
+      "Bash(scp -q ops/fix-role-escalation.js mcm-new:/tmp/)",
+      "Bash(curl -s -o /dev/null -w \" device-securities \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/device-securities)",
+      "Bash(curl -s -o /dev/null -w \" user/update \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/update)",
+      "Bash(curl -s -o /dev/null -w \" assign-role-bulk \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/assign-role-bulk-users)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
