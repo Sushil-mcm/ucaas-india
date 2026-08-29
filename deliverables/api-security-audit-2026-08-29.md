@@ -27,6 +27,21 @@ for this service anywhere on the server, so each fix is an edit to `dist/`. That
 is acceptable for a few lines. It is not a way to work long term — getting the
 source is the single most valuable thing anyone can do here.
 
+
+> **STATUS — 29 August 2026, 05:52 UTC.** Issues 2 and 3 are **fixed and live**
+> on 142.93.121.121. `Roles/index.js` scoped at 4 sites; filter guards added at
+> 9 sites across 5 files. `default-api` restarted 05:52:56, later than every
+> patched file (05:52:55) — verified per file, not just one. Startup log clean:
+> Mongo and MySQL connected, listening on 3000. `/api/user/role/list`,
+> `/api/billing/list` and `/api/user/device-securities` all return 401 rather
+> than 500, so the patched modules load and the auth gate runs. Backups:
+> `*.bak-20260829-0552*`.
+>
+> Not yet verified: that the scoping *rejects* a cross-tenant request, which
+> needs two accounts in different companies to test properly.
+>
+> **Still open: issues 1, 4 and 6.**
+
 ## Summary
 
 | # | Issue | State |
@@ -34,8 +49,8 @@ source is the single most valuable thing anyone can do here.
 | 0 | Any signed-in user could end any colleague's sessions | **Fixed** |
 | 5 | Any user could list colleagues' devices, IPs and emails | **Not a defect for ordinary users** — but admins leak cross-tenant via issue 3 |
 | 1 | A normal user can give themselves an administrator role | **OPEN** |
-| 2 | Any signed-in user can delete or rewrite any role, for any customer | **OPEN — worst of the four** |
-| 3 | Filter injection — any customer reads every company's rows | **OPEN — service-wide, 8 sites** |
+| 2 | Any signed-in user can delete or rewrite any role, for any customer | **FIXED 05:52 UTC** |
+| 3 | Filter injection — any customer reads every company's rows | **FIXED 05:52 UTC — 9 guards, 5 files** |
 | 4 | Releasing a number never tells the carrier, so billing continues | **OPEN** |
 | 6 | A company admin can end sessions for users in other companies | **OPEN — new, narrow** |
 

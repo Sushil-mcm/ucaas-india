@@ -16,7 +16,10 @@
       "Bash(grep -n \"where: { uuid, company_uuid }\" scripts/fix-role-tenant-scope.sh)",
       "Bash(bash -n scripts/fix-role-tenant-scope.sh)",
       "Bash(cd /root/mycountrymobile-web *)",
-      "Bash(bash scripts/apply-security-fixes.sh)"
+      "Bash(bash scripts/apply-security-fixes.sh)",
+      "Bash(curl -s -o /dev/null -w \"    https://api2.mycountrymobile.com/ → %{http_code}\\\\n\" https://api2.mycountrymobile.com/)",
+      "Bash(curl -s -o /dev/null -w \"    login endpoint \\(no creds, expect 4xx not 5xx\\) → %{http_code}\\\\n\" -X POST https://api2.mycountrymobile.com/api/auth/login -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s -o /dev/null -w \"    → %{http_code}\\\\n\" \"https://api2.mycountrymobile.com/api/did/list\")"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
