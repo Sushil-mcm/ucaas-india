@@ -16,6 +16,9 @@
       "Bash(grep -n \"where: { uuid, company_uuid }\" scripts/fix-role-tenant-scope.sh)",
       "Bash(bash -n scripts/fix-role-tenant-scope.sh)",
       "Bash(cd /root/mycountrymobile-web *)"
+    ],
+    "additionalDirectories": [
+      "/root/mycountrymobile-web/docs"
     ]
   }
 }

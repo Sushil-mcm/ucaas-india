@@ -2,18 +2,25 @@
 
 Checked 29 August 2026 against what is actually running, not against notes.
 
-**`default-api` runs on three servers, not one.** All three carry the same
-`dist/`, and all three need every fix applied in the same session:
+**Which server matters.** `default-api` is installed on three machines, but
+only one backs this product:
 
-| SSH alias | Address | Logout fix live? |
-|---|---|---|
-| `mcm-new` | 142.93.121.121 | yes — process 05:18:12 UTC, file 05:18:12 |
-| `mcm-switch` | 167.99.4.91 | yes — process 05:19:38 UTC, file 05:19:37 |
-| `mcm-ucaas3` | 151.106.57.254 | yes — process 05:19:27 UTC, file 05:19:27 |
+| SSH alias | Address | nginx serves | Backs |
+|---|---|---|---|
+| **`mcm-new`** | **142.93.121.121** | `api2.mycountrymobile.com` | **unified.mycountrymobile.com — this application** |
+| `mcm-ucaas3` | 151.106.57.254 | `api3.mycountrymobile.com` | a different front end |
+| `mcm-switch` | 167.99.4.91 | `api4.mycountrymobile.com` | a different front end |
 
-Verified on each by comparing the process start time against the file mtime —
-the check that caught the first patch sitting dead on disk for 20 hours. All
-three are confirmed identical for every finding below.
+The production frontend env sets `VITE_API_BASE_URL=https://api2.mycountrymobile.com`,
+so **142.93.121.121 is the only server that needs fixing for this product.**
+
+The other two carry byte-identical `dist/` and every finding below is equally
+open on them — they simply serve other front ends. Whether those are in scope is
+a separate decision; the scripts here run unchanged on any of the three.
+
+All three were confirmed running the logout fix, by comparing process start time
+against file mtime — the check that caught the first patch sitting dead on disk
+for 20 hours.
 
 Everything below is in **compiled JavaScript**. There is no TypeScript source
 for this service anywhere on the server, so each fix is an edit to `dist/`. That
@@ -274,7 +281,8 @@ marked released in our database. The difference is money already being spent.
 1. **Issue 2** — `scripts/fix-role-tenant-scope.sh --apply`. Largest exposure,
    smallest fix.
 2. **Issue 3** — run `scripts/fix-filter-injection.sh --apply` on all three
-   servers. Treat it as a sweep; patching one endpoint leaves billing open.
+   142.93.121.121. Treat it as a sweep; patching one endpoint leaves billing
+   open.
 3. **Issue 6** — the block above, ready to paste.
 4. **Issue 4** — carrier call, plus the billing reconciliation.
 5. **Issue 1** — the real authorisation layer. A project, not a patch.
