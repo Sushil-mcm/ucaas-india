@@ -129,7 +129,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'people',
         title: 'People',
         purpose: 'Everyone who needs a phone. Each one uses a licence.',
-        path: '/admin-settings/users/extension',
+        path: '/admin-settings/people',
         done: people > 0,
         detail: bought
           ? `${people} of ${bought} ${bought === 1 ? 'licence' : 'licences'} used`
@@ -150,7 +150,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'handling',
         title: 'Call handling',
         purpose: 'What happens when nobody answers, and outside working hours.',
-        path: '/admin-settings/company/settings/policies',
+        path: '/admin-settings/company/policies',
         /* Not ticked from a row count: whether calls are handled correctly
            cannot be read off one — a number can be configured and still drop
            every out-of-hours call. It counts as done once company-wide rules

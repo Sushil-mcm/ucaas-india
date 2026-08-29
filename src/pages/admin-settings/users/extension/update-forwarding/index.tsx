@@ -648,7 +648,21 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
            their first-time setup rather than an edit. */
         const isFirstTimeSetup = !settingsData?.operational_hours?.regional?.timezone?.value;
 
-        setValue('settings', isFirstTimeSetup ? settingsInitialState : settingsData);
+        /* Starting from defaults is right for the fields this form owns, and
+           destructive for anything else on the record. The same swap on the
+           company record silently deleted the emergency address, holidays and
+           policies until it was fixed; this is the same shape, one level down.
+           Keys the defaults do not describe are carried through untouched. */
+        const formOwnedKeys = new Set(Object.keys(settingsInitialState || {}));
+        const carriedThrough: Record<string, any> = {};
+        Object.keys(settingsData || {}).forEach((key) => {
+          if (!formOwnedKeys.has(key)) carriedThrough[key] = (settingsData as any)[key];
+        });
+
+        setValue('settings', {
+          ...(isFirstTimeSetup ? settingsInitialState : settingsData),
+          ...carriedThrough,
+        });
 
         /* Company policy decides what a new person starts with.
         

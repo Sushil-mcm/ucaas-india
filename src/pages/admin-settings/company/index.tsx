@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { siteDelete, siteList } from '@/services/api';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CompanyDetails from './company-details';
 import LocationFacts from './location-facts';
 import CompanyRecord from './company-record';
@@ -14,6 +14,7 @@ import { upsertSite, siteList as fetchSiteList } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
 import { SearchLine } from '@/assets/icons';
 import SideDrawer from '@/components/custom/side-drawer';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@/assets/icons/icon';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { Briefcase, MapPin, MapPinIcon } from 'lucide-react';
@@ -28,6 +29,13 @@ const CompanyInfo = () => {
   const [rowData, setRowData] = useState<any>({});
   const [drawerState, setDrawerState] = useState<any>(false);
   const [drawerState2, setDrawerState2] = useState<any>(false);
+
+  /* A location is opened from its own URL rather than only from a click, so it
+     can be linked to, reloaded and sent to someone. The drawer stays — it is a
+     good way to show a location — but it is no longer that location's only
+     address. */
+  const navigate = useNavigate();
+  const { locationId } = useParams();
   const [open, setOpen] = useState(false);
   const { user } = useUser();
   const isTrial = user?.company_info?.is_trial === 'Y';
@@ -91,9 +99,22 @@ const CompanyInfo = () => {
         type: 'error',
       });
     }
-    setDrawerState(true);
-    setRowData(site);
+    /* Navigating opens the drawer through the effect below, so a click and a
+       pasted URL take exactly the same path. */
+    navigate(`/admin-settings/company/locations/${site?.uuid}`);
   };
+
+  /* Opens the drawer for whichever location the URL names. Runs once the list
+     has arrived, because the drawer needs the whole record and the URL carries
+     only an id. An id that matches nothing is ignored rather than opening an
+     empty drawer. */
+  useEffect(() => {
+    if (!locationId || !sites.length) return;
+    const match = sites.find((site: any) => site?.uuid === locationId);
+    if (!match) return;
+    setRowData(match);
+    setDrawerState(true);
+  }, [locationId, sites]);
 
   /* Choosing the main location.
      

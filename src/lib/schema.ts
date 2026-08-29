@@ -1,4 +1,8 @@
 import * as yup from 'yup';
+import {
+  isReservedExtension,
+  reservedExtensionMessage,
+} from '@/constants/reserved-extensions';
 
 export const requiredStringFn = (fieldName: string) => {
   return yup.string().required(`${fieldName} is required`);
@@ -35,11 +39,19 @@ export const requiredStateOrCity = (fieldName: string) => {
     .matches(/^[A-Za-z\s]+$/, `${fieldName} should only contain letters`);
 };
 
+/* Kept in step with the copy in schema/common.ts. Both exist and either could be
+   picked up by a new form, so the emergency-number check lives in both rather
+   than in whichever one happened to be imported. */
 export const requiredExtension = () => {
   return yup
     .string()
     .required('Extension is required')
-    .matches(/^\d{4}$/, 'Extension must upto 4 digits');
+    .matches(/^\d{4}$/, 'Extension must be 4 digits')
+    .test(
+      'not-reserved',
+      ({ value }) => reservedExtensionMessage(value),
+      (value) => !isReservedExtension(value),
+    );
 };
 
 export const requiredEmail = () => {

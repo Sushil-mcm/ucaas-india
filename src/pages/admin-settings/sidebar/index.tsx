@@ -44,7 +44,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         },
         {
           title: 'Company Rules',
-          path: '/admin-settings/company/settings/policies',
+          path: '/admin-settings/company/policies',
           icon: 'SettingsIcon',
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
@@ -62,8 +62,8 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       visible: true,
       enabled: true,
       children: [
-        { title: 'Profile', icon: 'ExtensionIcon', path: '/admin-settings/account/basic-info' },
-        { title: 'Preferences', icon: 'SettingIcon', path: '/admin-settings/account/general' },
+        { title: 'Profile', icon: 'ExtensionIcon', path: '/admin-settings/account/profile' },
+        { title: 'Preferences', icon: 'SettingIcon', path: '/admin-settings/account/preferences' },
         { title: 'My Phone', icon: 'PhoneIcon', path: '/admin-settings/account/phone' },
         {
           title: 'Notifications',
@@ -95,19 +95,19 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         {
           title: 'People',
           icon: 'ExtensionIcon',
-          path: '/admin-settings/users/extension',
+          path: '/admin-settings/people',
         },
         {
           title: 'Role',
           icon: 'RoleIcon',
-          path: '/admin-settings/users/role',
+          path: '/admin-settings/roles',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
         {
           title: 'Groups',
           icon: 'DepartmentIcon1',
-          path: '/admin-settings/users/department',
+          path: '/admin-settings/phone/departments',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },

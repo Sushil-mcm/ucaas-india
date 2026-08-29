@@ -56,6 +56,9 @@ const CompanyCalling = lazy(
 const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/company-messaging'));
 const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
+const CompanyProfileFieldsPage = lazy(
+  () => import('@/pages/admin-settings/company/company-profile-fields'),
+);
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 const Performance = lazy(() => import('@/pages/performance'));
 const Login = lazy(() => import('@/pages/login'));
@@ -178,12 +181,12 @@ const AIDomain = lazy(() => import('@/pages/admin-settings/knowledge-base/domain
 const AiReceptionist = lazy(
   () => import('@/pages/admin-settings/knowledge-base/ai-receptionist/new-ai-receptionist'),
 );
-const DLCCompaigns = lazy(() => import('@/pages/admin-settings/compilance/10DLC-compaigns'));
+const DLCCompaigns = lazy(() => import('@/pages/admin-settings/compliance/10DLC-compaigns'));
 const IdentitiesAndAddressesPageLayout = lazy(
   () => import('@/pages/admin-settings/numbers/identities-and-address-page-layout'),
 );
-const Reseller = lazy(() => import('@/pages/admin-settings/compilance/reseller'));
-const DLCBrands = lazy(() => import('@/pages/admin-settings/compilance/10DLC-brands'));
+const Reseller = lazy(() => import('@/pages/admin-settings/compliance/reseller'));
+const DLCBrands = lazy(() => import('@/pages/admin-settings/compliance/10DLC-brands'));
 const DNC = lazy(() => import('@/pages/auto-dialer/dnc'));
 const AdminHome = lazy(() => import('@/pages/admin-settings/admin-home'));
 const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
@@ -524,66 +527,96 @@ export const router = createBrowserRouter([
           },
               {
                 /* The company area. `company`, not `company-info`: the word a
-                   customer uses. Old paths are kept as redirects below. */
-                path: 'company',
-                id: 'company',
-                element: (
-                  <ProtectedRoute
-                    element={<CompanyInfo />}
-                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
-                  />
-                ),
-              },
               {
-                /* Each settings section is its own route rather than a tab held in
-                   state. One screen, one URL: it can be linked to, bookmarked,
-                   reloaded, and later given its own permission.
+                /* The company area. `company`, not `company-info`: the word a
+                   customer uses. Old paths redirect below.
 
-                   Phase 1 deliberately reuses the EXISTING permission strings. A
-                   permission the backend does not return reads as "no permission"
-                   and would lock every admin out, so a section cannot get its own
-                   key until the API ships it. Security is the exception and is
-                   tightened now, because today it opens for anyone who can view the
-                   phone system. */
-                path: 'company/settings',
-                element: (
-                  <ProtectedRoute
-                    element={<CompanyLayout />}
-                    guard={{ permission: 'phone_system_action.action.view' }}
-                  />
-                ),
+                   The settings sections are children of a pathless layout route,
+                   so each one is /admin-settings/company/<section> — the address
+                   the sub-nav links to and the one people will bookmark. The
+                   overview and the locations screens are siblings, outside that
+                   layout, because they are not settings sections. */
+                path: 'company',
                 children: [
-                  { index: true, element: <Navigate to="phone-rules" replace /> },
-                  { path: 'phone-rules', element: <CompanyPhoneRules /> },
-                  { path: 'greetings', element: <CompanyGreetings /> },
-                  { path: 'voicemail', element: <CompanyVoicemailPage /> },
-                  { path: 'emergency-address', element: <CompanyEmergency /> },
-                  { path: 'holidays', element: <CompanyHolidaysPage /> },
-                  { path: 'calling', element: <CompanyCalling /> },
-                  { path: 'messaging', element: <CompanyMessagingPage /> },
-                  { path: 'policies', element: <CompanyPoliciesPage /> },
                   {
-                    /* Administrator-only. It holds the sign-in policy, and the
-                       phone-system permission is far too wide a key for that. */
-                    path: 'security',
+                    index: true,
                     element: (
                       <ProtectedRoute
-                        element={<CompanySecurityPage />}
-                        guard={{ adminOnly: true }}
+                        element={<CompanyInfo />}
+                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
                       />
                     ),
                   },
+                  {
+                    /* A location has its own address, so it can be linked to and
+                       reloaded. The list and a single location render the same
+                       screen; the id decides whether that location's panel opens. */
+                    path: 'locations',
+                    element: (
+                      <ProtectedRoute
+                        element={<CompanyInfo />}
+                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                      />
+                    ),
+                  },
+                  {
+                    path: 'locations/:locationId',
+                    element: (
+                      <ProtectedRoute
+                        element={<CompanyInfo />}
+                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                      />
+                    ),
+                  },
+                  {
+                    /* Each settings section is its own route rather than a tab held
+                       in state. One screen, one URL: it can be linked to,
+                       bookmarked, reloaded, and later given its own permission.
+
+                       Phase 1 deliberately reuses the EXISTING permission strings.
+                       A permission the backend does not return reads as "no
+                       permission" and would lock every admin out, so a section
+                       cannot get its own key until the API ships it. Security is
+                       the exception and is tightened now, because today it opens
+                       for anyone who can view the phone system. */
+                    element: (
+                      <ProtectedRoute
+                        element={<CompanyLayout />}
+                        guard={{ permission: 'phone_system_action.action.view' }}
+                      />
+                    ),
+                    children: [
+                      { path: 'phone-rules', element: <CompanyPhoneRules /> },
+                      { path: 'greetings', element: <CompanyGreetings /> },
+                      { path: 'voicemail', element: <CompanyVoicemailPage /> },
+                      { path: 'emergency-address', element: <CompanyEmergency /> },
+                      { path: 'holidays', element: <CompanyHolidaysPage /> },
+                      { path: 'calling', element: <CompanyCalling /> },
+                      { path: 'messaging', element: <CompanyMessagingPage /> },
+                      { path: 'policies', element: <CompanyPoliciesPage /> },
+                      { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
+                      {
+                        /* Administrator-only. It holds the sign-in policy, and the
+                           phone-system permission is far too wide a key for that. */
+                        path: 'security',
+                        element: (
+                          <ProtectedRoute
+                            element={<CompanySecurityPage />}
+                            guard={{ adminOnly: true }}
+                          />
+                        ),
+                      },
+                    ],
+                  },
                 ],
               },
-              /* Kept permanently: admins bookmark these and support articles link
-                 to them. */
               {
                 path: 'company-info',
                 element: <Navigate to="/admin-settings/company" replace />,
               },
               {
                 path: 'company-info/rules',
-                element: <Navigate to="/admin-settings/company/settings/policies" replace />,
+                element: <Navigate to="/admin-settings/company/policies" replace />,
               },
           {
             /* Integrations are set up once for the whole account, so they belong
@@ -628,10 +661,30 @@ export const router = createBrowserRouter([
             path: 'account',
             id: 'account',
             children: [
-              { path: 'basic-info', element: <BasicInfoSettings /> },
-              { path: 'general', element: <General /> },
+              /* `profile` and `preferences`: the words the navigation already
+                 uses for these two screens. `basic-info` and `general` said
+                 nothing and disagreed with their own labels. Old paths redirect. */
+              { path: 'profile', element: <BasicInfoSettings /> },
+              { path: 'preferences', element: <General /> },
               { path: 'phone', element: <ProtectedRoute element={<IncomingCalls />} /> },
               { path: 'notification', element: <SettingsNotification /> },
+              {
+                /* Video settings existed only under the old `/settings` tree, so
+                   once the navigation moved to `/admin-settings/account` there
+                   was no way to reach them. */
+                path: 'video',
+                element: (
+                  <ProtectedRoute
+                    element={<SettingsVideo />}
+                    guard={{
+                      feature: 'video.IS_SHOW',
+                      permission: 'video.action.view',
+                    }}
+                  />
+                ),
+              },
+              { path: 'basic-info', element: <Navigate to="../profile" replace /> },
+              { path: 'general', element: <Navigate to="../preferences" replace /> },
               {
                 path: 'greetings',
                 element: (
@@ -655,49 +708,60 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            path: 'users',
-            id: 'users',
-            children: [
-              {
-                path: 'extension',
-                element: (
-                  <ProtectedRoute
-                    element={<DirectoryPeople />}
-                    guard={{
-                      permission: 'account_setting.access.USER.action.view',
-                    }}
-                  />
-                ),
-                id: 'extension',
-              },
-              {
-                path: 'role',
-                element: <ProtectedRoute element={<DirectoryRoles />} />,
-                id: 'role',
-              },
-              {
-                path: 'department',
-                element: (
-                  <ProtectedRoute
-                    element={<DirectoryGroups />}
-                    guard={{
-                      feature: 'phone_system_action.access.DEPARTMENT',
-                      permission: 'phone_system_action.action.view',
-                    }}
-                  />
-                ),
-                id: 'department',
-              },
-            ],
+            /* People, not "users/extension". An extension is a number a person
+               happens to have; the screen is a list of people. */
+            path: 'people',
+            id: 'people',
+            element: (
+              <ProtectedRoute
+                element={<DirectoryPeople />}
+                guard={{
+                  permission: 'account_setting.access.USER.action.view',
+                }}
+              />
+            ),
+          },
+          {
+            /* This page defines what every role in the company may do, and it
+               carried no guard at all: `ProtectedRoute` returns its element
+               unchanged when `guard` is undefined, so any signed-in person could
+               open it. Administrator-only until the backend ships a permission
+               key of its own — a key it does not return reads as "no permission"
+               and would lock every admin out. */
+            path: 'roles',
+            id: 'roles',
+            element: <ProtectedRoute element={<DirectoryRoles />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* Kept permanently: bookmarked, and linked from support articles. */
+            path: 'users/extension',
+            element: <Navigate to="/admin-settings/people" replace />,
+          },
+          {
+            path: 'users/role',
+            element: <Navigate to="/admin-settings/roles" replace />,
+          },
+          {
+            path: 'users/department',
+            element: <Navigate to="/admin-settings/phone/departments" replace />,
           },
           {
             path: 'numbers',
             id: 'numbers',
             children: [
               {
+                /* Every sibling under `numbers` is gated on this permission.
+                   This one was not wrapped at all. */
                 path: 'coverage',
                 id: 'numbers-coverage',
-                element: <CallCoverage />,
+                element: (
+                  <ProtectedRoute
+                    element={<CallCoverage />}
+                    guard={{
+                      permission: 'virtual_numbers.action.view',
+                    }}
+                  />
+                ),
               },
               {
                 path: 'all',
@@ -782,7 +846,7 @@ export const router = createBrowserRouter([
                    into Company, where an admin looks for them, but this path is
                    bookmarked and linked from support articles. */
                 path: 'preferences',
-                element: <Navigate to="/admin-settings/company/settings/policies" replace />,
+                element: <Navigate to="/admin-settings/company/policies" replace />,
               },
               {
                 path: 'ivr-menus',
@@ -804,6 +868,23 @@ export const router = createBrowserRouter([
                     element={<CallQueues />}
                     guard={{
                       feature: 'phone_system_action.access.QUEUE',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                /* A department is a group calls are routed to, not a kind of
+                   person. It sat under People while being gated on a
+                   phone-system permission; now it sits with the other routing
+                   groups it belongs beside. */
+                path: 'departments',
+                id: 'departments',
+                element: (
+                  <ProtectedRoute
+                    element={<DirectoryGroups />}
+                    guard={{
+                      feature: 'phone_system_action.access.DEPARTMENT',
                       permission: 'phone_system_action.action.view',
                     }}
                   />
@@ -1261,72 +1342,54 @@ export const router = createBrowserRouter([
 
       {
         path: 'settings',
-        element: <Settings />,
+        /* These screens are the same components rendered under
+           `/admin-settings/account`, which is where the navigation points and
+           where they sit inside the Admin shell. Two live URLs for one screen
+           meant Video existed only here and so had no navigation at all, and a
+           person following an old link landed outside the shell they had just
+           been in. Redirected rather than deleted: these paths are bookmarked
+           and are linked from support articles. */
         children: [
+          { index: true, element: <Navigate to="/admin-settings/account/profile" replace /> },
           {
             path: 'basic-info',
-            element: <BasicInfoSettings />,
+            element: <Navigate to="/admin-settings/account/profile" replace />,
           },
           {
             path: 'general',
-            element: <General />,
+            element: <Navigate to="/admin-settings/account/preferences" replace />,
           },
-          {
-            path: 'video',
-            element: (
-              <ProtectedRoute
-                element={<SettingsVideo />}
-                guard={{
-                  feature: 'video.IS_SHOW',
-                  permission: 'video.action.view',
-                }}
-              />
-            ),
-          },
-          {
-            path: 'phone',
-            element: <ProtectedRoute element={<IncomingCalls />} />,
-          },
+          { path: 'video', element: <Navigate to="/admin-settings/account/video" replace /> },
+          { path: 'phone', element: <Navigate to="/admin-settings/account/phone" replace /> },
           {
             path: 'notification',
-            element: <SettingsNotification />,
+            element: <Navigate to="/admin-settings/account/notification" replace />,
           },
           {
             path: 'greetings',
-            element: (
-              <ProtectedRoute
-                element={<Greetings />}
-                guard={{
-                  permission: 'settings.action.greeting.view',
-                }}
-              />
-            ),
+            element: <Navigate to="/admin-settings/account/greetings" replace />,
           },
           {
             path: 'media',
-            element: <Outlet />,
             children: [
-              {
-                index: true,
-                element: <GreetingContent />,
-              },
+              { index: true, element: <Navigate to="/admin-settings/account/media" replace /> },
               {
                 path: 'type-greeting',
-                element: <GreetingContent />,
+                element: <Navigate to="/admin-settings/account/media/type-greeting" replace />,
               },
               {
                 path: 'type-prompt',
-                element: <GreetingContent />,
+                element: <Navigate to="/admin-settings/account/media/type-prompt" replace />,
               },
               {
                 path: 'type-voicemail',
-                element: <GreetingContent />,
+                element: <Navigate to="/admin-settings/account/media/type-voicemail" replace />,
               },
             ],
           },
           {
             path: 'security',
-            element: <Security />,
+            element: <Navigate to="/admin-settings/account/security" replace />,
           },
         ],
       },

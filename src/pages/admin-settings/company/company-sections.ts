@@ -4,7 +4,8 @@
  * its links from it, so a section cannot exist in one and be missing from the
  * other. Adding a section means adding one row here and one route.
  *
- * `path` is relative to /admin-settings/company.
+ * `path` is relative to /admin-settings/company — the layout links there and
+ * the router mounts the sections there, so the two cannot drift apart.
  */
 
 export interface CompanySection {
@@ -21,6 +22,7 @@ export const COMPANY_SECTIONS: CompanySection[] = [
   { path: 'calling', label: 'Calling' },
   { path: 'messaging', label: 'Messaging' },
   { path: 'policies', label: 'Policies' },
+  { path: 'profile-fields', label: 'Profile fields' },
   { path: 'security', label: 'Security' },
 ];
 

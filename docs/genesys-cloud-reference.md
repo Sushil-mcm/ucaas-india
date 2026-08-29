@@ -5,7 +5,7 @@ Internal study notes for the UCaaS project. Reference only.
 
 Sources actually read (not guessed):
 - Public Platform API spec — `api.mypurecloud.com/api/v2/docs/swagger` (22.9 MB, no auth needed).
-  2,178 URL paths, 3,372 operations, 87 product domains. This is the real object model.
+  2,178 URL paths, 3,215 operations, 87 product domains. This is the real object model.
 - Their design system source — npm `genesys-spark-components` v4.262.6 (open source, `MyPureCloud/genesys-spark`).
 - help.genesys.cloud, developer.genesys.cloud, voicebootcamp CX training outline.
 
@@ -27,7 +27,7 @@ Sizes below = number of API operations, which is a good proxy for how much produ
 | Outbound 176 | Integrations 86 | Telephony 25 |
 | Routing 174 | Gamification 78 | Web Deployments 21 |
 | Architect 147 | Quality 76 | Greetings 19 |
-| External Contacts 174 | Recording 57 | Groups 14 |
+| External Contacts 134 | Recording 57 | Groups 14 |
 | Knowledge 127 | Authorization 59 | Teams 10 |
 | Telephony Edge 127 | | Locations 8 |
 
@@ -273,7 +273,7 @@ background / border / foreground variants for light and dark.
 
 | Concept | Genesys | MCM today |
 |---|---|---|
-| Queue routing | bullseye rings, skill evaluation, conditional group routing, last-agent, direct routing, per-channel media settings | **`ring-all` and `top-down` only** (`call-queue/add-edit-call-queue/ring-strategy`) |
+| Queue routing | bullseye rings, skill evaluation, conditional group routing, last-agent, direct routing, per-channel media settings | **7 ring strategies** (ring all, longest idle, round robin, top down, least talk time, fewest calls, random) but no skills, no tiered escalation, no last-agent, no overflow |
 | Skills | skills + proficiency + skill groups + validated expressions | 4 files mention the word; no skill model |
 | Divisions | every object scoped; roles granted per division | 3 unrelated mentions; no model |
 | Number plans | ordered match rules → classification | **none** |
@@ -291,7 +291,7 @@ background / border / foreground variants for light and dark.
 2. **Number plan → classification → outbound route.** Turns dial rules into data. Makes
    "no international calling" a one-line policy instead of scattered regex.
 3. **Skills with proficiency**, then wire them into the queue.
-4. **Bullseye rings on queues.** Big perceived-quality jump for one new sub-object.
+4. **Bullseye rings on queues.** We already have 7 flat ring strategies; what is missing is tiered escalation that widens over time. Big perceived-quality jump for one new sub-object.
 5. **Flow versioning** (save / check in / publish + edit lock) before the IVR builder grows further.
    Retrofitting versioning later is very expensive.
 

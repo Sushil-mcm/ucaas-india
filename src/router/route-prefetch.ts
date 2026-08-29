@@ -135,15 +135,15 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withIntegration(() => import('@/pages/integration/crm')),
   },
   {
-    prefix: '/admin-settings/users/extension',
+    prefix: '/admin-settings/people',
     importers: withAdmin(() => import('@/pages/directory/people')),
   },
   {
-    prefix: '/admin-settings/users/role',
+    prefix: '/admin-settings/roles',
     importers: withAdmin(() => import('@/pages/directory/roles')),
   },
   {
-    prefix: '/admin-settings/users/department',
+    prefix: '/admin-settings/phone/departments',
     importers: withAdmin(() => import('@/pages/directory/groups')),
   },
   {
@@ -244,15 +244,15 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/admin-settings/compliance/brands/campaigns',
-    importers: withAdmin(() => import('@/pages/admin-settings/compilance/10DLC-compaigns')),
+    importers: withAdmin(() => import('@/pages/admin-settings/compliance/10DLC-compaigns')),
   },
   {
     prefix: '/admin-settings/compliance/brands/reseller',
-    importers: withAdmin(() => import('@/pages/admin-settings/compilance/reseller')),
+    importers: withAdmin(() => import('@/pages/admin-settings/compliance/reseller')),
   },
   {
     prefix: '/admin-settings/compliance/brands',
-    importers: withAdmin(() => import('@/pages/admin-settings/compilance/10DLC-brands')),
+    importers: withAdmin(() => import('@/pages/admin-settings/compliance/10DLC-brands')),
   },
   {
     prefix: '/admin-settings/templates/user-settings',
@@ -278,39 +278,39 @@ const routePrefetchers: RoutePrefetcher[] = [
     ),
   },
   {
-    prefix: '/settings/basic-info',
+    prefix: '/admin-settings/account/profile',
     importers: withSettings(() => import('@/pages/settings/basic-info')),
   },
   {
-    prefix: '/settings/general',
+    prefix: '/admin-settings/account/preferences',
     importers: withSettings(() => import('@/pages/settings/general')),
   },
   {
-    prefix: '/settings/video',
+    prefix: '/admin-settings/account/video',
     importers: withSettings(() => import('@/pages/settings/video')),
   },
   {
-    prefix: '/settings/phone',
+    prefix: '/admin-settings/account/phone',
     importers: withSettings(() => import('@/pages/settings/phone')),
   },
   {
-    prefix: '/settings/notification',
+    prefix: '/admin-settings/account/notification',
     importers: withSettings(() => import('@/pages/settings/notification')),
   },
   {
-    prefix: '/settings/greetings',
+    prefix: '/admin-settings/account/greetings',
     importers: withSettings(() => import('@/pages/settings/greetings')),
   },
   {
-    prefix: '/settings/media',
+    prefix: '/admin-settings/account/media',
     importers: withSettings(() => import('@/pages/greetings/greetings-content')),
   },
   {
-    prefix: '/settings/security',
+    prefix: '/admin-settings/account/security',
     importers: withSettings(() => import('@/pages/settings/security')),
   },
   {
-    prefix: '/settings',
+    prefix: '/admin-settings/account',
     importers: withSettings(() => import('@/pages/settings/basic-info')),
   },
   {

@@ -1,4 +1,8 @@
 import * as yup from 'yup'
+import {
+  isReservedExtension,
+  reservedExtensionMessage,
+} from '@/constants/reserved-extensions';
 
 export const requiredString = (fieldName: string, min = 2, max = 50) => {
   return yup
@@ -17,7 +21,14 @@ export const requiredExtension = () => {
   return yup
     .string()
     .required("Extension is required")
-    .matches(/^\d{4}$/, "Extension must upto 4 digits");
+    .matches(/^\d{4}$/, "Extension must be 4 digits")
+    /* An extension that matches an emergency or public service number can
+       shadow it on an internal dial. See constants/reserved-extensions.ts. */
+    .test(
+      "not-reserved",
+      ({ value }) => reservedExtensionMessage(value),
+      (value) => !isReservedExtension(value)
+    );
 };
 
 export const requiredEmail = () => {
