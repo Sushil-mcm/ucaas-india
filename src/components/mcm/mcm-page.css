@@ -3417,28 +3417,29 @@
    --------------------------------------------------------------------------- */
 
 .mcm-setcard {
+  /* `flex: 0 0 auto` because these sit in fixed-height flex columns on several
+     screens. Without it each card shrinks to share the height between them, the
+     rows disappear and the header button gets clipped by the overflow rule. */
+  flex: 0 0 auto;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 14px;
-  overflow: hidden;
+  margin-bottom: 12px;
 }
 
 .mcm-setcard-h {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
+  padding: 13px 16px 11px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--ground) 45%, var(--surface));
 }
 .mcm-setcard-ht { min-width: 0; }
 .mcm-setcard-h h3 {
   margin: 0;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -3460,8 +3461,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  padding: 13px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
 }
 .mcm-setcard-body > .mcm-setrow:last-child,
 .mcm-setnest > .mcm-setrow:last-child { border-bottom: 0; }
@@ -3472,8 +3473,8 @@
   align-items: center;
   gap: 8px;
   font-family: var(--sans);
-  font-size: 13.5px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 550;
   color: var(--ink);
 }
 .mcm-setrow-desc {
@@ -3507,9 +3508,9 @@
 
 /* Sub-settings. The rule down the left ties them to the row that governs them. */
 .mcm-setnest {
-  margin: 0 0 4px 2px;
-  padding: 2px 0 2px 14px;
-  border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  margin: 0 0 2px 0;
+  padding: 0 0 0 18px;
+  border-left: 1px solid var(--line);
 }
 
 .mcm-setgrid {
@@ -3529,11 +3530,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm);
-  background: var(--accent-wash);
-  color: var(--accent-ink);
+  color: color-mix(in srgb, var(--ink) 45%, transparent);
 }
 .mcm-setcard-title {
   display: flex;

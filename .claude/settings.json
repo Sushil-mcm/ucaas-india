@@ -57,7 +57,8 @@
       "Bash(timeout 120 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
       "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s\")",
       "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s -- --apply\")",
-      "Bash(timeout 150 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)"
+      "Bash(timeout 150 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 120 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s -- --apply\")"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
