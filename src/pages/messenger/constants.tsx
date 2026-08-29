@@ -1,5 +1,6 @@
 import {
   ChatLine,
+  GlobeIcon,
   Instagram,
   LetterLine,
   Messanger,
@@ -7,18 +8,24 @@ import {
   Unread,
   WhatsappIcon,
 } from '@/assets/icons';
+import { Bot } from 'lucide-react';
 
 export const ChatChannels = [
-  // {
-  //   label: 'All Channels',
-  //   value: 'all_channels',
-  //   icon: () => <></>,
-  // },
+  {
+    label: 'All Channels',
+    value: 'all_channels',
+    icon: () => <Bot className="w-6 h-6 text-gray-900" />,
+  },
 
   {
     label: 'Chat',
     value: 'chat',
     icon: () => <ChatLine className="w-6 h-6 text-gray-900" />,
+  },
+  {
+    label: 'Website',
+    value: 'captain',
+    icon: () => <Bot className="w-6 h-6 text-gray-900" />,
   },
   // {
   //   label: 'Whatsapp',
@@ -38,6 +45,8 @@ export const ChatChannels = [
 ];
 
 export const CHANNELS_ICON = {
+  website: <GlobeIcon className="w-8 h-8" />,
+  captain: <Bot className="w-8 h-8" />,
   facebook: <Messanger className="w-8 h-8" />,
   messenger: <Messanger className="w-8 h-8" />,
   instagram: <Instagram className="w-8 h-8" />,

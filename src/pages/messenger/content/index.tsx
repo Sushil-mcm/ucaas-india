@@ -3,6 +3,9 @@ import FacebookContent from './facebook-content';
 import InstagramContent from './instagramContent';
 import TelegramContent from './telegram-content';
 import WhatsappContent from './whatsapp-content';
+import WebsiteContent from './website-content';
+import CaptainContent from './captain-content';
+import AllChannelsContent from './all-channels-content';
 import NotFound from '@/assets/images/not-found-img.svg';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { canUseOmniChannel } from '../omni-permissions';
@@ -11,7 +14,7 @@ const Content = forwardRef<
   any,
   {
     selectedChat?: any;
-    chatType?: '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat';
+    chatType?: '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat' | 'website' | 'captain' | 'all_channels';
     selectedChannelType?: any;
     onBackToList?: () => void;
   }
@@ -53,6 +56,15 @@ const Content = forwardRef<
           selectedChannelType={selectedChannelType}
           onBackToList={onBackToList}
         />
+      )}
+      {chatType === 'website' && selectedChat && (
+        <WebsiteContent selectedChat={selectedChat} onBackToList={onBackToList} />
+      )}
+      {chatType === 'captain' && selectedChat && (
+        <CaptainContent selectedChat={selectedChat} onBackToList={onBackToList} />
+      )}
+      {chatType === 'all_channels' && selectedChat && (
+        <AllChannelsContent selectedChat={selectedChat} onBackToList={onBackToList} />
       )}
       {!selectedChat && (
         <div className="w-full bg-white p-3 flex items-center justify-center h-full">

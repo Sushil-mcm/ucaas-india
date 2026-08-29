@@ -42,6 +42,14 @@ const loadBillingPlan = async () => {
 
 const AdminSettings = lazy(() => import('@/pages/admin-settings'));
 const CompanyInfo = lazy(() => import('@/pages/admin-settings/company'));
+const CaptainPlayground = lazy(() => import('@/pages/admin-settings/captain/playground'));
+const CaptainAssistants = lazy(() => import('@/pages/admin-settings/captain/assistants'));
+const CaptainDocuments = lazy(() => import('@/pages/admin-settings/captain/documents'));
+const CaptainFaqs = lazy(() => import('@/pages/admin-settings/captain/faqs'));
+const CaptainScenarios = lazy(() => import('@/pages/admin-settings/captain/scenarios'));
+const CaptainActions = lazy(() => import('@/pages/admin-settings/captain/actions'));
+const CaptainInboxes = lazy(() => import('@/pages/admin-settings/captain/inboxes'));
+const CaptainSettings = lazy(() => import('@/pages/admin-settings/captain/settings'));
 const CompanyLayout = lazy(() => import('@/pages/admin-settings/company/company-layout'));
 const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page-phone-rules'));
 const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
@@ -712,6 +720,56 @@ export const router = createBrowserRouter([
               },
               { path: 'security', element: <Security /> },
             ],
+          },
+          {
+            path: 'captain/playground',
+            id: 'captain-playground',
+            element: <CaptainPlayground />,
+          },
+          {
+            path: 'captain/assistants',
+            id: 'captain-assistants',
+            element: <CaptainAssistants />,
+          },
+          {
+            path: 'captain/documents',
+            id: 'captain-documents',
+            element: <CaptainDocuments />,
+          },
+          {
+            path: 'captain/faqs',
+            id: 'captain-faqs',
+            element: <CaptainFaqs />,
+          },
+          {
+            path: 'captain/scenarios',
+            id: 'captain-scenarios',
+            element: <CaptainScenarios />,
+          },
+          {
+            path: 'captain/actions',
+            id: 'captain-actions',
+            element: <CaptainActions />,
+          },
+          {
+            path: 'captain/inboxes',
+            id: 'captain-inboxes',
+            element: <CaptainInboxes />,
+          },
+          {
+            path: 'captain/inboxes/:inboxId',
+            id: 'captain-inbox-detail',
+            element: <CaptainInboxes />,
+          },
+          {
+            path: 'captain/inboxes/:inboxId/:tab',
+            id: 'captain-inbox-detail-tab',
+            element: <CaptainInboxes />,
+          },
+          {
+            path: 'captain/settings',
+            id: 'captain-settings',
+            element: <CaptainSettings />,
           },
           {
             /* People, not "users/extension". An extension is a number a person

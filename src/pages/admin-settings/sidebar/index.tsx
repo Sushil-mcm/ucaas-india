@@ -25,6 +25,24 @@ export const canShowItem = (item: any, isAdmin: boolean) => {
 export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
   [
     {
+      title: 'Captain',
+      type: 'accordion',
+      value: 'captain',
+      icon: 'UserCircleIcon',
+      visible: true,
+      enabled: true,
+      children: [
+        { title: 'Playground', icon: 'PlayCircle', path: '/admin-settings/captain/playground' },
+        { title: 'Assistants', icon: 'AIChatIcon', path: '/admin-settings/captain/assistants' },
+        { title: 'Documents', icon: 'DocumentAdd', path: '/admin-settings/captain/documents' },
+        { title: 'FAQs', icon: 'QuestionIcon', path: '/admin-settings/captain/faqs' },
+        { title: 'Scenarios', icon: 'PlayDottedCircle', path: '/admin-settings/captain/scenarios' },
+        { title: 'Actions', icon: 'WebhookIcon', path: '/admin-settings/captain/actions' },
+        { title: 'Inboxes', icon: 'InboxIcon', path: '/admin-settings/captain/inboxes' },
+        { title: 'Settings', icon: 'SettingsIcon', path: '/admin-settings/captain/settings' },
+      ],
+    },
+    {
       /* Company-wide phone rules used to sit under Phone System, so an admin
          looking for company settings found a name and a list of locations and
          concluded there were none. Established systems keep organisation

@@ -51,7 +51,7 @@ type ChatTab = 'all' | 'team' | 'direct' | 'favorites';
 type MessageStatus = 'all' | 'unread';
 type MessengerMode = 'messenger' | 'agent-chat';
 type MessengerChatType =
-  '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat';
+  '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat' | 'website' | 'captain' | 'all_channels';
 type DraftRecord = Record<
   string,
   { message?: any; messageItemAction?: { action?: string }; updatedAt?: number }
@@ -1388,7 +1388,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
       return;
     }
 
-    if (chatType !== 'chat' && !canUseOmniChannel(omniAccess, chatType)) {
+    if (chatType !== 'chat' && chatType !== 'website' && chatType !== 'captain' && chatType !== 'all_channels' && !canUseOmniChannel(omniAccess, chatType)) {
       setSelectedChat(null);
       setselectedChannelType(null);
       setChatType('chat');

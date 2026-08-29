@@ -11,3 +11,6 @@ checked without a backend or a browser.
 The point of these is that the logic lives in `src/lib/` as a module rather than
 inside a component, so it can be proven now and reused by whoever builds the
 backend later.
+
+    npx esbuild src/lib/acd-routing.ts --format=cjs --outfile=tests/acd.build.cjs
+    node tests/acd-test.cjs

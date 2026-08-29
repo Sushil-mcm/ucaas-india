@@ -19,6 +19,9 @@ import { useQuery } from '@tanstack/react-query';
 import { allOmniChannelsList } from '@/services/api';
 import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
 import TelegramChats from './telegram-chats';
+import WebsiteChats from './website-chats';
+import CaptainChats from './captain-chats';
+import AllChannelsChats from './all-channels-chats';
 import { Plus, Copy } from 'lucide-react';
 import { CHANNELS_ICON, ChatChannels } from '../constants';
 import { canUseOmniChannel, getAllowedOmniChannels } from '../omni-permissions';
@@ -35,7 +38,7 @@ const Sidebar = ({
 }: {
   handleChatType: any;
   setSelectedChat: any;
-  chatType: '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat';
+  chatType: '' | 'whatsapp' | 'instagram' | 'facebook' | 'messenger' | 'telegram' | 'chat' | 'website' | 'captain' | 'all_channels';
   selectedChat?: any;
   setselectedChannelType?: any;
   selectedChannelType?: any;
@@ -268,6 +271,15 @@ const Sidebar = ({
                 selectedChannelType={selectedChannelType}
                 isCompactLayout={isCompactLayout}
               />
+            )}
+            {chatType === 'website' && (
+              <WebsiteChats setSelectedChat={setSelectedChat} selectedChat={selectedChat} isCompactLayout={isCompactLayout} />
+            )}
+            {chatType === 'captain' && (
+              <CaptainChats setSelectedChat={setSelectedChat} selectedChat={selectedChat} isCompactLayout={isCompactLayout} />
+            )}
+            {chatType === 'all_channels' && (
+              <AllChannelsChats setSelectedChat={setSelectedChat} selectedChat={selectedChat} isCompactLayout={isCompactLayout} />
             )}
           </div>
           {showCreateChatModal === 'direct' && (
