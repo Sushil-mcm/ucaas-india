@@ -476,3 +476,46 @@ which is the point at which language decides anything.
 ### Still to do in Wave 1's spirit
 - Split `settings` into `hours` and `recording` when that shared component is next touched.
 - Give each tab its own permission once S12 lands.
+
+
+---
+
+## Part 8 — Built so far
+
+All front end, on `feat/queues-ivr-urls`. Typecheck, lint and build pass on each step.
+
+| Item | State |
+|---|---|
+| I1 addressable queues and IVRs | **Built** — four routes each, redirects, tab slugs in one shared table |
+| I2 raise the caps | **Built** — 30 → 500 callers, 60 → 300 minutes, callers range-checked |
+| B1 callback in queue | **Built (settings only)** — thresholds, attempts, retry gap, expiry |
+| B2 wait announcements | **Built (settings only)** — place in line, expected wait |
+| B3 repeating delay greeting | **Built (settings only)** — prompt plus interval, floored at 30 s |
+| I3 wrap-up rule | **Built (settings only)** — five modes, defaulting to today's behaviour |
+| B5 last-agent routing | **Built (settings only)** — three modes plus a lookback window |
+| B7 service level target | **Built (settings only)** — percent within seconds |
+| I6 IVR language field | **Resolved** — stays a pass-through, dead validation removed, reason recorded |
+| B6 per-agent ring duration | **Already existed.** Not a gap. See the correction in the sheet |
+
+**"Settings only" means exactly that.** Each of those stores the admin's choice and reads it
+back. Nothing acts on any of them: the call path has no queue-depth counter, no rolling
+handle time, no callback scheduler, and does not read the wrap-up mode, the last-agent mode
+or the service level. **Every one of those controls says so on screen**, following the rule
+the company security page set — a setting that looks live but is not is worse than no
+setting, because an admin reads it and believes they are covered. Those labels come off in
+the same change that makes each real.
+
+### Deliberately not built: B4 skills
+
+Skills need a store, and there isn't one. What the directory calls a person's "ACD skills"
+is derived from their queue membership — `people-rows.ts` says so in its own comment — and
+`member.skills` in the queue editor is passed straight through from that.
+
+A skills picker with no skills to pick would be fabrication: an admin would assign a
+proficiency that nothing records and route on a skill nobody holds. It needs S4 first.
+
+### The rest of the runway needs the backend
+
+IVR versioning, text to speech and the flow builder cannot be started front-end-first
+without inventing data. Versioning in particular must be built with its storage, not
+retrofitted — that was the whole reason for putting it before the builder.
