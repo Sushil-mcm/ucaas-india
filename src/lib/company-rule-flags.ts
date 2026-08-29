@@ -8,7 +8,7 @@
  *     src/components/common-settings/index.tsx disables the control when that is
  *     false. Here `override: true` reads as "this person MAY change it themselves".
  *   - As a COPY INSTRUCTION. `seSettingsData` in
- *     src/pages/admin-settings/users/extension/update-forwarding/index.tsx copies the
+ *     src/pages/admin-settings/people/update-forwarding/index.tsx copies the
  *     company value onto the person only when the flag is on. Here `override: true`
  *     reads as "PUT this company value on the person".
  *

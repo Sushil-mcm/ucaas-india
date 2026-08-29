@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
-import UpdateForwarding from '@/pages/admin-settings/users/extension/update-forwarding';
+import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
 import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
@@ -21,9 +21,10 @@ import {
   useMyPresenceControl,
 } from '@/hooks/use-presence-control';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import RoleChangeModal from '@/pages/admin-settings/users/extension/role-change-modal';
-import AssignCallerIdModal from '@/pages/admin-settings/users/extension/add-users/assign-caller-id-modal';
-import AddUsers from '@/pages/admin-settings/users/extension/add-users';
+import RoleChangeModal from '@/pages/admin-settings/people/role-change-modal';
+import AssignCallerIdModal from '@/pages/admin-settings/people/add-users/assign-caller-id-modal';
+import AddUsers from '@/pages/admin-settings/people/add-users';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 
 /**
  * Directory ▸ People — the organisation roster.
@@ -87,7 +88,7 @@ const People = () => {
   const { mutate: removeCallerId, isPending: isUnassigning } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      invalidateNumberLists(queryClient);
       queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
       handleAlert({
         text: data?.data?.data?.message || 'Caller ID removed',

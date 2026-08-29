@@ -8,7 +8,7 @@ import { Label } from '../ui/label';
 import ErrorTooltip from './error-tooltip';
 import { SetValueConfig } from 'react-hook-form';
 import SelectGreeting from './greeting-select';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useUser } from '@/hooks/use-user';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';

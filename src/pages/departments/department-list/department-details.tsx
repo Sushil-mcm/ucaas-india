@@ -7,7 +7,7 @@ import SideDrawer from '@/components/custom/side-drawer';
 import { Button } from '@/components/ui/button';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { capitalizeFirstLetter, getObjectLength, handleAlert } from '@/lib/utils';
-import NewDepartment from '@/pages/admin-settings/users/department/new-department';
+import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
 import { deleteDepartment } from '@/services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';

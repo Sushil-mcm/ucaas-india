@@ -48,7 +48,7 @@ import {
  *
  * The number that actually decides how long a phone rings is sent per device as
  * `call_handling.incoming_calls.device_options[].timeout` from
- * src/pages/admin-settings/users/extension/update-forwarding/index.tsx, and it
+ * src/pages/admin-settings/people/update-forwarding/index.tsx, and it
  * falls back to a hardcoded `RINGING_OPTIONS[0]` — not to anything saved here.
  * The switch never sees this record at all.
  *

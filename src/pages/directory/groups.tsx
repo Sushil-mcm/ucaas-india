@@ -6,7 +6,7 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import NewDepartment from '@/pages/admin-settings/users/department/new-department';
+import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
 
 /**

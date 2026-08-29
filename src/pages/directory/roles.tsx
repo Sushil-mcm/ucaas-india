@@ -6,8 +6,8 @@ import { useUser } from '@/hooks/use-user';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import AlertConfirm from '@/components/custom/alert-confirm';
-import AddNewRole from '@/pages/admin-settings/users/roles/add-new-role';
-import AssignUsersModal from '@/pages/admin-settings/users/roles/assign-users-modal';
+import AddNewRole from '@/pages/admin-settings/roles/add-new-role';
+import AssignUsersModal from '@/pages/admin-settings/roles/assign-users-modal';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
 
 /**

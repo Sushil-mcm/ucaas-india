@@ -28,7 +28,7 @@ import CommonSettingPermission from '@/components/common-settings';
 import Media from './media';
 import { Tabs } from '@radix-ui/react-tabs';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ERROR_TYPES } from '@/pages/admin-settings/users/constants';
+import { ERROR_TYPES } from '@/pages/admin-settings/constants';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { useUser } from '@/hooks/use-user';
 interface AddEditIvrProps {

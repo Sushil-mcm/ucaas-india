@@ -73,6 +73,64 @@ export const WAITING_LIMITS = {
 
 export const DELAY_GREETING_DEFAULT_INTERVAL = 60;
 
+/* How the queue behaves after the call, and who it prefers to ring.
+ *
+ * Three settings established systems have and we did not.
+ *
+ * Wrap-up: we only ever had a timer. Their setting is the *prompt mode* — the
+ * timer is secondary. "Optional wrap-up" and "wrap-up you cannot skip" are
+ * different products to a supervisor, and a timer alone cannot say which.
+ *
+ * Last agent: send a repeat caller back to whoever they spoke to last. Three
+ * modes, matching the reference, plus how far back to look.
+ *
+ * Service level: the target reporting measures against, so a supervisor sees
+ * "84% against a 80% target" instead of a bare average with nothing to judge it
+ * by.
+ *
+ * As with the waiting settings, these are stored and read back but nothing acts
+ * on them yet, and every control says so on screen. */
+export const WRAPUP_PROMPT_MODES = [
+  { value: 'OPTIONAL', label: 'Optional — the agent may skip it' },
+  { value: 'MANDATORY', label: 'Required — no time limit' },
+  { value: 'MANDATORY_TIMEOUT', label: 'Required, then moves on when time runs out' },
+  { value: 'MANDATORY_FORCED_TIMEOUT', label: 'Required, and forced closed when time runs out' },
+  { value: 'AGENT_REQUESTED', label: 'Only when the agent asks for it' },
+];
+
+/* The mode existing queues get. It is what a plain timer already behaved like,
+   so no queue changes behaviour the first time it is opened and saved. */
+export const WRAPUP_DEFAULT_MODE = 'MANDATORY_TIMEOUT';
+
+export const LAST_AGENT_MODES = [
+  { value: 'DISABLED', label: 'Off' },
+  { value: 'QUEUE_MEMBERS_ONLY', label: 'Only if they are still in this queue' },
+  { value: 'ANY_AGENT', label: 'Any agent who handled them' },
+];
+
+export const AFTER_CALL_DEFAULTS = {
+  wrapup_prompt: WRAPUP_DEFAULT_MODE,
+  last_agent: {
+    mode: 'DISABLED',
+    /* How far back to look for the previous agent. Beyond a few days the caller
+       rarely remembers the person, and the wait to reach them is not worth it. */
+    window_hours: 24,
+  },
+  service_level: {
+    enabled: false,
+    /* Answer this share of calls within this many seconds. 80 in 20 is the
+       long-standing contact centre convention, so it is the starting point. */
+    percent: 80,
+    seconds: 20,
+  },
+};
+
+export const AFTER_CALL_LIMITS = {
+  window_hours: { min: 1, max: 720 },
+  percent: { min: 1, max: 100 },
+  seconds: { min: 1, max: 3600 },
+};
+
 export const CALL_QUEUE_INIITAL_VALUES = {
   name: '',
   extension: '',
@@ -137,6 +195,7 @@ export const CALL_QUEUE_INIITAL_VALUES = {
     },
     transcription: false,
     waiting: WAITING_DEFAULTS,
+    after_call: AFTER_CALL_DEFAULTS,
   },
   greetings: {
     welcome: {

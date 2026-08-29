@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  AFTER_CALL_DEFAULTS,
   CALL_DISTRIBUTION_DATA,
   CALL_QUEUE_INIITAL_VALUES,
   DELAY_GREETING_DEFAULT_INTERVAL,
@@ -372,6 +373,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
          dropped from the record — the same way a separate holiday action used
          to be destroyed on every save. */
       waiting: watch('settings.waiting') || WAITING_DEFAULTS,
+      after_call: watch('settings.after_call') || AFTER_CALL_DEFAULTS,
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
         leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
@@ -561,6 +563,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
     const display_number = queueInfo?.settings?.display_number;
     const ring_strategy = queueInfo?.settings?.ring_strategy;
     const storedWaiting = queueInfo?.settings?.waiting;
+    const storedAfterCall = queueInfo?.settings?.after_call;
     const transcription = queueInfo?.settings?.transcription;
     const ai_call_monitoring = queueInfo?.settings?.ai_call_monitoring;
     const wrapup_time = queueInfo?.settings?.wrapup_time;
@@ -693,6 +696,15 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
         ...WAITING_DEFAULTS,
         ...(storedWaiting || {}),
         callback: { ...WAITING_DEFAULTS.callback, ...(storedWaiting?.callback || {}) },
+      },
+      after_call: {
+        ...AFTER_CALL_DEFAULTS,
+        ...(storedAfterCall || {}),
+        last_agent: { ...AFTER_CALL_DEFAULTS.last_agent, ...(storedAfterCall?.last_agent || {}) },
+        service_level: {
+          ...AFTER_CALL_DEFAULTS.service_level,
+          ...(storedAfterCall?.service_level || {}),
+        },
       },
     };
 

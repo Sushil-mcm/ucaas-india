@@ -13,7 +13,7 @@ import { handleAlert } from '@/lib/utils';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import Loader from '@/components/custom/loader';
 import SideDrawer from '@/components/custom/side-drawer';
-import UpdateForwarding from '@/pages/admin-settings/users/extension/update-forwarding';
+import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
 import { Ic } from '@/components/mcm/icons';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
 import {
@@ -26,6 +26,7 @@ import {
   assignedNameOf,
   type Coverage,
 } from '@/lib/call-standard';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import '@/components/mcm/mcm-page.css';
 
 /**
@@ -102,8 +103,7 @@ const CallCoverage = () => {
   const { mutate: applyStandard, isPending: applying } = useMutation({
     mutationFn: callForwarding,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['usedNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      invalidateNumberLists(queryClient);
       handleAlert({ text: 'Standard call handling applied.', type: 'success' });
       setConfirming(null);
     },

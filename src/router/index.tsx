@@ -75,7 +75,7 @@ const VideoConsole = lazy(() => import('@/pages/video/console'));
 const NewContact = lazy(() => import('@/pages/new-contact'));
 const Directory = lazy(() => import('@/pages/directory'));
 const ErrorPage = lazy(() => import('@/pages/error'));
-const UserDepartment = lazy(() => import('@/pages/admin-settings/users/department'));
+const UserDepartment = lazy(() => import('@/pages/admin-settings/phone-systems/departments'));
 const AllNumbers = lazy(() => import('@/pages/admin-settings/numbers/all-numbers'));
 const IvrMenus = lazy(() => import('@/pages/admin-settings/phone-systems/ivr-menus'));
 const Inbox = lazy(() => import('@/pages/inbox'));

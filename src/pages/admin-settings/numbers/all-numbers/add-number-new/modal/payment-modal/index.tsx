@@ -1,4 +1,5 @@
 import PaymentScreen from '@/components/payment';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
@@ -55,7 +56,7 @@ const PaymentModal = ({
       });
     }
     handleClose();
-    queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+    invalidateNumberLists(queryClient);
     if (message) handleAlert({ text: message, type: 'success' });
   };
 

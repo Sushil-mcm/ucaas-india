@@ -5,7 +5,7 @@ import GroupedAvatar from '@/components/custom/grouped-avatar';
 import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

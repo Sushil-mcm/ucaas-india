@@ -7,7 +7,7 @@ import { safeJSONParse } from '../constants';
 import { FORWARD_TYPES_LABEL } from '@/components/custom/forward-action-all';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 import PhoneInput from 'react-phone-input-2';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 // import { MEDIA_URL } from '@/lib/utils';
 // import { useUser } from '@/hooks/use-user';
 // import { Button } from '@/components/ui/button';

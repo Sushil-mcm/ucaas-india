@@ -23,9 +23,9 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'Groups', path: '/department' },
   { label: 'Admin Settings', path: '/admin-settings' },
   { label: 'Company & Locations', path: '/admin-settings/company' },
-  { label: 'People', path: '/admin-settings/users/extension' },
-  { label: 'Roles', path: '/admin-settings/users/role' },
-  { label: 'Groups', path: '/admin-settings/users/department' },
+  { label: 'People', path: '/admin-settings/people' },
+  { label: 'Roles', path: '/admin-settings/roles' },
+  { label: 'Groups', path: '/admin-settings/phone/departments' },
   { label: 'All Numbers', path: '/admin-settings/numbers/all' },
   { label: 'Numbers In Use', path: '/admin-settings/numbers/in-use' },
   { label: 'Numbers Inventory', path: '/admin-settings/numbers/inventory' },
@@ -91,7 +91,7 @@ export function resolveApiResultPath(item: any): string {
     case 'meeting':
       return '/video';
     case 'user':
-      return '/admin-settings/users/extension';
+      return '/admin-settings/people';
     case 'plan':
       return '/admin-settings/billing/plan';
     case 'card':

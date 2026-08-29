@@ -71,10 +71,10 @@ const AdminHome = () => {
 
   /* Recent is a list of paths; resolving each through `allEntries` means a
      screen you lose access to quietly disappears.
-     A visited path may be a detail screen ("…/users/people/edit/42"), which is
-     not itself a nav entry. Fall back to the longest nav path it sits under, so
+     A visited path may be a detail screen ("…/people/edit/42"), which is not
+     itself a nav entry. Fall back to the longest nav path it sits under, so
      editing a person still counts as having used People rather than vanishing.
-     Longest wins because "/admin-settings/users" and "/admin-settings/users/people"
+     Longest wins because "/admin-settings/phone" and "/admin-settings/phone/queues"
      can both be prefixes and only the more specific one is the screen you saw. */
   const resolveEntry = useCallback(
     (path: string) =>

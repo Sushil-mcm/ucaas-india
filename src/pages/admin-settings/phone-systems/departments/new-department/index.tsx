@@ -24,7 +24,7 @@ import {
   getDepartmentTimeoutOption,
   MEMBER_RING_STRATEGY_OPTIONS,
   readDepartmentTimeoutOption,
-} from '../../constants';
+} from '../../../constants';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { requiredExtension } from '@/schema/common';
 import { COMMON_SETTINGS_SCHEMA } from '@/components/common-settings/schema';

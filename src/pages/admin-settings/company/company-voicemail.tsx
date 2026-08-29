@@ -53,7 +53,7 @@ import {
  *   src/components/common-settings/index.tsx:48 (useCompanyPolicy) through
  *   canEditField, which disables the Voicemail Settings button on a person's
  *   own settings page. It is also read at
- *   src/pages/admin-settings/users/extension/update-forwarding/index.tsx:787,
+ *   src/pages/admin-settings/people/update-forwarding/index.tsx:787,
  *   where a true flag copies this whole voicemail_pin block onto a user when an
  *   admin applies this record as their template.
  *

@@ -17,8 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icon } from '@/assets/icons/icon';
-import AddUsers from '../admin-settings/users/extension/add-users';
-import NewDepartment from '../admin-settings/users/department/new-department';
+import AddUsers from '../admin-settings/people/add-users';
+import NewDepartment from '../admin-settings/phone-systems/departments/new-department';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';

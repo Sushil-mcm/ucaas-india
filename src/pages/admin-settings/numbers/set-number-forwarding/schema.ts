@@ -1,7 +1,7 @@
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 import { requiredString } from '@/lib/schema';
 import * as yup from 'yup';
-import { holidaySchema } from '../../users/constants';
+import { holidaySchema } from '../../constants';
 
 const stringOptional = () => yup.string().optional();
 export const scheduleValidation = yup.object().shape({

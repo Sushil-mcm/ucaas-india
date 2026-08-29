@@ -9,7 +9,7 @@ import * as yup from 'yup';
 import { useUser } from '@/hooks/use-user';
 import moment from 'moment';
 import { Label } from '@/components/ui/label';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { generateUniqueId } from '@/lib/utils';
 import { chatEvents } from '@/context/socket-events';

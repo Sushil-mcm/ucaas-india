@@ -12,7 +12,7 @@
  * dialog or two hundred times from here:
  *
  *   - A holiday on a line MUST carry both `type.value` and `value.value`
- *     (`holidaySchema`, src/pages/admin-settings/users/constants.ts). A row with
+ *     (`holidaySchema`, src/pages/admin-settings/constants.ts). A row with
  *     an empty action does not fall back to anything — it fails validation and
  *     blocks that line's whole form from saving, on a screen that never explains
  *     why. So a line whose action cannot be resolved is REPORTED AS SKIPPED and
@@ -73,6 +73,7 @@ import {
   upsertCallQueue,
   upsertIVR,
 } from '@/services/api';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 
 /* The same cap the business-hours dialog enforces. It is a local constant there
    too, so this is a second copy rather than a shared one — worth knowing if the
@@ -630,8 +631,7 @@ const CompanyHolidayApply = () => {
       queryClient.invalidateQueries({ queryKey: ['callQueueListQueryFn'] });
       queryClient.invalidateQueries({ queryKey: ['ivrList'] });
       queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
-      queryClient.invalidateQueries({ queryKey: ['usedNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
+      invalidateNumberLists(queryClient);
 
       const failed = tally.failed;
       handleAlert({

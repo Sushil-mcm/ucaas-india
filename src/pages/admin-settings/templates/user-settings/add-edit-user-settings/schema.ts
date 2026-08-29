@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 import { ADD_TEMPLATE_INITIAL, TAB_CONSTANT } from './constants';
 import { requiredString } from '@/lib/schema';
-import { holidaySchema } from '@/pages/admin-settings/users/constants';
+import { holidaySchema } from '@/pages/admin-settings/constants';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 
 export const UPSERT_TEMPLATE_SCHEMA: Record<string, yup.ObjectSchema<any>> = {

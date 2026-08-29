@@ -3,7 +3,7 @@ import ForwardingActions from '@/components/custom/forwarding-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { generateRandomExtension } from '@/lib/utils';
-import { getDepartmentTimeoutOptions } from '../../constants';
+import { getDepartmentTimeoutOptions } from '../../../constants';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { Icon } from '@/assets/icons/icon';

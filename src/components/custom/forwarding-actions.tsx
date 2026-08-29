@@ -7,7 +7,7 @@ import CustomSelect from './custom-select';
 import SelectGreeting from './greeting-select';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 
 /* IVR and DEPARTMENT were missing from this map while FORWARD_VALUE_OPTIONS below
    referenced FORWARD_TYPES.IVR and FORWARD_TYPES.DEPARTMENT — both resolved to

@@ -49,7 +49,7 @@ export const VOICEMAIL_TO_TEXT_OFF = 'NO';
 
 /**
  * What a person's settings start out as before anyone has chosen anything:
- * `settingsInitialState` in src/pages/admin-settings/users/constants.ts hard
+ * `settingsInitialState` in src/pages/admin-settings/constants.ts hard
  * codes 'YES'. That is a placeholder the product ships, not an admin's answer,
  * so it counts as "nobody has set this" and may be replaced by the company
  * default. Any other stored value is treated as a real decision and left alone.

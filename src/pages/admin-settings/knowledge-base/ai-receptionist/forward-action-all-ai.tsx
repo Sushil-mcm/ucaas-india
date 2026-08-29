@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { SetValueConfig } from 'react-hook-form';
 import SelectGreeting from '@/components/custom/greeting-select';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const FORWARD_TYPES = {

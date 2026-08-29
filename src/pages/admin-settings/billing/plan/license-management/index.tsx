@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CARDS_TYPE } from '@/constants/common-const';
 import { useUser } from '@/hooks/use-user';
 import { getFullFormateDate, handleAlert } from '@/lib/utils';
-import AddUsers from '@/pages/admin-settings/users/extension/add-users';
+import AddUsers from '@/pages/admin-settings/people/add-users';
 import {
   getLicenseUserList,
   getTaxesAndFees,

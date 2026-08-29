@@ -1,4 +1,4 @@
-import CallRules from '@/pages/admin-settings/users/extension/update-forwarding/call-rules';
+import CallRules from '@/pages/admin-settings/people/update-forwarding/call-rules';
 import { getUserDetails, updateUserSettings, userUpdateStatus } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

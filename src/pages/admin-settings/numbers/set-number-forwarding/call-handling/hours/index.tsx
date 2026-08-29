@@ -11,7 +11,7 @@ import ErrorTooltip from '@/components/custom/error-tooltip';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import SelectGreeting from '@/components/custom/greeting-select';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import { useQuery } from '@tanstack/react-query';
 import { getAIReceptionistList } from '@/services/api';
 // import { SettingsLine } from '@/assets/icons';

@@ -5,9 +5,9 @@ import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-di
 import {
   FORWARDING_TAB_CONSTANT,
   greetingsInitialState,
-} from '@/pages/admin-settings/users/constants';
-import GreetingNotification from '@/pages/admin-settings/users/extension/update-forwarding/greetings';
-import { upsertUserSettingsSchema } from '@/pages/admin-settings/users/extension/update-forwarding/schema';
+} from '@/pages/admin-settings/constants';
+import GreetingNotification from '@/pages/admin-settings/people/update-forwarding/greetings';
+import { upsertUserSettingsSchema } from '@/pages/admin-settings/people/update-forwarding/schema';
 import { getUserDetails, updateUserSettings } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

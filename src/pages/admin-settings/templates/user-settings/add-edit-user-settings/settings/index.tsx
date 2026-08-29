@@ -8,7 +8,7 @@ import AutomaticCallRecordingModal from './automatic-call-recording';
 import DisplayNumberModal from './display-number-dialog';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import BussinessHoursModal from '@/components/custom/bussiness-hours-dialog';
-import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settings/users/constants';
+import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settings/constants';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';

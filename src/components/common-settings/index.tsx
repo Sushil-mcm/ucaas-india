@@ -12,7 +12,7 @@ import ErrorTooltip from '@/components/custom/error-tooltip';
 import BussinessHoursModal from '@/components/custom/bussiness-hours-dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import HolidaysTable from '@/components/custom/holdiays-table';
-import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settings/users/constants';
+import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settings/constants';
 import CampaignBussinessHoursModal from '../custom/campaign-bussiness-hours';
 import moment from 'moment';
 import { Switch } from '../ui/switch';

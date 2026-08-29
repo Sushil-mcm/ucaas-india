@@ -7,7 +7,7 @@ import CustomSelect from './custom-select';
 import SelectGreeting from './greeting-select';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 
 const FORWARD_TYPES: any = {
   VOICEMAIL: 'VOICEMAIL',

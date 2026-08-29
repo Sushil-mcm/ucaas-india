@@ -12,12 +12,14 @@ import {
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import {
+  AFTER_CALL_LIMITS,
   CALL_DISTRIBUTION_DATA,
   DEPARTMENT_RING_STRATEGY_DESC,
+  LAST_AGENT_MODES,
   WAITING_LIMITS,
 } from '../../constant';
 import { Input } from '@/components/ui/input';
-import SelectedMemberList from '@/pages/admin-settings/users/department/new-department/selected-member-list';
+import SelectedMemberList from '@/pages/admin-settings/phone-systems/departments/new-department/selected-member-list';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getRingTimeOptions, seedDeviceRingTime } from '@/lib/company-ring-time';
 
@@ -124,6 +126,113 @@ const RingStrategy = () => {
                 ?.value as keyof typeof DEPARTMENT_RING_STRATEGY_DESC
             ] || ''}
           </p>
+        </div>
+      </div>
+
+      {/* Who the queue prefers to ring, and what it is measured against.
+          Last agent sends a repeat caller back to whoever they spoke to last —
+          both reference platforms have it, we had nothing. It always falls back
+          to normal routing when that person is not free: holding a caller for
+          one person is a choice, never a side effect.
+          Service level gives reporting a target, so a supervisor sees a number
+          against a goal instead of a bare average.
+          Stored, not yet acted on. */}
+      <div className="w-full px-1 sm:px-3">
+        <p className="font-semibold text-gray-900 text-md mb-1">Who to prefer, and the target</p>
+        <p className="text-gray-600 text-xs mb-3">Saved with the queue, but not in effect yet.</p>
+
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg border border-gray-200 p-3">
+            <p className="text-sm font-semibold text-gray-900 mb-2">
+              Send them back to the person they spoke to last
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <CustomSelect
+                label="When to do it"
+                options={LAST_AGENT_MODES}
+                handleChange={(value: any) =>
+                  setValue('settings.after_call.last_agent.mode', value?.value || 'DISABLED')
+                }
+                value={
+                  LAST_AGENT_MODES.find(
+                    (mode) => mode.value === watch('settings.after_call.last_agent.mode'),
+                  ) || LAST_AGENT_MODES[0]
+                }
+                menuPlacement="auto"
+              />
+              {watch('settings.after_call.last_agent.mode') !== 'DISABLED' && (
+                <Input
+                  label="Only if they called within (hours)"
+                  type="number"
+                  min={AFTER_CALL_LIMITS.window_hours.min}
+                  max={AFTER_CALL_LIMITS.window_hours.max}
+                  value={watch('settings.after_call.last_agent.window_hours') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.after_call.last_agent.window_hours',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-600">
+              If that person is busy or signed out, the call routes normally. Nobody is left
+              waiting for one agent unless you ask for it.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={!!watch('settings.after_call.service_level.enabled')}
+                onChange={(event) =>
+                  setValue('settings.after_call.service_level.enabled', event.target.checked)
+                }
+              />
+              <span>
+                <span className="block text-sm font-semibold text-gray-900">
+                  Set a target for answering
+                </span>
+                <span className="block text-xs text-gray-600">
+                  Reporting compares against this instead of showing a bare average.
+                </span>
+              </span>
+            </label>
+
+            {watch('settings.after_call.service_level.enabled') && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Input
+                  label="Answer this share of calls (%)"
+                  type="number"
+                  min={AFTER_CALL_LIMITS.percent.min}
+                  max={AFTER_CALL_LIMITS.percent.max}
+                  value={watch('settings.after_call.service_level.percent') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.after_call.service_level.percent',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+                <Input
+                  label="Within this many seconds"
+                  type="number"
+                  min={AFTER_CALL_LIMITS.seconds.min}
+                  max={AFTER_CALL_LIMITS.seconds.max}
+                  value={watch('settings.after_call.service_level.seconds') ?? ''}
+                  onChange={(event) =>
+                    setValue(
+                      'settings.after_call.service_level.seconds',
+                      Number(event.target.value),
+                    )
+                  }
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

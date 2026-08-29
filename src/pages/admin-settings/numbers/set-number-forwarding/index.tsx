@@ -30,6 +30,7 @@ import Media from './media';
 import Summary from './summary';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import Settings from './condition';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { useUser } from '@/hooks/use-user';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 import { callForwardingOptions } from '@/components/custom/forwarding-actions';
@@ -111,7 +112,7 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
         setTemplateUUID(data?.data?.data?.data?.uuid);
         queryClient.invalidateQueries(['getCallHandlingTemplate']);
       } else {
-        queryClient.invalidateQueries(['allNumbersList']);
+        invalidateNumberLists(queryClient);
       }
       closeDrawer();
       handleAlert({

@@ -10,7 +10,7 @@ import { useUser } from '@/hooks/use-user';
 import { generateUniqueId } from '@/lib/utils';
 import moment from 'moment';
 import { Label } from '@/components/ui/label';
-import { ExtensionListView } from '@/pages/admin-settings/users/extension/update-forwarding/call-rules/add-coworker';
+import { ExtensionListView } from '@/pages/admin-settings/people/update-forwarding/call-rules/add-coworker';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import Loader from '@/components/custom/loader';
 import CustomAvatar from '@/components/custom/custom-avatar';

@@ -6,7 +6,7 @@ import {
   QUEUE_TIMEOUT_LIMITS,
 } from './constant';
 import { optionalString, requiredString } from '@/lib/schema';
-import { holidaySchema } from '../../users/constants';
+import { holidaySchema } from '../../constants';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 
 export const upsertCallQueueSchema = [

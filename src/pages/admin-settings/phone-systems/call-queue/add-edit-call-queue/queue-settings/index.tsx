@@ -9,9 +9,9 @@ import { useQuery } from '@tanstack/react-query';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { TIME_LIST } from '@/pages/auto-dialer/campaign/add-edit-campaign/consts';
+import { WRAPUP_DEFAULT_MODE, WRAPUP_PROMPT_MODES } from '../../constant';
 
 const QueueSettings: FC<any> = ({ scriptList, setModalState }) => {
-  console.log('scriptList in queue settings', scriptList);
   const {
     formState: { errors },
     setValue,
@@ -69,6 +69,36 @@ const QueueSettings: FC<any> = ({ scriptList, setModalState }) => {
               error={(errors?.settings as any)?.wrapup_time?.message}
               menuPlacement="auto"
             />
+          </div>
+
+          {/* The prompt mode, not just the timer. Established systems treat this
+              as the real setting — "optional" and "cannot be skipped" are
+              different products to a supervisor, and a timer alone cannot say
+              which one this queue is. Existing queues default to the mode a
+              plain timer already behaved like, so nothing changes underneath
+              anyone. Stored but not yet enforced. */}
+          <div className="flex flex-col gap-1.5 w-full lg:col-span-2">
+            <div className="flex items-center justify-between w-full min-h-[20px]">
+              <span className="text-sm font-semibold text-gray-900">Wrap-up rule</span>
+            </div>
+            <CustomSelect
+              placeholder="Select Option"
+              options={WRAPUP_PROMPT_MODES}
+              handleChange={(e: ISELECTVALUE | null) => {
+                setValue('settings.after_call.wrapup_prompt', e?.value || WRAPUP_DEFAULT_MODE, {
+                  shouldValidate: true,
+                });
+              }}
+              value={
+                WRAPUP_PROMPT_MODES.find(
+                  (mode) => mode.value === watch('settings.after_call.wrapup_prompt'),
+                ) || WRAPUP_PROMPT_MODES.find((mode) => mode.value === WRAPUP_DEFAULT_MODE)
+              }
+              menuPlacement="auto"
+            />
+            <p className="text-xs text-amber-700 font-semibold">
+              Saved, but the timer above is still what actually runs.
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5 w-full">

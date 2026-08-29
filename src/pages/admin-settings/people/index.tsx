@@ -33,6 +33,7 @@ import { getAgentLiveState } from '@/pages/performance/agent-rows';
 import AssignCallerIdModal from './add-users/assign-caller-id-modal';
 import RoleChangeModal from './role-change-modal';
 import MultipleAssignNumber from './add-users/multiple-assign-number';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { ListX } from 'lucide-react';
@@ -99,7 +100,7 @@ const UsersExtension: FC = () => {
   const { mutate: mutateRemoveAssignDID, isPending: isPendingRemoveAssignDID } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'Assigned DID Removed Successfully.',
         type: 'success',

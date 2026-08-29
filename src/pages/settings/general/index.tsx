@@ -8,8 +8,8 @@ import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/se
 import {
   FORWARDING_TAB_CONSTANT,
   settingsInitialState,
-} from '@/pages/admin-settings/users/constants';
-import { upsertUserSettingsSchema } from '@/pages/admin-settings/users/extension/update-forwarding/schema';
+} from '@/pages/admin-settings/constants';
+import { upsertUserSettingsSchema } from '@/pages/admin-settings/people/update-forwarding/schema';
 import { getUserDetails, updateUserSettings } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

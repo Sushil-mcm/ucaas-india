@@ -28,6 +28,7 @@ import {
   FORWARD_TYPES_WITH_PHONE,
   getDidTypeLabel,
 } from '../utils';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { featuresLookUp, featuresObj } from './constants';
 import { useSearchParams } from 'react-router-dom';
 
@@ -88,8 +89,7 @@ const AllNumbers = () => {
   const { mutate: mutateRemoveAssignDID, isPending: isPendingRemoveAssignDID } = useMutation({
     mutationFn: removeAssignNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'Assigned DID Removed Successfully.',
         type: 'success',
@@ -105,8 +105,7 @@ const AllNumbers = () => {
   const { mutate: mutateRemoveForwarding, isPending: isPendingRemovingForwarding } = useMutation({
     mutationFn: removeForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',
@@ -122,8 +121,7 @@ const AllNumbers = () => {
   const { mutate: mutateReleaseForwarding, isPending: isPendingReleaseForwarding } = useMutation({
     mutationFn: releaseForwarding,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',

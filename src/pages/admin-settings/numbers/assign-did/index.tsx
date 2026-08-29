@@ -4,6 +4,7 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import CustomSelect from '@/components/custom/custom-select';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import TableManager from '@/components/custom/table-manager';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -52,8 +53,7 @@ const AssignDIDNumber: FC<IAsiignDIDProps> = ({ modalState, setModalState, selec
   const { mutate: mutateAssignNumber, isPending: isPendingAssignNumber } = useMutation({
     mutationFn: assignDIDNumber,
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries(['allNumbersList'], { exact: true });
-      // queryClient.invalidateQueries(['allNumbersList', 'getUsersDetails'], { exact: true });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'DID Assigned Successfully.',
         type: 'success',

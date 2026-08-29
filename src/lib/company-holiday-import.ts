@@ -6,7 +6,7 @@
  * anything on its own; a line has to take the date and attach an action to it.
  *
  * The action is the part that is easy to get wrong. Every holiday on a line is
- * validated with `holidaySchema` (src/pages/admin-settings/users/constants.ts),
+ * validated with `holidaySchema` (src/pages/admin-settings/constants.ts),
  * which requires BOTH `type.value` and `value.value`. A holiday imported with an
  * empty action does not quietly fall back to anything — it fails validation and
  * blocks the whole business-hours form from saving, on a screen that gives no

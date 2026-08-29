@@ -64,7 +64,7 @@ const CallSetupGuide = ({ userInfo }: { userInfo: any }) => {
       ok: Boolean(extension),
       explain:
         'Your internal number. Anyone inside the company can dial it directly, and outside numbers are pointed at it.',
-      action: extension ? undefined : { label: 'Ask an admin', to: '/admin-settings/users' },
+      action: extension ? undefined : { label: 'Ask an admin', to: '/admin-settings/people' },
     },
     {
       title: 'Numbers that ring you',

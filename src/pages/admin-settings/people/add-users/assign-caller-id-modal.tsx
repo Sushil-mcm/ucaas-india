@@ -2,6 +2,7 @@ import { Plus, SearchLine } from '@/assets/icons';
 import { Icon } from '@/assets/icons/icon';
 import Loader from '@/components/custom/loader';
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -75,8 +76,7 @@ const AssignCallerIdModal: FC<AssignCallerIdModalProps> = ({
     mutationFn: removeForwarding,
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['numbers-list-modal'] });
-      queryClient.invalidateQueries({ queryKey: ['allNumbersList'] });
-      queryClient.invalidateQueries({ queryKey: ['getUsersDetails'] });
+      invalidateNumberLists(queryClient);
       handleAlert({
         text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
         type: 'success',

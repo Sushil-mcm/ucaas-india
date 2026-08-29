@@ -1,5 +1,5 @@
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
-import { holidaySchema } from '@/pages/admin-settings/users/constants';
+import { holidaySchema } from '@/pages/admin-settings/constants';
 import * as yup from 'yup';
 
 export const COMMON_SETTINGS_SCHEMA = yup.object().shape({

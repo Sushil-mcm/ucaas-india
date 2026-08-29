@@ -1,6 +1,6 @@
 import CustomSelect from '@/components/custom/custom-select';
 import { useFormContext } from 'react-hook-form';
-import { MEMBER_RING_STRATEGY_OPTIONS } from '../../constants';
+import { MEMBER_RING_STRATEGY_OPTIONS } from '../../../constants';
 import {
   Table,
   TableBody,
