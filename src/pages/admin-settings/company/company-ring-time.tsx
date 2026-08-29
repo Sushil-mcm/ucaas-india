@@ -32,31 +32,28 @@ import {
  * untouched on save.
  *
  * ---------------------------------------------------------------------------
- * READ THIS BEFORE YOU TRUST THIS PAGE
+ * WHAT READS THIS, AS OF 29 AUGUST 2026
  * ---------------------------------------------------------------------------
- * Nothing reads this value. Grepped on the date this file was written:
+ * This header used to say "nothing reads this value", and warned against
+ * leaving a stale reassurance behind. That warning now applies to the header
+ * itself: the key IS read, and `IS_ENFORCED` is true.
  *
- *   grep -rn  "company_ring_time"                --include=*.ts(x) src/ -> only this file
- *   grep -rn  "RINGING_OPTIONS"                  --include=*.ts(x) src/ -> 8 files, all of
- *       which use the hardcoded two-item list; none consults the company record
- *   grep -rn  "fetchCompanyDefaults"             --include=*.ts(x) src/ -> 10 readers,
- *       none of them a call path — company pages, the setup-progress hook, the
- *       business-hours dialog and lib/company-policy.ts (override flags only)
- *   grep -rni "ring_time|ringTime|timeout"       src/context/dialpad-context.tsx ->
- *       only JS timers (ICE, campaign clearing, AI auth); no ring duration
- *   grep -rni "ring"                             src/services/ -> nothing
+ * The reader is `seedDeviceRingTime` in src/lib/company-ring-time.ts, which
+ * returns a stored per-device value if one exists and otherwise falls back to
+ * this company number instead of a hardcoded constant. Three call sites use it:
  *
- * The number that actually decides how long a phone rings is sent per device as
- * `call_handling.incoming_calls.device_options[].timeout` from
- * src/pages/admin-settings/people/update-forwarding/index.tsx, and it
- * falls back to a hardcoded `RINGING_OPTIONS[0]` — not to anything saved here.
- * The switch never sees this record at all.
+ *   - people/update-forwarding/index.tsx      (Call rules > device options)
+ *   - phone-systems/call-queue/add-edit-call-queue/index.tsx
+ *   - phone-systems/call-queue/.../ring-strategy/index.tsx
  *
- * So: saving on this page changes nothing about how long any phone rings today.
- * The card says exactly that, in those words. If the backend ever starts reading
- * the key, flip `IS_ENFORCED` and rewrite the note — do not leave a stale
- * reassurance behind, because an admin who believes they have shortened the ring
- * and has not will read every missed call as a fault somewhere else.
+ * So a device or queue member saved through the interface without its own ring
+ * time now inherits what is set here. What this page still does NOT do is
+ * change anything already saved with an explicit value — those were somebody's
+ * decision and are kept, unclamped, by design (see seedDeviceRingTime).
+ *
+ * If that ever stops being true, change this note in the same commit. An admin
+ * who believes they have shortened the ring and has not will read every missed
+ * call as a fault somewhere else.
  */
 
 const RING_TIME_KEY = 'company_ring_time';
