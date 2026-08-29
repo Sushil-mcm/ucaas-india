@@ -41,7 +41,21 @@ const loadBillingPlan = async () => {
 };
 
 const AdminSettings = lazy(() => import('@/pages/admin-settings'));
-const CompanyInfo = lazy(() => import('@/pages/admin-settings/company-info'));
+const CompanyInfo = lazy(() => import('@/pages/admin-settings/company'));
+const CompanyLayout = lazy(() => import('@/pages/admin-settings/company/company-layout'));
+const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page-phone-rules'));
+const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
+const CompanyVoicemailPage = lazy(() => import('@/pages/admin-settings/company/page-voicemail'));
+const CompanyHolidaysPage = lazy(() => import('@/pages/admin-settings/company/page-holidays'));
+const CompanyEmergency = lazy(
+  () => import('@/pages/admin-settings/company/company-emergency-address'),
+);
+const CompanyCalling = lazy(
+  () => import('@/pages/admin-settings/company/company-calling-permissions'),
+);
+const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/company-messaging'));
+const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
+const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 const Performance = lazy(() => import('@/pages/performance'));
 const Login = lazy(() => import('@/pages/login'));
@@ -68,7 +82,6 @@ const PastMeetings = lazy(() => import('@/pages/video-meetings/past-meetings'));
 const AllRecording = lazy(() => import('@/pages/video-meetings/recordings/all-recording'));
 const MyRecording = lazy(() => import('@/pages/video-meetings/recordings/my-recording'));
 const CallQueues = lazy(() => import('@/pages/admin-settings/phone-systems/call-queue'));
-const Preferences = lazy(() => import('@/pages/admin-settings/phone-systems/preferences'));
 const GreetingDetailsPage = lazy(() => import('@/pages/greetings'));
 const GreetingContent = lazy(() => import('@/pages/greetings/greetings-content'));
 const Plan = lazy(loadBillingPlan);
@@ -509,32 +522,69 @@ export const router = createBrowserRouter([
             element: <AdminHome />,
             id: 'company-info-1',
           },
-          {
-            path: 'company-info',
-            id: 'company-info',
-            element: (
-              <ProtectedRoute
-                element={<CompanyInfo />}
-                guard={{
-                  permission: 'account_setting.access.SITE.action.view',
-                }}
-              />
-            ),
-          },
-          {
-            /* Company-wide phone rules, reachable under Company where an admin
-               looks for them. Same component as /admin-settings/phone/preferences,
-               which is kept so existing links and bookmarks still resolve. */
-            path: 'company-info/rules',
-            element: (
-              <ProtectedRoute
-                element={<Preferences />}
-                guard={{
-                  permission: 'account_setting.access.SITE.action.view',
-                }}
-              />
-            ),
-          },
+              {
+                /* The company area. `company`, not `company-info`: the word a
+                   customer uses. Old paths are kept as redirects below. */
+                path: 'company',
+                id: 'company',
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyInfo />}
+                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                /* Each settings section is its own route rather than a tab held in
+                   state. One screen, one URL: it can be linked to, bookmarked,
+                   reloaded, and later given its own permission.
+
+                   Phase 1 deliberately reuses the EXISTING permission strings. A
+                   permission the backend does not return reads as "no permission"
+                   and would lock every admin out, so a section cannot get its own
+                   key until the API ships it. Security is the exception and is
+                   tightened now, because today it opens for anyone who can view the
+                   phone system. */
+                path: 'company/settings',
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyLayout />}
+                    guard={{ permission: 'phone_system_action.action.view' }}
+                  />
+                ),
+                children: [
+                  { index: true, element: <Navigate to="phone-rules" replace /> },
+                  { path: 'phone-rules', element: <CompanyPhoneRules /> },
+                  { path: 'greetings', element: <CompanyGreetings /> },
+                  { path: 'voicemail', element: <CompanyVoicemailPage /> },
+                  { path: 'emergency-address', element: <CompanyEmergency /> },
+                  { path: 'holidays', element: <CompanyHolidaysPage /> },
+                  { path: 'calling', element: <CompanyCalling /> },
+                  { path: 'messaging', element: <CompanyMessagingPage /> },
+                  { path: 'policies', element: <CompanyPoliciesPage /> },
+                  {
+                    /* Administrator-only. It holds the sign-in policy, and the
+                       phone-system permission is far too wide a key for that. */
+                    path: 'security',
+                    element: (
+                      <ProtectedRoute
+                        element={<CompanySecurityPage />}
+                        guard={{ adminOnly: true }}
+                      />
+                    ),
+                  },
+                ],
+              },
+              /* Kept permanently: admins bookmark these and support articles link
+                 to them. */
+              {
+                path: 'company-info',
+                element: <Navigate to="/admin-settings/company" replace />,
+              },
+              {
+                path: 'company-info/rules',
+                element: <Navigate to="/admin-settings/company/settings/policies" replace />,
+              },
           {
             /* Integrations are set up once for the whole account, so they belong
                with the other administered settings rather than as a top-level
@@ -728,16 +778,11 @@ export const router = createBrowserRouter([
             id: 'phone',
             children: [
               {
+                /* Kept permanently. The company rules moved out of Phone System
+                   into Company, where an admin looks for them, but this path is
+                   bookmarked and linked from support articles. */
                 path: 'preferences',
-                element: (
-                  <ProtectedRoute
-                    element={<Preferences />}
-                    guard={{
-                      feature: 'phone_system_action.IS_SHOW',
-                      permission: 'phone_system_action.action.view',
-                    }}
-                  />
-                ),
+                element: <Navigate to="/admin-settings/company/settings/policies" replace />,
               },
               {
                 path: 'ivr-menus',

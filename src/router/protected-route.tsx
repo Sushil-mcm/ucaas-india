@@ -7,6 +7,11 @@ import { useUser } from '@/hooks/use-user';
 interface FeatureGuard {
   feature?: string; // plan level (IS_SHOW)
   permission?: string; // user level (action.view)
+  /* For pages that must be administrator-only but have no permission key yet.
+     A permission string the backend does not return reads as "no permission"
+     and locks everyone out, so a page cannot be given its own key until the API
+     ships it. This gate depends on nothing the backend has to add. */
+  adminOnly?: boolean;
 }
 
 interface ProtectedRouteProps {
@@ -35,6 +40,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (trialRestricted && user?.company_info?.is_trial === 'Y') {
     return <UpgradeRequired />;
+  }
+
+  /* Checked before the plan and permission gates: an administrator-only page is
+     not an upgrade problem, so a non-admin is sent away rather than shown a
+     screen offering them a bigger plan. */
+  if (guard?.adminOnly && !IS_ADMIN) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Plan availability must always come from the company subscription, even

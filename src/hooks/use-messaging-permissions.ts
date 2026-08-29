@@ -1,7 +1,7 @@
 /* Making the company messaging switches mean something at the moment of sending.
  *
  * Admin > Company info > Company messaging writes two decisions into the reserved
- * "Company Default" record (src/pages/admin-settings/company-info/company-messaging.tsx):
+ * "Company Default" record (src/pages/admin-settings/company/company-messaging.tsx):
  *
  *   settings.company_messaging.sms_mms.enabled                        default true
  *   settings.company_messaging.unregistered_us_numbers.outbound_allowed  default false

@@ -37,14 +37,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       children: [
         {
           title: 'Company & Locations',
-          path: '/admin-settings/company-info',
+          path: '/admin-settings/company',
           icon: 'CompayIcon',
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
         },
         {
           title: 'Company Rules',
-          path: '/admin-settings/company-info/rules',
+          path: '/admin-settings/company/settings/policies',
           icon: 'SettingsIcon',
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),

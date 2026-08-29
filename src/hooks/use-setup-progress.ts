@@ -102,7 +102,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'company',
         title: 'Company details',
         purpose: 'Your name and address, used on bills and when buying numbers.',
-        path: '/admin-settings/company-info',
+        path: '/admin-settings/company',
         anchor: 'setup-company-record',
         /* Judged on the address alone. The session's company_info is built from a
            fixed attribute list that includes `address` but NOT `name`, so testing
@@ -117,7 +117,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'locations',
         title: 'Locations',
         purpose: 'Each place you work from. Sets the clock and the address for everyone there.',
-        path: '/admin-settings/company-info',
+        path: '/admin-settings/company',
         anchor: 'setup-locations',
         done: completedLocations > 0,
         detail:
@@ -150,7 +150,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'handling',
         title: 'Call handling',
         purpose: 'What happens when nobody answers, and outside working hours.',
-        path: '/admin-settings/company-info/rules',
+        path: '/admin-settings/company/settings/policies',
         /* Not ticked from a row count: whether calls are handled correctly
            cannot be read off one — a number can be configured and still drop
            every out-of-hours call. It counts as done once company-wide rules

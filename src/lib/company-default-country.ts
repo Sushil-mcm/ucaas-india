@@ -15,10 +15,10 @@
  *
  *   1. settings.company_policies.default_country — an ISO alpha-2 code saved
  *      from Admin > Company > Policies, alongside the other keys that page
- *      writes (see src/pages/admin-settings/company-info/company-policies.tsx).
+ *      writes (see src/pages/admin-settings/company/company-policies.tsx).
  *   2. The main location's country. A location already stores one, and the
  *      location marked as main is the company's own address — a far better
- *      guess than an empty box. See src/pages/admin-settings/company-info/index.tsx,
+ *      guess than an empty box. See src/pages/admin-settings/company/index.tsx,
  *      which marks the main location with `is_default === '1'`.
  *   3. Nothing. An account with neither must behave exactly as it does today.
  *
@@ -69,7 +69,7 @@ export interface ResolvedDefaultCountry {
 
 /**
  * Every country, in the shape a picker wants. Same construction as
- * src/pages/admin-settings/company-info/company-record.tsx, so the company
+ * src/pages/admin-settings/company/company-record.tsx, so the company
  * record and the company policy store the country identically — a code, not a
  * name, because a name cannot be matched against a number supplier's list.
  */
@@ -99,7 +99,7 @@ const toObject = (raw: unknown): Record<string, any> | null => {
  *
  * Both spellings are accepted on purpose. The company policy saves a code, but
  * a location saves the readable country NAME — `country: country?.value` in
- * src/pages/admin-settings/company-info/new-site-steps/index.tsx, where the
+ * src/pages/admin-settings/company/new-site-steps/index.tsx, where the
  * option's value is the name. Anything that matches neither list is dropped
  * rather than passed through, because a code the country list does not know is
  * a code the number supplier will not know either.

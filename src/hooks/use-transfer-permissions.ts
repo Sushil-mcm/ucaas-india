@@ -3,7 +3,7 @@
  *
  * The three flags live in the reserved "Company Default" record under
  * `settings.company_calling_permissions.transfers`, written by
- * src/pages/admin-settings/company-info/company-calling-permissions.tsx:132-139:
+ * src/pages/admin-settings/company/company-calling-permissions.tsx:132-139:
  *
  *   allow_external               — hand a live call to a number outside the company
  *   allow_international          — child of the above: let that number be abroad

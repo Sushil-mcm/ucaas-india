@@ -24,7 +24,7 @@ import {
 } from '@/lib/company-defaults';
 
 /* Lives under Company now; the old Phone System path still resolves. */
-const PREFERENCES_PATH = '/admin-settings/company-info/rules';
+const PREFERENCES_PATH = '/admin-settings/company/settings/policies';
 
 interface Row {
   icon: React.ReactNode;

@@ -22,7 +22,7 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'Contacts', path: '/contact' },
   { label: 'Groups', path: '/department' },
   { label: 'Admin Settings', path: '/admin-settings' },
-  { label: 'Company & Locations', path: '/admin-settings/company-info' },
+  { label: 'Company & Locations', path: '/admin-settings/company' },
   { label: 'People', path: '/admin-settings/users/extension' },
   { label: 'Roles', path: '/admin-settings/users/role' },
   { label: 'Groups', path: '/admin-settings/users/department' },

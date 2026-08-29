@@ -67,7 +67,7 @@ const UserSettings: FC = () => {
           return (
             <span className="flex items-center gap-2">
               <span
-                onClick={() => navigate('/admin-settings/company-info/rules')}
+                onClick={() => navigate('/admin-settings/company/settings/policies')}
                 className="text-primary hover:text-primary/80 underline-offset-4 cursor-pointer"
               >
                 {row?.original?.name}
@@ -116,7 +116,7 @@ const UserSettings: FC = () => {
         if (data?.name === COMPANY_DEFAULT_TEMPLATE_NAME) {
           return (
             <span
-              onClick={() => navigate('/admin-settings/company-info/rules')}
+              onClick={() => navigate('/admin-settings/company/settings/policies')}
               className="cursor-pointer text-xs font-medium text-primary hover:underline"
             >
               Open company settings

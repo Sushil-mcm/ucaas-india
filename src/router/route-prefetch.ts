@@ -171,10 +171,6 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/numbers/numbers-inventory')),
   },
   {
-    prefix: '/admin-settings/phone/preferences',
-    importers: withAdmin(() => import('@/pages/admin-settings/phone-systems/preferences')),
-  },
-  {
     prefix: '/admin-settings/phone/ivr-menus',
     importers: withAdmin(() => import('@/pages/admin-settings/phone-systems/ivr-menus')),
   },
@@ -271,14 +267,14 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/calling-rates/outbound-rates')),
   },
   {
-    prefix: '/admin-settings/company-info',
-    importers: withAdmin(() => import('@/pages/admin-settings/company-info')),
+    prefix: '/admin-settings/company',
+    importers: withAdmin(() => import('@/pages/admin-settings/company')),
   },
   {
     prefix: '/admin-settings',
     importers: withAdmin(
       () => import('@/pages/admin-settings/admin-home'),
-      () => import('@/pages/admin-settings/company-info'),
+      () => import('@/pages/admin-settings/company'),
     ),
   },
   {

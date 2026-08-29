@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import AlertConfirm from '@/components/custom/alert-confirm';
-import NewSiteSteps from '@/pages/admin-settings/company-info/new-site-steps';
+import NewSiteSteps from '@/pages/admin-settings/company/new-site-steps';
 import { siteDelete, siteList } from '@/services/api';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';

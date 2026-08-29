@@ -16,7 +16,7 @@
  * still permitted but only inside the account's own country. A child can never
  * be more permissive than its parent, exactly as the transfer flags on the same
  * record are read and written
- * (src/pages/admin-settings/company-info/company-calling-permissions.tsx:111-121
+ * (src/pages/admin-settings/company/company-calling-permissions.tsx:111-121
  * and :131-138).
  *
  * WHY THIS SWITCH EXISTS. A menu key that dials out is a route for toll fraud.
