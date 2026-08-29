@@ -60,7 +60,8 @@
       "Bash(timeout 150 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
       "Bash(timeout 120 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s -- --apply\")",
       "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'grep -nE \"LISTEN_ADDR|listen\" /opt/fs-directory-manager/directory_service.py /opt/fs-directory-manager/config.yaml 2>/dev/null | head -6 | cut -c1-120 | sed \"s/^/  /\"')",
-      "Bash(sed -i 's|http://127.0.0.1:8080/|http://127.0.0.1:9001/|' fix-directory-user-call.sh)"
+      "Bash(sed -i 's|http://127.0.0.1:8080/|http://127.0.0.1:9001/|' fix-directory-user-call.sh)",
+      "Bash(timeout 180 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s -- --apply\")"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"

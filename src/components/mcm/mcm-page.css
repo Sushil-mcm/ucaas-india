@@ -3579,3 +3579,12 @@
   background: var(--live-wash);
   color: var(--live);
 }
+
+/* The base note is amber - advice, or something not yet in effect. An error is
+   something that will certainly strand a caller, so it reads louder. Same shape,
+   different weight, and the difference is visible without reading the words. */
+.mcm-setrow-note.is-error {
+  background: var(--crit-wash);
+  color: var(--crit);
+  font-weight: 500;
+}
