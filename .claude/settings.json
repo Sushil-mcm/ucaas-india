@@ -15,7 +15,8 @@
       "Bash(sed -i 's|n=$\\(grep -cF '\\\\''uuid, company_uuid }'\\\\'' \"$F\"\\)|n=$\\(grep -cF '\\\\''where: { uuid, company_uuid }'\\\\'' \"$F\"\\)|' scripts/fix-role-tenant-scope.sh)",
       "Bash(grep -n \"where: { uuid, company_uuid }\" scripts/fix-role-tenant-scope.sh)",
       "Bash(bash -n scripts/fix-role-tenant-scope.sh)",
-      "Bash(cd /root/mycountrymobile-web *)"
+      "Bash(cd /root/mycountrymobile-web *)",
+      "Bash(bash scripts/apply-security-fixes.sh)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
