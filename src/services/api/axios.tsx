@@ -126,6 +126,12 @@ apiClient.interceptors.response.use(
         msg = (error.response?.data as any).message;
       } else if ((error.response?.data as any)?.error?.message) {
         msg = (error.response?.data as any).error.message;
+      } else if (error?.response?.status === 504) {
+        msg = 'This is taking longer than expected. Try a narrower date range.';
+      } else if (error?.response?.status === 503) {
+        msg = 'This data is temporarily unavailable. Please retry in a moment.';
+      } else if (error?.response?.status) {
+        msg = `Something went wrong (${error.response.status}). Please retry in a moment.`;
       }
       if (msg) {
         handleAlert({
