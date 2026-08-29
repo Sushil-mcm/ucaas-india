@@ -31,7 +31,26 @@
       "Bash(scp -q ops/fix-role-escalation.js mcm-new:/tmp/)",
       "Bash(curl -s -o /dev/null -w \" device-securities \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/device-securities)",
       "Bash(curl -s -o /dev/null -w \" user/update \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/update)",
-      "Bash(curl -s -o /dev/null -w \" assign-role-bulk \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/assign-role-bulk-users)"
+      "Bash(curl -s -o /dev/null -w \" assign-role-bulk \\(no token\\) → %{http_code} \\(401 = alive\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/assign-role-bulk-users)",
+      "Bash(ls -la /var/www/prod/default-api/ 2>&1 | head -40; echo \"---WHOAMI---\"; whoami; echo \"---HOSTNAME---\"; hostname)",
+      "Read(//var/www/prod/**)",
+      "Bash(pm2 describe *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 5 127.0.0.1:3000/)",
+      "Bash(echo \"---VAR WWW---\"; ls -la /var/www/ 2>&1 | head -20; echo \"---PROD---\"; ls -la /var/www/prod/ 2>&1 | head -20; echo \"---PM2 LOGS DIR---\"; ls -la /root/.pm2/logs/ 2>&1 | head -20)",
+      "Read(//var/www/**)",
+      "Read(//dev/**)",
+      "Bash(awk '{print $4}')",
+      "Bash(getent hosts *)",
+      "Bash(curl -s -o /dev/null -w \"root=%{http_code}\\\\n\" --max-time 8 https://api-qa.mycountrymobile.com/)",
+      "Bash(timeout 40 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'cd /var/www/prod/default-api || exit 1 *)",
+      "Bash(timeout 40 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 90 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 30 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=8 -T gh-mcm-api)",
+      "Bash(timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=8 -T gh-mcm-api-rw)",
+      "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"

@@ -292,7 +292,7 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/settings/phone')),
   },
   {
-    prefix: '/admin-settings/account/notification',
+    prefix: '/admin-settings/account/notifications',
     importers: withAdmin(() => import('@/pages/settings/notification')),
   },
   {

@@ -1,6 +1,10 @@
 import { requiredExtension } from '@/schema/common';
 import * as yup from 'yup';
-import { CALL_QUEUE_INIITAL_VALUES } from './constant';
+import {
+  CALL_QUEUE_INIITAL_VALUES,
+  MAX_WAITING_CALLERS_LIMITS,
+  QUEUE_TIMEOUT_LIMITS,
+} from './constant';
 import { optionalString, requiredString } from '@/lib/schema';
 import { holidaySchema } from '../../users/constants';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
@@ -43,11 +47,31 @@ export const upsertCallQueueSchema = [
           queue_timeout: yup
             .number()
             .required('Queue timeout is required')
-            .min(60, 'Queue timeout must be greater than or equal to 60')
-            .max(3600, 'Queue timeout must be less than or equal to 3600')
+            .min(
+              QUEUE_TIMEOUT_LIMITS.min,
+              `Queue timeout must be at least ${QUEUE_TIMEOUT_LIMITS.min} seconds`,
+            )
+            .max(
+              QUEUE_TIMEOUT_LIMITS.max,
+              `Queue timeout must be ${QUEUE_TIMEOUT_LIMITS.max} seconds (300 minutes) or less`,
+            )
             .typeError('Queue timeout must be a number'),
           callers: yup.object().shape({
-            value: yup.mixed().required('Max waiting caller is required'),
+            /* Was `mixed().required()`, which accepted anything truthy. Now that
+               this is a free number field rather than a list of 3 to 30, the
+               range has to be checked here or nothing checks it. */
+            value: yup
+              .number()
+              .required('Max waiting callers is required')
+              .min(
+                MAX_WAITING_CALLERS_LIMITS.min,
+                `At least ${MAX_WAITING_CALLERS_LIMITS.min} caller must be able to wait`,
+              )
+              .max(
+                MAX_WAITING_CALLERS_LIMITS.max,
+                `Max waiting callers cannot be more than ${MAX_WAITING_CALLERS_LIMITS.max}`,
+              )
+              .typeError('Max waiting callers must be a number'),
           }),
           after_max_wait_time: yup
             .object()

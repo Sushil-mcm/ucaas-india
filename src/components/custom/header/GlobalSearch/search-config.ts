@@ -54,7 +54,7 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'My Account', path: '/admin-settings/account/basic-info' },
   { label: 'Profile', path: '/admin-settings/account/basic-info' },
   { label: 'Preferences', path: '/admin-settings/account/general' },
-  { label: 'Notifications', path: '/admin-settings/account/notification' },
+  { label: 'Notifications', path: '/admin-settings/account/notifications' },
   { label: 'Security Settings', path: '/admin-settings/account/security' },
   { label: 'Inbox', path: '/inbox' },
   { label: 'Greetings', path: '/greetings' },

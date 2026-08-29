@@ -12,19 +12,19 @@ const greetingSidebarArr = [
   { title: 'All', suffix: '', value: 'greetings', type: 'normal', icon: 'MenuLines' },
   {
     title: 'Voicemail',
-    suffix: '/type-voicemail',
+    suffix: '/voicemail',
     value: 'voicemail',
     type: 'normal',
     icon: 'VoicemailLineIcon',
   },
   {
     title: 'Greetings',
-    suffix: '/type-greeting',
+    suffix: '/greetings',
     type: 'normal',
     value: 'greeting',
     icon: 'MusicNote',
   },
-  { title: 'Prompt', suffix: '/type-prompt', type: 'normal', value: 'prompt', icon: 'Chat' },
+  { title: 'Prompt', suffix: '/prompts', type: 'normal', value: 'prompt', icon: 'Chat' },
 ];
 
 /* This sidebar is mounted only by the standalone /greetings area, so the base is

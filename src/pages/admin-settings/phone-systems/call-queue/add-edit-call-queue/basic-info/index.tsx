@@ -8,7 +8,7 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { generateRandomExtension } from '@/lib/utils';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { MAX_WAITING_CALLERS } from '../../constant';
+import { MAX_WAITING_CALLERS_LIMITS, QUEUE_TIMEOUT_LIMITS } from '../../constant';
 
 interface IAddMembersProps {
   queueDetails: any;
@@ -92,21 +92,25 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
           <div className="flex flex-col gap-3">
             <h5 className="font-semibold text-gray-900 text-md my-2">Response Time Settings</h5>
             <div className="flex flex-col gap-4 lg:flex-row">
-              <CustomSelect
+              {/* A number field rather than a dropdown: the ceiling is 500, and a
+                  500-entry list is unusable. The stored shape stays
+                  `{ label, value }` so nothing downstream has to change. */}
+              <Input
                 label={'Max Waiting Callers'}
-                options={MAX_WAITING_CALLERS.map((item) => ({
-                  label: item,
-                  value: item,
-                }))}
-                handleChange={(e: ISELECTVALUE | null) => {
+                placeholder={`1 to ${MAX_WAITING_CALLERS_LIMITS.max}`}
+                type="number"
+                min={MAX_WAITING_CALLERS_LIMITS.min}
+                max={MAX_WAITING_CALLERS_LIMITS.max}
+                value={watch('settings.ring_strategy.max_wait_time.callers')?.value ?? ''}
+                onChange={(event) => {
+                  const raw = event.target.value;
                   setValue(
                     `settings.ring_strategy.max_wait_time.callers`,
-                    e || { label: '', value: '' },
+                    raw === '' ? { label: '', value: '' } : { label: Number(raw), value: Number(raw) },
                     { shouldValidate: true },
                   );
                 }}
-                value={watch('settings.ring_strategy.max_wait_time.callers')}
-                error={(errors?.settings as any)?.ring_strategy?.max_wait_time?.callers?.messag}
+                error={(errors?.settings as any)?.ring_strategy?.max_wait_time?.callers?.value?.message}
               />
               {/* <Input
                 label={'Wrapup Time (Sec)'}
@@ -121,10 +125,10 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
               /> */}
               <Input
                 label={'Queue Timeout (Sec)'}
-                placeholder="Enter Queue Timeout (Sec)"
+                placeholder={`${QUEUE_TIMEOUT_LIMITS.min} to ${QUEUE_TIMEOUT_LIMITS.max}`}
                 type="number"
-                min={0}
-                // max={3600}
+                min={QUEUE_TIMEOUT_LIMITS.min}
+                max={QUEUE_TIMEOUT_LIMITS.max}
                 {...register('settings.ring_strategy.max_wait_time.queue_timeout')}
                 error={
                   (errors?.settings as any)?.ring_strategy?.max_wait_time?.queue_timeout?.message

@@ -164,7 +164,23 @@ export const DEPARTMENT_RING_STRATEGY_DESC = {
   random: 'Rings agents in random order.',
 };
 
-export const MAX_WAITING_CALLERS = [
-  3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
-  29, 30,
-];
+/* How many callers may wait, and how long they may wait for.
+ *
+ * This was a hand-written list of 3 to 30, offered in a dropdown. Thirty is an
+ * order of magnitude below what established systems allow — they hold 500 on a
+ * standard plan and 1,000 on their top plan — and a ceiling that low silently
+ * turns callers away on any busy morning, with nothing in the interface saying
+ * it happened.
+ *
+ * A dropdown of 500 entries is unusable, so this is a number field now. The
+ * stored shape is unchanged: still `{ label, value }`, so the payload builder
+ * and the saved records do not move.
+ *
+ * The 1,000 ceiling is deliberately not offered yet. It belongs to the top plan,
+ * and there is no plan flag for queue size to read — inventing a key would read
+ * as `undefined` and quietly give everyone the lower number anyway. */
+export const MAX_WAITING_CALLERS_LIMITS = { min: 1, max: 500 };
+
+/* 10 seconds to 300 minutes, matching what established systems allow. The old
+   floor of 60 seconds ruled out short overflow queues that hand off quickly. */
+export const QUEUE_TIMEOUT_LIMITS = { min: 10, max: 18000 };

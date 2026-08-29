@@ -666,7 +666,10 @@ export const router = createBrowserRouter([
               { path: 'profile', element: <BasicInfoSettings /> },
               { path: 'preferences', element: <General /> },
               { path: 'phone', element: <ProtectedRoute element={<IncomingCalls />} /> },
-              { path: 'notification', element: <SettingsNotification /> },
+              { path: 'notifications', element: <SettingsNotification /> },
+              /* Plural, like every other section. The singular stays as a
+                 redirect because it is what the sidebar shipped with. */
+              { path: 'notification', element: <Navigate to="../notifications" replace /> },
               {
                 /* Video settings existed only under the old `/settings` tree, so
                    once the navigation moved to `/admin-settings/account` there
@@ -698,9 +701,15 @@ export const router = createBrowserRouter([
                 element: <Outlet />,
                 children: [
                   { index: true, element: <GreetingContent /> },
-                  { path: 'type-greeting', element: <GreetingContent /> },
-                  { path: 'type-prompt', element: <GreetingContent /> },
-                  { path: 'type-voicemail', element: <GreetingContent /> },
+                  /* `greetings`, `prompts`, `voicemail` — what the thing is
+                     called, not how it is typed internally. The `type-` slugs
+                     below stay forever: they are in people's bookmarks. */
+                  { path: 'greetings', element: <GreetingContent /> },
+                  { path: 'prompts', element: <GreetingContent /> },
+                  { path: 'voicemail', element: <GreetingContent /> },
+                  { path: 'type-greeting', element: <Navigate to="../greetings" replace /> },
+                  { path: 'type-prompt', element: <Navigate to="../prompts" replace /> },
+                  { path: 'type-voicemail', element: <Navigate to="../voicemail" replace /> },
                 ],
               },
               { path: 'security', element: <Security /> },
@@ -1455,7 +1464,7 @@ export const router = createBrowserRouter([
           { path: 'phone', element: <Navigate to="/admin-settings/account/phone" replace /> },
           {
             path: 'notification',
-            element: <Navigate to="/admin-settings/account/notification" replace />,
+            element: <Navigate to="/admin-settings/account/notifications" replace />,
           },
           {
             path: 'greetings',
@@ -1467,15 +1476,15 @@ export const router = createBrowserRouter([
               { index: true, element: <Navigate to="/admin-settings/account/media" replace /> },
               {
                 path: 'type-greeting',
-                element: <Navigate to="/admin-settings/account/media/type-greeting" replace />,
+                element: <Navigate to="/admin-settings/account/media/greetings" replace />,
               },
               {
                 path: 'type-prompt',
-                element: <Navigate to="/admin-settings/account/media/type-prompt" replace />,
+                element: <Navigate to="/admin-settings/account/media/prompts" replace />,
               },
               {
                 path: 'type-voicemail',
-                element: <Navigate to="/admin-settings/account/media/type-voicemail" replace />,
+                element: <Navigate to="/admin-settings/account/media/voicemail" replace />,
               },
             ],
           },
@@ -1498,18 +1507,15 @@ export const router = createBrowserRouter([
             index: true,
             element: <GreetingContent />,
           },
-          {
-            path: 'type-greeting',
-            element: <GreetingContent />,
-          },
-          {
-            path: 'type-prompt',
-            element: <GreetingContent />,
-          },
-          {
-            path: 'type-voicemail',
-            element: <GreetingContent />,
-          },
+          /* Same slugs as under My Account > Media Files. This area's own
+             sidebar links to them, so without these three the tabs led nowhere. */
+          { path: 'greetings', element: <GreetingContent /> },
+          { path: 'prompts', element: <GreetingContent /> },
+          { path: 'voicemail', element: <GreetingContent /> },
+          /* Kept for good — these are in bookmarks. */
+          { path: 'type-greeting', element: <Navigate to="../greetings" replace /> },
+          { path: 'type-prompt', element: <Navigate to="../prompts" replace /> },
+          { path: 'type-voicemail', element: <Navigate to="../voicemail" replace /> },
         ],
       },
       {

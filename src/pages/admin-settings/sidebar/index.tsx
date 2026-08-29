@@ -69,7 +69,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         {
           title: 'Notifications',
           icon: 'NotificationIcon',
-          path: '/admin-settings/account/notification',
+          path: '/admin-settings/account/notifications',
         },
         {
           title: 'Greetings',

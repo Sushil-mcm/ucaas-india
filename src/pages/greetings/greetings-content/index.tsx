@@ -41,19 +41,41 @@ const GreetingContent: FC = () => {
   });
   const [drawerState, setDrawerState] = useState<any>(false);
   const [greetingData, setGreetingData] = useState<any>(null);
-  const type =
-    ['voicemail', 'prompt', 'greeting']?.find((t) => pathname?.includes(`type-${t}`)) || 'all';
+  /* Slug in the URL -> the type this page renders. The plural slugs are the
+     current ones; the `type-` forms are the old paths, still routed as
+     redirects, and still matched here so a direct hit on one resolves to the
+     right library instead of silently falling back to "all". */
+  const TYPE_SLUGS: Record<string, string> = {
+    voicemail: 'voicemail',
+    prompts: 'prompt',
+    greetings: 'greeting',
+    'type-voicemail': 'voicemail',
+    'type-prompt': 'prompt',
+    'type-greeting': 'greeting',
+  };
+  /* One of the type slugs is `greetings`, and this page is also mounted at
+     `/greetings`. So the last segment alone cannot say whether it is a type or
+     the mount itself: at `/greetings` the answer is "all", at
+     `/greetings/greetings` it is the greetings library. Strip the segment and
+     look at what is left — an empty base means we were standing on the mount. */
+  const trimmed = pathname.replace(/\/+$/, '');
+  const lastSegment = trimmed.split('/').pop() || '';
+  const candidateBase = trimmed.slice(0, trimmed.length - lastSegment.length - 1);
+  const isTypeSegment = Boolean(TYPE_SLUGS[lastSegment]) && candidateBase !== '';
 
-  /* The four type routes exist under every place this page is mounted, but only
-     the standalone greetings area has a sidebar linking to them — under
+  const type = isTypeSegment ? TYPE_SLUGS[lastSegment] : 'all';
+
+  /* The type routes exist under every place this page is mounted, but only the
+     standalone greetings area has a sidebar linking to them — under
      My Account > Media Files they were reachable by typing a URL and no other
-     way. The base is whatever precedes /type-*, so the tabs follow the mount. */
-  const typeBase = pathname.replace(/\/type-(voicemail|prompt|greeting)\/?$/, '');
+     way. The base is whatever precedes the type segment, so the tabs follow the
+     mount wherever it is. */
+  const typeBase = isTypeSegment ? candidateBase : trimmed;
   const TYPE_TABS = [
     { key: 'all', label: 'All', to: typeBase },
-    { key: 'greeting', label: 'Greetings', to: `${typeBase}/type-greeting` },
-    { key: 'prompt', label: 'Prompts', to: `${typeBase}/type-prompt` },
-    { key: 'voicemail', label: 'Voicemail', to: `${typeBase}/type-voicemail` },
+    { key: 'greeting', label: 'Greetings', to: `${typeBase}/greetings` },
+    { key: 'prompt', label: 'Prompts', to: `${typeBase}/prompts` },
+    { key: 'voicemail', label: 'Voicemail', to: `${typeBase}/voicemail` },
   ];
 
   /* One page serves four different libraries, so the description follows the
