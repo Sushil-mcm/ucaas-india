@@ -14,3 +14,6 @@ backend later.
 
     npx esbuild src/lib/acd-routing.ts --format=cjs --outfile=tests/acd.build.cjs
     node tests/acd-test.cjs
+
+    npx esbuild src/lib/cost-centres.ts --format=cjs --outfile=tests/cost-centres.build.cjs
+    node tests/cost-centres-test.cjs
