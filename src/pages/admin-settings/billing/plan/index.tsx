@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { durationMap, RequestedPlanDurationMap, RequestedPlanStatusMap } from '../constants';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon } from '@/assets/icons/icon';
-import { calculateTotalPercentage, formatDate, handleAlert } from '@/lib/utils';
+import { formatDate, handleAlert } from '@/lib/utils';
 import { useGetMyPlanDetails, useGetPlans } from '@/hooks/common';
 import {
   cancelUpgradeRequestPlan,
@@ -34,6 +34,7 @@ import PaymentScreen from '@/components/payment';
 import { CARDS_TYPE } from '@/constants/common-const';
 import Loader from '@/components/custom/loader';
 import Storage from './storage';
+import PlanUsageTable from './usage-table';
 import AgentCosting from './agent-costing';
 
 /* The card surface used below is defined here. Without this the classes
@@ -625,135 +626,30 @@ const Plan = () => {
                     </div>
                   )}
 
-                  {/* Temporarily hidden until Usage & Limits is ready to be shown again. */}
-                  <div hidden className="mcm-setcard p-3 flex flex-col gap-3">
-                    <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">
-                      Usage & Limits
-                    </h6>
-                    {/* items */}
-                    {/* <div className="flex items-center justify-between gap-3">
-                      <h4 className="font-semibold text-gray-900 text-sm min-w-[160px]">
-                        Call Minutes
-                      </h4>
-                      <span className="relative w-full h-2">
-                        <span className="rounded-full w-full h-2 flex bg-ucass-primary-200"></span>
-                        <span
-                          className="rounded-full h-2 flex bg-primary absolute top-0 left-0"
-                          style={{
-                            width: `${calculateTotalPercentage(
-                              dataGetMyPlanDetails?.current_plan_details?.call_duration_used || 0,
-                              dataGetMyPlanDetails?.current_plan_details?.call_duration || 0,
-                            )}%`,
-                          }}
-                        ></span>
-                      </span>
-
-                      <h4 className="font-medium text-gray-500 flex gap-1 items-center justify-end text-sm min-w-[160px]">
-                        {secondsToMinutes(
-                          dataGetMyPlanDetails?.current_plan_details?.call_duration_used || 0,
-                        )}
-                        /
-                        {secondsToMinutes(
-                          dataGetMyPlanDetails?.current_plan_details?.call_duration || 0,
-                        )}
-                        {allowedCountry &&
-                          Array.isArray(allowedCountry) &&
-                          allowedCountry.length > 0 ? (
-                          <CustomTooltip
-                            text={
-                              allowedCountry
-                                .map((item: any) => {
-                                  if (typeof item === 'string') return item;
-                                  return item?.country_name || item?.name || item || 'Unknown';
-                                })
-                                .filter(Boolean)
-                                .join(', ') || 'Allowed Countries'
-                            }
-                          >
-                            <span className="inline-flex items-center">
-                              <Icon name="NoticeLine" className="w-4 h-4 cursor-pointer" />
-                            </span>
-                          </CustomTooltip>
-                        ) : null}
-                      </h4>
-                    </div> */}
-                    {/* <div className="flex items-center justify-between gap-3">
-                      <h4 className="font-semibold text-gray-900  text-sm min-w-[160px]">
-                        Free SMS
-                      </h4>
-                      <span className="relative w-full h-2">
-                        <span className="rounded-full w-full h-2 flex bg-green-100"></span>
-                        <span
-                          className="rounded-full h-2 flex bg-green-600 absolute top-0 left-0"
-                          style={{
-                            width: `${calculateTotalPercentage(
-                              dataGetMyPlanDetails?.current_plan_details?.sms_used ?? 0,
-                              dataGetMyPlanDetails?.current_plan_details?.sms ?? 0,
-                            )}%`,
-                          }}
-                        ></span>
-                      </span>
-
-                      <h4 className="font-medium text-gray-500 flex gap-1 items-center justify-end text-sm min-w-[160px]">
-                        {dataGetMyPlanDetails?.current_plan_details?.sms_used ?? 0}/
-                        {dataGetMyPlanDetails?.current_plan_details?.sms || 0}
-                        {allowedCountry &&
-                          Array.isArray(allowedCountry) &&
-                          allowedCountry.length > 0 ? (
-                          <CustomTooltip
-                            text={
-                              allowedCountry
-                                .map((item: any) => {
-                                  if (typeof item === 'string') return item;
-                                  return item?.country_name || item?.name || item || 'Unknown';
-                                })
-                                .filter(Boolean)
-                                .join(', ') || 'Allowed Countries'
-                            }
-                          >
-                            <span className="inline-flex items-center">
-                              <Icon name="NoticeLine" className="w-4 h-4 cursor-pointer" />
-                            </span>
-                          </CustomTooltip>
-                        ) : null}
-                      </h4>
-                    </div> */}
-                    <div className="flex items-center justify-between gap-3">
-                      <h4 className="font-semibold text-gray-900 text-sm min-w-[160px]">
-                        Licenses
-                      </h4>
-
-                      <span className="relative w-full h-2" aria-hidden="true">
-                        <span className="rounded-full w-full h-2 flex bg-orange-100"></span>
-                        <span
-                          className="rounded-full h-2 flex bg-orange-400 absolute top-0 left-0"
-                          style={{
-                            width: `${calculateTotalPercentage(
-                              dataGetMyPlanDetails?.license_detail?.used_licenses || 0,
-                              dataGetMyPlanDetails?.license_detail?.total_licenses || 0,
-                            )}%`,
-                          }}
-                        ></span>
-                      </span>
-
-                      <h4 className="font-medium flex gap-1 items-center justify-end text-gray-500 text-sm min-w-[160px]">
-                        {dataGetMyPlanDetails?.license_detail?.used_licenses || 0}/
-                        {dataGetMyPlanDetails?.license_detail?.total_licenses || 0}
-                        <span>Assigned</span>
-                      </h4>
-                    </div>
-                    {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0) > 0 && (
-                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
-                        You are paying for{' '}
-                        {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0)} seat
-                        {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0) === 1
-                          ? ''
-                          : 's'}{' '}
-                        that nobody is assigned to. Deleting a user does not take their seat off
-                        your bill — open the License tab below to assign or remove them.
-                      </p>
-                    )}
-                  </div>
+                  {/* Two progress bars, hidden behind a `hidden` attribute with a note
+                      saying they would come back when ready. A bar shows roughly how full
+                      something is and nothing else - not what you were given, not what you
+                      spent, not what is left. Replaced with the four numbers somebody
+                      actually needs, and shown rather than hidden. */}
+                  <PlanUsageTable
+                    lines={[
+                      {
+                        service: 'Calling',
+                        included:
+                          Number(dataGetMyPlanDetails?.current_plan_details?.call_duration) || 0,
+                        used:
+                          Number(dataGetMyPlanDetails?.current_plan_details?.call_duration_used) ||
+                          0,
+                        unit: 'minutes',
+                      },
+                      {
+                        service: 'SMS / MMS',
+                        included: Number(dataGetMyPlanDetails?.current_plan_details?.sms) || 0,
+                        used: Number(dataGetMyPlanDetails?.current_plan_details?.sms_used) || 0,
+                        unit: 'messages',
+                      },
+                    ]}
+                  />
                   {/* <div className="mcm-setcard p-3 flex flex-col gap-3">
                     <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">
                       Billing & Payments
