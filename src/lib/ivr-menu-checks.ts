@@ -36,7 +36,9 @@ export interface IvrFinding {
     | 'menu-loop'
     | 'no-keys'
     | 'missing-target'
-    | 'no-way-out';
+    | 'no-way-out'
+    | 'fallback-loops'
+    | 'no-fallback';
   /* Plain sentence for an admin. Names the key where there is one. */
   message: string;
   /* Which key press this concerns, when it concerns one. */
@@ -50,9 +52,22 @@ interface KeyAction {
   label?: string;
 }
 
+/* What happens when the caller does not press a usable key: nothing at all, or
+   something that is not on the menu. Both end up here. */
+export interface IvrFallback {
+  status?: string;
+  type?: { value?: string } | string;
+  value?: { value?: string } | string;
+}
+
 export interface IvrMenuLike {
   uuid?: string;
   name?: string;
+  /* The form nests these under `generic`; stored records keep the same names. */
+  generic?: {
+    timeout_action?: IvrFallback;
+    failure_action?: IvrFallback;
+  };
   /* Either the form shape (ivrActions) or the stored shape (ivr_option). */
   ivrActions?: any[];
   ivr_option?: any[];
@@ -204,6 +219,37 @@ export const checkIvrMenu = ({
       }
     });
   }
+
+  /* --- the fallbacks, which decide what happens to a caller who presses
+         nothing or presses something that is not there. Getting these wrong
+         strands the callers least able to help themselves. --- */
+  const readFallback = (f?: IvrFallback) => ({
+    status: String(f?.status ?? ''),
+    type: String((f?.type as any)?.value ?? f?.type ?? ''),
+    value: String((f?.value as any)?.value ?? f?.value ?? ''),
+  });
+
+  ([
+    ['timeout_action', 'presses nothing'],
+    ['failure_action', 'presses a key that is not set up'],
+  ] as const).forEach(([field, when]) => {
+    const fb = readFallback(menu.generic?.[field]);
+    if (!fb.status) {
+      findings.push({
+        level: 'warning',
+        code: 'no-fallback',
+        message: `Nothing is set for when the caller ${when}. Say what should happen, so they are not left listening to a menu that has stopped.`,
+      });
+      return;
+    }
+    if (menu.uuid && fb.type === 'IVR' && fb.value === menu.uuid) {
+      findings.push({
+        level: 'error',
+        code: 'fallback-loops',
+        message: `When the caller ${when}, this menu sends them back to itself. They would hear it again, do the same thing, and never get anywhere.`,
+      });
+    }
+  });
 
   /* --- every key leads to another menu --- */
   const reachable = actions.filter((row) => row.type !== 'IVR');

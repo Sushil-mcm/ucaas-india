@@ -9,7 +9,9 @@ const codes = (f) => f.map(x => x.code).sort();
 const row = (key, type, value, label) => ({ key: { value: key }, forwardType: { value: type }, forwardValue: { value, label } });
 
 // clean menu
-let f = checkIvrMenu({ menu: { uuid: 'a', name: 'Main', ivrActions: [row('1','QUEUE','q1','Sales'), row('2','EXTENSION','101','Ana')] } });
+const FALLBACKS = { timeout_action: { status: 'HANGUP' }, failure_action: { status: 'HANGUP' } };
+let f = checkIvrMenu({ menu: { uuid: 'a', name: 'Main', generic: FALLBACKS,
+  ivrActions: [row('1','QUEUE','q1','Sales'), row('2','EXTENSION','101','Ana')] } });
 t('a sound menu reports nothing', f.length === 0);
 
 // duplicate key
@@ -50,6 +52,20 @@ t('all keys leading to menus is a warning', codes(f).includes('no-way-out'));
 // # and * read naturally
 f = checkIvrMenu({ menu: { uuid: 'a', ivrActions: [row('#','QUEUE','q1'), row('#','EXTENSION','1')] } });
 t('# is described as # not "key #"', /^# is used/.test(f[0].message));
+
+console.log('  --- the fallbacks ---');
+f = checkIvrMenu({ menu: { uuid:'a', ivrActions:[row('1','QUEUE','q1')],
+  generic:{ timeout_action:{status:'EXTENSION',type:{value:'IVR'},value:{value:'a'}},
+            failure_action:{status:'HANGUP'} } } });
+t('a timeout that returns to this menu is an error', codes(f).includes('fallback-loops'));
+t('and it says what the caller did', /presses nothing/.test(f.find(x=>x.code==='fallback-loops').message));
+
+f = checkIvrMenu({ menu: { uuid:'a', ivrActions:[row('1','QUEUE','q1')],
+  generic:{ timeout_action:{status:'HANGUP'}, failure_action:{status:'HANGUP'} } } });
+t('fallbacks that are set report nothing', f.length === 0);
+
+f = checkIvrMenu({ menu: { uuid:'a', ivrActions:[row('1','QUEUE','q1')] } });
+t('missing fallbacks are a warning', f.filter(x=>x.code==='no-fallback').length === 2);
 
 console.log(`\n    ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

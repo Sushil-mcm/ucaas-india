@@ -1,7 +1,23 @@
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFormContext } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
 import ForwardActionAll from '@/components/custom/forward-action-all';
+import CustomSelect from '@/components/custom/custom-select';
+import { SettingCard, SettingNest, SettingRow } from '@/components/mcm/setting-card';
+
+const FALLBACK_CHOICES = [
+  { label: 'Hang up', value: 'HANGUP' },
+  { label: 'Send them somewhere', value: 'EXTENSION' },
+];
+
+/* The two behaviours these keys have always had. Kept as stored strings rather
+   than codes so an existing menu keeps working untouched. */
+const HASH_CHOICES = [
+  { label: 'Go back to the previous menu', value: 'Return to Previous Menu' },
+  { label: 'Play this menu again', value: 'Repeat Menu Greeting' },
+];
+const ASTERISK_CHOICES = [
+  { label: 'Play this menu again', value: 'Repeat Menu Greeting' },
+  { label: 'Go back to the previous menu', value: 'Return to Previous Menu' },
+];
 import useIvrExternalForwarding from '@/hooks/use-ivr-external-forwarding';
 
 const GenericKey = () => {
@@ -15,268 +31,115 @@ const GenericKey = () => {
     formState: { errors },
   } = useFormContext();
 
-  const watchGeneric = watch('generic');
+  /* One shape for both fallbacks: hang up, or send them somewhere. The stored
+     keys differ only by name, so the row is written once and used twice rather
+     than the same markup appearing in two places and drifting apart. */
+  const FallbackRows = ({
+    field,
+    label,
+    description,
+  }: {
+    field: 'timeout_action' | 'failure_action';
+    label: string;
+    description: string;
+  }) => {
+    const status = watch(`generic.${field}.status`);
+    return (
+      <>
+        <SettingRow
+          label={label}
+          description={description}
+          control={
+            <CustomSelect
+              options={FALLBACK_CHOICES}
+              value={FALLBACK_CHOICES.find((c) => c.value === status) || FALLBACK_CHOICES[0]}
+              handleChange={(choice: any) => {
+                const next = choice?.value || 'HANGUP';
+                setValue(`generic.${field}.status`, next);
+                setValue(`generic.${field}.type`, {
+                  label: next === 'EXTENSION' ? 'Send to Voicemail' : '',
+                  value: next === 'EXTENSION' ? 'VOICEMAIL' : '',
+                });
+                setValue(`generic.${field}.value`, { label: '', value: '' });
+              }}
+              menuPlacement="auto"
+            />
+          }
+        />
+        <SettingNest when={status === 'EXTENSION'}>
+          <SettingRow label="Send them to" description="Where the call goes instead.">
+            <ForwardActionAll
+              {...{
+                setValue,
+                watch,
+                forwardType: `generic.${field}.type`,
+                forwardValue: `generic.${field}.value`,
+                forwardValueError: (errors?.generic as any)?.[field]?.value?.value?.message,
+                notInclude: hiddenForwardTypes,
+                forwardTypeClass: 'w-full sm:w-1/2',
+                forwardValueClass: 'w-full sm:w-1/2',
+                selectCustomClassSecond: 'w-full',
+              }}
+            />
+          </SettingRow>
+        </SettingNest>
+      </>
+    );
+  };
 
   return (
     <>
-      <div className="gap-2 flex flex-col">
-        <p className={`text-gray-800  text-sm`}>
-          If caller enters no action after the prompt played 3 Times.
-        </p>
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex w-full rounded-xl border border-gray-200 p-3">
-            <RadioGroup
-              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
-              value={watch('generic.timeout_action.status')}
-              onValueChange={(value) => {
-                setValue('generic.timeout_action.status', value);
-                setValue('generic.timeout_action.type', {
-                  label: value === 'EXTENSION' ? 'Send to Voicemail' : '',
-                  value: value === 'EXTENSION' ? 'VOICEMAIL' : '',
-                });
+      <SettingCard
+        title="When the caller does not choose"
+        description="The two cases that decide what happens to somebody who cannot use the menu — which is usually somebody on an old handset, in a noisy place, or who simply does not know what they need."
+      >
+        <FallbackRows
+          field="timeout_action"
+          label="They press nothing"
+          description="After the menu has played three times with no key pressed."
+        />
+        <FallbackRows
+          field="failure_action"
+          label="They press a key that is not set up"
+          description="After three tries at a key this menu does not use."
+        />
+      </SettingCard>
 
-                setValue('generic.timeout_action.value', {
-                  label: '',
-                  value: '',
-                });
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="HANGUP" id="yes" />
-                <Label htmlFor="yes">Disconnect the Call</Label>
-              </div>
-              <p className="text-gray-800  text-sm">or</p>
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="EXTENSION" id="no" />
-                <Label htmlFor="no">Forward to</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="flex w-full items-center gap-4">
-            {watchGeneric?.timeout_action?.status === 'EXTENSION' && (
-              <ForwardActionAll
-                {...{
-                  setValue,
-                  watch,
-                  forwardType: 'generic.timeout_action.type',
-                  forwardValue: 'generic.timeout_action.value',
-                  forwardValueError: (errors?.generic as any)?.timeout_action?.value?.value
-                    ?.message,
-                  notInclude: ['IVR', ...hiddenForwardTypes],
-                  forwardTypeClass: 'w-full lg:w-3/5',
-                  forwardValueClass: 'w-full lg:w-3/5',
-                  forwardTypeLabel: 'Forward type',
-                  forwardValueLabel: 'Forward value',
-                  selectCustomClassSecond: 'w-full',
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col gap-4">
-        <p className={`text-gray-800 text-sm`}>
-          If caller enters invalid key after prompt plays 3 times.
-        </p>
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex w-full rounded-xl border border-gray-200 p-3">
-            <RadioGroup
-              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
-              value={watch('generic.failure_action.status')}
-              onValueChange={(value) => {
-                setValue('generic.failure_action.status', value);
-                setValue('generic.failure_action.type', {
-                  label: value === 'EXTENSION' ? 'Send to Voicemail' : '',
-                  value: value === 'EXTENSION' ? 'VOICEMAIL' : '',
-                });
-
-                setValue('generic.failure_action.value', {
-                  label: '',
-                  value: '',
-                });
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="HANGUP" id="yes" />
-                <Label htmlFor="yes">Disconnect the Call</Label>
-              </div>
-              <p className="text-gray-800 text-sm">or</p>
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="EXTENSION" id="no" />
-                <Label htmlFor="no">Forward to</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          <div className="flex w-full items-center gap-4">
-            {watchGeneric?.failure_action?.status === 'EXTENSION' && (
-              <ForwardActionAll
-                {...{
-                  setValue,
-                  watch,
-                  forwardType: 'generic.failure_action.type',
-                  forwardValue: 'generic.failure_action.value',
-                  forwardValueError: (errors?.generic as any)?.failure_action?.value?.value
-                    ?.message,
-                  notInclude: ['IVR', ...hiddenForwardTypes],
-                  forwardTypeClass: 'w-full lg:w-3/5',
-                  forwardValueClass: 'w-full lg:w-3/5',
-                  forwardTypeLabel: 'Forward type',
-                  forwardValueLabel: 'Forward value',
-                  selectCustomClassSecond: 'w-full',
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* <div className="flex flex-col border border-gray-200 rounded-xl">
-        <div className="flex flex-col gap-2 p-3">
-          <h5 className="font-semibold  text-md text-gray-900"> Generic Key Press</h5>
-          <div className="flex gap-5">
-            <RadioGroup
-              className="flex gap-4"
-              value={watch('generic.enabled')?.toString()}
-              onValueChange={(value) => {
-                setValue('generic', {
-                  enabled: value === 'true',
-                  keyboard_shortcuts: 'default',
-                  press_hash: {
-                    label: 'Return to Previous Menu',
-                    value: 'Return to Previous Menu',
-                  },
-                  press_asterisk: { label: 'Repeat Menu Greeting', value: 'Repeat Menu Greeting' },
-                  timeout_action: {
-                    status: 'HANGUP',
-                    type: {},
-                    value: {},
-                  },
-                  failure_action: {
-                    status: 'HANGUP',
-                    type: {},
-                    value: {},
-                  },
-                });
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="true" id="yes" />
-                <Label htmlFor="yes">Yes</Label>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="false" id="no" />
-                <Label htmlFor="no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="flex flex-col gap-2 ">
-            {watchGeneric?.enabled && (
-              <>
-                <div className=" gap-12 flex flex-col">
-                  <div className="gap-2 flex flex-col py-4 px-3 pl-0">
-                    <div className="flex flex-col gap-2">
-                      <p className="text-gray-800  text-sm">
-                        Customize your keyboard shortcuts and key bindings.
-                      </p>
-                    </div>
-                    <div className=" flex w-fit border border-gray-200 rounded-xl p-3 gap-4">
-                      <div className="flex gap-2">
-                        <RadioGroup
-                          className="flex gap-4"
-                          value={watch('generic.keyboard_shortcuts')?.toString()}
-                          onValueChange={(value) => {
-                            if (value === 'default') {
-                              setValue('generic', {
-                                ...watch('generic'),
-                                keyboard_shortcuts: 'default',
-                                press_hash: {
-                                  label: 'Return to Previous Menu',
-                                  value: 'Return to Previous Menu',
-                                },
-                                press_asterisk: {
-                                  label: 'Repeat Menu Greeting',
-                                  value: 'Repeat Menu Greeting',
-                                },
-                              });
-                            } else if (value === 'specific') {
-                              setValue('generic', {
-                                ...watch('generic'),
-                                keyboard_shortcuts: 'specific',
-                                press_hash: null,
-                                press_asterisk: null,
-                              });
-                            }
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem value="default" id="yes" />
-                            <Label htmlFor="yes">Use Default Settings</Label>
-                          </div>
-                          <p className="text-gray-800  text-sm">or</p>
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem value="specific" id="no" />
-                            <Label htmlFor="no">Specify</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-
-                    <div className="w-full flex items-center gap-3 mt-3">
-                      <div className="flex gap-4 w-11/12">
-                        <div className="flex w-3/5 gap-1 relative">
-                          <CustomSelect
-                            label={'Press #'}
-                            options={KEYBOARD_SHORTCUTS}
-                            handleChange={(e: ISELECTVALUE | null) => {
-                              setValue('generic.press_hash', e);
-                              if (e?.value === 'Repeat Menu Greeting') {
-                                setValue('generic.press_asterisk', {
-                                  label: 'Return to Previous Menu',
-                                  value: 'Return to Previous Menu',
-                                });
-                              } else if (e?.value === 'Return to Previous Menu') {
-                                setValue('generic.press_asterisk', {
-                                  label: 'Repeat Menu Greeting',
-                                  value: 'Repeat Menu Greeting',
-                                });
-                              }
-                            }}
-                            value={watch(`generic.press_hash`) || {}}
-                            className="border-primary rounded-l-none"
-                          />
-                        </div>
-                        <div className="flex w-3/5 gap-1 relative">
-                          <CustomSelect
-                            label={'Press *'}
-                            options={KEYBOARD_SHORTCUTS}
-                            handleChange={(e: ISELECTVALUE | null) => {
-                              setValue('generic.press_asterisk', e);
-                              if (e?.value === 'Repeat Menu Greeting') {
-                                setValue('generic.press_hash', {
-                                  label: 'Return to Previous Menu',
-                                  value: 'Return to Previous Menu',
-                                });
-                              } else if (e?.value === 'Return to Previous Menu') {
-                                setValue('generic.press_hash', {
-                                  label: 'Repeat Menu Greeting',
-                                  value: 'Repeat Menu Greeting',
-                                });
-                              }
-                            }}
-                            value={watch(`generic.press_asterisk`) || {}}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div> */}
+      <SettingCard
+        title="The # and * keys"
+        description="Kept aside from the numbered keys because callers expect them to mean the same thing on every menu."
+      >
+        <SettingRow
+          label="Pressing #"
+          description="Usually takes the caller back to where they came from."
+          control={
+            <CustomSelect
+              options={HASH_CHOICES}
+              value={
+                HASH_CHOICES.find((c) => c.value === watch('generic.press_hash')?.value) ||
+                HASH_CHOICES[0]
+              }
+              handleChange={(choice: any) => setValue('generic.press_hash', choice)}
+              menuPlacement="auto"
+            />
+          }
+        />
+        <SettingRow
+          label="Pressing *"
+          description="Usually plays the menu again for somebody who missed it."
+          control={
+            <CustomSelect
+              options={ASTERISK_CHOICES}
+              value={
+                ASTERISK_CHOICES.find((c) => c.value === watch('generic.press_asterisk')?.value) ||
+                ASTERISK_CHOICES[0]
+              }
+              handleChange={(choice: any) => setValue('generic.press_asterisk', choice)}
+              menuPlacement="auto"
+            />
+          }
+        />
+      </SettingCard>
     </>
   );
 };
