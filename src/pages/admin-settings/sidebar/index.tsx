@@ -378,8 +378,15 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       visible: Boolean(features?.plan_features?.billing?.action?.view),
       children: [
         {
-          /* First in the list on purpose: "where do I stand" comes before
-             "what did I buy" and "what did I pay". */
+          /* First on purpose: somebody opening Billing arrives with three
+             questions - what am I paying for, what is due next, what have I
+             paid - and this is the only page that answers all three. Statement
+             below is the detailed ledger for when the summary is not enough. */
+          title: 'Summary',
+          path: '/admin-settings/billing/summary',
+          icon: 'BillingPlanIcon',
+        },
+        {
           title: 'Statement',
           path: '/admin-settings/billing/statement',
           icon: 'BillingPlanIcon',

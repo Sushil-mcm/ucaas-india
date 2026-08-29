@@ -196,6 +196,7 @@ const DNC = lazy(() => import('@/pages/auto-dialer/dnc'));
 const AdminHome = lazy(() => import('@/pages/admin-settings/admin-home'));
 const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
 const StatementOfAccount = lazy(() => import('@/pages/admin-settings/billing/statement'));
+const BillingSummary = lazy(() => import('@/pages/admin-settings/billing/summary'));
 const BillingResources = lazy(() => import('@/pages/admin-settings/billing/resources'));
 const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules'));
 /* Admin ▸ Users reuses the Directory screens rather than keeping a second,
@@ -530,8 +531,8 @@ export const router = createBrowserRouter([
             element: <AdminHome />,
             id: 'company-info-1',
           },
-              {
-                /* The company area. `company`, not `company-info`: the word a
+          {
+            /* The company area. `company`, not `company-info`: the word a
               {
                 /* The company area. `company`, not `company-info`: the word a
                    customer uses. Old paths redirect below.
@@ -541,40 +542,40 @@ export const router = createBrowserRouter([
                    the sub-nav links to and the one people will bookmark. The
                    overview and the locations screens are siblings, outside that
                    layout, because they are not settings sections. */
-                path: 'company',
-                children: [
-                  {
-                    index: true,
-                    element: (
-                      <ProtectedRoute
-                        element={<CompanyInfo />}
-                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
-                      />
-                    ),
-                  },
-                  {
-                    /* A location has its own address, so it can be linked to and
+            path: 'company',
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyInfo />}
+                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                /* A location has its own address, so it can be linked to and
                        reloaded. The list and a single location render the same
                        screen; the id decides whether that location's panel opens. */
-                    path: 'locations',
-                    element: (
-                      <ProtectedRoute
-                        element={<CompanyInfo />}
-                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
-                      />
-                    ),
-                  },
-                  {
-                    path: 'locations/:locationId',
-                    element: (
-                      <ProtectedRoute
-                        element={<CompanyInfo />}
-                        guard={{ permission: 'account_setting.access.SITE.action.view' }}
-                      />
-                    ),
-                  },
-                  {
-                    /* Each settings section is its own route rather than a tab held
+                path: 'locations',
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyInfo />}
+                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                path: 'locations/:locationId',
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyInfo />}
+                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                /* Each settings section is its own route rather than a tab held
                        in state. One screen, one URL: it can be linked to,
                        bookmarked, reloaded, and later given its own permission.
 
@@ -584,45 +585,45 @@ export const router = createBrowserRouter([
                        cannot get its own key until the API ships it. Security is
                        the exception and is tightened now, because today it opens
                        for anyone who can view the phone system. */
+                element: (
+                  <ProtectedRoute
+                    element={<CompanyLayout />}
+                    guard={{ permission: 'phone_system_action.action.view' }}
+                  />
+                ),
+                children: [
+                  { path: 'phone-rules', element: <CompanyPhoneRules /> },
+                  { path: 'greetings', element: <CompanyGreetings /> },
+                  { path: 'voicemail', element: <CompanyVoicemailPage /> },
+                  { path: 'emergency-address', element: <CompanyEmergency /> },
+                  { path: 'holidays', element: <CompanyHolidaysPage /> },
+                  { path: 'calling', element: <CompanyCalling /> },
+                  { path: 'messaging', element: <CompanyMessagingPage /> },
+                  { path: 'policies', element: <CompanyPoliciesPage /> },
+                  { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
+                  {
+                    /* Administrator-only. It holds the sign-in policy, and the
+                           phone-system permission is far too wide a key for that. */
+                    path: 'security',
                     element: (
                       <ProtectedRoute
-                        element={<CompanyLayout />}
-                        guard={{ permission: 'phone_system_action.action.view' }}
+                        element={<CompanySecurityPage />}
+                        guard={{ adminOnly: true }}
                       />
                     ),
-                    children: [
-                      { path: 'phone-rules', element: <CompanyPhoneRules /> },
-                      { path: 'greetings', element: <CompanyGreetings /> },
-                      { path: 'voicemail', element: <CompanyVoicemailPage /> },
-                      { path: 'emergency-address', element: <CompanyEmergency /> },
-                      { path: 'holidays', element: <CompanyHolidaysPage /> },
-                      { path: 'calling', element: <CompanyCalling /> },
-                      { path: 'messaging', element: <CompanyMessagingPage /> },
-                      { path: 'policies', element: <CompanyPoliciesPage /> },
-                      { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
-                      {
-                        /* Administrator-only. It holds the sign-in policy, and the
-                           phone-system permission is far too wide a key for that. */
-                        path: 'security',
-                        element: (
-                          <ProtectedRoute
-                            element={<CompanySecurityPage />}
-                            guard={{ adminOnly: true }}
-                          />
-                        ),
-                      },
-                    ],
                   },
                 ],
               },
-              {
-                path: 'company-info',
-                element: <Navigate to="/admin-settings/company" replace />,
-              },
-              {
-                path: 'company-info/rules',
-                element: <Navigate to="/admin-settings/company/policies" replace />,
-              },
+            ],
+          },
+          {
+            path: 'company-info',
+            element: <Navigate to="/admin-settings/company" replace />,
+          },
+          {
+            path: 'company-info/rules',
+            element: <Navigate to="/admin-settings/company/policies" replace />,
+          },
           {
             /* Integrations are set up once for the whole account, so they belong
                with the other administered settings rather than as a top-level
@@ -1240,6 +1241,17 @@ export const router = createBrowserRouter([
             path: 'billing',
             id: 'billing',
             children: [
+              {
+                /* The summary is what /billing opens on. Somebody checking their bill
+                   arrives with three questions - what am I paying for, what is next,
+                   what have I paid - and this is the page that answers all three. */
+                index: true,
+                element: <BillingSummary />,
+              },
+              {
+                path: 'summary',
+                element: <BillingSummary />,
+              },
               {
                 path: 'plan',
                 id: 'plan',
