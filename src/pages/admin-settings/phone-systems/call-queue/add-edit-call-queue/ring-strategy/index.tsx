@@ -174,8 +174,8 @@ const RingStrategy = () => {
 
         <SettingNest when={!!watch('settings.escalation.enabled')}>
           <SettingRow
-            label="Add the next tier after (seconds)"
-            description="Set each member's tier in the list below. Anyone left on tier 1 rings from the start."
+            label="Widen after (seconds)"
+            description="How long the first group rings before more people are added. Below fifteen seconds nobody has had a fair chance to answer."
             control={
               <Input
                 type="number"
@@ -185,6 +185,23 @@ const RingStrategy = () => {
                 onChange={(event) =>
                   setValue('settings.escalation.widen_after_seconds', Number(event.target.value))
                 }
+              />
+            }
+          />
+
+          <SettingRow
+            label="Only ring people rated at least"
+            description="Set ratings on the Members tab. Leave this at 0 and everybody rings from the start; raise it and the first group is only your strongest, with everyone else added when it widens."
+            control={
+              <Input
+                type="number"
+                min={ESCALATION_LIMITS.minimum_rating.min}
+                max={ESCALATION_LIMITS.minimum_rating.max}
+                value={watch('settings.escalation.minimum_rating') ?? 0}
+                onChange={(event) => {
+                  const raw = Number(event.target.value) || 0;
+                  setValue('settings.escalation.minimum_rating', Math.min(100, Math.max(0, raw)));
+                }}
               />
             }
           />

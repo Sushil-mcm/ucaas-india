@@ -48,6 +48,53 @@ const MANAGER_ROLES = ['MANAGER', 'ADMIN', 'SUB-ADMIN', 'SUPER-ADMIN'];
 const canManage = (member: IMEMBER): boolean =>
   MANAGER_ROLES.includes(roleOf(member).toUpperCase());
 
+/* How well somebody handles this queue's work, 0 to 100.
+ *
+ * Per queue, not per person: somebody can be the strongest on billing and the
+ * weakest on support, and one number per person could not say that.
+ *
+ * Everybody starts at 100, so a queue that rates nobody behaves exactly as it
+ * does today. That default is deliberate - starting at 0 would mean rating one
+ * person silently sidelined everybody else, and the first admin to try the
+ * feature would break their own queue.
+ *
+ * Only editable for somebody already in the queue. Rating a person you have not
+ * added is a setting with nowhere to live. */
+const MemberRatingCell = ({ memberData }: { memberData: IMEMBER }) => {
+  const { control, setValue } = useFormContext();
+  const members = useWatch({ control, name: 'members', defaultValue: [] });
+  const index = Array.isArray(members)
+    ? members.findIndex((m: any) => m?.value === memberData?.extension)
+    : -1;
+
+  if (index < 0) {
+    return <span className="text-xs text-gray-400">&mdash;</span>;
+  }
+
+  const rating = members[index]?.rating ?? 100;
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        type="number"
+        min={0}
+        max={100}
+        value={rating}
+        className="h-9 w-20"
+        onChange={(event) => {
+          const raw = event.target.value;
+          /* Clamped rather than refused: an admin typing 150 means "as high as
+             it goes", and an error message for that would be pedantic. */
+          const next = raw === '' ? 100 : Math.min(100, Math.max(0, Number(raw) || 0));
+          const copy = [...members];
+          copy[index] = { ...copy[index], rating: next };
+          setValue('members', copy, { shouldValidate: false });
+        }}
+      />
+    </div>
+  );
+};
+
 // Checkbox cell component with internal form subscription and logic
 const MemberCheckboxCell = ({ memberData }: { memberData: IMEMBER }) => {
   const { control, setValue, clearErrors } = useFormContext();
@@ -293,6 +340,12 @@ const AddMembers: FC = () => {
         header: 'Name',
         accessorKey: 'first_name',
         cell: ({ row }: any) => <MemberNameCell data={row?.original} />,
+      },
+      {
+        header: 'Rating',
+        id: 'rating',
+        accessorKey: 'rating',
+        cell: ({ row }: any) => <MemberRatingCell memberData={row?.original} />,
       },
     ],
     [currentMembers],

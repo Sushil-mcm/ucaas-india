@@ -61,9 +61,12 @@ const RingPreview = () => {
     const widenAfter = asSeconds(escalation?.widen_after_seconds, 30);
     /* Two steps only when widening is switched on. With it off the queue rings
        one group for the whole wait, and showing a second step would be a lie. */
-    const steps = escalation?.enabled
-      ? [{ waitSeconds: widenAfter }, { waitSeconds: 0 }]
-      : [{ waitSeconds: 0 }];
+    const minimumRating = Number(escalation?.minimum_rating);
+    const firstStep =
+      Number.isFinite(minimumRating) && minimumRating > 0
+        ? { waitSeconds: widenAfter, minimumRating }
+        : { waitSeconds: widenAfter };
+    const steps = escalation?.enabled ? [firstStep, { waitSeconds: 0 }] : [{ waitSeconds: 0 }];
 
     const list: AcdAgent[] = (Array.isArray(members) ? members : []).map((m: any, i: number) => ({
       id: String(m?.value ?? m?.uuid ?? i),
@@ -71,6 +74,9 @@ const RingPreview = () => {
         .split('/')[0]
         .trim(),
       state: 'available',
+      /* Unrated counts as fully able - the same default the rating cell uses,
+         so the preview and the editor cannot disagree about an untouched team. */
+      rating: typeof m?.rating === 'number' ? m.rating : 100,
       idleSince: 0,
     }));
 
@@ -82,7 +88,14 @@ const RingPreview = () => {
       } as AcdQueueRules,
       agents: list,
     };
-  }, [strategyRaw, escalation?.enabled, escalation?.widen_after_seconds, members, queueTimeout]);
+  }, [
+    strategyRaw,
+    escalation?.enabled,
+    escalation?.widen_after_seconds,
+    escalation?.minimum_rating,
+    members,
+    queueTimeout,
+  ]);
 
   /* The moments worth showing: the start, each point the answer changes, and the
      end. Walking forward using the decision's own `changesInSeconds` means the

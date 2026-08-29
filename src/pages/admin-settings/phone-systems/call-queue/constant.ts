@@ -156,9 +156,15 @@ export const ESCALATION_DEFAULTS = {
      had a fair chance to answer, so widening that fast just rings more phones
      for no reason. */
   widen_after_seconds: 30,
+  /* Lowest rating allowed in the first step. 0 means anybody, which is what a
+     queue that has never rated its people should do. */
+  minimum_rating: 0,
 };
 
-export const ESCALATION_LIMITS = { widen_after_seconds: { min: 15, max: 600 } };
+export const ESCALATION_LIMITS = {
+  widen_after_seconds: { min: 15, max: 600 },
+  minimum_rating: { min: 0, max: 100 },
+};
 
 export const CALL_QUEUE_INIITAL_VALUES = {
   name: '',
