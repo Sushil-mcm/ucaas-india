@@ -66,6 +66,8 @@ const DIDList = () => {
     <div className="h-full w-full flex flex-col gap-2">
       <TableManager
         {...{
+          emptyTablePlaceholder: 'No numbers on this plan',
+          descriptionEmptyTable: 'Numbers you buy will be listed here with what each one costs.',
           fetcherKey: 'freeDID',
           fetcherFn: allNumbersList,
           columns: columnsDIDFree,

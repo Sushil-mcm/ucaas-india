@@ -130,7 +130,16 @@ const ManageCards = () => {
             You can update or remove cards anytime.
           </p>
         </div>
-        <TableManager {...{ columns, fetcherKey: 'useGetSavedCards', fetcherFn: cardList }} />
+        <TableManager
+          {...{
+            emptyTablePlaceholder: 'No card saved',
+            descriptionEmptyTable:
+              'Add a card so numbers and plan renewals can be paid for without interruption.',
+            columns,
+            fetcherKey: 'useGetSavedCards',
+            fetcherFn: cardList,
+          }}
+        />
 
         {open && <AddCardModal {...{ open, setOpen }} />}
 

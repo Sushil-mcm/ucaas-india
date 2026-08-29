@@ -472,6 +472,9 @@ const UsersExtension: FC = () => {
           </p>
           <TableManager
             {...{
+              emptyTablePlaceholder: 'Nobody here yet',
+              descriptionEmptyTable:
+                'Add the people who will make and take calls. Each one gets an extension and their own settings.',
               columns,
               fetcherKey: 'fetchUsersList',
               fetcherFn: getUserList,

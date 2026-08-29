@@ -59,12 +59,13 @@ function TableManager({
   initiallySelectedRows = {},
   extraParams = {},
   search = '',
+  emptyAction,
   staticData,
   showPagination = true,
   loaderTableClass = '',
   type = '',
   getRowClassName = defaultGetRowClassName,
-  emptyTablePlaceholder = 'No Record Found!',
+  emptyTablePlaceholder = 'Nothing here yet',
   tableRef,
   isHeightSet = true,
   tableMaxHeight = null,
@@ -104,6 +105,10 @@ function TableManager({
   showPagination?: boolean;
   type?: string;
   emptyTablePlaceholder?: string;
+  /* The button that fixes an empty screen. Shown only when the list is
+     genuinely empty, never when a search found nothing - adding something is
+     not the answer to a search that missed. */
+  emptyAction?: React.ReactNode;
   getRowClassName?: (row: any) => string;
   isHeightSet?: boolean;
   tableMaxHeight?: any;
@@ -421,12 +426,31 @@ function TableManager({
             <Loader variant="blue" />
           </div>
         ) : !hasRows ? (
-          <div className="flex flex-col justify-center items-center gap-1 py-5 h-[calc(100%_-_45px)] w-full mx-auto">
-            {/* <Icon name="NotFound" className="text-gray-500 w-15 h-15" /> */}
-            {/* <p className="text-sm text-gray-700">{emptyTablePlaceholder || descriptionEmptyTable}</p> */}
-            <img src={NotFound} alt="BusyImage" className={imageSize} />
-            <p className="text-md font-medium text-gray-900">{emptyTablePlaceholder}</p>
-            <p className="text-sm text-gray-700">{descriptionEmptyTable}</p>
+          /* A search that found nothing and an account with nothing in it looked
+             identical, so somebody who mistyped a name was told the same thing as
+             somebody who has not set anything up. They are different problems and
+             need different words - and offering "add your first one" to somebody
+             whose search simply missed would be actively unhelpful. */
+          <div className="mx-auto flex h-[calc(100%_-_45px)] w-full flex-col items-center justify-center gap-2 py-5 text-center">
+            <img src={NotFound} alt="" className={imageSize} />
+            {String(search || '').trim() ? (
+              <>
+                <p className="text-md font-medium text-gray-900">
+                  Nothing matches &ldquo;{String(search).trim()}&rdquo;
+                </p>
+                <p className="max-w-md text-sm text-gray-700">
+                  Check the spelling, or clear the search to see everything.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-md font-medium text-gray-900">{emptyTablePlaceholder}</p>
+                {descriptionEmptyTable ? (
+                  <p className="max-w-md text-sm text-gray-700">{descriptionEmptyTable}</p>
+                ) : null}
+                {emptyAction ? <div className="pt-2">{emptyAction}</div> : null}
+              </>
+            )}
           </div>
         ) : null}
 

@@ -748,8 +748,8 @@ const Plan = () => {
                         {Number(dataGetMyPlanDetails?.license_detail?.free_licenses || 0) === 1
                           ? ''
                           : 's'}{' '}
-                        that nobody is assigned to. Deleting a user does not take their seat off your
-                        bill — open the License tab below to assign or remove them.
+                        that nobody is assigned to. Deleting a user does not take their seat off
+                        your bill — open the License tab below to assign or remove them.
                       </p>
                     )}
                   </div>

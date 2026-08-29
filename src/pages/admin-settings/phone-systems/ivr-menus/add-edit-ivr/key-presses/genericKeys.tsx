@@ -5,7 +5,6 @@ import ForwardActionAll from '@/components/custom/forward-action-all';
 import useIvrExternalForwarding from '@/hooks/use-ivr-external-forwarding';
 
 const GenericKey = () => {
-
   /* Hides the outside-number option when the company has switched off menu
      forwarding. A menu already pointed at an outside number keeps working and
      still shows its number — only the choice is withdrawn. */

@@ -476,6 +476,9 @@ function AiAgent() {
         <div className="w-full h-full p-3 flex flex-col gap-2">
           <TableManager
             {...{
+              emptyTablePlaceholder: 'No agents yet',
+              descriptionEmptyTable:
+                'An agent answers using what you have taught it. Make one to get started.',
               fetcherKey: 'getChatAgentList',
               fetcherFn: getChatAgentList,
               columns,

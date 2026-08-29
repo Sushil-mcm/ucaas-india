@@ -90,11 +90,7 @@ const BillingModules = () => {
         /* Some modules carry an explicit IS_SHOW; others are simply present or
            absent. Treating "no flag" as on avoids reporting a module as missing
            purely because it uses the older shape. */
-        const onPlan = !returnedByApi
-          ? false
-          : 'IS_SHOW' in entry
-            ? Boolean(entry.IS_SHOW)
-            : true;
+        const onPlan = !returnedByApi ? false : 'IS_SHOW' in entry ? Boolean(entry.IS_SHOW) : true;
         /* Mirrors the menu exactly. `Boolean(undefined)` is false there, so an
            absent `action.view` hides the module — an earlier version of this
            page fell back to `onPlan` when the flag was missing and cheerfully
@@ -137,7 +133,10 @@ const BillingModules = () => {
             />
             Only show what is unavailable
           </label>
-          <span className={`fchip ${missing.length ? 'bad' : 'live'}`} style={{ marginLeft: 'auto' }}>
+          <span
+            className={`fchip ${missing.length ? 'bad' : 'live'}`}
+            style={{ marginLeft: 'auto' }}
+          >
             <span className="num">{missing.length}</span> of {rows.length} unavailable
           </span>
         </>
@@ -167,7 +166,11 @@ const BillingModules = () => {
                 <td>{row.where || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
                 <td>
                   <span className={row.onPlan ? 'tag pos' : 'tag neg'}>
-                    {row.onPlan ? 'Included' : row.returnedByApi ? 'Switched off' : 'Not provisioned'}
+                    {row.onPlan
+                      ? 'Included'
+                      : row.returnedByApi
+                        ? 'Switched off'
+                        : 'Not provisioned'}
                   </span>
                 </td>
                 <td>

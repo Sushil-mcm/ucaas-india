@@ -177,7 +177,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
                    stopped working, including the one that prevents an
                    administrator being deleted. The role ids still travel
                    separately as role_uuid / custom_role_uuid. */
-                role: role?.label,
+            role: role?.label,
             password: password_type === 'common' ? data?.password : password,
           })),
           site_uuid: site?.value,
@@ -223,7 +223,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
                    stopped working, including the one that prevents an
                    administrator being deleted. The role ids still travel
                    separately as role_uuid / custom_role_uuid. */
-                role: role?.label,
+        role: role?.label,
         password: watchPasswordType === 'common' ? watchPassword : password,
       })),
       site_uuid: watchSite?.value,

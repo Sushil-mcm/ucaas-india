@@ -337,6 +337,9 @@ const AddMembers: FC = () => {
         <div className="py-3">
           <TableManager
             {...{
+              emptyTablePlaceholder: 'Nobody at this location',
+              descriptionEmptyTable:
+                'Only people at the location chosen on Basic info are listed. Change the location, or add people first.',
               columns,
               fetcherKey: 'forwardActionType',
               fetcherFn: forwardActionType,

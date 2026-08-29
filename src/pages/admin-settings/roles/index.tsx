@@ -255,7 +255,16 @@ const UserRoles = () => {
             point (like Manager or Agent) to automatically pre-fill recommended permissions, then
             fine-tune their access below.
           </p>
-          <TableManager {...{ columns, fetcherKey: 'rolesList', fetcherFn: userRolesList }} />
+          <TableManager
+            {...{
+              emptyTablePlaceholder: 'No roles yet',
+              descriptionEmptyTable:
+                'Roles decide what somebody can see and change. Everyone has a role, so the ones you make here apply straight away.',
+              columns,
+              fetcherKey: 'rolesList',
+              fetcherFn: userRolesList,
+            }}
+          />
         </div>
       </section>
 

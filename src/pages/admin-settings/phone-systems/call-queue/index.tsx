@@ -282,7 +282,11 @@ const CallQueues: FC = () => {
         description="Where incoming calls wait, and which people answer them. Queues can be company-wide or tied to one location."
         actions={
           hasQueueAccess && queueActions?.add ? (
-            <button type="button" className="btn primary" onClick={() => navigate(`${QUEUES_PATH}/new`)}>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => navigate(`${QUEUES_PATH}/new`)}
+            >
               <Plus className="w-3 h-3" />
               New queue
             </button>

@@ -90,16 +90,14 @@ const VIEWS: Record<ViewKey, NumberView> = {
     extraParams: { type: 'in_use' },
     showFeatures: false,
     showAddNumber: true,
-    emptyDescription:
-      'Numbers assigned to users, departments, or call flows will appear here.',
+    emptyDescription: 'Numbers assigned to users, departments, or call flows will appear here.',
   },
   inventory: {
     key: 'inventory',
     tab: 'Unused',
     path: '/admin-settings/numbers/inventory',
     title: 'Unused numbers',
-    description:
-      'Numbers you own that are not assigned to anyone and have no call forwarding set.',
+    description: 'Numbers you own that are not assigned to anyone and have no call forwarding set.',
     fetcherKey: 'inventoryNumbersList',
     extraParams: { type: 'inventory' },
     showFeatures: false,
@@ -475,7 +473,16 @@ const NumberList = () => {
 
         const assignNumberAction =
           !data?.User && virtualNumberAccess?.action?.assign_number
-            ? [createAction(2, 'Assign Number', 'AssignNumberIcon', 'w-5 h-5', neutral, 'assignDID')]
+            ? [
+                createAction(
+                  2,
+                  'Assign Number',
+                  'AssignNumberIcon',
+                  'w-5 h-5',
+                  neutral,
+                  'assignDID',
+                ),
+              ]
             : [];
 
         const setForwardingActions =
@@ -613,7 +620,10 @@ const NumberList = () => {
         <div className="flex flex-col gap-3">
           {/* One list, three views. Each keeps its own address so a view can be
               linked to and reloaded. */}
-          <nav className="flex items-center gap-1 border-b border-gray-200" aria-label="Number views">
+          <nav
+            className="flex items-center gap-1 border-b border-gray-200"
+            aria-label="Number views"
+          >
             {Object.values(VIEWS).map((item) => {
               const isActive = item.key === view.key;
               return (

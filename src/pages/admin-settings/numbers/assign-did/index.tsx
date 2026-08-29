@@ -206,6 +206,9 @@ const AssignDIDNumber: FC<IAsiignDIDProps> = ({ modalState, setModalState, selec
           <div className="flex flex-col gap-2 h-[calc(100vh_-_19rem)] overflow-auto">
             <TableManager
               {...{
+                emptyTablePlaceholder: 'No spare numbers',
+                descriptionEmptyTable:
+                  'Every number you own is already assigned. Buy another, or free one up first.',
                 columns,
                 fetcherKey: 'getUserListQueryFn',
                 fetcherFn: getUserList,

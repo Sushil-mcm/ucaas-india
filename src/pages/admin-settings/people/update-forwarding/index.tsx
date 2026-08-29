@@ -504,9 +504,9 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               value: {
                 label: item?.label,
                 value: seedDeviceRingTime(
-              { label: item?.label, value: item?.timeout },
-              companyDefaults?.settings,
-            ),
+                  { label: item?.label, value: item?.timeout },
+                  companyDefaults?.settings,
+                ),
               },
               option: {
                 label: item?.name,

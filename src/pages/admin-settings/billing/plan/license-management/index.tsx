@@ -550,8 +550,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
 
           <p className="text-xs text-gray-500 leading-relaxed border-t border-gray-200 pt-2">
             A seat is something you buy, not something a user owns. Deleting a user in{' '}
-            <span className="font-medium text-gray-700">Users</span> frees their seat but keeps it on
-            your bill — you have to remove the seat here as well. Seat removals take effect on{' '}
+            <span className="font-medium text-gray-700">Users</span> frees their seat but keeps it
+            on your bill — you have to remove the seat here as well. Seat removals take effect on{' '}
             {nextBillingDateLabel}; the current period is never refunded.
           </p>
 
@@ -561,8 +561,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                 <Icon name={'NoticeLine'} className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" />
                 <div className="flex flex-col gap-1">
                   <p className="text-sm font-semibold text-amber-900">
-                    You are paying for {idleLicenses} seat{idleLicenses === 1 ? '' : 's'} that nobody
-                    is using
+                    You are paying for {idleLicenses} seat{idleLicenses === 1 ? '' : 's'} that
+                    nobody is using
                     {perSeatPrice > 0 ? ` — ${currency(idleSeatCost)} per ${periodLabel}` : ''}.
                   </p>
                   <p className="text-xs text-amber-900/90 leading-relaxed">
@@ -802,8 +802,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
               <p className="text-xs text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-lg p-2">
                 Pick the seats to take off your plan. Removals apply on {nextBillingDateLabel} and
                 the current period is not refunded. Removing a seat that is{' '}
-                <span className="font-medium">still assigned to someone</span> does not lock them out
-                straight away — they keep full access until {nextBillingDateLabel}, when their
+                <span className="font-medium">still assigned to someone</span> does not lock them
+                out straight away — they keep full access until {nextBillingDateLabel}, when their
                 account is deactivated.
               </p>
               <div className="w-full flex items-center gap-2 justify-end">

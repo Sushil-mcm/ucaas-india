@@ -11,10 +11,7 @@ import { useUser } from '@/hooks/use-user';
 import { getObjectLength, handleAlert } from '@/lib/utils';
 import { ADD_TEMPLATE_INITIAL, settingsInitialState, TAB_CONSTANT } from './constants';
 import { UPSERT_TEMPLATE_SCHEMA } from './schema';
-import {
-  buildTemplatePayload,
-  hydrateTemplateForm,
-} from '@/lib/user-settings-template-form';
+import { buildTemplatePayload, hydrateTemplateForm } from '@/lib/user-settings-template-form';
 import SettingPermission from './settings';
 import GreetingNotification from './greetings';
 import '@/components/mcm/mcm-page.css';

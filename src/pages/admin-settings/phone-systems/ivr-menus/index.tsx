@@ -40,9 +40,7 @@ const IvrMenus: FC = () => {
   const { ivrId, tab: tabSlug } = useParams();
   const isCreating = pathname === `${IVR_PATH}/new`;
   const [loadedRows, setLoadedRows] = useState<any[]>([]);
-  const selectedIvr = ivrId
-    ? loadedRows.find((row: any) => row?.uuid === ivrId) || null
-    : null;
+  const selectedIvr = ivrId ? loadedRows.find((row: any) => row?.uuid === ivrId) || null : null;
   const ivrNotFound = Boolean(ivrId) && !selectedIvr;
   const drawerState = Boolean(ivrId) || isCreating;
 
@@ -141,7 +139,11 @@ const IvrMenus: FC = () => {
         description="Automated menus that greet callers and route them. Assign one to any number to control greetings, routing and voicemail."
         actions={
           hasIvrAccess && ivrActions?.add ? (
-            <button type="button" className="btn primary" onClick={() => navigate(`${IVR_PATH}/new`)}>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => navigate(`${IVR_PATH}/new`)}
+            >
               <Plus className="w-3 h-3" />
               New IVR menu
             </button>
@@ -171,8 +173,7 @@ const IvrMenus: FC = () => {
                  the wrong depth here meant the list of loaded rows was always
                  empty, so an IVR opened from a pasted link always claimed it was
                  not on the current page — including when it plainly was. */
-              onSuccess: (data: any) =>
-                setLoadedRows(data?.data?.data?.result?.rows || []),
+              onSuccess: (data: any) => setLoadedRows(data?.data?.data?.result?.rows || []),
               extraParams: { filter: [{ key: 'name', value: debouncedSearch }] },
               emptyTablePlaceholder: 'No IVR menus found',
               descriptionEmptyTable: 'Set up an IVR menu to manage incoming call flows',

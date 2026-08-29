@@ -184,7 +184,10 @@ const CallCoverage = () => {
   const runGeneration = async (people: any[]) => {
     const companyUuid = (user as any)?.company_info?.uuid;
     if (!companyUuid) {
-      handleAlert({ text: 'Could not resolve this company, so nothing was generated.', type: 'error' });
+      handleAlert({
+        text: 'Could not resolve this company, so nothing was generated.',
+        type: 'error',
+      });
       return;
     }
 
@@ -377,9 +380,7 @@ const CallCoverage = () => {
                     <div className="empty">
                       <Ic n="check" size={28} />
                       <p>
-                        {onlyGaps
-                          ? 'No numbers are dropping calls.'
-                          : 'No numbers in use yet.'}
+                        {onlyGaps ? 'No numbers are dropping calls.' : 'No numbers in use yet.'}
                       </p>
                     </div>
                   </td>
@@ -411,11 +412,7 @@ const CallCoverage = () => {
                     </td>
                     <td style={{ maxWidth: 420 }}>{coverage.detail}</td>
                     <td>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => setEditingUser(user)}
-                      >
+                      <button type="button" className="btn" onClick={() => setEditingUser(user)}>
                         {coverage.state === 'covered' ? 'Call rules' : 'Set voicemail'}
                       </button>
                     </td>
@@ -512,12 +509,13 @@ const CallCoverage = () => {
 
         {tab === 'extensions' ? (
           <div className="mcm-tblfoot">
-            This is the control that decides whether an unanswered call reaches voicemail. Open
-            an extension, expand <strong>Incoming Calls</strong>, and set{' '}
-            <strong>If Busy / Unanswered / Unreachable</strong> to <strong>Send to Voicemail</strong>.
-            It is not applied in bulk on purpose: the only endpoint that writes call rules replaces
-            the whole user record — name, role, greetings and settings included — so a partial write
-            would quietly clear fields this screen never asked about.
+            This is the control that decides whether an unanswered call reaches voicemail. Open an
+            extension, expand <strong>Incoming Calls</strong>, and set{' '}
+            <strong>If Busy / Unanswered / Unreachable</strong> to{' '}
+            <strong>Send to Voicemail</strong>. It is not applied in bulk on purpose: the only
+            endpoint that writes call rules replaces the whole user record — name, role, greetings
+            and settings included — so a partial write would quietly clear fields this screen never
+            asked about.
           </div>
         ) : null}
       </AdminPage>
@@ -588,8 +586,8 @@ const CallCoverage = () => {
                 </li>
                 <li>
                   An unanswered or rejected call goes to <strong>voicemail</strong> on that
-                  extension. This is the part the number wizard never saved, which is why calls
-                  rang out into silence.
+                  extension. This is the part the number wizard never saved, which is why calls rang
+                  out into silence.
                 </li>
                 <li>
                   Nothing else on this number changes, and no number that already has handling is

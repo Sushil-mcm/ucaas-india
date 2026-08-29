@@ -320,6 +320,8 @@ const AddMembers = () => {
         <div className="min-h-0 flex-1">
           <TableManager
             {...{
+              emptyTablePlaceholder: 'Nobody to add',
+              descriptionEmptyTable: 'There is nobody available to put in this department yet.',
               fetcherKey: 'forwardActionType',
               fetcherFn: forwardActionType,
               columns,

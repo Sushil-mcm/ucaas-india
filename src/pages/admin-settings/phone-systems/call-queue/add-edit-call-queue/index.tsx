@@ -11,12 +11,7 @@ import {
   TAB_CONSTANT,
   WAITING_DEFAULTS,
 } from '../constant';
-import {
-  QUEUES_PATH,
-  QUEUE_DEFAULT_TAB,
-  queueSlugFromTab,
-  queueTabFromSlug,
-} from '../queue-tabs';
+import { QUEUES_PATH, QUEUE_DEFAULT_TAB, queueSlugFromTab, queueTabFromSlug } from '../queue-tabs';
 import { FormProvider, useForm } from 'react-hook-form';
 import { upsertCallQueueSchema } from '../schema';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -425,8 +420,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
           enabled: delay?.enabled || false,
           value: delay?.value?.value || '',
           label: delay?.value?.label || '',
-          interval_seconds:
-            Number(delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
+          interval_seconds: Number(delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
         },
       },
     };
@@ -576,8 +570,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
           label: media?.delay?.label || '',
           value: media?.delay?.value,
         },
-        interval_seconds:
-          Number(media?.delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
+        interval_seconds: Number(media?.delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
       },
     });
     const operational_hours = queueInfo?.settings?.operational_hours;

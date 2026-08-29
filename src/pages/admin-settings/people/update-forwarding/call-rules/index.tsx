@@ -214,9 +214,8 @@ const CallRules: FC<CallRulesProps> = ({
         <div className="mcm-fsec-h">
           <div className="mcm-fsec-t">Call Rules</div>
           <div className="mcm-fsec-d">
-            These rules are read in order: Do Not Disturb first, then Forward All Calls, and only
-            if both are off do your devices ring. Whatever is still unanswered falls to the last
-            rule.
+            These rules are read in order: Do Not Disturb first, then Forward All Calls, and only if
+            both are off do your devices ring. Whatever is still unanswered falls to the last rule.
           </div>
         </div>
 
@@ -350,7 +349,8 @@ const CallRules: FC<CallRulesProps> = ({
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col items-start gap-5 px-3 sm:flex-row sm:items-center">
                   <p className="text-gray-800 text-sm w-full">
-                    Which of your devices ring, in what order, and for how long before the call is treated as missed.{' '}
+                    Which of your devices ring, in what order, and for how long before the call is
+                    treated as missed.{' '}
                   </p>
                   <div className="pl-1 w-full max-w-60">
                     <CustomSelect
