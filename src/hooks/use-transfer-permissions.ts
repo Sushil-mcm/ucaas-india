@@ -40,7 +40,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { parsePhoneNumberFromString, getCountryCallingCode, isSupportedCountry } from 'libphonenumber-js/max';
+import { parsePhoneNumberFromString, getCountryCallingCode } from 'libphonenumber-js/max';
 import type { CountryCode } from 'libphonenumber-js/max';
 
 import {
@@ -49,7 +49,7 @@ import {
   type CompanyDefaultTemplate,
 } from '@/lib/company-defaults';
 import { isExtensionDialTarget, normalizeDialTargetUserPart } from '@/lib/extension-utility';
-import { useUser } from '@/hooks/use-user';
+import { useHomeCountry } from '@/lib/home-country';
 
 const PERMISSIONS_KEY = 'company_calling_permissions';
 
@@ -103,12 +103,6 @@ const readTransfers = (template: CompanyDefaultTemplate | null | undefined): any
   if (!permissions || typeof permissions !== 'object') return null;
   const transfers = permissions.transfers;
   return transfers && typeof transfers === 'object' ? transfers : null;
-};
-
-const toCountryCode = (value: unknown): CountryCode | null => {
-  const candidate = String(value || '').trim().toUpperCase();
-  if (candidate.length !== 2) return null;
-  return isSupportedCountry(candidate) ? (candidate as CountryCode) : null;
 };
 
 interface Destination {
@@ -225,7 +219,6 @@ const classifyDestination = (target: string, homeCountry: CountryCode | null): D
 };
 
 export const useTransferPermissions = (): TransferPermissions => {
-  const { user } = useUser();
 
   const { data: companyDefaultTemplate, isLoading } = useQuery<CompanyDefaultTemplate | null>({
     queryKey: COMPANY_DEFAULTS_QUERY_KEY,
@@ -236,15 +229,7 @@ export const useTransferPermissions = (): TransferPermissions => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const homeCountry = useMemo(
-    () => toCountryCode(user?.countryInfo?.alpha2code),
-    [user?.countryInfo?.alpha2code],
-  );
-
-  const homeCountryName = useMemo(() => {
-    const name = String(user?.countryInfo?.countryname || '').trim();
-    return name || 'your country';
-  }, [user?.countryInfo?.countryname]);
+  const { homeCountry, homeCountryName } = useHomeCountry();
 
   const transfers = useMemo(
     () => readTransfers(companyDefaultTemplate),
