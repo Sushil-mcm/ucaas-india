@@ -128,12 +128,13 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
       )}
 
       {isRules && (
-        <div className="rounded-md border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700 mb-3">
+        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700 mb-3">
           <p className="font-semibold text-gray-900 mb-1">How these settings are used</p>
           <p className="mb-1">
-            Every setting below has an <strong>override</strong> switch. Leave it off and the
-            company rule stands. Turn it on and a person may change that one setting on their own
-            phone.
+            These are what everybody at your company starts with. Each one has a{' '}
+            <strong>Let people change this themselves</strong> switch: leave it off and the company
+            setting stands for everyone, turn it on and a person may change that one thing on their
+            own phone.
           </p>
           <p className="text-gray-600">
             Saving here does not rewrite phones that are already set up.

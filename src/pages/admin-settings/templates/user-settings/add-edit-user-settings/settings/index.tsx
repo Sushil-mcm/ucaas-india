@@ -9,9 +9,8 @@ import DisplayNumberModal from './display-number-dialog';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import BussinessHoursModal from '@/components/custom/bussiness-hours-dialog';
 import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settings/constants';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import RegionalModal from '@/components/common-settings/regional-dialog';
 
 interface DaySchedule {
@@ -68,11 +67,29 @@ const SettingPermission: FC<any> = ({ data }) => {
     }
   }, [modalState?.regionalModal]);
 
+  /* One row per company rule. Each says what it decides, shows what it is set to
+     now, and carries its own "may people change this" switch.
+
+     `override` is the stored key and reads as jargon on a screen a customer uses.
+     What it actually decides is whether a person may change that one setting on
+     their own phone, so that is what each row says instead. */
+  const OverrideRow = ({ path, what }: { path: string; what: string }) => (
+    <SettingRow
+      label="Let people change this themselves"
+      description={`Off, everybody keeps the company ${what}. On, a person may change it on their own phone.`}
+      control={
+        <Switch
+          checked={!!watch(path)}
+          onCheckedChange={(checked: boolean) => setValue(path, checked)}
+        />
+      }
+    />
+  );
 
   return (
     <>
-      <div className="h-[calc(100vh_-_15rem)] overflow-auto flex flex-col gap-4 user-settings-template-settings">
-        <div className="flex flex-col gap-4 mt-2 w-1/4 user-settings-template-settings-name-wrap">
+      <div className="user-settings-template-settings flex h-[calc(100vh_-_15rem)] flex-col gap-4 overflow-auto">
+        <div className="user-settings-template-settings-name-wrap mt-2 w-full max-w-sm">
           <Input
             label="Name"
             {...register('name')}
@@ -80,160 +97,96 @@ const SettingPermission: FC<any> = ({ data }) => {
             placeholder="Enter template name"
           />
         </div>
-        <div className="grid grid-cols-1 gap-3">
-          {/* <div className="flex flex-col gap-2 "> */}
-          <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200 p-4 rounded-xl ">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1">
-                <p
-                  className={`font-semibold truncate text-md ${(errors.settings as any)?.operational_hours?.regional ? 'text-red' : 'text-gray-900'}`}
-                >
-                  Regional Settings
-                </p>
-                {(errors.settings as any)?.operational_hours?.regional && (
-                  <ErrorTooltip text="Regional settings is required" />
-                )}
-              </div>
-              <Button
-                type="button"
-                variant={'outline'}
-                className="text-primary"
-                onClick={() => openModal('regionalModal')}
-              >
-                Select
-              </Button>
-            </div>
-            <p className="text-gray-800 truncate text-sm ">
-              {' '}
-              {operational_hours?.regional?.country?.value &&
+
+        <SettingCard
+          title="Where this company works"
+          description="The country and clock everything else is measured against - opening hours, holidays, and the times shown in reports."
+          aside={
+            <Button type="button" variant="outline" onClick={() => openModal('regionalModal')}>
+              Change
+            </Button>
+          }
+        >
+          <SettingRow
+            label="Country and time zone"
+            description={
+              operational_hours?.regional?.country?.value &&
               operational_hours?.regional?.timezone?.value
                 ? `${operational_hours?.regional?.timezone?.value}, ${operational_hours?.regional?.country?.value}`
-                : 'Regional settings are not configured.'}
-            </p>
+                : 'Not set yet. Nothing that depends on the clock will behave predictably until it is.'
+            }
+            control={
+              (errors.settings as any)?.operational_hours?.regional ? (
+                <ErrorTooltip text="Regional settings is required" />
+              ) : null
+            }
+          />
+          <OverrideRow
+            path="settings.operational_hours.regional.override"
+            what="country and time zone"
+          />
+        </SettingCard>
 
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                onCheckedChange={(checked: boolean) => {
-                  setValue('settings.operational_hours.regional.override', checked);
-                }}
-                checked={watch('settings.operational_hours.regional.override')}
-              />
-              <Label className="text-gray-500">Override regional settings</Label>
-            </div>
-          </div>
-          {/* <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1">
-                <p className={`font-semibold truncate text-md text-gray-900`}>Voicemail Settings</p>
-              </div>
-              <Button
-                type="button"
-                variant={'transparent'}
-                className="text-primary"
-                onClick={() => openModal('voicemailModal')}
-              >
-                Select
-              </Button>
-            </div>
-            <p className="text-gray-800 truncate text-sm bg-gray-100 p-3 rounded-lg">
-              {voicemail_pin?.users?.length
-                ? voicemail_pin.users
-                    .map((item: ISELECTVALUE) => {
-                      const label = item?.label || '';
-                      return label.includes('/') ? label.split('/')[0] : label;
-                    })
-                    .join(', ')
-                : 'Voicemail settings are not configured.'}
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                onCheckedChange={(checked: boolean) => {
-                  setValue('settings.voicemail_pin.override', checked);
-                }}
-                checked={watch('settings.voicemail_pin.override')}
-              />
-              <Label className="text-gray-500">Override voicemail settings</Label>
-            </div>
-          </div> */}
-          <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200 p-4 rounded-xl ">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1">
-                <p className={`font-semibold truncate text-md text-gray-900`}>Business Hours</p>
-              </div>
-              <Button
-                type="button"
-                variant={'outline'}
-                className="text-primary"
-                onClick={() => openModal('bussinessHoursModal')}
-              >
-                Select
-              </Button>
-            </div>
-            <p className="text-gray-800 truncate text-sm ">
-              {' '}
-              {bussinessHourError
+        <SettingCard
+          title="When you are open"
+          description="Calls outside these hours are handled differently - that is what the closed-hours action on your numbers and queues points at."
+          aside={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openModal('bussinessHoursModal')}
+            >
+              Change
+            </Button>
+          }
+        >
+          <SettingRow
+            label="Opening hours"
+            description={
+              bussinessHourError
                 ? bussinessHourError
                 : operational_hours?.type == '24_hours'
-                  ? '24 Hours, all times'
-                  : getWeeklyScheduleName(operational_hours?.value)}
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                onCheckedChange={(checked: boolean) => {
-                  setValue('settings.operational_hours.override', checked);
-                }}
-                checked={watch('settings.operational_hours.override')}
-              />
-              <Label className="text-gray-500">Override date and time</Label>
-            </div>
-          </div>
+                  ? 'Open 24 hours, every day. Nothing is ever treated as out of hours.'
+                  : getWeeklyScheduleName(operational_hours?.value) || 'Set per weekday.'
+            }
+          />
+          <OverrideRow path="settings.operational_hours.override" what="opening hours" />
+        </SettingCard>
 
-          <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200 p-4 rounded-xl ">
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-1">
-                <p className={`font-semibold truncate text-md text-gray-900`}>
-                  Automatic & On Demand Call Recording
-                </p>
-              </div>
+        <SettingCard
+          title="Call recording"
+          description="Whether calls are recorded automatically, or only when somebody chooses to start recording."
+          aside={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openModal('automaticRecordingModal')}
+            >
+              Change
+            </Button>
+          }
+        >
+          <SettingRow
+            label="What gets recorded"
+            description={
+              recording?.automatic?.enabled || recording?.on_demand?.enabled
+                ? `${recording?.automatic?.enabled ? 'Every call is recorded automatically.' : ''} ${recording?.on_demand?.enabled ? 'People can start a recording during a call.' : ''}`.trim()
+                : 'Nothing is recorded.'
+            }
+          />
+          <OverrideRow path="settings.recording.override" what="recording setting" />
+        </SettingCard>
 
-              <Button
-                type="button"
-                variant={'outline'}
-                className="text-primary"
-                onClick={() => openModal('automaticRecordingModal')}
-              >
-                Select
-              </Button>
-            </div>
-            <p className="text-gray-800 truncate text-sm ">
-              {recording?.automatic?.enabled || recording?.on_demand?.enabled
-                ? `${recording?.automatic?.enabled ? 'Automatic' : ''} ${recording?.automatic?.enabled && recording?.on_demand?.enabled ? '&' : ''} ${recording?.on_demand?.enabled ? 'On Demand' : ''} call recording is enabled.`
-                : 'Automatic & on demand call recording is disabled.'}
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                onCheckedChange={(checked: boolean) => {
-                  setValue('settings.recording.override', checked);
-                }}
-                checked={watch('settings.recording.override')}
-              />
-              <Label className="text-gray-500">Override call recording</Label>
-            </div>
-          </div>
-
-          {features?.plan_features?.advance_call_management?.access?.TRANSCRIPTION && (
-            <>
-              <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200 p-4 rounded-xl">
-                <div className="flex items-center justify-between gap-3.5 w-full">
-                  <div className="flex flex-col gap-1.5">
-                    <p className="font-semibold truncate text-md text-gray-900">
-                      Automatic Transcription
-                    </p>
-                    <p className="text-gray-800 truncate text-sm">
-                      Automatic transcription is{' '}
-                      {watch('settings.transcription.enabled') ? 'enabled' : 'disabled'}.
-                    </p>
-                  </div>
+        {features?.plan_features?.advance_call_management?.access?.TRANSCRIPTION && (
+          <>
+            <SettingCard
+              title="Transcription"
+              description="Writing calls out as text so they can be read and searched rather than listened to."
+            >
+              <SettingRow
+                label="Write calls out as text"
+                description="Applies to recorded calls. Turning this off also turns off call monitoring below, which depends on it."
+                control={
                   <Switch
                     checked={watch('settings.transcription.enabled')}
                     onCheckedChange={(checked) => {
@@ -243,86 +196,62 @@ const SettingPermission: FC<any> = ({ data }) => {
                       }
                     }}
                   />
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <Checkbox
-                    onCheckedChange={(checked: boolean) => {
-                      setValue('settings.transcription.override', checked);
-                    }}
-                    checked={watch('settings.transcription.override')}
-                  />
-                  <Label className="text-gray-500">Override transcription</Label>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200 p-4 rounded-xl">
-                <div className="flex items-center justify-between gap-3.5 w-full">
-                  <div className="flex flex-col gap-1.5">
-                    <p className="font-semibold truncate text-md text-gray-900">
-                      AI Call Monitoring
-                    </p>
-                    <p className="text-gray-800 truncate text-sm">
-                      When enabled transcripts will be automatically triggered.
-                    </p>
-                  </div>
+                }
+              />
+              <OverrideRow path="settings.transcription.override" what="transcription setting" />
+            </SettingCard>
+
+            <SettingCard
+              title="Call monitoring"
+              description="Reading the transcripts to flag calls worth a supervisor's attention."
+            >
+              <SettingRow
+                label="Look through transcripts automatically"
+                description="Needs transcription switched on above, since there is nothing to read without it."
+                control={
                   <Switch
                     checked={watch('settings.ai_call_monitoring.enabled')}
-                    onCheckedChange={(checked) => {
-                      setValue('settings.ai_call_monitoring.enabled', checked);
-                      if (checked) {
-                        setValue('settings.transcription.enabled', true);
-                      }
-                    }}
+                    disabled={!watch('settings.transcription.enabled')}
+                    onCheckedChange={(checked) =>
+                      setValue('settings.ai_call_monitoring.enabled', checked)
+                    }
                   />
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <Checkbox
-                    onCheckedChange={(checked: boolean) => {
-                      setValue('settings.ai_call_monitoring.override', checked);
-                    }}
-                    checked={watch('settings.ai_call_monitoring.override')}
-                  />
-                  <Label className="text-gray-500">Override AI call monitoring</Label>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="flex flex-col gap-2 bg-white justify-between  w-full  border border-gray-200  p-4 rounded-xl ">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1">
-                <p className={`font-semibold truncate text-md text-gray-900`}>Display Number</p>
-                {(errors?.settings as any)?.display_number?.masking?.value?.message && (
-                  <ErrorTooltip
-                    text={(errors?.settings as any)?.display_number?.masking?.value?.message}
-                  />
-                )}
-              </div>
-              <Button
-                type="button"
-                variant={'outline'}
-                className="text-primary"
-                onClick={() => openModal('displayNumberModal')}
-              >
-                Select
-              </Button>
-            </div>
-            <p className="text-gray-800 truncate text-sm ">
-              {display_number?.masking?.type?.value === 'N'
-                ? 'Display number is not configured'
-                : `Masking is ${display_number?.masking?.type?.label?.toLowerCase()} with ${display_number?.masking?.value} `}
-            </p>
-
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                onCheckedChange={(checked: boolean) => {
-                  setValue('settings.display_number.override', checked);
-                }}
-                checked={watch('settings.display_number.override')}
+                }
               />
-              <Label className="text-gray-500">Override display number</Label>
-            </div>
-          </div>
-        </div>
+              <OverrideRow
+                path="settings.ai_call_monitoring.override"
+                what="call monitoring setting"
+              />
+            </SettingCard>
+          </>
+        )}
+
+        <SettingCard
+          title="The number people see"
+          description="What shows on the other person's phone when somebody here calls out."
+          aside={
+            <Button type="button" variant="outline" onClick={() => openModal('displayNumberModal')}>
+              Change
+            </Button>
+          }
+        >
+          <SettingRow
+            label="Outgoing caller ID"
+            description={
+              display_number?.masking?.type?.value === 'N'
+                ? 'Not set. Calls go out showing whatever the line itself is set to.'
+                : `${display_number?.masking?.type?.label} - ${display_number?.masking?.value}`
+            }
+            control={
+              (errors?.settings as any)?.display_number?.masking?.value?.message ? (
+                <ErrorTooltip
+                  text={(errors?.settings as any)?.display_number?.masking?.value?.message}
+                />
+              ) : null
+            }
+          />
+          <OverrideRow path="settings.display_number.override" what="caller ID" />
+        </SettingCard>
       </div>
 
       {modalState?.regionalModal && (
