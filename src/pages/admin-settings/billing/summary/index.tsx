@@ -182,6 +182,29 @@ const BillingSummary = () => {
           )}
         </SettingCard>
 
+        {/* Where the charges came from.
+            Per-call records with a Charge column already exist, under Reports.
+            Somebody checking a bill has no reason to look there, so the two were
+            never connected: the invoice said what was owed and nothing said what
+            it was for. Linked rather than rebuilt - a second page showing the
+            same rows would be a second place for them to disagree. */}
+        <SettingCard
+          title="Where the charges came from"
+          description="Every call, with its length and what it cost. Filter by date, person or number to find a particular charge."
+          aside={
+            <Link to="/reports/call-history">
+              <Button type="button" variant="outline">
+                Call history
+              </Button>
+            </Link>
+          }
+        >
+          <SettingRow
+            label="Per-call charges"
+            description="Included calls and paid calls both appear here. This is the detail behind the totals on your invoices."
+          />
+        </SettingCard>
+
         <SettingCard
           title="What you have paid"
           description="Your most recent bills."

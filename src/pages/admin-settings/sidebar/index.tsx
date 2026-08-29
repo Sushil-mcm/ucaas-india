@@ -387,6 +387,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'BillingPlanIcon',
         },
         {
+          /* The calls behind the charges. The page itself lives under Reports,
+             which is the right home for it, but somebody checking a bill has no
+             reason to look there - so Billing points at it too. */
+          title: 'Usage',
+          path: '/reports/call-history',
+          icon: 'BillingPlanIcon',
+        },
+        {
           title: 'Statement',
           path: '/admin-settings/billing/statement',
           icon: 'BillingPlanIcon',
