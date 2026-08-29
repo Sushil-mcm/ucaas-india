@@ -19,7 +19,15 @@
       "Bash(bash scripts/apply-security-fixes.sh)",
       "Bash(curl -s -o /dev/null -w \"    https://api2.mycountrymobile.com/ → %{http_code}\\\\n\" https://api2.mycountrymobile.com/)",
       "Bash(curl -s -o /dev/null -w \"    login endpoint \\(no creds, expect 4xx not 5xx\\) → %{http_code}\\\\n\" -X POST https://api2.mycountrymobile.com/api/auth/login -H 'Content-Type: application/json' -d '{}')",
-      "Bash(curl -s -o /dev/null -w \"    → %{http_code}\\\\n\" \"https://api2.mycountrymobile.com/api/did/list\")"
+      "Bash(curl -s -o /dev/null -w \"    → %{http_code}\\\\n\" \"https://api2.mycountrymobile.com/api/did/list\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(git check-ignore *)",
+      "Bash(git checkout *)",
+      "Bash(grep -n \"^\\\\.env$\" .gitignore)",
+      "Bash(scp -q ops/patch-logout-tenant-scope.py mcm-new:/tmp/)",
+      "Bash(curl -s -o /dev/null -w \"    POST /api/user/device-securities \\(no token\\) → %{http_code}  \\(401 = alive, enforcing auth\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/user/device-securities)",
+      "Bash(curl -s -o /dev/null -w \"    POST /api/auth/login \\(empty body\\)          → %{http_code}  \\(4xx = alive, not 5xx\\)\\\\n\" -X POST -H 'Content-Type: application/json' -d '{}' https://api2.mycountrymobile.com/api/auth/login)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
