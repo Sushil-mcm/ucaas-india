@@ -21,6 +21,7 @@ import {
   WAITING_LIMITS,
 } from '../../constant';
 import { SettingCard, SettingGrid, SettingNest, SettingRow } from '@/components/mcm/setting-card';
+import RingPreview from '../ring-preview';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import SelectedMemberList from '@/pages/admin-settings/phone-systems/departments/new-department/selected-member-list';
@@ -189,6 +190,8 @@ const RingStrategy = () => {
           />
         </SettingNest>
       </SettingCard>
+
+      <RingPreview />
 
       {/* Who the queue prefers to ring, and what it is measured against.
           Last agent sends a repeat caller back to whoever they spoke to last —
