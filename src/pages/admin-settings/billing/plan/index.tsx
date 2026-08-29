@@ -35,6 +35,10 @@ import { CARDS_TYPE } from '@/constants/common-const';
 import Loader from '@/components/custom/loader';
 import Storage from './storage';
 import AgentCosting from './agent-costing';
+
+/* The card surface used below is defined here. Without this the classes
+   render as plain divs, which is worse than the boxes they replaced. */
+import '@/components/mcm/mcm-page.css';
 import { normalizeDidCountries } from '@/lib/did-countries';
 import RateDetails, { RateType } from './rate-details';
 
@@ -390,7 +394,7 @@ const Plan = () => {
             <div className="flex flex-col gap-2 sm:w-1/2 h-full">
               <div className="border border-gray-200 rounded-xl w-full h-full p-3 bg-white overflow-y-auto">
                 <div className="w-full flex flex-col gap-3">
-                  <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3">
+                  <div className="mcm-setcard p-3 flex flex-col gap-3">
                     <div className="w-full flex items-center justify-between gap-2">
                       <h6 className="font-semibold text-gray-900 text-md">Current Plan</h6>
                       <div className="flex items-center gap-1">
@@ -483,7 +487,7 @@ const Plan = () => {
                       </span> */}
                     </div>
                     <div className="w-full">
-                      <div className="border border-grey-200 bg-gray-50 flex  gap-2 flex-col px-3 py-2 rounded-lg">
+                      <div className="flex flex-col gap-2 border-t border-gray-100 px-0 pt-3">
                         <h4 className="font-semibold text-gray-900 text-sm w-full">
                           Last billing charges for{' '}
                           {dataGetMyPlanDetails?.current_plan_details?.is_trial == 'Y'
@@ -521,7 +525,7 @@ const Plan = () => {
 
                   {dataGetMyPlanDetails?.current_plan_details?.is_trial == 'N' &&
                   requestedPlanInfo?.action_type !== 'CANCEL' ? (
-                    <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3">
+                    <div className="mcm-setcard p-3 flex flex-col gap-3">
                       <div className="w-full flex items-center justify-between gap-2">
                         <h6 className="font-semibold text-gray-900 text-md">Next Billing</h6>
                         <div className="flex items-center gap-1">
@@ -569,7 +573,7 @@ const Plan = () => {
                         </span>
                       </div>
                       <div className="w-full">
-                        <div className="border border-grey-200 bg-gray-50 flex flex-col gap-2 px-3 py-2 rounded-lg">
+                        <div className="flex flex-col gap-2 border-t border-gray-100 px-0 pt-3">
                           <h4 className="font-semibold text-gray-900 text-sm">
                             Next billing charges for {totalPaybleLicences} licenses :
                           </h4>
@@ -585,7 +589,7 @@ const Plan = () => {
                   ) : null}
 
                   {isAdmin && (
-                    <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3">
+                    <div className="mcm-setcard p-3 flex flex-col gap-3">
                       <h6 className="font-semibold text-gray-900 text-md">Usage</h6>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {aiUsageItems.map((item) => (
@@ -622,10 +626,7 @@ const Plan = () => {
                   )}
 
                   {/* Temporarily hidden until Usage & Limits is ready to be shown again. */}
-                  <div
-                    hidden
-                    className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3"
-                  >
+                  <div hidden className="mcm-setcard p-3 flex flex-col gap-3">
                     <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">
                       Usage & Limits
                     </h6>
@@ -753,7 +754,7 @@ const Plan = () => {
                       </p>
                     )}
                   </div>
-                  {/* <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl flex flex-col gap-3">
+                  {/* <div className="mcm-setcard p-3 flex flex-col gap-3">
                     <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">
                       Billing & Payments
                     </h6>
@@ -857,7 +858,7 @@ const Plan = () => {
                       </Button>
                     </div>
                     <div className=" w-1/2">
-                      <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl mt-2 flex flex-col gap-3 w-full">
+                      <div className="mcm-setcard p-3 mt-2 flex flex-col gap-3 w-full">
                         <div className="flex items-center justify-between gap-3">
                           <h4 className="font-semibold text-gray-900 text-sm w-1/2">
                             Requested Date
