@@ -2,6 +2,7 @@ import { Icon } from '@/assets/icons/icon';
 import CustomSelect from '@/components/custom/custom-select';
 import ForwardingActions from '@/components/custom/forwarding-actions';
 import { Button } from '@/components/ui/button';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useGetSite } from '@/hooks/common';
@@ -32,146 +33,163 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
       <div className="mt-1 flex flex-col gap-4 sm:mt-2">
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <Input
-            placeholder="Enter name"
-            {...register('name')}
+        <SettingCard
+          title="What this queue is"
+          description="The name people see in reports and on transfers, and the extension used to reach it."
+        >
+          <SettingRow
             label="Name"
-            error={errors?.name?.message}
+            description="Shown wherever this queue appears - reports, transfer lists, the queue list."
+            control={
+              <Input placeholder="Enter name" {...register('name')} error={errors?.name?.message} />
+            }
           />
 
-          <Input
-            placeholder="Enter Description"
-            {...register('description')}
+          <SettingRow
             label="Description"
-            error={errors?.description?.message}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <CustomSelect
-            label={'Site'}
-            options={dataSiteList.map((site: { name: string; uuid: string }) => ({
-              label: site?.name,
-              value: site?.uuid,
-            }))}
-            handleChange={(e: ISELECTVALUE | null) => {
-              setValue(`site_uuid`, e || { label: '', value: '' }, { shouldValidate: true });
-            }}
-            value={watch('site_uuid')}
-            error={(errors as any)?.site_uuid?.message}
+            description="For your own team. Callers never see it."
+            control={
+              <Input
+                placeholder="Enter description"
+                {...register('description')}
+                error={errors?.description?.message}
+              />
+            }
           />
 
-          <div className="flex w-full items-end gap-2">
-            <Input
-              label={'Extension'}
-              placeholder="Enter extension"
-              type="number"
-              min={0}
-              {...register('extension')}
-              error={errors?.extension?.message}
-              disabled={!!queueDetails}
-            />
-            {!queueDetails && (
-              <Button
-                type="button"
-                className="w-10 h-10"
-                variant={'outline'}
-                onClick={() => generateNewExtension()}
-              >
-                <Icon name="Refresh" className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
-          {/* {errors?.extension?.message && (
-            <div className="flex justify-end">
-              <ErrorTooltip text={errors?.extension?.message} />
-            </div>
-          )} */}
-        </div>
+          <SettingRow
+            label="Location"
+            description="Sets the clock this queue works to, and the hours it follows."
+            control={
+              <CustomSelect
+                options={dataSiteList.map((site: { name: string; uuid: string }) => ({
+                  label: site?.name,
+                  value: site?.uuid,
+                }))}
+                handleChange={(e: ISELECTVALUE | null) => {
+                  setValue(`site_uuid`, e || { label: '', value: '' }, { shouldValidate: true });
+                }}
+                value={watch('site_uuid')}
+                error={(errors as any)?.site_uuid?.message}
+              />
+            }
+          />
+
+          <SettingRow
+            label="Extension"
+            description={
+              queueDetails
+                ? 'Fixed once the queue exists, because people dial it and other screens point at it.'
+                : 'The internal number people dial to reach this queue.'
+            }
+            control={
+              <div className="flex w-full items-start gap-2">
+                <Input
+                  placeholder="Enter extension"
+                  type="number"
+                  min={0}
+                  {...register('extension')}
+                  error={errors?.extension?.message}
+                  disabled={!!queueDetails}
+                />
+                {!queueDetails && (
+                  <Button
+                    type="button"
+                    className="h-10 w-10 shrink-0"
+                    variant={'outline'}
+                    onClick={() => generateNewExtension()}
+                  >
+                    <Icon name="Refresh" className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
+            }
+          />
+        </SettingCard>
         <div className="flex flex-col gap-4 w-full">
           <div className="flex flex-col gap-3">
-            <h5 className="font-semibold text-gray-900 text-md my-2">Response Time Settings</h5>
-            <div className="flex flex-col gap-4 lg:flex-row">
+            <SettingCard
+              title="How long a caller waits"
+              description="The limits that decide when the queue stops holding somebody and hands them on."
+            >
               {/* A number field rather than a dropdown: the ceiling is 500, and a
                   500-entry list is unusable. The stored shape stays
                   `{ label, value }` so nothing downstream has to change. */}
-              <Input
-                label={'Max Waiting Callers'}
-                placeholder={`1 to ${MAX_WAITING_CALLERS_LIMITS.max}`}
-                type="number"
-                min={MAX_WAITING_CALLERS_LIMITS.min}
-                max={MAX_WAITING_CALLERS_LIMITS.max}
-                value={watch('settings.ring_strategy.max_wait_time.callers')?.value ?? ''}
-                onChange={(event) => {
-                  const raw = event.target.value;
-                  setValue(
-                    `settings.ring_strategy.max_wait_time.callers`,
-                    raw === '' ? { label: '', value: '' } : { label: Number(raw), value: Number(raw) },
-                    { shouldValidate: true },
-                  );
-                }}
-                error={(errors?.settings as any)?.ring_strategy?.max_wait_time?.callers?.value?.message}
-              />
-              {/* <Input
-                label={'Wrapup Time (Sec)'}
-                placeholder="Enter Wrapup Time (Sec)"
-                type="number"
-                min={0}
-                // max={3600}
-                {...register('settings.wrapup_time')}
-                error={
-                  (errors?.settings as any)?.wrapup_time?.message
-                }
-              /> */}
-              <Input
-                label={'Queue Timeout (Sec)'}
-                placeholder={`${QUEUE_TIMEOUT_LIMITS.min} to ${QUEUE_TIMEOUT_LIMITS.max}`}
-                type="number"
-                min={QUEUE_TIMEOUT_LIMITS.min}
-                max={QUEUE_TIMEOUT_LIMITS.max}
-                {...register('settings.ring_strategy.max_wait_time.queue_timeout')}
-                error={
-                  (errors?.settings as any)?.ring_strategy?.max_wait_time?.queue_timeout?.message
+              <SettingRow
+                label="Most callers allowed to wait"
+                description={`Past this, new callers go to the failover instead of joining the line. Up to ${MAX_WAITING_CALLERS_LIMITS.max}.`}
+                control={
+                  <Input
+                    placeholder={`1 to ${MAX_WAITING_CALLERS_LIMITS.max}`}
+                    type="number"
+                    min={MAX_WAITING_CALLERS_LIMITS.min}
+                    max={MAX_WAITING_CALLERS_LIMITS.max}
+                    value={watch('settings.ring_strategy.max_wait_time.callers')?.value ?? ''}
+                    onChange={(event) => {
+                      const raw = event.target.value;
+                      setValue(
+                        `settings.ring_strategy.max_wait_time.callers`,
+                        raw === ''
+                          ? { label: '', value: '' }
+                          : { label: Number(raw), value: Number(raw) },
+                        { shouldValidate: true },
+                      );
+                    }}
+                    error={
+                      (errors?.settings as any)?.ring_strategy?.max_wait_time?.callers?.value
+                        ?.message
+                    }
+                  />
                 }
               />
-              {/* Country select input */}
-            </div>
 
-            {/* `leave_room_if_no_agent` has been saved, loaded and defaulted to
-                true since the queue form was written, with no input anywhere —
-                so every queue has been silently sending callers away the moment
-                the last agent goes off duty, and no admin could see it, let
-                alone change it.
-
-                Established systems make this a choice, because the two answers
-                suit different businesses: a sales line would rather hold a
-                caller until someone comes back than lose them, while a support
-                line with published hours would rather send them to voicemail
-                than leave them listening to music nobody will answer.
-
-                Worded as "hold" rather than "leave_room" because the stored key
-                is backwards from the way an admin thinks about it. */}
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  Hold callers when no one is on duty
-                </p>
-                <p className="text-xs text-gray-600">
-                  On, callers wait in the queue until an agent comes on duty, or until the timeout
-                  above sends them to the failover. Off, they go straight to the failover as soon as
-                  the last agent leaves.
-                </p>
-              </div>
-              <Switch
-                checked={watch('settings.ring_strategy.leave_room_if_no_agent') === false}
-                onCheckedChange={(checked) =>
-                  setValue('settings.ring_strategy.leave_room_if_no_agent', !checked, {
-                    shouldValidate: true,
-                  })
+              <SettingRow
+                label="Longest anyone waits (seconds)"
+                description="When this is up the caller is sent to the failover, rather than left holding."
+                control={
+                  <Input
+                    placeholder={`${QUEUE_TIMEOUT_LIMITS.min} to ${QUEUE_TIMEOUT_LIMITS.max}`}
+                    type="number"
+                    min={QUEUE_TIMEOUT_LIMITS.min}
+                    max={QUEUE_TIMEOUT_LIMITS.max}
+                    {...register('settings.ring_strategy.max_wait_time.queue_timeout')}
+                    error={
+                      (errors?.settings as any)?.ring_strategy?.max_wait_time?.queue_timeout
+                        ?.message
+                    }
+                  />
                 }
               />
-            </div>
+
+              {/* `leave_room_if_no_agent` has been saved, loaded and defaulted to
+                  true since the queue form was written, with no input anywhere - so
+                  every queue has been silently sending callers away the moment the
+                  last agent goes off duty, and no admin could see it, let alone
+                  change it.
+
+                  Established systems make this a choice, because the two answers
+                  suit different businesses: a sales line would rather hold a caller
+                  until someone comes back than lose them, while a support line with
+                  published hours would rather send them to voicemail than leave them
+                  listening to music nobody will answer.
+
+                  Worded as "hold" rather than "leave_room" because the stored key is
+                  backwards from the way an admin thinks about it. */}
+              <SettingRow
+                label="Hold callers when no one is on duty"
+                description="On, callers wait until somebody comes on duty, or until the timeout above sends them to the failover. Off, they go to the failover as soon as the last agent leaves."
+                control={
+                  <Switch
+                    checked={watch('settings.ring_strategy.leave_room_if_no_agent') === false}
+                    onCheckedChange={(checked) =>
+                      setValue('settings.ring_strategy.leave_room_if_no_agent', !checked, {
+                        shouldValidate: true,
+                      })
+                    }
+                  />
+                }
+              />
+            </SettingCard>
 
             {/* Timezone and Time Format */}
             <ForwardingActions

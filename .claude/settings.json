@@ -54,7 +54,8 @@
       "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)",
       "Bash(rm -f /tmp/claude-0/-root-mycountrymobile-web/dc1ac764-260e-4a2c-b731-92b19dbe00a3/scratchpad/didkey.txt)",
       "Bash(timeout 30 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'getent hosts 1787400463485.mycountrymobile.com >/dev/null 2>&1 && echo \"  tenant domain RESOLVES: $\\(getent hosts 1787400463485.mycountrymobile.com | head -1\\)\" || echo \"  tenant domain DOES NOT RESOLVE\"')",
-      "Bash(timeout 120 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)"
+      "Bash(timeout 120 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
+      "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new \"bash -s\")"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"

@@ -1,6 +1,7 @@
 import { Icon } from '@/assets/icons/icon';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import TableManager from '@/components/custom/table-manager';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,6 @@ import { forwardActionType } from '@/services/api';
 import { ColumnDef } from '@tanstack/react-table';
 import { FC, useState, useMemo, memo, useCallback } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Search } from 'lucide-react';
 import useDebounce from '@/hooks/use-debounce';
 import { SearchLine } from '@/assets/icons';
 
@@ -277,50 +277,57 @@ const AddMembers: FC = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pr-1">
-      {/* {isLoadingSiteList && <FullPageLoader />} */}
-      {errors && (
-        <div className="flex gap-2">
-          {errors?.members && (
-            <p className="text-red-500 text-sm">
-              {(errors?.members as any)?.message} {errors?.members && errors?.manager ? '&' : ''}
-            </p>
-          )}
-          {errors?.manager && (
-            <p className="text-red-500 text-sm">{(errors?.manager as any)?.value?.message}</p>
-          )}
+      <SettingCard
+        title="Who this queue rings"
+        description="Tick the people who should take these calls, and mark one as the manager. Only people at the location chosen on Basic info are listed."
+        aside={
+          <div className="relative w-full min-w-[15rem] max-w-sm">
+            <Input
+              type="text"
+              placeholder="Search by name, email or extension"
+              IconPosition="left-0 pl-2 inset-y-0"
+              value={searchKey}
+              Icon={<SearchLine className="text-gray-700" />}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.startsWith(' ')) return;
+                setSearchKey(e.target.value);
+              }}
+              className="w-full pl-10"
+            />
+          </div>
+        }
+      >
+        {/* Errors sit inside the card rather than floating above the tab, so it is
+            obvious which thing is complaining. */}
+        {(errors?.members || errors?.manager) && (
+          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            {errors?.members ? (
+              <p className="text-xs text-red-700">{(errors?.members as any)?.message}</p>
+            ) : null}
+            {errors?.manager ? (
+              <p className="text-xs text-red-700">{(errors?.manager as any)?.value?.message}</p>
+            ) : null}
+          </div>
+        )}
+
+        <div className="py-3">
+          <TableManager
+            {...{
+              columns,
+              fetcherKey: 'forwardActionType',
+              fetcherFn: forwardActionType,
+              onSuccess: handleSuccess,
+              extraParams: {
+                site_uuid: selectedSite,
+                type: 'EXTENSION',
+                search: debouncedSearchKey,
+              },
+              customClass: 'min-h-[18rem]',
+            }}
+          />
         </div>
-      )}
-
-      {/* Search Input */}
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          type="text"
-          placeholder="Search by name, email, or extension..."
-          IconPosition="left-0 pl-2 inset-y-0"
-          value={searchKey}
-          Icon={<SearchLine className=" text-gray-700" />}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value.startsWith(' ')) return;
-            setSearchKey(e.target.value);
-          }}
-          className="pl-10 w-full"
-        />
-      </div>
-
-      <TableManager
-        {...{
-          columns,
-          fetcherKey: 'forwardActionType',
-          fetcherFn: forwardActionType,
-          onSuccess: handleSuccess,
-          extraParams: { site_uuid: selectedSite, type: 'EXTENSION', search: debouncedSearchKey },
-          customClass: 'min-h-[18rem]',
-        }}
-      />
-
-      {/* )} */}
+      </SettingCard>
     </div>
   );
 };
