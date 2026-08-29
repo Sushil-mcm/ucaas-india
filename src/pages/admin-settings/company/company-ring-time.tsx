@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, PhoneCall, Timer, Users } from 'lucide-react';
@@ -168,62 +169,6 @@ const buildRingTimePayload = (form: RingTimeForm) => ({
  * The same honesty badge the other company cards carry. `enforced` is only ever
  * passed `true` once something outside this file genuinely acts on the value.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Not active yet
-    </span>
-  );
-
-interface RingTimeCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  enforced: boolean;
-  enforcementNote: string;
-  children: React.ReactNode;
-}
-
-const RingTimeCard = ({
-  icon,
-  title,
-  summary,
-  enforced,
-  enforcementNote,
-  children,
-}: RingTimeCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
-          <StatusBadge enforced={enforced} />
-        </div>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-4 p-4">
-      {children}
-      <p
-        className={`rounded-lg border px-3 py-2 text-xs ${
-          enforced
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-amber-200 bg-amber-50 text-amber-800'
-        }`}
-      >
-        {enforcementNote}
-      </p>
-    </div>
-  </div>
-);
-
 const selectedOption = (options: { label: string; value: string }[], value: string) =>
   options.find((option) => option.value === value) || null;
 
@@ -344,10 +289,10 @@ const CompanyRingTime = () => {
             </div>
           )}
 
-          <RingTimeCard
+          <SettingCard
             icon={<Timer className="h-5 w-5" />}
             title="Default ring time"
-            summary="How many seconds a phone rings before the call gives up and moves on."
+            description="How many seconds a phone rings before the call gives up and moves on."
             enforced={IS_ENFORCED}
             enforcementNote="Used as the starting point. Someone with no ring time of their own gets this one. People already set up keep the time they have."
           >
@@ -395,12 +340,12 @@ const CompanyRingTime = () => {
                 </li>
               </ul>
             </div>
-          </RingTimeCard>
+          </SettingCard>
 
-          <RingTimeCard
+          <SettingCard
             icon={<Users className="h-5 w-5" />}
             title="Who it applies to"
-            summary="Whether people added after today start with this ring time."
+            description="Whether people added after today start with this ring time."
             enforced={IS_ENFORCED}
             enforcementNote="Used when someone is set up who has no ring time of their own."
           >
@@ -420,7 +365,7 @@ const CompanyRingTime = () => {
                 onCheckedChange={(checked) => updateForm({ apply_to_new_people: checked })}
               />
             </div>
-          </RingTimeCard>
+          </SettingCard>
 
           {/* The honest other half of the question. Ring time only decides when
               ringing stops; what happens next is a different setting, in a

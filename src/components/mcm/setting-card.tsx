@@ -34,19 +34,48 @@ interface SettingCardProps {
   description?: ReactNode;
   /* Shown at the top right - a switch that governs the whole group, or a badge. */
   aside?: ReactNode;
+  /* Optional mark in the header. The company screens use one per area. */
+  icon?: ReactNode;
+  /* Whether the settings in this card actually change what happens on a call.
+     Left undefined, no claim is made either way - which is right for a card
+     whose settings have always worked. Passing false says plainly that they are
+     stored and not yet acted on, and `enforcementNote` says what is missing. */
+  enforced?: boolean;
+  enforcementNote?: ReactNode;
   children: ReactNode;
 }
 
-export const SettingCard = ({ title, description, aside, children }: SettingCardProps) => (
+export const SettingCard = ({
+  title,
+  description,
+  aside,
+  icon,
+  enforced,
+  enforcementNote,
+  children,
+}: SettingCardProps) => (
   <section className="mcm-setcard">
     <header className="mcm-setcard-h">
+      {icon ? <span className="mcm-setcard-icon">{icon}</span> : null}
       <div className="mcm-setcard-ht">
-        <h3>{title}</h3>
+        <div className="mcm-setcard-title">
+          <h3>{title}</h3>
+          {enforced === undefined ? null : (
+            <span className={`mcm-setcard-badge${enforced ? ' is-on' : ''}`}>
+              {enforced ? 'Active' : 'Not active yet'}
+            </span>
+          )}
+        </div>
         {description ? <p>{description}</p> : null}
       </div>
       {aside ? <div className="mcm-setcard-aside">{aside}</div> : null}
     </header>
     <div className="mcm-setcard-body">{children}</div>
+    {/* Kept at the foot rather than the header: what is missing matters after
+        somebody has read the settings, not before. */}
+    {enforced === false && enforcementNote ? (
+      <p className="mcm-setcard-note">{enforcementNote}</p>
+    ) : null}
   </section>
 );
 

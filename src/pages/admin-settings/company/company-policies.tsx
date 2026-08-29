@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flag, Globe, Headphones, Mic, PhoneOutgoing, Voicemail, Archive } from 'lucide-react';
 
@@ -299,62 +300,6 @@ const selectedOption = (options: { label: string; value: string }[], value: stri
  * A per-setting honesty badge. `enforced` is only ever passed `true` once the
  * backend genuinely acts on that key — today nothing does.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Not active yet
-    </span>
-  );
-
-interface PolicyCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  enforced: boolean;
-  enforcementNote: string;
-  children: React.ReactNode;
-}
-
-const PolicyCard = ({
-  icon,
-  title,
-  summary,
-  enforced,
-  enforcementNote,
-  children,
-}: PolicyCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
-          <StatusBadge enforced={enforced} />
-        </div>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-4 p-4">
-      {children}
-      <p
-        className={`rounded-lg border px-3 py-2 text-xs ${
-          enforced
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-amber-200 bg-amber-50 text-amber-800'
-        }`}
-      >
-        {enforcementNote}
-      </p>
-    </div>
-  </div>
-);
-
 const CompanyPolicies = () => {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<PoliciesForm>(DEFAULT_FORM);
@@ -519,10 +464,10 @@ const CompanyPolicies = () => {
             </div>
           )}
 
-          <PolicyCard
+          <SettingCard
             icon={<Globe className="h-5 w-5" />}
             title="Default language"
-            summary="The language used for voicemail prompts and IVR menus when nothing more specific is set."
+            description="The language used for voicemail prompts and IVR menus when nothing more specific is set."
             enforced={false}
             enforcementNote="Used when you record a new greeting — it opens in this language. Greetings and menus you already have keep the language they were made in."
           >
@@ -541,12 +486,12 @@ const CompanyPolicies = () => {
                 </p>
               </div>
             </div>
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<Flag className="h-5 w-5" />}
             title="Default country"
-            summary="The country your number search opens on."
+            description="The country your number search opens on."
             enforced
             enforcementNote="Active. When you buy a number, the country box starts here. You can still choose a different country for any purchase."
           >
@@ -559,12 +504,12 @@ const CompanyPolicies = () => {
                 updateForm({ default_country: option?.value || '' })
               }
             />
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<Headphones className="h-5 w-5" />}
             title="Who may listen to call recordings"
-            summary="Whether people can play their own calls back, and whether admins can play anyone's."
+            description="Whether people can play their own calls back, and whether admins can play anyone's."
             enforced
             enforcementNote="Active. Turning one off hides the play button for those recordings. It does not stop someone who already has a direct link to the file."
           >
@@ -598,12 +543,12 @@ const CompanyPolicies = () => {
                 }
               />
             </div>
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<Voicemail className="h-5 w-5" />}
             title="Voicemail policy"
-            summary="PIN strength, how long a caller may talk, and whether messages are transcribed for new users."
+            description="PIN strength, how long a caller may talk, and whether messages are transcribed for new users."
             enforced={false}
             enforcementNote="Not active yet. These are recorded as your company's preference."
           >
@@ -658,12 +603,12 @@ const CompanyPolicies = () => {
                 }
               />
             </div>
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<Mic className="h-5 w-5" />}
             title="Call recording policy"
-            summary="Whether calls are recorded across the company, and whether callers are told."
+            description="Whether calls are recorded across the company, and whether callers are told."
             enforced={false}
             enforcementNote="Important: this does not switch recording off. Recording is turned on for each person under their own settings."
           >
@@ -751,12 +696,12 @@ const CompanyPolicies = () => {
                 </div>
               </div>
             )}
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<Archive className="h-5 w-5" />}
             title="Data retention"
-            summary="How long call recordings and voicemail messages are kept before deletion."
+            description="How long call recordings and voicemail messages are kept before deletion."
             enforced={false}
             enforcementNote="Not active yet. Nothing is deleted automatically — recordings and messages are kept until someone removes them."
           >
@@ -770,12 +715,12 @@ const CompanyPolicies = () => {
               'Voicemail messages',
               'How long a voicemail is kept once it is left.',
             )}
-          </PolicyCard>
+          </SettingCard>
 
-          <PolicyCard
+          <SettingCard
             icon={<PhoneOutgoing className="h-5 w-5" />}
             title="International calling"
-            summary="Whether a newly created user may dial abroad before an admin says otherwise."
+            description="Whether a newly created user may dial abroad before an admin says otherwise."
             enforced={false}
             enforcementNote="Not active yet. Recorded as your preference for new people."
           >
@@ -798,7 +743,7 @@ const CompanyPolicies = () => {
                 </p>
               </div>
             </div>
-          </PolicyCard>
+          </SettingCard>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">

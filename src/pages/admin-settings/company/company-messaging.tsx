@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { count } from 'sms-length';
@@ -151,62 +152,6 @@ const validateForm = (form: MessagingForm): Record<string, string> => {
  * A per-setting honesty badge. `enforced` is only ever passed `true` once the
  * backend genuinely acts on that key — today nothing does.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Not active yet
-    </span>
-  );
-
-interface MessagingCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  enforced: boolean;
-  enforcementNote: React.ReactNode;
-  children: React.ReactNode;
-}
-
-const MessagingCard = ({
-  icon,
-  title,
-  summary,
-  enforced,
-  enforcementNote,
-  children,
-}: MessagingCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
-          <StatusBadge enforced={enforced} />
-        </div>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-4 p-4">
-      {children}
-      <p
-        className={`rounded-lg border px-3 py-2 text-xs ${
-          enforced
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-amber-200 bg-amber-50 text-amber-800'
-        }`}
-      >
-        {enforcementNote}
-      </p>
-    </div>
-  </div>
-);
-
 const ToggleRow = ({
   title,
   description,
@@ -359,10 +304,10 @@ const CompanyMessaging = () => {
             </div>
           )}
 
-          <MessagingCard
+          <SettingCard
             icon={<MessageSquare className="h-5 w-5" />}
             title="Inbound and outbound SMS/MMS"
-            summary="One switch for texting with people outside the company, on every number this account owns."
+            description="One switch for texting with people outside the company, on every number this account owns."
             enforced
             enforcementNote="Active. When this is off, people are stopped from sending texts in the app. If you need texting stopped completely — for a legal hold or a carrier complaint — release the SMS numbers and contact support as well."
           >
@@ -401,12 +346,12 @@ const CompanyMessaging = () => {
                 </div>
               </div>
             </div>
-          </MessagingCard>
+          </SettingCard>
 
-          <MessagingCard
+          <SettingCard
             icon={<ShieldAlert className="h-5 w-5" />}
             title="Outbound SMS/MMS from unregistered numbers (US only)"
-            summary="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
+            description="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
             enforced
             enforcementNote="Active. You are warned before sending from a number that is not registered, because carriers are likely to block it and charge a higher rate. Registering your brand is what clears the block."
           >
@@ -471,12 +416,12 @@ const CompanyMessaging = () => {
                 number only counts as registered once it sits under an approved campaign.
               </p>
             </div>
-          </MessagingCard>
+          </SettingCard>
 
-          <MessagingCard
+          <SettingCard
             icon={<LifeBuoy className="h-5 w-5" />}
             title="HELP message"
-            summary="The reply someone should get when they text HELP to one of your numbers."
+            description="The reply someone should get when they text HELP to one of your numbers."
             enforced={false}
             enforcementNote="Not active yet. This is the wording to give your carrier when you register, so your reply is agreed and written down in one place."
           >
@@ -534,7 +479,7 @@ const CompanyMessaging = () => {
                 </p>
               </div>
             </div>
-          </MessagingCard>
+          </SettingCard>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">

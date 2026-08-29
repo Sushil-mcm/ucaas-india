@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, ShieldCheck, Timer, Network, Info, UserMinus } from 'lucide-react';
 
@@ -266,62 +267,6 @@ const toRosterPerson = (person: any): RosterPerson | null => {
  * The honesty badge. `enforced` is only ever passed `true` once the auth layer
  * genuinely acts on that key. Today every card passes `false`.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700">
-      Saved, not enforced
-    </span>
-  );
-
-interface SecurityCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  enforced: boolean;
-  enforcementNote: string;
-  children: React.ReactNode;
-}
-
-const SecurityCard = ({
-  icon,
-  title,
-  summary,
-  enforced,
-  enforcementNote,
-  children,
-}: SecurityCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
-          <StatusBadge enforced={enforced} />
-        </div>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-4 p-4">
-      {children}
-      <p
-        className={`rounded-lg border px-3 py-2 text-xs ${
-          enforced
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-red-200 bg-red-50 text-red-800'
-        }`}
-      >
-        {enforcementNote}
-      </p>
-    </div>
-  </div>
-);
-
 const textareaClass =
   'w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none placeholder:text-gray-400 hover:border-primary focus:border-primary disabled:bg-gray-100 disabled:text-slate-500';
 
@@ -583,10 +528,10 @@ const CompanySecurity = () => {
             </div>
           )}
 
-          <SecurityCard
+          <SettingCard
             icon={<ShieldCheck className="h-5 w-5" />}
             title="Require multi-factor authentication"
-            summary="Whether everyone signing in with a password must also pass a second check."
+            description="Whether everyone signing in with a password must also pass a second check."
             enforced={false}
             enforcementNote="Not active yet. Signing in does not ask for a second step."
           >
@@ -608,12 +553,12 @@ const CompanySecurity = () => {
                 onCheckedChange={(checked) => updateForm({ mfa_required: checked })}
               />
             </div>
-          </SecurityCard>
+          </SettingCard>
 
-          <SecurityCard
+          <SettingCard
             icon={<UserMinus className="h-5 w-5" />}
             title="MFA exception list"
-            summary="The named people who would be allowed to sign in without the second check."
+            description="The named people who would be allowed to sign in without the second check."
             enforced={false}
             enforcementNote="Not active yet."
           >
@@ -695,12 +640,12 @@ const CompanySecurity = () => {
                 );
               })}
             </div>
-          </SecurityCard>
+          </SettingCard>
 
-          <SecurityCard
+          <SettingCard
             icon={<Timer className="h-5 w-5" />}
             title="Idle timeout"
-            summary="How long someone can leave the console untouched before they are signed out."
+            description="How long someone can leave the console untouched before they are signed out."
             enforced
             enforcementNote="Active. People are signed out after this long without activity, with a warning first and a chance to stay signed in. It waits while someone is on a call."
           >
@@ -745,12 +690,12 @@ const CompanySecurity = () => {
                 </div>
               </div>
             )}
-          </SecurityCard>
+          </SettingCard>
 
-          <SecurityCard
+          <SettingCard
             icon={<Network className="h-5 w-5" />}
             title="IP allowlist"
-            summary="The networks people are allowed to sign in from, written as IPv4 CIDR blocks."
+            description="The networks people are allowed to sign in from, written as IPv4 CIDR blocks."
             enforced={false}
             enforcementNote="Not active yet. Signing in is not restricted by network."
           >
@@ -819,12 +764,12 @@ const CompanySecurity = () => {
                 </div>
               </>
             )}
-          </SecurityCard>
+          </SettingCard>
 
-          <SecurityCard
+          <SettingCard
             icon={<KeyRound className="h-5 w-5" />}
             title="Single sign-on (SAML)"
-            summary="Where your identity provider lives, so sign-in can be handed over to it."
+            description="Where your identity provider lives, so sign-in can be handed over to it."
             enforced={false}
             enforcementNote="Not active yet. People sign in with their email address and password."
           >
@@ -916,7 +861,7 @@ const CompanySecurity = () => {
                 </div>
               </>
             )}
-          </SecurityCard>
+          </SettingCard>
 
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">

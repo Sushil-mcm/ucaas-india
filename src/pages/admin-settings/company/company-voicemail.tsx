@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, ScrollText, Voicemail } from 'lucide-react';
 
@@ -145,62 +146,6 @@ const validateForm = (form: VoicemailForm): Record<string, string> => {
  * The honesty badge. `enforced` is only ever passed `true` for a key something
  * in this product genuinely reads today.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Not active yet
-    </span>
-  );
-
-interface VoicemailCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  enforced: boolean;
-  enforcementNote: string;
-  children: React.ReactNode;
-}
-
-const VoicemailCard = ({
-  icon,
-  title,
-  summary,
-  enforced,
-  enforcementNote,
-  children,
-}: VoicemailCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
-          <StatusBadge enforced={enforced} />
-        </div>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-4 p-4">
-      {children}
-      <p
-        className={`rounded-lg border px-3 py-2 text-xs ${
-          enforced
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-amber-200 bg-amber-50 text-amber-800'
-        }`}
-      >
-        {enforcementNote}
-      </p>
-    </div>
-  </div>
-);
-
 const CompanyVoicemail = () => {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<VoicemailForm>(DEFAULT_FORM);
@@ -321,10 +266,10 @@ const CompanyVoicemail = () => {
             </div>
           )}
 
-          <VoicemailCard
+          <SettingCard
             icon={<Voicemail className="h-5 w-5" />}
             title="Who may change voicemail settings"
-            summary="The one setting on this page that something already acts on — and it is read in two different ways."
+            description="The one setting on this page that something already acts on — and it is read in two different ways."
             enforced
             enforcementNote="Active. Decides whether people can change their own voicemail settings."
           >
@@ -346,12 +291,12 @@ const CompanyVoicemail = () => {
                 </p>
               </div>
             </div>
-          </VoicemailCard>
+          </SettingCard>
 
-          <VoicemailCard
+          <SettingCard
             icon={<ScrollText className="h-5 w-5" />}
             title="Voicemail to text"
-            summary="Whether a message is written out as text as well as left as audio."
+            description="Whether a message is written out as text as well as left as audio."
             enforced={false}
             enforcementNote="Used when you set someone up from these company settings. It does not change anyone already set up."
           >
@@ -368,12 +313,12 @@ const CompanyVoicemail = () => {
                 onCheckedChange={(checked) => updateForm({ voicemail_to_text: checked })}
               />
             </div>
-          </VoicemailCard>
+          </SettingCard>
 
-          <VoicemailCard
+          <SettingCard
             icon={<KeyRound className="h-5 w-5" />}
             title="Voicemail PIN"
-            summary="The PIN a person would type to hear their messages from a phone."
+            description="The PIN a person would type to hear their messages from a phone."
             enforced={false}
             enforcementNote="Not active yet — mailboxes do not ask for this PIN. Anyone you set up from these settings receives it, so choose a PIN you are happy to share."
           >
@@ -395,7 +340,7 @@ const CompanyVoicemail = () => {
                 </p>
               </div>
             </div>
-          </VoicemailCard>
+          </SettingCard>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">

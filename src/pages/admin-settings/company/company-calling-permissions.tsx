@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRightLeft, PhoneForwarded, PhoneOutgoing, ShieldAlert } from 'lucide-react';
 
@@ -129,10 +130,7 @@ const buildFormFromSettings = (settings: Record<string, any>): PermissionsForm =
       callerId?.allow_office_or_group_number,
       DEFAULT_FORM.allow_office_or_group_caller_id,
     ),
-    allow_hidden_caller_id: toBoolean(
-      callerId?.allow_hidden,
-      DEFAULT_FORM.allow_hidden_caller_id,
-    ),
+    allow_hidden_caller_id: toBoolean(callerId?.allow_hidden, DEFAULT_FORM.allow_hidden_caller_id),
     allow_external_transfer: allowExternalTransfer,
     /* International is a child of external. A stored `true` under a parent that is
        off is read as off rather than shown checked-but-inert, so what is on screen
@@ -144,14 +142,11 @@ const buildFormFromSettings = (settings: Record<string, any>): PermissionsForm =
       transfers?.allow_outbound_call_external,
       DEFAULT_FORM.allow_outbound_call_external_transfer,
     ),
-        allow_ivr_external_forwarding: allowIvrForwarding,
-        /* Never on under a parent that is off, on read as well as on write. */
-        ivr_external_forwarding_domestic_only:
-          allowIvrForwarding &&
-          toBoolean(
-            ivrForwarding?.domestic_only,
-            DEFAULT_FORM.ivr_external_forwarding_domestic_only,
-          ),
+    allow_ivr_external_forwarding: allowIvrForwarding,
+    /* Never on under a parent that is off, on read as well as on write. */
+    ivr_external_forwarding_domestic_only:
+      allowIvrForwarding &&
+      toBoolean(ivrForwarding?.domestic_only, DEFAULT_FORM.ivr_external_forwarding_domestic_only),
   };
 };
 
@@ -172,8 +167,7 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
   },
   ivr_external_forwarding: {
     allowed: form.allow_ivr_external_forwarding,
-    domestic_only:
-      form.allow_ivr_external_forwarding && form.ivr_external_forwarding_domestic_only,
+    domestic_only: form.allow_ivr_external_forwarding && form.ivr_external_forwarding_domestic_only,
   },
 });
 
@@ -181,39 +175,6 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
  * A per-setting honesty badge. `enforced` is only ever passed `true` once
  * something in the call path genuinely acts on that key — today nothing does.
  */
-const StatusBadge = ({ enforced }: { enforced: boolean }) =>
-  enforced ? (
-    <span className="rounded-sm bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700">
-      Active
-    </span>
-  ) : (
-    <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-      Not active yet
-    </span>
-  );
-
-interface PermissionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  summary: string;
-  children: React.ReactNode;
-}
-
-const PermissionCard = ({ icon, title, summary, children }: PermissionCardProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-        {icon}
-      </div>
-      <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-        <p className="text-base font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{summary}</p>
-      </div>
-    </div>
-    <div className="flex flex-col gap-3 p-4">{children}</div>
-  </div>
-);
-
 interface PermissionRowProps {
   label: string;
   description: React.ReactNode;
@@ -255,12 +216,15 @@ const PermissionRow = ({
       />
       <div className="flex flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p
-            className={`text-sm font-semibold ${disabled ? 'text-gray-500' : 'text-gray-900'}`}
-          >
+          <p className={`text-sm font-semibold ${disabled ? 'text-gray-500' : 'text-gray-900'}`}>
             {label}
           </p>
-          <StatusBadge enforced={enforced} />
+          <span
+            className={`mcm-setcard-badge${enforced ? ' is-on' : ''}`}
+            title={enforced ? 'Enforced on calls' : 'Saved, not yet enforced on calls'}
+          >
+            {enforced ? 'Active' : 'Not active yet'}
+          </span>
         </div>
         <p className="text-xs text-gray-500">{description}</p>
       </div>
@@ -391,10 +355,10 @@ const CompanyCallingPermissions = () => {
                 These are fraud controls, not conveniences
               </p>
               <p className="text-xs text-red-800">
-                Every box on this page is off to begin with, which is the safe default. Each
-                one is a way of turning a call you already pay for into a second leg you also pay
-                for. Toll fraud works by getting someone — or something — to transfer a call out to
-                a premium-rate number abroad and leaving it up; the bill arrives days later. Turn a
+                Every box on this page is off to begin with, which is the safe default. Each one is
+                a way of turning a call you already pay for into a second leg you also pay for. Toll
+                fraud works by getting someone — or something — to transfer a call out to a
+                premium-rate number abroad and leaving it up; the bill arrives days later. Turn a
                 box on only when a real job needs it, and turn it off again when that job ends.
               </p>
             </div>
@@ -421,10 +385,10 @@ const CompanyCallingPermissions = () => {
             </div>
           )}
 
-          <PermissionCard
+          <SettingCard
             icon={<PhoneOutgoing className="h-5 w-5" />}
             title="Outbound caller ID"
-            summary="Which number the person being called sees when a team member dials out."
+            description="Which number the person being called sees when a team member dials out."
           >
             <PermissionRow
               label="Allow team members to use the office number or group numbers for which they are a member as caller ID"
@@ -445,15 +409,15 @@ const CompanyCallingPermissions = () => {
               enforcementNote="Not active yet. Your number is still shown on outgoing calls. Dialling *67 before a number withholds it for that call, where your carrier supports it."
             />
             <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-              How the pair works: if neither of these two is on, a team member with more
-              than one line can only ever call out from their own primary number.
+              How the pair works: if neither of these two is on, a team member with more than one
+              line can only ever call out from their own primary number.
             </p>
-          </PermissionCard>
+          </SettingCard>
 
-          <PermissionCard
+          <SettingCard
             icon={<ArrowRightLeft className="h-5 w-5" />}
             title="Transferring a call outside the company"
-            summary="Whether a connected call may be handed to a number that is not one of yours — and, if so, whether it may leave the country."
+            description="Whether a connected call may be handed to a number that is not one of yours — and, if so, whether it may leave the country."
           >
             <PermissionRow
               label="Allow team members to transfer calls outside of the company"
@@ -474,12 +438,12 @@ const CompanyCallingPermissions = () => {
               disabledNote="Switched off and locked because external transfers are not allowed at all. Allow those first if you need this."
               isChild
             />
-          </PermissionCard>
+          </SettingCard>
 
-          <PermissionCard
+          <SettingCard
             icon={<PhoneForwarded className="h-5 w-5" />}
             title="Transferring a call your team made"
-            summary="Whether a call a team member dialled out themselves may then be transferred to another outside number."
+            description="Whether a call a team member dialled out themselves may then be transferred to another outside number."
           >
             <PermissionRow
               label="Allow transferring an outbound call to an external number"
@@ -491,12 +455,12 @@ const CompanyCallingPermissions = () => {
               enforced
               enforcementNote="Active. When this is off, people cannot transfer a call they placed themselves to an outside number."
             />
-          </PermissionCard>
+          </SettingCard>
 
-          <PermissionCard
+          <SettingCard
             icon={<ShieldAlert className="h-5 w-5" />}
             title="Sending a caller out of a phone menu"
-            summary="Whether a menu key can pass a caller to a number outside your company."
+            description="Whether a menu key can pass a caller to a number outside your company."
           >
             <PermissionRow
               label="Let a menu key forward to an outside number"
@@ -519,11 +483,12 @@ const CompanyCallingPermissions = () => {
               enforced
               enforcementNote="Active. Numbers outside your country cannot be chosen for a menu key."
             />
-          </PermissionCard>
+          </SettingCard>
 
           <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
-              Saved for your whole company. Your other settings are not affected.</p>
+              Saved for your whole company. Your other settings are not affected.
+            </p>
             <Button
               type="button"
               variant="primary"
