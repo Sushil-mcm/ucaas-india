@@ -20,7 +20,6 @@ const matchesPrefix = (path: string, prefix: string) =>
   path === prefix || path.startsWith(`${prefix}/`);
 
 const adminBase: RouteImporter[] = [() => import('@/pages/admin-settings')];
-const settingsBase: RouteImporter[] = [() => import('@/pages/settings')];
 const reportsBase: RouteImporter[] = [() => import('@/pages/reports')];
 const campaignBase: RouteImporter[] = [() => import('@/pages/auto-dialer')];
 const monitoringBase: RouteImporter[] = [() => import('@/pages/monitoring')];
@@ -28,7 +27,6 @@ const departmentBase: RouteImporter[] = [() => import('@/pages/departments')];
 const integrationBase: RouteImporter[] = [() => import('@/pages/integration')];
 
 const withAdmin = (...importers: RouteImporter[]) => [...adminBase, ...importers];
-const withSettings = (...importers: RouteImporter[]) => [...settingsBase, ...importers];
 const withReports = (...importers: RouteImporter[]) => [...reportsBase, ...importers];
 const withCampaign = (...importers: RouteImporter[]) => [...campaignBase, ...importers];
 const withMonitoring = (...importers: RouteImporter[]) => [...monitoringBase, ...importers];
@@ -279,39 +277,39 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/admin-settings/account/profile',
-    importers: withSettings(() => import('@/pages/settings/basic-info')),
+    importers: withAdmin(() => import('@/pages/settings/basic-info')),
   },
   {
     prefix: '/admin-settings/account/preferences',
-    importers: withSettings(() => import('@/pages/settings/general')),
+    importers: withAdmin(() => import('@/pages/settings/general')),
   },
   {
     prefix: '/admin-settings/account/video',
-    importers: withSettings(() => import('@/pages/settings/video')),
+    importers: withAdmin(() => import('@/pages/settings/video')),
   },
   {
     prefix: '/admin-settings/account/phone',
-    importers: withSettings(() => import('@/pages/settings/phone')),
+    importers: withAdmin(() => import('@/pages/settings/phone')),
   },
   {
     prefix: '/admin-settings/account/notification',
-    importers: withSettings(() => import('@/pages/settings/notification')),
+    importers: withAdmin(() => import('@/pages/settings/notification')),
   },
   {
     prefix: '/admin-settings/account/greetings',
-    importers: withSettings(() => import('@/pages/settings/greetings')),
+    importers: withAdmin(() => import('@/pages/settings/greetings')),
   },
   {
     prefix: '/admin-settings/account/media',
-    importers: withSettings(() => import('@/pages/greetings/greetings-content')),
+    importers: withAdmin(() => import('@/pages/greetings/greetings-content')),
   },
   {
     prefix: '/admin-settings/account/security',
-    importers: withSettings(() => import('@/pages/settings/security')),
+    importers: withAdmin(() => import('@/pages/settings/security')),
   },
   {
     prefix: '/admin-settings/account',
-    importers: withSettings(() => import('@/pages/settings/basic-info')),
+    importers: withAdmin(() => import('@/pages/settings/basic-info')),
   },
   {
     prefix: '/reports/local-call-list',

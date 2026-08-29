@@ -18,8 +18,9 @@ import {
 /**
  * Company voicemail
  * -----------------------------------------------------------------------------
- * established business phone systems both let an admin set voicemail rules for the whole
- * organisation. Here there was no such screen: the company record already
+ * Setting voicemail rules once for the whole organisation is standard in
+ * established business phone systems. Here there was no such screen: the
+ * company record already
  * carried `settings.voicemail_pin`, other code already read it, but the only
  * editor for it was the per-person dialog. The company-level card that would
  * have written it sits commented out in

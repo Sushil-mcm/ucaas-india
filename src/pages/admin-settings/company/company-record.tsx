@@ -1,6 +1,6 @@
 /* The company itself, above the list of places it works from.
  *
- * established business phone systems both separate the organisation from its locations, and
+ * Established business phone systems separate the organisation from its locations, and
  * both put the organisation first: name, address, and the ID that support asks
  * for. MCM stores all of that on the `companies` record and showed none of it —
  * the page opened straight into the location list, so an admin had no way to see

@@ -90,7 +90,6 @@ const GreetingContent = lazy(() => import('@/pages/greetings/greetings-content')
 const Plan = lazy(loadBillingPlan);
 const Purchase = lazy(() => import('@/pages/admin-settings/billing/purchase'));
 const Invoice = lazy(() => import('@/pages/admin-settings/billing/invoice'));
-const Settings = lazy(() => import('@/pages/settings'));
 const BasicInfoSettings = lazy(() => import('@/pages/settings/basic-info'));
 const General = lazy(() =>
   import('@/pages/settings/general').then((module) => ({ default: module.General })),

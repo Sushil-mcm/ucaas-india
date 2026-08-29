@@ -4,7 +4,7 @@
  * edited at Admin > Phone System > Preferences. But an admin opening
  * "Company & Locations" reasonably expects company settings to be there, finds a
  * company name and a list of locations, and concludes the product has none.
- * established business phone systems both put organisation-wide policy on the company screen.
+ * Established business phone systems put organisation-wide policy on the company screen.
  *
  * This shows the current values and hands off to the existing editor rather than
  * duplicating it: two editors writing the same record is how settings start
@@ -14,7 +14,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Clock, Mic, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Clock, Mic, ShieldCheck, Voicemail } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,9 +22,7 @@ import {
   fetchCompanyDefaults,
   type CompanyDefaultTemplate,
 } from '@/lib/company-defaults';
-
-/* Lives under Company now; the old Phone System path still resolves. */
-const PREFERENCES_PATH = '/admin-settings/company/policies';
+import { COMPANY_RULES_PATH } from './company-sections';
 
 interface Row {
   icon: React.ReactNode;
@@ -67,12 +65,28 @@ const CompanySettingsCard = () => {
               : 'Not set',
         staffMayChange: readPath(settings, 'operational_hours.override') === true,
       },
-      /* No voicemail row. The company-level voicemail editor is commented out
-         in the settings tab, so nothing here could ever be set — the card was
-         reading the initial-state default and presenting it as the company's
-         choice, complete with a Locked / Staff can change badge. Showing a
-         setting that cannot be changed, with a value nobody chose, is worse
-         than showing nothing. It belongs back here once that editor returns. */
+      /* The voicemail row was pulled when the only editor for it was commented
+         out: the card read an initial-state default and presented it as the
+         company's choice, badge and all. There is a real editor now, at
+         /admin-settings/company/voicemail, so the row is back — and it shows what
+         was actually saved rather than a default.
+
+         A PIN that has never been set reads as "Not set", so the card cannot
+         claim a decision nobody made. */
+      {
+        icon: <Voicemail className="h-4 w-4" />,
+        label: 'Voicemail',
+        value: (() => {
+          const pin = readPath(settings, 'voicemail_pin.value');
+          const hasPin = typeof pin === 'string' ? pin.trim() !== '' : pin != null;
+          const toText = readPath(settings, 'voicemail_pin.voicemail_to_text') === 'YES';
+          if (!hasPin && !toText) return 'Not set';
+          return [hasPin ? 'PIN set' : 'No PIN', toText ? 'read as text' : null]
+            .filter(Boolean)
+            .join(' · ');
+        })(),
+        staffMayChange: readPath(settings, 'voicemail_pin.override') === true,
+      },
       {
         icon: <Mic className="h-4 w-4" />,
         label: 'Call recording',
@@ -100,7 +114,7 @@ const CompanySettingsCard = () => {
             change on their own phone.
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={() => navigate(PREFERENCES_PATH)}>
+        <Button type="button" variant="outline" onClick={() => navigate(COMPANY_RULES_PATH)}>
           {hasDefaults ? 'Edit rules' : 'Set them up'}
           <ArrowRight className="h-3.5 w-3.5" />
         </Button>

@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getUserList, siteList } from '@/services/api';
 import { useLocationNumbers } from '@/hooks/use-location-numbers';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { COMPANY_RULES_PATH } from '@/pages/admin-settings/company/company-sections';
 
 export type SetupStepKey = 'company' | 'locations' | 'people' | 'numbers' | 'handling';
 
@@ -150,7 +151,7 @@ export const useSetupProgress = (companyInfo?: any): SetupProgress => {
         key: 'handling',
         title: 'Call handling',
         purpose: 'What happens when nobody answers, and outside working hours.',
-        path: '/admin-settings/company/policies',
+        path: COMPANY_RULES_PATH,
         /* Not ticked from a row count: whether calls are handled correctly
            cannot be read off one — a number can be configured and still drop
            every out-of-hours call. It counts as done once company-wide rules

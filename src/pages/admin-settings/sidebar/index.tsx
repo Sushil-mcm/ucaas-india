@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
+import { COMPANY_RULES_PATH } from '@/pages/admin-settings/company/company-sections';
 
 export const canShowItem = (item: any, isAdmin: boolean) => {
   if ('visible' in item && item.visible !== true) return false;
@@ -44,7 +45,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         },
         {
           title: 'Company Rules',
-          path: '/admin-settings/company/policies',
+          path: COMPANY_RULES_PATH,
           icon: 'SettingsIcon',
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
@@ -84,7 +85,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       ].filter(Boolean),
     },
     {
-      title: 'Users',
+      title: 'People',
       type: 'accordion',
       value: 'users',
       icon: 'UserCircleIcon',
@@ -98,18 +99,11 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           path: '/admin-settings/people',
         },
         {
-          title: 'Role',
+          title: 'Roles',
           icon: 'RoleIcon',
           path: '/admin-settings/roles',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
-        },
-        {
-          title: 'Groups',
-          icon: 'DepartmentIcon1',
-          path: '/admin-settings/phone/departments',
-          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
-          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
       ].filter(Boolean),
     },
@@ -172,6 +166,15 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           path: '/admin-settings/phone/call-queue',
           icon: 'CallQueue',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.QUEUE),
+          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
+        },
+        {
+          /* A department is a group calls route to, so it belongs beside the
+             other routing groups rather than under People. */
+          title: 'Departments',
+          path: '/admin-settings/phone/departments',
+          icon: 'DepartmentIcon1',
+          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
         {
