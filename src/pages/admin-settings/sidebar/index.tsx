@@ -395,6 +395,11 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'BillingPlanIcon',
         },
         {
+          title: 'Cost centres',
+          path: '/admin-settings/billing/cost-centres',
+          icon: 'BillingPlanIcon',
+        },
+        {
           title: 'Statement',
           path: '/admin-settings/billing/statement',
           icon: 'BillingPlanIcon',
