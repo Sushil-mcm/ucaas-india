@@ -146,11 +146,11 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/admin-settings/numbers/all',
-    importers: withAdmin(() => import('@/pages/admin-settings/numbers/all-numbers')),
+    importers: withAdmin(() => import('@/pages/admin-settings/numbers/number-list')),
   },
   {
     prefix: '/admin-settings/numbers/in-use',
-    importers: withAdmin(() => import('@/pages/admin-settings/numbers/numbers-in-use')),
+    importers: withAdmin(() => import('@/pages/admin-settings/numbers/number-list')),
   },
   {
     prefix: '/admin-settings/numbers/identities',
@@ -166,7 +166,7 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/admin-settings/numbers/inventory',
-    importers: withAdmin(() => import('@/pages/admin-settings/numbers/numbers-inventory')),
+    importers: withAdmin(() => import('@/pages/admin-settings/numbers/number-list')),
   },
   {
     prefix: '/admin-settings/phone/ivr',

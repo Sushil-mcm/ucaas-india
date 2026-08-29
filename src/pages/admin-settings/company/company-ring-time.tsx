@@ -106,7 +106,7 @@ const RING_TIME_OPTIONS = [
 
 /* Where the "what happens next" half of this question is answered. A real route
    from src/router/index.tsx — a number's call handling, including its Business
-   Hours step, is edited from the numbers-in-use list. */
+   Hours step, is edited from the numbers list. */
 const NUMBERS_IN_USE_PATH = '/admin-settings/numbers/in-use';
 
 interface RingTimeForm {

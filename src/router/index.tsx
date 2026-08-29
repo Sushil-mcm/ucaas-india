@@ -76,7 +76,7 @@ const NewContact = lazy(() => import('@/pages/new-contact'));
 const Directory = lazy(() => import('@/pages/directory'));
 const ErrorPage = lazy(() => import('@/pages/error'));
 const UserDepartment = lazy(() => import('@/pages/admin-settings/phone-systems/departments'));
-const AllNumbers = lazy(() => import('@/pages/admin-settings/numbers/all-numbers'));
+const NumberList = lazy(() => import('@/pages/admin-settings/numbers/number-list'));
 const IvrMenus = lazy(() => import('@/pages/admin-settings/phone-systems/ivr-menus'));
 const Inbox = lazy(() => import('@/pages/inbox'));
 const VideoMeetings = lazy(() => import('@/pages/video-meetings'));
@@ -110,8 +110,6 @@ const DepartmentDetails = lazy(
   () => import('@/pages/departments/department-list/department-details'),
 );
 const UserDetails = lazy(() => import('@/pages/departments/users-list/user-details'));
-const InUseNumbers = lazy(() => import('@/pages/admin-settings/numbers/numbers-in-use'));
-const NumbersInventory = lazy(() => import('@/pages/admin-settings/numbers/numbers-inventory'));
 const UserSettings = lazy(() => import('@/pages/admin-settings/templates/user-settings'));
 const OutboundRates = lazy(() => import('@/pages/admin-settings/calling-rates/outbound-rates'));
 const CallHandling = lazy(() => import('@/pages/admin-settings/templates/call-handling'));
@@ -772,11 +770,18 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                /* `/admin-settings/numbers` on its own is the list, so the
+                   section has a home to link to. The three views below are the
+                   same screen with a different filter. */
+                index: true,
+                element: <Navigate to="all" replace />,
+              },
+              {
                 path: 'all',
                 id: 'all',
                 element: (
                   <ProtectedRoute
-                    element={<AllNumbers />}
+                    element={<NumberList />}
                     guard={{
                       permission: 'virtual_numbers.action.view',
                     }}
@@ -788,7 +793,7 @@ export const router = createBrowserRouter([
                 id: 'in-use',
                 element: (
                   <ProtectedRoute
-                    element={<InUseNumbers />}
+                    element={<NumberList />}
                     guard={{
                       permission: 'virtual_numbers.action.view',
                     }}
@@ -836,7 +841,7 @@ export const router = createBrowserRouter([
                 id: 'inventory',
                 element: (
                   <ProtectedRoute
-                    element={<NumbersInventory />}
+                    element={<NumberList />}
                     guard={{
                       permission: 'virtual_numbers.action.view',
                     }}
