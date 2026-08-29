@@ -60,7 +60,7 @@ Legend: **Have** = built and working · **Partial** = built but thinner than ref
 
 | Feature | Genesys | Dialpad | Ours | Verdict |
 |---|---|---|---|---|
-| Per-agent ring duration | `alertingTimeoutSeconds` per media | ring duration slider | **not exposed** | Gap |
+| Per-agent ring duration | `alertingTimeoutSeconds` per media | ring duration slider | **per member, seeded from the company default** | Have |
 | Max time in queue | via flows and routing rules | 10 s – **300 min** | 60 s – 3600 s (60 min) | Partial |
 | Max callers waiting | no hard cap of this shape | **500** (Advanced) / **1,000** (Premium) | **max 30** | **Partial — hard cap far too low** |
 | Leave queue if no agent | via flow logic | yes | `leave_room_if_no_agent` | Have |
@@ -117,9 +117,15 @@ Legend: **Have** = built and working · **Partial** = built but thinner than ref
 | Real-time queue stats | analytics + websocket topics | live dashboard | monitoring module | Partial |
 | Per-channel settings | call, callback, chat, email, message | separate products | voice only | Gap (scope decision) |
 
-**Queue summary: 9 real gaps.** In value order —
+**Queue summary: 8 real gaps.** In value order —
 callback, estimated wait + place in queue, skills, the 30-caller cap, last-agent routing,
-delay greeting, tiered escalation, service level, per-agent ring duration.
+delay greeting, tiered escalation, service level.
+
+**Second correction.** An earlier draft listed per-agent ring duration as a gap. It is not:
+`ring-strategy/index.tsx` renders a ring-time select for every member, seeded from the
+company default through `getRingTimeOptions`. That is twice this sheet has understated what
+we already have, both times from grepping for a string instead of reading the component.
+Read the component.
 
 ---
 

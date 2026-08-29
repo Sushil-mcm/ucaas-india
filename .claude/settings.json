@@ -51,7 +51,8 @@
       "Bash(timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=8 -T gh-mcm-api-rw)",
       "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new ' *)",
       "Bash(timeout 45 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)",
-      "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)"
+      "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=8 mcm-new 'B64=Y1BPdFNNSVEyYkRhbnc1SzZSdUxuRU9DeCRoSk5PNyM= *)",
+      "Bash(rm -f /tmp/claude-0/-root-mycountrymobile-web/dc1ac764-260e-4a2c-b731-92b19dbe00a3/scratchpad/didkey.txt)"
     ],
     "additionalDirectories": [
       "/root/mycountrymobile-web/docs"
