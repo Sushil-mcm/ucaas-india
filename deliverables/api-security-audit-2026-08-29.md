@@ -1,9 +1,19 @@
 # default-api — security audit against the running code
 
-Checked 29 August 2026 against what is actually running on 142.93.121.121
-(`/var/www/prod/default-api/dist`), not against notes. `default-api` was
-restarted at 05:18:12 that morning, so the file on disk and the running process
-match.
+Checked 29 August 2026 against what is actually running, not against notes.
+
+**`default-api` runs on three servers, not one.** All three carry the same
+`dist/`, and all three need every fix applied in the same session:
+
+| SSH alias | Address | Logout fix live? |
+|---|---|---|
+| `mcm-new` | 142.93.121.121 | yes — process 05:18:12 UTC, file 05:18:12 |
+| `mcm-switch` | 167.99.4.91 | yes — process 05:19:38 UTC, file 05:19:37 |
+| `mcm-ucaas3` | 151.106.57.254 | yes — process 05:19:27 UTC, file 05:19:27 |
+
+Verified on each by comparing the process start time against the file mtime —
+the check that caught the first patch sitting dead on disk for 20 hours. All
+three are confirmed identical for every finding below.
 
 Everything below is in **compiled JavaScript**. There is no TypeScript source
 for this service anywhere on the server, so each fix is an edit to `dist/`. That
@@ -15,10 +25,10 @@ source is the single most valuable thing anyone can do here.
 | # | Issue | State |
 |---|---|---|
 | 0 | Any signed-in user could end any colleague's sessions | **Fixed** |
-| 5 | Any user could list colleagues' devices, IPs and emails | **Not a defect** — narrowing is present |
+| 5 | Any user could list colleagues' devices, IPs and emails | **Not a defect for ordinary users** — but admins leak cross-tenant via issue 3 |
 | 1 | A normal user can give themselves an administrator role | **OPEN** |
 | 2 | Any signed-in user can delete or rewrite any role, for any customer | **OPEN — worst of the four** |
-| 3 | Any customer can read every phone number on the platform | **OPEN** |
+| 3 | Filter injection — any customer reads every company's rows | **OPEN — service-wide, 8 sites** |
 | 4 | Releasing a number never tells the carrier, so billing continues | **OPEN** |
 | 6 | A company admin can end sessions for users in other companies | **OPEN — new, narrow** |
 
@@ -99,10 +109,12 @@ scope inside `logout()`.
 
 **Worst of the four. Fix this first.**
 
-**Where:** `controllers/Roles/index.js`, and `routers/roleRoute.js` line 18.
+**Where:** `controllers/Roles/index.js`, and `routers/rolesRoute.js` line 18.
+**Reachable at:** `DELETE /api/user/role/delete/:uuid` — `userRoute.js:36`
+does `userRoute.use("/role", rolesRoute)`, so the path is nested under `/user`.
 
 ```js
-roleRoute.delete("/delete/:uuid", AuthMiddleware, catchErrors(remove));
+rolesRoute.delete("/delete/:uuid", AuthMiddleware, catchErrors(remove));
 ```
 
 ```js
@@ -132,8 +144,12 @@ certainly not be reachable by customers at all.
 
 Both sit behind `AuthMiddleware` only. That middleware establishes *who you
 are*, never *what you may do*. There is no authorisation middleware in this
-service at all — `isAdmin`, `requireRole`, `checkPermission`,
-`hasPermission` and `requirePermission` return zero files.
+service at all. Grepped service-wide, `isAdmin|requireRole|checkPermission|
+hasPermission|requirePermission` hits exactly three files — `CronController.js`,
+`MetaOnboardingService.js` and `Stripe/PaymentController.js`. None is a
+middleware and none is wired to a route, so the conclusion stands, but an
+earlier draft of this document said "zero files", which came from grepping only
+`middlewares/` and `routers/`. Anyone rerunning it service-wide will see three.
 
 Both handlers **are** tenant-scoped — the target user lookup filters on
 `company_uuid: userData.company_uuid`, so this cannot cross companies. But
@@ -152,37 +168,71 @@ just these two routes on an administrator role.
 
 ---
 
-## OPEN 3 — any customer can read every phone number on the platform
+## OPEN 3 — filter injection: a house style, not one endpoint
 
-**Where:** `controllers/DID/DidController.js`, `list()` at line 121.
+This was written up as a DID bug. It is not. The same shape appears across the
+service, and fixing `DidController` alone leaves billing wide open.
 
-```js
-const { company_uuid, role, uuid } = req.auth;
-const where = { company_uuid };            // tenant scope set first
-...
-filter.forEach((_value) => {
-    const { key, value } = _value;
-    where[key] = { [Op.like]: `${value}%` };   // caller chooses the key
-});
-```
-
-`key` comes straight from the request body with no allow-list, so
-`filter: [{ key: "company_uuid", value: "" }]` overwrites the tenant scope with
-`company_uuid LIKE '%'` and returns every DID on the platform.
-
-**Fix:** allow-list the filterable columns, and re-apply `company_uuid` after
-the caller's filters rather than before:
+**The pattern:**
 
 ```js
-const FILTERABLE = ["did_number", "did_name", "type", "status", "user_uuid"];
+let where = { company_uuid };              // tenant scope set FIRST
 filter.forEach(({ key, value }) => {
-    if (!FILTERABLE.includes(key)) return;
-    where[key] = { [Op.like]: `${value}%` };
+    where[key] = { [Op.like]: `%${value}%` };   // caller chooses the key
 });
-where.company_uuid = company_uuid;   // last word, always
 ```
 
-The same `where[key]` pattern is worth grepping for across the service.
+`key` comes straight from the request body. Sending
+`filter: [{ key: "company_uuid", value: "" }]` overwrites the tenant scope with
+`company_uuid LIKE '%'` and returns every customer's rows.
+
+**Where it appears.** `(where|whereCond)[key] =` matches **19 sites in 12
+files**. They are not all vulnerable — several already dispatch on the key:
+
+| Site | State |
+|---|---|
+| `helpers/filterHelper.js` (4 sites) | **Safe** — `switch (key)` with named cases, effectively an allow-list. The four controllers that go through it are not exposed this way. |
+| `Tenant/TenantController.js:1615` | **Safe** — guarded by `if (key === 'name')`. |
+| `DID/DidController.js:135` | **Vulnerable** — confirmed, tenant scope overwritten. |
+| `BillingController.js:37` | **Vulnerable** — confirmed. Identical shape. Returns every company's billing records. |
+| `Roles/index.js:71` | **Vulnerable** — overrides the `name != "ADMIN"` guard set just above it, exposing the ADMIN role. |
+| `CRMController.js:194` | **Vulnerable** — the `else` branch is unguarded and `where` carries `company_uuid`. |
+| `UserController.js:587` | **Vulnerable** — the `else` branch of a key chain. |
+| `UserController.js:2623` | **Vulnerable, admin-only** — see below. |
+| `DID/DidController.js:1938` | **Vulnerable** — `where: {}`, no tenant scope at all. |
+| `Admin/` (4 sites: `PlansController`, `AiController`, `DidController`, `SiteController`, `UserController`) | **Lower severity** — behind `AdminMiddleware`, but the same defect. |
+
+**The device-list nuance.** `UserController.js:2622-2627` sets the company
+scope, runs the filter loop, and *then* narrows:
+
+```js
+if (role !== "ADMIN") { whereCond.user_uuid = uuid; }
+```
+
+A non-admin who overwrites `company_uuid` still gets their own uuid forced
+afterwards, so they see only their own devices — harmless. An **ADMIN**
+overwriting `company_uuid` is not narrowed, and reads every device on the
+platform: extension, IP address, user agent, and the joined user's email and
+name, for every customer. So the device list is safe for ordinary users and
+leaks across tenants for admins.
+
+**Fix — a sweep, not a patch.** Doing this per-endpoint guarantees one gets
+missed. `scripts/fix-filter-injection.sh` inserts a guard at the top of every
+vulnerable loop refusing the columns that carry scope:
+
+```js
+if (["company_uuid","user_uuid","website_uuid","tenant_uuid","uuid","id"].includes(String(key))) { return; }
+```
+
+All eight non-helper sites were checked and every one sits inside a
+`filter.forEach(...)` arrow callback, so `return` skips that iteration rather
+than exiting the handler. The script backs each file up, runs `node --check`,
+and rolls back any file that fails.
+
+This is a denylist. An allow-list of each endpoint's real filterable columns is
+the better shape, and it is what should be written once the TypeScript source
+exists — it needs per-endpoint judgement that does not belong in a mechanical
+patch against compiled output. The denylist closes the actual exploit now.
 
 ---
 
@@ -211,12 +261,13 @@ marked released in our database. The difference is money already being spent.
 ## Order
 
 1. **Issue 2** — one line each in four places. Largest exposure, smallest fix.
-2. **Issue 3** — allow-list plus moving one line.
+2. **Issue 3** — run `scripts/fix-filter-injection.sh --apply` on all three
+   servers. Treat it as a sweep; patching one endpoint leaves billing open.
 3. **Issue 6** — the block above, ready to paste.
 4. **Issue 4** — carrier call, plus the billing reconciliation.
 5. **Issue 1** — the real authorisation layer. A project, not a patch.
 
-1, 2 and 3 are each a few lines and can go out together. Take a `.bak` of every
+1, 2 and 3 can go out together. Take a `.bak` of every
 file first, run `node --check` on each, restart `default-api`, and confirm the
 process start time is later than the file mtime — that check is what showed the
 earlier patch had never gone live.

@@ -4,7 +4,12 @@
       "Bash(timeout 40 ssh -o BatchMode=yes -o ConnectTimeout=10 mcm-ucaas3 ' *)",
       "Bash(timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=10 mcm-new ' *)",
       "Bash(timeout 90 ssh -o BatchMode=yes -o ConnectTimeout=10 mcm-new ' *)",
-      "Bash(echo \"tsc exit=$?\")"
+      "Bash(echo \"tsc exit=$?\")",
+      "Bash(timeout 40 ssh -o BatchMode=yes mcm-new ' *)",
+      "Bash(bash -n scripts/fix-filter-injection.sh)",
+      "Bash(timeout 30 ssh -o BatchMode=yes mcm-new 'bash -s')",
+      "Bash(cp docs/api-security-audit-2026-08-29.md deliverables/)",
+      "Bash(cp scripts/fix-filter-injection.sh deliverables/)"
     ]
   }
 }
