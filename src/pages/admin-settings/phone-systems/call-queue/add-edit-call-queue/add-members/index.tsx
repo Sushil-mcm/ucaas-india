@@ -28,6 +28,26 @@ interface IMEMBER {
   profile?: string;
 }
 
+/* One reading of a person's role.
+ *
+ * There were three. The name cell showed `custom_role_data ?? role_data ?? role`,
+ * the manager radio decided whether to enable itself from `role_data ?? role`,
+ * and the click handler checked the raw `role` on its own. So somebody whose
+ * role comes from a custom role — which is what the list actually displays —
+ * could be shown as MANAGER and still never be selectable as one: the radio read
+ * a different field and stayed disabled forever.
+ *
+ * The list and the rule now read the same field, so what an admin sees is what
+ * the form acts on. */
+const roleOf = (member: IMEMBER): string =>
+  member?.custom_role_data?.name || member?.role_data?.name || member?.role || '';
+
+/* Who may be the manager of a queue. Agents answer calls; they do not own the
+   queue. */
+const MANAGER_ROLES = ['MANAGER', 'ADMIN', 'SUB-ADMIN', 'SUPER-ADMIN'];
+const canManage = (member: IMEMBER): boolean =>
+  MANAGER_ROLES.includes(roleOf(member).toUpperCase());
+
 // Checkbox cell component with internal form subscription and logic
 const MemberCheckboxCell = ({ memberData }: { memberData: IMEMBER }) => {
   const { control, setValue, clearErrors } = useFormContext();
@@ -55,9 +75,16 @@ const MemberCheckboxCell = ({ memberData }: { memberData: IMEMBER }) => {
           user_uuid: memberData?.uuid,
         };
 
-        // Check if member already exists to avoid duplicates
+        /* Matched on the extension, which is the field every other check in
+           this file already uses and the one that is always present. Matching
+           on the id alone meant that if a row ever arrived without one, the
+           first member added would have `user_uuid: undefined`, every later one
+           would compare undefined to undefined, and the tick would be silently
+           swallowed — one member addable, and no error to explain it. */
         const memberExists = members.some(
-          (member: IMEMBER) => member.user_uuid === newValue.user_uuid,
+          (member: IMEMBER) =>
+            member.value === newValue.value ||
+            (!!newValue.user_uuid && member.user_uuid === newValue.user_uuid),
         );
 
         if (!memberExists) {
@@ -91,15 +118,11 @@ const ManagerRadioCell = ({ memberData }: { memberData: IMEMBER }) => {
   const members = useWatch({ control, name: 'members', defaultValue: [] });
 
   const manager = useWatch({ control, name: 'manager', defaultValue: { value: '' } });
-  const roleName = memberData?.role_data?.name || memberData?.role;
-  const isEnabled =
-    Array.isArray(members) &&
-    members.some((item: any) => item?.value === memberData?.extension) &&
-    ['MANAGER', 'ADMIN', 'SUB-ADMIN'].includes(roleName);
-
-  console.log(members, 'isEnabled', isEnabled, 'memberData', memberData);
+  const isTicked =
+    Array.isArray(members) && members.some((item: any) => item?.value === memberData?.extension);
+  const isEnabled = isTicked && canManage(memberData);
   const handleManagerChange = useCallback(() => {
-    if (memberData.role === 'AGENT') return;
+    if (!canManage(memberData)) return;
     const managerVal = {
       value: memberData?.extension ? memberData?.extension : memberData?.value,
       extension: memberData?.extension,

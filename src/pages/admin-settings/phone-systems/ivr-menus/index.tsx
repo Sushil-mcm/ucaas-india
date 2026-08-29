@@ -167,7 +167,12 @@ const IvrMenus: FC = () => {
               columns,
               fetcherKey: 'fetchIvrList',
               fetcherFn: ivrList,
-              onSuccess: (data: any) => setLoadedRows(data?.rows || data?.result?.rows || []),
+              /* TableManager hands back the raw response, not the rows. Reading
+                 the wrong depth here meant the list of loaded rows was always
+                 empty, so an IVR opened from a pasted link always claimed it was
+                 not on the current page — including when it plainly was. */
+              onSuccess: (data: any) =>
+                setLoadedRows(data?.data?.data?.result?.rows || []),
               extraParams: { filter: [{ key: 'name', value: debouncedSearch }] },
               emptyTablePlaceholder: 'No IVR menus found',
               descriptionEmptyTable: 'Set up an IVR menu to manage incoming call flows',
