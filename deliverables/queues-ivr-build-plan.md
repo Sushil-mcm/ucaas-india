@@ -380,12 +380,99 @@ I4 (schedules) → B14 (three paths) → B12 (tiers) → B13 (overflow while wai
 
 ---
 
-## Part 6 — Decisions needed before anything is built
+## Part 6 — Decisions, made
 
-1. **URL naming.** `queues` and `ivr` as proposed, or something else? Painful to change later.
-2. **Tab split.** Today's "Settings & Permissions" becomes `hours` + `recording`. Agreed?
-3. **Caps.** Raise to 500 / 300 minutes, or a different number the backend can actually hold?
-4. **Wave 1 alone first**, or wait and ship it together with Wave 2?
-5. **Scope of the IVR builder** — the seven starter steps, or fewer for a first release?
+All five were decided from what Genesys and Dialpad actually do, with the evidence.
 
-Nothing gets deployed until you say so.
+### D1. URL naming — `queues` and `ivr`
+**Evidence.** Genesys's own admin URL is `/admin/organization/queues/<QUEUE-ID>/general`
+— plural `queues`, id in the path, tab in the path. Dialpad's admin nav item is literally
+**"IVR workflows"**, so "IVR" is the customer's word for it there too.
+**Decision.** `queues` and `ivr`. `ivr` survives the later flow builder — Dialpad still
+calls theirs IVR workflows even though the editor is a flow builder.
+
+### D2. Tab split — deferred, and the reason changed
+**Evidence.** Genesys's queue has General, Members, Wrap-up Codes and After Call Work tabs,
+with routing settings sitting *on* General. Dialpad keeps "Call routing" as its own area.
+**Decision.** Routing gets its own tab (Dialpad's shape) rather than being crammed into
+General (Genesys's shape, which is famously overloaded). But the `hours` + `recording`
+split is **deferred**: that tab is a shared component the IVR editor also uses, so splitting
+it is a content change, not URL work, and it would have made Wave 1 depend on a refactor.
+Wave 1 maps today's tabs one-to-one onto slugs.
+
+### D3. Caps — 500 / 1,000 by plan, and 300 minutes
+**Evidence.** Dialpad caps the hold queue at 500 callers on Advanced and 1,000 on Premium,
+and allows a maximum wait from 10 seconds to 300 minutes. Genesys has no cap of this shape.
+**Decision.** Mirror the *tiered* approach, not just the number — 500 on the standard plan
+and 1,000 on the top plan, using the plan features we already read. Maximum wait 10 s to
+300 minutes. Still gated on S3: confirm the backend can hold it before the UI promises it.
+
+### D4. Ship Wave 1 alone
+**Evidence.** Genesys documents continuous delivery — "rapid deployment of small changes
+and updates" — as a deliberate choice, not an accident.
+**Decision.** Ship Wave 1 alone. It has no backend dependency, so holding it only delays
+the fix and grows the diff.
+
+### D5. Builder scope — five steps for release one
+**Evidence.** Dialpad groups its thirteen steps into prompt steps (Menu, Collect, Play),
+logic steps (Go-To, Assign, Branch, Customer Data, External API, Expert, Park, Resume) and
+terminal steps (Transfer, Hangup).
+**Decision.** Release one is **Menu, Play, Transfer, Hangup, Go-To**.
+The first four represent every existing IVR exactly, so migration loses nothing. Go-To adds
+the reuse and nesting we currently fake by forwarding to another IVR record — it fixes an
+existing weakness rather than introducing a new idea. Collect and Branch bring variables,
+a whole new mental model, and should not land in the same release as the builder itself.
+
+---
+
+## Part 7 — Wave 1, built
+
+On branch `feat/queues-ivr-urls`. Typecheck, lint and build all pass. Not deployed.
+
+**Routes added** — four each, all rendering the same screen, with the id deciding whether
+the editor opens over the list:
+```
+/admin-settings/phone/queues
+/admin-settings/phone/queues/new
+/admin-settings/phone/queues/:queueId
+/admin-settings/phone/queues/:queueId/:tab
+/admin-settings/phone/ivr, /ivr/new, /ivr/:ivrId, /ivr/:ivrId/:tab
+```
+Permanent redirects from `call-queue` and `ivr-menus`. Sidebar, global search and route
+prefetch all point at the new paths.
+
+**Tab slugs** live in one table per feature (`queue-tabs.ts`, `ivr-tabs.ts`) read by both
+the router and the editor, so a tab cannot exist in one and not the other.
+Queue: `general`, `settings`, `after-call`, `members`, `routing`, `audio`.
+IVR: `general`, `settings`, `audio`, `keys`.
+
+**Two things worth knowing about the implementation:**
+
+1. **Creating still keeps the tab in state, on purpose.** The create flow is a wizard that
+   refuses to move forward until the current tab validates. A URL is an open door past that
+   check, so a link to the last tab would let someone save a queue with empty required
+   fields. Editing reads the tab from the URL; creating does not.
+2. **An IVR opened from a pasted link shows an honest message when its row is not loaded.**
+   There is no endpoint that returns one IVR by id — only list, upsert and delete — and the
+   editor hydrates entirely from the row. Handing it a bare id would produce an object with
+   a uuid and no fields, and saving would overwrite a real IVR with empty values. So the
+   editor is not opened at all in that case. Queues do not have this problem: they have a
+   detail endpoint and already fetch by id.
+
+**A decision that changed once I read the code — I6.** The plan said "finish or remove" the
+IVR language field. Neither is right. There is **no language input on the form at all**: the
+value is read from the stored IVR and written straight back. So a required rule would make
+every existing IVR unsaveable, and deleting the field would wipe the stored value on the
+next save. It stays a pass-through, the dead commented-out validation is gone, and the note
+in `ivr-menus/schema.ts` explains why. A real language picker belongs with text to speech,
+which is the point at which language decides anything.
+
+**New backend ask.**
+
+| # | Ask | Unblocks |
+|---|---|---|
+| S13 | An endpoint returning one IVR by id | true deep links to an IVR; today only queues have one |
+
+### Still to do in Wave 1's spirit
+- Split `settings` into `hours` and `recording` when that shared component is next touched.
+- Give each tab its own permission once S12 lands.
