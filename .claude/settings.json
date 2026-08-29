@@ -9,7 +9,13 @@
       "Bash(bash -n scripts/fix-filter-injection.sh)",
       "Bash(timeout 30 ssh -o BatchMode=yes mcm-new 'bash -s')",
       "Bash(cp docs/api-security-audit-2026-08-29.md deliverables/)",
-      "Bash(cp scripts/fix-filter-injection.sh deliverables/)"
+      "Bash(cp scripts/fix-filter-injection.sh deliverables/)",
+      "Bash(timeout 30 ssh -o BatchMode=yes mcm-new ' *)",
+      "Bash(sed -i 's|grep -cF '\\\\''uuid, company_uuid }'\\\\'' \"$F\" 2>/dev/null|grep -cF '\\\\''where: { uuid, company_uuid }'\\\\'' \"$F\" 2>/dev/null|' scripts/fix-role-tenant-scope.sh)",
+      "Bash(sed -i 's|n=$\\(grep -cF '\\\\''uuid, company_uuid }'\\\\'' \"$F\"\\)|n=$\\(grep -cF '\\\\''where: { uuid, company_uuid }'\\\\'' \"$F\"\\)|' scripts/fix-role-tenant-scope.sh)",
+      "Bash(grep -n \"where: { uuid, company_uuid }\" scripts/fix-role-tenant-scope.sh)",
+      "Bash(bash -n scripts/fix-role-tenant-scope.sh)",
+      "Bash(cd /root/mycountrymobile-web *)"
     ]
   }
 }

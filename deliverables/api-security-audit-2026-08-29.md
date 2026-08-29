@@ -131,9 +131,20 @@ pattern appears at lines 128 (`Role.update`), 164 (`CustomRole.update`) and
 182 (`CustomRole.destroy`). The file mentions `company_uuid` 21 times
 elsewhere, so the scoping was simply not applied to these four.
 
-**Fix:** add the caller's company to all four `where` clauses, and gate the
-route on an administrator role. Deleting a *system* role should almost
-certainly not be reachable by customers at all.
+**Fix:** `scripts/fix-role-tenant-scope.sh`. Both `Role` and `CustomRole` carry
+a `company_uuid` column and roles are created with it, so scoping is the correct
+fix and not a workaround. The script adds `company_uuid` to all four `where`
+clauses. Two of the handlers already destructure it from `req.auth`; the other
+two read only `req.params`, so it inserts the read first. It refuses to edit
+unless all four anchors match verbatim, backs up, runs `node --check`, and rolls
+back on failure. Dry-run against the real file produces exactly a four-site diff
+and parses clean.
+
+**What it deliberately does not do:** gate the routes on an administrator role.
+Managing roles should almost certainly be admin-only, but *which* of your roles
+may do it is a product decision, and guessing it would lock people out of a
+working screen. This closes the cross-customer damage — the severe half. Issue 1
+is the real answer to the in-company half.
 
 ---
 
@@ -260,7 +271,8 @@ marked released in our database. The difference is money already being spent.
 
 ## Order
 
-1. **Issue 2** — one line each in four places. Largest exposure, smallest fix.
+1. **Issue 2** — `scripts/fix-role-tenant-scope.sh --apply`. Largest exposure,
+   smallest fix.
 2. **Issue 3** — run `scripts/fix-filter-injection.sh --apply` on all three
    servers. Treat it as a sweep; patching one endpoint leaves billing open.
 3. **Issue 6** — the block above, ready to paste.
