@@ -142,6 +142,13 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'InventoryIcon',
         },
         {
+          title: 'Released numbers',
+          path: '/admin-settings/numbers/released',
+          icon: 'HashIcon',
+          enabled: true,
+          visible: Boolean(features?.plan_features?.virtual_numbers?.action?.view),
+        },
+        {
           title: 'Call Coverage',
           path: '/admin-settings/numbers/coverage',
           icon: 'TickCircleIcon',

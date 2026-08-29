@@ -837,6 +837,20 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                /* The archive of numbers that have left the account. Served by
+                   an endpoint that already existed and was never called. */
+                path: 'released',
+                id: 'released',
+                element: (
+                  <ProtectedRoute
+                    element={<NumberList />}
+                    guard={{
+                      permission: 'virtual_numbers.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
                 path: 'inventory',
                 id: 'inventory',
                 element: (

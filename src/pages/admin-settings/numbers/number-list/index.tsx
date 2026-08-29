@@ -7,7 +7,8 @@ import { useUser } from '@/hooks/use-user';
 import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
 import {
   allNumbersList,
-  releaseForwarding,
+  releasedNumbersList,
+  releaseDidToCarrier,
   removeAssignNumber,
   removeForwarding,
 } from '@/services/api';
@@ -46,7 +47,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
    Identities / Addresses / Verifications tabs already work here. Each view
    keeps its own address so it can still be linked to and bookmarked. */
 
-type ViewKey = 'all' | 'in-use' | 'inventory';
+type ViewKey = 'all' | 'in-use' | 'inventory' | 'released';
 
 interface NumberView {
   key: ViewKey;
@@ -62,6 +63,9 @@ interface NumberView {
   /* Unused numbers are, by definition, not ones you buy more of from here. */
   showAddNumber: boolean;
   emptyDescription?: string;
+  /* Released numbers are an archive, not live inventory: they come from a
+     different table, have no owner to act on, and carry no row actions. */
+  isArchive?: boolean;
 }
 
 const VIEWS: Record<ViewKey, NumberView> = {
@@ -102,12 +106,26 @@ const VIEWS: Record<ViewKey, NumberView> = {
     showAddNumber: false,
     emptyDescription: 'Numbers you own but have not assigned or forwarded will appear here.',
   },
+  released: {
+    key: 'released',
+    tab: 'Released',
+    path: '/admin-settings/numbers/released',
+    title: 'Released numbers',
+    description:
+      'Numbers that have left the account, and who held them last — so a number that went with someone who left can still be traced.',
+    fetcherKey: 'releasedNumbersList',
+    showFeatures: false,
+    showAddNumber: false,
+    isArchive: true,
+    emptyDescription: 'Numbers released from this account will appear here.',
+  },
 };
 
 const viewFromPath = (pathname: string): ViewKey => {
   const last = pathname.replace(/\/+$/, '').split('/').pop() || '';
   if (last === 'in-use') return 'in-use';
   if (last === 'inventory') return 'inventory';
+  if (last === 'released') return 'released';
   return 'all';
 };
 
@@ -133,6 +151,9 @@ const NumberList = () => {
      a customer with an expired subscription could still open the buy flow. */
   const isPlanExpired = user?.company_info?.plan_status === 'EXPIRED';
   const isTrial = user?.company_info?.is_trial === 'Y';
+  /* Required by the released-numbers endpoint, which rejects a company_uuid
+     that is not the caller's own. */
+  const companyUuid = user?.company_info?.uuid;
   const [numberState, setNumberState] = useState<INumberListState>({
     updateForwarding: false,
     assignDID: false,
@@ -200,24 +221,96 @@ const NumberList = () => {
     onSuccess: (data: any) => {
       invalidateNumberLists(queryClient);
       handleAlert({
-        text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
+        text: data?.data?.data?.message || 'Forwarding removed. You still have this number.',
         type: 'success',
       });
       closeAlert('removeConfirmationAlert');
     },
   });
 
+  /* "Release Number" gives the number back to the carrier.
+
+     It called releaseForwarding, which only unwires forwarding in our own
+     database and never contacts the carrier. So the number vanished from these
+     screens and stopped taking calls, while still being billed - and the dialog
+     told the admin the action could not be undone. Every number released that
+     way is still live at the carrier and should be checked against the invoice.
+
+     releaseDidToCarrier sends the termination first and only then marks it
+     deleted here. */
   const { mutate: mutateReleaseForwarding, isPending: isPendingReleaseForwarding } = useMutation({
-    mutationFn: releaseForwarding,
+    mutationFn: releaseDidToCarrier,
     onSuccess: (data: any) => {
       invalidateNumberLists(queryClient);
       handleAlert({
-        text: data?.data?.data?.message || 'Forwarding Removed Successfully.',
+        text:
+          data?.data?.data?.message ||
+          'Number released. It has been given back and will not be billed again.',
         type: 'success',
       });
       closeAlert('releaseConfirmationAlert');
     },
+    /* A failed carrier call must not read as success - the number would carry on
+       being billed while the admin believes it is gone. */
+    onError: (error: any) => {
+      handleAlert({
+        text:
+          error?.response?.data?.message ||
+          'The number could not be released with the carrier. It has NOT been given back - please try again.',
+        type: 'error',
+      });
+    },
   });
+
+  const archiveColumns = useMemo(
+    () => [
+      {
+        header: 'Number/Name',
+        accessorKey: 'did_number',
+        cell: ({ row }: any) => {
+          const data = row?.original || {};
+          return (
+            <div className="flex flex-col items-start">
+              <NumberWithFlag number={data?.did_number} />
+              {data?.did_name ? <small className="pl-6">{data.did_name}</small> : null}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Last assigned to',
+        accessorKey: 'user_details',
+        cell: ({ row }: any) => {
+          const held = row?.original?.user_details;
+          const name = [held?.first_name, held?.last_name].filter(Boolean).join(' ').trim();
+          /* A number can be released without ever having had an owner, so this
+             says so rather than showing an empty cell that reads as missing data. */
+          return name || <span className="text-gray-500">Never assigned</span>;
+        },
+      },
+      {
+        header: 'Type',
+        accessorKey: 'did_type',
+        cell: ({ row: { original: _val } }: any) => getDidTypeLabel(_val?.did_type),
+      },
+      {
+        header: 'Site',
+        accessorKey: 'site_data',
+        cell: ({ row }: any) => row?.original?.site_data?.name ?? '--',
+      },
+      {
+        header: 'Held from',
+        accessorKey: 'buy_date',
+        cell: ({ row }: any) => {
+          const bought = row?.original?.buy_date;
+          if (!bought) return '--';
+          const parsed = new Date(bought);
+          return Number.isNaN(parsed.getTime()) ? '--' : parsed.toLocaleDateString();
+        },
+      },
+    ],
+    [],
+  );
 
   const columns = useMemo(() => {
     const base: any[] = [
@@ -551,9 +644,10 @@ const NumberList = () => {
           <TableManager
             {...{
               fetcherKey: view.fetcherKey,
-              fetcherFn: allNumbersList,
-              columns,
+              fetcherFn: view.isArchive ? releasedNumbersList : allNumbersList,
+              columns: view.isArchive ? archiveColumns : columns,
               search,
+              ...(view.isArchive ? { extraParams: { company_uuid: companyUuid } } : {}),
               ...(view.extraParams ? { extraParams: view.extraParams } : {}),
               emptyTablePlaceholder: 'No numbers available',
               ...(view.emptyDescription ? { descriptionEmptyTable: view.emptyDescription } : {}),
@@ -631,8 +725,8 @@ const NumberList = () => {
             open: numberState.releaseConfirmationAlert,
             setOpen: () => closeAlert('releaseConfirmationAlert'),
             descriptionTextComp: releaseBlocked
-              ? ' You must remove the assignment or forwarding before releasing this DID number.'
-              : 'Are you sure you want to release this DID number? This action cannot be undone.',
+              ? ' You must remove the assignment or forwarding before releasing this number.'
+              : 'Give this number back to the carrier? Billing for it stops and it will no longer reach you. It may then be issued to somebody else, so you cannot get it back. To stop it taking calls but keep the number, use Remove forwarding instead.',
             confirmBtnDisabled: releaseBlocked,
           }}
         />

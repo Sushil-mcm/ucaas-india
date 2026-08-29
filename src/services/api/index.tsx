@@ -302,6 +302,16 @@ export const allNumbersList = (data?: any) => {
   });
 };
 
+/* Query params, not a body: this endpoint is a GET. company_uuid is required
+   and the server rejects one that does not match the caller's own. */
+export const releasedNumbersList = (data?: any) => {
+  return apiClient({
+    method: routes.RELEASED_NUMBERS_LIST.METHOD,
+    url: routes.RELEASED_NUMBERS_LIST.URL,
+    params: data,
+  });
+};
+
 export const dashboardStats = (data: any) => {
   return apiClient({
     method: routes.DASHBOARD_STATS.METHOD,
@@ -1472,11 +1482,24 @@ export const callingRatesList = (data: any) => {
   });
 };
 
-// Release Number
+/* Removes forwarding only. Despite the name it does NOT give the number back —
+   it unwires the forwarding and any IVR menus in our own database and stops.
+   Use releaseDidToCarrier below to actually hand a number back. */
 export const releaseForwarding = (didNumber: string) => {
   return apiClient({
     method: routes.RELEASE_FORWARDING.METHOD,
     url: `${routes.RELEASE_FORWARDING.URL}/${didNumber}`,
+  });
+};
+
+/* Hands the number back to the carrier and stops it being billed.
+   Server side this looks the number up at the carrier, sends the termination,
+   and only then marks it deleted here. Irreversible: once terminated the number
+   is gone and may be issued to someone else. */
+export const releaseDidToCarrier = (didNumber: string) => {
+  return apiClient({
+    method: routes.RELEASE_DID_TO_CARRIER.METHOD,
+    url: `${routes.RELEASE_DID_TO_CARRIER.URL}/${didNumber}`,
   });
 };
 

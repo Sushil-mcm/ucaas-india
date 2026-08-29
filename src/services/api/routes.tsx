@@ -746,6 +746,13 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/v1/sms/graph',
   },
+  /* Numbers released back to the company. Already served by default-api and
+     unused by the front end until now — it is the only place that records who a
+     number was last assigned to before it was let go. GET, query params. */
+  RELEASED_NUMBERS_LIST: {
+    METHOD: 'GET',
+    URL: '/api/did/released-number-listing',
+  },
   DELETE_MEMBER: {
     METHOD: 'DELETE',
     URL: '/api/user/delete',
@@ -800,6 +807,13 @@ export const routes = {
   RELEASE_FORWARDING: {
     METHOD: 'GET',
     URL: '/api/did/release-forwarding',
+  },
+  /* Giving a number back to the carrier. Distinct from RELEASE_FORWARDING
+     above, which only unwires forwarding in our own database and never
+     contacts the carrier. */
+  RELEASE_DID_TO_CARRIER: {
+    METHOD: 'DELETE',
+    URL: '/api/did/delete-did',
   },
   // User Template
   UPSERT_TEMPLATE: {
