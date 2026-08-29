@@ -431,6 +431,26 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       },
     };
 
+    /* Anything the queue already had that this builder does not rebuild is carried
+       through untouched.
+
+       Every key above is written out field by field, which means a key the backend
+       starts storing — or one an older queue holds and this form has no input for —
+       is dropped the next time anybody presses Save. That is not hypothetical: the
+       holidays_action comment above records the same shape of loss reaching all
+       twenty live queues before it was caught.
+
+       Checked against the live data when this was written: all eight stored keys are
+       rebuilt, so today this changes nothing. It is here so the next key added does
+       not have to be lost first to be noticed. */
+    const storedSettings = (queueInfo as any)?.settings ?? {};
+    const rebuiltKeys = new Set(Object.keys(settings));
+    Object.keys(storedSettings).forEach((key) => {
+      if (!rebuiltKeys.has(key)) {
+        (settings as any)[key] = storedSettings[key];
+      }
+    });
+
     // Remove duplicates from members array before sending payload for safety
     const members =
       watch('members')?.map((m: any) => {
