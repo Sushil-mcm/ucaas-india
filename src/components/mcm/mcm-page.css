@@ -3408,3 +3408,118 @@
     box-shadow: 0 0 0 3px transparent;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Settings screens — see components/mcm/setting-card.tsx
+
+   Built on the tokens above, so light and dark follow the rest of the admin
+   without these rules naming a colour.
+   --------------------------------------------------------------------------- */
+
+.mcm-setcard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.mcm-setcard-h {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ground) 45%, var(--surface));
+}
+.mcm-setcard-ht { min-width: 0; }
+.mcm-setcard-h h3 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.mcm-setcard-h p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
+  max-width: 62ch;
+}
+.mcm-setcard-aside { flex: 0 0 auto; }
+.mcm-setcard-body { padding: 4px 16px; }
+
+/* One decision. Label and explanation left, control right; the control drops
+   below the text on narrow screens rather than being squeezed. */
+.mcm-setrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.mcm-setcard-body > .mcm-setrow:last-child,
+.mcm-setnest > .mcm-setrow:last-child { border-bottom: 0; }
+
+.mcm-setrow-t { min-width: 0; flex: 1 1 auto; }
+.mcm-setrow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.mcm-setrow-desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
+  max-width: 66ch;
+}
+.mcm-setrow-c {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 280px;
+  padding-top: 1px;
+}
+.mcm-setrow-full { flex: 1 1 100%; min-width: 0; }
+.mcm-setrow-stack { flex-direction: column; align-items: stretch; gap: 10px; }
+
+/* Says plainly that a setting is stored but does not change anything yet. */
+.mcm-setrow-flag {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  background: var(--warn-wash);
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+/* Sub-settings. The rule down the left ties them to the row that governs them. */
+.mcm-setnest {
+  margin: 0 0 4px 2px;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.mcm-setgrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  padding: 4px 0 12px;
+}
+
+@media (max-width: 640px) {
+  .mcm-setrow { flex-direction: column; align-items: stretch; gap: 10px; }
+  .mcm-setrow-c { max-width: none; }
+}

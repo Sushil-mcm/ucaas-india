@@ -1,6 +1,7 @@
 import { GreetingItem, useGetGreetings } from '@/hooks/common';
 import CommonGreetingNotification from '@/components/common-greetings';
 import { useFormContext } from 'react-hook-form';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Input } from '@/components/ui/input';
 import { DELAY_GREETING_DEFAULT_INTERVAL, WAITING_LIMITS } from '../../constant';
 
@@ -83,27 +84,29 @@ const GreetingNotification = () => {
       {/* How often the repeating message plays. Only useful once that message is
           switched on, so it appears with it rather than sitting there greyed. */}
       {delayEnabled && (
-        <div className="rounded-lg border border-gray-200 p-3">
-          <Input
-            label="Play the repeating message every (seconds)"
-            type="number"
-            min={WAITING_LIMITS.delay_interval_seconds.min}
-            max={WAITING_LIMITS.delay_interval_seconds.max}
-            value={watch('greetings.delay.interval_seconds') ?? DELAY_GREETING_DEFAULT_INTERVAL}
-            onChange={(event) =>
-              setValue('greetings.delay.interval_seconds', Number(event.target.value), {
-                shouldValidate: true,
-              })
+        <SettingCard
+          title="The repeating message"
+          description="How often the caller hears it while they wait."
+        >
+          <SettingRow
+            label="Play it every (seconds)"
+            description={`Anything under ${WAITING_LIMITS.delay_interval_seconds.min} seconds starts to feel like badgering, so that is the floor.`}
+            notActive
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.delay_interval_seconds.min}
+                max={WAITING_LIMITS.delay_interval_seconds.max}
+                value={watch('greetings.delay.interval_seconds') ?? DELAY_GREETING_DEFAULT_INTERVAL}
+                onChange={(event) =>
+                  setValue('greetings.delay.interval_seconds', Number(event.target.value), {
+                    shouldValidate: true,
+                  })
+                }
+              />
             }
           />
-          <p className="mt-1.5 text-xs text-gray-600">
-            Anything under {WAITING_LIMITS.delay_interval_seconds.min} seconds starts to feel like
-            badgering, so that is the floor.
-          </p>
-          <p className="mt-2 text-xs font-semibold text-amber-700">
-            Saved, but not yet played. The call path cannot repeat a message on a timer yet.
-          </p>
-        </div>
+        </SettingCard>
       )}
     </div>
   );

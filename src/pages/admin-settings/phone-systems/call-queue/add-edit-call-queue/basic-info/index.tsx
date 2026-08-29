@@ -3,6 +3,7 @@ import CustomSelect from '@/components/custom/custom-select';
 import ForwardingActions from '@/components/custom/forwarding-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useGetSite } from '@/hooks/common';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { generateRandomExtension } from '@/lib/utils';
@@ -135,6 +136,41 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
                 }
               />
               {/* Country select input */}
+            </div>
+
+            {/* `leave_room_if_no_agent` has been saved, loaded and defaulted to
+                true since the queue form was written, with no input anywhere —
+                so every queue has been silently sending callers away the moment
+                the last agent goes off duty, and no admin could see it, let
+                alone change it.
+
+                Established systems make this a choice, because the two answers
+                suit different businesses: a sales line would rather hold a
+                caller until someone comes back than lose them, while a support
+                line with published hours would rather send them to voicemail
+                than leave them listening to music nobody will answer.
+
+                Worded as "hold" rather than "leave_room" because the stored key
+                is backwards from the way an admin thinks about it. */}
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Hold callers when no one is on duty
+                </p>
+                <p className="text-xs text-gray-600">
+                  On, callers wait in the queue until an agent comes on duty, or until the timeout
+                  above sends them to the failover. Off, they go straight to the failover as soon as
+                  the last agent leaves.
+                </p>
+              </div>
+              <Switch
+                checked={watch('settings.ring_strategy.leave_room_if_no_agent') === false}
+                onCheckedChange={(checked) =>
+                  setValue('settings.ring_strategy.leave_room_if_no_agent', !checked, {
+                    shouldValidate: true,
+                  })
+                }
+              />
             </div>
 
             {/* Timezone and Time Format */}

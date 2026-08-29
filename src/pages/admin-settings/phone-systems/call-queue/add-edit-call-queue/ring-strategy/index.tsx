@@ -20,7 +20,9 @@ import {
   LAST_AGENT_MODES,
   WAITING_LIMITS,
 } from '../../constant';
+import { SettingCard, SettingGrid, SettingNest, SettingRow } from '@/components/mcm/setting-card';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import SelectedMemberList from '@/pages/admin-settings/phone-systems/departments/new-department/selected-member-list';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getRingTimeOptions, seedDeviceRingTime } from '@/lib/company-ring-time';
@@ -151,30 +153,30 @@ const RingStrategy = () => {
           a timer. Their version can also drop a skill requirement as it widens;
           we have no skills, so the honest half is tiers. Everyone on tier 1
           behaves exactly as the queue does today, which is the default. */}
-      <div className="w-full px-1 sm:px-3">
-        <div className="rounded-lg border border-gray-200 p-3">
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-1"
+      <SettingCard
+        title="Widening the ring"
+        description="What happens when the first group of people does not pick up."
+      >
+        <SettingRow
+          label="Widen the ring if nobody answers"
+          description="Start with tier 1, then bring in the next tier. People are added, never swapped out, so the first group keeps ringing."
+          notActive
+          control={
+            <Switch
               checked={!!watch('settings.escalation.enabled')}
-              onChange={(event) => setValue('settings.escalation.enabled', event.target.checked)}
+              onCheckedChange={(checked: boolean) =>
+                setValue('settings.escalation.enabled', checked)
+              }
             />
-            <span>
-              <span className="block text-sm font-semibold text-gray-900">
-                Widen the ring if nobody answers
-              </span>
-              <span className="block text-xs text-gray-600">
-                Start with tier 1, then bring in the next tier. People are added, never swapped
-                out, so the first group keeps ringing.
-              </span>
-            </span>
-          </label>
+          }
+        />
 
-          {watch('settings.escalation.enabled') && (
-            <div className="mt-3 max-w-xs">
+        <SettingNest when={!!watch('settings.escalation.enabled')}>
+          <SettingRow
+            label="Add the next tier after (seconds)"
+            description="Set each member's tier in the list below. Anyone left on tier 1 rings from the start."
+            control={
               <Input
-                label="Add the next tier after (seconds)"
                 type="number"
                 min={ESCALATION_LIMITS.widen_after_seconds.min}
                 max={ESCALATION_LIMITS.widen_after_seconds.max}
@@ -183,17 +185,10 @@ const RingStrategy = () => {
                   setValue('settings.escalation.widen_after_seconds', Number(event.target.value))
                 }
               />
-              <p className="mt-1.5 text-xs text-gray-600">
-                Set each member&apos;s tier in the list below. Anyone left on tier 1 rings from the
-                start.
-              </p>
-            </div>
-          )}
-          <p className="mt-2 text-xs font-semibold text-amber-700">
-            Saved, but not yet in effect. The call path still rings one group.
-          </p>
-        </div>
-      </div>
+            }
+          />
+        </SettingNest>
+      </SettingCard>
 
       {/* Who the queue prefers to ring, and what it is measured against.
           Last agent sends a repeat caller back to whoever they spoke to last —
@@ -203,104 +198,90 @@ const RingStrategy = () => {
           Service level gives reporting a target, so a supervisor sees a number
           against a goal instead of a bare average.
           Stored, not yet acted on. */}
-      <div className="w-full px-1 sm:px-3">
-        <p className="font-semibold text-gray-900 text-md mb-1">Who to prefer, and the target</p>
-        <p className="text-gray-600 text-xs mb-3">Saved with the queue, but not in effect yet.</p>
+      <SettingCard
+        title="Who to prefer, and the target"
+        description="Two choices a supervisor makes about the queue rather than about a single call."
+      >
+        <SettingRow
+          label="Send them back to the person they spoke to last"
+          description="Familiar voice, no repeating themselves. If that person is busy or signed out the call routes normally - nobody waits for one agent unless you ask for it."
+          notActive
+          control={
+            <CustomSelect
+              options={LAST_AGENT_MODES}
+              handleChange={(value: any) =>
+                setValue('settings.after_call.last_agent.mode', value?.value || 'DISABLED')
+              }
+              value={
+                LAST_AGENT_MODES.find(
+                  (mode) => mode.value === watch('settings.after_call.last_agent.mode'),
+                ) || LAST_AGENT_MODES[0]
+              }
+              menuPlacement="auto"
+            />
+          }
+        />
 
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg border border-gray-200 p-3">
-            <p className="text-sm font-semibold text-gray-900 mb-2">
-              Send them back to the person they spoke to last
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CustomSelect
-                label="When to do it"
-                options={LAST_AGENT_MODES}
-                handleChange={(value: any) =>
-                  setValue('settings.after_call.last_agent.mode', value?.value || 'DISABLED')
-                }
-                value={
-                  LAST_AGENT_MODES.find(
-                    (mode) => mode.value === watch('settings.after_call.last_agent.mode'),
-                  ) || LAST_AGENT_MODES[0]
-                }
-                menuPlacement="auto"
-              />
-              {watch('settings.after_call.last_agent.mode') !== 'DISABLED' && (
-                <Input
-                  label="Only if they called within (hours)"
-                  type="number"
-                  min={AFTER_CALL_LIMITS.window_hours.min}
-                  max={AFTER_CALL_LIMITS.window_hours.max}
-                  value={watch('settings.after_call.last_agent.window_hours') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.after_call.last_agent.window_hours',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-              )}
-            </div>
-            <p className="mt-2 text-xs text-gray-600">
-              If that person is busy or signed out, the call routes normally. Nobody is left
-              waiting for one agent unless you ask for it.
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-gray-200 p-3">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={!!watch('settings.after_call.service_level.enabled')}
+        <SettingNest when={watch('settings.after_call.last_agent.mode') !== 'DISABLED'}>
+          <SettingRow
+            label="Only within (hours)"
+            description="After this long, treat it as a new call and route it normally."
+            control={
+              <Input
+                type="number"
+                min={AFTER_CALL_LIMITS.window_hours.min}
+                max={AFTER_CALL_LIMITS.window_hours.max}
+                value={watch('settings.after_call.last_agent.window_hours') ?? ''}
                 onChange={(event) =>
-                  setValue('settings.after_call.service_level.enabled', event.target.checked)
+                  setValue(
+                    'settings.after_call.last_agent.window_hours',
+                    Number(event.target.value),
+                  )
                 }
               />
-              <span>
-                <span className="block text-sm font-semibold text-gray-900">
-                  Set a target for answering
-                </span>
-                <span className="block text-xs text-gray-600">
-                  Reporting compares against this instead of showing a bare average.
-                </span>
-              </span>
-            </label>
+            }
+          />
+        </SettingNest>
 
-            {watch('settings.after_call.service_level.enabled') && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Input
-                  label="Answer this share of calls (%)"
-                  type="number"
-                  min={AFTER_CALL_LIMITS.percent.min}
-                  max={AFTER_CALL_LIMITS.percent.max}
-                  value={watch('settings.after_call.service_level.percent') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.after_call.service_level.percent',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <Input
-                  label="Within this many seconds"
-                  type="number"
-                  min={AFTER_CALL_LIMITS.seconds.min}
-                  max={AFTER_CALL_LIMITS.seconds.max}
-                  value={watch('settings.after_call.service_level.seconds') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.after_call.service_level.seconds',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        <SettingRow
+          label="Set a target for answering"
+          description="Reporting compares against this instead of showing a bare average, so a supervisor sees a number against a goal."
+          notActive
+          control={
+            <Switch
+              checked={!!watch('settings.after_call.service_level.enabled')}
+              onCheckedChange={(checked: boolean) =>
+                setValue('settings.after_call.service_level.enabled', checked)
+              }
+            />
+          }
+        />
+
+        <SettingNest when={!!watch('settings.after_call.service_level.enabled')}>
+          <SettingGrid>
+            <Input
+              label="Answer this share of calls (%)"
+              type="number"
+              min={AFTER_CALL_LIMITS.percent.min}
+              max={AFTER_CALL_LIMITS.percent.max}
+              value={watch('settings.after_call.service_level.percent') ?? ''}
+              onChange={(event) =>
+                setValue('settings.after_call.service_level.percent', Number(event.target.value))
+              }
+            />
+            <Input
+              label="Within this many seconds"
+              type="number"
+              min={AFTER_CALL_LIMITS.seconds.min}
+              max={AFTER_CALL_LIMITS.seconds.max}
+              value={watch('settings.after_call.service_level.seconds') ?? ''}
+              onChange={(event) =>
+                setValue('settings.after_call.service_level.seconds', Number(event.target.value))
+              }
+            />
+          </SettingGrid>
+        </SettingNest>
+      </SettingCard>
 
       {/* What happens while somebody waits.
           Established systems all do three things here that we did not: offer a
@@ -310,149 +291,142 @@ const RingStrategy = () => {
           path has no queue-depth counter, no rolling handle time and no callback
           scheduler — so each block says so rather than letting an admin believe
           it is switched on. */}
-      <div className="w-full px-1 sm:px-3">
-        <p className="font-semibold text-gray-900 text-md mb-1">While the caller waits</p>
-        <p className="text-gray-600 text-xs mb-3">
-          Saved with the queue, but not in effect yet. The call path needs to be able to count the
-          line before any of it can happen.
-        </p>
+      <SettingCard
+        title="While the caller waits"
+        description="What somebody hears, and what they can do, between joining the line and being answered."
+      >
+        <SettingRow
+          label="Tell them where they are in the line"
+          description="Callers who know they are third wait more willingly than callers who know nothing."
+          notActive
+          control={
+            <Switch
+              checked={!!watch('settings.waiting.announce_position')}
+              onCheckedChange={(checked: boolean) =>
+                setValue('settings.waiting.announce_position', checked)
+              }
+            />
+          }
+        />
 
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg border border-gray-200 p-3">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={!!watch('settings.waiting.announce_position')}
+        <SettingRow
+          label="Tell them roughly how long"
+          description="An estimate from how long recent calls have taken. Better a rough number than silence."
+          notActive
+          control={
+            <Switch
+              checked={!!watch('settings.waiting.announce_wait_time')}
+              onCheckedChange={(checked: boolean) =>
+                setValue('settings.waiting.announce_wait_time', checked)
+              }
+            />
+          }
+        />
+
+        <SettingRow
+          label="Offer to call them back"
+          description="They hang up and keep their place. The queue rings them when their turn comes, so a long wait does not have to be spent holding."
+          notActive
+          control={
+            <Switch
+              checked={!!watch('settings.waiting.callback.enabled')}
+              onCheckedChange={(checked: boolean) =>
+                setValue('settings.waiting.callback.enabled', checked)
+              }
+            />
+          }
+        />
+
+        <SettingNest when={!!watch('settings.waiting.callback.enabled')}>
+          <SettingRow
+            label="Offer it once this many are waiting"
+            description="Below this, callers are likely to be answered quickly enough that offering would be a nuisance."
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.offer_after_callers.min}
+                max={WAITING_LIMITS.offer_after_callers.max}
+                value={watch('settings.waiting.callback.offer_after_callers') ?? ''}
                 onChange={(event) =>
-                  setValue('settings.waiting.announce_position', event.target.checked)
+                  setValue(
+                    'settings.waiting.callback.offer_after_callers',
+                    Number(event.target.value),
+                  )
                 }
               />
-              <span>
-                <span className="block text-sm font-semibold text-gray-900">
-                  Tell them their place in the line
-                </span>
-                <span className="block text-xs text-gray-600">
-                  Skipped when the wait is under two minutes — it only delays the answer.
-                </span>
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2 cursor-pointer mt-3">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={!!watch('settings.waiting.announce_wait_time')}
+            }
+          />
+          <SettingRow
+            label="Or once the wait passes (minutes)"
+            description="Whichever happens first."
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.offer_after_minutes.min}
+                max={WAITING_LIMITS.offer_after_minutes.max}
+                value={watch('settings.waiting.callback.offer_after_minutes') ?? ''}
                 onChange={(event) =>
-                  setValue('settings.waiting.announce_wait_time', event.target.checked)
+                  setValue(
+                    'settings.waiting.callback.offer_after_minutes',
+                    Number(event.target.value),
+                  )
                 }
               />
-              <span>
-                <span className="block text-sm font-semibold text-gray-900">
-                  Tell them how long the wait is
-                </span>
-                <span className="block text-xs text-gray-600">
-                  Rounded, and said nothing at all when the estimate cannot be trusted. A wrong
-                  number is worse than no number.
-                </span>
-              </span>
-            </label>
-          </div>
-
-          <div className="rounded-lg border border-gray-200 p-3">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={!!watch('settings.waiting.callback.enabled')}
+            }
+          />
+          <SettingRow
+            label="Try this many times"
+            description="If nobody picks up when the queue rings them back."
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.max_attempts.min}
+                max={WAITING_LIMITS.max_attempts.max}
+                value={watch('settings.waiting.callback.max_attempts') ?? ''}
                 onChange={(event) =>
-                  setValue('settings.waiting.callback.enabled', event.target.checked)
+                  setValue('settings.waiting.callback.max_attempts', Number(event.target.value))
                 }
               />
-              <span>
-                <span className="block text-sm font-semibold text-gray-900">
-                  Offer to call them back
-                </span>
-                <span className="block text-xs text-gray-600">
-                  They hang up and keep their place. An agent is found first, then the customer is
-                  dialled, so nobody answers to silence.
-                </span>
-              </span>
-            </label>
-
-            {watch('settings.waiting.callback.enabled') && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Input
-                  label="Offer it once this many are waiting"
-                  type="number"
-                  min={WAITING_LIMITS.offer_after_callers.min}
-                  max={WAITING_LIMITS.offer_after_callers.max}
-                  value={watch('settings.waiting.callback.offer_after_callers') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.waiting.callback.offer_after_callers',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <Input
-                  label="Or once the wait passes (minutes)"
-                  type="number"
-                  min={WAITING_LIMITS.offer_after_minutes.min}
-                  max={WAITING_LIMITS.offer_after_minutes.max}
-                  value={watch('settings.waiting.callback.offer_after_minutes') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.waiting.callback.offer_after_minutes',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <Input
-                  label="Try this many times"
-                  type="number"
-                  min={WAITING_LIMITS.max_attempts.min}
-                  max={WAITING_LIMITS.max_attempts.max}
-                  value={watch('settings.waiting.callback.max_attempts') ?? ''}
-                  onChange={(event) =>
-                    setValue('settings.waiting.callback.max_attempts', Number(event.target.value))
-                  }
-                />
-                <Input
-                  label="Wait between tries (minutes)"
-                  type="number"
-                  min={WAITING_LIMITS.retry_after_minutes.min}
-                  max={WAITING_LIMITS.retry_after_minutes.max}
-                  value={watch('settings.waiting.callback.retry_after_minutes') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.waiting.callback.retry_after_minutes',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <Input
-                  label="Give up after (hours)"
-                  type="number"
-                  min={WAITING_LIMITS.expires_after_hours.min}
-                  max={WAITING_LIMITS.expires_after_hours.max}
-                  value={watch('settings.waiting.callback.expires_after_hours') ?? ''}
-                  onChange={(event) =>
-                    setValue(
-                      'settings.waiting.callback.expires_after_hours',
-                      Number(event.target.value),
-                    )
-                  }
-                />
-                <p className="text-xs text-gray-600 sm:col-span-2">
-                  Set either threshold to zero to ignore it. Both zero means the offer never goes
-                  out. Outside opening hours a callback waits until the queue opens again.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            }
+          />
+          <SettingRow
+            label="Wait between tries (minutes)"
+            description="Long enough that a second ring is not an annoyance."
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.retry_after_minutes.min}
+                max={WAITING_LIMITS.retry_after_minutes.max}
+                value={watch('settings.waiting.callback.retry_after_minutes') ?? ''}
+                onChange={(event) =>
+                  setValue(
+                    'settings.waiting.callback.retry_after_minutes',
+                    Number(event.target.value),
+                  )
+                }
+              />
+            }
+          />
+          <SettingRow
+            label="Give up after (hours)"
+            description="Past this the callback is dropped rather than ringing somebody about a problem from yesterday."
+            control={
+              <Input
+                type="number"
+                min={WAITING_LIMITS.expires_after_hours.min}
+                max={WAITING_LIMITS.expires_after_hours.max}
+                value={watch('settings.waiting.callback.expires_after_hours') ?? ''}
+                onChange={(event) =>
+                  setValue(
+                    'settings.waiting.callback.expires_after_hours',
+                    Number(event.target.value),
+                  )
+                }
+              />
+            }
+          />
+        </SettingNest>
+      </SettingCard>
 
       <div className="w-full">
         <p className="font-semibold text-gray-900 truncate text-md mb-2">Call Queue Members</p>
