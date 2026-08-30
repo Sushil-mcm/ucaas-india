@@ -35,6 +35,7 @@ import { CARDS_TYPE } from '@/constants/common-const';
 import Loader from '@/components/custom/loader';
 import Storage from './storage';
 import PlanUsageTable from './usage-table';
+import PlanComparison from './plan-comparison';
 import AgentCosting from './agent-costing';
 
 /* The card surface used below is defined here. Without this the classes
@@ -650,6 +651,11 @@ const Plan = () => {
                       },
                     ]}
                   />
+
+                  {/* What you have used, then what each plan gives - the
+                      question somebody asks next. Choosing a plan used to show
+                      only a name, a price and a seat count. */}
+                  <PlanComparison />
                   {/* <div className="mcm-setcard p-3 flex flex-col gap-3">
                     <h6 className="font-semibold text-gray-900 text-md border-b border-grey-200 pb-3">
                       Billing & Payments
