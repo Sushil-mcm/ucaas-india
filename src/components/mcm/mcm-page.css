@@ -3563,6 +3563,23 @@
   line-height: 1.5;
 }
 
+/* A plain text box or dropdown inside a settings row.
+   Most settings screens carry shadcn controls, which bring their own styling;
+   the console pages do not, and an unstyled native field beside a styled card
+   reads as broken. Opt-in by class so nothing that already looks right changes. */
+.mcm-field {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: inherit;
+  font-size: 13px;
+}
+.mcm-field:hover { border-color: var(--accent); }
+.mcm-field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 /* A note attached to the row above - why a setting cannot be changed, or what is
    still missing before it takes effect. Sits under the row rather than beside it,
    so a long explanation does not squeeze the control. */

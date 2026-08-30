@@ -126,6 +126,22 @@ export const bulkUpsertContact = (data: any) => {
   });
 };
 
+/* Takes a flat list of `{ name, phone, email, external_id }` and matches each
+   one on the number, so the same address book can be brought in repeatedly
+   without making a second copy of everybody. */
+export const syncContacts = (data: {
+  name: string;
+  phone: string;
+  email?: string;
+  external_id?: string;
+}[]) => {
+  return apiClient({
+    method: routes.SYNC_CONTACTS.METHOD,
+    url: routes.SYNC_CONTACTS.URL,
+    data,
+  });
+};
+
 export const deleteContact = (data: any) => {
   return apiClient({
     method: routes.DELETE_CONTACT.METHOD,

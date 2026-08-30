@@ -24,3 +24,12 @@ backend later.
 
     npx esbuild src/lib/removal-impact.ts --format=cjs --outfile=tests/removal.build.cjs
     node tests/removal-test.cjs
+    npx esbuild src/lib/contact-blocking.ts --format=cjs --outfile=tests/contact-blocking.build.cjs
+    node tests/contact-blocking-test.cjs
+
+    npx esbuild src/lib/contact-labels.ts --format=cjs --outfile=tests/contact-labels.build.cjs
+    node tests/contact-labels-test.cjs
+
+    npx esbuild src/lib/contact-sync.ts --format=cjs --outfile=tests/contact-sync.build.cjs \
+      --bundle --platform=node
+    node tests/contact-sync-test.cjs
