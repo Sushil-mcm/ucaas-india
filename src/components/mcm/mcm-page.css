@@ -2412,7 +2412,6 @@
   color: var(--ink-4);
 }
 
-
 .mcm-adminhome-empty {
   margin: 40px 0 0;
   text-align: center;
@@ -3261,7 +3260,6 @@
   background: color-mix(in srgb, var(--warn) 10%, var(--surface));
 }
 
-
 /* ── Call coverage ────────────────────────────────────────────────────────
    The count chip goes red when numbers are dropping calls, so the headline
    figure carries its own severity rather than relying on the reader to know
@@ -3453,7 +3451,9 @@
   padding: 13px 16px 11px;
   border-bottom: 1px solid var(--line);
 }
-.mcm-setcard-ht { min-width: 0; }
+.mcm-setcard-ht {
+  min-width: 0;
+}
 .mcm-setcard-h h3 {
   margin: 0;
   font-family: var(--sans);
@@ -3469,8 +3469,12 @@
   color: color-mix(in srgb, var(--ink) 62%, transparent);
   max-width: 62ch;
 }
-.mcm-setcard-aside { flex: 0 0 auto; }
-.mcm-setcard-body { padding: 4px 16px; }
+.mcm-setcard-aside {
+  flex: 0 0 auto;
+}
+.mcm-setcard-body {
+  padding: 4px 16px;
+}
 
 /* One decision. Label and explanation left, control right; the control drops
    below the text on narrow screens rather than being squeezed. */
@@ -3483,9 +3487,14 @@
   border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
 }
 .mcm-setcard-body > .mcm-setrow:last-child,
-.mcm-setnest > .mcm-setrow:last-child { border-bottom: 0; }
+.mcm-setnest > .mcm-setrow:last-child {
+  border-bottom: 0;
+}
 
-.mcm-setrow-t { min-width: 0; flex: 1 1 auto; }
+.mcm-setrow-t {
+  min-width: 0;
+  flex: 1 1 auto;
+}
 .mcm-setrow-label {
   display: inline-flex;
   align-items: center;
@@ -3508,8 +3517,15 @@
   max-width: 280px;
   padding-top: 1px;
 }
-.mcm-setrow-full { flex: 1 1 100%; min-width: 0; }
-.mcm-setrow-stack { flex-direction: column; align-items: stretch; gap: 10px; }
+.mcm-setrow-full {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.mcm-setrow-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
 
 /* Says plainly that a setting is stored but does not change anything yet. */
 .mcm-setrow-flag {
@@ -3550,8 +3566,14 @@
 }
 
 @media (max-width: 640px) {
-  .mcm-setrow { flex-direction: column; align-items: stretch; gap: 10px; }
-  .mcm-setrow-c { max-width: none; }
+  .mcm-setrow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .mcm-setrow-c {
+    max-width: none;
+  }
 }
 
 .mcm-setcard-icon {
@@ -3630,8 +3652,13 @@
   color: inherit;
   font-size: 13px;
 }
-.mcm-field:hover { border-color: var(--accent); }
-.mcm-field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mcm-field:hover {
+  border-color: var(--accent);
+}
+.mcm-field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 
 /* A note attached to the row above - why a setting cannot be changed, or what is
    still missing before it takes effect. Sits under the row rather than beside it,
@@ -3683,12 +3710,28 @@
   font-size: 12.5px;
   line-height: 1.5;
 }
-.mcm-acctbanner.is-warn { background: var(--warn-wash); color: var(--warn); }
-.mcm-acctbanner.is-stop { background: var(--crit-wash); color: var(--crit); }
+.mcm-acctbanner.is-warn {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.mcm-acctbanner.is-stop {
+  background: var(--crit-wash);
+  color: var(--crit);
+}
 
-.mcm-acctbanner-t { min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
-.mcm-acctbanner-t strong { font-weight: 650; }
-.mcm-acctbanner-t span { opacity: 0.92; }
+.mcm-acctbanner-t {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+}
+.mcm-acctbanner-t strong {
+  font-weight: 650;
+}
+.mcm-acctbanner-t span {
+  opacity: 0.92;
+}
 
 .mcm-acctbanner-a {
   flex: 0 0 auto;
@@ -3700,4 +3743,6 @@
   color: inherit;
   white-space: nowrap;
 }
-.mcm-acctbanner-a:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.mcm-acctbanner-a:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}

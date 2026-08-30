@@ -213,75 +213,94 @@ export const PermissionsAccordion = ({
   };
 
   return (
-    <Accordion
-      type="multiple"
-      value={openItems}
-      onValueChange={setOpenItems}
-      className="flex w-full flex-col gap-2"
-    >
-      {features.map(([featureKey, featureValue]) => {
-        if (featureValue?.IS_SHOW === false) return null;
+    <>
+      {/* The tick-boxes below are the place an administrator actually builds a
+          permission set, and they carried no note about how far it reaches while
+          the three screens that merely DESCRIBE the model — the capability
+          table, Admin scope and Default permissions — all carried one. So the
+          caveat was on the map and not on the controls. Worded to match those
+          three, so the four screens say the same thing. */}
+      <div className="mb-3 rounded-md border-l-[3px] border-l-muted-foreground/50 bg-muted/40 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
+        <span className="font-semibold">
+          These decide what the app shows, not what the platform allows.
+        </span>{' '}
+        Every box below is checked when this app draws a screen, and is not checked again when the
+        platform answers a request. Untick something and it disappears from that person&rsquo;s
+        screens — it is not sealed off behind them. Treat this as tidying the product for each kind
+        of person, not as a security control.
+      </div>
+      <Accordion
+        type="multiple"
+        value={openItems}
+        onValueChange={setOpenItems}
+        className="flex w-full flex-col gap-2"
+      >
+        {features.map(([featureKey, featureValue]) => {
+          if (featureValue?.IS_SHOW === false) return null;
 
-        return (
-          <AccordionItem
-            key={featureKey}
-            value={featureKey}
-            className="border rounded-lg border-gray-200"
-          >
-            <AccordionTrigger
-              variant="default"
-              className="bg-gray-50 px-3 py-4 text-left text-sm font-semibold uppercase text-gray-900 hover:no-underline sm:px-4"
+          return (
+            <AccordionItem
+              key={featureKey}
+              value={featureKey}
+              className="border rounded-lg border-gray-200"
             >
-              {featureKey.replace(/_/g, ' ')}
-            </AccordionTrigger>
+              <AccordionTrigger
+                variant="default"
+                className="bg-gray-50 px-3 py-4 text-left text-sm font-semibold uppercase text-gray-900 hover:no-underline sm:px-4"
+              >
+                {featureKey.replace(/_/g, ' ')}
+              </AccordionTrigger>
 
-            <AccordionContent className="space-y-6 pt-0">
-              {featureValue.access && (
-                <div className="p-3 pb-0 sm:p-4 sm:pb-0">
-                  <p className="font-semibold mb-3">Access</p>
-                  <PermissionTree
-                    companyData={featureValue.access}
-                    userData={userPermissions}
-                    basePath={[featureKey, 'access']}
-                    readOnly={readOnly}
-                    lockAccessValues={featureKey !== 'phone_system_action'}
-                    onToggle={handleToggle}
-                  />
-                </div>
-              )}
-
-              {featureValue.action && (
-                <div className="p-3 sm:p-4">
-                  <p className="font-semibold mb-3">Actions</p>
-                  <PermissionTree
-                    companyData={featureValue.action}
-                    userData={userPermissions}
-                    basePath={[featureKey, 'action']}
-                    readOnly={readOnly}
-                    onToggle={handleToggle}
-                  />
-                </div>
-              )}
-
-              {/* Render nested siblings */}
-              {Object.entries(featureValue)
-                .filter(([key]) => !['access', 'action', 'IS_SHOW'].includes(key))
-                .map(([nestedKey, nestedValue]) => (
-                  <div key={nestedKey} className="p-3 sm:p-4">
-                    <p className="font-semibold mb-3 capitalize">{nestedKey.replace(/_/g, ' ')}</p>
+              <AccordionContent className="space-y-6 pt-0">
+                {featureValue.access && (
+                  <div className="p-3 pb-0 sm:p-4 sm:pb-0">
+                    <p className="font-semibold mb-3">Access</p>
                     <PermissionTree
-                      companyData={nestedValue as PermissionObject}
+                      companyData={featureValue.access}
                       userData={userPermissions}
-                      basePath={[featureKey, nestedKey]}
+                      basePath={[featureKey, 'access']}
+                      readOnly={readOnly}
+                      lockAccessValues={featureKey !== 'phone_system_action'}
+                      onToggle={handleToggle}
+                    />
+                  </div>
+                )}
+
+                {featureValue.action && (
+                  <div className="p-3 sm:p-4">
+                    <p className="font-semibold mb-3">Actions</p>
+                    <PermissionTree
+                      companyData={featureValue.action}
+                      userData={userPermissions}
+                      basePath={[featureKey, 'action']}
                       readOnly={readOnly}
                       onToggle={handleToggle}
                     />
                   </div>
-                ))}
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
+                )}
+
+                {/* Render nested siblings */}
+                {Object.entries(featureValue)
+                  .filter(([key]) => !['access', 'action', 'IS_SHOW'].includes(key))
+                  .map(([nestedKey, nestedValue]) => (
+                    <div key={nestedKey} className="p-3 sm:p-4">
+                      <p className="font-semibold mb-3 capitalize">
+                        {nestedKey.replace(/_/g, ' ')}
+                      </p>
+                      <PermissionTree
+                        companyData={nestedValue as PermissionObject}
+                        userData={userPermissions}
+                        basePath={[featureKey, nestedKey]}
+                        readOnly={readOnly}
+                        onToggle={handleToggle}
+                      />
+                    </div>
+                  ))}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </>
   );
 };

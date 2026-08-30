@@ -94,6 +94,20 @@ const SettingsNotification = () => {
           <p className="text-gray-700 text-sm mb-1">
             Manage how you receive notifications across different channels
           </p>
+
+          {/* Voicemail, missed calls and SMS all save, and nothing reads them.
+              The only key any service takes out of `notification_settings` is
+              `security_alert`. The missed-call script on the switch is worse
+              than unwired: it is referenced by no dialplan, it posts to a
+              placeholder address, and it uses `!=`, which is not valid Lua.
+              Remove this notice in the same change that makes the three real —
+              not before. */}
+          <div className="mb-3 rounded-md border-l-[3px] border-l-amber-500 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-900">
+            <span className="font-semibold">Not sending yet.</span> What you choose here is saved
+            against your account and is ready for the day these are switched on, but no voicemail,
+            missed-call or text notification is being sent today. Nothing you change on this page
+            will reach you.
+          </div>
           <div className="w-full flex flex-col gap-3">
             {NOTIFICATION_TYPES_LIST.map((item) => (
               <div className="border border-gray-200 bg-white rounded-xl" key={item?.id}>
@@ -126,7 +140,9 @@ const SettingsNotification = () => {
                         >
                           <div className="min-w-0">
                             <Label className="text-gray-700 text-sm">{label}</Label>
-                            {hint && <p className="text-[11px] leading-tight text-gray-500">{hint}</p>}
+                            {hint && (
+                              <p className="text-[11px] leading-tight text-gray-500">{hint}</p>
+                            )}
                           </div>
                           <Switch
                             disabled={item?.id === 3 && value === 'sms'}
@@ -150,7 +166,11 @@ const SettingsNotification = () => {
                               value={watch(`${item?.value}.phone`) || ''}
                               onChange={(value) => setValue(`${item?.value}.phone`, value)}
                             />
-                            <p className="text-xs mt-1">Note: SMS notifications will be charged.</p>
+                            {/* Kept, but no longer written as a live warning:
+                                nothing is sent, so nothing is charged today. */}
+                            <p className="text-xs mt-1">
+                              Note: SMS notifications will be charged once they are switched on.
+                            </p>
                           </div>
                         )}
                       </div>

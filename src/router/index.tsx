@@ -711,7 +711,7 @@ export const router = createBrowserRouter([
                  nothing and disagreed with their own labels. Old paths redirect. */
               { path: 'profile', element: <BasicInfoSettings /> },
               { path: 'preferences', element: <General /> },
-              { path: 'phone', element: <ProtectedRoute element={<IncomingCalls />} /> },
+              { path: 'phone', element: <IncomingCalls /> },
               { path: 'notifications', element: <SettingsNotification /> },
               /* Plural, like every other section. The singular stays as a
                  redirect because it is what the sidebar shipped with. */
@@ -1712,8 +1712,17 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        /* Plain, not wrapped in ProtectedRoute. ProtectedRoute checks
+           `guard?.feature`, `guard?.permission` and `guard?.adminOnly`, so a
+           wrapper with no guard object checks nothing at all — it reads as a
+           lock and is not one. Twelve routes carried that empty wrapper. None
+           was an open hole: ten sat under /reports, which guards its children,
+           and this one and account/phone are a person's own inbox and own phone
+           settings, which everybody should reach. They are unwrapped rather than
+           given guards so that a ProtectedRoute in this file always means a real
+           check, and an empty one is never mistaken for protection again. */
         path: 'inbox',
-        element: <ProtectedRoute element={<Inbox />} />,
+        element: <Inbox />,
         id: 'inbox',
       },
       {
@@ -1824,11 +1833,11 @@ export const router = createBrowserRouter([
           },
           {
             path: 'call-history',
-            element: <ProtectedRoute element={<CallHistory />} />,
+            element: <CallHistory />,
           },
           {
             path: 'local-call-list',
-            element: <ProtectedRoute element={<LocalCallList />} />,
+            element: <LocalCallList />,
           },
           {
             path: 'call-recording',
@@ -1844,31 +1853,31 @@ export const router = createBrowserRouter([
           },
           {
             path: 'voicemail',
-            element: <ProtectedRoute element={<Voicemail />} />,
+            element: <Voicemail />,
           },
           {
             path: 'call-volume',
-            element: <ProtectedRoute element={<CallVolume />} />,
+            element: <CallVolume />,
           },
           {
             path: 'queue',
-            element: <ProtectedRoute element={<QueueCallLogs />} />,
+            element: <QueueCallLogs />,
           },
           {
             path: 'inbound',
-            element: <ProtectedRoute element={<Inbound />} />,
+            element: <Inbound />,
           },
           {
             path: 'outbound',
-            element: <ProtectedRoute element={<Outbound />} />,
+            element: <Outbound />,
           },
           {
             path: 'activity',
-            element: <ProtectedRoute element={<ActivityCallLogs />} />,
+            element: <ActivityCallLogs />,
           },
           {
             path: 'agent-reports',
-            element: <ProtectedRoute element={<AgentReports />} />,
+            element: <AgentReports />,
           },
           {
             path: 'sms-log',
@@ -1884,7 +1893,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'analytics',
-            element: <ProtectedRoute element={<CallAnalytics />} />,
+            element: <CallAnalytics />,
           },
         ],
       },

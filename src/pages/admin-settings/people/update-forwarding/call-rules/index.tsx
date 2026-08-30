@@ -198,15 +198,28 @@ const CallRules: FC<CallRulesProps> = ({
     (device: any) => device?.status,
   ).length;
 
-  const summary = dndOn
-    ? `Do Not Disturb is on, so callers go straight to ${describeTarget(summaryRules?.failureAction)} without your devices ringing.`
+  /* This summary used to describe what happens to a caller: devices ringing,
+     callers going straight to voicemail, rules being skipped. None of it
+     happens. Nothing in the call path reads these rules — the directory
+     service hands back a dial-string that rings whatever device is registered,
+     and an inbound call takes its route from the number, not from the person.
+     So the summary now describes what is SAVED, and says once, plainly, that it
+     is not applied. Every branch keeps its own wording, because which rule an
+     admin has chosen is still worth reading back to them.
+     Restore the "what a caller gets" wording when the rules are honoured. */
+  const savedIntent = dndOn
+    ? `Do Not Disturb is on, and your fallback is set to ${describeTarget(summaryRules?.failureAction)}.`
     : forwardingAll
-      ? `Every call goes straight to ${describeTarget(summaryRules?.forwardCall)}. Your devices will not ring, and the rules below are not used.`
+      ? `Every call is set to go to ${describeTarget(summaryRules?.forwardCall)}.`
       : activeDevices
-        ? `Your ${activeDevices} active ${activeDevices === 1 ? 'device rings' : 'devices ring'}, and anything you miss goes to ${describeTarget(summaryRules?.failureAction)}.`
-        : `No device is switched on, so nothing rings — callers go to ${describeTarget(summaryRules?.failureAction)}.`;
+        ? `${activeDevices} ${activeDevices === 1 ? 'device is' : 'devices are'} switched on, with ${describeTarget(summaryRules?.failureAction)} as the fallback.`
+        : `No device is switched on, and your fallback is ${describeTarget(summaryRules?.failureAction)}.`;
 
-  const summaryTone = dndOn || forwardingAll ? 'warn' : activeDevices ? 'ok' : 'warn';
+  const summary = `${savedIntent} This is saved, but the call path does not read it yet — your devices ring as normal whatever is set here.`;
+
+  /* Always 'warn': what is on screen is not in force, whichever rule is chosen,
+     and an 'ok' tone would suggest one of these states is working. */
+  const summaryTone = 'warn';
 
   return (
     <div className={`flex flex-col gap-4 overflow-y-auto pr-1 pt-2 ${customClass}`}>
@@ -329,13 +342,15 @@ const CallRules: FC<CallRulesProps> = ({
                 <span className={`truncate${errors?.callRules ? ' text-red' : ''}`}>
                   Incoming Calls
                 </span>
-                <span className={`mcm-rule-rank${forwardingAll || dndOn ? ' off' : ''}`}>
-                  {dndOn
-                    ? 'Bypassed by Do Not Disturb'
-                    : forwardingAll
-                      ? 'Bypassed by Forward All Calls'
-                      : 'Used when nothing above applies'}
-                </span>
+                {/* These used to read "Bypassed by Do Not Disturb" / "Bypassed by
+                    Forward All Calls" / "Used when nothing above applies" — a
+                    precedence order that does not exist. The call path reads none
+                    of these rules: the directory service returns a dial-string
+                    that rings whatever device is registered, and inbound calls
+                    take their route from the number rather than from the person.
+                    So nothing is bypassed, because nothing is applied.
+                    Restore the three labels when the rules are honoured. */}
+                <span className="mcm-rule-rank off">Saved, not applied yet</span>
                 {(errors.callRules as any)?.failureAction?.value?.value?.message && (
                   <ErrorTooltip
                     text={(errors.callRules as any)?.failureAction?.value?.value?.message}

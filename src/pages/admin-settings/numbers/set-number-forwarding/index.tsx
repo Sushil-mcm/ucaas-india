@@ -62,6 +62,21 @@ interface UpdateForwardingProps {
   isUser: any;
 }
 
+/* The stored blob arrives as a JSON string or as an object depending on the
+   endpoint, and is null on a number that has never been routed. Anything
+   unparseable is treated as empty rather than thrown, because a save must not
+   be blocked by a bad stored value — the worst case is then the old behaviour. */
+const parseStoredForwardActions = (value: any): Record<string, any> => {
+  if (!value) return {};
+  if (typeof value === 'object') return value as Record<string, any>;
+  try {
+    const parsed = JSON.parse(String(value));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
 const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
   initialType = null,
   initialData = null,
@@ -327,7 +342,16 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
       }),
     };
 
-    const payload: any = { forward_call_actions: { ...request } };
+    /* Merge, never replace. `request` is rebuilt from scratch out of this form,
+       so writing it straight through drops any key this form does not render.
+       That matters because this is not the only writer: assigning a number to an
+       AI receptionist writes `forward_call_actions` against the same DID uuid.
+       Whichever saved last used to win outright and silently discard the
+       other's routing. Same fix the company settings screens already use. */
+    const storedForwardActions = parseStoredForwardActions(initialData?.forward_call_actions);
+    const payload: any = {
+      forward_call_actions: { ...storedForwardActions, ...request },
+    };
 
     if (isUpsertTemplate) {
       payload.name = templateName;

@@ -24,8 +24,12 @@ export const presenceStatusArray = [
   {
     title: 'Busy',
     value: 'busy',
-    description:
-      'When you are in Busy mode, you will only get external call, \n internal calls will go to voicemail \n	you will receive voicemail notification.',
+    /* Made honest alongside Do not disturb below, for the same reason: it
+       promised that internal calls go to voicemail and that a voicemail
+       notification follows. Neither happens. The call path does not read a
+       person's presence at all, and the notification settings it implies are
+       saved but read by nothing. */
+    description: 'Shows colleagues you are busy. Your phone still rings, from inside and outside.',
   },
   {
     title: 'Do not disturb',
@@ -35,9 +39,15 @@ export const presenceStatusArray = [
        decides which device to ring - so a phone set to Do not disturb still
        rings. Somebody who set it before an evening off and was rung anyway
        would rightly say the product lied to them, so it now says what it
-       actually does. Restore the old sentence when the switch honours it. */
-    description:
-      'Shows colleagues you are busy. Your phone still rings — send calls to voicemail under My Account → My Phone.',
+       actually does. Restore the old sentence when the switch honours it.
+
+       This first said "send calls to voicemail under My Account -> My Phone".
+       That pointed at a second thing that does not work: My Phone saves to
+       `call_forwarding` on the person, and the call path reads none of it -
+       0 matches in both the dialplan and the directory service, against
+       controls of 1 each on the same files. Sending somebody to a remedy that
+       is also inert is worse than saying plainly that there is none yet. */
+    description: 'Shows colleagues you are busy. It does not stop your phone ringing yet.',
   },
 ];
 
