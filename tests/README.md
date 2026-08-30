@@ -69,3 +69,28 @@ it, and reading a line's numbers back out of where each number forwards.
     npx esbuild src/lib/number-labels.ts --format=cjs --outfile=tests/number-labels.build.cjs \
       --bundle --platform=node --alias:@=./src
     node tests/number-labels-test.cjs
+
+Which role somebody gets when you invite them — that the company's own answer
+wins, that a deleted answer falls back rather than failing, and above all that
+no arrangement of roles ever causes an administrator to be chosen for somebody
+automatically.
+
+    npx esbuild src/lib/invite-role.ts --format=cjs --outfile=tests/invite-role.build.cjs \
+      --bundle --platform=node
+    node tests/invite-role-test.cjs
+
+Somebody you are inviting who is already here, or is in the list twice — the
+two cases the platform cannot find, because neither unsaved row is "taken" yet
+and its own check spans every company it hosts rather than just yours.
+
+    npx esbuild src/lib/invite-duplicates.ts --format=cjs \
+      --outfile=tests/invite-duplicates.build.cjs
+    node tests/invite-duplicates-test.cjs
+
+The people list as a spreadsheet — that a comma in a name does not shift every
+following column, and that a cell beginning with an equals sign is text rather
+than a formula.
+
+    npx esbuild src/lib/user-roster-export.ts --format=cjs \
+      --outfile=tests/user-roster-export.build.cjs
+    node tests/user-roster-export-test.cjs

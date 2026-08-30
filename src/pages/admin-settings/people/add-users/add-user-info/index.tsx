@@ -6,7 +6,7 @@ import { useUser } from '@/hooks/use-user';
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { userInitialState } from '../../../constants';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getRoleList, validateUser } from '@/services/api';
+import { getRoleList, getUserList, validateUser } from '@/services/api';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import type { ISELECTVALUE } from '@/interfaces/api-interfaces';
@@ -21,6 +21,19 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import { InfoIcon } from 'lucide-react';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { NEW_PERSON_ROLE_KEY, readNewPersonRole } from '@/lib/role-permission-defaults';
+import {
+  decideInviteRole,
+  describeRole,
+  roleWarning,
+  toRoleChoice,
+} from '@/lib/invite-role';
+import {
+  blocksInvite,
+  clashForField,
+  explainTakenEmail,
+  findInviteClashes,
+  summariseClashes,
+} from '@/lib/invite-duplicates';
 
 type User = typeof userInitialState;
 type ValidationErrorMap = {
@@ -82,9 +95,29 @@ const AddUserInfo = ({
     (companyDefaults as any)?.settings?.[NEW_PERSON_ROLE_KEY],
   );
 
-  /* Which rows have already been offered the company's choice, held by the row's
-     own id rather than its position — removing the first row renumbers every
-     other one, and a set of positions would then re-fill a row somebody had
+  /* Everybody already on the account, read under the key the People page
+     already uses so opening this form from there costs nothing extra.
+     It is what lets a clash say "Amara Osei, at London" instead of the
+     platform's four words, "Email already exists!". */
+  const { data: roster = [] } = useQuery({
+    queryKey: ['directoryPeople'],
+    queryFn: () => getUserList({ page: 1, limit: 500 }),
+    select: (res: any) => res?.data?.data?.result?.rows || [],
+  });
+
+  /* Which role a new person starts on, and why that one. The company's own
+     answer wins; with no answer the narrowest role on the account is used, and
+     an administrator is never chosen for somebody automatically. The reasoning
+     and its tests live in lib/invite-role.ts, so this form and the Default
+     permissions screen cannot drift apart. */
+  const roleDecision = useMemo(
+    () => decideInviteRole({ savedRoleId: defaultRoleId, roles: roleList }),
+    [defaultRoleId, roleList],
+  );
+
+  /* Which rows have already been offered that answer, held by the row's own id
+     rather than its position — removing the first row renumbers every other
+     one, and a set of positions would then re-fill a row somebody had
      deliberately cleared. A row is filled in once and never again. */
   const seededRows = useRef<Set<string>>(new Set());
 
@@ -93,15 +126,8 @@ const AddUserInfo = ({
   const [users, userAddCountRaw] = watch(['users', 'user_add_count']) as [User[], number | null];
 
   useEffect(() => {
-    if (!defaultRoleId || !roleList?.length || !Array.isArray(users)) return;
-
-    const picked = roleList.find(
-      (item: any) => (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === defaultRoleId,
-    );
-    // A role that has since been deleted leaves the box empty, as it does today.
-    if (!picked) return;
-
-    const isCustomRole = picked?.type === 'custom';
+    const picked = roleDecision.role;
+    if (!picked || !Array.isArray(users)) return;
 
     fields.forEach((field: any, index: number) => {
       const rowId = String(field?.id || index);
@@ -110,11 +136,27 @@ const AddUserInfo = ({
       // Never overwrite a row somebody has already answered.
       if ((users as any[])[index]?.role?.value) return;
 
-      setValue(`users.${index}.role`, { label: picked?.name, value: defaultRoleId });
-      setValue(`users.${index}.role_uuid`, isCustomRole ? '' : defaultRoleId);
-      setValue(`users.${index}.custom_role_uuid`, isCustomRole ? defaultRoleId : '');
+      setValue(`users.${index}.role`, { label: picked.name, value: picked.id });
+      setValue(`users.${index}.role_uuid`, picked.custom ? '' : picked.id);
+      setValue(`users.${index}.custom_role_uuid`, picked.custom ? picked.id : '');
     });
-  }, [defaultRoleId, roleList, fields, users, setValue]);
+  }, [roleDecision, fields, users, setValue]);
+
+  /* The role showing on one row right now, whether it was filled in for the
+     admin or picked by hand. Used to say underneath what that role actually
+     allows, because the names alone do not. */
+  const chosenRoleOf = (index: number) => {
+    const value = (users as any[])?.[index]?.role?.value;
+    if (!value) return null;
+    return toRoleChoice(
+      roleList.find((item: any) => (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === value),
+    );
+  };
+
+  /* The same person typed twice, or somebody who is already here. The platform
+     cannot find either — two unsaved rows are not "taken" yet, and its check
+     spans every company it hosts rather than just this one. */
+  const clashes = useMemo(() => findInviteClashes({ rows: users, roster }), [users, roster]);
   const userAddCount = Number(userAddCountRaw) || 0;
   const { plan_info, user_info = {}, company_info } = user || {};
   const isPlanExpired = company_info?.plan_status === 'EXPIRED';
@@ -179,8 +221,6 @@ const AddUserInfo = ({
           [type]: undefined,
         },
       }));
-
-      setIsUserValidatorError(false);
     },
 
     onError: (err: any, variables) => {
@@ -194,10 +234,55 @@ const AddUserInfo = ({
           [type]: errMsg,
         },
       }));
-
-      setIsUserValidatorError(true);
     },
   });
+
+  /* Whether the platform has rejected anything still on the form.
+     It used to be set straight from each reply, which meant a successful check
+     on row two's phone cleared the flag row one's rejected email had raised —
+     and the Continue button came back on with a known-bad row on screen. Read
+     from the errors themselves and that cannot happen: the flag is true exactly
+     while a rejection is showing. */
+  const apiRejected = useMemo(
+    () =>
+      Object.values(validationErrors).some(
+        (row: any) => row && Object.values(row).some((message) => Boolean(message)),
+      ),
+    [validationErrors],
+  );
+
+  /* Continue is off while anything on this form would be refused — by the
+     platform, or by the duplicate checks it cannot make. */
+  useEffect(() => {
+    setIsUserValidatorError(apiRejected || blocksInvite(clashes));
+  }, [apiRejected, clashes, setIsUserValidatorError]);
+
+  /* What to show under a field, worst first: a clash we can explain properly
+     beats the platform's wording, and the platform's wording beats nothing.
+     "Email already exists!" is turned into a sentence naming the colleague, or
+     saying plainly that the address belongs outside this company — which the
+     platform's own answer never distinguishes. */
+  const emailProblem = (index: number) => {
+    const clash = clashForField(clashes, index, 'email');
+    if (clash) return clash.message;
+    const fromApi = validationErrors?.[index]?.email;
+    if (fromApi) {
+      return /already exists/i.test(String(fromApi))
+        ? explainTakenEmail((users as any[])?.[index]?.email, roster) || fromApi
+        : fromApi;
+    }
+    return errors?.users?.[index]?.email?.message;
+  };
+
+  const extensionProblem = (index: number) =>
+    clashForField(clashes, index, 'extension')?.message ||
+    errors?.users?.[index]?.extension?.message ||
+    validationErrors?.[index]?.extension;
+
+  const phoneProblem = (index: number) =>
+    clashForField(clashes, index, 'phone')?.message ||
+    errors?.users?.[index]?.phone?.message ||
+    validationErrors?.[index]?.phone;
 
   // const { mutate: mutateValidateUser } = useMutation({
   //   mutationFn: validateUser,
@@ -457,6 +542,32 @@ const AddUserInfo = ({
         <p className="text-gray-700 text-center text-sm">
           New licenses purchased: {licenseInfo?.extraUnits || 0}
         </p>
+
+        {/* Which role everybody on this form starts on, and why that one. Said
+            once at the top rather than repeated on every row: it is the same
+            answer for all of them, and it is a company-wide setting somebody
+            can go and change. */}
+        {roleDecision.reason ? (
+          <p className="mx-auto mt-1 max-w-3xl text-center text-xs text-gray-600">
+            {roleDecision.reason}
+          </p>
+        ) : null}
+        {roleDecision.warning ? (
+          <p className="mx-auto max-w-3xl text-center text-xs font-medium text-amber-600">
+            {roleDecision.warning}
+          </p>
+        ) : null}
+
+        {/* One line saying what is wrong with the list as a whole, so somebody
+            scrolling ten rows knows there is something to find. */}
+        {clashes.length ? (
+          <p
+            role="status"
+            className="mx-auto mt-2 max-w-3xl rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-800"
+          >
+            {summariseClashes(clashes)}
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-col my-2 gap-3 pr-0 md:pr-3 lg:gap-2">
         {fields?.map((_, index) => (
@@ -490,7 +601,7 @@ const AddUserInfo = ({
                 type="email"
                 placeholder="Email"
                 {...register(`users.${index}.email`)}
-                error={errors?.users?.[index]?.email?.message || validationErrors?.[index]?.email}
+                error={emailProblem(index)}
                 onChange={(e) => {
                   const value = e.target.value;
                   setValue(`users.[${index}].email`, value, {
@@ -505,13 +616,7 @@ const AddUserInfo = ({
               <div className="flex items-center justify-between">
                 <Label>Phone</Label>
                 <div className="flex items-start">
-                  {(errors?.users?.[index]?.phone?.message || validationErrors?.[index]?.phone) && (
-                    <ErrorTooltip
-                      text={
-                        errors?.users?.[index]?.phone?.message || validationErrors?.[index]?.phone
-                      }
-                    />
-                  )}
+                  {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
                 </div>
               </div>
               <div className="flex w-full gap-1">
@@ -566,6 +671,28 @@ const AddUserInfo = ({
                 error={errors?.users?.[index]?.role?.value?.message}
                 isLoading={isPending}
               />
+              {/* What that role actually allows. The names the platform ships
+                  with — AGENT, MANAGER, SUB-ADMIN — do not say, and the
+                  permissions behind them barely differ, so the box on its own is
+                  a guess dressed up as a decision. The words come from the same
+                  place the Default permissions screen reads them, so the two
+                  screens describe a role identically. */}
+              {(() => {
+                const chosen = chosenRoleOf(index);
+                const caution = roleWarning(chosen);
+                return chosen ? (
+                  <>
+                    <p className="mt-1 text-[11px] leading-snug text-gray-500">
+                      {describeRole(chosen)}
+                    </p>
+                    {caution ? (
+                      <p className="mt-0.5 text-[11px] font-medium leading-snug text-amber-600">
+                        {caution}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null;
+              })()}
             </div>
 
             <div className="w-full">
@@ -574,9 +701,7 @@ const AddUserInfo = ({
                 type="text"
                 placeholder="Extension"
                 value={watch(`users.[${index}].extension`)}
-                error={
-                  errors?.users?.[index]?.extension?.message || validationErrors?.[index]?.extension
-                }
+                error={extensionProblem(index)}
                 onChange={(e) => {
                   const value = e.target.value;
                   setValue(`users.[${index}].extension`, value, {

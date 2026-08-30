@@ -225,7 +225,7 @@ const DefaultPermissionsPage = () => {
             <SettingCard
               title="Which role a new person starts on"
               icon={<UserPlus className="h-4 w-4" />}
-              description="The Add person form opens with no role chosen, so whoever is adding people has to remember which one is right. Choose one here and it is filled in for them."
+              description="Choose one here and it is filled in on the Add person form, with your reason shown beside it. Leave it empty and the form falls back to the narrowest role on the account rather than to nothing — but a fallback is a guess, and this is the answer."
               aside={
                 <Button
                   type="button"
@@ -239,13 +239,13 @@ const DefaultPermissionsPage = () => {
             >
               <SettingRow
                 label="Role for a new person"
-                description="Filled in on the Add person form. Whoever is adding somebody can still change it before saving, so this is a starting point rather than a restriction."
+                description="Filled in on the Add person form, along with a line saying what that role allows and a caution when it reaches past the person holding it. Whoever is adding somebody can still change it before saving, so this is a starting point rather than a restriction. An administrator is never filled in automatically — that is always a decision somebody makes on purpose."
               >
                 <CustomSelect
                   options={roleOptions}
                   value={chosen}
                   isClearable
-                  placeholder="No role — the form opens empty"
+                  placeholder="Not chosen — the form falls back to the narrowest role"
                   handleChange={(option: any) => setChosenRole(String(option?.value || ''))}
                 />
               </SettingRow>

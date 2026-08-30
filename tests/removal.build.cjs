@@ -82,6 +82,11 @@ const checkRemoval = ({
   const extension = extensionOf(person);
   const who = nameOf(person);
   if (isAdmin(person)) {
+    found.push({
+      code: "admin-refused",
+      level: "refused",
+      message: `${who} is an administrator, and the platform will not remove an administrator \u2014 the request comes back refused. Change their role to something else first, then remove them.`
+    });
     const otherAdmins = everyone.filter((p) => isAdmin(p) && !isSamePerson(p, person));
     if (otherAdmins.length === 0) {
       found.push({
@@ -165,21 +170,31 @@ const checkRemoval = ({
     found.push({
       code: "keeps-a-number",
       level: "worth-knowing",
-      message: `${ownNumber} is assigned to them. It goes back to your released numbers, where it can be given to somebody else \u2014 you keep it and keep paying for it either way.`,
+      /* Not "released": released numbers are the ones that have left the account
+         altogether. This one stays on the account and stays on the bill — it
+         simply stops being assigned to anybody, and turns up under Unused
+         numbers. Sending an admin to the wrong screen to find it is how a paid
+         number goes missing for a month. */
+      message: `${ownNumber} is assigned to them. It stays on the account and turns up under Unused numbers, where it can be given to somebody else \u2014 you keep paying for it either way. Nothing records that this person was the last to hold it.`,
       where: ownNumber
     });
   }
   return found;
 };
 const ORDER = {
-  "locks-you-out": 0,
-  "stops-calls": 1,
-  "worth-knowing": 2
+  /* A closed door goes above everything, including the lockout: there is no
+     point weighing consequences of something that is not going to happen. */
+  refused: 0,
+  "locks-you-out": 1,
+  "stops-calls": 2,
+  "worth-knowing": 3
 };
 const sortImpacts = (impacts) => [...impacts].sort((a, b) => ORDER[a.level] - ORDER[b.level]);
-const blocksRemoval = (impacts) => impacts.some((i) => i.level === "locks-you-out");
+const blocksRemoval = (impacts) => impacts.some((i) => i.level === "locks-you-out" || i.level === "refused");
 const countByLevel = (impacts, level) => impacts.filter((i) => i.level === level).length;
 const summarise = (impacts) => {
+  if (impacts.some((i) => i.level === "refused"))
+    return "The platform will not do this. There is a way round it below.";
   if (blocksRemoval(impacts)) return "This cannot be undone from inside the product.";
   const breaks = countByLevel(impacts, "stops-calls");
   if (breaks > 0) {
