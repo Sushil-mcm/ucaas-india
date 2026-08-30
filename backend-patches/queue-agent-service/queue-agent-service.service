@@ -1,0 +1,27 @@
+[Unit]
+Description=Queue Agent Service (answers which agent a queued call should ring)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/queue-agent-service
+EnvironmentFile=/opt/queue-agent-service/.env
+ExecStart=/usr/bin/python3 /opt/queue-agent-service/queue_agent_service.py
+Restart=always
+RestartSec=2
+# A queued caller is on the line while this runs, so a crash must come back in
+# seconds rather than be held off by systemd's start-rate limiting.
+StartLimitIntervalSec=0
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=queue-agent-service
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/queue-agent-service
+
+[Install]
+WantedBy=multi-user.target
