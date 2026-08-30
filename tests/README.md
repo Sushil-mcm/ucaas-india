@@ -94,3 +94,6 @@ than a formula.
     npx esbuild src/lib/user-roster-export.ts --format=cjs \
       --outfile=tests/user-roster-export.build.cjs
     node tests/user-roster-export-test.cjs
+
+    npx esbuild src/lib/destination-rates.ts --format=cjs --outfile=tests/destination-rates.build.cjs
+    node tests/destination-rates-test.cjs

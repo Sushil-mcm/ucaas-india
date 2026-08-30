@@ -421,6 +421,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           path: '/admin-settings/calling-rates/outbound-rates',
           icon: 'CallOutgoing',
         },
+        {
+          /* The whole price list, rather than one country at a time. */
+          key: 'admin-settings.calling_rates.destinations',
+          id: 'destinations',
+          title: 'Destinations',
+          path: '/admin-settings/calling-rates/destinations',
+          icon: 'CallOutgoing',
+        },
       ].filter(Boolean),
     },
     {
