@@ -119,6 +119,11 @@ export type AreaView = {
  * Locations and Favourites have no service behind them yet and render an
  * honest empty state rather than being hidden, so the rail matches the console
  * and the gap is visible rather than silently missing.
+ *
+ * Blocked is the contact book's Blocked tag given a list of its own. Marking a
+ * contact as blocked was already possible from a menu on the contacts table,
+ * but nothing showed what had been blocked, so nobody could check their own
+ * decisions.
  */
 export const DIRECTORY_VIEWS: AreaView[] = [
   { key: 'people', label: 'People', icon: 'ContactIcon' },
@@ -127,6 +132,7 @@ export const DIRECTORY_VIEWS: AreaView[] = [
   { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
   { key: 'external', label: 'External Contacts', icon: 'InboxIcon' },
   { key: 'favourites', label: 'Favourites', icon: 'Star' },
+  { key: 'blocked', label: 'Blocked', icon: 'AdminIcon' },
 ];
 
 export const PERFORMANCE_VIEWS: AreaView[] = [

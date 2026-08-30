@@ -2,7 +2,14 @@ import { Icon } from '@/assets/icons/icon';
 import '@/components/mcm/mcm-page.css';
 import { Button } from '@/components/ui/button';
 import { handleAlert, normalizeSearchText } from '@/lib/utils';
-import { deleteContact, deleteLeadGroup, bulkUpsertContact } from '@/services/api';
+import { deleteContact, deleteLeadGroup, getContactList, syncContacts } from '@/services/api';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
+import {
+  describeSyncPlan,
+  planContactSync,
+  syncPayload,
+  syncWouldChangeAnything,
+} from '@/lib/contact-sync';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FC, useState } from 'react';
 import AlertConfirm from '@/components/custom/alert-confirm.tsx';
@@ -174,62 +181,34 @@ const NewContact: FC = () => {
           hasNextPage = !!nextPageToken;
         }
 
-        console.log('Google API fetch completed. Total connections loaded:', connections.length);
-        const mappedContacts = connections?.map((conn: any) => {
+        /* One entry per person, in the four fields the contact book keeps.
+           Google returns numbers in whatever shape they were typed, so they are
+           passed through as they came and matched on their digits later. */
+        const fromGoogle = connections.map((conn: any) => {
           const nameObj = conn.names?.[0] || {};
-          const rawPhone =
-            conn.phoneNumbers?.[0]?.canonicalForm || conn.phoneNumbers?.[0]?.value || '';
-          let phone = rawPhone.replace(/[^0-9+]/g, '');
-          if (phone && !phone.startsWith('+')) {
-            phone = `+${phone}`;
-          }
-
           return {
-            name: {
-              first: nameObj.givenName || nameObj.displayName || '',
-              last: nameObj.familyName || '',
-            },
-            contact: {
-              email: conn.emailAddresses?.[0]?.value || '',
-              phone: phone,
-            },
-            profile: {
-              gender: '',
-              dob: '',
-              title: '',
-              company: '',
-              webpage: '',
-              contactPic: '',
-            },
-            address: {
-              street: '',
-              city: '',
-              state: '',
-              zipcode: '',
-            },
-            social: {
-              twitter: '',
-              facebook: '',
-              linkedin: '',
-            },
-            type: 'CONTACT',
+            name:
+              `${nameObj.givenName || nameObj.displayName || ''} ${nameObj.familyName || ''}`.trim(),
+            phone: conn.phoneNumbers?.[0]?.canonicalForm || conn.phoneNumbers?.[0]?.value || '',
+            email: conn.emailAddresses?.[0]?.value || '',
+            externalId: conn.resourceName || '',
           };
         });
 
-        console.log('MAPPED CONTACTS PAYLOAD:', mappedContacts);
+        /* Everything already stored, so the same address book can be brought in
+           again without saving a second copy of everybody. Without this, the
+           import created a duplicate of every contact on every run. */
+        const stored = await fetchAllPages(getContactList);
+        const plan = planContactSync(fromGoogle, stored);
 
-        if (mappedContacts.length === 0) {
-          handleAlert({ text: 'No Google contacts found to import.', type: 'info' });
+        if (!syncWouldChangeAnything(plan)) {
+          handleAlert({ text: describeSyncPlan(plan), type: 'info' });
           return;
         }
 
-        const response = await bulkUpsertContact({ contact: mappedContacts });
-        console.log('BULK UPSERT RESPONSE:', response);
+        await syncContacts(syncPayload(plan));
 
-        handleAlert({
-          text: response?.data?.data?.message || 'Google contacts imported successfully!',
-          type: 'success',
-        });
+        handleAlert({ text: describeSyncPlan(plan), type: 'success' });
 
         queryClient.invalidateQueries({ queryKey: ['getContactList'] });
         queryClient.invalidateQueries({ queryKey: ['contactList'] });

@@ -160,6 +160,14 @@ export const routes = {
     URL: '/api/contact/bulk/upsert',
     METHOD: 'POST',
   },
+  /* Bringing contacts in from an outside address book. Unlike bulk upsert this
+     one matches on the phone number, so importing the same address book twice
+     updates the people already stored instead of saving them a second time. It
+     also links past calls from that number to the contact it just saved. */
+  SYNC_CONTACTS: {
+    URL: '/api/contact/sync',
+    METHOD: 'POST',
+  },
   DELETE_CONTACT: {
     URL: '/api/contact/delete',
     METHOD: 'DELETE',

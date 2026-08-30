@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
@@ -10,6 +10,7 @@ import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { Ic } from '@/components/mcm/icons';
 import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import { useDirectoryFavourites } from './use-directory-favourites';
+import { useContactLabels } from './use-contact-labels';
 
 /**
  * Directory ▸ External — people outside the organisation.
@@ -22,6 +23,12 @@ import { useDirectoryFavourites } from './use-directory-favourites';
  * Record shape is nested and easy to get wrong: `name.first` / `name.last`,
  * `contact.phone` / `contact.email`, `profile.contactPic`, and the record id is
  * `_id`, not `uuid`.
+ *
+ * Labels are the one thing on this screen the platform does not store. A
+ * contact carries a single tag from a fixed list of four, and the endpoint that
+ * saves a contact refuses any field it does not already know, so your own words
+ * for a contact are kept in this browser — see `use-contact-labels`. The drawer
+ * says so where somebody adds one, rather than letting them assume otherwise.
  */
 
 type Contact = {
@@ -58,8 +65,11 @@ const External = () => {
   const { isFavourite, toggleFavourite } = useDirectoryFavourites();
   const [search, setSearch] = useState('');
   const [tag, setTag] = useState('All');
+  const [label, setLabel] = useState('All');
   const [open, setOpen] = useState<Contact | null>(null);
   const [whatsappTo, setWhatsappTo] = useState<string>('');
+  const [newLabel, setNewLabel] = useState('');
+  const labels = useContactLabels();
 
   const { data: rows = [], isPending } = useQuery({
     /* create-new-contact invalidates ['getContactList']; sharing that prefix is
@@ -69,11 +79,23 @@ const External = () => {
     select: (res: any) => res?.data?.data?.result?.rows || [],
   });
 
+  /* Labels live in this browser, so a contact deleted on another device would
+     otherwise leave its labels in the filter list for ever. Cleared against
+     whatever the page has just loaded. */
+  useEffect(() => {
+    if (!rows.length) return;
+    labels.pruneTo(rows.map((row: Contact) => String(row?._id || '')).filter(Boolean));
+  }, [rows, labels]);
+
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return rows.filter((row: Contact) => {
       if (tag !== 'All' && tagOf(row).label !== tag) return false;
+      if (label !== 'All' && !labels.matches(row?._id, label)) return false;
       if (!needle) return true;
+      /* Search covers labels as well as the record, because a label is only
+         worth applying if it is a way of finding the contact again. */
+      if (labels.matches(row?._id, needle) && labels.labelsOf(row?._id).length) return true;
       return [
         fullName(row),
         row?.contact?.phone,
@@ -83,7 +105,7 @@ const External = () => {
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [rows, search, tag]);
+  }, [rows, search, tag, label, labels]);
 
   /**
    * WhatsApp routes off the number, so it can be initiated outbound from here.
@@ -134,7 +156,17 @@ const External = () => {
               options={['All', 'VIP', 'DNC', 'Blocked', 'Standard']}
               onChange={setTag}
             />
-            <SearchChip value={search} onChange={setSearch} placeholder="Search contacts" />
+            <FilterChip
+              label="Label"
+              value={label}
+              options={['All', ...labels.index.map((entry) => entry.label)]}
+              onChange={setLabel}
+            />
+            <SearchChip
+              value={search}
+              onChange={setSearch}
+              placeholder="Search contacts and labels"
+            />
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               <span className="num">{rows.length}</span> contacts
             </span>
@@ -150,6 +182,7 @@ const External = () => {
               <th>Phone</th>
               <th>Email</th>
               <th>Groups</th>
+              <th>Labels</th>
               <th>Tag</th>
               <th>Updated</th>
               <th>Contact via</th>
@@ -157,7 +190,7 @@ const External = () => {
           </thead>
           <tbody>
             {isPending ? (
-              <EmptyRow span={7} message="Loading contacts…" />
+              <EmptyRow span={10} message="Loading contacts…" />
             ) : visible.length ? (
               visible.map((row: Contact) => {
                 const name = fullName(row);
@@ -215,6 +248,29 @@ const External = () => {
                     <td>
                       {groups.length ? (
                         groups.join(', ')
+                      ) : (
+                        <span style={{ color: 'var(--ink-4)' }}>—</span>
+                      )}
+                    </td>
+                    {/* The label matching the search leads, so a contact found
+                        by one of six labels shows the reason it was found. */}
+                    <td>
+                      {labels.labelsOf(row?._id).length ? (
+                        <span className="flex flex-wrap items-center gap-1">
+                          {labels
+                            .ranked(row?._id, label !== 'All' ? label : search)
+                            .slice(0, 3)
+                            .map((entry) => (
+                              <span className="tag neu" key={entry}>
+                                {entry}
+                              </span>
+                            ))}
+                          {labels.labelsOf(row?._id).length > 3 ? (
+                            <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>
+                              +{labels.labelsOf(row?._id).length - 3}
+                            </span>
+                          ) : null}
+                        </span>
                       ) : (
                         <span style={{ color: 'var(--ink-4)' }}>—</span>
                       )}
@@ -307,7 +363,7 @@ const External = () => {
               })
             ) : (
               <EmptyRow
-                span={9}
+                span={10}
                 message={rows.length ? 'No contacts match those filters.' : 'No contacts yet.'}
               />
             )}
@@ -402,6 +458,88 @@ const External = () => {
                 <span className="v">—</span>
               </div>
             ) : null}
+
+            {/* Labels sit above the actions because they are the part of this
+                panel somebody edits, and the actions are the part they press
+                once and leave. */}
+            <div style={{ marginTop: 14 }}>
+              <div
+                style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', marginBottom: 6 }}
+              >
+                Labels
+              </div>
+              <div className="flex flex-wrap items-center gap-1" style={{ marginBottom: 8 }}>
+                {labels.labelsOf(open?._id).length ? (
+                  labels.labelsOf(open?._id).map((entry) => (
+                    <span className="tag neu" key={entry}>
+                      {entry}
+                      <button
+                        type="button"
+                        onClick={() => labels.remove(String(open?._id), entry)}
+                        title={`Remove the label “${entry}”`}
+                        aria-label={`Remove the label ${entry}`}
+                        style={{ marginLeft: 4, lineHeight: 1 }}
+                      >
+                        <Ic n="x" size={10} />
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>None yet.</span>
+                )}
+              </div>
+
+              <form
+                className="flex items-center gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  labels.add(String(open?._id), newLabel);
+                  setNewLabel('');
+                }}
+              >
+                <input
+                  className="mcm-field"
+                  value={newLabel}
+                  onChange={(event) => setNewLabel(event.target.value)}
+                  placeholder="Add a label"
+                  aria-label="Add a label"
+                  list="mcm-label-suggestions"
+                />
+                {/* Suggests labels already in use, so the same idea does not end
+                    up spelled three ways and split across three filters. */}
+                <datalist id="mcm-label-suggestions">
+                  {labels.index.map((entry) => (
+                    <option key={entry.label} value={entry.label} />
+                  ))}
+                </datalist>
+                <button type="submit" className="mini solid" disabled={!newLabel.trim()}>
+                  <Ic n="plus" size={12} />
+                  Add
+                </button>
+              </form>
+
+              {labels
+                .check(String(open?._id), newLabel)
+                .filter(() => newLabel.trim().length > 0)
+                .map((problem) => (
+                  <p
+                    key={problem.message}
+                    style={{
+                      fontSize: 11,
+                      margin: '6px 0 0',
+                      color: problem.blocking ? 'var(--crit)' : 'var(--ink-4)',
+                    }}
+                  >
+                    {problem.message}
+                  </p>
+                ))}
+
+              <p style={{ fontSize: 11, color: 'var(--ink-4)', margin: '8px 0 0' }}>
+                Labels are yours and are kept in this browser. They do not reach the contact
+                record, so they will not follow you to another device or appear for anyone
+                else on your team.
+              </p>
+            </div>
 
             <div className="ac-acts" style={{ marginTop: 14 }}>
               <button

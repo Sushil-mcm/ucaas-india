@@ -7,6 +7,7 @@ import External from './external';
 import Locations from './locations';
 import Roles from './roles';
 import Favourites from './favourites';
+import Blocked from './blocked';
 import '@/components/mcm/mcm-page.css';
 
 /**
@@ -23,6 +24,7 @@ import '@/components/mcm/mcm-page.css';
  *   External   -> the contact book
  *   Favourites -> no platform equivalent; pinned locally, see
  *                 `use-directory-favourites`
+ *   Blocked    -> the contact book's Blocked tag, which had no list of its own
  */
 
 const Directory = () => {
@@ -44,6 +46,7 @@ const Directory = () => {
         {view === 'external' && <External />}
         {view === 'locations' && <Locations />}
         {view === 'favourites' && <Favourites />}
+        {view === 'blocked' && <Blocked />}
       </Suspense>
     </div>
   );
