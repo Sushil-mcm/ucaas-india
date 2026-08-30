@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CARDS_TYPE } from '@/constants/common-const';
 import { useUser } from '@/hooks/use-user';
 import { getFullFormateDate, handleAlert } from '@/lib/utils';
+import { formatMoney, knownNumber, moneyOrUnavailable } from '@/lib/billing-money';
 import AddUsers from '@/pages/admin-settings/people/add-users';
 import {
   getLicenseUserList,
@@ -43,7 +44,7 @@ const EMPTY_CONFIRM: ConfirmState = {
 const formatBillingDate = (value: any) =>
   value && moment(value).isValid() ? moment(value).format('DD MMM YYYY') : 'your next renewal date';
 
-const currency = (value: any) => `$${Number(value || 0).toFixed(2)}`;
+const currency = (value: unknown) => moneyOrUnavailable(value);
 
 const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   const [showCounter, setShowCounter] = useState(false);
@@ -87,12 +88,23 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   );
   const availableLicenses = maxLicenses !== null ? Math.max(0, maxLicenses - totalLicenses) : null;
 
-  const perSeatPrice = Number(dataGetMyPlanDetails?.next_billing_details?.original_price || 0);
+  /* Read before converting. `Number(null)` is 0, and a seat price of zero says
+     "this seat is free" — which is the opposite of what somebody removing a seat
+     needs to hear, and the sort of sentence that gets quoted back at us. */
+  const perSeatPrice = knownNumber(dataGetMyPlanDetails?.next_billing_details?.original_price);
   const nextBillingDate = dataGetMyPlanDetails?.next_billing_details?.next_billing_date;
   const nextBillingDateLabel = formatBillingDate(nextBillingDate);
   const periodLabel =
     Number(dataGetMyPlanDetails?.current_plan_details?.plan_duration) === 12 ? 'year' : 'month';
-  const idleSeatCost = idleLicenses * perSeatPrice;
+  const idleSeatCost = perSeatPrice === null ? null : idleLicenses * perSeatPrice;
+
+  /* What comes off the bill when seats are removed, as a phrase for the middle
+     of a sentence. Without a per-seat price the phrase drops the figure rather
+     than printing $0.00. */
+  const offTheBill = (seats: number, fallback: string): string => {
+    const total = perSeatPrice === null ? null : formatMoney(seats * perSeatPrice);
+    return total ? `${total} per ${periodLabel}` : fallback;
+  };
 
   /**
    * Every licence row with no user sorts to the end of the server-side list
@@ -407,8 +419,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
       return (
         <span className="block text-sm text-gray-700">
           This seat is currently scheduled to be removed on {nextBillingDateLabel}. Keeping it means
-          it stays on your plan and you keep paying {currency(perSeatPrice)} per {periodLabel} for
-          it.
+          it stays on your plan and you keep paying {offTheBill(1, 'for')} it.
         </span>
       );
     }
@@ -422,8 +433,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           </span>
           <span className="block mt-2">
             Nobody is assigned to these seats. Removing them takes{' '}
-            {currency(confirmState.licenses.length * perSeatPrice)} per {periodLabel} off your bill
-            from {nextBillingDateLabel}.
+            {offTheBill(confirmState.licenses.length, 'what they cost')} off your bill from{' '}
+            {nextBillingDateLabel}.
           </span>
           <span className="block mt-2 text-gray-500">
             The current billing period is not refunded. You can undo this at any time before{' '}
@@ -440,7 +451,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             {confirmUserName} is still using this seat.
           </span>
           <span className="block mt-2">
-            Removing it takes {currency(perSeatPrice)} per {periodLabel} off your bill from{' '}
+            Removing it takes {offTheBill(1, 'what it costs')} off your bill from{' '}
             {nextBillingDateLabel}.
           </span>
           <span className="block mt-2 rounded-md bg-amber-50 border border-amber-200 p-2 text-amber-900">
@@ -463,8 +474,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           Remove this unused seat from your plan?
         </span>
         <span className="block mt-2">
-          Nobody is assigned to it. Removing it takes {currency(perSeatPrice)} per {periodLabel} off
-          your bill from {nextBillingDateLabel}.
+          Nobody is assigned to it. Removing it takes {offTheBill(1, 'what it costs')} off your bill
+          from {nextBillingDateLabel}.
         </span>
         <span className="block mt-2 text-gray-500">
           The current billing period is not refunded. You can undo this at any time before{' '}
@@ -540,7 +551,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             </h4>
             <h4 className="font-semibold text-gray-900 flex items-center justify-end gap-2  text-sm w-1/2">
               {payableLicenses}
-              {perSeatPrice > 0 && (
+              {perSeatPrice !== null && perSeatPrice > 0 && (
                 <span className="font-normal text-gray-500">
                   ({currency(payableLicenses * perSeatPrice)}/{periodLabel})
                 </span>
@@ -563,7 +574,9 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   <p className="text-sm font-semibold text-amber-900">
                     You are paying for {idleLicenses} seat{idleLicenses === 1 ? '' : 's'} that
                     nobody is using
-                    {perSeatPrice > 0 ? ` — ${currency(idleSeatCost)} per ${periodLabel}` : ''}.
+                    {idleSeatCost !== null && idleSeatCost > 0
+                      ? ` — ${currency(idleSeatCost)} per ${periodLabel}`
+                      : ''}.
                   </p>
                   <p className="text-xs text-amber-900/90 leading-relaxed">
                     Seats end up here when you delete a user, or when you buy more seats than you
@@ -761,8 +774,12 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                     {isLoading ? (
                       <Skeleton className="h-3 w-[150px] bg-gray-200" />
                     ) : (
+                      /* A quote, so nothing here may fall back to zero: a
+                         prorated amount of $0.00 reads as "these seats are free
+                         until your next bill", and somebody would buy on it. */
                       <>
-                        ${getTaxes?.per_license_cost || 0} X {count} = ${getTaxes?.sub_total || 0}
+                        {moneyOrUnavailable(getTaxes?.per_license_cost)} X {count} ={' '}
+                        {moneyOrUnavailable(getTaxes?.sub_total)}
                       </>
                     )}
                   </div>
@@ -774,10 +791,10 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                       <Skeleton className="h-3 w-[90px] bg-gray-200" />
                     ) : (
                       <>
-                        ${getTaxes?.tax_amount || 0}
-                        <span className="font-normal">
-                          ({Number(getTaxes?.tax_percentage ?? 0)}%)
-                        </span>
+                        {moneyOrUnavailable(getTaxes?.tax_amount)}
+                        {knownNumber(getTaxes?.tax_percentage) === null ? null : (
+                          <span className="font-normal">({getTaxes.tax_percentage}%)</span>
+                        )}
                       </>
                     )}
                   </div>
@@ -790,7 +807,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                     {isLoading ? (
                       <Skeleton className="h-3 w-[55px] bg-gray-200" />
                     ) : (
-                      <>${getTaxes?.total_amount || 0}</>
+                      <>{moneyOrUnavailable(getTaxes?.total_amount)}</>
                     )}
                   </div>
                 </div>
@@ -894,7 +911,12 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                 onSuccess3dsPayment={() => paymentSuccess(null)}
                 onFailure3dsPayment={() => setIsPaymentInitiate(false)}
                 isApiLoad={isPurchasePending}
-                submitButtonText={`Pay $${getTaxes?.total_amount || 0}`}
+                /* Never "Pay $0" — see the quote above. */
+                submitButtonText={
+                  formatMoney(getTaxes?.total_amount)
+                    ? `Pay ${formatMoney(getTaxes?.total_amount)}`
+                    : 'Pay'
+                }
               />
             </div>
           </DialogContent>

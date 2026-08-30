@@ -32,7 +32,7 @@ type TabKey = (typeof TABS)[number]['key'];
 const BillingResources = () => {
   const [tab, setTab] = useState<TabKey>('licence');
   const { user } = useUser();
-  const { data: planData = {}, isPending } = useGetMyPlanDetails(undefined, true);
+  const { data: planData = {}, isPending, isError } = useGetMyPlanDetails(undefined, true);
 
   const planStatus = (user as any)?.company_info?.plan_status;
   const restrictPlan = planStatus === 'EXPIRED';
@@ -42,6 +42,29 @@ const BillingResources = () => {
       <div className="flex h-full w-full items-center justify-center p-5">
         <Loader variant="blue" size="lg" />
       </div>
+    );
+  }
+
+  /* Every tab below is built from the plan. Rendering them without it would show
+     a company with no seats, no allowances and nothing on the bill — an account
+     that looks cancelled. Better to say the read failed. */
+  if (isError) {
+    return (
+      <AdminPage
+        section="Billing"
+        title="Licences & resources"
+        description="What this account holds — seats, numbers, storage and AI usage — and who is using them."
+      >
+        <div className="p-3">
+          <p className="text-sm font-semibold text-gray-900">
+            Your plan details could not be loaded
+          </p>
+          <p className="mt-1 text-xs text-gray-600">
+            Nothing about your account has changed and no seat has been affected. Reload the page —
+            if it keeps happening, the Plan screen shows the same figures.
+          </p>
+        </div>
+      </AdminPage>
     );
   }
 

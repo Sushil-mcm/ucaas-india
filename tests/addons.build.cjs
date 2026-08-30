@@ -15,6 +15,8 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/lib/addons.ts
 var addons_exports = {};
 __export(addons_exports, {
   ADD_ONS: () => ADD_ONS,
@@ -26,7 +28,62 @@ __export(addons_exports, {
   priceText: () => priceText
 });
 module.exports = __toCommonJS(addons_exports);
-const estimateMonthlyCost = (addOn, used) => {
+
+// src/lib/plan-catalogue.ts
+var PLAN_ADD_ONS = [
+  {
+    id: "ai_voice_agent",
+    name: "AI voice agent",
+    summary: "An AI voice that answers and speaks to callers.",
+    monthlyPrice: 45,
+    per: "seat",
+    included: { units: 100, unit: "minutes" },
+    overageRate: 0.25,
+    maps: {
+      ai_call_free_minutes: "100",
+      ai_call_rate: "0.25"
+    },
+    notes: [
+      "Every minute costs real money to run - speech recognition, the model, and the voice - so the rate here is set to cover that rather than to look cheap."
+    ]
+  },
+  {
+    id: "ai_copilot",
+    name: "AI copilot",
+    summary: "Transcription, call summaries, sentiment and topic tracking.",
+    monthlyPrice: 10,
+    per: "seat",
+    maps: {
+      ai_message_free_reply: "see plan",
+      ai_message_rate: "0.08"
+    },
+    notes: [
+      "Transcripts and summaries are given away by most of the market, so this is priced for the analysis on top of them rather than for the transcript itself."
+    ]
+  },
+  {
+    id: "call_recording",
+    name: "Call recording",
+    summary: "Record calls and keep them.",
+    monthlyPrice: 0,
+    per: "seat",
+    overageRate: 5e-3,
+    maps: { per_gb_price: "storage beyond the plan allowance" },
+    notes: ["Charged per minute recorded rather than as a monthly fee."]
+  },
+  {
+    id: "spam_watch",
+    name: "Spam monitoring",
+    summary: "Watch whether your numbers get flagged as spam, and get them cleared.",
+    monthlyPrice: 15,
+    per: "number",
+    maps: {}
+  }
+];
+
+// src/lib/addons.ts
+var CATALOGUE_AI_VOICE = PLAN_ADD_ONS.find((entry) => entry.id === "ai_voice_agent");
+var estimateMonthlyCost = (addOn, used) => {
   if (addOn.monthlyPrice === void 0) return null;
   const base = addOn.monthlyPrice;
   const allowance = addOn.included ?? 0;
@@ -36,7 +93,7 @@ const estimateMonthlyCost = (addOn, used) => {
   const overage = Math.round(overUnits * rate * 100) / 100;
   return { total: Math.round((base + overage) * 100) / 100, base, overage, overUnits };
 };
-const ADD_ONS = [
+var ADD_ONS = [
   {
     id: "international",
     name: "Global unlimited calling",
@@ -73,18 +130,22 @@ const ADD_ONS = [
   {
     id: "ai_voice",
     name: "AI voice",
-    summary: "50 minutes a month of an AI voice answering and speaking to callers.",
+    /* The allowance is written into the sentence from the catalogue, not
+       alongside it. This card used to promise 50 minutes in its summary and
+       charge for anything past 100 two lines further down - the same card
+       disagreeing with itself about what somebody had bought. */
+    summary: `${(CATALOGUE_AI_VOICE?.included?.units ?? 0).toLocaleString()} minutes a month of an AI voice answering and speaking to callers.`,
     replaces: "Replaces somebody having to pick up simply to find out what a caller wants.",
     billing: "Bought per seat, monthly.",
     /* No featureKey on purpose. This is bought separately from AI assistance and
        the platform reports no flag of its own for it, so the card says it cannot
        tell rather than borrowing the AI flag and claiming you have it. */
-    monthlyPrice: 45,
-    included: 100,
-    includedUnit: "minutes",
-    overageRate: 0.25,
+    monthlyPrice: CATALOGUE_AI_VOICE?.monthlyPrice,
+    included: CATALOGUE_AI_VOICE?.included?.units,
+    includedUnit: CATALOGUE_AI_VOICE?.included?.unit,
+    overageRate: CATALOGUE_AI_VOICE?.overageRate,
     detail: [
-      "Past 100 minutes, it keeps working and each further minute costs 25 cents.",
+      "Past the included minutes it keeps working, and each further minute is charged at the rate shown above.",
       "Every minute costs real money to run - speech recognition, the model and the voice - so the rate covers that rather than being set to look cheap."
     ]
   },
@@ -162,7 +223,7 @@ const ADD_ONS = [
     featureKey: "video"
   }
 ];
-const addOnState = (features, addOn) => {
+var addOnState = (features, addOn) => {
   if (!addOn.featureKey) return "unknown";
   if (!features || typeof features !== "object") return "unknown";
   const node = features[addOn.featureKey];
@@ -175,12 +236,12 @@ const addOnState = (features, addOn) => {
   }
   return "unknown";
 };
-const STATE_LABEL = {
+var STATE_LABEL = {
   included: "On your plan",
   "not-included": "Not on your plan",
   unknown: "Not available yet"
 };
-const countByState = (features, addOns = ADD_ONS) => {
+var countByState = (features, addOns = ADD_ONS) => {
   const counts = { included: 0, notIncluded: 0, unknown: 0 };
   addOns.forEach((addOn) => {
     const state = addOnState(features, addOn);
@@ -190,5 +251,15 @@ const countByState = (features, addOns = ADD_ONS) => {
   });
   return counts;
 };
-const priceText = () => "Not available yet";
-const canPurchaseHere = () => false;
+var priceText = () => "Not available yet";
+var canPurchaseHere = () => false;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  ADD_ONS,
+  STATE_LABEL,
+  addOnState,
+  canPurchaseHere,
+  countByState,
+  estimateMonthlyCost,
+  priceText
+});

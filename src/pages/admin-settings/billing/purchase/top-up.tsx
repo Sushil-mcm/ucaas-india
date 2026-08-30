@@ -8,6 +8,7 @@ import AmountSection from './amount-section';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/use-user';
+import { formatMoney } from '@/lib/billing-money';
 
 const TopUp = () => {
   const navigate = useNavigate();
@@ -94,7 +95,11 @@ const TopUp = () => {
         <strong>Credit covers usage beyond what your plan includes</strong>
         <ul>
           <li>Calls to destinations not bundled with your plan, charged per minute</li>
-          <li>SMS and MMS above your monthly allowance, charged per message</li>
+          {/* Careful wording. Text messages have a monthly allowance on every
+              plan; picture messages do not, so saying "above your allowance"
+              about them would describe an allowance nobody was sold. */}
+          <li>Text messages above your monthly allowance, charged per message</li>
+          <li>Picture messages, charged per message</li>
           <li>AI call minutes and message replies once the included pool runs out</li>
           <li>Fax pages</li>
         </ul>
@@ -121,7 +126,13 @@ const TopUp = () => {
               onSuccess3dsPayment={() => handleSuccess()}
               // onFailure3dsPayment={handle3DSFailure}
               isApiLoad={isPendingAddFund}
-              submitButtonText={`Pay $${selectedAmount || 0}`}
+              /* The amount somebody picked, written as money. There is always
+                 one — the buttons above cannot select nothing — but it is
+                 formatted through the same function as every other figure so
+                 "Pay $20.00" reads like the rest of billing. */
+              submitButtonText={
+                formatMoney(selectedAmount) ? `Pay ${formatMoney(selectedAmount)}` : 'Pay'
+              }
             />
           </div>
         </div>

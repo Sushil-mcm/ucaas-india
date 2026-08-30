@@ -53,9 +53,12 @@ export const describeAllowance = (allowance: Allowance, unit: string): string =>
 export interface PlanDefinition {
   id: string;
   name: string;
-  /* Per seat, per month, in US dollars. Zero is a real plan, not a missing
-     price - the entry tier costs nothing and you pay only for numbers. */
+  /* Per seat, per month, in US dollars, when billed monthly. */
   monthlyPerSeat: number;
+  /* Per seat for a whole year, billed once. Lower than twelve monthly payments
+     - that discount is the reason a yearly plan exists, so it is stored rather
+     than worked out from the monthly price by anybody who needs it. */
+  yearlyPerSeat: number;
   summary: string;
   /* What one seat includes each month. */
   includes: {
@@ -76,36 +79,28 @@ export interface PlanDefinition {
   notes?: string[];
 }
 
-/* Priced to match the market reference the product owner chose, in USD. */
+/* The plans we sell today, matching the plan records the platform holds.
+ *
+ * These three are what a customer can be on. There is no free tier: every plan
+ * here is paid for, and a seat that is not on one of them is not a plan we
+ * offer. Listing a fourth would put a product on the comparison table that
+ * nobody can actually buy, which is the same class of mistake as an invented
+ * price.
+ *
+ * The allowance figures are the ones the plan records carry, written the way a
+ * person says them. Unlimited is a word here and a very large number on the
+ * record - see UNLIMITED_STORED_THRESHOLD at the foot of this file for why. */
 export const PLANS: PlanDefinition[] = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    monthlyPerSeat: 0,
-    summary: 'Pay only for the numbers you keep. No monthly seat charge.',
-    includes: { domesticMinutes: 0, sms: 0, numbers: 0 },
-    overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
-    maps: {
-      cost: '0',
-      free_calls: '0',
-      free_sms: '0',
-      outbound_ratecard_uuid: 'standard outbound card',
-      sms_rate_card_uuid: 'standard SMS card',
-    },
-    notes: [
-      'Costs nothing to hold, so somebody can try the product before committing.',
-      'Every minute and text is charged from the first one.',
-    ],
-  },
   {
     id: 'starter',
     name: 'Starter',
     monthlyPerSeat: 18,
+    yearlyPerSeat: 162,
     summary: '1,000 domestic minutes and 100 texts a month, per seat.',
     includes: { domesticMinutes: 1000, sms: 100, numbers: 1 },
     overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
     maps: {
-      cost: '18',
+      cost: '18 monthly, 162 yearly',
       free_calls: '1000',
       free_sms: '100',
       did_count: '1',
@@ -115,35 +110,57 @@ export const PLANS: PlanDefinition[] = [
     id: 'professional',
     name: 'Professional',
     monthlyPerSeat: 30,
+    yearlyPerSeat: 270,
     summary: 'Unlimited domestic calling and 500 texts a month, per seat.',
     includes: { domesticMinutes: UNLIMITED, sms: 500, numbers: 1 },
     /* No minute rate: domestic calling cannot run out on this plan. */
     overage: { smsRate: 0.04 },
     maps: {
-      cost: '30',
-      free_calls: 'unlimited - see note',
+      cost: '30 monthly, 270 yearly',
+      free_calls: '999999999 - the stored form of unlimited',
       free_sms: '500',
       did_count: '1',
     },
-    notes: [
-      'The platform stores allowances as numbers, so unlimited needs a deliberate representation on the plan record rather than a very large figure.',
-    ],
   },
   {
-    id: 'ultimate',
-    name: 'Ultimate',
+    id: 'enterprise',
+    name: 'Enterprise',
     monthlyPerSeat: 42,
+    yearlyPerSeat: 378,
     summary: 'Unlimited domestic calling and 1,000 texts a month, per seat.',
     includes: { domesticMinutes: UNLIMITED, sms: 1000, numbers: 1 },
     overage: { smsRate: 0.04 },
     maps: {
-      cost: '42',
-      free_calls: 'unlimited - see note',
+      cost: '42 monthly, 378 yearly',
+      free_calls: '999999999 - the stored form of unlimited',
       free_sms: '1000',
       did_count: '1',
     },
   },
 ];
+
+/* The plan somebody is on, found by the name the platform reports.
+ *
+ * Matches on the customer-facing name or the id, and refuses everything else.
+ * A customer may be on a legacy plan, a custom-priced one, or one renamed since
+ * - and the honest answer for those is "we do not recognise this", not the
+ * nearest plan in the list. */
+export const planByName = (planName: string | undefined | null): PlanDefinition | null => {
+  const wanted = String(planName ?? '')
+    .trim()
+    .toLowerCase();
+  if (!wanted) return null;
+  return PLANS.find((p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted) ?? null;
+};
+
+/* What a year costs against twelve monthly payments, as a whole-percent saving.
+   Worked out rather than written down, so the saving cannot disagree with the
+   two prices it is the difference between. */
+export const yearlySavingPercent = (plan: PlanDefinition): number | null => {
+  const twelve = plan.monthlyPerSeat * 12;
+  if (!(twelve > 0) || !(plan.yearlyPerSeat > 0) || plan.yearlyPerSeat >= twelve) return null;
+  return Math.round(((twelve - plan.yearlyPerSeat) / twelve) * 100);
+};
 
 export interface AddOnDefinition {
   id: string;
@@ -246,12 +263,7 @@ export const monthlyCostForSeat = (
 export const ratesForPlan = (
   planName: string | undefined | null,
 ): { domesticMinuteRate?: number; smsRate?: number; planId: string } | null => {
-  const wanted = String(planName ?? '')
-    .trim()
-    .toLowerCase();
-  if (!wanted) return null;
-
-  const plan = PLANS.find((p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted);
+  const plan = planByName(planName);
   if (!plan) return null;
 
   return {

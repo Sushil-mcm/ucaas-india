@@ -1,6 +1,7 @@
 const {
   percentUsed, usageBand, overageUnits, overageCost, isFullyIncluded,
   makeUsageRow, sortUsageRows, hasAnyUsage, unavailableCount, WARNING_AT_PERCENT,
+  isUnlimitedAllowance,
 } = require('./billing-usage.build.cjs');
 
 let pass = 0, fail = 0;
@@ -82,6 +83,21 @@ t('a table of nothing but blanks is not',
   !hasAnyUsage([makeUsageRow({ service: 'a', unit: 'm' })]));
 t('the blanks are counted so the screen can warn once',
   unavailableCount(rows) === 1);
+
+console.log('  --- unlimited, which the plan record has to store as a number ---');
+/* The two plans with unlimited domestic calling carry 999,999,999 minutes on
+   their record, because the column holds whole numbers. Nothing derived from it
+   may behave as though it were an allowance that can run out. */
+t('an unlimited allowance is recognised', isUnlimitedAllowance(999999999));
+t('an ordinary one is not', !isUnlimitedAllowance(1000));
+t('and neither is a missing one', !isUnlimitedAllowance(null));
+t('there is no percentage of unlimited', percentUsed(999999999, 40000) === null);
+t('so no band, and so no bar', usageBand(999999999, 40000) === null);
+t('nothing can be over an unlimited allowance', overageUnits(999999999, 40000) === 0);
+t('so nothing can be charged for going over it',
+  overageCost(999999999, 40000, 0.02) === 0);
+t('and the row counts as fully included',
+  isFullyIncluded(makeUsageRow({ service: 'Voice', unit: 'minutes', included: 999999999, used: 40000 })));
 
 console.log(`\n    ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

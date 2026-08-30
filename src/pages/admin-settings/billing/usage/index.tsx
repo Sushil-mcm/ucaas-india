@@ -58,6 +58,7 @@ import { UNAVAILABLE, knownNumber, moneyOrUnavailable } from '@/lib/billing-mone
 import {
   hasAnyUsage,
   isFullyIncluded,
+  isUnlimitedAllowance,
   makeUsageRow,
   percentUsed,
   sortUsageRows,
@@ -125,6 +126,11 @@ const AllowanceTable = ({ rows }: { rows: UsageRow[] }) => (
              about keeps its normal weight — dimming it would imply it had been
              checked and settled. */
           const dim = isFullyIncluded(row);
+          /* An unlimited allowance has no "over" and nothing past it to price.
+             Those three cells say so in words instead of showing a rate that
+             cannot apply, or "Not available yet" for a figure that is not
+             missing — it simply does not exist on this plan. */
+          const unlimited = isUnlimitedAllowance(row.included);
           return (
             <tr key={row.service} className={dim ? 'text-gray-500' : ''}>
               <td className="border-b border-gray-100 py-2.5 pr-4 align-top">
@@ -145,13 +151,17 @@ const AllowanceTable = ({ rows }: { rows: UsageRow[] }) => (
                   row.over !== null && row.over > 0 ? 'font-semibold text-gray-900' : ''
                 }`}
               >
-                {units(row.over, row.unit)}
+                {unlimited ? 'None' : units(row.over, row.unit)}
               </td>
               <td className="border-b border-gray-100 py-2.5 pr-4 text-right align-top tabular-nums">
-                {row.rate === null ? UNAVAILABLE : moneyOrUnavailable(row.rate)}
+                {unlimited ? '—' : row.rate === null ? UNAVAILABLE : moneyOrUnavailable(row.rate)}
               </td>
               <td className="border-b border-gray-100 py-2.5 text-right align-top tabular-nums">
-                {row.cost === null ? UNAVAILABLE : moneyOrUnavailable(row.cost)}
+                {unlimited
+                  ? 'Included'
+                  : row.cost === null
+                    ? UNAVAILABLE
+                    : moneyOrUnavailable(row.cost)}
               </td>
             </tr>
           );
@@ -306,7 +316,12 @@ const Usage = () => {
         included: current?.call_duration,
         used: current?.call_duration_used,
         rate: planRates?.domesticMinuteRate,
-        note: 'Calls to destinations your plan covers. Anything beyond the allowance is charged per minute at the rate for the country dialled.',
+        /* Two different true sentences, because two plans include unlimited
+           domestic calling. Telling one of those customers that minutes past
+           their allowance are charged describes an allowance they do not have. */
+        note: isUnlimitedAllowance(current?.call_duration)
+          ? 'Domestic calling is unlimited on your plan, so these minutes cost nothing however many you use. Calls to other countries are charged per minute at the rate for the country dialled.'
+          : 'Calls to destinations your plan covers. Anything beyond the allowance is charged per minute at the rate for the country dialled.',
       }),
       makeUsageRow({
         service: 'Text messages',

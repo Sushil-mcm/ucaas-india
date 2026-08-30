@@ -35,6 +35,7 @@ import { callList, getInvoice } from '@/services/api';
 import { useGetMyPlanDetails, useGetSavedCards } from '@/hooks/common';
 import { readTotals } from '@/lib/spend-breakdown';
 import { UNAVAILABLE, dateOrUnavailable, knownNumber, moneyOrUnavailable } from '@/lib/billing-money';
+import { describeStoredAllowance } from '@/lib/plan-catalogue';
 import { billingAlert } from '@/lib/billing-alerts';
 import { ABSOLUTE, CALL_HISTORY_PATH } from '../billing-sections';
 
@@ -245,6 +246,7 @@ const BillingSummary = () => {
           ) : planLoading ? (
             <>
               <SettingRow label="Plan" description="" control={<Skeleton className="h-4 w-32 bg-gray-200" />} />
+              <SettingRow label="Included each month" description="" control={<Skeleton className="h-4 w-40 bg-gray-200" />} />
               <SettingRow label="Per licence" description="" control={<Skeleton className="h-4 w-20 bg-gray-200" />} />
               <SettingRow label="Next bill" description="" control={<Skeleton className="h-4 w-24 bg-gray-200" />} />
             </>
@@ -256,6 +258,22 @@ const BillingSummary = () => {
                 control={
                   <span className="text-sm font-semibold text-gray-900">
                     {current?.plan_duration ? `Billed every ${current.plan_duration}` : UNAVAILABLE}
+                  </span>
+                }
+              />
+              {/* What the plan actually includes, which is half of "what am I
+                  paying for" and used to be missing from the page that asks it.
+                  Printed through the catalogue's own formatter: an unlimited
+                  allowance is held as a very large number on the plan record, and
+                  a customer who reads "999,999,999 minutes" learns nothing except
+                  that we cannot be trusted with numbers. */}
+              <SettingRow
+                label="Included each month"
+                description="Per seat. Past an allowance the service keeps working and each further minute or text comes off your credit."
+                control={
+                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                    {describeStoredAllowance(current?.call_duration, 'minutes')} ·{' '}
+                    {describeStoredAllowance(current?.sms, 'texts')}
                   </span>
                 }
               />

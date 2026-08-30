@@ -1,6 +1,7 @@
 import TableManager from '@/components/custom/table-manager';
 import { getAgentBillingList } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
+import { UNAVAILABLE, knownNumber } from '@/lib/billing-money';
 
 type AgentBillingApiRow = {
   agent_uuid?: string;
@@ -69,24 +70,28 @@ const columns = [
     header: 'Total USD',
     accessorKey: 'totalCostUSD',
     cell: ({ row }: any) => {
-      const amount = Number(row?.original?.totalCostUSD || 0);
-      return <span>${amount.toFixed(5)}</span>;
+      /* An agent whose cost did not come back has not cost nothing — nobody
+         sent us a figure. Shown as such rather than as $0.00000, which reads as
+         "this agent is free" on a page headed Billing. Five decimal places
+         because AI usage is genuinely priced in fractions of a cent. */
+      const amount = knownNumber(row?.original?.totalCostUSD);
+      return <span>{amount === null ? UNAVAILABLE : `$${amount.toFixed(5)}`}</span>;
     },
   },
   {
     header: 'Used Minutes',
     accessorKey: 'usedMinutes',
     cell: ({ row }: any) => {
-      const minutes = Number(row?.original?.usedMinutes || 0);
-      return <span>{minutes.toLocaleString()}</span>;
+      const minutes = knownNumber(row?.original?.usedMinutes);
+      return <span>{minutes === null ? UNAVAILABLE : minutes.toLocaleString()}</span>;
     },
   },
   {
     header: 'Used Messages',
     accessorKey: 'usedMessages',
     cell: ({ row }: any) => {
-      const messages = Number(row?.original?.usedMessages || 0);
-      return <span>{messages.toLocaleString()}</span>;
+      const messages = knownNumber(row?.original?.usedMessages);
+      return <span>{messages === null ? UNAVAILABLE : messages.toLocaleString()}</span>;
     },
   },
 ];
@@ -104,9 +109,11 @@ const AgentCosting = () => {
     agentId: agent?.agent_uuid || '',
     agentName: agent?.agentName || '--',
     channel: agent?.channel || '--',
-    totalCostUSD: Number(agent?.cost_total_usd ?? 0),
-    usedMinutes: Number(agent?.used_minutes ?? 0),
-    usedMessages: Number(agent?.used_messages ?? 0),
+    /* Passed through unconverted, so a missing figure stays missing all the way
+       to the cell that has to say so. */
+    totalCostUSD: knownNumber(agent?.cost_total_usd) ?? undefined,
+    usedMinutes: knownNumber(agent?.used_minutes) ?? undefined,
+    usedMessages: knownNumber(agent?.used_messages) ?? undefined,
   }));
 
   return (

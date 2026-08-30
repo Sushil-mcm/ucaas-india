@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import PaymentScreen from '@/components/payment';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
+import { formatMoney, knownNumber, moneyOrUnavailable } from '@/lib/billing-money';
 
 // Register
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -22,8 +23,15 @@ const Storage = () => {
   const current_plan = planList?.find(
     (item: any) => item?.uuid === dataGetMyPlanDetails?.current_plan_details?.plan_uuid,
   );
-  const perGbPrice = Number(current_plan?.per_gb_price || 0);
-  const totalPrice = (extraGb * perGbPrice).toFixed(2);
+  /* The price of a gigabyte, read before it is converted. `Number(null)` is 0,
+     and a storage price of zero would offer somebody extra space for nothing —
+     then charge them whatever the server decides. Without a price this section
+     says so and the buy button is disabled. */
+  const perGbPrice = knownNumber(current_plan?.per_gb_price);
+  const isPriced = perGbPrice !== null && perGbPrice > 0;
+  /* What the purchase call sends. Kept as a plain number for the request and
+     formatted separately for the screen. */
+  const totalPrice = isPriced ? Number((extraGb * perGbPrice).toFixed(2)) : null;
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const paymentRef = useRef<any>(null);
@@ -306,7 +314,17 @@ const Storage = () => {
               Need more space?
             </h4>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>
-              Add extra storage to your plan for <strong>${perGbPrice} per GB</strong>.
+              {isPriced ? (
+                <>
+                  Add extra storage to your plan for{' '}
+                  <strong>{moneyOrUnavailable(perGbPrice)} per GB</strong>.
+                </>
+              ) : (
+                <>
+                  The price per GB is not available yet, so extra storage cannot be bought here.
+                  Speak to your account manager.
+                </>
+              )}
             </p>
           </div>
 
@@ -394,6 +412,7 @@ const Storage = () => {
 
             <button
               onClick={() => {
+                if (totalPrice === null) return;
                 mutateGetProratedCost(
                   { cost: totalPrice },
                   {
@@ -410,7 +429,7 @@ const Storage = () => {
                   },
                 );
               }}
-              disabled={isPendingProrated}
+              disabled={isPendingProrated || !isPriced}
               className="bg-ucass-active hover:opacity-90"
               style={{
                 flex: '1',
@@ -436,7 +455,11 @@ const Storage = () => {
                 }
               }}
             >
-              {isPendingProrated ? 'Fetching Cost...' : `Buy Now $${totalPrice}`}
+              {isPendingProrated
+                ? 'Fetching Cost...'
+                : isPriced
+                  ? `Buy Now ${formatMoney(totalPrice)}`
+                  : 'Price not available'}
             </button>
           </div>
         </div>
@@ -450,11 +473,12 @@ const Storage = () => {
           <div className="mt-4">
             <p className="text-sm text-gray-600 mb-4">
               You are purchasing <strong>{extraGb} GB</strong> of extra storage for{' '}
-              <strong>${totalPrice}</strong>.
+              <strong>{moneyOrUnavailable(totalPrice)}</strong>.
               {proratedData && (
                 <span className="block mt-2 p-2 bg-ucass-active-bg border border-ucass-active-bg rounded-md text-ucass-active">
-                  Prorated cost for remaining <strong>{proratedData.remainingDays || 0}</strong>{' '}
-                  days: <strong>${proratedData.proratedCost}</strong>
+                  Prorated cost for remaining{' '}
+                  <strong>{knownNumber(proratedData.remainingDays) ?? '—'}</strong> days:{' '}
+                  <strong>{moneyOrUnavailable(proratedData.proratedCost)}</strong>
                 </span>
               )}
             </p>
@@ -465,7 +489,13 @@ const Storage = () => {
               onSuccess3dsPayment={() => handlePaymentSuccess()}
               onFailure3dsPayment={() => setShowPaymentModal(false)}
               isApiLoad={isPendingBuyStorage}
-              submitButtonText={`Pay $${proratedData?.proratedCost || totalPrice}`}
+              /* The prorated figure when the server has given one, the full
+                 price otherwise, and no figure at all rather than "Pay $0". */
+              submitButtonText={
+                formatMoney(proratedData?.proratedCost ?? totalPrice)
+                  ? `Pay ${formatMoney(proratedData?.proratedCost ?? totalPrice)}`
+                  : 'Pay'
+              }
             />
           </div>
         </DialogContent>

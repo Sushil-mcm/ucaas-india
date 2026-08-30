@@ -5,6 +5,8 @@ import { useGetPlans } from '@/hooks/common';
 import { useUser } from '@/hooks/use-user';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { durationMap, PlanDurationMap, PRICE_FEATURES } from '../constants';
+import { describeAllowance, planByName } from '@/lib/plan-catalogue';
+import { formatMoney, moneyOrUnavailable } from '@/lib/billing-money';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { handleAlert } from '@/lib/utils';
 import {
@@ -339,9 +341,19 @@ const ChangePlan = ({
               const isUpgrade = changeAction === 'UPGRADE';
               const isActive = activePlanUuid ? activePlanUuid === uuid : index === 0;
               const discount_enabled = costObj?.discount_enabled ?? false;
-              const original_price = costObj?.original_price ?? 0;
+              /* Left as whatever came back, including nothing. A plan whose
+                 price did not arrive must not be shown as costing $0 and must
+                 not be buyable — "free" is the one wrong price nobody queries
+                 before they click. */
+              const original_price = costObj?.original_price;
               const discount = costObj?.discount ?? 0;
-              const planCost = calculatedPlanCost ?? 0;
+              const planCost = calculatedPlanCost;
+              const priced = formatMoney(discount_enabled ? planCost : original_price) !== null;
+              /* What this plan includes, from the one catalogue the rest of
+                 billing reads. Every card used to list the same eight features,
+                 so the question somebody is actually answering — what do I get
+                 for the extra twelve dollars — was not on the screen. */
+              const includes = planByName(plan_name);
               return (
                 <div
                   key={uuid || `${index}-${plan_name}`}
@@ -378,11 +390,13 @@ const ChangePlan = ({
                             {' '}
                             <div
                               className={`text-4xl ${activeTextClass(isActive)} font-semibold flex items-center`}
-                            >{`$${planCost}`}</div>
+                            >
+                              {moneyOrUnavailable(planCost)}
+                            </div>
                             <div
                               className={`text-xl line-through ${isActive ? 'text-white' : 'text-grey-800'} font-normal `}
                             >
-                              ${`${original_price}`}
+                              {moneyOrUnavailable(original_price)}
                             </div>
                             <div
                               className={`text-gray-900 inline-flex items-center rounded-xl bg-yellow-100 px-2 py-1 font-medium uppercase tracking-widest text-xs`}
@@ -397,7 +411,9 @@ const ChangePlan = ({
                         ) : (
                           <div
                             className={`text-4xl ${activeTextClass(isActive)} font-semibold flex items-center`}
-                          >{`$${original_price}`}</div>
+                          >
+                            {moneyOrUnavailable(original_price)}
+                          </div>
                         )}
                       </div>
 
@@ -420,6 +436,10 @@ const ChangePlan = ({
                               : 'text-primary bg-white border-primary hover:bg-primary hover:text-white'
                           }`}
                           variant={'outline'}
+                          /* An unpriced plan cannot be bought. The purchase call
+                             takes the amount from here, so a missing price would
+                             send nothing and charge nothing. */
+                          disabled={!priced}
                           onClick={() => {
                             setIsPaymentInitiate(true);
                             setUpgradePlanReq({
@@ -440,6 +460,7 @@ const ChangePlan = ({
                           type="button"
                           variant={'outline'}
                           className={`font-semibold ${isActive ? ' hover:bg-white hover:text-primary' : ''}`}
+                          disabled={!priced}
                           onClick={() => {
                             if (!planFeatures?.action?.request_plan || isCurrentSelection) {
                               setIsPaymentInitiate(true);
@@ -467,6 +488,12 @@ const ChangePlan = ({
                         </Button>
                       )}
 
+                      {!priced ? (
+                        <p className={`text-xs ${isActive ? 'text-white' : 'text-gray-600'}`}>
+                          This plan&rsquo;s price did not come back, so it cannot be chosen from
+                          here. Reload the page, or speak to your account manager.
+                        </p>
+                      ) : null}
                       <h5
                         className={` ${isActive ? 'text-white' : ''} font-semibold text-gray-900 truncate text-md`}
                       >
@@ -477,6 +504,18 @@ const ChangePlan = ({
                           isActive ? 'text-white' : 'text-grey-800'
                         } text-gray-800 truncate text-sm flex flex-col gap-4 pb-1.5`}
                       >
+                        {(includes
+                          ? [
+                              describeAllowance(includes.includes.domesticMinutes, 'domestic minutes'),
+                              describeAllowance(includes.includes.sms, 'texts a month'),
+                            ]
+                          : []
+                        ).map((line) => (
+                          <li key={line} className="flex items-center gap-2 font-semibold">
+                            <Check className={`${isActive ? 'text-white' : 'text-primary'} `} />
+                            {line}
+                          </li>
+                        ))}
                         {PRICE_FEATURES.map(({ name }, i) => {
                           return (
                             <li key={`${i + 1}-${name}`} className="flex items-center gap-2">
@@ -570,7 +609,14 @@ const ChangePlan = ({
                 onSuccess3dsPayment={paymentSuccess}
                 onFailure3dsPayment={() => setIsPaymentInitiate(false)}
                 isApiLoad={isLoading || isPendingUpgradeTrialPlan || isPendingPaymentCharge}
-                submitButtonText={`Pay $${getTaxes?.total_amount ?? 0}`}
+                /* Never "Pay $0": until the tax call answers there is no total
+                   to quote, and a button naming a price we were not given is
+                   how a charge ends up disputed. */
+                submitButtonText={
+                  formatMoney(getTaxes?.total_amount)
+                    ? `Pay ${formatMoney(getTaxes?.total_amount)}`
+                    : 'Pay'
+                }
               />
             </div>
           </DialogContent>

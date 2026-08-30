@@ -163,3 +163,8 @@ var isBalanceLow = (balance, threshold = 10) => {
   if (!Number.isFinite(n) || !Number.isFinite(limit)) return null;
   return n <= limit;
 };
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  billingAlert,
+  isBalanceLow
+});

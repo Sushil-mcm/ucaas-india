@@ -34,7 +34,7 @@ const CostCentres = () => {
   const [centres, setCentres] = useState<CostCentre[]>([]);
   const [dirty, setDirty] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: COMPANY_DEFAULTS_QUERY_KEY,
     queryFn: fetchCompanyDefaults,
   });
@@ -95,6 +95,20 @@ const CostCentres = () => {
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
         {isLoading ? (
           <Loader />
+        ) : isError ? (
+          /* Said outright. A failed read leaves an empty list, and an empty list
+             on this screen reads as "you have no cost centres" — which would
+             invite somebody to type theirs in again and save over the ones that
+             are already there. */
+          <SettingCard
+            title="Your cost centres could not be loaded"
+            description="Nothing has been changed or lost. Reload the page and they will appear."
+          >
+            <SettingRow
+              label="Do not add them again yet"
+              description="Saving from this screen while the list is empty would replace the cost centres already on your company."
+            />
+          </SettingCard>
         ) : (
           <>
             <SettingCard

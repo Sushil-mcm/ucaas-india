@@ -166,3 +166,21 @@ var cardExpiresSoon = (expMonth, expYear, todayISO, withinDays = 30) => {
   if (gap === null) return null;
   return gap <= withinDays;
 };
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  BILLING_CURRENCY,
+  DAYS_PER_BILLING_MONTH,
+  MINIMUM_CHARGE,
+  UNAVAILABLE,
+  cardExpiresSoon,
+  dateOrUnavailable,
+  formatBillingDate,
+  formatMoney,
+  knownNumber,
+  licenceQuote,
+  moneyOrUnavailable,
+  planDays,
+  prorate,
+  remainingDays,
+  roundMoney
+});

@@ -5,12 +5,15 @@
  * whether your plan already includes it — and it is honest that buying one is
  * not something this screen can do yet.
  *
- * Two things are deliberately absent. There is no price, because nothing in the
- * platform supplies one and a number invented here is a number somebody would
- * budget against. And there is no purchase button, because the only endpoint
- * that buys licences charges the amount the browser sends it rather than the
- * amount it works out itself — a button here would be a button that trusts the
- * browser with a price.
+ * Prices appear only where the product owner has actually set one, and those
+ * come from the plan catalogue that the plan comparison reads, so the two
+ * cannot disagree. Everything else says "Not available yet" rather than
+ * carrying a number invented here — a number somebody would budget against.
+ *
+ * There is no purchase button, because the only endpoint that buys licences
+ * charges the amount the browser sends it rather than the amount it works out
+ * itself — a button here would be a button that trusts the browser with a
+ * price.
  *
  * What IS real is the badge on each card. Whether your plan includes an add-on
  * is read from the plan the platform reports for your company, so it is the
@@ -23,6 +26,7 @@ import { Link } from 'react-router-dom';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { moneyOrUnavailable } from '@/lib/billing-money';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import {
   ADD_ONS,
@@ -66,7 +70,7 @@ const AddOnCard = ({ addOn, state }: { addOn: AddOn; state: AddOnState }) => {
             <span className="text-xs text-gray-500">{priceText()}</span>
           ) : (
             <span className="text-sm font-semibold tabular-nums text-gray-900">
-              ${addOn.monthlyPrice.toFixed(2)}
+              {moneyOrUnavailable(addOn.monthlyPrice)}
               <span className="ml-1 text-xs font-normal text-gray-500">a month</span>
             </span>
           )
@@ -80,7 +84,7 @@ const AddOnCard = ({ addOn, state }: { addOn: AddOn; state: AddOnState }) => {
           control={
             addOn.overageRate !== undefined ? (
               <span className="text-xs text-gray-600 tabular-nums">
-                then ${addOn.overageRate.toFixed(2)} per{' '}
+                then {moneyOrUnavailable(addOn.overageRate)} per{' '}
                 {(addOn.includedUnit ?? 'unit').replace(/s$/, '')}
               </span>
             ) : undefined

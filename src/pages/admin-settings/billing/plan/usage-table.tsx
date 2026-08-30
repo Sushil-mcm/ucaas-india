@@ -10,36 +10,36 @@
  * every service, and they are right to. Four numbers on a row can be compared
  * down a column; four bars cannot be compared at all.
  *
- * A service is only listed when the plan actually includes an allowance for it.
- * Showing "Fax: 0 of 0" to somebody whose plan has no fax is noise dressed as
- * information.
+ * Every figure on the row is worked out by `allowance-meter`, which is the only
+ * place that decides what an allowance means. That matters here more than
+ * anywhere: this table used to convert its inputs to numbers before looking at
+ * them, so a plan that had not loaded read as "0 minutes included", and an
+ * unlimited plan read as "999,999,999 minutes" with a bar at nought per cent.
+ * Both are wrong facts about what somebody was sold.
  */
 
 import { SettingCard } from '@/components/mcm/setting-card';
+import { allowanceMeter, isRunningLow, RUNNING_LOW_PERCENT } from '@/lib/allowance-meter';
 
 export interface UsageLine {
   service: string;
-  /* What the plan includes for the period. */
-  included: number;
-  used: number;
+  /* Straight off the plan record. Deliberately not narrowed to a number: null,
+     undefined and the unlimited sentinel all have to survive as far as the
+     meter, which is what tells them apart. */
+  included: unknown;
+  used: unknown;
   /* Minutes, messages, pages — whatever this service is counted in. */
   unit: string;
 }
 
-const pct = (used: number, included: number): number => {
-  if (!included || included <= 0) return 0;
-  return Math.min(100, Math.max(0, Math.round((used / included) * 100)));
-};
-
-const num = (n: number): string => (Number.isFinite(n) ? n.toLocaleString() : '0');
-
-/* Past this, somebody needs to know before the service stops rather than after.
-   80 rather than 100 because a warning that arrives at the moment you run out is
-   not a warning. */
-const RUNNING_LOW = 80;
-
 const PlanUsageTable = ({ lines }: { lines: UsageLine[] }) => {
-  const shown = lines.filter((l) => l.included > 0);
+  const rows = lines.map((line) => ({ line, meter: allowanceMeter(line.included, line.used, line.unit) }));
+
+  /* A service with nothing included is charged as it is used, and saying "0 of
+     0" about it is noise dressed as information. One we cannot read is kept —
+     staying silent about an allowance somebody is paying for would be worse. */
+  const shown = rows.filter(({ meter }) => meter.kind !== 'none');
+  const allUnknown = shown.length > 0 && shown.every(({ meter }) => meter.kind === 'unknown');
 
   return (
     <SettingCard
@@ -50,6 +50,13 @@ const PlanUsageTable = ({ lines }: { lines: UsageLine[] }) => {
         <div className="py-3">
           <p className="text-xs text-gray-600">
             This plan has no included allowances — calls and messages are charged as you use them.
+          </p>
+        </div>
+      ) : allUnknown ? (
+        <div className="py-3">
+          <p className="text-xs text-gray-600">
+            Your allowances could not be read just now. Nothing is wrong with your account — reload
+            the page, and the Usage screen shows the same figures.
           </p>
         </div>
       ) : (
@@ -68,42 +75,47 @@ const PlanUsageTable = ({ lines }: { lines: UsageLine[] }) => {
               </tr>
             </thead>
             <tbody>
-              {shown.map((line) => {
-                const left = Math.max(0, line.included - line.used);
-                const used = pct(line.used, line.included);
-                const low = used >= RUNNING_LOW;
-                return (
-                  <tr key={line.service}>
-                    <td className="border-b border-gray-100 py-2.5 pr-4 font-medium text-gray-900">
-                      {line.service}
-                    </td>
-                    <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums text-gray-700">
-                      {num(line.included)} {line.unit}
-                    </td>
-                    <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums text-gray-700">
-                      {num(line.used)}
-                    </td>
-                    <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums font-medium text-gray-900">
-                      {num(left)}
-                    </td>
-                    {/* The percentage last and quiet: it is the least useful of
-                        the four, and putting it first is what made the old bars
-                        the only thing anybody could see. */}
-                    <td className="border-b border-gray-100 py-2.5 text-right tabular-nums">
-                      <span className={low ? 'font-semibold text-amber-700' : 'text-gray-500'}>
-                        {used}%
+              {shown.map(({ line, meter }) => (
+                <tr key={line.service}>
+                  <td className="border-b border-gray-100 py-2.5 pr-4 font-medium text-gray-900">
+                    {line.service}
+                  </td>
+                  <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums text-gray-700">
+                    {meter.includedText}
+                  </td>
+                  <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums text-gray-700">
+                    {meter.usedText}
+                  </td>
+                  <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums font-medium text-gray-900">
+                    {meter.leftText}
+                  </td>
+                  {/* The percentage last and quiet: it is the least useful of
+                      the four, and putting it first is what made the old bars
+                      the only thing anybody could see. Absent where there is
+                      nothing to be a percentage of — an unlimited allowance has
+                      no "how full", and a bar stuck at nought would read as one. */}
+                  <td className="border-b border-gray-100 py-2.5 text-right tabular-nums">
+                    {meter.percent === null ? (
+                      <span className="text-gray-400">—</span>
+                    ) : (
+                      <span
+                        className={
+                          isRunningLow(meter) ? 'font-semibold text-amber-700' : 'text-gray-500'
+                        }
+                      >
+                        {meter.percent}%
                       </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
-          {shown.some((l) => pct(l.used, l.included) >= RUNNING_LOW) ? (
+          {shown.some(({ meter }) => isRunningLow(meter)) ? (
             <p className="mcm-setrow-note mt-3">
-              Some allowances are nearly used up. Anything past the included amount is charged at
-              your usual rate — nothing stops working.
+              Some allowances are more than {RUNNING_LOW_PERCENT}% used. Anything past the included
+              amount is charged at your usual rate — nothing stops working.
             </p>
           ) : null}
         </div>

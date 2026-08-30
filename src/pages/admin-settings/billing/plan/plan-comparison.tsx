@@ -8,51 +8,66 @@
  * The figures come from the same catalogue the rest of billing reads, so a
  * price shown here cannot disagree with a price charged elsewhere.
  *
- * The honesty column is deliberate. Four of these services have an allowance
- * and nothing counting against it, which means the number in the row is a real
- * promise but nobody is measuring it yet. Showing those identically to the
- * measured ones would be the more comfortable choice and the wrong one: a
- * customer who plans around an allowance nobody counts finds out at the worst
- * possible moment.
+ * Every row here is something the platform genuinely counts: minutes, texts and
+ * numbers. A service the platform holds an allowance for but measures nothing
+ * against carries "Not counted yet" on its own row rather than being shown
+ * identically to the measured ones — a customer who plans around an allowance
+ * nobody counts finds out at the worst possible moment.
+ *
+ * Unlimited is a word in this table, never a number. Two of these plans include
+ * unlimited domestic calling, and the plan record has to hold that as a very
+ * large figure because the column takes whole numbers. Printing it would put
+ * "999,999,999 minutes" on a pricing table.
  */
 
 import { SettingCard } from '@/components/mcm/setting-card';
-import { PLANS, PLAN_ADD_ONS, describeAllowance, type PlanDefinition } from '@/lib/plan-catalogue';
-
-/* Which services the platform genuinely counts today. Voice and text usage come
-   from real call records; the rest have an allowance on the plan and no counter
-   anywhere. Kept here as a plain list so it is obvious what to delete when a
-   counter ships. */
-const METERED = new Set(['minutes', 'texts']);
+import {
+  PLANS,
+  PLAN_ADD_ONS,
+  describeAllowance,
+  isUnlimited,
+  yearlySavingPercent,
+  type PlanDefinition,
+} from '@/lib/plan-catalogue';
+import { formatMoney, moneyOrUnavailable } from '@/lib/billing-money';
 
 interface Row {
   label: string;
-  unit: string;
   value: (plan: PlanDefinition) => string;
   rate?: (plan: PlanDefinition) => string | undefined;
+  /* False where the platform holds an allowance for this but counts nothing
+     against it. Said on the row rather than in a footnote nobody reads. */
+  counted: boolean;
 }
 
 const ROWS: Row[] = [
   {
     label: 'Domestic calling',
-    unit: 'minutes',
+    counted: true,
     value: (p) => describeAllowance(p.includes.domesticMinutes, 'minutes'),
+    /* No rate line where calling is unlimited: there is no "then", because the
+       allowance cannot run out. Printing one would imply it could. */
     rate: (p) =>
-      p.overage?.domesticMinuteRate !== undefined
-        ? `then $${p.overage.domesticMinuteRate.toFixed(2)} a minute`
+      !isUnlimited(p.includes.domesticMinutes) && p.overage?.domesticMinuteRate !== undefined
+        ? `then ${formatMoney(p.overage.domesticMinuteRate)} a minute`
         : undefined,
   },
   {
     label: 'Text messages',
-    unit: 'texts',
+    counted: true,
     value: (p) => describeAllowance(p.includes.sms, 'texts'),
     rate: (p) =>
-      p.overage?.smsRate !== undefined ? `then $${p.overage.smsRate.toFixed(2)} each` : undefined,
+      !isUnlimited(p.includes.sms) && p.overage?.smsRate !== undefined
+        ? `then ${formatMoney(p.overage.smsRate)} each`
+        : undefined,
   },
   {
     label: 'Numbers included',
-    unit: 'numbers',
-    value: (p) => (p.includes.numbers ? `${p.includes.numbers}` : 'Bought separately'),
+    counted: true,
+    value: (p) =>
+      p.includes.numbers
+        ? `${p.includes.numbers} number${p.includes.numbers === 1 ? '' : 's'}`
+        : 'Bought separately',
   },
 ];
 
@@ -76,9 +91,16 @@ const PlanComparison = () => (
                 >
                   <span className="block text-sm font-semibold text-gray-900">{plan.name}</span>
                   <span className="block text-xs font-normal tabular-nums text-gray-600">
-                    {plan.monthlyPerSeat === 0
-                      ? 'Free'
-                      : `$${plan.monthlyPerSeat.toFixed(2)} a month`}
+                    {moneyOrUnavailable(plan.monthlyPerSeat)} a month
+                  </span>
+                  {/* The yearly price beside the monthly one, because paying for
+                      a year is cheaper and somebody comparing plans should not
+                      have to find that out on the next screen. The saving is
+                      worked out from the two prices rather than written down, so
+                      it cannot disagree with them. */}
+                  <span className="block text-xs font-normal tabular-nums text-gray-500">
+                    {moneyOrUnavailable(plan.yearlyPerSeat)} a year
+                    {yearlySavingPercent(plan) ? ` · save ${yearlySavingPercent(plan)}%` : ''}
                   </span>
                 </th>
               ))}
@@ -89,9 +111,7 @@ const PlanComparison = () => (
               <tr key={row.label}>
                 <td className="border-b border-gray-100 py-2.5 pr-4 align-top">
                   <span className="font-medium text-gray-900">{row.label}</span>
-                  {/* Said on the row it applies to, not in a footnote nobody
-                      reads. The allowance is real; the counting is not. */}
-                  {!METERED.has(row.unit) ? (
+                  {!row.counted ? (
                     <span className="mt-0.5 block text-[11px] text-amber-700">Not counted yet</span>
                   ) : null}
                 </td>
@@ -153,7 +173,7 @@ const PlanComparison = () => (
                   </span>
                 </td>
                 <td className="border-b border-gray-100 py-2.5 pr-4 tabular-nums text-gray-800">
-                  {addOn.monthlyPrice === 0 ? '—' : `$${addOn.monthlyPrice.toFixed(2)}`}
+                  {addOn.monthlyPrice === 0 ? '—' : moneyOrUnavailable(addOn.monthlyPrice)}
                 </td>
                 <td className="border-b border-gray-100 py-2.5 pr-4 text-gray-600">
                   per {addOn.per}

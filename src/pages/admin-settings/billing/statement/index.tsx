@@ -7,6 +7,9 @@ import { useGetMyPlanDetails } from '@/hooks/common';
 import { useUser } from '@/hooks/use-user';
 import Loader from '@/components/custom/loader';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { allowanceMeter } from '@/lib/allowance-meter';
+import { knownNumber, moneyOrUnavailable } from '@/lib/billing-money';
+import { UNLIMITED_STORED_THRESHOLD } from '@/lib/plan-catalogue';
 import '@/components/mcm/mcm-page.css';
 
 /**
@@ -32,25 +35,19 @@ type Txn = {
   tax_detail?: { total_amount?: number | string };
 };
 
-const money = (value: unknown) => {
-  const amount = Number(value ?? 0);
-  return Number.isFinite(amount) ? `$${amount.toFixed(2)}` : '$0.00';
-};
-
 /** Money is only "taken" once a transaction completes. */
 const isSettled = (status?: string) => String(status || '').toLowerCase() === 'completed';
 const isInFlight = (status?: string) =>
   ['processing', 'pending'].includes(String(status || '').toLowerCase());
 const isFailed = (status?: string) => String(status || '').toLowerCase() === 'failed';
 
-/** Consumption of an allowance as a percentage; null when the plan has none. */
-const usedPct = (used: unknown, total: unknown) => {
-  const u = Number(used ?? 0);
-  const t = Number(total ?? 0);
-  if (!Number.isFinite(u) || !Number.isFinite(t) || t <= 0) return null;
-  return Math.min(100, Math.round((u / t) * 100));
-};
-
+/* One allowance with its bar.
+ *
+ * Everything it prints is decided by `allowance-meter`, so this screen cannot
+ * disagree with the Plan or Usage screens about the same allowance. Before that
+ * it converted its inputs to numbers first, which meant an unlimited plan —
+ * stored as a very large number, because the column holds whole numbers — read
+ * as "12,345 / 999,999,999 min" with the bar at nought per cent. */
 const Meter = ({
   label,
   used,
@@ -62,30 +59,35 @@ const Meter = ({
   total: unknown;
   unit: string;
 }) => {
-  const pct = usedPct(used, total);
-  const over = Number(used ?? 0) > Number(total ?? 0) && Number(total ?? 0) > 0;
+  const meter = allowanceMeter(total, used, unit);
+  const pct = meter.percent;
 
   return (
     <div className="mcm-soa-meter">
       <div className="mcm-soa-meter-h">
         <span className="mcm-soa-meter-l">{label}</span>
-        <span className={`mcm-soa-meter-v${over ? ' over' : ''}`}>
-          {Number(used ?? 0).toLocaleString()}
-          {Number(total ?? 0) > 0 ? ` / ${Number(total).toLocaleString()}` : ''} {unit}
+        <span className={`mcm-soa-meter-v${meter.over ? ' over' : ''}`}>
+          {meter.kind === 'metered' ? `${meter.usedText} of ${meter.includedText}` : meter.usedText}
         </span>
       </div>
       {pct === null ? (
-        <p className="mcm-soa-note">Not bundled on this plan — charged as used.</p>
+        <p className="mcm-soa-note">
+          {meter.kind === 'unlimited'
+            ? `Unlimited ${unit} on this plan — there is nothing to count down.`
+            : meter.kind === 'none'
+              ? 'Not bundled on this plan — charged as used.'
+              : 'Not available yet — this figure did not come back with your plan.'}
+        </p>
       ) : (
         <>
           <div className="mcm-soa-bar">
             <span
               className={`mcm-soa-bar-fill${pct >= 90 ? ' hot' : pct >= 75 ? ' warm' : ''}`}
-              style={{ width: `${pct}%` }}
+              style={{ width: `${Math.min(100, pct)}%` }}
             />
           </div>
           <p className="mcm-soa-note">
-            {pct}% used{over ? ' — over the included allowance' : ''}
+            {pct}% used{meter.over ? ' — over the included allowance' : ''}
           </p>
         </>
       )}
@@ -95,12 +97,20 @@ const Meter = ({
 
 const StatementOfAccount = () => {
   const { user } = useUser();
-  const { data: planData = {}, isPending: isPlanPending } = useGetMyPlanDetails(undefined, true);
+  const {
+    data: planData = {},
+    isPending: isPlanPending,
+    isError: isPlanError,
+  } = useGetMyPlanDetails(undefined, true);
 
   /* Walks every page: the list endpoints cap `limit` at 200 and reject a larger
      request rather than truncating it. A statement that quietly omitted older
      transactions would understate what has been charged. */
-  const { data: transactions = [], isPending: isTxnPending } = useQuery({
+  const {
+    data: transactions = [],
+    isPending: isTxnPending,
+    isError: isTxnError,
+  } = useQuery({
     queryKey: ['billingList', 'statement'],
     queryFn: () => fetchAllPages(getInvoice),
   });
@@ -136,6 +146,12 @@ const StatementOfAccount = () => {
     return { settled, inFlight, failed, settledCount };
   }, [transactions]);
 
+  /* A seat cap of nought means no cap on this platform, not "no seats". Said
+     out loud here so the meter shows unlimited rather than an allowance of
+     nothing, which would read as a company entitled to no licences at all. */
+  const seatCap = knownNumber(plan?.licenses_limit);
+  const seatAllowance = seatCap === 0 ? UNLIMITED_STORED_THRESHOLD : seatCap;
+
   const periodEnd = plan?.plan_expiration_date ? moment(plan.plan_expiration_date) : null;
   const daysLeft = periodEnd ? periodEnd.diff(moment(), 'days') : null;
 
@@ -155,6 +171,34 @@ const StatementOfAccount = () => {
     );
   }
 
+  /* A statement that could not be loaded must say so. Rendering the page
+     anyway would fill every figure with a zero and tell somebody they had been
+     charged nothing and had no allowances — both untrue, and both the sort of
+     thing that gets planned around. */
+  if (isPlanError || isTxnError) {
+    return (
+      <AdminPage
+        section="Billing"
+        title="Statement of account"
+        description="Everything charged and consumed on this account so far."
+      >
+        <div className="mcm-soa">
+          <section className="mcm-soa-card">
+            <div className="mcm-soa-card-h">
+              <div>
+                <h2>Your statement could not be loaded</h2>
+                <p>
+                  Nothing is wrong with your account and no payment has been affected. Reload the
+                  page — if it keeps happening, the Invoices screen lists the same charges.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </AdminPage>
+    );
+  }
+
   return (
     <AdminPage
       section="Billing"
@@ -169,24 +213,24 @@ const StatementOfAccount = () => {
         <div className="mcm-soa-figures">
           <div className="mcm-soa-fig">
             <span className="mcm-soa-fig-l">Charged to date</span>
-            <span className="mcm-soa-fig-v">{money(totals.settled)}</span>
+            <span className="mcm-soa-fig-v">{moneyOrUnavailable(totals.settled)}</span>
             <span className="mcm-soa-fig-s">
               {totals.settledCount} completed payment{totals.settledCount === 1 ? '' : 's'}
             </span>
           </div>
           <div className={`mcm-soa-fig${totals.inFlight > 0 ? ' warn' : ''}`}>
             <span className="mcm-soa-fig-l">Pending</span>
-            <span className="mcm-soa-fig-v">{money(totals.inFlight)}</span>
+            <span className="mcm-soa-fig-v">{moneyOrUnavailable(totals.inFlight)}</span>
             <span className="mcm-soa-fig-s">Still processing</span>
           </div>
           <div className={`mcm-soa-fig${totals.failed > 0 ? ' bad' : ''}`}>
             <span className="mcm-soa-fig-l">Failed</span>
-            <span className="mcm-soa-fig-v">{money(totals.failed)}</span>
+            <span className="mcm-soa-fig-v">{moneyOrUnavailable(totals.failed)}</span>
             <span className="mcm-soa-fig-s">Needs another attempt</span>
           </div>
           <div className="mcm-soa-fig">
             <span className="mcm-soa-fig-l">Wallet balance</span>
-            <span className="mcm-soa-fig-v">{money(walletBalance)}</span>
+            <span className="mcm-soa-fig-v">{moneyOrUnavailable(walletBalance)}</span>
             <span className="mcm-soa-fig-s">Available credit</span>
           </div>
         </div>
@@ -196,7 +240,7 @@ const StatementOfAccount = () => {
             <div>
               <h2>{plan?.plan_name || 'Current plan'}</h2>
               <p>
-                {money(planPrice)} per {plan?.plan_duration || 'month'}
+                {moneyOrUnavailable(planPrice)} per {plan?.plan_duration || 'month'}
                 {plan?.discount_enabled ? ' · discounted' : ''}
                 {plan?.is_trial === 'Y' ? ' · trial' : ''}
               </p>
@@ -222,12 +266,7 @@ const StatementOfAccount = () => {
               unit="min"
             />
             <Meter label="SMS" used={plan?.sms_used} total={plan?.sms} unit="messages" />
-            <Meter
-              label="Licences"
-              used={lastBilling?.total_license}
-              total={plan?.licenses_limit}
-              unit="seats"
-            />
+            <Meter label="Licences" used={lastBilling?.total_license} total={seatAllowance} unit="seats" />
           </div>
         </section>
 
@@ -272,7 +311,7 @@ const StatementOfAccount = () => {
                           {txn?.status || '—'}
                         </span>
                       </td>
-                      <td className="num">{money(txn?.tax_detail?.total_amount)}</td>
+                      <td className="num">{moneyOrUnavailable(txn?.tax_detail?.total_amount)}</td>
                     </tr>
                   ))
                 ) : (

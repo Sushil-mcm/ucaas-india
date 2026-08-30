@@ -2,6 +2,7 @@ import { formatDate } from '@/lib/utils';
 import TableManager from '@/components/custom/table-manager';
 import { allNumbersList } from '@/services/api';
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import { UNAVAILABLE, knownNumber } from '@/lib/billing-money';
 
 // const DID_TYPE_MAP = {
 //   L: 'LOCAL_DID',
@@ -35,10 +36,13 @@ const DIDList = () => {
       cell: ({ row }: any) => {
         const { monthly_cost } = row.original ?? {};
 
-        const parsedCost = Number(monthly_cost);
-        const isValidCost = !Number.isNaN(parsedCost);
-        const costValue = isValidCost ? parsedCost.toFixed(2) : '--';
-        const isFree = isValidCost && parsedCost === 0;
+        /* Read before converting. `Number(null)` is 0, and a cost of zero here
+           is not a blank — it puts a green "Free" badge on a number the customer
+           is being charged for. A cost we were not sent says so instead. */
+        const parsedCost = knownNumber(monthly_cost);
+        const isValidCost = parsedCost !== null;
+        const costValue = isValidCost ? parsedCost.toFixed(2) : UNAVAILABLE;
+        const isFree = parsedCost === 0;
 
         return (
           <div className="flex items-center gap-2">
@@ -50,7 +54,7 @@ const DIDList = () => {
                   : 'bg-[var(--color-ucass-active)]/10 text-[var(--color-ucass-active)] border-[var(--color-ucass-active)]/20'
               }`}
             >
-              {isFree ? 'Free' : 'Paid'}
+              {isFree ? 'Free' : isValidCost ? 'Paid' : 'Unknown'}
             </span>
           </div>
         );

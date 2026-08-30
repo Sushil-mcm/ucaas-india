@@ -26,8 +26,10 @@ __export(plan_catalogue_exports, {
   describeStoredAllowance: () => describeStoredAllowance,
   isUnlimited: () => isUnlimited,
   monthlyCostForSeat: () => monthlyCostForSeat,
+  planByName: () => planByName,
   ratesForPlan: () => ratesForPlan,
-  storedAllowanceIsUnlimited: () => storedAllowanceIsUnlimited
+  storedAllowanceIsUnlimited: () => storedAllowanceIsUnlimited,
+  yearlySavingPercent: () => yearlySavingPercent
 });
 module.exports = __toCommonJS(plan_catalogue_exports);
 const UNLIMITED = "unlimited";
@@ -41,33 +43,15 @@ const allowanceLeft = (allowance, used) => {
 const describeAllowance = (allowance, unit) => isUnlimited(allowance) ? `Unlimited ${unit}` : `${Number(allowance).toLocaleString()} ${unit}`;
 const PLANS = [
   {
-    id: "basic",
-    name: "Basic",
-    monthlyPerSeat: 0,
-    summary: "Pay only for the numbers you keep. No monthly seat charge.",
-    includes: { domesticMinutes: 0, sms: 0, numbers: 0 },
-    overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
-    maps: {
-      cost: "0",
-      free_calls: "0",
-      free_sms: "0",
-      outbound_ratecard_uuid: "standard outbound card",
-      sms_rate_card_uuid: "standard SMS card"
-    },
-    notes: [
-      "Costs nothing to hold, so somebody can try the product before committing.",
-      "Every minute and text is charged from the first one."
-    ]
-  },
-  {
     id: "starter",
     name: "Starter",
     monthlyPerSeat: 18,
+    yearlyPerSeat: 162,
     summary: "1,000 domestic minutes and 100 texts a month, per seat.",
     includes: { domesticMinutes: 1e3, sms: 100, numbers: 1 },
     overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
     maps: {
-      cost: "18",
+      cost: "18 monthly, 162 yearly",
       free_calls: "1000",
       free_sms: "100",
       did_count: "1"
@@ -77,35 +61,44 @@ const PLANS = [
     id: "professional",
     name: "Professional",
     monthlyPerSeat: 30,
+    yearlyPerSeat: 270,
     summary: "Unlimited domestic calling and 500 texts a month, per seat.",
     includes: { domesticMinutes: UNLIMITED, sms: 500, numbers: 1 },
     /* No minute rate: domestic calling cannot run out on this plan. */
     overage: { smsRate: 0.04 },
     maps: {
-      cost: "30",
-      free_calls: "unlimited - see note",
+      cost: "30 monthly, 270 yearly",
+      free_calls: "999999999 - the stored form of unlimited",
       free_sms: "500",
       did_count: "1"
-    },
-    notes: [
-      "The platform stores allowances as numbers, so unlimited needs a deliberate representation on the plan record rather than a very large figure."
-    ]
+    }
   },
   {
-    id: "ultimate",
-    name: "Ultimate",
+    id: "enterprise",
+    name: "Enterprise",
     monthlyPerSeat: 42,
+    yearlyPerSeat: 378,
     summary: "Unlimited domestic calling and 1,000 texts a month, per seat.",
     includes: { domesticMinutes: UNLIMITED, sms: 1e3, numbers: 1 },
     overage: { smsRate: 0.04 },
     maps: {
-      cost: "42",
-      free_calls: "unlimited - see note",
+      cost: "42 monthly, 378 yearly",
+      free_calls: "999999999 - the stored form of unlimited",
       free_sms: "1000",
       did_count: "1"
     }
   }
 ];
+const planByName = (planName) => {
+  const wanted = String(planName ?? "").trim().toLowerCase();
+  if (!wanted) return null;
+  return PLANS.find((p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted) ?? null;
+};
+const yearlySavingPercent = (plan) => {
+  const twelve = plan.monthlyPerSeat * 12;
+  if (!(twelve > 0) || !(plan.yearlyPerSeat > 0) || plan.yearlyPerSeat >= twelve) return null;
+  return Math.round((twelve - plan.yearlyPerSeat) / twelve * 100);
+};
 const PLAN_ADD_ONS = [
   {
     id: "ai_voice_agent",
@@ -167,11 +160,7 @@ const monthlyCostForSeat = (planId, addOnIds = []) => {
   };
 };
 const ratesForPlan = (planName) => {
-  const wanted = String(planName ?? "").trim().toLowerCase();
-  if (!wanted) return null;
-  const plan = PLANS.find(
-    (p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted
-  );
+  const plan = planByName(planName);
   if (!plan) return null;
   return {
     planId: plan.id,

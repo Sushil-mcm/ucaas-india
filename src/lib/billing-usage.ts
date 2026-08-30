@@ -19,6 +19,7 @@
  */
 
 import { knownNumber, roundMoney } from './billing-money';
+import { storedAllowanceIsUnlimited } from './plan-catalogue';
 
 /* How close to the allowance somebody is. Drives the colour of the thin bar on
    each row — nothing more. Amber is a nudge; red means money is being spent. */
@@ -55,7 +56,20 @@ export const percentUsed = (included: unknown, used: unknown): number | null => 
   const inc = knownNumber(included);
   const use = knownNumber(used);
   if (inc === null || use === null || inc <= 0) return null;
+  /* An unlimited allowance is held as a very large number, because the plan
+     record's column takes whole numbers. There is no such thing as a percentage
+     of unlimited, and the sum would answer 0% forever — a bar pinned to empty
+     that somebody would eventually read as "plenty left" of something else. */
+  if (storedAllowanceIsUnlimited(inc)) return null;
   return Math.round((use / inc) * 100);
+};
+
+/* Is this row's allowance unlimited? Screens ask so they can print the word
+   rather than the figure, and drop the "what does the next one cost" column
+   entirely — nothing can be past an allowance that does not end. */
+export const isUnlimitedAllowance = (included: unknown): boolean => {
+  const inc = knownNumber(included);
+  return inc !== null && storedAllowanceIsUnlimited(inc);
 };
 
 export const usageBand = (included: unknown, used: unknown): UsageBand | null => {
@@ -72,6 +86,10 @@ export const overageUnits = (included: unknown, used: unknown): number | null =>
   const inc = knownNumber(included);
   const use = knownNumber(used);
   if (inc === null || use === null) return null;
+  /* Unlimited cannot be exceeded. Said outright rather than relying on the
+     subtraction happening to come out at nought, so no amount of usage can ever
+     produce an overage on a plan that promised there would not be one. */
+  if (storedAllowanceIsUnlimited(inc)) return 0;
   return Math.max(0, use - inc);
 };
 

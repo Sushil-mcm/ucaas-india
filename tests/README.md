@@ -104,4 +104,34 @@ than a formula.
     npx esbuild src/lib/plan-allowance.ts --format=cjs --outfile=tests/plan-allowance.build.cjs
     node tests/plan-allowance-test.cjs
 
+The money rules, the usage table's rows, and the one banner that says an account
+is in trouble. All three bundle their imports, because they read the plan
+catalogue and each other.
+
+    npx esbuild src/lib/billing-money.ts --format=cjs --outfile=tests/billing-money.build.cjs \
+      --bundle --platform=node
+    node tests/billing-money-test.cjs
+
+    npx esbuild src/lib/billing-usage.ts --format=cjs --outfile=tests/billing-usage.build.cjs \
+      --bundle --platform=node
+    node tests/billing-usage-test.cjs
+
+    npx esbuild src/lib/billing-alerts.ts --format=cjs --outfile=tests/billing-alerts.build.cjs \
+      --bundle --platform=node --alias:@=./src
+    node tests/billing-alerts-test.cjs
+
+The plans we sell — that the three prices and the two unlimited allowances match
+the plan records the platform holds, that a plan we do not recognise gets no
+rates rather than the nearest ones, and that unlimited never prints as a number.
+
     npx esbuild src/lib/plan-catalogue.ts --format=cjs --outfile=tests/plan-catalogue.build.cjs
+    node tests/plan-catalogue-test.cjs
+
+One allowance ready for a screen — that nothing is not zero, that the very large
+number a plan record has to use for unlimited comes back as a word with no
+percentage attached, and that an allowance of genuinely none reads differently
+from one nobody told us about.
+
+    npx esbuild src/lib/allowance-meter.ts --format=cjs --outfile=tests/allowance-meter.build.cjs \
+      --bundle --platform=node
+    node tests/allowance-meter-test.cjs

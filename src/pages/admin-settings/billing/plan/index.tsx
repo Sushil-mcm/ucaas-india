@@ -42,6 +42,8 @@ import AgentCosting from './agent-costing';
    render as plain divs, which is worse than the boxes they replaced. */
 import '@/components/mcm/mcm-page.css';
 import { normalizeDidCountries } from '@/lib/did-countries';
+import { describeStoredAllowance } from '@/lib/plan-catalogue';
+import { formatMoney, moneyOrUnavailable } from '@/lib/billing-money';
 import RateDetails, { RateType } from './rate-details';
 
 interface RateModalState {
@@ -70,14 +72,19 @@ const Plan = () => {
   const [rateModal, setRateModal] = useState<RateModalState | null>(null);
   const companyInfo = userInfoData?.company_info || {};
   const isAdmin = userInfoData?.user_info?.role === 'ADMIN';
+  /* The AI allowances the plan carries. Written out by the same rule as every
+     other allowance: an unlimited one is a word, and one the platform did not
+     send is said to be missing rather than shown as zero — "0 AI minutes" reads
+     as a plan that includes none, which for somebody paying for them is a
+     support ticket. Nothing counts these down yet, and the label says so. */
   const aiUsageItems = [
     {
-      label: 'Available AI Call Minutes',
-      value: companyInfo?.ai_call_free_minutes ?? 0,
+      label: 'AI call minutes included',
+      value: describeStoredAllowance(companyInfo?.ai_call_free_minutes, 'minutes'),
     },
     {
-      label: 'Available AI Message Replies',
-      value: companyInfo?.ai_message_free_reply ?? 0,
+      label: 'AI message replies included',
+      value: describeStoredAllowance(companyInfo?.ai_message_free_reply, 'replies'),
     },
   ];
   const currentPlanDetails = dataGetMyPlanDetails?.current_plan_details || {};
@@ -381,8 +388,8 @@ const Plan = () => {
             return (
               <div className={`mcm-planchange${cheaper ? ' down' : ' up'}`}>
                 <strong>
-                  Your plan changes at the next renewal — ${nowPrice.toFixed(2)} to $
-                  {nextPrice.toFixed(2)} per user
+                  Your plan changes at the next renewal — {moneyOrUnavailable(nowPrice)} to{' '}
+                  {moneyOrUnavailable(nextPrice)} per user
                 </strong>
                 <span>
                   {cheaper ? 'A downgrade you requested takes effect' : 'The new rate applies'}
@@ -559,7 +566,10 @@ const Plan = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-gray-900  text-base xxl:text-lg">
-                          ${dataGetMyPlanDetails?.next_billing_details?.original_price}/
+                          {moneyOrUnavailable(
+                            dataGetMyPlanDetails?.next_billing_details?.original_price,
+                          )}
+                          /
                           {dataGetMyPlanDetails?.current_plan_details?.plan_duration === 12
                             ? 'year'
                             : 'month'}
@@ -579,10 +589,18 @@ const Plan = () => {
                           <h4 className="font-semibold text-gray-900 text-sm">
                             Next billing charges for {totalPaybleLicences} licenses :
                           </h4>
+                          {/* A sum, not a guess. If the platform has not sent
+                              the next amount, the line says so rather than
+                              multiplying out to a figure of our own — the two
+                              can differ, and the one on the card statement wins. */}
                           <span className="text-gray-900 text-sm border-t border-grey-200 w-full pt-2 font-medium">
-                            ${dataGetMyPlanDetails?.next_billing_details?.original_price} X{' '}
-                            {totalPaybleLicences} = $
-                            {dataGetMyPlanDetails?.next_billing_details?.next_billing_amount || 0}{' '}
+                            {moneyOrUnavailable(
+                              dataGetMyPlanDetails?.next_billing_details?.original_price,
+                            )}{' '}
+                            X {totalPaybleLicences} ={' '}
+                            {moneyOrUnavailable(
+                              dataGetMyPlanDetails?.next_billing_details?.next_billing_amount,
+                            )}{' '}
                             <sup className="text-gray-700 font-normal">(excl. Tax)</sup>
                           </span>
                         </div>
@@ -592,7 +610,14 @@ const Plan = () => {
 
                   {isAdmin && (
                     <div className="mcm-setcard p-3 flex flex-col gap-3">
-                      <h6 className="font-semibold text-gray-900 text-md">Usage</h6>
+                      <h6 className="font-semibold text-gray-900 text-md">AI allowances</h6>
+                      {/* Called allowances, not usage. These are what the plan
+                          carries; nothing counts AI minutes or replies back to
+                          this screen, so a "used" figure here would be invented. */}
+                      <p className="text-xs text-gray-600">
+                        What your plan carries. AI minutes and replies are not counted back to this
+                        screen yet.
+                      </p>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {aiUsageItems.map((item) => (
                           <div
@@ -633,20 +658,21 @@ const Plan = () => {
                       spent, not what is left. Replaced with the four numbers somebody
                       actually needs, and shown rather than hidden. */}
                   <PlanUsageTable
+                    /* Passed straight through, unconverted. `Number(null)` is 0,
+                       so converting here is what used to tell a customer their
+                       plan included no minutes when the truth was that the plan
+                       had not loaded. The table tells the two apart. */
                     lines={[
                       {
                         service: 'Calling',
-                        included:
-                          Number(dataGetMyPlanDetails?.current_plan_details?.call_duration) || 0,
-                        used:
-                          Number(dataGetMyPlanDetails?.current_plan_details?.call_duration_used) ||
-                          0,
+                        included: dataGetMyPlanDetails?.current_plan_details?.call_duration,
+                        used: dataGetMyPlanDetails?.current_plan_details?.call_duration_used,
                         unit: 'minutes',
                       },
                       {
-                        service: 'SMS / MMS',
-                        included: Number(dataGetMyPlanDetails?.current_plan_details?.sms) || 0,
-                        used: Number(dataGetMyPlanDetails?.current_plan_details?.sms_used) || 0,
+                        service: 'Text messages',
+                        included: dataGetMyPlanDetails?.current_plan_details?.sms,
+                        used: dataGetMyPlanDetails?.current_plan_details?.sms_used,
                         unit: 'messages',
                       },
                     ]}
@@ -920,7 +946,14 @@ const Plan = () => {
                   setIsRenewPaymentInitiate(false);
                 }}
                 isApiLoad={isRenewPaymentInitiate || isPendingUpgradeTrialPlan}
-                submitButtonText={`Pay $${getTaxes?.total_amount || 0}`}
+                /* Never "Pay $0". Until the tax call answers there is no total
+                   to quote, and a button that names a price we did not get is
+                   the start of a refund conversation. */
+                submitButtonText={
+                  formatMoney(getTaxes?.total_amount)
+                    ? `Pay ${formatMoney(getTaxes?.total_amount)}`
+                    : 'Pay'
+                }
               />
             </div>
           </DialogContent>

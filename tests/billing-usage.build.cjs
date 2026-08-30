@@ -22,6 +22,7 @@ __export(billing_usage_exports, {
   WARNING_AT_PERCENT: () => WARNING_AT_PERCENT,
   hasAnyUsage: () => hasAnyUsage,
   isFullyIncluded: () => isFullyIncluded,
+  isUnlimitedAllowance: () => isUnlimitedAllowance,
   makeUsageRow: () => makeUsageRow,
   overageCost: () => overageCost,
   overageUnits: () => overageUnits,
@@ -40,13 +41,25 @@ var knownNumber = (value) => {
 };
 var roundMoney = (amount) => Math.round((amount + Number.EPSILON) * 100) / 100;
 
+// src/lib/plan-catalogue.ts
+var UNLIMITED_STORED_THRESHOLD = 999999999;
+var storedAllowanceIsUnlimited = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= UNLIMITED_STORED_THRESHOLD;
+};
+
 // src/lib/billing-usage.ts
 var WARNING_AT_PERCENT = 80;
 var percentUsed = (included, used) => {
   const inc = knownNumber(included);
   const use = knownNumber(used);
   if (inc === null || use === null || inc <= 0) return null;
+  if (storedAllowanceIsUnlimited(inc)) return null;
   return Math.round(use / inc * 100);
+};
+var isUnlimitedAllowance = (included) => {
+  const inc = knownNumber(included);
+  return inc !== null && storedAllowanceIsUnlimited(inc);
 };
 var usageBand = (included, used) => {
   const pct = percentUsed(included, used);
@@ -59,6 +72,7 @@ var overageUnits = (included, used) => {
   const inc = knownNumber(included);
   const use = knownNumber(used);
   if (inc === null || use === null) return null;
+  if (storedAllowanceIsUnlimited(inc)) return 0;
   return Math.max(0, use - inc);
 };
 var overageCost = (included, used, ratePerUnit) => {
@@ -100,3 +114,17 @@ var sortUsageRows = (rows) => [...rows].sort((a, b) => {
 });
 var hasAnyUsage = (rows) => rows.some((r) => r.used !== null || r.included !== null);
 var unavailableCount = (rows) => rows.filter((r) => r.used === null).length;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  WARNING_AT_PERCENT,
+  hasAnyUsage,
+  isFullyIncluded,
+  isUnlimitedAllowance,
+  makeUsageRow,
+  overageCost,
+  overageUnits,
+  percentUsed,
+  sortUsageRows,
+  unavailableCount,
+  usageBand
+});

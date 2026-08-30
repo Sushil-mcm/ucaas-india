@@ -7,6 +7,15 @@ import { Button } from '@/components/ui/button';
 import { useRef, useState } from 'react';
 import TableManager from '@/components/custom/table-manager';
 import { downloadAnalyticsSectionAsPdf } from '@/lib/analytics-export';
+import { UNAVAILABLE, knownNumber, moneyOrUnavailable, roundMoney } from '@/lib/billing-money';
+
+/* This is the document a finance team files, so every figure on it is either a
+ * real amount or an admission. The version before this fell back to "$0.0"
+ * wherever a figure was missing — on a tax invoice, a zero is not a blank, it is
+ * a statement that nothing was charged for that line, and it gets reconciled
+ * against. Amounts also print with two decimal places now: "$18" and "$18.00"
+ * are the same number, but only one of them looks like money on a receipt.
+ */
 
 const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
   const { user } = useUser();
@@ -18,7 +27,7 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
     typeof mainSiteInfo?.address === 'string' ? mainSiteInfo.address.trim() : '';
   const mainSiteInvoiceEmail =
     typeof mainSiteInfo?.invoice_email === 'string' ? mainSiteInfo.invoice_email.trim() : '';
-  const discountPrice = Number(info?.promo_discount || 0)?.toFixed(0);
+  const discount = knownNumber(info?.promo_discount);
   const isDiscount =
     info?.purchase_detail?.plan_cost?.discount_enabled || info?.purchase_detail?.discount_enabled;
   const planDiscountPrice =
@@ -26,6 +35,21 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
   const planOriginalPrice =
     info?.purchase_detail?.plan_cost?.original_price || info?.purchase_detail?.original_price;
   const isValidType = ['Plan Payment', 'License Purchase', 'Add Member'].includes(info?.type ?? '');
+
+  /* The three figures the invoice is built from, read once. */
+  const subTotal = knownNumber(info?.tax_detail?.sub_total);
+  const taxAmount = knownNumber(info?.tax_detail?.tax_amount);
+  const totalAmount = knownNumber(info?.tax_detail?.total_amount);
+
+  /* Any part of the total that is neither the goods nor the tax. Worked out from
+     the invoice's own three figures rather than written down as zero: if the
+     platform ever does add a fee, this line reports it instead of hiding it,
+     and if any of the three is missing the line says so instead of claiming
+     there was no fee. */
+  const processingFee =
+    subTotal === null || taxAmount === null || totalAmount === null
+      ? null
+      : roundMoney(totalAmount - subTotal - taxAmount);
 
   const columns = [
     { header: 'Item', accessorKey: 'desc' },
@@ -41,7 +65,7 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
         ]
       : []),
     { header: 'Buy Price', accessorKey: 'buy_price' },
-    !!discountPrice && Number(discountPrice) > 0 && { header: 'Discount', accessorKey: 'discount' },
+    discount !== null && discount > 0 && { header: 'Discount', accessorKey: 'discount' },
     { header: 'Total Price', accessorKey: 'total_price' },
   ].filter(Boolean);
   const tableData = [
@@ -52,24 +76,17 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
           ? info?.did_detail?.did_number
           : '',
       purchase_detail: info?.purchase_detail?.plan_name ? info?.purchase_detail?.plan_name : 'NA',
-      per_licence_price:
+      per_licence_price: moneyOrUnavailable(
         info?.type === 'License Purchase'
-          ? `$${parseFloat(info?.amount || 0)}`
+          ? info?.amount
           : isDiscount
-            ? `$${planDiscountPrice || 0}`
-            : `$${planOriginalPrice || 0}`,
-      licence_count: info?.total_license ? info?.total_license : '0',
-      buy_price: isValidType
-        ? info?.tax_detail
-          ? `$${parseFloat(info?.tax_detail?.sub_total || 0)}`
-          : '$0.0'
-        : `$${parseFloat(info?.amount || 0)}`,
-      discount: info?.promo_discount ? `$${info?.promo_discount}` : '0',
-      total_price: isValidType
-        ? info?.tax_detail
-          ? `$${parseFloat(info?.tax_detail?.sub_total)}`
-          : '$0.0'
-        : `$${parseFloat(info?.amount || 0)}`,
+            ? planDiscountPrice
+            : planOriginalPrice,
+      ),
+      licence_count: knownNumber(info?.total_license) === null ? UNAVAILABLE : info.total_license,
+      buy_price: moneyOrUnavailable(isValidType ? subTotal : info?.amount),
+      discount: moneyOrUnavailable(info?.promo_discount),
+      total_price: moneyOrUnavailable(isValidType ? subTotal : info?.amount),
       isSummary: false,
     },
     {
@@ -93,7 +110,7 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
             licence_count: '',
             buy_price: '',
             discount: '',
-            total_price: info?.tax_detail ? `$${parseFloat(info?.tax_detail?.sub_total)}` : '$0.0',
+            total_price: moneyOrUnavailable(subTotal),
             isSummary: true,
           },
           {
@@ -104,9 +121,10 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
             licence_count: '',
             buy_price: '',
             discount: '',
-            total_price: info?.tax_detail
-              ? `$${parseFloat(info?.tax_detail?.tax_amount)} (${Number(info?.tax_detail?.tax_percentage ?? 0)}%)`
-              : '$0.0',
+            total_price:
+              knownNumber(info?.tax_detail?.tax_percentage) === null
+                ? moneyOrUnavailable(taxAmount)
+                : `${moneyOrUnavailable(taxAmount)} (${info.tax_detail.tax_percentage}%)`,
             isSummary: true,
           },
           {
@@ -117,7 +135,7 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
             licence_count: '',
             buy_price: '',
             discount: '',
-            total_price: '$0.0',
+            total_price: moneyOrUnavailable(processingFee),
             isSummary: true,
           },
         ]
@@ -130,11 +148,7 @@ const InvoiceDetails = ({ info, drawerState, setDrawerState }: any) => {
       licence_count: '',
       buy_price: '',
       discount: '',
-      total_price: isValidType
-        ? info?.tax_detail?.total_amount
-          ? `$${parseFloat(info?.tax_detail?.total_amount)}`
-          : '$0.0'
-        : `$${parseFloat(info?.total_amount || 0)}`,
+      total_price: moneyOrUnavailable(isValidType ? totalAmount : info?.total_amount),
       isSummary: true,
     },
   ];

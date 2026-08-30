@@ -17,6 +17,19 @@
  *   worst kind of wrong: somebody would budget against it.
  */
 
+import { PLAN_ADD_ONS } from './plan-catalogue';
+
+/* The AI voice licence is priced in the plan catalogue, alongside the plans it
+ * is sold with. It is read from there rather than typed again here: this file
+ * and that one both reach a customer's eyes — one as a card on the Add-ons
+ * screen, the other as a row on the plan comparison — and two copies of a price
+ * drift apart on the day somebody edits only the copy they happened to open.
+ *
+ * The lookup is by id and may find nothing. If it ever does, every figure below
+ * becomes undefined, which the screen already knows how to say out loud: "Not
+ * available yet" is a survivable answer, and an invented price is not. */
+const CATALOGUE_AI_VOICE = PLAN_ADD_ONS.find((entry) => entry.id === 'ai_voice_agent');
+
 export interface AddOn {
   id: string;
   name: string;
@@ -116,18 +129,22 @@ export const ADD_ONS: AddOn[] = [
   {
     id: 'ai_voice',
     name: 'AI voice',
-    summary: '50 minutes a month of an AI voice answering and speaking to callers.',
+    /* The allowance is written into the sentence from the catalogue, not
+       alongside it. This card used to promise 50 minutes in its summary and
+       charge for anything past 100 two lines further down - the same card
+       disagreeing with itself about what somebody had bought. */
+    summary: `${(CATALOGUE_AI_VOICE?.included?.units ?? 0).toLocaleString()} minutes a month of an AI voice answering and speaking to callers.`,
     replaces: 'Replaces somebody having to pick up simply to find out what a caller wants.',
     billing: 'Bought per seat, monthly.',
     /* No featureKey on purpose. This is bought separately from AI assistance and
        the platform reports no flag of its own for it, so the card says it cannot
        tell rather than borrowing the AI flag and claiming you have it. */
-    monthlyPrice: 45,
-    included: 100,
-    includedUnit: 'minutes',
-    overageRate: 0.25,
+    monthlyPrice: CATALOGUE_AI_VOICE?.monthlyPrice,
+    included: CATALOGUE_AI_VOICE?.included?.units,
+    includedUnit: CATALOGUE_AI_VOICE?.included?.unit,
+    overageRate: CATALOGUE_AI_VOICE?.overageRate,
     detail: [
-      'Past 100 minutes, it keeps working and each further minute costs 25 cents.',
+      'Past the included minutes it keeps working, and each further minute is charged at the rate shown above.',
       'Every minute costs real money to run - speech recognition, the model and the voice - so the rate covers that rather than being set to look cheap.',
     ],
   },
