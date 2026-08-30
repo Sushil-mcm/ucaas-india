@@ -1,3 +1,50 @@
+# CORRECTION, 30 August 2026 — read this first
+
+**The counter in this document cannot work yet, and I was wrong to say otherwise.**
+
+`mod_callcenter` is not loaded in FreeSWITCH. Verified independently: 504 modules
+are loaded and none of them is callcenter, and `callcenter_config queue list`
+returns "Command not found!". So the switch emits no call-centre events at all,
+`esl-manager` receives none, and the aggregator I deployed on 29 August can never
+populate.
+
+When I checked after deploying and saw `[]`, I told you that meant "no calls
+since the restart, it will fill as calls come in". That was wrong. It will stay
+empty until the module loads. The code is harmless and inert, not working.
+
+**Why the module fails to load.** It asks the config manager for
+`callcenter.conf` over xml_curl and gets a 400 with an empty body. Verified:
+`callcenter.conf -> 400` while `sofia.conf -> 200` on the same endpoint. At
+module-load time FreeSWITCH sends no queue or domain, the handler falls through
+to its not-found path, and that path is configured as an empty string — so it
+tries to open "" and fails.
+
+**And nothing else routes a caller into a queue either.** The dialplan generator
+`/opt/fs-xml-api-1.2.5/dialplan_service.py` contains zero matches for "queue" and
+zero for "callcenter". `callcenter-queue.lua` exists but no dialplan file
+references it.
+
+Credit to Agent 3, who traced this end to end; I verified each claim before
+recording it here.
+
+**So the real order of work is upstream of everything below:**
+
+1. Make `callcenter.conf` return 200 for a contextless module-load request
+   (wire the not-found template path — `templates/notfound.xml` exists already).
+2. Add `<agents>` and `<tiers>` to `templates/callcenter.conf.xml`; it renders
+   only a `<queues>` block today, so no agent would ever attach.
+3. Give the dialplan a path that actually sends a caller into the queue.
+
+Only after those three does the counter below start returning real figures, and
+only then can the wait announcements and callback be switched on.
+
+**Do not migrate agent data between MySQL and MongoDB as a fix.** The config
+manager reads queues from MySQL and agents/tiers from MongoDB, but neither is
+consulted while the module is unloaded, so moving data would change nothing
+observable.
+
+---
+
 # Making queue behaviour real — where the counter should live
 
 Investigated 2026-08-29 on the live backend. **Nothing on the backend was changed.**
