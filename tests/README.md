@@ -42,3 +42,11 @@ means on a clock that is not yours.
 
     npx esbuild src/lib/location-hours.ts --format=cjs --outfile=tests/location-hours.build.cjs
     node tests/location-hours-test.cjs
+
+Changing one setting for many people at once — that only the settings an admin
+ticked are written, that everything else on a person's record survives the
+write, and that somebody already set that way is left alone rather than saved
+again.
+
+    npx esbuild src/lib/bulk-user-settings.ts --format=cjs --outfile=tests/bulk-user-settings.build.cjs
+    node tests/bulk-user-settings-test.cjs

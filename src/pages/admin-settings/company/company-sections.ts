@@ -22,6 +22,10 @@ export const COMPANY_SECTIONS: CompanySection[] = [
   { path: 'calling', label: 'Calling' },
   { path: 'messaging', label: 'Messaging' },
   { path: 'policies', label: 'Policies' },
+  /* Sits straight after Policies on purpose. Policies is where an admin decides
+     the company's answer; this is where that answer is put onto the people who
+     already work here, who none of the other screens reach. */
+  { path: 'apply-to-people', label: 'Apply to people' },
   { path: 'profile-fields', label: 'Profile fields' },
   { path: 'security', label: 'Security' },
 ];
