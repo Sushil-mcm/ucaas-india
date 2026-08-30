@@ -28,6 +28,9 @@ export const NUMBER_LIST_QUERY_KEYS = [
   'usedNumbersList',
   'inventoryNumbersList',
   'allNumbersListInInventory',
+  /* The By line view walks every page of the same endpoint and groups the
+     result, so a label or a forwarding change makes it stale too. */
+  'numbersByLine',
 ] as const;
 
 /* Anything a number change also makes stale. */

@@ -163,6 +163,13 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'TickCircleIcon',
         },
         {
+          /* The same numbers read from the line's side rather than the
+             number's, which is how an admin asks the question. */
+          title: 'Numbers by line',
+          path: '/admin-settings/numbers/by-line',
+          icon: 'AllNumberIcon',
+        },
+        {
           title: 'Unused numbers',
           path: '/admin-settings/numbers/inventory',
           icon: 'InventoryIcon',
