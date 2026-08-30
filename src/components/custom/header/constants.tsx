@@ -30,7 +30,14 @@ export const presenceStatusArray = [
   {
     title: 'Do not disturb',
     value: 'dnd',
-    description: 'When you are in Do not disturb mode, all call will go to voicemail',
+    /* This used to promise that every call goes to voicemail. Nothing in the
+       call path reads it - not the dialplan, not the directory service that
+       decides which device to ring - so a phone set to Do not disturb still
+       rings. Somebody who set it before an evening off and was rung anyway
+       would rightly say the product lied to them, so it now says what it
+       actually does. Restore the old sentence when the switch honours it. */
+    description:
+      'Shows colleagues you are busy. Your phone still rings — send calls to voicemail under My Account → My Phone.',
   },
 ];
 

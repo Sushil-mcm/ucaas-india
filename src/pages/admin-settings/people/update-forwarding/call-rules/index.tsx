@@ -225,6 +225,16 @@ const CallRules: FC<CallRulesProps> = ({
         </div>
         {/* <div className="border border-gray-200 rounded-xl flex flex-col"> */}
         {/* <div className="divide-y divide-gray-200"> */}
+        {/* Said once, above the whole list. Nothing in the call path reads these
+            rules - the service that decides which device to ring dials whatever
+            is registered, with no rule evaluation at all - so the order below
+            describes an intention, not what happens to a caller today. Saying
+            "checked first" without this reads as a working precedence order.
+            Delete this in the same change that makes the rules real. */}
+        <p className="mcm-setrow-note is-info mb-3">
+          Coming soon — these rules are saved, but calls are not routed by them yet. The order below
+          is how they will apply once they are switched on.
+        </p>
         <div className="mcm-rule">
           <span className="block">
             <div className="mcm-rule-h">
