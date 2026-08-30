@@ -41,6 +41,10 @@ const rowsOf = (response: any): any[] => {
 };
 
 const TONE: Record<Impact['level'], string> = {
+  /* The same red as the lockout: both mean stop. The difference between them is
+     in the sentence, not in the colour, and giving a closed door its own shade
+     would only add a colour nobody has learnt. */
+  refused: 'border-red-200 bg-red-50 text-red-900',
   'locks-you-out': 'border-red-200 bg-red-50 text-red-900',
   'stops-calls': 'border-amber-200 bg-amber-50 text-amber-900',
   'worth-knowing': 'border-gray-200 bg-gray-50 text-gray-700',

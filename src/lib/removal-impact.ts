@@ -65,10 +65,20 @@ export interface DepartmentLike {
   members?: { user_uuid?: string; uuid?: string; extension?: string | number }[];
 }
 
-export type ImpactLevel = 'stops-calls' | 'locks-you-out' | 'worth-knowing';
+/**
+ * How bad a finding is.
+ *
+ * 'refused' is the newest and the flattest of them: it does not mean "think
+ * carefully", it means the platform will not do this, and pressing the button
+ * produces an error and nothing else. It is separated from 'locks-you-out'
+ * because the two ask different things of the reader — one is a decision, the
+ * other is a closed door with a way round it.
+ */
+export type ImpactLevel = 'refused' | 'stops-calls' | 'locks-you-out' | 'worth-knowing';
 
 export interface Impact {
   code:
+    | 'admin-refused'
     | 'last-admin'
     | 'queue-last-agent'
     | 'queue-member'
@@ -182,8 +192,19 @@ export const checkRemoval = ({
   const extension = extensionOf(person);
   const who = nameOf(person);
 
-  /* --- the one that cannot be undone from inside the product --- */
+  /* --- the door that is simply closed --- */
   if (isAdmin(person)) {
+    /* The platform refuses to remove anybody whose role is administrator, and it
+       refuses every one of them — not only the last. Until this was checked
+       here, the button was offered, the warnings were read, the admin pressed
+       it and got an error with no explanation and no next step. The way round
+       exists and is one click: change the role, then remove. */
+    found.push({
+      code: 'admin-refused',
+      level: 'refused',
+      message: `${who} is an administrator, and the platform will not remove an administrator — the request comes back refused. Change their role to something else first, then remove them.`,
+    });
+
     const otherAdmins = everyone.filter((p) => isAdmin(p) && !isSamePerson(p, person));
     if (otherAdmins.length === 0) {
       found.push({
@@ -287,7 +308,12 @@ export const checkRemoval = ({
     found.push({
       code: 'keeps-a-number',
       level: 'worth-knowing',
-      message: `${ownNumber} is assigned to them. It goes back to your released numbers, where it can be given to somebody else — you keep it and keep paying for it either way.`,
+      /* Not "released": released numbers are the ones that have left the account
+         altogether. This one stays on the account and stays on the bill — it
+         simply stops being assigned to anybody, and turns up under Unused
+         numbers. Sending an admin to the wrong screen to find it is how a paid
+         number goes missing for a month. */
+      message: `${ownNumber} is assigned to them. It stays on the account and turns up under Unused numbers, where it can be given to somebody else — you keep paying for it either way. Nothing records that this person was the last to hold it.`,
       where: ownNumber,
     });
   }
@@ -296,9 +322,12 @@ export const checkRemoval = ({
 };
 
 const ORDER: Record<ImpactLevel, number> = {
-  'locks-you-out': 0,
-  'stops-calls': 1,
-  'worth-knowing': 2,
+  /* A closed door goes above everything, including the lockout: there is no
+     point weighing consequences of something that is not going to happen. */
+  refused: 0,
+  'locks-you-out': 1,
+  'stops-calls': 2,
+  'worth-knowing': 3,
 };
 
 /* Worst first. An admin reading this is deciding whether to go ahead, and the
@@ -311,7 +340,7 @@ export const sortImpacts = (impacts: Impact[]): Impact[] =>
    make, and a product that refuses to remove somebody who is on a queue would
    be unusable. */
 export const blocksRemoval = (impacts: Impact[]): boolean =>
-  impacts.some((i) => i.level === 'locks-you-out');
+  impacts.some((i) => i.level === 'locks-you-out' || i.level === 'refused');
 
 export const countByLevel = (impacts: Impact[], level: ImpactLevel): number =>
   impacts.filter((i) => i.level === level).length;
@@ -319,6 +348,12 @@ export const countByLevel = (impacts: Impact[], level: ImpactLevel): number =>
 /* One sentence for the top of the dialog. Silence when nothing is affected is
    itself the useful answer — it means the removal is clean. */
 export const summarise = (impacts: Impact[]): string => {
+  /* Said before the lockout line, because it answers a different question. The
+     lockout asks "should you"; this one answers "can you", and the answer is
+     no — so an admin reading it stops looking for the courage and starts
+     looking for the way round. */
+  if (impacts.some((i) => i.level === 'refused'))
+    return 'The platform will not do this. There is a way round it below.';
   if (blocksRemoval(impacts)) return 'This cannot be undone from inside the product.';
 
   const breaks = countByLevel(impacts, 'stops-calls');

@@ -213,6 +213,9 @@ const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules
 const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
+const JoiningAndLeaving = lazy(
+  () => import('@/pages/admin-settings/people/joining-and-leaving'),
+);
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
 const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
 const AccessControl = lazy(() => import('@/pages/admin-settings/roles/access-control'));
@@ -815,6 +818,22 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute
                 element={<DirectoryPeople />}
+                guard={{
+                  permission: 'account_setting.access.USER.action.view',
+                }}
+              />
+            ),
+          },
+          {
+            /* What somebody receives when they are added, and what happens when
+               they leave. Gated on the same permission as the people list
+               itself: it describes that list, and there is nothing on it
+               somebody who may see the list should be kept from. */
+            path: 'joining-and-leaving',
+            id: 'joining-and-leaving',
+            element: (
+              <ProtectedRoute
+                element={<JoiningAndLeaving />}
                 guard={{
                   permission: 'account_setting.access.USER.action.view',
                 }}

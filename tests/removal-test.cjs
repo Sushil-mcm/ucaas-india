@@ -72,7 +72,39 @@ const twoAdmins = checkRemoval({
   everyone: [amara, { ...bo, role: 'ADMIN' }],
 });
 is('a second admin means no lockout', codes(twoAdmins).includes('last-admin'), false);
-is('and nothing blocks', blocksRemoval(twoAdmins), false);
+
+/* ---- the closed door -------------------------------------------------- */
+
+/* The platform refuses to remove ANY administrator, not only the last one. The
+   button used to be offered anyway: the admin read the warnings, pressed it,
+   and got an error with no explanation and no next step. */
+is('every administrator is refused', codes(twoAdmins).includes('admin-refused'), true);
+is('and it still blocks even with a spare admin', blocksRemoval(twoAdmins), true);
+is(
+  'with the way round said out loud',
+  twoAdmins.find((i) => i.code === 'admin-refused').message.includes('Change their role'),
+  true,
+);
+is('a non-admin is never refused', codes(checkRemoval({ person: bo })).includes('admin-refused'), false);
+/* A custom role wins over the plain column, the same order the people list
+   reads them in — read them the other way and this fires on the wrong people. */
+is(
+  'a custom role decides it, not the old column',
+  codes(checkRemoval({ person: { ...amara, custom_role_data: { name: 'Agent' } } })).includes(
+    'admin-refused',
+  ),
+  false,
+);
+is(
+  'the refusal is read before the lockout',
+  sortImpacts(onlyAdmin)[0].code,
+  'admin-refused',
+);
+is(
+  'and the summary says what to do rather than how brave to be',
+  summarise(onlyAdmin),
+  'The platform will not do this. There is a way round it below.',
+);
 
 /* The person being removed must not be counted as their own replacement — the
    list always contains them, so this is the mistake that would disable the
@@ -188,11 +220,18 @@ const many = checkRemoval({
   numbers: [{ did_number: '+441234', forward_type: 'EXTENSION', forward_value: '1001' }],
 });
 const sorted = sortImpacts(many);
-is('the lockout is read first', sorted[0].code, 'last-admin');
-is('then what stops calls', sorted[1].code, 'number-forwarding');
-is('then the rest', sorted[2].code, 'queue-member');
+is('the closed door is read first', sorted[0].code, 'admin-refused');
+is('then the lockout', sorted[1].code, 'last-admin');
+is('then what stops calls', sorted[2].code, 'number-forwarding');
+is('then the rest', sorted[3].code, 'queue-member');
 
-is('a lockout leads the summary', summarise(many).includes('cannot be undone'), true);
+/* A lockout on somebody the platform would still remove — a person who holds a
+   custom role named after an administrator's job but is not one. */
+const lockoutOnly = checkRemoval({
+  person: { ...bo, role: 'ADMIN' },
+  everyone: [{ ...bo, role: 'ADMIN' }, { ...amara, role: 'AGENT' }],
+});
+is('the lockout still leads when nothing is refused', summarise([lockoutOnly[1]]).includes('cannot be undone'), true);
 is('one break reads as one', summarise(checkRemoval({ person: bo, queues: [{ name: 'S', members: [{ user_uuid: 'u-2' }] }] })), 'One thing will stop working when they are removed.');
 is('nothing at all is said plainly', summarise([]), 'Nothing else points at this person. Removing them changes nothing else.');
 is(

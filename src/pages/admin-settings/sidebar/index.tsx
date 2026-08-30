@@ -116,6 +116,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'ExtensionIcon',
           path: '/admin-settings/people',
         },
+        {
+          /* Sits directly under the list it explains. An administrator looking
+             for "what happens when I remove somebody" looks next to the people,
+             not under access control. */
+          title: 'Joining and leaving',
+          icon: 'UserCircleIcon',
+          path: '/admin-settings/joining-and-leaving',
+        },
         /* Access is one decision made in four steps, so the four screens are
            listed in the order they should be used rather than alphabetically or
            in the order they happened to be built. The reference table sits last:

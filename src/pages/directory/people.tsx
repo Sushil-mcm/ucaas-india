@@ -27,6 +27,7 @@ import RoleChangeModal from '@/pages/admin-settings/people/role-change-modal';
 import AssignCallerIdModal from '@/pages/admin-settings/people/add-users/assign-caller-id-modal';
 import AddUsers from '@/pages/admin-settings/people/add-users';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
+import { buildRosterCsv, rosterFileName, toExportRow } from '@/lib/user-roster-export';
 
 /**
  * Directory ▸ People — the organisation roster.
@@ -166,6 +167,37 @@ const People = () => {
 
   const onQueue = rows.filter((row) => row.tone === 'good').length;
 
+  /* Take the roster away as a spreadsheet.
+   *
+   * The platform has no export of any kind for people, so this is built here
+   * out of the list already on screen. That is why it exports what the filters
+   * are showing rather than "everybody": the rows are what this page fetched,
+   * and pretending otherwise would quietly hand somebody a partial file
+   * labelled as the whole company. The button says how many are in it.
+   *
+   * The file starts with a byte-order mark because otherwise a spreadsheet
+   * opening it on Windows reads the accents in people's names as rubbish. */
+  const exportRoster = () => {
+    const csv = buildRosterCsv(
+      visible.map((row) =>
+        toExportRow(
+          row.raw,
+          row.department && row.department !== '—' ? row.department.split(', ') : [],
+        ),
+      ),
+    );
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = rosterFileName(
+      user?.company_info?.company_name || user?.user_info?.company_name,
+      new Date().toISOString(),
+    );
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <DirectoryPage
@@ -180,6 +212,23 @@ const People = () => {
             >
               <Ic n="users" />
               Groups
+            </button>
+            {/* The count is in the label on purpose: filters are on this page,
+                and a button that just says "Export" invites somebody to file a
+                filtered list as the whole company. */}
+            <button
+              type="button"
+              className="btn ghost"
+              disabled={!visible.length}
+              title={
+                visible.length === rows.length
+                  ? 'Download everybody as a spreadsheet'
+                  : 'Downloads the people these filters are showing, not the whole company'
+              }
+              onClick={exportRoster}
+            >
+              <Ic n="dl" />
+              Export {visible.length}
             </button>
             {canInvite ? (
               <button type="button" className="btn primary" onClick={() => setInviting(true)}>
