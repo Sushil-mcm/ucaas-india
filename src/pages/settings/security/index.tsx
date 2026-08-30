@@ -45,15 +45,20 @@ const Security = () => {
   });
 
   /* This page is titled "your password, and every device signed in as you", and
-     that is what it should show. The endpoint behind it returns every device in
-     the COMPANY, and the picker below let anyone choose a colleague and end
-     their sessions — the server takes the target from the request and does not
-     check it is you.
-     
-     Scoped here to the signed-in person. Ending someone else's session is an
+     that is what it should show.
+
+     It used to say the server did not check who you were targeting. That is no
+     longer true, and the note is kept accurate on purpose: the three server-side
+     gaps behind it are all closed and live as of 29 August 2026.
+       - logout() gives a non-privileged caller `undefined` for the target, so it
+         falls back to their own uuid, and the payload cannot smuggle one past it.
+       - getDeviceSecurities scopes to the caller's company, and to the caller's
+         own uuid unless they are an ADMIN.
+       - logOutUser now refuses a target outside the admin's own company.
+
+     The filter below stays regardless. Ending someone else's session is an
      administrative act and belongs on an admin screen, not on a page about your
-     own account. The server-side check is the real fix and is still needed;
-     this stops the product offering it. */
+     own account — so this page shows you your own devices whatever your role. */
   const currentUserUuid = `${user?.uuid || user?.user_info?.uuid || ''}`.trim();
 
   const ownDevices = useMemo(

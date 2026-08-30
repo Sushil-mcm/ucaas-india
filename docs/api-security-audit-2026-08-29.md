@@ -41,6 +41,15 @@ source is the single most valuable thing anyone can do here.
 > needs two accounts in different companies to test properly.
 >
 > **Still open: issues 1, 4 and 6.**
+>
+> **RETESTED — 30 August 2026, Agent 3.** Issues 1 and 6 are now **fixed and
+> live** too. Verified against the running service, not the file alone:
+> `UserController.js` contains the `callerMayAssignRoles` guard at 2 sites
+> (mtime 29 Aug 06:46:22); `AuthController.js` carries the logout tenant-scope
+> block (mtime 29 Aug 06:17:35); `default-api` pid 608976 started 29 Aug
+> 08:22:01 — later than both, so both are in the running process.
+>
+> **Still open: issue 4 only.**
 
 ## Summary
 
@@ -48,11 +57,11 @@ source is the single most valuable thing anyone can do here.
 |---|---|---|
 | 0 | Any signed-in user could end any colleague's sessions | **Fixed** |
 | 5 | Any user could list colleagues' devices, IPs and emails | **Not a defect for ordinary users** — but admins leak cross-tenant via issue 3 |
-| 1 | A normal user can give themselves an administrator role | **OPEN** |
+| 1 | A normal user can give themselves an administrator role | **FIXED 29 Aug 06:46 — live, retested 30 Aug** |
 | 2 | Any signed-in user can delete or rewrite any role, for any customer | **FIXED 05:52 UTC** |
 | 3 | Filter injection — any customer reads every company's rows | **FIXED 05:52 UTC — 9 guards, 5 files** |
 | 4 | Releasing a number never tells the carrier, so billing continues | **OPEN** |
-| 6 | A company admin can end sessions for users in other companies | **OPEN — new, narrow** |
+| 6 | A company admin can end sessions for users in other companies | **FIXED 29 Aug 06:17 — live, retested 30 Aug** |
 
 Two things on the old list turned out not to need work, and one new gap was
 found while confirming the logout fix.
