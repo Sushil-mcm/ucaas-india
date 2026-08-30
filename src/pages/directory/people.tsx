@@ -15,6 +15,7 @@ import { deleteMember, removeAssignNumber } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
+import RemovalWarning, { useRemovalImpact } from '@/components/mcm/removal-warning';
 import {
   PRESENCE_OPTIONS,
   presenceValueOf,
@@ -51,6 +52,7 @@ const People = () => {
   const { dial } = useConsoleDialer();
   const { startVideoCall, isStarting } = useInstantMeeting();
   const { rows, isLoading } = usePeopleRows();
+
   const { user } = useUser();
   const { setMyPresence, isPending: isSettingPresence, myUuid } = useMyPresenceControl();
   const { features } = useCompanyFeatures();
@@ -71,6 +73,13 @@ const People = () => {
 
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<PersonRow | null>(null);
+
+  /* Before anybody is removed, find what still points at them — a queue they
+     are the last agent on, a menu key, a number forwarded to their extension.
+     The roster is already on screen, so it is handed over rather than fetched
+     a second time. */
+  const roster = useMemo(() => rows.map((row: any) => row.raw), [rows]);
+  const removal = useRemovalImpact((deleting?.raw ?? null) as any, Boolean(deleting), roster);
   const [unassigning, setUnassigning] = useState<PersonRow | null>(null);
 
   const { mutate: removePerson, isPending: isDeletingPerson } = useMutation({
@@ -563,13 +572,20 @@ const People = () => {
           onConfirm: () => deleting?.raw?.uuid && removePerson(deleting.raw.uuid),
           onCancel: () => setDeleting(null),
           onClose: () => setDeleting(null),
-          confirmBtnText: 'Remove',
+          confirmBtnText: 'Remove them',
           closeBtnText: 'Cancel',
+          /* Off only for the finding that cannot be undone from inside the
+             product — losing your last administrator. Everything else is a
+             judgement the admin is entitled to make. */
+          confirmBtnDisabled: removal.blocked || removal.loading,
+          className: 'w-full sm:w-2/3 md:w-1/2 lg:w-2/5 p-3',
           descriptionTextComp: (
-            <div className="text-md">
-              Remove <strong>{deleting?.name}</strong>? Their extension and any numbers assigned to
-              them are released.
-            </div>
+            <RemovalWarning
+              impacts={removal.impacts}
+              loading={removal.loading}
+              incomplete={removal.incomplete}
+              name={deleting?.name || 'this person'}
+            />
           ),
         }}
       />
