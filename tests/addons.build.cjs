@@ -22,22 +22,45 @@ __export(addons_exports, {
   addOnState: () => addOnState,
   canPurchaseHere: () => canPurchaseHere,
   countByState: () => countByState,
+  estimateMonthlyCost: () => estimateMonthlyCost,
   priceText: () => priceText
 });
 module.exports = __toCommonJS(addons_exports);
+const estimateMonthlyCost = (addOn, used) => {
+  if (addOn.monthlyPrice === void 0) return null;
+  const base = addOn.monthlyPrice;
+  const allowance = addOn.included ?? 0;
+  const rate = addOn.overageRate ?? 0;
+  const consumed = Number.isFinite(used) ? Math.max(0, used) : 0;
+  const overUnits = Math.max(0, consumed - allowance);
+  const overage = Math.round(overUnits * rate * 100) / 100;
+  return { total: Math.round((base + overage) * 100) / 100, base, overage, overUnits };
+};
 const ADD_ONS = [
   {
     id: "international",
-    name: "International calling bundle",
-    summary: "A monthly allowance of international minutes shared across your company.",
-    replaces: "Replaces per-minute charges for calls abroad, up to the allowance.",
+    name: "Global unlimited calling",
+    summary: "8,000 international minutes a month, instead of paying for each one.",
+    replaces: "Replaces per-minute charges for calls abroad, up to 8,000 minutes.",
     billing: "Bought per seat, monthly.",
     featureKey: "calling_rates",
+    monthlyPrice: 20,
+    included: 8e3,
+    includedUnit: "minutes",
+    overageRate: 0.08,
     detail: [
-      "Calls abroad are charged per minute today. A bundle turns that into one predictable monthly figure.",
-      "Once the allowance is used, calls carry on and are charged at your usual rates rather than being blocked.",
+      "Calls abroad are charged per minute today. This turns that into one predictable monthly figure.",
+      "Past 8,000 minutes, calls carry on at 8 cents a minute rather than being blocked.",
       "Unused minutes do not carry over to the following month."
     ]
+  },
+  {
+    id: "numbers",
+    name: "Extra and toll-free numbers",
+    summary: "More numbers than your plan includes, including toll-free ones.",
+    replaces: "Replaces buying numbers one at a time as you need them.",
+    billing: "Bought per number, monthly.",
+    featureKey: "virtual_numbers"
   },
   {
     id: "ai",
@@ -48,12 +71,55 @@ const ADD_ONS = [
     featureKey: "ai"
   },
   {
+    id: "ai_voice",
+    name: "AI voice",
+    summary: "50 minutes a month of an AI voice answering and speaking to callers.",
+    replaces: "Replaces somebody having to pick up simply to find out what a caller wants.",
+    billing: "Bought per seat, monthly.",
+    /* No featureKey on purpose. This is bought separately from AI assistance and
+       the platform reports no flag of its own for it, so the card says it cannot
+       tell rather than borrowing the AI flag and claiming you have it. */
+    monthlyPrice: 20,
+    included: 50,
+    includedUnit: "minutes",
+    overageRate: 0.08,
+    detail: [
+      "Past 50 minutes, it keeps working and each further minute costs 8 cents.",
+      "Replies from the AI agent beyond the allowance are charged the same way."
+    ]
+  },
+  {
+    id: "quality",
+    name: "Quality scoring and coaching",
+    summary: "Score calls automatically, measure how satisfied callers were, and prompt agents while they talk.",
+    replaces: "Replaces listening back to calls one at a time to mark them.",
+    billing: "Bought per seat, monthly, for the people being scored.",
+    featureKey: "monitoring_features",
+    detail: [
+      "Calls are scored against your own checklist rather than a supervisor working through recordings.",
+      "Caller satisfaction is worked out from the conversation, so you hear about a bad call without waiting for a survey."
+    ]
+  },
+  {
     id: "monitoring",
-    name: "Live monitoring and coaching",
+    name: "Live monitoring",
     summary: "Listen to a live call, whisper to the agent, or join it.",
     replaces: "Replaces sitting next to somebody to train them.",
     billing: "Bought per seat, monthly, for the people who supervise.",
     featureKey: "monitoring"
+  },
+  {
+    id: "contact_centre",
+    name: "Advanced call handling",
+    summary: "Route by skill, offer callers a call back instead of holding, and give agents time to write up.",
+    replaces: "Replaces a single queue that rings everybody the same way.",
+    billing: "Bought per seat, monthly, for the people answering.",
+    featureKey: "advance_call_management",
+    detail: [
+      "Skills routing sends a caller to somebody who can actually help rather than whoever is free.",
+      "A call back means somebody keeps their place in the queue without holding the line.",
+      "Wrap-up time keeps the next call away until the last one is written up."
+    ]
   },
   {
     id: "campaigns",
@@ -64,12 +130,28 @@ const ADD_ONS = [
     featureKey: "campaign"
   },
   {
+    id: "reports",
+    name: "Advanced reporting",
+    summary: "Deeper reporting on calls, queues and people than the standard screens.",
+    replaces: "Replaces exporting call logs and building the report yourself.",
+    billing: "Bought per company, monthly.",
+    featureKey: "reports"
+  },
+  {
     id: "omni_channel",
     name: "Messaging channels",
     summary: "Handle social and messaging conversations beside your calls.",
     replaces: "Replaces watching several separate inboxes.",
     billing: "Bought per seat, monthly.",
     featureKey: "omni_channel"
+  },
+  {
+    id: "fax",
+    name: "Internet fax",
+    summary: "Send and receive faxes without a fax machine or a separate line.",
+    replaces: "Replaces a physical fax line.",
+    billing: "Bought per number, monthly.",
+    featureKey: "messages"
   },
   {
     id: "video",
@@ -81,6 +163,7 @@ const ADD_ONS = [
   }
 ];
 const addOnState = (features, addOn) => {
+  if (!addOn.featureKey) return "unknown";
   if (!features || typeof features !== "object") return "unknown";
   const node = features[addOn.featureKey];
   if (node === void 0 || node === null) return "not-included";

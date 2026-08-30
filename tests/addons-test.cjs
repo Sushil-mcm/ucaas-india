@@ -13,6 +13,7 @@ const {
   countByState,
   priceText,
   canPurchaseHere,
+  estimateMonthlyCost,
 } = require('./addons.build.cjs');
 
 let passed = 0;
@@ -39,7 +40,7 @@ is('every one has a name', ADD_ONS.every((a) => a.name.trim().length > 0), true)
    is a price with no reason attached. */
 is('every one says what it replaces', ADD_ONS.every((a) => a.replaces.trim().length > 0), true);
 is('every one says how it is charged', ADD_ONS.every((a) => a.billing.trim().length > 0), true);
-is('every one is tied to a plan feature', ADD_ONS.every((a) => a.featureKey.trim().length > 0), true);
+is('any feature key given is non-empty', ADD_ONS.every((a) => a.featureKey === undefined || a.featureKey.trim().length > 0), true);
 is('ids are unique', new Set(ADD_ONS.map((a) => a.id)).size, ADD_ONS.length);
 
 /* ---- reading whether a company already has it -------------------------- */
@@ -57,6 +58,10 @@ is('an object with no flag counts as included',
 is('a plain true is included', addOnState({ ai: true }, ai), 'included');
 is('a plain false is not included', addOnState({ ai: false }, ai), 'not-included');
 is('a feature simply absent is not included', addOnState({ video: true }, ai), 'not-included');
+/* AI voice is bought separately and has no flag, so it must never claim to be
+   included just because AI assistance is. */
+is('an add-on with no flag is unknown even on a full plan',
+   addOnState({ ai: { IS_SHOW: true } }, addOn('ai_voice')), 'unknown');
 
 /* The distinction this module exists for. */
 is('no plan data at all is unknown, not "no"', addOnState(null, ai), 'unknown');
@@ -73,9 +78,12 @@ is('unknown does not claim absence', STATE_LABEL.unknown, 'Not available yet');
 /* ---- counting --------------------------------------------------------- */
 
 const someOn = countByState({ ai: { IS_SHOW: true }, video: true, campaign: { IS_SHOW: false } });
+const keyless = ADD_ONS.filter((a) => !a.featureKey).length;
 is('included are counted', someOn.included, 2);
-is('the rest are counted as not included', someOn.notIncluded, ADD_ONS.length - 2);
-is('and none are unknown when the plan was readable', someOn.unknown, 0);
+is('the rest are counted as not included', someOn.notIncluded, ADD_ONS.length - 2 - keyless);
+/* An add-on with no flag of its own stays unknown even when the plan reads fine. */
+is('add-ons with no flag stay unknown', someOn.unknown, keyless);
+is('at least one add-on has no flag of its own', keyless > 0, true);
 
 const noPlan = countByState(null);
 is('an unreadable plan makes every one unknown', noPlan.unknown, ADD_ONS.length);
@@ -88,6 +96,47 @@ is('and claims none are excluded either', noPlan.notIncluded, 0);
    and somebody would budget against it. */
 is('no price is invented', priceText(), 'Not available yet');
 is('and nothing can be bought from this screen', canPurchaseHere(), false);
+
+/* ---- what an add-on costs this month ---------------------------------- */
+
+const intl = addOn('international');
+const aiVoice = addOn('ai_voice');
+
+is('the bundle is priced', intl.monthlyPrice, 20);
+is('and says what that includes', intl.included, 8000);
+is('and what a minute costs past it', intl.overageRate, 0.08);
+is('AI voice is priced', aiVoice.monthlyPrice, 20);
+is('with its own smaller allowance', aiVoice.included, 50);
+is('and the same overage rate', aiVoice.overageRate, 0.08);
+
+/* Inside the allowance, the bill is just the monthly price. */
+is('well under the allowance costs the base price', estimateMonthlyCost(intl, 3000).total, 20);
+is('exactly at the allowance is still the base price', estimateMonthlyCost(intl, 8000).total, 20);
+is('and nothing is counted as overage there', estimateMonthlyCost(intl, 8000).overUnits, 0);
+
+/* One minute past, and only that minute is charged - not the whole month. */
+const oneOver = estimateMonthlyCost(intl, 8001);
+is('one minute over charges for one minute', oneOver.overUnits, 1);
+is('at eight cents', oneOver.overage, 0.08);
+is('so the total is the base plus eight cents', oneOver.total, 20.08);
+
+is('a hundred minutes over', estimateMonthlyCost(intl, 8100).overage, 8);
+is('AI voice past fifty minutes', estimateMonthlyCost(aiVoice, 60).overage, 0.8);
+is('and its total', estimateMonthlyCost(aiVoice, 60).total, 20.8);
+
+/* Rounding is done once at the end. Rounding every minute first drifts by whole
+   cents across thousands of them, and a bill that misses a quote by cents is
+   still a bill somebody queries. */
+is('an awkward number still lands on a clean cent', estimateMonthlyCost(intl, 8333).overage, 26.64);
+
+/* Usage we do not know is not usage of zero - the honest answer is the base
+   price, never a total implying nothing was used. */
+is('no usage figure gives the base price', estimateMonthlyCost(intl).total, 20);
+is('rubbish usage does not become a charge', estimateMonthlyCost(intl, NaN).total, 20);
+is('negative usage is not a credit', estimateMonthlyCost(intl, -500).total, 20);
+
+/* An add-on with no price cannot have a cost worked out for it. */
+is('an unpriced add-on returns nothing rather than zero', estimateMonthlyCost(addOn('video'), 10), null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
