@@ -91,7 +91,7 @@ const GreetingNotification = () => {
           <SettingRow
             label="Play it every (seconds)"
             description={`Anything under ${WAITING_LIMITS.delay_interval_seconds.min} seconds starts to feel like badgering, so that is the floor.`}
-            notActive
+            status="coming-soon"
             control={
               <Input
                 type="number"

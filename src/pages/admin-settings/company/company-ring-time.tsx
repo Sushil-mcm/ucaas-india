@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
+import { SettingCard, SettingRow, type SettingStatus } from '@/components/mcm/setting-card';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, PhoneCall, Timer, Users } from 'lucide-react';
@@ -37,7 +37,7 @@ import {
  * ---------------------------------------------------------------------------
  * This header used to say "nothing reads this value", and warned against
  * leaving a stale reassurance behind. That warning now applies to the header
- * itself: the key IS read, and `IS_ENFORCED` is true.
+ * itself: the key IS read, and `RING_TIME_STATUS` is 'active'.
  *
  * The reader is `seedDeviceRingTime` in src/lib/company-ring-time.ts, which
  * returns a stored per-device value if one exists and otherwise falls back to
@@ -60,8 +60,8 @@ import {
 const RING_TIME_KEY = 'company_ring_time';
 const RING_TIME_SCHEMA_VERSION = 1;
 
-/* Flip this only when something outside this file genuinely reads the key. */
-const IS_ENFORCED = true;
+/* Change this only if something outside this file stops reading the key. */
+const RING_TIME_STATUS: SettingStatus = 'active';
 
 /* the safe default ships 30 seconds. other established systems ships 12 and refuses anything above 60, so
    60 is the ceiling here too: offering 90 would let an admin save a number that
@@ -166,8 +166,8 @@ const buildRingTimePayload = (form: RingTimeForm) => ({
 });
 
 /**
- * The same honesty badge the other company cards carry. `enforced` is only ever
- * passed `true` once something outside this file genuinely acts on the value.
+ * The same honesty badge the other company cards carry. A card is only ever
+ * marked 'active' once something outside this file genuinely acts on the value.
  */
 const selectedOption = (options: { label: string; value: string }[], value: string) =>
   options.find((option) => option.value === value) || null;
@@ -293,8 +293,8 @@ const CompanyRingTime = () => {
             icon={<Timer className="h-5 w-5" />}
             title="Default ring time"
             description="How many seconds a phone rings before the call gives up and moves on."
-            enforced={IS_ENFORCED}
-            enforcementNote="Used as the starting point. Someone with no ring time of their own gets this one. People already set up keep the time they have."
+            status={RING_TIME_STATUS}
+            note="Active. Used as the starting point: somebody with no ring time of their own gets this one. People already set up keep the time they have."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -346,8 +346,8 @@ const CompanyRingTime = () => {
             icon={<Users className="h-5 w-5" />}
             title="Who it applies to"
             description="Whether people added after today start with this ring time."
-            enforced={IS_ENFORCED}
-            enforcementNote="Used when someone is set up who has no ring time of their own."
+            status={RING_TIME_STATUS}
+            note="Active. Used when somebody is set up who has no ring time of their own."
           >
             <SettingRow
               label="Use this for people added from now on"

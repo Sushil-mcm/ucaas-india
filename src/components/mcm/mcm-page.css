@@ -3505,6 +3505,17 @@
   color: var(--warn);
   white-space: nowrap;
 }
+/* Works, but only inside this app. Blue rather than amber: nothing is missing,
+   it simply does not reach as far as somebody might assume. */
+.mcm-setrow-flag.is-app {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+/* Waiting on you, not on us. Grey, because nothing is wrong. */
+.mcm-setrow-flag.is-off {
+  background: var(--line-2);
+  color: var(--ink-3);
+}
 
 /* Sub-settings. The rule down the left ties them to the row that governs them. */
 .mcm-setnest {
@@ -3553,6 +3564,17 @@
   background: var(--live-wash);
   color: var(--live);
 }
+.mcm-setcard-badge.is-app {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-setcard-badge.is-off {
+  background: var(--line-2);
+  color: var(--ink-3);
+}
+/* The sentence under a card. It takes the colour of the badge above it, so the
+   two are obviously one statement rather than two. Amber by default, which is
+   "coming soon"; plain grey when the card makes no claim about itself at all. */
 .mcm-setcard-note {
   margin: 0;
   padding: 10px 16px;
@@ -3561,6 +3583,19 @@
   color: var(--warn);
   font-size: 11.5px;
   line-height: 1.5;
+}
+.mcm-setcard-note.is-on {
+  background: var(--live-wash);
+  color: var(--live);
+}
+.mcm-setcard-note.is-app {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-setcard-note.is-off,
+.mcm-setcard-note.is-plain {
+  background: var(--line-2);
+  color: var(--ink-3);
 }
 
 /* A plain text box or dropdown inside a settings row.

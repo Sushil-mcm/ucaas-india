@@ -253,18 +253,23 @@ const AdminScopePage = () => {
                   ? `${scopes.length} ${scopes.length === 1 ? 'person has' : 'people have'} a scope written down. Anybody not listed is treated as covering the whole company, which is what happens today.`
                   : 'Nobody has a scope yet, so every administrator covers the whole company — including people at other locations.'
               }
-              enforced={false}
-              enforcementNote={
+              status="coming-soon"
+              note={
                 <>
-                  Saved on your company record, and nothing acts on it yet. The platform does not
-                  check an administrator&rsquo;s scope when it answers a request, so this is a
-                  written record of who <em>should</em> manage what, not a restriction. Decide it
-                  now and it is ready the day the platform enforces it.
+                  Coming soon. This is saved on your company record and nothing acts on it yet: an
+                  administrator&rsquo;s scope is never checked, so it is a written record of who{' '}
+                  <em>should</em> manage what rather than a restriction. Decide it now and it is
+                  ready the day it arrives.
                 </>
               }
               aside={
                 dirty ? (
-                  <Button type="button" variant="primary" disabled={isPending} onClick={() => persist(scopes)}>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={isPending}
+                    onClick={() => persist(scopes)}
+                  >
                     {isPending ? 'Saving…' : 'Save changes'}
                   </Button>
                 ) : null

@@ -21,10 +21,11 @@
  *
  * And it does not claim more than it does. A check of the call switch found
  * that none of these settings currently changes a live call — the switch does
- * not read them. So every setting here is marked as not active yet, and the
- * screen says plainly that it is putting the same answer on everyone's record
- * rather than changing what a caller hears. When that stops being true, the
- * notes here are what must change first.
+ * not read them. So every setting here is marked "Coming soon" — the software
+ * cannot do it yet, which is a different thing from an admin not having switched
+ * it on — and the screen says plainly that it is putting the same answer on
+ * everyone's record rather than changing what a caller hears. When that stops
+ * being true, the notes here are what must change first.
  */
 
 import { useMemo, useState } from 'react';
@@ -85,8 +86,8 @@ const INTERNATIONAL_OPTIONS: { label: string; value: InternationalCallingChoice 
 /* The switch reads none of these today, so the same sentence is true of every
    one of them. It is written once and shown on each, rather than being softened
    into something vaguer that an admin could read as "it works". */
-const NOT_ACTIVE_NOTE =
-  'Not active yet. This is written onto each person the same way their own settings page writes it, and it is what a future release will read — but the call switch does not read it today, so calls do not change.';
+const COMING_SOON_NOTE =
+  'Coming soon. This is written onto each person the same way their own settings page writes it, so it is saved and waiting — but the call switch does not read it yet, so what a caller hears does not change.';
 
 type FieldId =
   | 'recording_automatic'
@@ -166,7 +167,7 @@ const FieldRow = ({
   disabled: boolean;
   control: React.ReactNode;
 }) => (
-  <SettingRow label={label} description={description} notActive>
+  <SettingRow label={label} description={description} status="coming-soon">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <label className="flex cursor-pointer items-center gap-2">
         <Checkbox checked={included} onCheckedChange={onToggle} disabled={disabled} />
@@ -376,8 +377,8 @@ const CompanyBulkSettings = () => {
           <SettingCard
             title="Choose what to change"
             description="Tick a setting to include it in this run. Anything left unticked is not touched on anyone."
-            enforced={false}
-            enforcementNote={NOT_ACTIVE_NOTE}
+            status="coming-soon"
+            note={COMING_SOON_NOTE}
           >
             <FieldRow
               included={include.recording_automatic}

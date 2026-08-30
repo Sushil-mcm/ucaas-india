@@ -255,12 +255,12 @@ const DefaultPermissionsPage = () => {
               title="What each kind of person should get"
               icon={<ShieldCheck className="h-4 w-4" />}
               description="Six kinds of person, worked out from your plan. Each one lists what it is given and what is deliberately held back, with the reason."
-              enforced={false}
-              enforcementNote={
+              status="app-only"
+              note={
                 <>
-                  Permissions decide what this app puts on screen. The platform does not check them
-                  when it answers a request, so a tighter role makes the product simpler for the
-                  person using it — it is not a lock. They also apply to the whole company: there is
+                  Works in this app. Permissions decide what this app puts on screen, and nothing
+                  behind it checks them again — so a tighter role makes the product simpler for the
+                  person using it rather than locking anything away. Reach is coming soon: there is
                   no setting yet for which office or team somebody looks after, so a manager&rsquo;s
                   permissions reach every team. Admin scope, next door, records that missing half.
                 </>
@@ -374,11 +374,16 @@ const DefaultPermissionsPage = () => {
               title="What a role cannot say here"
               icon={<KeyRound className="h-4 w-4" />}
               description="Some things belong to one named person rather than to their role, because one person needs them and the rest of the team does not. A person record here has nowhere to keep them."
-              enforced={false}
-              enforcementNote="These are listed so nobody spends an afternoon looking for a switch that is not there. Each needs a place on the person record before it can be set."
+              status="coming-soon"
+              note="Coming soon. They are listed here so nobody spends an afternoon looking for a switch that is not there. Each one needs a place on the person record before it can be set at all."
             >
               {PER_PERSON_GAPS.map((gap) => (
-                <SettingRow key={gap.id} label={gap.label} description={gap.why} notActive />
+                <SettingRow
+                  key={gap.id}
+                  label={gap.label}
+                  description={gap.why}
+                  status="coming-soon"
+                />
               ))}
             </SettingCard>
           </>

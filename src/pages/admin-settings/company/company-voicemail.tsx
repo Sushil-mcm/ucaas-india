@@ -68,9 +68,10 @@ import {
  *   src/components/common-settings/voicemail-dialog/index.tsx:62). Nothing
  *   checks it when a mailbox is opened.
  *
- * Keep those notes honest. If the backend starts acting on a key, flip that
- * card's `enforced` flag and rewrite its note — a stale reassurance here is
- * worse than no page.
+ * Keep those notes honest. If the backend starts acting on a key, change that
+ * card's `status` and rewrite its note — a stale reassurance here is worse than
+ * no page. "Coming soon" means we have not built it; "In this app only" means
+ * the browser does the work and nothing behind it checks again.
  */
 
 const VOICEMAIL_KEY = 'voicemail_pin';
@@ -141,8 +142,8 @@ const validateForm = (form: VoicemailForm): Record<string, string> => {
 };
 
 /**
- * The honesty badge. `enforced` is only ever passed `true` for a key something
- * in this product genuinely reads today.
+ * The honesty badge. A card is only ever marked 'active' or 'app-only' for a key
+ * something in this product genuinely reads today.
  */
 const CompanyVoicemail = () => {
   const queryClient = useQueryClient();
@@ -268,8 +269,8 @@ const CompanyVoicemail = () => {
             icon={<Voicemail className="h-5 w-5" />}
             title="Who may change voicemail settings"
             description="The one setting on this page that something already acts on — and it is read in two different ways."
-            enforced
-            enforcementNote="Active. Decides whether people can change their own voicemail settings."
+            status="app-only"
+            note="Works in this app. When this is off, a person cannot open their own voicemail settings here and an admin changes them instead."
           >
             <SettingRow
               label="Let people change their own voicemail settings"
@@ -287,8 +288,8 @@ const CompanyVoicemail = () => {
             icon={<ScrollText className="h-5 w-5" />}
             title="Voicemail to text"
             description="Whether a message is written out as text as well as left as audio."
-            enforced={false}
-            enforcementNote="Used when you set someone up from these company settings. It does not change anyone already set up."
+            status="app-only"
+            note="Works in this app, in one place: setting somebody up from these company settings. It does not change anyone already set up."
           >
             <SettingRow
               label="Write messages out as text"
@@ -306,8 +307,8 @@ const CompanyVoicemail = () => {
             icon={<KeyRound className="h-5 w-5" />}
             title="Voicemail PIN"
             description="The PIN a person would type to hear their messages from a phone."
-            enforced={false}
-            enforcementNote="Not active yet — mailboxes do not ask for this PIN. Anyone you set up from these settings receives it, so choose a PIN you are happy to share."
+            status="coming-soon"
+            note="Coming soon. Mailboxes do not ask for a PIN yet, so this one guards nothing today. Anyone you set up from these settings still receives it, so choose a PIN you are happy to share."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">

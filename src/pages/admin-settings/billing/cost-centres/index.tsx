@@ -104,8 +104,8 @@ const CostCentres = () => {
                   ? `${active} in use. Codes are what your finance system matches on, so they are kept upper case.`
                   : 'None yet. Add the codes your finance team already uses, so the two systems agree.'
               }
-              enforced={false}
-              enforcementNote="Saved for your company, but nothing splits spending by them yet — no report or invoice uses these. Set them up now and they are ready when that arrives."
+              status="coming-soon"
+              note="Coming soon. Codes are saved for your company, but nothing splits spending by them yet — no report or invoice uses them. Set them up now and they are ready when it arrives."
               aside={
                 <Button type="button" variant="outline" onClick={add}>
                   <Plus className="h-3.5 w-3.5" />
