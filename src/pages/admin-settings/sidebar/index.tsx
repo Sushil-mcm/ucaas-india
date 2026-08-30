@@ -124,6 +124,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: IS_ADMIN,
         },
         {
+          /* What a role should hold, as opposed to what one happens to hold. */
+          title: 'Default permissions',
+          icon: 'RoleIcon',
+          path: '/admin-settings/default-permissions',
+          enabled: IS_ADMIN,
+          visible: IS_ADMIN,
+        },
+        {
           /* Roles say what somebody may do. This says who they may do it to. */
           title: 'Admin scope',
           icon: 'LockFilled',

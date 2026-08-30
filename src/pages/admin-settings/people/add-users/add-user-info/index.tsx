@@ -3,7 +3,7 @@ import CustomSelect from '@/components/custom/custom-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/hooks/use-user';
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { userInitialState } from '../../../constants';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getRoleList, validateUser } from '@/services/api';
@@ -19,6 +19,8 @@ import { generateRandomExtension, handleAlert } from '@/lib/utils';
 import { Icon } from '@/assets/icons/icon';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { InfoIcon } from 'lucide-react';
+import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
+import { NEW_PERSON_ROLE_KEY, readNewPersonRole } from '@/lib/role-permission-defaults';
 
 type User = typeof userInitialState;
 type ValidationErrorMap = {
@@ -69,9 +71,50 @@ const AddUserInfo = ({
     select: (data) => data?.data?.data?.result?.rows || [],
   });
 
+  /* The role a new person should start on, if the company has chosen one under
+     Admin > People > Default permissions. Without it this box opens empty and
+     whoever is adding somebody has to remember which of the roles is right. */
+  const { data: companyDefaults } = useQuery({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+  });
+  const defaultRoleId = readNewPersonRole(
+    (companyDefaults as any)?.settings?.[NEW_PERSON_ROLE_KEY],
+  );
+
+  /* Which rows have already been offered the company's choice, held by the row's
+     own id rather than its position — removing the first row renumbers every
+     other one, and a set of positions would then re-fill a row somebody had
+     deliberately cleared. A row is filled in once and never again. */
+  const seededRows = useRef<Set<string>>(new Set());
+
   const { fields, append, remove } = formFieldArrayInstance;
 
   const [users, userAddCountRaw] = watch(['users', 'user_add_count']) as [User[], number | null];
+
+  useEffect(() => {
+    if (!defaultRoleId || !roleList?.length || !Array.isArray(users)) return;
+
+    const picked = roleList.find(
+      (item: any) => (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === defaultRoleId,
+    );
+    // A role that has since been deleted leaves the box empty, as it does today.
+    if (!picked) return;
+
+    const isCustomRole = picked?.type === 'custom';
+
+    fields.forEach((field: any, index: number) => {
+      const rowId = String(field?.id || index);
+      if (seededRows.current.has(rowId)) return;
+      seededRows.current.add(rowId);
+      // Never overwrite a row somebody has already answered.
+      if ((users as any[])[index]?.role?.value) return;
+
+      setValue(`users.${index}.role`, { label: picked?.name, value: defaultRoleId });
+      setValue(`users.${index}.role_uuid`, isCustomRole ? '' : defaultRoleId);
+      setValue(`users.${index}.custom_role_uuid`, isCustomRole ? defaultRoleId : '');
+    });
+  }, [defaultRoleId, roleList, fields, users, setValue]);
   const userAddCount = Number(userAddCountRaw) || 0;
   const { plan_info, user_info = {}, company_info } = user || {};
   const isPlanExpired = company_info?.plan_status === 'EXPIRED';

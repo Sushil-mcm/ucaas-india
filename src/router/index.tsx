@@ -213,6 +213,7 @@ const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
+const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
 const AiBotSession = lazy(() => import('@/pages/admin-settings/knowledge-base/ai-bot-session'));
 const CallHistory = lazy(() => import('@/pages/reports/call-logs/call-history'));
 const LocalCallList = lazy(() => import('@/pages/reports/call-logs/local-call-list'));
@@ -825,6 +826,14 @@ export const router = createBrowserRouter([
             path: 'admin-scope',
             id: 'admin-scope',
             element: <ProtectedRoute element={<AdminScope />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* What each kind of person should be able to do on their first day.
+               Administrator-only for the same reason as the two above: it sets
+               the shape of authority for everybody in the company. */
+            path: 'default-permissions',
+            id: 'default-permissions',
+            element: <ProtectedRoute element={<DefaultPermissions />} guard={{ adminOnly: true }} />,
           },
           {
             /* Kept permanently: bookmarked, and linked from support articles. */
