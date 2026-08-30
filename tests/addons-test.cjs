@@ -104,10 +104,12 @@ const aiVoice = addOn('ai_voice');
 
 is('the bundle is priced', intl.monthlyPrice, 20);
 is('and says what that includes', intl.included, 8000);
-is('and what a minute costs past it', intl.overageRate, 0.08);
-is('AI voice is priced', aiVoice.monthlyPrice, 20);
-is('with its own smaller allowance', aiVoice.included, 50);
-is('and the same overage rate', aiVoice.overageRate, 0.08);
+is('and what a minute costs past it', intl.overageRate, 0.02);
+is('AI voice is priced', aiVoice.monthlyPrice, 45);
+is('with its own smaller allowance', aiVoice.included, 100);
+/* AI voice costs far more per minute to run than a normal call, so its rate is
+   more than ten times the calling rate. They are deliberately not the same. */
+is('and a much higher rate, because a minute of it costs more to run', aiVoice.overageRate, 0.25);
 
 /* Inside the allowance, the bill is just the monthly price. */
 is('well under the allowance costs the base price', estimateMonthlyCost(intl, 3000).total, 20);
@@ -117,17 +119,18 @@ is('and nothing is counted as overage there', estimateMonthlyCost(intl, 8000).ov
 /* One minute past, and only that minute is charged - not the whole month. */
 const oneOver = estimateMonthlyCost(intl, 8001);
 is('one minute over charges for one minute', oneOver.overUnits, 1);
-is('at eight cents', oneOver.overage, 0.08);
-is('so the total is the base plus eight cents', oneOver.total, 20.08);
+is('at two cents', oneOver.overage, 0.02);
+is('so the total is the base plus two cents', oneOver.total, 20.02);
 
-is('a hundred minutes over', estimateMonthlyCost(intl, 8100).overage, 8);
-is('AI voice past fifty minutes', estimateMonthlyCost(aiVoice, 60).overage, 0.8);
-is('and its total', estimateMonthlyCost(aiVoice, 60).total, 20.8);
+is('a hundred minutes over', estimateMonthlyCost(intl, 8100).overage, 2);
+is('AI voice past its hundred minutes', estimateMonthlyCost(aiVoice, 110).overage, 2.5);
+is('and its total', estimateMonthlyCost(aiVoice, 110).total, 47.5);
+is('inside the allowance it is just the monthly price', estimateMonthlyCost(aiVoice, 60).total, 45);
 
 /* Rounding is done once at the end. Rounding every minute first drifts by whole
    cents across thousands of them, and a bill that misses a quote by cents is
    still a bill somebody queries. */
-is('an awkward number still lands on a clean cent', estimateMonthlyCost(intl, 8333).overage, 26.64);
+is('an awkward number still lands on a clean cent', estimateMonthlyCost(intl, 8333).overage, 6.66);
 
 /* Usage we do not know is not usage of zero - the honest answer is the base
    price, never a total implying nothing was used. */

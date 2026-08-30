@@ -90,10 +90,10 @@ export const ADD_ONS: AddOn[] = [
     monthlyPrice: 20,
     included: 8000,
     includedUnit: 'minutes',
-    overageRate: 0.08,
+    overageRate: 0.02,
     detail: [
       'Calls abroad are charged per minute today. This turns that into one predictable monthly figure.',
-      'Past 8,000 minutes, calls carry on at 8 cents a minute rather than being blocked.',
+      'Past 8,000 minutes, calls carry on at your usual per-country rate rather than being blocked.',
       'Unused minutes do not carry over to the following month.',
     ],
   },
@@ -122,13 +122,13 @@ export const ADD_ONS: AddOn[] = [
     /* No featureKey on purpose. This is bought separately from AI assistance and
        the platform reports no flag of its own for it, so the card says it cannot
        tell rather than borrowing the AI flag and claiming you have it. */
-    monthlyPrice: 20,
-    included: 50,
+    monthlyPrice: 45,
+    included: 100,
     includedUnit: 'minutes',
-    overageRate: 0.08,
+    overageRate: 0.25,
     detail: [
-      'Past 50 minutes, it keeps working and each further minute costs 8 cents.',
-      'Replies from the AI agent beyond the allowance are charged the same way.',
+      'Past 100 minutes, it keeps working and each further minute costs 25 cents.',
+      'Every minute costs real money to run - speech recognition, the model and the voice - so the rate covers that rather than being set to look cheap.',
     ],
   },
   {
