@@ -69,6 +69,9 @@ const CompanyCalling = lazy(
 );
 const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/company-messaging'));
 const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
+const CompanyBulkSettingsPage = lazy(
+  () => import('@/pages/admin-settings/company/company-bulk-settings'),
+);
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
 const CompanyProfileFieldsPage = lazy(
   () => import('@/pages/admin-settings/company/company-profile-fields'),
@@ -622,6 +625,16 @@ export const router = createBrowserRouter([
                   { path: 'calling', element: <CompanyCalling /> },
                   { path: 'messaging', element: <CompanyMessagingPage /> },
                   { path: 'policies', element: <CompanyPoliciesPage /> },
+                  {
+                    /* Administrator-only, like Security below. Everything else
+                       in this area changes one company record; this one writes
+                       every person's own settings, which is a different order of
+                       thing to hand to whoever can view the phone system. */
+                    path: 'apply-to-people',
+                    element: (
+                      <ProtectedRoute element={<CompanyBulkSettingsPage />} guard={{ adminOnly: true }} />
+                    ),
+                  },
                   { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
                   {
                     /* Administrator-only. It holds the sign-in policy, and the
