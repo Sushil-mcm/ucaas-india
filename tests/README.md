@@ -50,3 +50,10 @@ again.
 
     npx esbuild src/lib/bulk-user-settings.ts --format=cjs --outfile=tests/bulk-user-settings.build.cjs
     node tests/bulk-user-settings-test.cjs
+What a number is called and which shared line it belongs to — when a label may
+safely be written, that writing one never disturbs the routing stored alongside
+it, and reading a line's numbers back out of where each number forwards.
+
+    npx esbuild src/lib/number-labels.ts --format=cjs --outfile=tests/number-labels.build.cjs \
+      --bundle --platform=node --alias:@=./src
+    node tests/number-labels-test.cjs

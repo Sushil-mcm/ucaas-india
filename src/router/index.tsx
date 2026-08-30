@@ -45,9 +45,7 @@ const CompanyInfo = lazy(() => import('@/pages/admin-settings/company'));
 /* Sits beside the location list rather than inside the settings sections: it is
    a view of the locations themselves, so it is guarded by the same location
    permission the list is, not by the phone-system one. */
-const LocationManagement = lazy(
-  () => import('@/pages/admin-settings/company/location-management'),
-);
+const LocationManagement = lazy(() => import('@/pages/admin-settings/company/location-management'));
 const CaptainPlayground = lazy(() => import('@/pages/admin-settings/captain/playground'));
 const CaptainAssistants = lazy(() => import('@/pages/admin-settings/captain/assistants'));
 const CaptainDocuments = lazy(() => import('@/pages/admin-settings/captain/documents'));
@@ -917,6 +915,21 @@ export const router = createBrowserRouter([
               {
                 path: 'in-use',
                 id: 'in-use',
+                element: (
+                  <ProtectedRoute
+                    element={<NumberList />}
+                    guard={{
+                      permission: 'virtual_numbers.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                /* Same numbers, gathered under the shared line each one rings.
+                   A line does not store its numbers, so this is the only place
+                   that relationship can be seen from the line's side. */
+                path: 'by-line',
+                id: 'by-line',
                 element: (
                   <ProtectedRoute
                     element={<NumberList />}

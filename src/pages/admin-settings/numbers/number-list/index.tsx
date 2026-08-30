@@ -32,6 +32,9 @@ import {
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { featuresLookUp, featuresObj } from '../all-numbers/constants';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { canEditLabel, labelOf } from '@/lib/number-labels';
+import EditNumberLabel from '../edit-label';
+import NumbersByLine from '../by-line';
 
 /* One screen, three views.
 
@@ -47,7 +50,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
    Identities / Addresses / Verifications tabs already work here. Each view
    keeps its own address so it can still be linked to and bookmarked. */
 
-type ViewKey = 'all' | 'in-use' | 'inventory' | 'released';
+type ViewKey = 'all' | 'in-use' | 'inventory' | 'released' | 'by-line';
 
 interface NumberView {
   key: ViewKey;
@@ -66,6 +69,9 @@ interface NumberView {
   /* Released numbers are an archive, not live inventory: they come from a
      different table, have no owner to act on, and carry no row actions. */
   isArchive?: boolean;
+  /* Not a filter of the same table but a different shape entirely: the numbers
+     gathered under the shared line each one rings. */
+  isGrouped?: boolean;
 }
 
 const VIEWS: Record<ViewKey, NumberView> = {
@@ -78,6 +84,18 @@ const VIEWS: Record<ViewKey, NumberView> = {
     fetcherKey: 'allNumbersList',
     showFeatures: true,
     showAddNumber: true,
+  },
+  'by-line': {
+    key: 'by-line',
+    tab: 'By line',
+    path: '/admin-settings/numbers/by-line',
+    title: 'Numbers by line',
+    description:
+      'The numbers that ring each department, queue and menu, with what each one is called.',
+    fetcherKey: 'numbersByLine',
+    showFeatures: false,
+    showAddNumber: false,
+    isGrouped: true,
   },
   'in-use': {
     key: 'in-use',
@@ -124,6 +142,7 @@ const viewFromPath = (pathname: string): ViewKey => {
   if (last === 'in-use') return 'in-use';
   if (last === 'inventory') return 'inventory';
   if (last === 'released') return 'released';
+  if (last === 'by-line') return 'by-line';
   return 'all';
 };
 
@@ -134,6 +153,7 @@ interface INumberListState {
   deleteConfirmationAlert: boolean;
   removeConfirmationAlert: boolean;
   releaseConfirmationAlert: boolean;
+  editLabel: boolean;
 }
 
 const NumberList = () => {
@@ -159,6 +179,7 @@ const NumberList = () => {
     deleteConfirmationAlert: false,
     removeConfirmationAlert: false,
     releaseConfirmationAlert: false,
+    editLabel: false,
   });
   const queryClient: any = useQueryClient();
   const { features } = useCompanyFeatures();
@@ -263,17 +284,14 @@ const NumberList = () => {
   const archiveColumns = useMemo(
     () => [
       {
-        header: 'Number/Name',
+        header: 'Number',
         accessorKey: 'did_number',
-        cell: ({ row }: any) => {
-          const data = row?.original || {};
-          return (
-            <div className="flex flex-col items-start">
-              <NumberWithFlag number={data?.did_number} />
-              {data?.did_name ? <small className="pl-6">{data.did_name}</small> : null}
-            </div>
-          );
-        },
+        cell: ({ row }: any) => <NumberWithFlag number={row?.original?.did_number} />,
+      },
+      {
+        header: 'Label',
+        accessorKey: 'did_name',
+        cell: ({ row }: any) => labelOf(row?.original) || <span className="text-gray-500">--</span>,
       },
       {
         header: 'Last assigned to',
@@ -313,22 +331,42 @@ const NumberList = () => {
   const columns = useMemo(() => {
     const base: any[] = [
       {
-        header: 'Number/Name',
+        header: 'Number',
         accessorKey: 'did_number',
         cell: ({ row }: any) => {
           const data = row?.original || {};
           return (
-            <div className="flex flex-col items-start">
-              <div className="flex items-center gap-2">
-                <NumberWithFlag number={data?.did_number} />
-                {data?.is_fax_enabled && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    FAX
-                  </span>
-                )}
-              </div>
-              <small className="pl-6">{data?.did_name || ''}</small>
+            <div className="flex items-center gap-2">
+              <NumberWithFlag number={data?.did_number} />
+              {data?.is_fax_enabled && (
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  FAX
+                </span>
+              )}
             </div>
+          );
+        },
+      },
+      /* The name a number was bought with used to sit as small print under the
+         number, where it read as decoration. It is the only thing that tells
+         three numbers on the same line apart, so it gets a column of its own -
+         and, for the first time, a way to change it. */
+      {
+        header: 'Label',
+        accessorKey: 'did_name',
+        cell: ({ row }: any) => {
+          const data = row?.original || {};
+          const label = labelOf(data);
+          if (label) return label;
+          return canEditLabel(data).ok && virtualNumberAccess?.action?.update_forwarding ? (
+            <span
+              className="text-primary cursor-pointer"
+              onClick={() => handleNumberState(data, 'editLabel')}
+            >
+              Add label
+            </span>
+          ) : (
+            <span className="text-gray-500">--</span>
           );
         },
       },
@@ -539,6 +577,15 @@ const NumberList = () => {
               ]
             : [];
 
+        /* Offered wherever a label can actually be kept, assigned or not. The
+           permission is the forwarding one because that is literally the write
+           this makes - there is no endpoint that changes a number's name on its
+           own. */
+        const editLabelAction =
+          canEditLabel(data).ok && virtualNumberAccess?.action?.update_forwarding
+            ? [createAction(5, 'Edit Label', 'EditStrokIcon', 'w-5 h-5', neutral, 'editLabel')]
+            : [];
+
         const releaseNumberAction = virtualNumberAccess?.action?.release
           ? [
               createAction(
@@ -552,7 +599,10 @@ const NumberList = () => {
             ]
           : [];
 
-        const faxActions = data?.User ? removeAssignmentAction : assignNumberAction;
+        const faxActions = [
+          ...(data?.User ? removeAssignmentAction : assignNumberAction),
+          ...editLabelAction,
+        ];
 
         const actions = data?.is_fax_enabled
           ? faxActions
@@ -560,6 +610,7 @@ const NumberList = () => {
               ...removeAssignmentAction,
               ...setForwardingActions,
               ...updateForwardingActions,
+              ...editLabelAction,
               ...releaseNumberAction,
             ];
 
@@ -651,18 +702,26 @@ const NumberList = () => {
             </p>
           )}
 
-          <TableManager
-            {...{
-              fetcherKey: view.fetcherKey,
-              fetcherFn: view.isArchive ? releasedNumbersList : allNumbersList,
-              columns: view.isArchive ? archiveColumns : columns,
-              search,
-              ...(view.isArchive ? { extraParams: { company_uuid: companyUuid } } : {}),
-              ...(view.extraParams ? { extraParams: view.extraParams } : {}),
-              emptyTablePlaceholder: 'No numbers available',
-              ...(view.emptyDescription ? { descriptionEmptyTable: view.emptyDescription } : {}),
-            }}
-          />
+          {view.isGrouped ? (
+            <NumbersByLine
+              search={search}
+              canLabel={Boolean(virtualNumberAccess?.action?.update_forwarding)}
+              onEditLabel={(did) => handleNumberState(did, 'editLabel')}
+            />
+          ) : (
+            <TableManager
+              {...{
+                fetcherKey: view.fetcherKey,
+                fetcherFn: view.isArchive ? releasedNumbersList : allNumbersList,
+                columns: view.isArchive ? archiveColumns : columns,
+                search,
+                ...(view.isArchive ? { extraParams: { company_uuid: companyUuid } } : {}),
+                ...(view.extraParams ? { extraParams: view.extraParams } : {}),
+                emptyTablePlaceholder: 'No numbers available',
+                ...(view.emptyDescription ? { descriptionEmptyTable: view.emptyDescription } : {}),
+              }}
+            />
+          )}
 
           {openDrawer && (
             <SideDrawer
@@ -700,6 +759,14 @@ const NumberList = () => {
               initialData={selected}
             />
           }
+        />
+      )}
+
+      {numberState.editLabel && selected && (
+        <EditNumberLabel
+          did={selected}
+          open={numberState.editLabel}
+          onClose={() => closeAlert('editLabel')}
         />
       )}
 
