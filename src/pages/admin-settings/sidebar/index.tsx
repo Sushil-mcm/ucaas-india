@@ -13,6 +13,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
 import { COMPANY_RULES_PATH } from '@/pages/admin-settings/company/company-sections';
+import { ABSOLUTE, BILLING_SECTIONS } from '@/pages/admin-settings/billing/billing-sections';
 
 export const canShowItem = (item: any, isAdmin: boolean) => {
   if ('visible' in item && item.visible !== true) return false;
@@ -432,71 +433,21 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       ].filter(Boolean),
     },
     {
+      /* Billing's pages come from one shared list, so this menu and the router
+         cannot drift apart. Admin-only, because who may look at the company's
+         money is a question about the person, not about which calling features
+         the company has bought. */
       title: 'Billing',
       type: 'accordion',
       value: 'billing',
       icon: 'Billing',
-      enabled: Boolean(features?.plan_features?.billing?.IS_SHOW),
-      visible: Boolean(features?.plan_features?.billing?.action?.view),
-      children: [
-        {
-          /* First on purpose: somebody opening Billing arrives with three
-             questions - what am I paying for, what is due next, what have I
-             paid - and this is the only page that answers all three. Statement
-             below is the detailed ledger for when the summary is not enough. */
-          title: 'Summary',
-          path: '/admin-settings/billing/summary',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          /* The calls behind the charges. The page itself lives under Reports,
-             which is the right home for it, but somebody checking a bill has no
-             reason to look there - so Billing points at it too. */
-          title: 'Usage',
-          path: '/reports/call-history',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Cost centres',
-          path: '/admin-settings/billing/cost-centres',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Spending',
-          path: '/admin-settings/billing/spending',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Statement',
-          path: '/admin-settings/billing/statement',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Plan',
-          path: '/admin-settings/billing/plan',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Licences & Resources',
-          path: '/admin-settings/billing/resources',
-          icon: 'BillingPlanIcon',
-        },
-        {
-          title: 'Modules & Access',
-          path: '/admin-settings/billing/modules',
-          icon: 'AllNumberIcon',
-        },
-        {
-          title: 'Credit & Payment',
-          path: '/admin-settings/billing/purchase',
-          icon: 'Cart',
-        },
-        {
-          title: 'Invoices',
-          path: '/admin-settings/billing/invoices',
-          icon: 'InvoiceIcon',
-        },
-      ].filter(Boolean),
+      enabled: Boolean(IS_ADMIN),
+      visible: Boolean(IS_ADMIN),
+      children: BILLING_SECTIONS.map((section) => ({
+        title: section.label,
+        path: ABSOLUTE(section),
+        icon: section.icon,
+      })),
     },
     {
       key: 'admin-settings.compliance',

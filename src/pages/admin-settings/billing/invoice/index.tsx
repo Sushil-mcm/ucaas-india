@@ -1,16 +1,42 @@
+/* Every charge raised on the account, and what each one covered.
+ *
+ * Three things changed here and each was a wrong fact rather than a rough edge:
+ *
+ * **Amounts printed as "$0"** when the tax record was missing, because the cell
+ * fell back to a literal zero. On an invoice list a zero is not a placeholder -
+ * it says "you were charged nothing", and somebody reconciling their books
+ * against it will believe it. Missing figures now say so.
+ *
+ * **Dates printed as 2026-08-29, 05:52 AM.** Fine for a log, wrong for a
+ * document a finance team reads: the time of day is noise, and the numeric form
+ * is ambiguous across countries. Dates are spelled out.
+ *
+ * **The tax was invisible** unless you opened a modal. A row now opens in place
+ * and itemises tax on the line, because "how much of this was tax" is the
+ * single most common question asked about a bill.
+ *
+ * The page moved onto the shared admin shell at the same time, so Billing looks
+ * like the rest of the settings area rather than like an older screen that
+ * nobody got round to.
+ */
+
 import { Icon } from '@/assets/icons/icon';
-import { convertDateFormateApis, handleAlert } from '@/lib/utils';
+import { handleAlert } from '@/lib/utils';
 import { getInvoice } from '@/services/api';
 import TableManager from '@/components/custom/table-manager';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import InvoiceDetails from './invoice-details';
+import InvoiceLines from './invoice-lines';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dropdownInitialVal } from '@/components/custom/date-dropdown/constant';
 import DateDropdown from '@/components/custom/date-dropdown';
+import CustomSelect from '@/components/custom/custom-select';
 import useDebounce from '@/hooks/use-debounce';
 import { SearchLine } from '@/assets/icons';
 import CustomTooltip from '@/components/custom/custom-tooltip';
+import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { UNAVAILABLE, dateOrUnavailable, moneyOrUnavailable } from '@/lib/billing-money';
 import {
   Dialog,
   DialogContent,
@@ -18,15 +44,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-// import Breadcrumb from '@/components/custom/breadcrumb';
 
-const InvoiceStatusMap: any = {
-  Completed: 'text-green-600 font-medium',
-  completed: 'text-green-600 font-medium',
-  Failed: 'text-red-600 font-medium',
-  failed: 'text-red-600 font-medium',
-  Processing: 'text-amber-500 font-medium',
-  processing: 'text-amber-500 font-medium',
+/* Status as a pill rather than coloured text. Colour alone is not a label -
+   somebody who cannot separate red from green still needs to know which of
+   these charges failed. */
+const StatusPill = ({ value }: { value: string }) => {
+  const key = String(value ?? '').toLowerCase();
+  const tone =
+    key === 'completed'
+      ? 'bg-green-100 text-green-700'
+      : key === 'failed' || key === 'cancel'
+        ? 'bg-red-100 text-red-700'
+        : key === 'refunded'
+          ? 'bg-blue-100 text-blue-700'
+          : key === 'processing' || key === 'pending'
+            ? 'bg-amber-100 text-amber-700'
+            : 'bg-gray-100 text-gray-600';
+  return (
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${tone}`}>
+      {value || 'Unknown'}
+    </span>
+  );
 };
 
 const TruncatedDescriptionCell = ({ value }: { value: string }) => {
@@ -52,7 +90,20 @@ const TruncatedDescriptionCell = ({ value }: { value: string }) => {
     </div>
   );
 };
-// const breadcrumbData = [{ label: 'Billing' }, { label: 'Invoices' }];
+
+/* Whole years, newest first, plus the escape hatch.
+ *
+ * Finance work happens in years — closing one, reconciling last one — and
+ * setting a from/to date twice to see a whole year is a chore nobody should
+ * have to repeat. Five years back covers anything the platform can hold. */
+const yearOptions = () => {
+  const now = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => now - i).map((y) => ({
+    label: String(y),
+    value: String(y),
+  }));
+  return [{ label: 'All time', value: '' }, ...years];
+};
 
 const Invoice = () => {
   const tableRef = useRef<any>(null);
@@ -60,49 +111,67 @@ const Invoice = () => {
   const [rowData, setRowData] = useState({});
   const [search, setSearch] = useState<string>('');
   const [dropdownVal, setDropdownVal] = useState(dropdownInitialVal);
+  const [year, setYear] = useState<any>({ label: 'All time', value: '' });
   const [failureDetails, setFailureDetails] = useState<{
     billNumber: string;
     description: string;
   } | null>(null);
   const debouncedSearch = useDebounce(search, 1000);
 
+  const years = useMemo(yearOptions, []);
+
+  /* The year filter and the date picker both narrow the same thing, so only one
+     can be in charge at a time. Picking a year clears the date range and picking
+     a range clears the year — two controls silently fighting over one filter is
+     how somebody ends up convinced the platform has lost their invoices. */
+  const activeRange = useMemo(() => {
+    if (year?.value) {
+      return { from: `${year.value}-01-01`, to: `${year.value}-12-31` };
+    }
+    return { from: dropdownVal?.value?.from, to: dropdownVal?.value?.to };
+  }, [year, dropdownVal]);
+
   const columns = [
     {
-      header: 'Paid On',
+      header: 'Date',
       accessorKey: 'created_at',
-      cell: ({ getValue }: any) => convertDateFormateApis(getValue(), 'YYYY-MM-DD, hh:mm A'),
+      cell: ({ getValue }: any) => (
+        <span className="whitespace-nowrap">{dateOrUnavailable(getValue())}</span>
+      ),
     },
     {
-      header: 'Invoice #',
+      header: 'Invoice number',
       accessorKey: 'bill_no',
+      cell: ({ getValue }: any) => (
+        <span className="tabular-nums">{getValue() || UNAVAILABLE}</span>
+      ),
     },
     {
-      header: 'Amount($)',
+      header: 'Amount',
       accessorKey: 'tax_detail.total_amount',
-      cell: ({ row }: any) =>
-        `$${row?.original?.tax_detail?.total_amount || row?.original?.total_amount || 0}`,
+      meta: { textAlign: 'right' },
+      cell: ({ row }: any) => (
+        <span className="block text-right tabular-nums font-medium text-gray-900">
+          {moneyOrUnavailable(
+            row?.original?.tax_detail?.total_amount ?? row?.original?.total_amount,
+          )}
+        </span>
+      ),
     },
-
     {
       header: 'Description',
       accessorKey: 'desc',
       cell: ({ getValue }: any) => <TruncatedDescriptionCell value={getValue()} />,
     },
     {
-      header: 'Payment Mode',
+      header: 'Paid with',
       accessorKey: 'mode',
+      cell: ({ getValue }: any) => getValue() || UNAVAILABLE,
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: ({ getValue }: any) => {
-        const value = getValue();
-        return (
-          <span className={`capitalize ${InvoiceStatusMap[value] || 'text-gray-600 font-medium'}`}>
-            {value || '---'}
-          </span>
-        );
-      },
+      cell: ({ getValue }: any) => <StatusPill value={getValue()} />,
     },
     {
       header: 'Action',
@@ -140,12 +209,6 @@ const Invoice = () => {
                 <Icon name="EyeLine" className="w-5 h-5" />
               </span>
             </CustomTooltip>
-            {/* <span onClick={() => downloadCSVFile(row?.original)}>
-              <Icon
-                name="Download"
-                className="w-5 h-5"
-              />
-            </span> */}
           </span>
         );
       },
@@ -160,44 +223,25 @@ const Invoice = () => {
       return;
     }
 
-    // Filter out Action column and format data according to table columns
-    const csvColumns = columns.filter((col: any) => col.accessorKey !== 'action');
-    const headers = csvColumns.map((col: any) => col.header);
+    const headers = ['Date', 'Invoice number', 'Net', 'Tax', 'Total', 'Description', 'Paid with', 'Status'];
+    const csvRows = tableData.map((row: any) => [
+      dateOrUnavailable(row?.created_at),
+      row?.bill_no ?? '',
+      row?.tax_detail?.sub_total ?? '',
+      row?.tax_detail?.tax_amount ?? '',
+      row?.tax_detail?.total_amount ?? row?.total_amount ?? '',
+      row?.desc ?? '',
+      row?.mode ?? '',
+      row?.status ?? '',
+    ]);
 
-    const csvRows = tableData.map((row: any) => {
-      return csvColumns.map((col: any) => {
-        const value = row[col.accessorKey];
-
-        // Handle specific field formatting based on column definitions
-        if (col.accessorKey === 'created_at') {
-          return convertDateFormateApis(value, 'YYYY-MM-DD, hh:mm A');
-        }
-
-        if (col.accessorKey === 'status') {
-          // Format status with capitalized first letter (same as table display)
-          return value ? String(value)?.charAt(0).toUpperCase() + String(value).slice(1) : '';
-        }
-
-        // For other columns, return the raw value
-        return value || '';
-      });
-    });
-
-    // Create CSV content
     const csvContent = [
       headers.join(','),
       ...csvRows.map((row: any) =>
-        row
-          .map((cell: any) => {
-            // Escape commas and quotes in cell values
-            const cellValue = String(cell || '').replace(/"/g, '""');
-            return `"${cellValue}"`;
-          })
-          .join(','),
+        row.map((cell: any) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','),
       ),
     ].join('\n');
 
-    // Download CSV
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -213,28 +257,28 @@ const Invoice = () => {
 
   const handleReset = () => {
     setDropdownVal(dropdownInitialVal);
+    setYear({ label: 'All time', value: '' });
     setSearch('');
   };
-  return (
-    <section className="w-full overflow-x-auto overflow-y-hidden">
-      {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
 
-      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div>
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            Billing
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">Invoices</span>
-          </p>
-          <p className="text-gray-500 text-xs">
-            Every invoice raised on the account, with what each one covered.
-          </p>
-        </div>
-        <div className="flex gap-2 filters">
+  return (
+    <AdminPage
+      section="Billing"
+      title="Invoices"
+      description="Every charge raised on the account, with its tax broken out. Open a row to see what it covered."
+      actions={
+        <Button
+          className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+          onClick={handleDownloadCSV}
+          title="Download as CSV"
+        >
+          <Icon name="DownloadIcon" className="w-5 h-5" />
+        </Button>
+      }
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
           <Input
-            placeholder="Search"
+            placeholder="Search by invoice number"
             className="pl-10 min-h-9 rounded-lg"
             IconPosition="left-0 pl-2 inset-y-0"
             value={search}
@@ -245,51 +289,69 @@ const Invoice = () => {
             }}
             Icon={<SearchLine className=" text-gray-700" />}
           />
+          <div className="min-w-[9rem]">
+            <CustomSelect
+              options={years}
+              value={year}
+              placeholder="Year"
+              handleChange={(option: any) => {
+                setYear(option ?? { label: 'All time', value: '' });
+                /* Choosing a year takes over from the date range, so the two
+                   cannot quietly contradict each other. */
+                if (option?.value) setDropdownVal(dropdownInitialVal);
+              }}
+            />
+          </div>
           <DateDropdown
             {...{
               dropdownVal,
-              setDropdownVal,
+              setDropdownVal: (next: any) => {
+                setYear({ label: 'All time', value: '' });
+                setDropdownVal(next);
+              },
             }}
           />
-
           <Button className="min-h-9" variant={'outline'} onClick={handleReset}>
             Reset
           </Button>
-          <Button
-            className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-            onClick={handleDownloadCSV}
-          >
-            <Icon name="DownloadIcon" className="w-5 h-5" />
-          </Button>
         </div>
-      </div>
-      <div className="w-full p-3 flex flex-col gap-2">
-        <TableManager
-          {...{
-            tableRef,
-            columns,
-            fetcherKey: 'getInvoice',
-            fetcherFn: getInvoice,
-            extraParams: {
-              filter: [{ key: 'bill_no', value: debouncedSearch }],
-              filter_date: { from: dropdownVal?.value?.from, to: dropdownVal?.value?.to },
-            },
-            emptyTablePlaceholder: 'No invoices for the selected filters',
-            descriptionEmptyTable: 'Try adjusting filters or date range.',
-          }}
-        />
+      }
+    >
+      <TableManager
+        {...{
+          tableRef,
+          columns,
+          fetcherKey: 'getInvoice',
+          fetcherFn: getInvoice,
+          extraParams: {
+            filter: [{ key: 'bill_no', value: debouncedSearch }],
+            filter_date: activeRange,
+          },
+          /* The row opens in place instead of sending somebody to a modal. The
+             expander needs a fetcher to exist, but the lines are already on the
+             row, so nothing is requested — this returns an empty result so the
+             shared table's success handler has the shape it expects. */
+          hasSubRows: true,
+          showMoreData: () => true,
+          subRowsMutateKey: 'invoice-lines',
+          subRowsMutateFn: async () => ({ data: { data: { result: { data: [] } } } }),
+          renderSubComponent: (invoice: any) => <InvoiceLines invoice={invoice} />,
+          emptyTablePlaceholder: 'No invoices yet',
+          descriptionEmptyTable:
+            'Charges appear here once your first payment goes through. If you expected something, widen the year or date range.',
+        }}
+      />
 
-        {drawerState && <InvoiceDetails {...{ info: rowData, drawerState, setDrawerState }} />}
-      </div>
+      {drawerState && <InvoiceDetails {...{ info: rowData, drawerState, setDrawerState }} />}
 
       {failureDetails && (
         <Dialog open={true} onOpenChange={(open) => !open && setFailureDetails(null)}>
           <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden bg-white">
             <DialogHeader>
-              <DialogTitle>Payment Failure Description</DialogTitle>
+              <DialogTitle>Why this payment did not go through</DialogTitle>
               <DialogDescription>
                 {failureDetails.billNumber
-                  ? `Invoice #${failureDetails.billNumber}`
+                  ? `Invoice ${failureDetails.billNumber}`
                   : 'Payment details'}
               </DialogDescription>
             </DialogHeader>
@@ -301,7 +363,7 @@ const Invoice = () => {
           </DialogContent>
         </Dialog>
       )}
-    </section>
+    </AdminPage>
   );
 };
 

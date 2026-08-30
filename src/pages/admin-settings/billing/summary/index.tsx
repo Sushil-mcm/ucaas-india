@@ -1,20 +1,26 @@
 /* What you are paying, what is next, and what you have paid — on one page.
  *
- * Billing was six menu items: Statement, Plan, Licences & Resources, Modules &
- * Access, Credit & Payment, Invoices. Everything a customer needs is in there
- * somewhere, but the three questions they actually arrive with —
+ * Billing is nine menu items. Everything a customer needs is in there somewhere,
+ * but the three questions they actually arrive with —
  *
  *   what am I paying for
  *   what will I be charged next, and when
  *   what have I been charged before
  *
  * — are spread across three of those pages, and nothing answers them together.
- * Established phone systems put exactly these three on one screen, and they are
- * right to: somebody checking their bill is not browsing.
+ * Somebody checking their bill is not browsing, so this page answers all three
+ * before a single click.
  *
  * Nothing here is a new figure. Every number comes from the same endpoints the
- * existing pages already use, so this cannot disagree with them — and each block
- * links to the page that owns that thing rather than duplicating its controls.
+ * other billing pages use — and, importantly, under the same query keys. An
+ * earlier version of this page fetched the plan and the cards under keys of its
+ * own, which meant adding a card on the Credit & payment screen refreshed that
+ * screen and left this one showing the old card indefinitely. Sharing the hooks
+ * fixes that: one cache, one answer, everywhere.
+ *
+ * Where a figure has no source the screen says so rather than printing a zero.
+ * On a billing page a zero is not a neutral placeholder — it is a claim the
+ * customer will plan around, and then ask for a refund over.
  */
 
 import { useMemo } from 'react';
@@ -23,154 +29,353 @@ import { useQuery } from '@tanstack/react-query';
 
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
-import { cardList, getInvoice, getMyPlanDetails } from '@/services/api';
+import { callList, getInvoice } from '@/services/api';
+import { useGetMyPlanDetails, useGetSavedCards } from '@/hooks/common';
+import { readTotals } from '@/lib/spend-breakdown';
+import { UNAVAILABLE, dateOrUnavailable, knownNumber, moneyOrUnavailable } from '@/lib/billing-money';
+import { billingAlert } from '@/lib/billing-alerts';
+import { ABSOLUTE, CALL_HISTORY_PATH } from '../billing-sections';
 
-const money = (value: unknown): string => {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '—';
-  return `$${n.toFixed(2)}`;
-};
+/* Today and the first of this month, as plain calendar dates. Used both for the
+   "this month" tile and for every "is this soon?" decision on the page, so the
+   whole screen agrees about what day it is. */
+const isoDay = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-const onDate = (value: unknown): string => {
-  if (!value) return '—';
-  const d = new Date(String(value));
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-};
+/* One tile: a big number with a small label beneath it.
+ *
+ * The number is what somebody is scanning for, so it leads and the label
+ * explains it — the other way round makes a row of tiles read as a list of
+ * headings. `hint` carries the second fact that makes the first one useful
+ * ("7 unassigned" next to 43 of 50). */
+const Tile = ({
+  value,
+  label,
+  hint,
+  loading,
+  tone,
+}: {
+  value: string;
+  label: string;
+  hint?: string;
+  loading?: boolean;
+  tone?: 'warning';
+}) => (
+  <div className="rounded-lg border border-gray-200 bg-white p-4">
+    {loading ? (
+      <Skeleton className="h-7 w-24 bg-gray-200" />
+    ) : (
+      <p
+        className={`text-2xl font-semibold tabular-nums leading-tight ${
+          tone === 'warning' ? 'text-amber-600' : 'text-gray-900'
+        }`}
+      >
+        {value}
+      </p>
+    )}
+    <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+      {label}
+    </p>
+    {hint ? <p className="mt-0.5 text-xs text-gray-600">{hint}</p> : null}
+  </div>
+);
 
 const BillingSummary = () => {
-  const { data: planData, isLoading: planLoading } = useQuery({
-    queryKey: ['getMyPlanDetails'],
-    queryFn: () => getMyPlanDetails(),
-    staleTime: 60 * 1000,
-  });
+  const today = useMemo(() => isoDay(new Date()), []);
+  const monthStart = useMemo(() => {
+    const d = new Date();
+    return isoDay(new Date(d.getFullYear(), d.getMonth(), 1));
+  }, []);
 
-  const { data: cardData } = useQuery({
-    queryKey: ['cardList'],
-    queryFn: () => cardList(),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
+  const {
+    data: plan,
+    isLoading: planLoading,
+    isError: planFailed,
+  } = useGetMyPlanDetails(undefined, true) as any;
 
-  const { data: invoiceData } = useQuery({
+  const { data: cards = [], isLoading: cardsLoading } = useGetSavedCards() as any;
+
+  const {
+    data: invoiceData,
+    isLoading: invoicesLoading,
+    isError: invoicesFailed,
+  } = useQuery({
     queryKey: ['getInvoice', 'summary'],
     queryFn: () => getInvoice({ page: 1, limit: 5 } as any),
     staleTime: 60 * 1000,
     retry: false,
   });
 
-  const plan = (planData as any)?.data?.data ?? (planData as any)?.data ?? {};
+  /* This month's calling, from the server's own totals for the period so the
+     tile cannot disagree with the Usage page or the invoice. */
+  const { data: monthData, isLoading: monthLoading } = useQuery({
+    queryKey: ['usage-totals', monthStart, today],
+    queryFn: () =>
+      callList({
+        page: 1,
+        limit: 1,
+        filter: [],
+        filter_date: { from: monthStart, to: today },
+        sort: {},
+      }),
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+
   const current = plan?.current_plan_details ?? {};
   const next = plan?.next_billing_details ?? {};
+  const licences = plan?.license_detail ?? {};
+  const lastBilling = plan?.last_billing ?? null;
 
-  const cards = useMemo(() => {
-    const rows =
-      (cardData as any)?.data?.data?.result?.rows ??
-      (cardData as any)?.data?.data?.rows ??
-      (cardData as any)?.data?.data ??
-      [];
-    return Array.isArray(rows) ? rows : [];
-  }, [cardData]);
+  const monthTotals = useMemo(
+    () => readTotals((monthData as any)?.data?.data?.result?.call_stats),
+    [monthData],
+  );
 
   /* The card that will actually be charged. Showing "a card is saved" when three
-     are saved and the wrong one is default would be worse than showing none. */
-  const defaultCard = useMemo(
-    () => cards.find((c: any) => c?.is_default === 'Y' || c?.is_default === true) ?? cards[0],
-    [cards],
-  );
+     are saved and the wrong one is primary would be worse than showing none. */
+  const primaryCard = useMemo(() => {
+    const list = Array.isArray(cards) ? cards : [];
+    return list.find((c: any) => c?.is_primary === 'Y' || c?.is_primary === true) ?? list[0];
+  }, [cards]);
 
   const invoices = useMemo(() => {
     const rows =
-      (invoiceData as any)?.data?.data?.result?.rows ??
-      (invoiceData as any)?.data?.data?.rows ??
-      [];
+      (invoiceData as any)?.data?.data?.result?.rows ?? (invoiceData as any)?.data?.data?.rows ?? [];
     return Array.isArray(rows) ? rows.slice(0, 5) : [];
   }, [invoiceData]);
 
-  const isTrial = current?.is_trial === 'Y';
-  const expired = String(current?.plan_status || '').toUpperCase() === 'EXPIRED';
+  /* One banner, only when something is actually wrong, and it names the
+     consequence rather than the status. The rules live in billing-alerts so they
+     can be tested — deciding whether an account is in trouble is not something
+     to work out inside a ternary. */
+  const alert = useMemo(() => {
+    if (planLoading || cardsLoading) return null;
+    return billingAlert({
+      planStatus: current?.plan_status,
+      isTrial: current?.is_trial,
+      planExpiryISO: current?.plan_expiration_date,
+      lastPaymentStatus: lastBilling?.status,
+      hasPaymentMethod: Boolean(primaryCard),
+      cardExpMonth: primaryCard?.exp_month,
+      cardExpYear: primaryCard?.exp_year,
+      todayISO: today,
+    });
+  }, [planLoading, cardsLoading, current, lastBilling, primaryCard, today]);
+
+  const isTrial = String(current?.is_trial ?? '').toUpperCase() === 'Y';
+  const expired = String(current?.plan_status ?? '').toUpperCase() === 'EXPIRED';
+
+  const perSeat = current?.discount_enabled ? current?.discount_price : current?.original_price;
+
+  const purchased = knownNumber(licences?.total_licenses);
+  const assigned = knownNumber(licences?.used_licenses);
+  const spare = knownNumber(licences?.free_licenses);
 
   return (
     <AdminPage
+      section="Billing"
       title="Billing summary"
       description="What you are paying for, what is due next, and what you have paid before."
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+        {/* Only on screen when there is something to do. A banner that is always
+            there is wallpaper, and people scroll past the one time it matters. */}
+        {alert ? (
+          <div
+            role="status"
+            className={`mb-3 flex flex-wrap items-start gap-3 rounded-lg border p-3.5 ${
+              alert.tone === 'danger'
+                ? 'border-red-200 bg-red-50'
+                : 'border-amber-200 bg-amber-50'
+            }`}
+          >
+            <div className="min-w-[16rem] flex-1">
+              <p
+                className={`text-sm font-semibold ${
+                  alert.tone === 'danger' ? 'text-red-800' : 'text-amber-900'
+                }`}
+              >
+                {alert.title}
+              </p>
+              <p
+                className={`mt-0.5 text-xs ${
+                  alert.tone === 'danger' ? 'text-red-700' : 'text-amber-800'
+                }`}
+              >
+                {alert.detail}
+              </p>
+            </div>
+            <Link to={alert.actionHref}>
+              <Button type="button" variant="outline">
+                {alert.actionLabel}
+              </Button>
+            </Link>
+          </div>
+        ) : null}
+
+        {/* The hero. Everything above the fold answers "what am I paying, and
+            when" without a click, which is the whole point of the page. */}
         <SettingCard
           title="Your plan"
           description={
-            expired
-              ? 'This plan has expired. Renew it to keep calls working.'
-              : isTrial
-                ? 'You are on a trial. Choose a plan before it ends to keep your numbers.'
-                : 'What you are paying for at the moment.'
+            planFailed
+              ? 'Your plan could not be loaded just now.'
+              : expired
+                ? 'This plan has expired. Renewing puts your numbers and settings straight back into service.'
+                : isTrial
+                  ? 'You are on a trial. Choosing a plan before it ends keeps your numbers.'
+                  : 'What you are paying for at the moment.'
           }
           aside={
-            <Link to="/admin-settings/billing/plan">
+            <Link to={ABSOLUTE('plan')}>
               <Button type="button" variant="outline">
                 {expired || isTrial ? 'Choose a plan' : 'Change plan'}
               </Button>
             </Link>
           }
         >
-          <SettingRow
-            label="Plan"
-            description={planLoading ? 'Loading…' : current?.plan_name || 'No plan yet'}
-          />
-          <SettingRow
-            label="Billed"
-            description={
-              current?.plan_duration ? `Every ${current.plan_duration}` : 'Billing period not set'
-            }
-            control={
-              <span className="text-sm font-semibold text-gray-900">
-                {money(
-                  current?.discount_enabled ? current?.discount_price : current?.original_price,
-                )}
-              </span>
-            }
-          />
-          <SettingRow
-            label="Next charge"
-            description={
-              expired
-                ? 'Nothing is scheduled while the plan is expired.'
-                : `Due ${onDate(current?.plan_expiration_date)}${
-                    next?.total_license ? ` for ${next.total_license} licences` : ''
-                  }`
-            }
-            control={
-              <span className="text-sm font-semibold text-gray-900">
-                {expired ? '—' : money(next?.original_price ?? current?.original_price)}
-              </span>
-            }
-          />
+          {planFailed ? (
+            <SettingRow
+              label="Nothing is wrong with your account"
+              description="This screen could not read your plan. Reload the page; if it keeps happening the Plan screen shows the same details."
+            />
+          ) : planLoading ? (
+            <>
+              <SettingRow label="Plan" description="" control={<Skeleton className="h-4 w-32 bg-gray-200" />} />
+              <SettingRow label="Per licence" description="" control={<Skeleton className="h-4 w-20 bg-gray-200" />} />
+              <SettingRow label="Next bill" description="" control={<Skeleton className="h-4 w-24 bg-gray-200" />} />
+            </>
+          ) : (
+            <>
+              <SettingRow
+                label="Plan"
+                description={current?.plan_name || 'No plan chosen yet'}
+                control={
+                  <span className="text-sm font-semibold text-gray-900">
+                    {current?.plan_duration ? `Billed every ${current.plan_duration}` : UNAVAILABLE}
+                  </span>
+                }
+              />
+              <SettingRow
+                label="Per licence"
+                description="What one seat costs for a full billing cycle."
+                control={
+                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                    {moneyOrUnavailable(perSeat)}
+                  </span>
+                }
+              />
+              <SettingRow
+                label="Licences on the bill"
+                description="Seats you are charged for. Removed seats stop being charged from the next cycle."
+                control={
+                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                    {knownNumber(licences?.payable_licenses) === null
+                      ? UNAVAILABLE
+                      : String(licences.payable_licenses)}
+                  </span>
+                }
+              />
+              <SettingRow
+                label="Next bill"
+                description={
+                  expired
+                    ? 'Nothing is scheduled while the plan is expired.'
+                    : `You'll be charged on ${dateOrUnavailable(next?.next_billing_date ?? current?.plan_expiration_date)}.`
+                }
+                control={
+                  <span className="text-base font-semibold tabular-nums text-gray-900">
+                    {expired ? UNAVAILABLE : moneyOrUnavailable(next?.next_billing_amount)}
+                  </span>
+                }
+              />
+            </>
+          )}
         </SettingCard>
+
+        {/* Four figures somebody wants at a glance. Auto-fitting rather than a
+            fixed four across, so they stay readable on a narrow window instead
+            of squeezing into unreadable slivers. */}
+        <div
+          className="mb-3 grid gap-3"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
+        >
+          <Tile
+            loading={planLoading}
+            value={
+              purchased === null || assigned === null ? UNAVAILABLE : `${assigned}/${purchased}`
+            }
+            label="Licences"
+            hint={
+              spare === null
+                ? undefined
+                : spare === 0
+                  ? 'None spare'
+                  : `${spare} unassigned`
+            }
+          />
+          <Tile
+            loading={planLoading}
+            value={moneyOrUnavailable(current?.credits)}
+            label="Credit balance"
+            hint="Shared across the whole company."
+          />
+          <Tile
+            loading={monthLoading}
+            value={moneyOrUnavailable(monthTotals.amount)}
+            label="This month's calling"
+            hint="So far this month. An estimate until the month closes."
+          />
+          <Tile
+            loading={planLoading}
+            value={expired ? UNAVAILABLE : moneyOrUnavailable(next?.next_billing_amount)}
+            label="Next payment"
+            hint={
+              expired
+                ? 'Nothing scheduled.'
+                : `Due ${dateOrUnavailable(next?.next_billing_date ?? current?.plan_expiration_date)}`
+            }
+          />
+        </div>
 
         <SettingCard
           title="How it gets paid"
           description="The card charged when your plan renews or you buy a number."
           aside={
-            <Link to="/admin-settings/billing/purchase">
+            <Link to={ABSOLUTE('purchase')}>
               <Button type="button" variant="outline">
-                {defaultCard ? 'Manage cards' : 'Add a card'}
+                {primaryCard ? 'Replace card' : 'Add a card'}
               </Button>
             </Link>
           }
         >
-          {defaultCard ? (
-            <SettingRow
-              label={`${defaultCard?.brand || defaultCard?.card_type || 'Card'} ending ${
-                defaultCard?.last4 || defaultCard?.last_four || '••••'
-              }`}
-              description={
-                cards.length > 1
-                  ? `This is the one that gets charged. ${cards.length - 1} other ${cards.length === 2 ? 'card is' : 'cards are'} saved.`
-                  : 'This is the one that gets charged.'
-              }
-            />
+          {cardsLoading ? (
+            <SettingRow label="Card" description="" control={<Skeleton className="h-4 w-40 bg-gray-200" />} />
+          ) : primaryCard ? (
+            <>
+              <SettingRow
+                label={`${String(primaryCard?.brand ?? 'Card').toUpperCase()} ending ${primaryCard?.last4 ?? '••••'}`}
+                description={
+                  cards.length > 1
+                    ? `This is the one that gets charged. ${cards.length - 1} other ${cards.length === 2 ? 'card is' : 'cards are'} saved.`
+                    : 'This is the one that gets charged.'
+                }
+                control={
+                  <span className="text-sm tabular-nums text-gray-700">
+                    {primaryCard?.exp_month && primaryCard?.exp_year
+                      ? `Expires ${String(primaryCard.exp_month).padStart(2, '0')}/${primaryCard.exp_year}`
+                      : UNAVAILABLE}
+                  </span>
+                }
+              />
+              <SettingRow
+                label="Changing card"
+                description="A replacement card is saved alongside this one and made primary — cards are never edited in place, so a mistyped number cannot leave you with no working card."
+              />
+            </>
           ) : (
             /* Said plainly rather than left blank: no card means a renewal will
                fail, and that is worth knowing before it happens rather than
@@ -182,56 +387,75 @@ const BillingSummary = () => {
           )}
         </SettingCard>
 
-        {/* Where the charges came from.
-            Per-call records with a Charge column already exist, under Reports.
-            Somebody checking a bill has no reason to look there, so the two were
-            never connected: the invoice said what was owed and nothing said what
-            it was for. Linked rather than rebuilt - a second page showing the
-            same rows would be a second place for them to disagree. */}
         <SettingCard
           title="Where the charges came from"
-          description="Every call, with its length and what it cost. Filter by date, person or number to find a particular charge."
+          description="Your allowances against what has been used, and which people and destinations the charges went to."
           aside={
-            <Link to="/reports/call-history">
+            <Link to={ABSOLUTE('usage')}>
               <Button type="button" variant="outline">
-                Call history
+                Usage
               </Button>
             </Link>
           }
         >
           <SettingRow
-            label="Per-call charges"
-            description="Included calls and paid calls both appear here. This is the detail behind the totals on your invoices."
+            label="Looking for one particular charge?"
+            description="Usage groups the charges by person and destination. The call history lists them one by one."
+          />
+          <SettingRow
+            label="Call history"
+            description="Every call with its length and what it cost."
+            control={
+              <Link to={CALL_HISTORY_PATH}>
+                <Button type="button" variant="outline">
+                  Open
+                </Button>
+              </Link>
+            }
           />
         </SettingCard>
 
         <SettingCard
           title="What you have paid"
-          description="Your most recent bills."
+          description="Your five most recent charges."
           aside={
-            <Link to="/admin-settings/billing/invoices">
+            <Link to={ABSOLUTE('invoices')}>
               <Button type="button" variant="outline">
-                All invoices
+                View all invoices
               </Button>
             </Link>
           }
         >
-          {invoices.length === 0 ? (
+          {invoicesFailed ? (
             <SettingRow
-              label="Nothing billed yet"
-              description="Invoices appear here once your first payment goes through."
+              label="Your invoices could not be loaded"
+              description="Reload the page. Nothing about your account has changed and no payment has been affected."
+            />
+          ) : invoicesLoading ? (
+            <>
+              {[0, 1, 2].map((i) => (
+                <SettingRow
+                  key={i}
+                  label="Invoice"
+                  description=""
+                  control={<Skeleton className="h-4 w-16 bg-gray-200" />}
+                />
+              ))}
+            </>
+          ) : invoices.length === 0 ? (
+            <SettingRow
+              label="No invoices yet"
+              description="Charges appear here once your first payment goes through."
             />
           ) : (
             invoices.map((inv: any, i: number) => (
               <SettingRow
-                key={inv?.uuid || inv?.invoice_number || i}
-                label={`Invoice ${inv?.invoice_number ?? inv?.id ?? ''}`.trim()}
-                description={`${onDate(inv?.paid_on || inv?.created_at)}${
-                  inv?.description ? ` — ${inv.description}` : ''
-                }`}
+                key={inv?.uuid || inv?.bill_no || i}
+                label={inv?.bill_no ? `Invoice ${inv.bill_no}` : 'Charge'}
+                description={`${dateOrUnavailable(inv?.created_at)}${inv?.desc ? ` — ${inv.desc}` : ''}`}
                 control={
-                  <span className="text-sm font-semibold text-gray-900">
-                    {money(inv?.total_amount ?? inv?.amount)}
+                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                    {moneyOrUnavailable(inv?.tax_detail?.total_amount ?? inv?.total_amount)}
                   </span>
                 }
               />

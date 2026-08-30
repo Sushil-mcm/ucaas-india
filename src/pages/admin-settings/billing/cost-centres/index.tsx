@@ -105,7 +105,12 @@ const CostCentres = () => {
                   : 'None yet. Add the codes your finance team already uses, so the two systems agree.'
               }
               status="coming-soon"
-              note="Coming soon. Codes are saved for your company, but nothing splits spending by them yet — no report or invoice uses them. Set them up now and they are ready when it arrives."
+              /* Two separate facts, and both have to stay. The first is about
+                 today and will stop being true. The second is about what a cost
+                 centre IS and must never come off this card: the moment somebody
+                 believes a code changes what they are charged, the next
+                 conversation is about a refund. */
+              note="Cost centres are labels for reporting. They do not change what is charged, invoice totals, or taxes. Coming soon: codes are saved for your company, but nothing splits spending by them yet — no report or invoice uses them. Set them up now and they are ready when it arrives."
               aside={
                 <Button type="button" variant="outline" onClick={add}>
                   <Plus className="h-3.5 w-3.5" />
