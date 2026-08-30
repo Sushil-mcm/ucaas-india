@@ -20,11 +20,14 @@ __export(plan_catalogue_exports, {
   PLANS: () => PLANS,
   PLAN_ADD_ONS: () => PLAN_ADD_ONS,
   UNLIMITED: () => UNLIMITED,
+  UNLIMITED_STORED_THRESHOLD: () => UNLIMITED_STORED_THRESHOLD,
   allowanceLeft: () => allowanceLeft,
   describeAllowance: () => describeAllowance,
+  describeStoredAllowance: () => describeStoredAllowance,
   isUnlimited: () => isUnlimited,
   monthlyCostForSeat: () => monthlyCostForSeat,
-  ratesForPlan: () => ratesForPlan
+  ratesForPlan: () => ratesForPlan,
+  storedAllowanceIsUnlimited: () => storedAllowanceIsUnlimited
 });
 module.exports = __toCommonJS(plan_catalogue_exports);
 const UNLIMITED = "unlimited";
@@ -175,4 +178,15 @@ const ratesForPlan = (planName) => {
     domesticMinuteRate: plan.overage?.domesticMinuteRate,
     smsRate: plan.overage?.smsRate
   };
+};
+const UNLIMITED_STORED_THRESHOLD = 999999999;
+const storedAllowanceIsUnlimited = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= UNLIMITED_STORED_THRESHOLD;
+};
+const describeStoredAllowance = (value, unit) => {
+  if (value === null || value === void 0 || value === "") return "Not available yet";
+  if (storedAllowanceIsUnlimited(value)) return `Unlimited ${unit}`;
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n.toLocaleString()} ${unit}` : "Not available yet";
 };

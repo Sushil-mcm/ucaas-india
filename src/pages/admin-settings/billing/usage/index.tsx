@@ -41,7 +41,7 @@ import { callList } from '@/services/api';
 import { useGetMyPlanDetails } from '@/hooks/common';
 import { useUser } from '@/hooks/use-user';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
-import { ratesForPlan } from '@/lib/plan-catalogue';
+import { ratesForPlan, storedAllowanceIsUnlimited } from '@/lib/plan-catalogue';
 import {
   isBreakdownComplete,
   onlyCharged,
@@ -74,8 +74,14 @@ const SHOWN = 8;
 /* A quantity with its unit, or the admission that nobody counted it. Kept
    separate from the money formatter because "0 minutes" and "$0.00" are
    different kinds of claim, and both must be avoidable. */
-const units = (value: number | null, unit: string): string =>
-  value === null ? UNAVAILABLE : `${value.toLocaleString()} ${unit}`;
+const units = (value: number | null, unit: string): string => {
+  if (value === null) return UNAVAILABLE;
+  /* An unlimited allowance is stored as a very large number because the column
+     holds whole numbers. Printing it would show "999,999,999 minutes", which
+     tells a customer we do not know what we are doing. */
+  if (storedAllowanceIsUnlimited(value)) return `Unlimited ${unit}`;
+  return `${value.toLocaleString()} ${unit}`;
+};
 
 /* The thin bar on each row. Absent entirely when there is nothing to measure -
    an empty grey track would suggest an allowance sitting at zero. */

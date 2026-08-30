@@ -246,12 +246,12 @@ export const monthlyCostForSeat = (
 export const ratesForPlan = (
   planName: string | undefined | null,
 ): { domesticMinuteRate?: number; smsRate?: number; planId: string } | null => {
-  const wanted = String(planName ?? '').trim().toLowerCase();
+  const wanted = String(planName ?? '')
+    .trim()
+    .toLowerCase();
   if (!wanted) return null;
 
-  const plan = PLANS.find(
-    (p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted,
-  );
+  const plan = PLANS.find((p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted);
   if (!plan) return null;
 
   return {
@@ -259,4 +259,42 @@ export const ratesForPlan = (
     domesticMinuteRate: plan.overage?.domesticMinuteRate,
     smsRate: plan.overage?.smsRate,
   };
+};
+
+/* Unlimited, as it has to be stored.
+ *
+ * The plan record keeps allowances as whole numbers, so unlimited needs a
+ * number. Every candidate is wrong in some direction, and only one is wrong
+ * SAFELY:
+ *
+ *   0     charges from the first minute - the opposite of unlimited
+ *   NULL  becomes NaN, and NaN comparisons are false, so it looks free until
+ *         some other sum quietly turns it into a charge
+ *   -1    makes "used > included" true at once, so every minute bills
+ *
+ * A very large number is the only one that fails towards not charging: any
+ * comparison against it says "still inside the allowance". So that is what is
+ * stored, and this threshold is what turns it back into a word on screen.
+ * Anything at or above it is unlimited - written down rather than left as a
+ * magic number somebody later trims a zero from.
+ */
+export const UNLIMITED_STORED_THRESHOLD = 999_999_999;
+
+export const storedAllowanceIsUnlimited = (value: unknown): boolean => {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= UNLIMITED_STORED_THRESHOLD;
+};
+
+/* An allowance straight off the plan record, ready to show. Never prints the
+   sentinel - a screen reading "999,999,999 minutes" tells a customer we do not
+   know what we are doing. */
+export const describeStoredAllowance = (value: unknown, unit: string): string => {
+  /* Nothing at all is NOT zero. Number(null) is 0, so letting null through here
+     would tell a customer their plan includes no minutes when the truth is that
+     nobody told us. Checked before any conversion, because the conversion is
+     what loses the difference. */
+  if (value === null || value === undefined || value === '') return 'Not available yet';
+  if (storedAllowanceIsUnlimited(value)) return `Unlimited ${unit}`;
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n.toLocaleString()} ${unit}` : 'Not available yet';
 };
