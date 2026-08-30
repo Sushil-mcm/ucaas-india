@@ -206,6 +206,7 @@ const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules
 const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
+const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
 const AiBotSession = lazy(() => import('@/pages/admin-settings/knowledge-base/ai-bot-session'));
 const CallHistory = lazy(() => import('@/pages/reports/call-logs/call-history'));
 const LocalCallList = lazy(() => import('@/pages/reports/call-logs/local-call-list'));
@@ -798,6 +799,14 @@ export const router = createBrowserRouter([
             path: 'roles',
             id: 'roles',
             element: <ProtectedRoute element={<DirectoryRoles />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* Who each administrator covers, as opposed to what they may do.
+               Administrator-only for the same reason the Roles screen is: it
+               describes the shape of authority across the whole company. */
+            path: 'admin-scope',
+            id: 'admin-scope',
+            element: <ProtectedRoute element={<AdminScope />} guard={{ adminOnly: true }} />,
           },
           {
             /* Kept permanently: bookmarked, and linked from support articles. */

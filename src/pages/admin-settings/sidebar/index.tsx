@@ -123,6 +123,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
+        {
+          /* Roles say what somebody may do. This says who they may do it to. */
+          title: 'Admin scope',
+          icon: 'LockFilled',
+          path: '/admin-settings/admin-scope',
+          enabled: IS_ADMIN,
+          visible: IS_ADMIN,
+        },
       ].filter(Boolean),
     },
     {
