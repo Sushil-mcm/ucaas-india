@@ -180,7 +180,9 @@ const CommonSettingPermission: FC<any> = ({
   /* The company's own answer, so this person's row can say what "follow the
      company" actually means for them rather than making them go and look. Only
      fetched on the screens that show the control. */
-  const { data: companyDefaultTemplate = null } = useQuery<CompanyDefaultTemplate | null>({
+  const { data: companyDefaultTemplate = null, isPending: loadingCompanyRule } = useQuery<
+    CompanyDefaultTemplate | null
+  >({
     queryKey: COMPANY_DEFAULTS_QUERY_KEY,
     queryFn: fetchCompanyDefaults,
     enabled: isShowInternationalCalling,
@@ -534,7 +536,15 @@ const CommonSettingPermission: FC<any> = ({
           >
             <SettingRow
               label="International calling"
-              description={describePersonRule(internationalRule, companyInternationalRule)}
+              /* While the company's own answer is still loading, "follows the
+                 company setting" is said without guessing what that setting is.
+                 Showing "nothing is restricted" for a moment on a company that
+                 restricts everything would be a lie, briefly. */
+              description={
+                loadingCompanyRule && internationalRule.allowed === null
+                  ? 'Follows the company setting.'
+                  : describePersonRule(internationalRule, companyInternationalRule)
+              }
               notActive
               control={
                 <div className="min-w-[240px]">
