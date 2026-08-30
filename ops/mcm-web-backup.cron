@@ -1,0 +1,6 @@
+# Hourly off-box backup of the mycountrymobile-web repository to the Furkan and
+# Adnan servers. At :17 rather than :00 so it does not queue behind every other
+# job on a box that also serves 33 other sites.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+17 * * * * root /usr/local/bin/mcm-web-backup.sh >/dev/null 2>&1
