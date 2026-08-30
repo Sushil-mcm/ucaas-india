@@ -213,9 +213,7 @@ const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules
 const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
-const JoiningAndLeaving = lazy(
-  () => import('@/pages/admin-settings/people/joining-and-leaving'),
-);
+const JoiningAndLeaving = lazy(() => import('@/pages/admin-settings/people/joining-and-leaving'));
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
 const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
 const AccessControl = lazy(() => import('@/pages/admin-settings/roles/access-control'));
@@ -635,7 +633,10 @@ export const router = createBrowserRouter([
                        thing to hand to whoever can view the phone system. */
                     path: 'apply-to-people',
                     element: (
-                      <ProtectedRoute element={<CompanyBulkSettingsPage />} guard={{ adminOnly: true }} />
+                      <ProtectedRoute
+                        element={<CompanyBulkSettingsPage />}
+                        guard={{ adminOnly: true }}
+                      />
                     ),
                   },
                   { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
@@ -879,7 +880,9 @@ export const router = createBrowserRouter([
                the shape of authority for everybody in the company. */
             path: 'default-permissions',
             id: 'default-permissions',
-            element: <ProtectedRoute element={<DefaultPermissions />} guard={{ adminOnly: true }} />,
+            element: (
+              <ProtectedRoute element={<DefaultPermissions />} guard={{ adminOnly: true }} />
+            ),
           },
           {
             /* Kept permanently: bookmarked, and linked from support articles. */
@@ -1423,17 +1426,35 @@ export const router = createBrowserRouter([
               {
                 path: 'brands',
                 id: 'brands',
-                element: <ProtectedRoute element={<DLCBrands />} trialRestricted />,
+                element: (
+                  <ProtectedRoute
+                    element={<DLCBrands />}
+                    guard={{ adminOnly: true }}
+                    trialRestricted
+                  />
+                ),
               },
               {
                 path: 'brands/campaigns',
                 id: 'brands/campaigns',
-                element: <ProtectedRoute element={<DLCCompaigns />} trialRestricted />,
+                element: (
+                  <ProtectedRoute
+                    element={<DLCCompaigns />}
+                    guard={{ adminOnly: true }}
+                    trialRestricted
+                  />
+                ),
               },
               {
                 path: 'brands/reseller',
                 id: 'brands/reseller',
-                element: <ProtectedRoute element={<Reseller />} trialRestricted />,
+                element: (
+                  <ProtectedRoute
+                    element={<Reseller />}
+                    guard={{ adminOnly: true }}
+                    trialRestricted
+                  />
+                ),
               },
             ],
           },
@@ -1443,7 +1464,7 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 path: 'user-settings',
-                element: <ProtectedRoute element={<UserSettings />} />,
+                element: <ProtectedRoute element={<UserSettings />} guard={{ adminOnly: true }} />,
               },
               {
                 path: 'call-handling',

@@ -368,9 +368,18 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
          rather than spread from what was stored, so anything missing here is
          dropped from the record — the same way a separate holiday action used
          to be destroyed on every save. */
-      waiting: watch('settings.waiting') || WAITING_DEFAULTS,
-      after_call: watch('settings.after_call') || AFTER_CALL_DEFAULTS,
-      escalation: watch('settings.escalation') || ESCALATION_DEFAULTS,
+      /* `waiting`, `after_call` and `escalation` are deliberately NOT sent.
+         The queue save is forwarded to the service that owns queues, and its
+         settings schema accepts only: operational_hours, recording,
+         display_number, ai_call_monitoring, transcription, wrapup_time, skills,
+         ring_strategy, leave_room_if_no_agent and media. It does not permit
+         unknown keys, so including these three makes the whole save fail
+         validation - an admin changing a queue's name would be told the save
+         did not work, with no clue why.
+
+         The controls stay on screen, marked as coming soon, because that is
+         honest: nothing acts on them yet either. Send them again in the same
+         change that teaches the backend to accept them, and not before. */
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
         leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
