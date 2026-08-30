@@ -33,24 +33,30 @@ import {
  * ---------------------------------------------------------------------------
  * READ THIS BEFORE YOU TRUST THIS PAGE
  * ---------------------------------------------------------------------------
- * Nothing on this page is enforced. Every control here writes a value into a
- * JSON blob and stops. Grepped on the date this file was written:
+ * Four of the five controls here write a value into a JSON blob and stop.
+ * Grepped when this file was written, and again on 30 August 2026:
  *
  *   grep -rni "mfa|two_factor|2fa"                 --include=*.ts(x) src/  -> 0 hits
- *   grep -rni "idle_timeout|session_timeout"       --include=*.ts(x) src/  -> 0 hits
  *   grep -rni "cidr|allowlist|ip_whitelist"        --include=*.ts(x) src/  -> 0 hits
  *   grep -rni "saml|idp|entity_id"                 --include=*.ts(x) src/  -> 0 hits
- *   grep -rn  "company_security"                   --include=*.ts(x) src/  -> only this file
+ *   grep -rn  "company_security"  on the API       -> 0 hits, both services
  *
- * Nothing reads any of these keys. There is no MFA challenge in the sign-in
- * flow, no inactivity timer, no request-time IP check and no SAML handler.
- * All five settings need backend / auth-layer work before they do anything.
+ * There is no MFA challenge in the sign-in flow, no request-time IP check and
+ * no SAML handler. Those four need auth-layer work before they do anything, so
+ * they are marked "Coming soon".
+ *
+ * The exception is the idle timeout. src/hooks/use-idle-timeout.ts reads
+ * `idle_timeout` and does sign an idle person out — but it is this browser
+ * doing it, and the API never checks a session's age, so the card says "In this
+ * app only" rather than claiming a lock it cannot deliver.
  *
  * A security page that looks live but is not is worse than no page at all,
  * because an admin reads it and believes they are covered. Every card below
- * says, in its own words, exactly what is and is not happening. If the backend
- * ever starts honouring one of these keys, change that card's `enforced` flag
- * and rewrite its note — do not leave a stale reassurance in place.
+ * carries a `status` saying which of those it is, in words a customer can act
+ * on: "Coming soon" where we have not built it, "In this app only" where the
+ * browser does the work and nothing behind it checks again. If the backend ever
+ * starts honouring one of these keys, change that card's status and rewrite its
+ * note — do not leave a stale reassurance in place.
  */
 
 const SECURITY_KEY = 'company_security';
@@ -535,8 +541,8 @@ const CompanySecurity = () => {
             icon={<ShieldCheck className="h-5 w-5" />}
             title="Require multi-factor authentication"
             description="Whether everyone signing in with a password must also pass a second check."
-            enforced={false}
-            enforcementNote="Not active yet. Signing in does not ask for a second step."
+            status="coming-soon"
+            note="Coming soon. Signing in does not ask for a second step yet, so this does not protect anything today. What you choose is saved and ready for the day it does."
           >
             <SettingRow
               label="Require MFA for password sign-in"
@@ -554,8 +560,8 @@ const CompanySecurity = () => {
             icon={<UserMinus className="h-5 w-5" />}
             title="MFA exception list"
             description="The named people who would be allowed to sign in without the second check."
-            enforced={false}
-            enforcementNote="Not active yet."
+            status="coming-soon"
+            note="Coming soon, along with the requirement above. Nobody is being asked for a second step yet, so nobody is being let off one."
           >
             {!form.mfa_required && (
               <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
@@ -641,8 +647,8 @@ const CompanySecurity = () => {
             icon={<Timer className="h-5 w-5" />}
             title="Idle timeout"
             description="How long someone can leave the console untouched before they are signed out."
-            enforced
-            enforcementNote="Active. People are signed out after this long without activity, with a warning first and a chance to stay signed in. It waits while someone is on a call."
+            status="app-only"
+            note="Works in this app. Somebody who leaves this app untouched for this long is signed out of it, with a warning first and a chance to stay signed in, and the clock waits while they are on a call. It only reaches this app — it does not sign anybody out of anything else."
           >
             <SettingRow
               label="Sign people out when idle"
@@ -678,8 +684,8 @@ const CompanySecurity = () => {
                     other established systems forces HIPAA-enabled organisations down to{' '}
                     {IDLE_HIPAA_MINUTES} minutes and does not let them choose. This platform has no
                     HIPAA flag, so nothing is forced here. If you are handling health data, set{' '}
-                    {IDLE_HIPAA_MINUTES} yourself — and remember it will not be applied until the
-                    timer is actually built.
+                    {IDLE_HIPAA_MINUTES} yourself — and remember this signs somebody out of this app
+                    only, so it is housekeeping rather than a rule you can point an auditor at.
                   </p>
                 </div>
               </div>
@@ -690,8 +696,8 @@ const CompanySecurity = () => {
             icon={<Network className="h-5 w-5" />}
             title="IP allowlist"
             description="The networks people are allowed to sign in from, written as IPv4 CIDR blocks."
-            enforced={false}
-            enforcementNote="Not active yet. Signing in is not restricted by network."
+            status="coming-soon"
+            note="Coming soon. Signing in is not restricted by network yet, so this list keeps nobody out today. Write it down now and it is ready for the day it does."
           >
             <SettingRow
               label="Restrict sign-in by IP address"
@@ -762,8 +768,8 @@ const CompanySecurity = () => {
             icon={<KeyRound className="h-5 w-5" />}
             title="Single sign-on (SAML)"
             description="Where your identity provider lives, so sign-in can be handed over to it."
-            enforced={false}
-            enforcementNote="Not active yet. People sign in with their email address and password."
+            status="coming-soon"
+            note="Coming soon. Everyone still signs in with their email address and password. These details are saved and waiting for the day sign-in can be handed over."
           >
             <SettingRow
               label="Record SAML SSO details"

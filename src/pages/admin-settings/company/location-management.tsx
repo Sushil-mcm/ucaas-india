@@ -419,10 +419,10 @@ const LocationManagement = () => {
           title="What this table is telling you"
           description="Two of these columns are worked out rather than stored, so it is worth knowing where the numbers come from."
           icon={<Globe2 className="h-4 w-4" />}
-          enforced={false}
-          enforcementNote={
+          status="coming-soon"
+          note={
             <>
-              There are no per-location opening hours in the platform yet. “Right now” applies your
+              Coming soon: opening hours set per location. Until then, “Right now” applies your
               company opening hours ({describeWeeklyHours(companyHours)}) and your company holidays,
               read on each location&rsquo;s own clock. Individual queues, menus, people and numbers
               each keep their own hours, and those are what actually answer a call — so a line at a

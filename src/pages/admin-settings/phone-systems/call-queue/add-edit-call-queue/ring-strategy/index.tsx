@@ -161,7 +161,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Widen the ring if nobody answers"
           description="Start with tier 1, then bring in the next tier. People are added, never swapped out, so the first group keeps ringing."
-          notActive
+          status="coming-soon"
           control={
             <Switch
               checked={!!watch('settings.escalation.enabled')}
@@ -225,7 +225,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Send them back to the person they spoke to last"
           description="Familiar voice, no repeating themselves. If that person is busy or signed out the call routes normally - nobody waits for one agent unless you ask for it."
-          notActive
+          status="coming-soon"
           control={
             <CustomSelect
               options={LAST_AGENT_MODES}
@@ -266,7 +266,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Set a target for answering"
           description="Reporting compares against this instead of showing a bare average, so a supervisor sees a number against a goal."
-          notActive
+          status="coming-soon"
           control={
             <Switch
               checked={!!watch('settings.after_call.service_level.enabled')}
@@ -318,7 +318,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Tell them where they are in the line"
           description="Callers who know they are third wait more willingly than callers who know nothing."
-          notActive
+          status="coming-soon"
           control={
             <Switch
               checked={!!watch('settings.waiting.announce_position')}
@@ -332,7 +332,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Tell them roughly how long"
           description="An estimate from how long recent calls have taken. Better a rough number than silence."
-          notActive
+          status="coming-soon"
           control={
             <Switch
               checked={!!watch('settings.waiting.announce_wait_time')}
@@ -346,7 +346,7 @@ const RingStrategy = () => {
         <SettingRow
           label="Offer to call them back"
           description="They hang up and keep their place. The queue rings them when their turn comes, so a long wait does not have to be spent holding."
-          notActive
+          status="coming-soon"
           control={
             <Switch
               checked={!!watch('settings.waiting.callback.enabled')}

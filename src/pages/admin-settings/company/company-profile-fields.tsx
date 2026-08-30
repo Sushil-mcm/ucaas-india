@@ -327,7 +327,7 @@ const CompanyProfileFields = () => {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-base font-semibold text-gray-900">Your fields</p>
                   <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
-                    Not active yet
+                    Coming soon
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">
@@ -345,10 +345,9 @@ const CompanyProfileFields = () => {
                   yet puts it on anybody's record, and an admin who saves this
                   and then opens a colleague's profile must not be surprised. */}
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Not active yet. What you set here is saved for your company, but these details do
-                not appear on anyone&apos;s profile yet — there is nowhere to fill them in, and
-                nothing to see in the people list. Set them up now and they will be ready when that
-                arrives.
+                Coming soon. What you set here is saved for your company, but these details do not
+                appear on anyone&apos;s profile yet — there is nowhere to fill them in, and nothing
+                to see in the people list. Set them up now and they are ready when it arrives.
               </p>
 
               {!fields.length ? (

@@ -304,8 +304,8 @@ const CompanyMessaging = () => {
             icon={<MessageSquare className="h-5 w-5" />}
             title="Inbound and outbound SMS/MMS"
             description="One switch for texting with people outside the company, on every number this account owns."
-            enforced
-            enforcementNote="Active. When this is off, people are stopped from sending texts in the app. If you need texting stopped completely — for a legal hold or a carrier complaint — release the SMS numbers and contact support as well."
+            status="app-only"
+            note="Works in this app. When this is off, people are stopped from sending texts here. If you need texting stopped completely — for a legal hold or a carrier complaint — release the SMS numbers and contact support as well."
           >
             <ToggleRow
               title="Allow SMS and MMS"
@@ -348,8 +348,8 @@ const CompanyMessaging = () => {
             icon={<ShieldAlert className="h-5 w-5" />}
             title="Outbound SMS/MMS from unregistered numbers (US only)"
             description="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
-            enforced
-            enforcementNote="Active. You are warned before sending from a number that is not registered, because carriers are likely to block it and charge a higher rate. Registering your brand is what clears the block."
+            status="active"
+            note="Active. You are warned before sending from a number that is not registered, because carriers are likely to block it and charge a higher rate. Registering your brand is what clears the block."
           >
             <ToggleRow
               title="Allow texting from unregistered US numbers"
@@ -418,8 +418,8 @@ const CompanyMessaging = () => {
             icon={<LifeBuoy className="h-5 w-5" />}
             title="HELP message"
             description="The reply someone should get when they text HELP to one of your numbers."
-            enforced={false}
-            enforcementNote="Not active yet. This is the wording to give your carrier when you register, so your reply is agreed and written down in one place."
+            status="coming-soon"
+            note="Coming soon: sending this reply for you. For now it is the wording to give your carrier when you register, so your reply is agreed and written down in one place."
           >
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">

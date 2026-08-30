@@ -105,13 +105,13 @@ const AccessControlPage = () => {
           title="Step 1 — the six kinds of person"
           icon={<Users className="h-4 w-4" />}
           description="Each name says how far that kind of person reaches, not how senior they are. Somebody who runs two departments and somebody who runs the company do the same sorts of thing to different sets of people."
-          enforced={false}
-          enforcementNote={
+          status="coming-soon"
+          note={
             <>
-              Reach is the half this platform does not have yet. There is no record of which
-              locations or departments somebody looks after, so a Location Admin&rsquo;s permissions
-              currently apply to every location. Step 3 is where that is written down, ready for the
-              day the platform acts on it.
+              Coming soon: reach. There is no record yet of which locations or departments somebody
+              looks after, so a Location Admin&rsquo;s permissions currently apply to every
+              location. Step 3 is where you write it down, ready for the day it arrives. The
+              permissions themselves do work, inside this app.
             </>
           }
           aside={
@@ -154,8 +154,8 @@ const AccessControlPage = () => {
           />
           <SettingRow
             label="3. How far the role reaches"
-            description="Which locations or departments it applies to. Written down on the Admin scope screen and not yet acted on, so today every role reaches the whole company."
-            notActive
+            description="Which locations or departments it applies to. Written down on the Admin scope screen, and nothing acts on it yet, so today every role reaches the whole company."
+            status="coming-soon"
           />
         </SettingCard>
       </div>

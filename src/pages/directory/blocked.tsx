@@ -126,16 +126,15 @@ const Blocked = () => {
           title="Block a number"
           description="Blocking covers calls, faxes and messages from that number."
           icon={<Ic n="shield" size={16} />}
-          enforced={false}
-          enforcementNote={
+          status="coming-soon"
+          note={
             <>
-              A block is recorded against the contact, and that is as far as it goes today:
-              nothing in the call path reads it yet, so a blocked number can still ring
-              through. The contact book also stores only the fact of the block — not which
-              channels it covers, not what the caller hears instead, and not whether it
-              applies to a shared line. Those choices are shown here because they are the
-              decision people actually make, and they are what the platform needs to be able
-              to keep.
+              Coming soon. A block is recorded against the contact and that is as far as it
+              goes today: nothing in the call path reads it yet, so a blocked number can
+              still ring through. Only the fact of the block is kept — not which channels it
+              covers, not what the caller hears instead, and not whether it applies to a
+              shared line. Those choices are shown here because they are the decision people
+              actually make, and they are what we need to be able to keep.
             </>
           }
         >
@@ -171,7 +170,7 @@ const Blocked = () => {
                 ))}
               </select>
             }
-            notActive={scope !== DEFAULT_BLOCK_CHOICE.scope}
+            status={scope === DEFAULT_BLOCK_CHOICE.scope ? undefined : 'coming-soon'}
           />
 
           <SettingRow
@@ -191,7 +190,7 @@ const Blocked = () => {
                 ))}
               </select>
             }
-            notActive={treatment !== DEFAULT_BLOCK_CHOICE.treatment}
+            status={treatment === DEFAULT_BLOCK_CHOICE.treatment ? undefined : 'coming-soon'}
           />
 
           <SettingRow
@@ -208,7 +207,7 @@ const Blocked = () => {
                 <option value="shared">A shared line</option>
               </select>
             }
-            notActive={line !== DEFAULT_BLOCK_CHOICE.line}
+            status={line === DEFAULT_BLOCK_CHOICE.line ? undefined : 'coming-soon'}
           />
 
           {typed ? (

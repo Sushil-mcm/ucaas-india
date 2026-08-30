@@ -28,11 +28,13 @@ import {
  * key written from here is namespaced under `settings.company_policies` and
  * nothing else in that blob is touched on save.
  *
- * IMPORTANT — nothing in this product reads `settings.company_policies.*` yet.
- * The call switch, the recording pipeline and the API all ignore it today, so
- * every control on this page is a stored preference, not an enforced rule.
- * Each card says so in its own words; please keep those notes accurate if the
- * backend starts honouring a key.
+ * IMPORTANT — the call switch, the recording pipeline and the API all ignore
+ * `settings.company_policies.*` entirely. Some of it is read by this app, which
+ * is a real thing but a smaller one, and the rest is a stored preference that
+ * nothing acts on at all. Each card carries a `status` saying which it is:
+ * 'active' where it does exactly what the card claims, 'app-only' where this
+ * app is the only thing doing the work, 'coming-soon' where we have not built
+ * it. Keep those accurate if a key starts being honoured.
  */
 
 const POLICIES_KEY = 'company_policies';
@@ -468,8 +470,8 @@ const CompanyPolicies = () => {
             icon={<Globe className="h-5 w-5" />}
             title="Default language"
             description="The language used for voicemail prompts and IVR menus when nothing more specific is set."
-            enforced={false}
-            enforcementNote="Used when you record a new greeting — it opens in this language. Greetings and menus you already have keep the language they were made in."
+            status="active"
+            note="Active. Used when you record a new greeting — it opens in this language. Greetings and menus you already have keep the language they were made in."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -492,8 +494,8 @@ const CompanyPolicies = () => {
             icon={<Flag className="h-5 w-5" />}
             title="Default country"
             description="The country your number search opens on."
-            enforced
-            enforcementNote="Active. When you buy a number, the country box starts here. You can still choose a different country for any purchase."
+            status="active"
+            note="Active. When you buy a number, the country box starts here. You can still choose a different country for any purchase."
           >
             <CustomSelect
               label="Default country"
@@ -508,8 +510,8 @@ const CompanyPolicies = () => {
             icon={<Headphones className="h-5 w-5" />}
             title="Who may listen to call recordings"
             description="Whether people can play their own calls back, and whether admins can play anyone's."
-            enforced
-            enforcementNote="Active. Turning one off hides the play button for those recordings. It does not stop someone who already has a direct link to the file."
+            status="app-only"
+            note="Works in this app. Turning one off hides the play button for those recordings here. It does not stop somebody who already has a direct link to the file."
           >
             <SettingRow
               label="People can play their own calls"
@@ -539,8 +541,8 @@ const CompanyPolicies = () => {
             icon={<Voicemail className="h-5 w-5" />}
             title="Voicemail policy"
             description="PIN strength, how long a caller may talk, and whether messages are transcribed for new users."
-            enforced={false}
-            enforcementNote="Not active yet. These are recorded as your company's preference."
+            status="coming-soon"
+            note="Coming soon: the PIN length rule and the message length limit are saved but nothing checks them yet. The transcription switch below is the exception — it already applies to each new person you add."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -594,8 +596,8 @@ const CompanyPolicies = () => {
             icon={<Mic className="h-5 w-5" />}
             title="Call recording policy"
             description="Whether calls are recorded across the company, and whether callers are told."
-            enforced={false}
-            enforcementNote="Important: this does not switch recording off. Recording is turned on for each person under their own settings."
+            status="coming-soon"
+            note="Coming soon. Nothing here starts or stops recording yet — which matters, because it means this cannot switch recording off. Recording is turned on for each person under their own settings."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -684,8 +686,8 @@ const CompanyPolicies = () => {
             icon={<Archive className="h-5 w-5" />}
             title="Data retention"
             description="How long call recordings and voicemail messages are kept before deletion."
-            enforced={false}
-            enforcementNote="Not active yet. Nothing is deleted automatically — recordings and messages are kept until someone removes them."
+            status="coming-soon"
+            note="Coming soon. Nothing is deleted automatically yet — recordings and messages are kept until somebody removes them by hand."
           >
             {renderRetention(
               'retention_recordings',
@@ -703,8 +705,8 @@ const CompanyPolicies = () => {
             icon={<PhoneOutgoing className="h-5 w-5" />}
             title="International calling"
             description="Whether a newly created user may dial abroad before an admin says otherwise."
-            enforced={false}
-            enforcementNote="Not active yet. Recorded as your preference for new people."
+            status="app-only"
+            note="Works in this app when you add somebody: a new person starts on this setting. It does not change anyone already added."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">

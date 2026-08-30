@@ -83,15 +83,15 @@ const CapabilityMatrixPage = () => {
           title="The six kinds of person"
           icon={<Table2 className="h-4 w-4" />}
           description="Each one is named after how far it reaches, not after how senior anybody is. A Department Admin is not a junior administrator — they are an administrator of one department."
-          enforced={false}
-          enforcementNote={
+          status="app-only"
+          note={
             <>
-              Two things this table describes but the platform does not yet do. Permissions decide
-              what this app puts on screen; the platform does not check them when it answers a
-              request, so a tighter role makes the product simpler for the person using it rather
-              than locking anything. And reach is not stored yet, so a Department Admin&rsquo;s
-              permissions currently apply to every department, not only theirs. Admin scope, step 3,
-              is where reach is written down for the day the platform enforces it.
+              Works in this app. Permissions decide what this app puts on screen, and nothing behind
+              it checks them again — so a tighter role makes the product simpler for the person
+              using it rather than locking anything away. Reach is the part that is coming soon:
+              which departments somebody looks after is not stored yet, so a Department
+              Admin&rsquo;s permissions currently apply to every department, not only theirs. Admin
+              scope, step 3, is where reach is written down ready for that.
             </>
           }
         >
@@ -120,8 +120,8 @@ const CapabilityMatrixPage = () => {
           title="Capability by role"
           icon={<Table2 className="h-4 w-4" />}
           description="A tick means this kind of person gets it by default. A dash means it is held back on purpose — hover any row heading for the reason."
-          enforced={false}
-          enforcementNote="This is the model, not a report on your company. What your own roles actually hold is on the Roles screen, and Default permissions shows how far each one has drifted from this."
+          status="app-only"
+          note="Works in this app: permissions decide what this app puts on screen, and nothing behind it checks them again. Two things this table is not — it is the model rather than a report on your company. What your own roles actually hold is on the Roles screen, and Default permissions shows how far each one has drifted from this."
         >
           {/* Wide on purpose: seven columns do not fold onto a phone, so the
               table scrolls inside its own box rather than the whole page moving
