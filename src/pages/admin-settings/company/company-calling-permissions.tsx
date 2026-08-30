@@ -220,8 +220,17 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
 
 /* The line an admin reads under the country list. Kept out of the component so
    the wording is next to the payload it describes. */
-const INTERNATIONAL_NOT_ACTIVE_NOTE =
-  'Not active yet. Your choice is recorded on your company record, and it is what the call switch will read — but the switch does not check it today, so no call is stopped by it yet. Nothing about your calling changes until that check ships.';
+/* The switch reads this now. It was stored-and-ignored until 30 August 2026,
+   when the check went into the call path: the dialplan reads this company
+   record and the person's own permission before it picks a carrier, and
+   refuses the call if the country is not allowed.
+
+   The one thing worth saying on screen is the safety rule that makes it
+   harmless to leave alone: with no list chosen, every country is allowed, so
+   nothing changes for a company that never opens this. A restriction only
+   exists once somebody sets one. */
+const INTERNATIONAL_ACTIVE_NOTE =
+  'Calls to countries not on your list are refused by the phone switch itself, not just hidden in this app — so a desk phone or softphone cannot get around it. With no list chosen, every country is allowed.';
 
 /**
  * A per-setting honesty badge. `enforced` is only ever passed `true` once
@@ -606,13 +615,12 @@ const CompanyCallingPermissions = () => {
             icon={<Globe2 className="h-5 w-5" />}
             title="Calling other countries"
             description="Which countries your team can phone. Calls abroad are where a stolen password turns into a real bill, because premium-rate numbers in other countries pay whoever set the call up, by the minute."
-            enforced={false}
-            enforcementNote={INTERNATIONAL_NOT_ACTIVE_NOTE}
+            enforced
+            enforcementNote={INTERNATIONAL_ACTIVE_NOTE}
           >
             <SettingRow
               label="Only allow calls to the countries chosen below"
               description="Leave this off and calls can be made to any country, which is how your account works today. Turn it on and your team can only phone the countries you tick — the shorter that list, the smaller the bill somebody else can run up on your account."
-              notActive
               control={
                 <Checkbox
                   checked={form.international_restricted}
@@ -630,8 +638,7 @@ const CompanyCallingPermissions = () => {
             {form.international_restricted ? (
               <SettingRow
                 label="Countries your team can call"
-                description="Tick every country your business genuinely phones. Anywhere you do not tick would be refused once the call switch starts checking this."
-                notActive
+                description="Tick every country your business genuinely phones. Anywhere you do not tick is refused by the phone switch."
               >
                 <CountryChooser
                   options={countryOptions}

@@ -103,10 +103,10 @@ const SettingsNotification = () => {
               Remove this notice in the same change that makes the three real —
               not before. */}
           <div className="mb-3 rounded-md border-l-[3px] border-l-amber-500 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-900">
-            <span className="font-semibold">Not sending yet.</span> What you choose here is saved
-            against your account and is ready for the day these are switched on, but no voicemail,
-            missed-call or text notification is being sent today. Nothing you change on this page
-            will reach you.
+            <span className="font-semibold">Voicemail and missed-call alerts have stopped.</span>{' '}
+            They worked until 24 August and are not being sent at the moment — what you choose here
+            is saved and will apply again once they are running. Text message alerts have never been
+            sent.
           </div>
           <div className="w-full flex flex-col gap-3">
             {NOTIFICATION_TYPES_LIST.map((item) => (
