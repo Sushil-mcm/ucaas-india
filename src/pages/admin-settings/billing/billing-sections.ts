@@ -94,6 +94,15 @@ export const BILLING_SECTIONS: BillingSection[] = [
     purpose: 'Which modules the plan carries, and who can see them.',
   },
   {
+    /* Add-ons are licences bought per seat, so they sit beside the plan rather
+       than under settings. Nothing here can be bought yet - the page says so
+       rather than offering a button that would take a browser-supplied price. */
+    path: 'add-ons',
+    label: 'Add-ons',
+    icon: 'BillingPlanIcon',
+    purpose: 'Extras on top of your plan, and which ones you already have.',
+  },
+  {
     path: 'cost-centres',
     label: 'Cost centres',
     icon: 'BillingPlanIcon',

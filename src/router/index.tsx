@@ -110,6 +110,7 @@ const GreetingContent = lazy(() => import('@/pages/greetings/greetings-content')
 const Plan = lazy(loadBillingPlan);
 const Purchase = lazy(() => import('@/pages/admin-settings/billing/purchase'));
 const Invoice = lazy(() => import('@/pages/admin-settings/billing/invoice'));
+const AddOns = lazy(() => import('@/pages/admin-settings/billing/add-ons'));
 const BasicInfoSettings = lazy(() => import('@/pages/settings/basic-info'));
 const General = lazy(() =>
   import('@/pages/settings/general').then((module) => ({ default: module.General })),
@@ -230,6 +231,7 @@ const BILLING_ELEMENTS: Record<string, ReactElement> = {
   statement: <StatementOfAccount />,
   modules: <BillingModules />,
   'cost-centres': <CostCentres />,
+  'add-ons': <AddOns />,
 };
 /* Admin ▸ Users reuses the Directory screens rather than keeping a second,
    older implementation of the same lists. Same components, same actions. */

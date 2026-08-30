@@ -100,6 +100,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="Where this company works"
+          status="coming-soon"
+          note="Saved, but no call uses it yet. The country and time zone here are what opening hours will be judged against once that is switched on."
           description="The country and clock everything else is measured against - opening hours, holidays, and the times shown in reports."
           aside={
             <Button type="button" variant="outline" onClick={() => openModal('regionalModal')}>
@@ -129,6 +131,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="When you are open"
+          status="coming-soon"
+          note="Saved, but calls are not routed by it yet — a call at 2am is treated exactly like one at 2pm. Nothing here changes what a caller hears until the switch reads it."
           description="Calls outside these hours are handled differently - that is what the closed-hours action on your numbers and queues points at."
           aside={
             <Button
@@ -155,6 +159,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="Call recording"
+          status="coming-soon"
+          note="Saved, but nothing is being recorded. Recording worked until 22 August and stopped when the call router was rebuilt; restoring it is separate from this setting."
           description="Whether calls are recorded automatically, or only when somebody chooses to start recording."
           aside={
             <Button
@@ -181,6 +187,8 @@ const SettingPermission: FC<any> = ({ data }) => {
           <>
             <SettingCard
               title="Transcription"
+              status="coming-soon"
+              note="Saved, and nothing writes calls out as text yet."
               description="Writing calls out as text so they can be read and searched rather than listened to."
             >
               <SettingRow
@@ -203,6 +211,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
             <SettingCard
               title="Call monitoring"
+              status="coming-soon"
+              note="Saved, and no transcript is being looked through yet."
               description="Reading the transcripts to flag calls worth a supervisor's attention."
             >
               <SettingRow
@@ -228,6 +238,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="The number people see"
+          status="active"
+          note="This one does reach the call: it is the number shown on the other person's phone."
           description="What shows on the other person's phone when somebody here calls out."
           aside={
             <Button type="button" variant="outline" onClick={() => openModal('displayNumberModal')}>

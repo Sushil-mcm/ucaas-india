@@ -97,3 +97,6 @@ than a formula.
 
     npx esbuild src/lib/destination-rates.ts --format=cjs --outfile=tests/destination-rates.build.cjs
     node tests/destination-rates-test.cjs
+
+    npx esbuild src/lib/addons.ts --format=cjs --outfile=tests/addons.build.cjs
+    node tests/addons-test.cjs
