@@ -36,3 +36,9 @@ backend later.
     npx esbuild src/lib/contact-sync.ts --format=cjs --outfile=tests/contact-sync.build.cjs \
       --bundle --platform=node
     node tests/contact-sync-test.cjs
+Opening hours and holidays for a location — whether a holiday beats the weekly
+hours, whether a location's own holiday beats a company one, and what "open"
+means on a clock that is not yours.
+
+    npx esbuild src/lib/location-hours.ts --format=cjs --outfile=tests/location-hours.build.cjs
+    node tests/location-hours-test.cjs

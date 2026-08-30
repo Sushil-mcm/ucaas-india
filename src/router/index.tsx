@@ -42,6 +42,12 @@ const loadBillingPlan = async () => {
 
 const AdminSettings = lazy(() => import('@/pages/admin-settings'));
 const CompanyInfo = lazy(() => import('@/pages/admin-settings/company'));
+/* Sits beside the location list rather than inside the settings sections: it is
+   a view of the locations themselves, so it is guarded by the same location
+   permission the list is, not by the phone-system one. */
+const LocationManagement = lazy(
+  () => import('@/pages/admin-settings/company/location-management'),
+);
 const CaptainPlayground = lazy(() => import('@/pages/admin-settings/captain/playground'));
 const CaptainAssistants = lazy(() => import('@/pages/admin-settings/captain/assistants'));
 const CaptainDocuments = lazy(() => import('@/pages/admin-settings/captain/documents'));
@@ -573,6 +579,18 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute
                     element={<CompanyInfo />}
+                    guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                /* Every location in one table, for comparing and exporting.
+                       The card list next door is still the place to read one
+                       location; this is the place to run all of them. */
+                path: 'location-management',
+                element: (
+                  <ProtectedRoute
+                    element={<LocationManagement />}
                     guard={{ permission: 'account_setting.access.SITE.action.view' }}
                   />
                 ),

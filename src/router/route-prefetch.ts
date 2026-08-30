@@ -265,6 +265,13 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/calling-rates/outbound-rates')),
   },
   {
+    /* Its own entry so hovering the link loads the table rather than the card
+       list. The longest matching prefix wins, so this beats the plain company
+       one below whatever order they are written in. */
+    prefix: '/admin-settings/company/location-management',
+    importers: withAdmin(() => import('@/pages/admin-settings/company/location-management')),
+  },
+  {
     prefix: '/admin-settings/company',
     importers: withAdmin(() => import('@/pages/admin-settings/company')),
   },
