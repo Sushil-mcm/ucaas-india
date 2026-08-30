@@ -4,18 +4,19 @@
 Run:  python3 tests/queue_agent_service_test.py
 
 The database is faked out throughout, so these run anywhere - no driver, no
-server, no network. Two things are being proven:
+server, no network. Three things are being proven:
 
-  * the answers match, field for field, what the switch actually reads; and
+  * the answers match, field for field, what the switch actually reads;
   * the choice of who to ring follows the queue rules the rest of the product
-    already shows on screen.
+    already shows on screen; and
+  * the questions put to the database match the records as they are really
+    stored, including that a queue is pointed at by a record id and not by text.
 """
 
 import json
 import os
 import sys
 import threading
-import time
 import unittest
 from http.server import ThreadingHTTPServer
 from urllib.error import HTTPError
@@ -28,24 +29,42 @@ import queue_agent_service as svc  # noqa: E402
 
 NOW = 1_800_000_000
 DOMAIN = "1785148080251.mycountrymobile.com"
+QUEUE_ID = "6a6c9063cbd65b771cae87e5"
+
+
+class FakeObjectId(object):
+    """Stands in for a database record id, so the tests do not need the driver."""
+
+    def __init__(self, value):
+        if not isinstance(value, str) or len(value) != 24:
+            raise ValueError("not an id")
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, FakeObjectId) and other.value == self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __repr__(self):
+        return "FakeObjectId(%s)" % self.value
 
 
 def agent(extension="1000", status="Available", state="Waiting", **overrides):
-    """One row shaped exactly like the agents table on the platform."""
+    """One record shaped exactly like the agent records on the platform."""
     row = {
-        "uuid": "agent-" + extension,
-        "queue_uuid": "queue-1",
+        "queue_uuid": FakeObjectId(QUEUE_ID),
         "name": "%s@%s" % (extension, DOMAIN),
-        "user_detail": {"name": "Ramandeep Kaur", "extension": extension, "timeout": "30"},
+        "user_detail": {"name": "Ramandeep Kaur", "extension": extension,
+                        "timeout": "30", "skills": ["en"]},
         "type": "callback",
         "contact": "user/%s_web@%s" % (extension, DOMAIN),
         "status": status,
         "state": state,
         "max_no_answer": 3,
+        # Every agent record on the platform holds nought here; the real
+        # wrap-up time is saved against the queue.
         "wrap_up_time": 0,
-        "reject_delay_time": 0,
-        "busy_delay_time": 0,
-        "no_answer_delay_time": 0,
         "last_bridge_start": 0,
         "last_bridge_end": 0,
         "last_offered_call": 0,
@@ -54,6 +73,20 @@ def agent(extension="1000", status="Available", state="Waiting", **overrides):
         "calls_answered": 0,
         "talk_time": 0,
         "ready_time": 0,
+    }
+    row.update(overrides)
+    return row
+
+
+def queue_record(**overrides):
+    row = {
+        "_id": FakeObjectId(QUEUE_ID),
+        "name": "Sales",
+        "extension": "1975",
+        "domain": DOMAIN,
+        "type": "QUEUE",
+        "wrap_seconds": 0,
+        "settings": {"wrapup_time": 30, "ring_strategy": {"value": "ring-all"}},
     }
     row.update(overrides)
     return row
@@ -85,13 +118,6 @@ class DutyStateTest(unittest.TestCase):
         self.assertEqual(svc.duty_state(row, NOW), svc.ON_A_CALL)
         self.assertFalse(svc.is_ringable(row, NOW))
 
-    def test_finishing_notes_rings_again_once_the_time_is_up(self):
-        row = agent(wrap_up_time=30, last_bridge_end=NOW - 10)
-        self.assertEqual(svc.duty_state(row, NOW), svc.WRAPPING_UP)
-        self.assertFalse(svc.is_ringable(row, NOW))
-        self.assertEqual(svc.seconds_until_free(row, NOW), 20)
-        self.assertTrue(svc.is_ringable(row, NOW + 21))
-
     def test_an_unknown_label_is_treated_as_unavailable(self):
         self.assertEqual(svc.duty_state(agent(status="Gardening leave"), NOW), svc.OFF_DUTY)
 
@@ -108,6 +134,37 @@ class DutyStateTest(unittest.TestCase):
                     last_status_change=NOW - int(svc.NO_ANSWER_WINDOW_SECONDS) - 60)
         self.assertFalse(svc.missed_too_many(row, NOW))
         self.assertTrue(svc.is_ringable(row, NOW))
+
+
+class WrapUpTest(unittest.TestCase):
+    """Time to write up notes is saved against the queue, not against the person.
+
+    Every agent record on the platform holds nought, so reading only the agent
+    record would mean nobody was ever given a moment to finish.
+    """
+
+    def test_the_queue_setting_is_used_when_the_person_has_none(self):
+        row = agent(last_bridge_end=NOW - 10)
+        self.assertEqual(svc.duty_state(row, NOW), svc.AVAILABLE, "no queue setting, no wrap-up")
+        self.assertEqual(svc.duty_state(row, NOW, wrap_default=30), svc.WRAPPING_UP)
+        self.assertEqual(svc.seconds_until_free(row, NOW, wrap_default=30), 20)
+        self.assertTrue(svc.is_ringable(row, NOW + 21, wrap_default=30))
+
+    def test_a_persons_own_setting_wins_when_they_have_one(self):
+        row = agent(wrap_up_time=5, last_bridge_end=NOW - 10)
+        self.assertEqual(svc.duty_state(row, NOW, wrap_default=600), svc.AVAILABLE)
+
+    def test_read_from_the_queue_record(self):
+        self.assertEqual(svc.queue_wrap_seconds(queue_record()), 30)
+        self.assertEqual(
+            svc.queue_wrap_seconds(queue_record(settings={}, wrap_seconds=45)), 45)
+        self.assertEqual(svc.queue_wrap_seconds({}), 0)
+        self.assertEqual(svc.queue_wrap_seconds(None), 0)
+
+    def test_the_queues_own_ring_order_is_read_too(self):
+        self.assertEqual(svc.queue_ring_strategy(queue_record()), "ring-all")
+        self.assertEqual(svc.queue_ring_strategy({}), "")
+        self.assertEqual(svc.queue_ring_strategy(None), "")
 
 
 class ExtensionTest(unittest.TestCase):
@@ -232,10 +289,11 @@ class DecisionTest(unittest.TestCase):
         self.assertIsNone(later["changes_in_seconds"])
 
     def test_it_says_when_the_answer_changes_on_its_own(self):
-        rows = [agent("1000", wrap_up_time=30, last_bridge_end=NOW - 25)]
-        decision = svc.decide_ring(rows, {}, "ring-all", 0, now=NOW)
+        rows = [agent("1000", last_bridge_end=NOW - 25)]
+        decision = svc.decide_ring(rows, {}, "ring-all", 0, now=NOW, wrap_default=30)
         self.assertEqual(decision["agents"], [])
         self.assertEqual(decision["changes_in_seconds"], 5)
+        self.assertIn("finishing notes", decision["reason"])
 
 
 class PayloadTest(unittest.TestCase):
@@ -267,6 +325,114 @@ class PayloadTest(unittest.TestCase):
         row = agent()
         row["user_detail"] = json.dumps({"name": "Ramandeep Kaur", "timeout": "30"})
         self.assertEqual(svc.agent_payload(row)["user_detail"]["timeout"], "30")
+
+    def test_the_record_id_never_leaks_into_the_answer(self):
+        # It is not a plain value and would not survive being turned into text.
+        payload = svc.agent_payload(agent())
+        self.assertNotIn("queue_uuid", payload)
+        json.dumps(payload)
+
+
+class DatabaseQuestionTest(unittest.TestCase):
+    """The questions put to the database, checked against how the records are
+    really stored. A queue is pointed at by a record id, not by text, so asking
+    with text alone would quietly find nobody."""
+
+    def setUp(self):
+        self.found_docs = []
+        self.found_one = []
+        self.updates = []
+        self.original = (svc.find_docs, svc.find_one_doc, svc.update_doc)
+
+    def tearDown(self):
+        svc.find_docs, svc.find_one_doc, svc.update_doc = self.original
+
+    def test_a_reference_is_looked_for_as_both_a_record_id_and_as_text(self):
+        values = svc.reference_values(QUEUE_ID, oid=FakeObjectId)
+        self.assertEqual(values, [FakeObjectId(QUEUE_ID), QUEUE_ID])
+
+    def test_text_that_is_not_a_record_id_is_left_as_it_is(self):
+        self.assertEqual(svc.reference_values("1975@" + DOMAIN, oid=FakeObjectId),
+                         ["1975@" + DOMAIN])
+
+    def test_nothing_is_looked_for_when_nothing_was_asked(self):
+        self.assertEqual(svc.reference_values("", oid=FakeObjectId), [])
+        self.assertEqual(svc.reference_values(None, oid=FakeObjectId), [])
+
+    def test_the_roster_is_read_by_queue_then_joined_to_the_running_order(self):
+        def fake_find_one(collection, query, projection=None):
+            self.found_one.append((collection, query))
+            return queue_record()
+
+        def fake_find(collection, query, projection=None, limit=0, sort=None):
+            self.found_docs.append((collection, query))
+            if collection == svc.AGENTS:
+                return [agent("1000")]
+            return [{"agent": "1000@" + DOMAIN, "level": 1, "position": 2, "state": "Ready"}]
+
+        svc.find_one_doc = fake_find_one
+        svc.find_docs = fake_find
+
+        rows, tiers, queue = svc.load_queue_roster(QUEUE_ID)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(tiers["1000@" + DOMAIN]["level"], 1)
+        self.assertEqual(tiers["1000@" + DOMAIN]["position"], 2)
+        self.assertEqual(queue["extension"], "1975")
+
+        agents_query = [q for c, q in self.found_docs if c == svc.AGENTS][0]
+        self.assertIn("queue_uuid", agents_query)
+        # The people are found by the queue's own record id, which is what the
+        # database is indexed on.
+        self.assertIn(FakeObjectId(QUEUE_ID), agents_query["queue_uuid"]["$in"])
+
+        tiers_query = [q for c, q in self.found_docs if c == svc.TIERS][0]
+        self.assertIn("1975@" + DOMAIN, tiers_query["queue"]["$in"])
+
+    def test_a_queue_called_by_its_extension_is_still_found(self):
+        seen = []
+
+        def fake_find_one(collection, query, projection=None):
+            seen.append(query)
+            return None if "_id" in query else queue_record()
+
+        svc.find_one_doc = fake_find_one
+        svc.find_docs = lambda *a, **k: []
+        svc.load_queue_roster("1975@" + DOMAIN)
+        self.assertEqual(seen[-1], {"extension": "1975", "domain": DOMAIN})
+
+    def test_a_missing_queue_record_does_not_stop_the_lookup(self):
+        svc.find_one_doc = lambda *a, **k: None
+        svc.find_docs = lambda collection, query, projection=None, limit=0, sort=None: (
+            [agent("1000")] if collection == svc.AGENTS else [])
+        rows, tiers, queue = svc.load_queue_roster(QUEUE_ID)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(queue, {})
+
+    def test_an_update_is_written_as_a_set_and_a_count(self):
+        def fake_update(collection, query, changes):
+            self.updates.append((collection, query, changes))
+            return True
+
+        svc.update_doc = fake_update
+        svc.update_agent("1000@" + DOMAIN, QUEUE_ID,
+                         {"last_status_change": NOW}, {"no_answer_count": 1})
+        collection, query, changes = self.updates[0]
+        self.assertEqual(collection, svc.AGENTS)
+        self.assertEqual(query["name"], "1000@" + DOMAIN)
+        self.assertIn("queue_uuid", query)
+        self.assertEqual(changes["$set"], {"last_status_change": NOW})
+        self.assertEqual(changes["$inc"], {"no_answer_count": 1})
+
+    def test_a_database_that_is_down_is_reported_as_nobody_free(self):
+        def explode(*args, **kwargs):
+            raise RuntimeError("no connection")
+        svc.find_one_doc = explode
+        svc.find_docs = explode
+        svc.update_doc = explode
+        rows, tiers, queue = svc.load_queue_roster(QUEUE_ID)
+        self.assertEqual(rows, [])
+        self.assertEqual(tiers, {})
+        self.assertFalse(svc.update_agent("1000@" + DOMAIN, None, {"state": "Idle"}))
 
 
 class HttpTest(unittest.TestCase):
@@ -321,9 +487,9 @@ class HttpTest(unittest.TestCase):
         self.assertEqual(payload["status"], "ok")
 
     def test_the_queue_answer_has_the_agents_list_the_switch_reads(self):
-        svc.load_queue_roster = lambda key: ([agent("1000")], {})
+        svc.load_queue_roster = lambda key: ([agent("1000")], {}, queue_record())
         status, payload = self.get(
-            "/api/callcenter/queues/queue-1/agents?strategy=ring-all&call_uuid=c1&call_timeout=45")
+            "/api/callcenter/queues/%s/agents?strategy=ring-all&call_uuid=c1&call_timeout=45" % QUEUE_ID)
         self.assertEqual(status, 200)
         self.assertIsInstance(payload["agents"], list)
         self.assertEqual(payload["agents"][0]["name"], "1000@" + DOMAIN)
@@ -331,8 +497,8 @@ class HttpTest(unittest.TestCase):
         self.assertEqual(payload["strategy"], "ring-all")
 
     def test_nobody_free_is_an_empty_list_and_still_a_good_answer(self):
-        svc.load_queue_roster = lambda key: ([agent("1000", status="Logged Out")], {})
-        status, payload = self.get("/api/callcenter/queues/queue-1/agents?strategy=ring-all")
+        svc.load_queue_roster = lambda key: ([agent("1000", status="Logged Out")], {}, queue_record())
+        status, payload = self.get("/api/callcenter/queues/q/agents?strategy=ring-all")
         self.assertEqual(status, 200)
         self.assertEqual(payload["agents"], [])
         self.assertTrue(payload["reason"])
@@ -341,26 +507,41 @@ class HttpTest(unittest.TestCase):
         def explode(key):
             raise RuntimeError("database is down")
         svc.load_queue_roster = explode
-        status, payload = self.get("/api/callcenter/queues/queue-1/agents?strategy=ring-all")
+        status, payload = self.get("/api/callcenter/queues/q/agents?strategy=ring-all")
         self.assertEqual(status, 200)
         self.assertEqual(payload["agents"], [])
 
+    def test_the_queues_own_ring_order_is_used_when_the_switch_sends_none(self):
+        svc.load_queue_roster = lambda key: ([agent("1000"), agent("1001")], {}, queue_record())
+        status, payload = self.get("/api/callcenter/queues/q/agents")
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["strategy"], "ring-all")
+        self.assertTrue(payload["rings_together"])
+
+    def test_the_queues_wrap_up_time_keeps_somebody_out_of_the_next_call(self):
+        just_finished = agent("1000", last_bridge_end=int(__import__("time").time()) - 5)
+        svc.load_queue_roster = lambda key: ([just_finished], {}, queue_record())
+        status, payload = self.get("/api/callcenter/queues/q/agents?strategy=ring-all")
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["agents"], [])
+        self.assertIn("finishing notes", payload["reason"])
+
     def test_the_same_caller_is_walked_down_the_list(self):
-        svc.load_queue_roster = lambda key: ([agent("1000"), agent("1001")], {})
+        svc.load_queue_roster = lambda key: ([agent("1000"), agent("1001")], {}, queue_record())
         _, first = self.get(
-            "/api/callcenter/queues/queue-1/agents?strategy=top-down&call_uuid=c9&call_timeout=45")
+            "/api/callcenter/queues/q/agents?strategy=top-down&call_uuid=c9&call_timeout=45")
         svc._agent_cache.clear()
         _, second = self.get(
-            "/api/callcenter/queues/queue-1/agents?strategy=top-down&call_uuid=c9&call_timeout=45")
+            "/api/callcenter/queues/q/agents?strategy=top-down&call_uuid=c9&call_timeout=45")
         self.assertNotEqual(first["agents"][0]["name"], second["agents"][0]["name"])
 
     def test_a_different_caller_starts_at_the_top(self):
-        svc.load_queue_roster = lambda key: ([agent("1000"), agent("1001")], {})
+        svc.load_queue_roster = lambda key: ([agent("1000"), agent("1001")], {}, queue_record())
         _, first = self.get(
-            "/api/callcenter/queues/queue-1/agents?strategy=top-down&call_uuid=a1&call_timeout=45")
+            "/api/callcenter/queues/q/agents?strategy=top-down&call_uuid=a1&call_timeout=45")
         svc._agent_cache.clear()
         _, other = self.get(
-            "/api/callcenter/queues/queue-1/agents?strategy=top-down&call_uuid=b2&call_timeout=45")
+            "/api/callcenter/queues/q/agents?strategy=top-down&call_uuid=b2&call_timeout=45")
         self.assertEqual(first["agents"][0]["name"], other["agents"][0]["name"])
 
     def test_the_switch_missed_call_report_arrives_with_nothing_in_it(self):
@@ -374,17 +555,17 @@ class HttpTest(unittest.TestCase):
     def test_a_missed_call_with_details_is_counted(self):
         status, payload = self.get(
             "/api/callcenter/agents/no-answer", "POST",
-            {"extension": "1000_web", "domain": DOMAIN, "queue_id": "queue-1"})
+            {"extension": "1000_web", "domain": DOMAIN, "queue_id": QUEUE_ID})
         self.assertEqual(status, 200)
         self.assertTrue(payload["recorded"])
         name, queue_id, assignments, increments = self.updates[0]
         self.assertEqual(name, "1000@" + DOMAIN)
-        self.assertEqual(queue_id, "queue-1")
+        self.assertEqual(queue_id, QUEUE_ID)
         self.assertEqual(increments["no_answer_count"], 1)
 
     def test_answering_a_call_clears_the_run_of_missed_ones(self):
         self.get("/api/callcenter/agents/call-start", "POST",
-                 {"extension": "1000", "domain": DOMAIN, "queue_id": "queue-1"})
+                 {"extension": "1000", "domain": DOMAIN, "queue_id": QUEUE_ID})
         _, _, assignments, increments = self.updates[0]
         self.assertEqual(assignments["no_answer_count"], 0)
         self.assertEqual(increments["calls_answered"], 1)
@@ -437,10 +618,10 @@ class CacheTest(unittest.TestCase):
 
         def loader(key):
             calls.append(key)
-            return [agent("1000")], {}
+            return [agent("1000")], {}, {}
 
-        svc.cached_queue_agents("queue-1", loader, NOW)
-        svc.cached_queue_agents("queue-1", loader, NOW + 1)
+        svc.cached_queue_agents("q", loader, NOW)
+        svc.cached_queue_agents("q", loader, NOW + 1)
         self.assertEqual(len(calls), 1)
 
     def test_the_memory_does_not_last(self):
@@ -448,10 +629,10 @@ class CacheTest(unittest.TestCase):
 
         def loader(key):
             calls.append(key)
-            return [agent("1000")], {}
+            return [agent("1000")], {}, {}
 
-        svc.cached_queue_agents("queue-1", loader, NOW)
-        svc.cached_queue_agents("queue-1", loader, NOW + svc.AGENT_CACHE_SECONDS + 1)
+        svc.cached_queue_agents("q", loader, NOW)
+        svc.cached_queue_agents("q", loader, NOW + svc.AGENT_CACHE_SECONDS + 1)
         self.assertEqual(len(calls), 2)
 
     def test_finished_callers_are_forgotten(self):
