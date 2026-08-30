@@ -71,4 +71,18 @@ for h in $DESTS; do
   fi
 done
 
+# GitHub, last. It is the only copy that survives all three machines being
+# lost, but it is also the only one that depends on someone else's service and
+# on a token that can expire - so it runs after the two that do not, and a
+# failure here is logged rather than allowed to mask a successful local backup.
+if git remote get-url origin >/dev/null 2>&1; then
+  if git push --quiet origin --all 2>>"$LOG" && git push --quiet origin --tags 2>>"$LOG"; then
+    log "github: ok"
+  else
+    log "github: PUSH FAILED (token expired, or no network)"
+  fi
+else
+  log "github: no origin remote configured, skipped"
+fi
+
 log "done"
