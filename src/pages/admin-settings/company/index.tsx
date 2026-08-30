@@ -373,6 +373,16 @@ const CompanyInfo = () => {
                     Icon={<SearchLine className=" text-gray-700" />}
                   />
                 </div>
+                {/* Comparing locations is a different job from reading one, and
+                    it needs a table rather than a column of cards. */}
+                <Button
+                  className="rounded-xl"
+                  variant={'outline'}
+                  onClick={() => navigate('/admin-settings/company/location-management')}
+                >
+                  <MapPin className="mr-1 h-4 w-4" />
+                  Manage all locations
+                </Button>
                 {!isTrial && canViewSites && canAddSites && (
                   <Button
                     className="rounded-xl"

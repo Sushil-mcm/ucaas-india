@@ -91,6 +91,31 @@ const Summary = ({ formInstance }: any) => {
               </div>
             </div>
           </div>
+
+          {/* Said here rather than discovered later.
+
+              Established business phone systems ask for a billing contact and an
+              emergency address as part of creating a location, and an admin who
+              has used one will be looking for those steps. This platform keeps
+              both for the company as a whole — there is nowhere on a location
+              record to put them — so the honest thing is to name where they
+              actually live instead of leaving somebody hunting for a step that
+              does not exist. */}
+          <hr className="text-gray-200 w-full my-2" />
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+            <p className="text-sm font-semibold text-gray-900">What this location will control</p>
+            <p className="mt-1 text-xs text-gray-600">
+              Anyone you assign here picks up this timezone for their working hours, and this
+              address is what the location is registered at for buying local numbers.
+            </p>
+            <p className="mt-2 text-xs text-gray-600">
+              Billing details and the emergency address are held once for your whole company, not
+              per location — you will find them under Company &amp; Locations, in Billing and in
+              Emergency address. Outbound caller ID is recorded against this location but is not yet
+              applied to calls; what someone shows when they dial out still comes from their own
+              record.
+            </p>
+          </div>
         </div>
       </div>
     </div>
