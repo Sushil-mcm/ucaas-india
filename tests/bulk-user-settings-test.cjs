@@ -4,6 +4,7 @@ const {
   readRecordingDirection, readOnDemandRecording, readVoicemailToText,
   readTranscription, readDeviceOptions, readRingSeconds,
   hasAnyChoice, planBulkUserUpdate, describeRun,
+  readInternationalCalling,
 } = require('./bulk-user-settings.build.cjs');
 
 let pass = 0, fail = 0;
@@ -217,6 +218,60 @@ t('strings are parsed, so the write is not built on an empty record',
 t('and the payload goes back out as objects',
   typeof plan.payload.settings === 'object' && typeof plan.payload.call_forwarding === 'object');
 t('greetings survive the round trip', plan.payload.greetings.voicemail.value === 'x.mp3');
+
+console.log('  --- calling other countries, for many people at once ---');
+t('a person with nothing stored follows the company',
+  readInternationalCalling({}) === 'inherit');
+t('a stored refusal reads as a refusal',
+  readInternationalCalling({ international_calling: { allowed: false } }) === 'block');
+t('a stored permission reads as a permission',
+  readInternationalCalling({ international_calling: { allowed: true } }) === 'allow');
+t('a half-written value falls back to the company rather than blocking anyone',
+  readInternationalCalling({ international_calling: { allowed: 'no' } }) === 'inherit');
+
+let intl = planBulkUserUpdate(
+  { uuid: 'p1', settings: { transcription: true } },
+  { international_calling: 'block' },
+);
+t('refusing somebody is a change', intl.outcome === 'changed');
+t('and it is stored on their record',
+  intl.payload.settings.international_calling.allowed === false);
+t('while the rest of their settings survive', intl.payload.settings.transcription === true);
+t('and the sentence says what moved',
+  /not allowed to call other countries/.test(intl.changes[0].message));
+
+intl = planBulkUserUpdate(
+  { uuid: 'p1', settings: { international_calling: { allowed: false } } },
+  { international_calling: 'block' },
+);
+t('somebody already refused is left alone', intl.outcome === 'unchanged' && intl.payload === null);
+
+intl = planBulkUserUpdate(
+  { uuid: 'p1', settings: { international_calling: { allowed: false }, transcription: true } },
+  { international_calling: 'inherit' },
+);
+t('going back to the company setting removes the block entirely',
+  'international_calling' in intl.payload.settings === false);
+t('and still leaves everything else on the record',
+  intl.payload.settings.transcription === true);
+
+intl = planBulkUserUpdate(
+  { uuid: 'p1', settings: { international_calling: { allowed: true, countries: ['FR'] } } },
+  { international_calling: 'allow' },
+);
+t('a person already allowed is not written again', intl.outcome === 'unchanged');
+
+/* This screen shows no per-country list, so it must not delete one. */
+intl = planBulkUserUpdate(
+  { uuid: 'p1', settings: { international_calling: { allowed: false, countries: [] } } },
+  { international_calling: 'allow' },
+);
+t('allowing somebody stores a permission',
+  intl.payload.settings.international_calling.allowed === true);
+
+intl = planBulkUserUpdate({ uuid: 'p1', settings: {} }, { transcription: true });
+t('a run that never mentions international calling does not touch it',
+  'international_calling' in intl.payload.settings === false);
 
 console.log('  --- saying how the run went ---');
 t('the ordinary run reads as a success',

@@ -15,16 +15,19 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/lib/bulk-user-settings.ts
 var bulk_user_settings_exports = {};
 __export(bulk_user_settings_exports, {
   RING_MAX_SECONDS: () => RING_MAX_SECONDS,
   RING_MIN_SECONDS: () => RING_MIN_SECONDS,
-  asObject: () => asObject,
+  asObject: () => asObject2,
   describeRun: () => describeRun,
   hasAnyChoice: () => hasAnyChoice,
   parseRingSeconds: () => parseRingSeconds,
   planBulkUserUpdate: () => planBulkUserUpdate,
   readDeviceOptions: () => readDeviceOptions,
+  readInternationalCalling: () => readInternationalCalling,
   readOnDemandRecording: () => readOnDemandRecording,
   readRecordingDirection: () => readRecordingDirection,
   readRingSeconds: () => readRingSeconds,
@@ -33,17 +36,46 @@ __export(bulk_user_settings_exports, {
   ringTimeLabel: () => ringTimeLabel
 });
 module.exports = __toCommonJS(bulk_user_settings_exports);
-const RING_MIN_SECONDS = 5;
-const RING_MAX_SECONDS = 60;
-const SECONDS_PER_RING = 5;
-const VOICEMAIL_TO_TEXT_ON = "YES";
-const VOICEMAIL_TO_TEXT_OFF = "NO";
-const RECORDING_LABELS = {
-  all: "All",
-  incoming: "Incoming",
-  outgoing: "Outgoing"
-};
-const asObject = (value) => {
+
+// src/lib/international-calling.ts
+var import_libphonenumber_js = require("libphonenumber-js");
+var COMPANY_PERMISSIONS_KEY = "company_calling_permissions";
+var COMPANY_INTERNATIONAL_KEY = "international_calling";
+var COMPANY_INTERNATIONAL_PATH = `${COMPANY_PERMISSIONS_KEY}.${COMPANY_INTERNATIONAL_KEY}`;
+var PERSON_INTERNATIONAL_KEY = "international_calling";
+var EMERGENCY_NUMBERS = [
+  "000",
+  "08",
+  "100",
+  "101",
+  "102",
+  "106",
+  "108",
+  "110",
+  "111",
+  "112",
+  "113",
+  "114",
+  "115",
+  "117",
+  "118",
+  "119",
+  "122",
+  "911",
+  "912",
+  "991",
+  "992",
+  "993",
+  "994",
+  "995",
+  "996",
+  "997",
+  "998",
+  "999",
+  "1122"
+];
+var EMERGENCY_SET = new Set(EMERGENCY_NUMBERS);
+var asObject = (value) => {
   if (!value) return {};
   if (typeof value === "object") return value;
   try {
@@ -53,11 +85,75 @@ const asObject = (value) => {
     return {};
   }
 };
-const ringTimeLabel = (seconds) => {
+var toCountryCode = (value) => {
+  const candidate = String(value ?? "").trim().toUpperCase();
+  if (candidate.length !== 2) return "";
+  return (0, import_libphonenumber_js.isSupportedCountry)(candidate) ? candidate : "";
+};
+var toCountryList = (value) => {
+  const raw = Array.isArray(value) ? value : typeof value === "string" && value.trim() ? (() => {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })() : [];
+  const codes = raw.map(
+    (entry) => toCountryCode(typeof entry === "string" ? entry : entry?.country_code_iso2 ?? entry?.code)
+  ).filter(Boolean);
+  return codes.filter((code, index) => codes.indexOf(code) === index);
+};
+var readPersonInternationalRule = (userSettings) => {
+  const block = asObject(asObject(userSettings)[PERSON_INTERNATIONAL_KEY]);
+  const allowed = block.allowed;
+  return {
+    allowed: allowed === true ? true : allowed === false ? false : null,
+    countries: toCountryList(block.countries)
+  };
+};
+var buildPersonInternationalRule = (rule, now = /* @__PURE__ */ new Date()) => {
+  if (rule.allowed === null) return void 0;
+  return {
+    allowed: rule.allowed === true,
+    /* A list kept under "not allowed" would read to a later maintainer as a set
+       of countries somebody was granted. It is dropped, not hidden. */
+    countries: rule.allowed ? toCountryList(rule.countries) : [],
+    updated_at: now.toISOString()
+  };
+};
+
+// src/lib/bulk-user-settings.ts
+var RING_MIN_SECONDS = 5;
+var RING_MAX_SECONDS = 60;
+var SECONDS_PER_RING = 5;
+var VOICEMAIL_TO_TEXT_ON = "YES";
+var VOICEMAIL_TO_TEXT_OFF = "NO";
+var RECORDING_LABELS = {
+  all: "All",
+  incoming: "Incoming",
+  outgoing: "Outgoing"
+};
+var INTERNATIONAL_LABELS = {
+  inherit: "following the company setting",
+  allow: "allowed to call other countries",
+  block: "not allowed to call other countries"
+};
+var asObject2 = (value) => {
+  if (!value) return {};
+  if (typeof value === "object") return value;
+  try {
+    const parsed = JSON.parse(String(value));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+var ringTimeLabel = (seconds) => {
   const rings = Math.round(seconds / SECONDS_PER_RING);
   return `${rings} ${rings === 1 ? "time" : "times"} / ${seconds} secs`;
 };
-const parseRingSeconds = (raw) => {
+var parseRingSeconds = (raw) => {
   if (raw === null || typeof raw === "undefined" || raw === "") return null;
   const value = Number(raw);
   if (!Number.isFinite(value)) return null;
@@ -65,29 +161,33 @@ const parseRingSeconds = (raw) => {
   if (value < RING_MIN_SECONDS || value > RING_MAX_SECONDS) return null;
   return value;
 };
-const readRecordingDirection = (settings) => {
-  const automatic = asObject(asObject(settings).recording).automatic;
-  const node = asObject(automatic);
+var readRecordingDirection = (settings) => {
+  const automatic = asObject2(asObject2(settings).recording).automatic;
+  const node = asObject2(automatic);
   if (node.enabled !== true) return "off";
   const value = String(node.value || "");
   return value === "all" || value === "incoming" || value === "outgoing" ? value : "all";
 };
-const readOnDemandRecording = (settings) => asObject(asObject(asObject(settings).recording).on_demand).enabled === true;
-const readVoicemailToText = (settings) => String(asObject(asObject(settings).voicemail_pin).voicemail_to_text || "").toUpperCase() === VOICEMAIL_TO_TEXT_ON;
-const readTranscription = (settings) => asObject(settings).transcription === true;
-const readDeviceOptions = (callForwarding) => {
-  const devices = asObject(asObject(callForwarding).incoming_calls).device_options;
+var readOnDemandRecording = (settings) => asObject2(asObject2(asObject2(settings).recording).on_demand).enabled === true;
+var readVoicemailToText = (settings) => String(asObject2(asObject2(settings).voicemail_pin).voicemail_to_text || "").toUpperCase() === VOICEMAIL_TO_TEXT_ON;
+var readTranscription = (settings) => asObject2(settings).transcription === true;
+var readInternationalCalling = (settings) => {
+  const { allowed } = readPersonInternationalRule(settings);
+  return allowed === true ? "allow" : allowed === false ? "block" : "inherit";
+};
+var readDeviceOptions = (callForwarding) => {
+  const devices = asObject2(asObject2(callForwarding).incoming_calls).device_options;
   return Array.isArray(devices) ? devices : [];
 };
-const readRingSeconds = (callForwarding) => readDeviceOptions(callForwarding).map((device) => Number(asObject(device).timeout)).filter((seconds) => Number.isFinite(seconds) && seconds > 0);
-const describeRecording = (direction) => direction === "off" ? "not recorded" : `recorded (${RECORDING_LABELS[direction].toLowerCase()})`;
-const onOff = (value) => value ? "on" : "off";
-const hasAnyChoice = (choices) => Object.keys(choices).some(
+var readRingSeconds = (callForwarding) => readDeviceOptions(callForwarding).map((device) => Number(asObject2(device).timeout)).filter((seconds) => Number.isFinite(seconds) && seconds > 0);
+var describeRecording = (direction) => direction === "off" ? "not recorded" : `recorded (${RECORDING_LABELS[direction].toLowerCase()})`;
+var onOff = (value) => value ? "on" : "off";
+var hasAnyChoice = (choices) => Object.keys(choices).some(
   (key) => typeof choices[key] !== "undefined" && choices[key] !== null
 );
-const planBulkUserUpdate = (person, choices) => {
-  const settings = asObject(person?.settings);
-  const callForwarding = asObject(person?.call_forwarding);
+var planBulkUserUpdate = (person, choices) => {
+  const settings = asObject2(person?.settings);
+  const callForwarding = asObject2(person?.call_forwarding);
   const changes = [];
   const unchanged = [];
   const skipped = [];
@@ -102,8 +202,8 @@ const planBulkUserUpdate = (person, choices) => {
         message: `Calls are already ${describeRecording(current)}.`
       });
     } else {
-      const recording = asObject(nextSettings.recording);
-      const automatic = asObject(recording.automatic);
+      const recording = asObject2(nextSettings.recording);
+      const automatic = asObject2(recording.automatic);
       nextSettings = {
         ...nextSettings,
         recording: {
@@ -136,8 +236,8 @@ const planBulkUserUpdate = (person, choices) => {
         message: `Starting a recording mid-call is already ${onOff(current)}.`
       });
     } else {
-      const recording = asObject(nextSettings.recording);
-      const onDemand = asObject(recording.on_demand);
+      const recording = asObject2(nextSettings.recording);
+      const onDemand = asObject2(recording.on_demand);
       nextSettings = {
         ...nextSettings,
         recording: { ...recording, on_demand: { ...onDemand, enabled: wanted } }
@@ -157,7 +257,7 @@ const planBulkUserUpdate = (person, choices) => {
         message: `Voicemail to text is already ${onOff(current)}.`
       });
     } else {
-      const voicemailPin = asObject(nextSettings.voicemail_pin);
+      const voicemailPin = asObject2(nextSettings.voicemail_pin);
       nextSettings = {
         ...nextSettings,
         voicemail_pin: {
@@ -189,6 +289,32 @@ const planBulkUserUpdate = (person, choices) => {
       });
     }
   }
+  if (typeof choices.international_calling !== "undefined") {
+    const current = readInternationalCalling(settings);
+    const wanted = choices.international_calling;
+    if (current === wanted) {
+      unchanged.push({
+        field: "international_calling",
+        message: `This person is already ${INTERNATIONAL_LABELS[current]}.`
+      });
+    } else {
+      const existing = readPersonInternationalRule(nextSettings);
+      const block = buildPersonInternationalRule({
+        allowed: wanted === "allow" ? true : wanted === "block" ? false : null,
+        countries: wanted === "allow" ? existing.countries : []
+      });
+      if (block) {
+        nextSettings = { ...nextSettings, international_calling: block };
+      } else {
+        nextSettings = { ...nextSettings };
+        delete nextSettings.international_calling;
+      }
+      changes.push({
+        field: "international_calling",
+        message: `Goes from ${INTERNATIONAL_LABELS[current]} to ${INTERNATIONAL_LABELS[wanted]}.`
+      });
+    }
+  }
   if (typeof choices.ring_seconds !== "undefined") {
     const wanted = parseRingSeconds(choices.ring_seconds);
     const devices = readDeviceOptions(callForwarding);
@@ -203,14 +329,14 @@ const planBulkUserUpdate = (person, choices) => {
         message: "This person has no phones or devices saved yet, so there is no ring time to set. Open their call rules once and it will apply from then on."
       });
     } else {
-      const already = devices.every((device) => Number(asObject(device).timeout) === wanted);
+      const already = devices.every((device) => Number(asObject2(device).timeout) === wanted);
       if (already) {
         unchanged.push({
           field: "ring_seconds",
           message: `Every device already rings for ${wanted} seconds.`
         });
       } else {
-        const incoming = asObject(nextCallForwarding.incoming_calls);
+        const incoming = asObject2(nextCallForwarding.incoming_calls);
         nextCallForwarding = {
           ...nextCallForwarding,
           incoming_calls: {
@@ -220,7 +346,7 @@ const planBulkUserUpdate = (person, choices) => {
                is what the settings screen shows the admin next time; leaving a
                stale label would show a time the phone no longer rings for. */
             device_options: devices.map((device) => ({
-              ...asObject(device),
+              ...asObject2(device),
               timeout: String(wanted),
               label: ringTimeLabel(wanted)
             }))
@@ -261,7 +387,7 @@ const planBulkUserUpdate = (person, choices) => {
       ...person?.caller_id ? { caller_id: person.caller_id } : {},
       ...siteUuid ? { site_uuid: siteUuid } : {},
       ...person?.custom_role_uuid ? { custom_role_uuid: roleId } : { role_uuid: roleId },
-      greetings: asObject(person?.greetings),
+      greetings: asObject2(person?.greetings),
       call_forwarding: nextCallForwarding,
       settings: nextSettings,
       uuid: person?.uuid,
@@ -269,7 +395,7 @@ const planBulkUserUpdate = (person, choices) => {
     }
   };
 };
-const describeRun = (tally) => {
+var describeRun = (tally) => {
   const people = (count) => `${count} ${count === 1 ? "person" : "people"}`;
   const parts = [];
   if (tally.changed > 0) parts.push(`Updated ${people(tally.changed)}.`);
@@ -279,3 +405,21 @@ const describeRun = (tally) => {
   if (parts.length === 0) return "Nothing to do \u2014 no people were selected.";
   return parts.join(" ");
 };
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  RING_MAX_SECONDS,
+  RING_MIN_SECONDS,
+  asObject,
+  describeRun,
+  hasAnyChoice,
+  parseRingSeconds,
+  planBulkUserUpdate,
+  readDeviceOptions,
+  readInternationalCalling,
+  readOnDemandRecording,
+  readRecordingDirection,
+  readRingSeconds,
+  readTranscription,
+  readVoicemailToText,
+  ringTimeLabel
+});

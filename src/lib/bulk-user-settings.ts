@@ -11,14 +11,15 @@
  * they must open two hundred people one at a time. That is the gap this file
  * closes: pick the settings, pick the people, write them.
  *
- * Be clear about what this does and does not do. These five settings are the
- * same fields the per-person settings drawer writes, on the same records, and
- * this writes them the same way — so whatever the drawer achieves for one
- * person, this achieves for hundreds. But a check of the call switch found that
- * NONE of the five currently changes what happens on a live call: the switch
- * plays no recording prompt from a stored setting, and ring length is a fixed
- * number in its dial plan rather than one read from a person's devices. So what
- * is being made consistent here is the record, not yet the call.
+ * Be clear about what this does and does not do. These settings are the same
+ * fields the per-person settings drawer writes, on the same records, and this
+ * writes them the same way — so whatever the drawer achieves for one person,
+ * this achieves for hundreds. But a check of the call switch found that NONE of
+ * them currently changes what happens on a live call: the switch plays no
+ * recording prompt from a stored setting, ring length is a fixed number in its
+ * dial plan rather than one read from a person's devices, and no country check
+ * runs on an outbound call at all. So what is being made consistent here is the
+ * record, not yet the call.
  *
  * That is still worth having, and it is worth having honestly. An admin asked
  * to state the company's position on recording should be able to state it once
@@ -48,6 +49,12 @@
  * Deliberately pure: no React, no network, no query client. Give it a person
  * record and the admin's choices, get back a payload and plain sentences.
  */
+
+import {
+  buildPersonInternationalRule,
+  readPersonInternationalRule,
+  type PersonInternationalRule,
+} from '@/lib/international-calling';
 
 /** The shortest and longest ring time the product's own screens allow. */
 export const RING_MIN_SECONDS = 5;
@@ -81,13 +88,31 @@ const RECORDING_LABELS: Record<Exclude<RecordingDirection, 'off'>, string> = {
   outgoing: 'Outgoing',
 };
 
+/**
+ * Whether a person may phone other countries.
+ *
+ * Three answers rather than a switch, because "follow the company setting" is a
+ * real answer and is not the same as "yes" — see src/lib/international-calling.ts.
+ * It matters most here: a bulk run that could only say yes or no would hand a
+ * personal permission to two hundred people who had never been given one, and
+ * every one of them would then stop tracking the company's own answer.
+ */
+export type InternationalCallingChoice = 'inherit' | 'allow' | 'block';
+
+const INTERNATIONAL_LABELS: Record<InternationalCallingChoice, string> = {
+  inherit: 'following the company setting',
+  allow: 'allowed to call other countries',
+  block: 'not allowed to call other countries',
+};
+
 /** Every setting that can be changed for many people at once. */
 export type BulkFieldId =
   | 'recording_automatic'
   | 'recording_on_demand'
   | 'voicemail_to_text'
   | 'transcription'
-  | 'ring_seconds';
+  | 'ring_seconds'
+  | 'international_calling';
 
 /**
  * The admin's choices. A key that is absent means "leave this one alone" — it
@@ -100,6 +125,7 @@ export interface BulkChoices {
   voicemail_to_text?: boolean;
   transcription?: boolean;
   ring_seconds?: number;
+  international_calling?: InternationalCallingChoice;
 }
 
 /** One thing that happened to one person, in a sentence an admin can read. */
@@ -183,6 +209,12 @@ export const readVoicemailToText = (settings: unknown): boolean =>
 /** Whether this person's calls are transcribed. */
 export const readTranscription = (settings: unknown): boolean =>
   asObject(settings).transcription === true;
+
+/** What this person's record currently says about calling other countries. */
+export const readInternationalCalling = (settings: unknown): InternationalCallingChoice => {
+  const { allowed } = readPersonInternationalRule(settings);
+  return allowed === true ? 'allow' : allowed === false ? 'block' : 'inherit';
+};
 
 /**
  * The devices a person's phone rings on, as stored.
@@ -340,6 +372,43 @@ export const planBulkUserUpdate = (person: any, choices: BulkChoices): BulkUserP
       changes.push({
         field: 'transcription',
         message: `Call transcription goes ${onOff(current)} to ${onOff(wanted)}.`,
+      });
+    }
+  }
+
+  if (typeof choices.international_calling !== 'undefined') {
+    const current = readInternationalCalling(settings);
+    const wanted = choices.international_calling;
+    if (current === wanted) {
+      unchanged.push({
+        field: 'international_calling',
+        message: `This person is already ${INTERNATIONAL_LABELS[current]}.`,
+      });
+    } else {
+      /* Any per-country list already on the record is read back off it and
+         written through untouched. This screen does not show one, and a screen
+         that cannot show a value has no business deleting it. */
+      const existing: PersonInternationalRule = readPersonInternationalRule(nextSettings);
+      const block = buildPersonInternationalRule({
+        allowed: wanted === 'allow' ? true : wanted === 'block' ? false : null,
+        countries: wanted === 'allow' ? existing.countries : [],
+      });
+
+      if (block) {
+        nextSettings = { ...nextSettings, international_calling: block };
+      } else {
+        /* "Follow the company" is stored as no block at all, so the key is
+           taken out rather than left behind holding nothing. The copy is made
+           first: `nextSettings` may still be the person's own stored object at
+           this point, and deleting from that would edit the record we were
+           handed. */
+        nextSettings = { ...nextSettings };
+        delete nextSettings.international_calling;
+      }
+
+      changes.push({
+        field: 'international_calling',
+        message: `Goes from ${INTERNATIONAL_LABELS[current]} to ${INTERNATIONAL_LABELS[wanted]}.`,
       });
     }
   }

@@ -16,6 +16,59 @@ import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settin
 import CampaignBussinessHoursModal from '../custom/campaign-bussiness-hours';
 import moment from 'moment';
 import { Switch } from '../ui/switch';
+import CustomSelect from '@/components/custom/custom-select';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
+import { useQuery } from '@tanstack/react-query';
+import {
+  COMPANY_DEFAULTS_QUERY_KEY,
+  fetchCompanyDefaults,
+  type CompanyDefaultTemplate,
+} from '@/lib/company-defaults';
+import {
+  buildPersonInternationalRule,
+  describePersonRule,
+  readCompanyInternationalRule,
+  readPersonInternationalRule,
+  type PersonInternationalRule,
+} from '@/lib/international-calling';
+
+/* Whether one person may phone other countries.
+ *
+ * Three answers, not a switch, because "follow the company" is a real and
+ * common answer and is not the same as "yes". A two-state switch would force
+ * every person ever opened in this form to be given a personal permission they
+ * never asked for, and those would then stop tracking the company's own answer
+ * the day it changed.
+ *
+ * Stored under `settings.international_calling` on the person's own record. The
+ * decision it feeds, and the reason the company list is always the ceiling,
+ * live in src/lib/international-calling.ts.
+ */
+type InternationalChoice = 'inherit' | 'allow' | 'block';
+
+const INTERNATIONAL_OPTIONS: { label: string; value: InternationalChoice }[] = [
+  { label: 'Follow the company setting', value: 'inherit' },
+  { label: 'Allowed to call other countries', value: 'allow' },
+  { label: 'Not allowed to call other countries', value: 'block' },
+];
+
+const toInternationalChoice = (allowed: boolean | null): InternationalChoice =>
+  allowed === true ? 'allow' : allowed === false ? 'block' : 'inherit';
+
+const fromInternationalChoice = (
+  choice: InternationalChoice,
+  countries: string[],
+): PersonInternationalRule => ({
+  allowed: choice === 'allow' ? true : choice === 'block' ? false : null,
+  /* Any narrower per-country list already on the record is carried through
+     rather than being wiped by a screen that does not show it. */
+  countries: choice === 'allow' ? countries : [],
+});
+
+/* The switch does not read this yet, and saying otherwise would be telling an
+   admin a fraud control is protecting them when it is not. */
+const INTERNATIONAL_NOT_ACTIVE_NOTE =
+  'Not active yet. This is recorded on this person\'s record, and it is what the call switch will read — but the switch does not check it today, so it does not stop any call yet.';
 
 interface DaySchedule {
   open: boolean;
@@ -48,6 +101,10 @@ const CommonSettingPermission: FC<any> = ({
   origin,
   isAdminAccount = false,
   selectedUserExt = null,
+  /* Off everywhere by default. This editor is also used for a number, a
+     department, a phone menu and a queue, and "may this person call abroad"
+     is a question only a person can answer. */
+  isShowInternationalCalling = false,
 }) => {
   /* Company rules govern a person editing their own phone, and nothing else. The
      other screens using this editor are an admin configuring a number, department,
@@ -120,6 +177,15 @@ const CommonSettingPermission: FC<any> = ({
 
   const { features } = useCompanyFeatures();
 
+  /* The company's own answer, so this person's row can say what "follow the
+     company" actually means for them rather than making them go and look. Only
+     fetched on the screens that show the control. */
+  const { data: companyDefaultTemplate = null } = useQuery<CompanyDefaultTemplate | null>({
+    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+    queryFn: fetchCompanyDefaults,
+    enabled: isShowInternationalCalling,
+  });
+
   const {
     watch,
     setValue,
@@ -131,6 +197,22 @@ const CommonSettingPermission: FC<any> = ({
     display_number = {},
     voicemail_pin = {},
   } = watch('settings');
+
+  /* Read through the shared module, never by hand: a half-written value must
+     read as "follow the company" here for exactly the same reason it must on
+     the call switch. */
+  const internationalRule = readPersonInternationalRule(watch('settings'));
+  const companyInternationalRule = readCompanyInternationalRule(companyDefaultTemplate?.settings);
+  const internationalChoice = toInternationalChoice(internationalRule.allowed);
+
+  const setInternationalChoice = (choice: InternationalChoice) =>
+    setValue(
+      'settings.international_calling',
+      /* undefined for "follow the company". The save endpoint replaces the whole
+         user record and drops undefined keys, so this removes the block rather
+         than leaving a hollow one behind that a later reader could misread. */
+      buildPersonInternationalRule(fromInternationalChoice(choice, internationalRule.countries)),
+    );
 
   const startDate = watch('startDate') ? moment(watch('startDate')) : null;
   const endDate = watch('endDate') ? moment(watch('endDate')) : null;
@@ -442,6 +524,41 @@ const CommonSettingPermission: FC<any> = ({
             </div>
           )}
         </div>
+
+        {isShowInternationalCalling ? (
+          <SettingCard
+            title="Calling other countries"
+            description="Whether this person can phone numbers outside your own country. This is the control that decides how much a stolen password could cost you, because calls abroad are billed by the minute at rates the caller chooses."
+            enforced={false}
+            enforcementNote={INTERNATIONAL_NOT_ACTIVE_NOTE}
+          >
+            <SettingRow
+              label="International calling"
+              description={describePersonRule(internationalRule, companyInternationalRule)}
+              notActive
+              control={
+                <div className="min-w-[240px]">
+                  <CustomSelect
+                    options={INTERNATIONAL_OPTIONS}
+                    value={INTERNATIONAL_OPTIONS.find(
+                      (option) => option.value === internationalChoice,
+                    )}
+                    isDisabled={!isEditable}
+                    handleChange={(option: any) =>
+                      setInternationalChoice((option?.value || 'inherit') as InternationalChoice)
+                    }
+                  />
+                </div>
+              }
+            />
+            <p className="mcm-setrow-note">
+              Refusing somebody here always works. Allowing them does not reach past the company:
+              they still cannot phone a country your company has not allowed, which is set under
+              Company → Calling. Extensions, calls inside your own country and emergency numbers
+              are never affected by this.
+            </p>
+          </SettingCard>
+        ) : null}
 
         {operational_hours?.holidays?.length && !isCampaignHours ? (
           <div className="flex flex-col justify-between gap-1.5">

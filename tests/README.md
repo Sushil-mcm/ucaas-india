@@ -48,8 +48,20 @@ ticked are written, that everything else on a person's record survives the
 write, and that somebody already set that way is left alone rather than saved
 again.
 
-    npx esbuild src/lib/bulk-user-settings.ts --format=cjs --outfile=tests/bulk-user-settings.build.cjs
+    npx esbuild src/lib/bulk-user-settings.ts --format=cjs --outfile=tests/bulk-user-settings.build.cjs \
+      --bundle --external:libphonenumber-js --platform=node --alias:@=./src
     node tests/bulk-user-settings-test.cjs
+
+Which countries a company may call, and whether one person may call them — that
+an extension is never mistaken for a call abroad, that a company which has
+configured nothing goes on calling everywhere, and that a person can be refused
+a country but never granted one the company forbids.
+
+    npx esbuild src/lib/international-calling.ts --format=cjs \
+      --outfile=tests/international-calling.build.cjs \
+      --bundle --external:libphonenumber-js --platform=node
+    node tests/international-calling-test.cjs
+
 What a number is called and which shared line it belongs to — when a label may
 safely be written, that writing one never disturbs the routing stored alongside
 it, and reading a line's numbers back out of where each number forwards.

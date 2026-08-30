@@ -50,6 +50,7 @@ import {
   RING_MIN_SECONDS,
   type BulkChoices,
   type BulkUserPlan,
+  type InternationalCallingChoice,
   type RecordingDirection,
 } from '@/lib/bulk-user-settings';
 import { getUserList, updateMemberForwading } from '@/services/api';
@@ -71,6 +72,16 @@ const RECORDING_OPTIONS: { label: string; value: RecordingDirection }[] = [
   { label: 'Outgoing calls only', value: 'outgoing' },
 ];
 
+/* "Follow the company setting" is first because it is the answer that keeps
+   tracking whatever the company decides later, and it is the one an admin
+   usually wants when they are undoing a personal permission rather than
+   granting one. */
+const INTERNATIONAL_OPTIONS: { label: string; value: InternationalCallingChoice }[] = [
+  { label: 'Follow the company setting', value: 'inherit' },
+  { label: 'Allowed to call other countries', value: 'allow' },
+  { label: 'Not allowed to call other countries', value: 'block' },
+];
+
 /* The switch reads none of these today, so the same sentence is true of every
    one of them. It is written once and shown on each, rather than being softened
    into something vaguer that an admin could read as "it works". */
@@ -82,7 +93,8 @@ type FieldId =
   | 'recording_on_demand'
   | 'voicemail_to_text'
   | 'transcription'
-  | 'ring_seconds';
+  | 'ring_seconds'
+  | 'international_calling';
 
 interface Draft {
   recording_automatic: RecordingDirection;
@@ -90,6 +102,7 @@ interface Draft {
   voicemail_to_text: boolean;
   transcription: boolean;
   ring_seconds: string;
+  international_calling: InternationalCallingChoice;
 }
 
 const DEFAULT_DRAFT: Draft = {
@@ -98,6 +111,10 @@ const DEFAULT_DRAFT: Draft = {
   voicemail_to_text: false,
   transcription: false,
   ring_seconds: '30',
+  /* Opens on the answer that changes nobody's permissions. Taking away the
+     right to phone abroad from two hundred people should be something an admin
+     chooses, never the setting a screen happened to open on. */
+  international_calling: 'inherit',
 };
 
 interface PersonRow {
@@ -179,6 +196,7 @@ const CompanyBulkSettings = () => {
     voicemail_to_text: false,
     transcription: false,
     ring_seconds: false,
+    international_calling: false,
   });
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -230,6 +248,7 @@ const CompanyBulkSettings = () => {
     if (include.recording_on_demand) next.recording_on_demand = draft.recording_on_demand;
     if (include.voicemail_to_text) next.voicemail_to_text = draft.voicemail_to_text;
     if (include.transcription) next.transcription = draft.transcription;
+    if (include.international_calling) next.international_calling = draft.international_calling;
     if (include.ring_seconds) {
       const seconds = parseRingSeconds(draft.ring_seconds);
       if (seconds !== null) next.ring_seconds = seconds;
@@ -429,6 +448,29 @@ const CompanyBulkSettings = () => {
                     setDraft((previous) => ({ ...previous, transcription: !!checked }))
                   }
                   disabled={running}
+                />
+              }
+            />
+
+            <FieldRow
+              included={include.international_calling}
+              onToggle={() => toggleField('international_calling')}
+              disabled={running}
+              label="Calling other countries"
+              description="Whether each person may phone numbers outside your own country. Refusing somebody always works; allowing them never reaches past the company list under Company → Calling, which stays the ceiling."
+              control={
+                <CustomSelect
+                  options={INTERNATIONAL_OPTIONS}
+                  value={INTERNATIONAL_OPTIONS.find(
+                    (option) => option.value === draft.international_calling,
+                  )}
+                  handleChange={(option: any) =>
+                    setDraft((previous) => ({
+                      ...previous,
+                      international_calling: (option?.value ||
+                        'inherit') as InternationalCallingChoice,
+                    }))
+                  }
                 />
               }
             />

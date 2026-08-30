@@ -992,6 +992,12 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
                     company_info,
                     isShowRole: true,
                     // isShowVoicemail: true,
+                    /* Only here. This editor is shared with numbers, departments,
+                       phone menus and queues, and "may this person call abroad"
+                       is a question only a person can answer. The answer is
+                       carried through on save by `restSettings` in `onSubmit`,
+                       the same way every other key this form does not own is. */
+                    isShowInternationalCalling: true,
                     isAdminAccount,
                   }}
                   customClass="h-full mcm-settings"
