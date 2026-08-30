@@ -21,3 +21,8 @@ dist-ssr
 *.sw?
 package-lock.json
 .env
+# Compiled Python bytecode. Two .pyc files under backend-patches/ were tracked
+# by accident, so every run of those services dirtied the working tree with an
+# unreadable binary diff. The sources next to them are what matters.
+__pycache__/
+*.py[cod]
