@@ -28,6 +28,18 @@ const clean = (value, fallback = 0) => {
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 };
 const chargeFor = (plan, units, wallet) => {
+  const wantedUnits = clean(units);
+  if (plan?.included === "unlimited") {
+    return {
+      fromAllowance: wantedUnits,
+      charged: 0,
+      cost: 0,
+      affordable: true,
+      shortfall: 0,
+      allowanceLeft: Infinity,
+      message: `Included \u2014 your plan has unlimited ${plan?.unit || "units"}.`
+    };
+  }
   const included = clean(plan?.included);
   const alreadyUsed = clean(plan?.used);
   const rate = clean(plan?.rate);
@@ -61,6 +73,12 @@ const chargeFor = (plan, units, wallet) => {
   };
 };
 const canStart = (plan, wallet) => {
+  if (plan?.included === "unlimited") {
+    return {
+      decision: "included",
+      reason: `Your plan includes unlimited ${plan?.unit || "units"}.`
+    };
+  }
   const included = clean(plan?.included);
   const used = clean(plan?.used);
   const rate = clean(plan?.rate);

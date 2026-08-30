@@ -144,5 +144,32 @@ is('rubbish units charge nothing', chargeFor(voice, NaN, rich).cost, 0);
 is('a missing wallet is treated as empty',
    chargeFor({ ...aiVoice, used: 10 }, 5, {}).affordable, false);
 
+/* ---- unlimited is not a big number ------------------------------------- */
+
+/* The bug this guards against: an unlimited customer receiving a bill. Every
+   obvious way of storing "unlimited" as a number fails in the same direction,
+   so it is its own value and is answered before any arithmetic runs. */
+const unlimitedVoice = { service: 'voice_minutes', included: 'unlimited', used: 99999, rate: 0.02, unit: 'minutes' };
+
+const huge = chargeFor(unlimitedVoice, 100000, empty);
+is('unlimited never charges, however much is used', huge.cost, 0);
+is('and none of it is billed', huge.charged, 0);
+is('all of it counts as included', huge.fromAllowance, 100000);
+is('affordable even with an empty wallet', huge.affordable, true);
+is('and it says why', huge.message.includes('unlimited'), true);
+
+/* Usage far past any plausible allowance must still be free. */
+is('a million minutes on unlimited is still free', chargeFor(unlimitedVoice, 1000000, empty).cost, 0);
+
+/* And it may always start, with no money at all. */
+is('unlimited always starts', canStart(unlimitedVoice, empty).decision, 'included');
+is('and never refuses for lack of funds',
+   canStart({ ...unlimitedVoice, rate: 5 }, { balance: 0 }).decision, 'included');
+
+/* Zero must NOT behave like unlimited - it is the opposite, and confusing the
+   two gives the service away. */
+is('zero included charges from the first unit',
+   chargeFor({ ...unlimitedVoice, included: 0 }, 10, rich).charged, 10);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

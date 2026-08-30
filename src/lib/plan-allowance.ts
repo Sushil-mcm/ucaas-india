@@ -37,9 +37,12 @@ export type ServiceId =
 
 export interface ServicePlan {
   service: ServiceId;
-  /* What the plan includes for the billing period. Zero is a real value: it
-     means every unit is charged from the first one. */
-  included: number;
+  /* What the plan includes for the billing period.
+     Zero is a real value: every unit is charged from the first one.
+     'unlimited' is also a real value and is NOT a large number - see the note
+     on UNLIMITED in plan-catalogue.ts. Arithmetic on it would silently bill a
+     customer who was promised unlimited calling. */
+  included: number | 'unlimited';
   /* How much of that has been used so far this period. */
   used: number;
   /* What one unit costs once the allowance is gone. */
@@ -86,6 +89,22 @@ export const chargeFor = (
   units: number,
   wallet: Wallet,
 ): ChargeOutcome => {
+  const wantedUnits = clean(units);
+
+  /* Unlimited is answered before any arithmetic happens. Letting it fall
+     through to the sums below is how an unlimited customer gets a bill. */
+  if (plan?.included === 'unlimited') {
+    return {
+      fromAllowance: wantedUnits,
+      charged: 0,
+      cost: 0,
+      affordable: true,
+      shortfall: 0,
+      allowanceLeft: Infinity,
+      message: `Included — your plan has unlimited ${plan?.unit || 'units'}.`,
+    };
+  }
+
   const included = clean(plan?.included);
   const alreadyUsed = clean(plan?.used);
   const rate = clean(plan?.rate);
@@ -142,6 +161,13 @@ export interface StartOutcome {
  * somebody is entitled to make is worse than a small overrun. Enforcement
  * mid-call is a separate decision and a separate risk. */
 export const canStart = (plan: ServicePlan, wallet: Wallet): StartOutcome => {
+  if (plan?.included === 'unlimited') {
+    return {
+      decision: 'included',
+      reason: `Your plan includes unlimited ${plan?.unit || 'units'}.`,
+    };
+  }
+
   const included = clean(plan?.included);
   const used = clean(plan?.used);
   const rate = clean(plan?.rate);

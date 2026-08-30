@@ -103,3 +103,5 @@ than a formula.
 
     npx esbuild src/lib/plan-allowance.ts --format=cjs --outfile=tests/plan-allowance.build.cjs
     node tests/plan-allowance-test.cjs
+
+    npx esbuild src/lib/plan-catalogue.ts --format=cjs --outfile=tests/plan-catalogue.build.cjs
