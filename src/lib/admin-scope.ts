@@ -2,13 +2,13 @@
  *
  * A role in this product answers one question: what can this person do? Edit a
  * user, buy a number, listen to a recording. It does not answer the second
- * question every company with more than one office asks: *to whom?*
+ * question every company with more than one location asks: *to whom?*
  *
  * Today the answer is "everybody". A role that grants "edit user" grants it over
- * every person in the company, so the manager of the Manchester office can edit
+ * every person in the company, so the manager of the Manchester location can edit
  * somebody in London, and the person who runs the support queue can edit the
- * sales team. For a company with one office that is invisible. For a company
- * with ten, it is the reason they cannot let anybody but head office administer
+ * sales team. For a company with one location that is invisible. For a company
+ * with ten, it is the reason they cannot let anybody but head location administer
  * anything.
  *
  * This module is the missing half. A scope says which part of the organisation
@@ -16,25 +16,25 @@
  *
  *   company      the whole company - the person who signed up, and anybody they
  *                choose to make their equal
- *   location     one office, or the several offices somebody manages
+ *   location     one location, or the several locations somebody manages
  *   department   one department or call queue and nothing else
  *
  * and `canActOn` answers, for one administrator and one thing they are trying to
  * change, yes or no and why. The "why" matters: a refusal that says only "not
  * allowed" sends somebody to support, and a refusal that says "Priya is at the
- * London office, which you do not manage" does not.
+ * London location, which you do not manage" does not.
  *
  * Two rules here exist because of how this goes wrong in practice rather than in
  * theory:
  *
- *   an unknown home is a refusal   if we cannot tell which office a person
+ *   an unknown home is a refusal   if we cannot tell which location a person
  *                                  belongs to, a location administrator does not
  *                                  get to edit them. Guessing "probably mine"
  *                                  is how somebody edits the wrong person.
  *
  *   nobody widens their own reach  an administrator cannot change their own
  *                                  scope, and only a company-wide administrator
- *                                  can change anybody's. Otherwise the office
+ *                                  can change anybody's. Otherwise the location
  *                                  manager grants themselves the company.
  *
  * IMPORTANT, and the reason the screen that uses this says so on its face: the
@@ -52,7 +52,7 @@ export interface AdminScope {
   /** The administrator this scope belongs to. */
   personUuid: string;
   tier: ScopeTier;
-  /** Offices covered. Only meaningful when the tier is `location`. */
+  /** Locations covered. Only meaningful when the tier is `location`. */
   locationUuids: string[];
   /** Departments and queues covered. Only meaningful when the tier is `department`. */
   departmentUuids: string[];
@@ -61,7 +61,7 @@ export interface AdminScope {
 /** Something an administrator is trying to view or change. */
 export interface ScopeTarget {
   kind: 'person' | 'department' | 'location' | 'company';
-  /** The office this thing belongs to. `null` when the platform does not say. */
+  /** The location this thing belongs to. `null` when the platform does not say. */
   locationUuid?: string | null;
   /** For a person: the departments they are a member of. */
   departmentUuids?: string[];
@@ -82,24 +82,24 @@ export const TIERS: TierInfo[] = [
   {
     tier: 'company',
     label: 'Whole company',
-    description: 'Every office, every department and every person. The widest there is.',
+    description: 'Every location, every department and every person. The widest there is.',
   },
   {
     tier: 'location',
-    label: 'Chosen offices',
+    label: 'Chosen locations',
     description:
-      'The people, departments and numbers that belong to the offices you pick. One office for an office manager, several for somebody who covers a region.',
+      'The people, departments and numbers that belong to the locations you pick. One location for an location manager, several for somebody who covers a region.',
   },
   {
     tier: 'department',
     label: 'Chosen departments',
     description:
-      'One department or call queue and the people in it. Nothing about the office around it.',
+      'One department or call queue and the people in it. Nothing about the location around it.',
   },
 ];
 
 export interface Directory {
-  /** Every office in the company. */
+  /** Every location in the company. */
   locations: { uuid: string; name?: string }[];
   /** Every department and queue in the company. */
   departments: { uuid: string; name?: string; locationUuid?: string | null }[];
@@ -131,7 +131,7 @@ const isTier = (value: unknown): value is ScopeTier =>
 /* Stored scopes are read back out of a JSON blob that older versions of this
    screen, and hand edits, have both written to. Anything unrecognised becomes
    the narrowest safe answer rather than an error, and the lists the chosen tier
-   does not use are dropped so a scope cannot carry a stale office list that
+   does not use are dropped so a scope cannot carry a stale location list that
    nobody can see but that would come back if the tier changed. */
 export const normaliseScope = (raw: unknown): AdminScope => {
   const source = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
@@ -162,7 +162,7 @@ export const checkScope = (scope: AdminScope, directory: Directory): ScopeProble
     if (scope.locationUuids.length === 0) {
       problems.push({
         field: 'locations',
-        message: 'Pick at least one office, or this administrator covers nobody at all.',
+        message: 'Pick at least one location, or this administrator covers nobody at all.',
         blocking: true,
       });
     }
@@ -173,18 +173,18 @@ export const checkScope = (scope: AdminScope, directory: Directory): ScopeProble
       .forEach((uuid) => {
         problems.push({
           field: 'locations',
-          message: `An office on this list no longer exists (${uuid}). Remove it.`,
+          message: `An location on this list no longer exists (${uuid}). Remove it.`,
           blocking: true,
         });
       });
 
-    /* Not an error, but worth saying out loud: somebody who covers every office
+    /* Not an error, but worth saying out loud: somebody who covers every location
        has the company, and giving them the company tier says that plainly. */
     if (locations.length > 0 && scope.locationUuids.length === locations.length) {
       problems.push({
         field: 'tier',
         message:
-          'This covers every office you have, which is the same as the whole company. Use "Whole company" so it stays true when you open the next office.',
+          'This covers every location you have, which is the same as the whole company. Use "Whole company" so it stays true when you open the next location.',
         blocking: false,
       });
     }
@@ -249,23 +249,23 @@ export const canActOn = (scope: AdminScope, target: ScopeTarget): Decision => {
 
     if (target.kind === 'location') {
       return covered.has(String(target.uuid))
-        ? { allowed: true, reason: `${what} is one of the offices you manage.` }
-        : { allowed: false, reason: `${what} is not one of the offices you manage.` };
+        ? { allowed: true, reason: `${what} is one of the locations you manage.` }
+        : { allowed: false, reason: `${what} is not one of the locations you manage.` };
     }
 
-    /* A person or department whose office the platform does not report. The
+    /* A person or department whose location the platform does not report. The
        honest answer is no: assuming it is one of theirs is how an admin ends up
        editing somebody in another country. */
     if (!target.locationUuid) {
       return {
         allowed: false,
-        reason: `We cannot tell which office ${what} belongs to, so it is left alone. Set an office on it first.`,
+        reason: `We cannot tell which location ${what} belongs to, so it is left alone. Set an location on it first.`,
       };
     }
 
     return covered.has(target.locationUuid)
-      ? { allowed: true, reason: `${what} belongs to an office you manage.` }
-      : { allowed: false, reason: `${what} belongs to an office you do not manage.` };
+      ? { allowed: true, reason: `${what} belongs to an location you manage.` }
+      : { allowed: false, reason: `${what} belongs to an location you do not manage.` };
   }
 
   /* Department tier. */
@@ -274,7 +274,7 @@ export const canActOn = (scope: AdminScope, target: ScopeTarget): Decision => {
   if (target.kind === 'location') {
     return {
       allowed: false,
-      reason: 'Office settings are wider than the departments you manage.',
+      reason: 'Location settings are wider than the departments you manage.',
     };
   }
 
@@ -307,7 +307,7 @@ export interface Person {
 
 export interface Coverage {
   people: number;
-  /** People whose office or department the platform does not report. */
+  /** People whose location or department the platform does not report. */
   unplaced: number;
   departments: number;
   locations: number;
@@ -344,8 +344,8 @@ export const coverageOf = (
   );
 
   /* Counted separately because it is the number that explains a surprise. An
-     office administrator who expected forty people and covers twelve usually
-     has twenty-eight people with no office set, not a broken scope. */
+     location administrator who expected forty people and covers twelve usually
+     has twenty-eight people with no location set, not a broken scope. */
   const unplaced =
     scope.tier === 'location'
       ? list.filter((person) => !person.locationUuid).length
@@ -372,7 +372,7 @@ export const describeScope = (scope: AdminScope, directory: Directory): string =
   if (scope.tier === 'company') return 'The whole company';
 
   if (scope.tier === 'location') {
-    if (scope.locationUuids.length === 0) return 'No offices chosen yet';
+    if (scope.locationUuids.length === 0) return 'No locations chosen yet';
     const names = scope.locationUuids.map((uuid) => nameOf(directory?.locations || [], uuid));
     if (names.length <= 2) return names.join(' and ');
     return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
@@ -387,7 +387,7 @@ export const describeScope = (scope: AdminScope, directory: Directory): string =
 /**
  * May this administrator change somebody's scope?
  *
- * Kept apart from `canActOn` because it is not about offices at all. Editing a
+ * Kept apart from `canActOn` because it is not about locations at all. Editing a
  * scope is editing the boundary itself, and a boundary that the people inside it
  * can move is not a boundary.
  */

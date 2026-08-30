@@ -37,6 +37,7 @@ import Loader from '@/components/custom/loader';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { AreaNav } from '@/pages/admin-settings/roles/area-nav';
 import { extractPlanFeatures, useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
 import {
@@ -213,7 +214,8 @@ const DefaultPermissionsPage = () => {
     <AdminPage
       section="People"
       title="Default permissions"
-      description="What each kind of person should be able to do on their first day, and why. Write a recommendation down as a role, then pick it when adding people."
+      description="Step 4 of four. What each kind of person should be able to do on their first day, and why. Write a recommendation down as a role, then pick it when adding people."
+      actions={<AreaNav current="/admin-settings/default-permissions" />}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
         {loading ? (

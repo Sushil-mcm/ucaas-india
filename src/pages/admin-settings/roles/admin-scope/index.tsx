@@ -13,7 +13,7 @@
  * It is deliberately honest about what it is. The platform's API does not check
  * scope on any request today, so what is saved here is a written record of who
  * should administer what, not a lock. The card says exactly that, and it will
- * keep saying it until the API enforces it. An administrator told their offices
+ * keep saying it until the API enforces it. An administrator told their locations
  * are separated, when nothing separates them, would find out the wrong way.
  *
  * Stored under `settings.admin_scopes` on the company record, the same place the
@@ -29,6 +29,7 @@ import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { AreaNav } from '@/pages/admin-settings/roles/area-nav';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
@@ -62,8 +63,8 @@ const nameOf = (person: any): string =>
   person?.extension ||
   'Unknown';
 
-/* A department's office arrives as a JSON string of `{ label, value }`, which is
-   how the department form writes it. Anything else means no office is set, and
+/* A department's location arrives as a JSON string of `{ label, value }`, which is
+   how the department form writes it. Anything else means no location is set, and
    the scope rules treat that as "we cannot tell" rather than guessing. */
 const departmentSiteUuid = (raw: unknown): string | null => {
   if (!raw) return null;
@@ -133,7 +134,7 @@ const AdminScopePage = () => {
     () => ({
       locations: (sites as any[]).map((site) => ({
         uuid: String(site?.uuid || ''),
-        name: site?.name || 'Unnamed office',
+        name: site?.name || 'Unnamed location',
       })),
       departments: (departments as any[]).map((department) => ({
         uuid: String(department?.uuid || ''),
@@ -144,7 +145,7 @@ const AdminScopePage = () => {
     [sites, departments],
   );
 
-  /** People with their office and their department memberships attached. */
+  /** People with their location and their department memberships attached. */
   const roster: Person[] = useMemo(() => {
     const byUser = new Map<string, string[]>();
     (departments as any[]).forEach((department) => {
@@ -236,7 +237,8 @@ const AdminScopePage = () => {
     <AdminPage
       section="People"
       title="Admin scope"
-      description="A role says what somebody may do. This says who they may do it to — the whole company, chosen offices, or chosen departments."
+      description="Step 3 of four. A role says what somebody may do. This says who they may do it to — the whole company, chosen locations, or chosen departments."
+      actions={<AreaNav current="/admin-settings/admin-scope" />}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
         {isLoading || peopleLoading ? (
@@ -249,7 +251,7 @@ const AdminScopePage = () => {
               description={
                 scopes.length
                   ? `${scopes.length} ${scopes.length === 1 ? 'person has' : 'people have'} a scope written down. Anybody not listed is treated as covering the whole company, which is what happens today.`
-                  : 'Nobody has a scope yet, so every administrator covers the whole company — including people at other offices.'
+                  : 'Nobody has a scope yet, so every administrator covers the whole company — including people at other locations.'
               }
               enforced={false}
               enforcementNote={
@@ -271,7 +273,7 @@ const AdminScopePage = () => {
               {scopes.length === 0 ? (
                 <SettingRow
                   label="Nothing written down"
-                  description="Most companies start with the person who runs each office."
+                  description="Most companies start with the person who runs each location."
                 />
               ) : (
                 scopes.map((scope) => {
@@ -290,7 +292,7 @@ const AdminScopePage = () => {
                               {' '}
                               ({cover.unplaced}{' '}
                               {scope.tier === 'location'
-                                ? 'have no office set, so they are left out'
+                                ? 'have no location set, so they are left out'
                                 : 'are in no department, so they are left out'}
                               )
                             </>
@@ -384,13 +386,13 @@ const AdminScopePage = () => {
 
                 {editing.tier === 'location' ? (
                   <SettingRow
-                    label="Offices they manage"
-                    description="One for an office manager, several for somebody who covers a region."
+                    label="Locations they manage"
+                    description="One for an location manager, several for somebody who covers a region."
                   >
                     <div className="flex flex-col gap-2">
                       {directory.locations.length === 0 ? (
                         <p className="text-sm text-gray-600">
-                          No offices yet. Add one under Company before using this scope.
+                          No locations yet. Add one under Company before using this scope.
                         </p>
                       ) : (
                         directory.locations.map((location) => (
@@ -462,12 +464,12 @@ const AdminScopePage = () => {
                     label="What this reaches"
                     description={
                       editing.tier === 'company'
-                        ? `Everybody — all ${preview.totalPeople} people, ${preview.locations || directory.locations.length} offices and ${preview.departments} departments.`
+                        ? `Everybody — all ${preview.totalPeople} people, ${preview.locations || directory.locations.length} locations and ${preview.departments} departments.`
                         : `${preview.people} of ${preview.totalPeople} people${
                             preview.unplaced > 0
                               ? `. ${preview.unplaced} ${
                                   editing.tier === 'location'
-                                    ? 'have no office set and are left out'
+                                    ? 'have no location set and are left out'
                                     : 'are in no department and are left out'
                                 }`
                               : ''

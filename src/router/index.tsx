@@ -214,6 +214,8 @@ const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
 const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
+const AccessControl = lazy(() => import('@/pages/admin-settings/roles/access-control'));
+const CapabilityMatrix = lazy(() => import('@/pages/admin-settings/roles/capability-matrix'));
 const AiBotSession = lazy(() => import('@/pages/admin-settings/knowledge-base/ai-bot-session'));
 const CallHistory = lazy(() => import('@/pages/reports/call-logs/call-history'));
 const LocalCallList = lazy(() => import('@/pages/reports/call-logs/local-call-list'));
@@ -818,6 +820,20 @@ export const router = createBrowserRouter([
             path: 'roles',
             id: 'roles',
             element: <ProtectedRoute element={<DirectoryRoles />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* The front door to the four screens that decide access, and the
+               only one that says what order they go in. */
+            path: 'access-control',
+            id: 'access-control',
+            element: <ProtectedRoute element={<AccessControl />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* The whole model on one page: every capability against every kind
+               of person. Describes, saves nothing. */
+            path: 'capability-matrix',
+            id: 'capability-matrix',
+            element: <ProtectedRoute element={<CapabilityMatrix />} guard={{ adminOnly: true }} />,
           },
           {
             /* Who each administrator covers, as opposed to what they may do.

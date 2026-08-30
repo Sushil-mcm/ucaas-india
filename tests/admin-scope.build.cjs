@@ -33,17 +33,17 @@ const TIERS = [
   {
     tier: "company",
     label: "Whole company",
-    description: "Every office, every department and every person. The widest there is."
+    description: "Every location, every department and every person. The widest there is."
   },
   {
     tier: "location",
-    label: "Chosen offices",
-    description: "The people, departments and numbers that belong to the offices you pick. One office for an office manager, several for somebody who covers a region."
+    label: "Chosen locations",
+    description: "The people, departments and numbers that belong to the locations you pick. One location for an location manager, several for somebody who covers a region."
   },
   {
     tier: "department",
     label: "Chosen departments",
-    description: "One department or call queue and the people in it. Nothing about the office around it."
+    description: "One department or call queue and the people in it. Nothing about the location around it."
   }
 ];
 const clean = (list) => {
@@ -81,7 +81,7 @@ const checkScope = (scope, directory) => {
     if (scope.locationUuids.length === 0) {
       problems.push({
         field: "locations",
-        message: "Pick at least one office, or this administrator covers nobody at all.",
+        message: "Pick at least one location, or this administrator covers nobody at all.",
         blocking: true
       });
     }
@@ -89,14 +89,14 @@ const checkScope = (scope, directory) => {
     scope.locationUuids.filter((uuid) => !known.has(uuid)).forEach((uuid) => {
       problems.push({
         field: "locations",
-        message: `An office on this list no longer exists (${uuid}). Remove it.`,
+        message: `An location on this list no longer exists (${uuid}). Remove it.`,
         blocking: true
       });
     });
     if (locations.length > 0 && scope.locationUuids.length === locations.length) {
       problems.push({
         field: "tier",
-        message: 'This covers every office you have, which is the same as the whole company. Use "Whole company" so it stays true when you open the next office.',
+        message: 'This covers every location you have, which is the same as the whole company. Use "Whole company" so it stays true when you open the next location.',
         blocking: false
       });
     }
@@ -135,21 +135,21 @@ const canActOn = (scope, target) => {
   if (scope.tier === "location") {
     const covered2 = new Set(scope.locationUuids);
     if (target.kind === "location") {
-      return covered2.has(String(target.uuid)) ? { allowed: true, reason: `${what} is one of the offices you manage.` } : { allowed: false, reason: `${what} is not one of the offices you manage.` };
+      return covered2.has(String(target.uuid)) ? { allowed: true, reason: `${what} is one of the locations you manage.` } : { allowed: false, reason: `${what} is not one of the locations you manage.` };
     }
     if (!target.locationUuid) {
       return {
         allowed: false,
-        reason: `We cannot tell which office ${what} belongs to, so it is left alone. Set an office on it first.`
+        reason: `We cannot tell which location ${what} belongs to, so it is left alone. Set an location on it first.`
       };
     }
-    return covered2.has(target.locationUuid) ? { allowed: true, reason: `${what} belongs to an office you manage.` } : { allowed: false, reason: `${what} belongs to an office you do not manage.` };
+    return covered2.has(target.locationUuid) ? { allowed: true, reason: `${what} belongs to an location you manage.` } : { allowed: false, reason: `${what} belongs to an location you do not manage.` };
   }
   const covered = new Set(scope.departmentUuids);
   if (target.kind === "location") {
     return {
       allowed: false,
-      reason: "Office settings are wider than the departments you manage."
+      reason: "Location settings are wider than the departments you manage."
     };
   }
   if (target.kind === "department") {
@@ -199,7 +199,7 @@ const coverageOf = (scope, people, directory) => {
 const describeScope = (scope, directory) => {
   if (scope.tier === "company") return "The whole company";
   if (scope.tier === "location") {
-    if (scope.locationUuids.length === 0) return "No offices chosen yet";
+    if (scope.locationUuids.length === 0) return "No locations chosen yet";
     const names2 = scope.locationUuids.map((uuid) => nameOf(directory?.locations || [], uuid));
     if (names2.length <= 2) return names2.join(" and ");
     return `${names2[0]}, ${names2[1]} and ${names2.length - 2} more`;
