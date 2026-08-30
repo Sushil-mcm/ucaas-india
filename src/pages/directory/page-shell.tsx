@@ -16,12 +16,16 @@ import { Ic, McmIconSprite } from '@/components/mcm/icons';
 export const DirectoryPage = ({
   title,
   description,
+  note,
   actions,
   filters,
   children,
 }: {
   title: string;
   description: string;
+  /* An honest caveat about how far this screen really reaches, shown under the
+     description. Optional, so every page that does not need one is unchanged. */
+  note?: ReactNode;
   actions?: ReactNode;
   filters?: ReactNode;
   children: ReactNode;
@@ -35,6 +39,7 @@ export const DirectoryPage = ({
       </div>
       {actions}
     </div>
+    {note ? <div className="page-caveat">{note}</div> : null}
     {filters ? <div className="tbar">{filters}</div> : null}
     <div className="panel-card">
       <div className="tbl-wrap">{children}</div>
