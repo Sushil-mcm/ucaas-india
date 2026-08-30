@@ -400,6 +400,11 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'BillingPlanIcon',
         },
         {
+          title: 'Spending',
+          path: '/admin-settings/billing/spending',
+          icon: 'BillingPlanIcon',
+        },
+        {
           title: 'Statement',
           path: '/admin-settings/billing/statement',
           icon: 'BillingPlanIcon',

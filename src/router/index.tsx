@@ -198,6 +198,7 @@ const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
 const StatementOfAccount = lazy(() => import('@/pages/admin-settings/billing/statement'));
 const BillingSummary = lazy(() => import('@/pages/admin-settings/billing/summary'));
 const CostCentres = lazy(() => import('@/pages/admin-settings/billing/cost-centres'));
+const Spending = lazy(() => import('@/pages/admin-settings/billing/spending'));
 const BillingResources = lazy(() => import('@/pages/admin-settings/billing/resources'));
 const BillingModules = lazy(() => import('@/pages/admin-settings/billing/modules'));
 /* Admin ▸ Users reuses the Directory screens rather than keeping a second,
@@ -1256,6 +1257,10 @@ export const router = createBrowserRouter([
               {
                 path: 'cost-centres',
                 element: <CostCentres />,
+              },
+              {
+                path: 'spending',
+                element: <Spending />,
               },
               {
                 path: 'plan',

@@ -17,3 +17,7 @@ backend later.
 
     npx esbuild src/lib/cost-centres.ts --format=cjs --outfile=tests/cost-centres.build.cjs
     node tests/cost-centres-test.cjs
+
+    npx esbuild src/lib/spend-breakdown.ts --format=cjs --outfile=tests/spend.build.cjs \
+      --bundle --external:libphonenumber-js --platform=node
+    node tests/spend-test.cjs
