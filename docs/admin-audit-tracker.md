@@ -96,28 +96,60 @@ second is only worth building once DND itself is honoured.
 
 ## People
 
-Not yet audited.
+### Open
+
+| # | Defect | State | Notes |
+|---|---|---|---|
+| P1 | The permission tree an admin builds is never enforced. All three `rbac` uses in default-api are in the login response (`rbac: findRole?.permission ?? {}`, AuthController lines 426/721/2435) — handed to the browser at sign-in, never consulted again. No authorization middleware for tenant users; `AdminMiddleware` authenticates a separate platform Admin model and is used by no router. The only real gate is 51 role-string comparisons. | OPEN | Labelled backwards: the three screens that only *describe* the model all warn it is not checked, while the two where an admin *builds and saves* it — `directory/roles.tsx` and `roles/add-new-role/role-permissions/index.tsx` — say nothing. Smallest fix in the audit. |
+| P2 | A person's own call rules never affect a call. The directory service reads no forwarding, call rules or DND (all 0; control on the same file: `user_call` 1, `dial-string` 3). Its dial-string is plain `sofia_contact(*/user@domain)`. Inbound takes its route from the DID, not the person. | OPEN | Same root cause as M3. |
+| P3 | `call-rules/index.tsx:324` renders "Bypassed by Do Not Disturb" and "Bypassed by Forward All Calls" — a precedence order that does not exist server-side. | OPEN | Fix with M3 as one change. |
+
+---
 
 ## Numbers
 
-Not yet audited.
+### Open
+
+| # | Defect | State | Notes |
+|---|---|---|---|
+| N1 | Releasing a number never tells the carrier, so billing continues. `releaseDid()` calls `CommonHelper.releaseDidForwarding()`, which soft-deletes in our own database only — sets `deleted_at`, nulls `forward_call_actions`, `site_uuid`, `user_uuid`. Zero references to `DID_WW_URL`, `didww` or `wholesale` in `DidController.js`. | OPEN | Issue 4 of the API security audit, and the last of its six still open. Costs money every month and grows with each release. The identity flow already has a working wholesale-API path through `DidwwHelper`, so the plumbing exists. |
+| N2 | `set-number-forwarding/index.tsx:330` writes `{ forward_call_actions: { ...request } }` from a freshly rebuilt object — no merge. `assign-receptionist-caller-id-modal.tsx:193` writes the same field keyed on the same DID uuid. | OPEN | **Not yet proven** that both land on the same row — confirm on a live record before treating the overwrite as real. Fix is the merge pattern Company already uses. |
+| N3 | Two carrier targets are configured: `DidwwHelper.js` hardcodes `wholesale-api.mycountrymobile.com`, while default-api's `.env` sets `DID_WW_URL` to the DIDWW host. | OPEN | Not a defect yet — establish which paths use which. A request in one dialect sent to the other endpoint fails silently. |
+
+### Confirmed working
+
+| # | Was broken | Evidence |
+|---|---|---|
+| N4 | Expired-plan customers could open the buy flow, because the check read `companyInfo` — a field that does not exist on the user object | Now reads `user?.company_info?.plan_status`; `parseForwardActions` defensive parse also present |
+
+### Not a defect — checked and fine
+
+Identities, addresses and verifications are genuinely wired to the carrier, not
+stored-only as I expected. `IdentityController.js` requires `DidwwHelper` and
+`WholesaleApiLog` and uses axios 19 times; `IdentityRoute.js` mounts ten
+endpoints including `/did/assign` and `/did/assign/callback`.
+
+---
 
 ## Phone System
 
-Not yet audited. Known from the queue trace, to be confirmed in this group:
+### Open
 
-- `mod_callcenter` is not loaded. It is present and uncommented in
-  `modules.conf.xml` but fails to load, because `callcenter.conf` returns 400
-  from the configuration service on :9002 while `ivr.conf`, `sofia.conf` and
-  `acl.conf` all return 200. Its log gives the cause: the request arrives with an
-  empty queue_name and domain, falls to the not-found path, and that template
-  path is an empty string.
-- The `callcenter.conf.xml` template renders only `<queues>` — no `<agents>`,
-  no `<tiers>`.
-- The dialplan generator has no reference to `callcenter` or `queue`, so nothing
-  routes a caller into a queue.
-- Consequence: **no queue works at call time**, and neither MySQL nor MongoDB is
-  read for a queue call. Do not migrate agent data between the two as a fix.
+| # | Defect | State | Notes |
+|---|---|---|---|
+| F1 | `mod_callcenter` is not loaded, so **no queue exists at call time**. It is present and uncommented in `modules.conf.xml` but fails to load: `callcenter.conf` returns 400 from :9002 (while `ivr.conf`, `sofia.conf`, `acl.conf` all return 200) because the request arrives with empty queue_name and domain, falls to the not-found path, and that template path is an empty string. Confirmed twice, independently — `show application` lists `bridge` and `ivr` but not `callcenter`. | OPEN | **First domino.** Nothing about queues can be tested until the module loads. Do not migrate agent data between MySQL and MongoDB as a fix — neither store is read for a queue call. |
+| F2 | The `callcenter.conf.xml` template renders only `<queues>` — no `<agents>`, no `<tiers>`. | OPEN | Even once loaded, no agent would join a queue. |
+| F3 | **IVR is one missing branch from working.** The `ivr` application is available (`ivr,Run an ivr menu,<menu_name>,mod_dptools`), config is served correctly (ivr.conf 200, template present, SQL query present), and the admin UI is complete — but the dialplan never invokes it. | OPEN | **Highest value per effort in the whole audit.** Adding a branch emitting `{"application": "ivr", "data": <menu_name>}` connects work that is otherwise finished. |
+| F4 | `build_inbound_dialplan` branches on `EXTENSION` (line 321) and `VOICEMAIL` (line 334) only. Everything else logs "unhandled route type" and the call fails. Control-checked: EXTENSION appears once; ivr, IVR, department, DEPARTMENT, queue, QUEUE all appear zero times. | OPEN | Departments can be created and staffed and will never receive a call. |
+| F5 | Business hours are never evaluated. The builder reads `call_handling.business_hours` and nothing else — no after_hours, no holiday, no closed, no clock comparison. A 2am call takes the business-hours route. | OPEN | Not a missing-data problem: `releaseDidForwarding` parses both `business_hours` AND `closed_hours`, so the data is stored. One missing branch, same shape as F3. |
+
+### Gaps vs the reference product
+
+Queue admin has basic-info, greetings, queue-settings, add-members,
+ring-strategy. Missing: queue priority (0 hits), global queue settings applying
+across all queues (0 hits — same shape as the missing global department
+settings). Callback shows only 2 hits and may be thinner than it looks. Skills
+(9) and duty state (4) look present.
 
 ---
 
@@ -125,5 +157,15 @@ Not yet audited. Known from the queue trace, to be confirmed in this group:
 
 | # | Item | State |
 |---|---|---|
-| X1 | Releasing a number never tells the carrier, so billing continues (issue 4 of the API security audit) | OPEN — the only one of that audit's six still open |
-| X2 | `rbac` permissions are advisory; the `users.role` string is the only real gate server-side | OPEN — a project, not a patch |
+| X1 | Releasing a number never tells the carrier — see N1 | OPEN |
+| X2 | `rbac` permissions are advisory; the `users.role` string is the only real gate — see P1 | OPEN |
+
+## Suggested order across all groups
+
+1. **F1** — the callcenter.conf 400. Everything queue-shaped is blocked behind it.
+2. **F3** — the IVR branch. Small, self-contained, unblocks a finished feature.
+3. **P1** — two honesty labels. The most misleading thing currently in the admin area, and the cheapest fix here.
+4. **M3 + P3** — Do Not Disturb, as one change, since they share a cause.
+5. **D1** — calling restrictions reaching the switch. The money one.
+6. **N1** — carrier release. Costs money every month it waits.
+7. **F4, F5, P2** — the remaining route types and the clock check.
