@@ -23,7 +23,8 @@ __export(plan_catalogue_exports, {
   allowanceLeft: () => allowanceLeft,
   describeAllowance: () => describeAllowance,
   isUnlimited: () => isUnlimited,
-  monthlyCostForSeat: () => monthlyCostForSeat
+  monthlyCostForSeat: () => monthlyCostForSeat,
+  ratesForPlan: () => ratesForPlan
 });
 module.exports = __toCommonJS(plan_catalogue_exports);
 const UNLIMITED = "unlimited";
@@ -160,5 +161,18 @@ const monthlyCostForSeat = (planId, addOnIds = []) => {
     plan: plan.monthlyPerSeat,
     addOns: Math.round(addOns * 100) / 100,
     total: Math.round((plan.monthlyPerSeat + addOns) * 100) / 100
+  };
+};
+const ratesForPlan = (planName) => {
+  const wanted = String(planName ?? "").trim().toLowerCase();
+  if (!wanted) return null;
+  const plan = PLANS.find(
+    (p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted
+  );
+  if (!plan) return null;
+  return {
+    planId: plan.id,
+    domesticMinuteRate: plan.overage?.domesticMinuteRate,
+    smsRate: plan.overage?.smsRate
   };
 };

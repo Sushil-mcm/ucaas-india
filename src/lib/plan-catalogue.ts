@@ -229,3 +229,34 @@ export const monthlyCostForSeat = (
     total: Math.round((plan.monthlyPerSeat + addOns) * 100) / 100,
   };
 };
+
+/* The rates that apply to a named plan, or nothing if we cannot tell which plan
+ * somebody is on.
+ *
+ * This exists so a usage screen can turn "412 minutes over" into "412 minutes
+ * over, that is $8.24" - which is the number somebody actually wants.
+ *
+ * The refusal matters more than the lookup. A customer may be on a legacy plan,
+ * a custom-priced one, or something renamed since. Falling back to a default
+ * rate would put a confident figure on a billing screen that is wrong for that
+ * customer, and a wrong money figure is worse than an absent one: the absent
+ * one prompts a question, the wrong one prompts an invoice dispute. So an
+ * unrecognised plan returns null and the screen says it cannot tell.
+ */
+export const ratesForPlan = (
+  planName: string | undefined | null,
+): { domesticMinuteRate?: number; smsRate?: number; planId: string } | null => {
+  const wanted = String(planName ?? '').trim().toLowerCase();
+  if (!wanted) return null;
+
+  const plan = PLANS.find(
+    (p) => p.name.toLowerCase() === wanted || p.id.toLowerCase() === wanted,
+  );
+  if (!plan) return null;
+
+  return {
+    planId: plan.id,
+    domesticMinuteRate: plan.overage?.domesticMinuteRate,
+    smsRate: plan.overage?.smsRate,
+  };
+};

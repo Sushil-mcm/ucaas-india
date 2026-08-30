@@ -41,6 +41,7 @@ import { callList } from '@/services/api';
 import { useGetMyPlanDetails } from '@/hooks/common';
 import { useUser } from '@/hooks/use-user';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { ratesForPlan } from '@/lib/plan-catalogue';
 import {
   isBreakdownComplete,
   onlyCharged,
@@ -86,7 +87,10 @@ const UsageBar = ({ row }: { row: UsageRow }) => {
     band === 'over' ? 'bg-red-500' : band === 'warning' ? 'bg-amber-500' : 'bg-gray-400';
   return (
     <div className="mt-1.5 h-1 w-full max-w-[8rem] overflow-hidden rounded-full bg-gray-100">
-      <div className={`h-full rounded-full ${colour}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+      <div
+        className={`h-full rounded-full ${colour}`}
+        style={{ width: `${Math.min(pct, 100)}%` }}
+      />
     </div>
   );
 };
@@ -217,10 +221,7 @@ const TableSkeleton = ({ rows = 5, cols = 6 }: { rows?: number; cols?: number })
     {Array.from({ length: rows }).map((_, r) => (
       <div key={r} className="flex items-center gap-4 border-b border-gray-100 py-3">
         {Array.from({ length: cols }).map((__, c) => (
-          <Skeleton
-            key={c}
-            className={`h-3 bg-gray-200 ${c === 0 ? 'w-40' : 'ml-auto w-16'}`}
-          />
+          <Skeleton key={c} className={`h-3 bg-gray-200 ${c === 0 ? 'w-40' : 'ml-auto w-16'}`} />
         ))}
       </div>
     ))}
@@ -284,6 +285,13 @@ const Usage = () => {
    * still appears — a customer paying for AI minutes deserves to know the
    * allowance exists even while nobody is counting against it — but its cells
    * say so instead of guessing. */
+  /* The rate that applies to THIS customer, from the plan they are actually on.
+     An unrecognised plan - legacy, custom-priced, renamed - gets no rate rather
+     than a default one. A confident money figure that is wrong for this
+     customer is worse than an absent one: the absent one prompts a question,
+     the wrong one prompts an invoice dispute. */
+  const planRates = useMemo(() => ratesForPlan(current?.plan_name), [current?.plan_name]);
+
   const allowanceRows = useMemo(() => {
     const built: UsageRow[] = [
       makeUsageRow({
@@ -291,6 +299,7 @@ const Usage = () => {
         unit: 'minutes',
         included: current?.call_duration,
         used: current?.call_duration_used,
+        rate: planRates?.domesticMinuteRate,
         note: 'Calls to destinations your plan covers. Anything beyond the allowance is charged per minute at the rate for the country dialled.',
       }),
       makeUsageRow({
@@ -298,6 +307,7 @@ const Usage = () => {
         unit: 'messages',
         included: current?.sms,
         used: current?.sms_used,
+        rate: planRates?.smsRate,
       }),
       makeUsageRow({
         service: 'Toll-free minutes',
@@ -328,7 +338,7 @@ const Usage = () => {
       }),
     ];
     return sortUsageRows(built);
-  }, [current, company]);
+  }, [current, company, planRates]);
 
   const byPerson = useMemo(() => onlyCharged(spendByPerson(rows as any)), [rows]);
   const byDestination = useMemo(() => onlyCharged(spendByDestination(rows as any)), [rows]);
