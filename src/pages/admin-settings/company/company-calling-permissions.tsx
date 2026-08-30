@@ -384,8 +384,8 @@ const CountryChooser = ({
       {!homeCountry ? (
         <p className="text-xs text-amber-700">
           We could not work out which country your company is in, so nothing has been ticked for
-          you. Tick {homeCountryName === 'your country' ? 'your own country' : homeCountryName}
-          {' '}yourself before you save, or calls at home could be treated as calls abroad.
+          you. Tick {homeCountryName === 'your country' ? 'your own country' : homeCountryName}{' '}
+          yourself before you save, or calls at home could be treated as calls abroad.
         </p>
       ) : null}
     </div>
@@ -566,11 +566,13 @@ const CompanyCallingPermissions = () => {
                 These are fraud controls, not conveniences
               </p>
               <p className="text-xs text-red-800">
-                Every box on this page is off to begin with, which is the safe default. Each one is
-                a way of turning a call you already pay for into a second leg you also pay for. Toll
-                fraud works by getting someone — or something — to transfer a call out to a
-                premium-rate number abroad and leaving it up; the bill arrives days later. Turn a
-                box on only when a real job needs it, and turn it off again when that job ends.
+                The transfer switches below start off, which is the safe default. Calling other
+                countries does not: until you choose a list, every country is allowed. That is the
+                one worth setting today. Each control here is a way of turning a call you already
+                pay for into a second leg you also pay for. Toll fraud works by getting someone — or
+                something — to transfer a call out to a premium-rate number abroad and leaving it
+                up; the bill arrives days later. Turn a box on only when a real job needs it, and
+                turn it off again when that job ends.
               </p>
             </div>
           </div>

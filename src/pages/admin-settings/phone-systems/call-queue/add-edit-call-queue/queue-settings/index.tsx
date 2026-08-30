@@ -8,6 +8,7 @@ import { getDispositions } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { SettingFlag } from '@/components/mcm/setting-card';
 import { TIME_LIST } from '@/pages/auto-dialer/campaign/add-edit-campaign/consts';
 import { WRAPUP_DEFAULT_MODE, WRAPUP_PROMPT_MODES } from '../../constant';
 
@@ -79,7 +80,13 @@ const QueueSettings: FC<any> = ({ scriptList, setModalState }) => {
               anyone. Stored but not yet enforced. */}
           <div className="flex flex-col gap-1.5 w-full lg:col-span-2">
             <div className="flex items-center justify-between w-full min-h-[20px]">
-              <span className="text-sm font-semibold text-gray-900">Wrap-up rule</span>
+              <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                Wrap-up rule
+                {/* Said on screen, not only in a comment above. The choice is
+                    saved, but no call acts on it yet, and a supervisor picking
+                    "cannot be skipped" would otherwise believe it holds. */}
+                <SettingFlag status="coming-soon" />
+              </span>
             </div>
             <CustomSelect
               placeholder="Select Option"

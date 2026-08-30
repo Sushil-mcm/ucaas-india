@@ -194,6 +194,18 @@ export const SettingRow = ({
 /* Sub-settings belonging to the row above. Rendering nothing when the parent is
    off is deliberate: a disabled field still reads as something you could change,
    and an admin should not have to work out which half of a screen applies. */
+/* The same badge, on its own, for controls that do not sit inside a card.
+ *
+ * Some screens were built before these cards existed and lay out their own
+ * fields. One of them - the queue wrap-up rule - was stored and never acted on,
+ * said so in a code comment, and said nothing at all on screen. A control that
+ * cannot be honest because of where it happens to live is a gap in this
+ * component, not in that screen, so the badge is exported rather than copied. */
+export const SettingFlag = ({ status }: { status: SettingStatus }) =>
+  status === 'active' ? null : (
+    <span className={`mcm-setrow-flag${STATUS_CLASS[status]}`}>{STATUS_LABEL[status]}</span>
+  );
+
 export const SettingNest = ({ when, children }: { when: boolean; children: ReactNode }) =>
   when ? <div className="mcm-setnest">{children}</div> : null;
 
