@@ -1,23 +1,27 @@
--- Queue tables for the shared database (mycountrymobile_db).
+-- ###########################################################################
+-- #  DO NOT RUN THIS. IT IS KEPT ONLY AS A RECORD OF A ROUTE NOT TAKEN.     #
+-- ###########################################################################
 --
--- NOT APPLIED. Nothing has been run against any database. A human reviews this
--- and runs it. See README.md, "What a human must do".
+-- Running this would create a second, empty set of queue records in MySQL
+-- alongside the real ones. That is the exact problem this work set out to end.
 --
--- Two parts, and only the first is needed to make queued calls ring:
+-- The queue records the product actually writes are in MongoDB: when an admin
+-- edits a queue on the website, that is where it is saved. The MySQL `agents`
+-- table below is written by nobody and holds no rows. The decision, taken by
+-- the product owner, is that MongoDB is the one true copy, and the queue agent
+-- service reads it directly. Nothing is copied, so nothing can drift.
 --
---   1. Indexes on the agents table. It already exists and already holds the
---      right columns, but it has no index except the primary key, so every
---      lookup reads the whole table. A caller is on the line while that runs.
+-- This file was written earlier, when MySQL looked like the intended home. It
+-- is left here so that anybody who finds the empty MySQL `agents` table knows
+-- why it is empty, and does not helpfully fill it in.
 --
---   2. The queues and tiers tables. Neither exists yet. The switch's own
---      dialplan service already reads a queues table with exactly these
---      columns, and fails its queue lookup because it is not there. The tiers
---      table is what lets a queue ring a first group first and widen to a
---      second group if nobody picks up.
+-- If you are looking for what to do instead, see README.md.
 --
--- Both new tables are written to match, column for column, the records the
--- product already stores for queues, so nothing has to be reshaped when the
--- data is moved across.
+-- The one part below that is not superseded, and would still be worth doing on
+-- its own day, is the two indexes: if anything is ever going to read that
+-- MySQL table, it needs them. Nothing reads it today.
+--
+-- Everything from here down is kept verbatim and is not part of the plan.
 
 -- ---------------------------------------------------------------------------
 -- 1. Indexes on the table that already exists

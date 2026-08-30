@@ -2,10 +2,14 @@
 """Queue agent service - answers the one question a waiting caller depends on:
 who should this call ring right now?
 
-When somebody calls a queue, the switch plays hold music and asks this service,
-over and over, for the next person to try. Nothing was listening on that port,
-so every queued call waited out its timeout and gave up. This is that missing
-service.
+When somebody calls a queue, the switch answers, plays hold music, and asks a
+service on this port which phone to ring. It asks again every couple of seconds
+until somebody picks up or the caller gives up. Nothing was ever listening, so
+every queued call waited out its timeout and rang nobody. This is that service.
+
+It reads the queue records the product actually writes: when an admin edits a
+queue on the website, that is saved to MongoDB, and this reads the same place.
+There is no copy, no sync and no second version of the truth to drift.
 
 It sits directly on the call path, so the rules it lives by are:
 
@@ -15,8 +19,8 @@ It sits directly on the call path, so the rules it lives by are:
   * "Nobody is free" is a normal answer, not an error. The switch expects an
     empty list and handles it by holding the caller.
   * It answers fast. A person is on the line while this runs, so every query is
-    small, every connection has a timeout, and repeated questions inside a few
-    seconds are answered from memory.
+    small and indexed, every database call has a hard time limit, and repeated
+    questions inside a few seconds are answered from memory.
 """
 
 import datetime
@@ -30,13 +34,18 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
-# Imported the forgiving way on purpose: the decision rules in this file can then
-# be tested on any machine, including ones with no database driver installed.
+# Imported the forgiving way on purpose, and for two reasons. The rules in this
+# file can then be tested on any machine, with no database driver installed. And
+# on a machine where the driver is missing the service still starts and still
+# answers - a caller waits on hold instead of the line going dead.
 try:
-    import pymysql
-    import pymysql.cursors
+    from pymongo import MongoClient
 except ImportError:  # pragma: no cover - exercised only where the driver is absent
-    pymysql = None
+    MongoClient = None
+try:
+    from bson import ObjectId
+except ImportError:  # pragma: no cover
+    ObjectId = None
 
 
 LISTEN_ADDR = os.environ.get("HTTP_LISTEN_ADDR", "127.0.0.1:9006")
@@ -44,9 +53,17 @@ LISTEN_ADDR = os.environ.get("HTTP_LISTEN_ADDR", "127.0.0.1:9006")
 # resolve to either the IPv4 or the IPv6 loopback, and a caller that picks the one
 # we are not listening on is simply refused. Answering on both removes that coin toss.
 LISTEN_HOST6 = os.environ.get("HTTP_LISTEN_HOST6", "::1")
-MYSQL_DSN = os.environ.get("MYSQL_DSN", "")
+
+MONGODB_URI = os.environ.get("MONGODB_URI", "")
+MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "mycountrymobile_db")
 BASE_DOMAIN = os.environ.get("BASE_DOMAIN", "mycountrymobile.com")
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "info")
+
+# Hard limits on every database call. The switch has no time limit of its own on
+# the request it makes here, so a database that stops answering would otherwise
+# hold a real caller on a silent line. These caps are what make that impossible.
+DB_TIMEOUT_MS = int(os.environ.get("DB_TIMEOUT_MS", "2000"))
+DB_POOL_MAX = int(os.environ.get("DB_POOL_MAX", "8"))
 
 # How long an answer may be reused. Several callers waiting in the same queue ask
 # the same question every couple of seconds; answering them from one lookup keeps
@@ -68,14 +85,14 @@ CALL_MEMORY_MAX = int(os.environ.get("CALL_MEMORY_MAX", "5000"))
 # or a bad day must not lock somebody out of their queue for good.
 NO_ANSWER_WINDOW_SECONDS = float(os.environ.get("NO_ANSWER_WINDOW_SECONDS", "3600"))
 
-DB_CONNECT_TIMEOUT = int(os.environ.get("DB_CONNECT_TIMEOUT", "3"))
-DB_READ_TIMEOUT = int(os.environ.get("DB_READ_TIMEOUT", "3"))
-DB_POOL_MAX = int(os.environ.get("DB_POOL_MAX", "4"))
-
 # Optional. Left empty, the service trusts anything that can reach it - which is
 # only this machine, because it listens on the loopback address alone. The switch
 # and the event manager send different tokens, so anything set here must list both.
 AUTH_TOKENS = [t.strip() for t in os.environ.get("AUTH_TOKENS", "").split(",") if t.strip()]
+
+QUEUES = "queues"
+AGENTS = "agents"
+TIERS = "tiers"
 
 
 def log(level, msg, **kwargs):
@@ -91,246 +108,165 @@ def log(level, msg, **kwargs):
 # Database
 # ---------------------------------------------------------------------------
 
-def parse_dsn(dsn):
-    m = re.match(r'^(\w+):(.+)@tcp\(([^)]+)\)/([^?]+)(\?.*)?$', dsn)
-    if not m:
-        raise ValueError("Cannot parse DSN")
-    host_port = m.group(3)
-    host, port = host_port.rsplit(":", 1) if ":" in host_port else (host_port, "3306")
-    params = m.group(5) or ""
-    return {
-        "user": m.group(1),
-        "password": m.group(2),
-        "host": host,
-        "port": int(port),
-        "database": m.group(4),
-        "use_ssl": "tls" in params,
-    }
+_client = None
+_client_lock = threading.Lock()
 
 
-DB_CONFIG = None
-_pool = []
-_pool_lock = threading.Lock()
+def get_database():
+    """One shared connection to the queue records.
 
-
-def _new_connection():
-    global DB_CONFIG
-    if pymysql is None:
-        raise RuntimeError("pymysql is not installed")
-    if DB_CONFIG is None:
-        DB_CONFIG = parse_dsn(MYSQL_DSN)
-    kwargs = {
-        "host": DB_CONFIG["host"],
-        "port": DB_CONFIG["port"],
-        "user": DB_CONFIG["user"],
-        "password": DB_CONFIG["password"],
-        "database": DB_CONFIG["database"],
-        "connect_timeout": DB_CONNECT_TIMEOUT,
-        "read_timeout": DB_READ_TIMEOUT,
-        "write_timeout": DB_READ_TIMEOUT,
-        "autocommit": True,
-        "cursorclass": pymysql.cursors.DictCursor,
-    }
-    if DB_CONFIG["use_ssl"]:
-        import ssl as _ssl
-        ctx = _ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = _ssl.CERT_NONE
-        kwargs["ssl"] = ctx
-    return pymysql.connect(**kwargs)
-
-
-class borrowed_connection(object):
-    """One database connection, taken from a small shared set and put back after.
-
-    Several callers can be waiting at once, so requests are handled side by side.
-    Sharing a single connection between them would make them queue behind each
-    other; opening a fresh one per request would be slower still. A handful of
-    reused connections is the middle ground.
+    The driver keeps its own set of connections and shares them safely between
+    requests, so several waiting callers are served side by side rather than
+    queueing behind each other.
     """
+    global _client
+    if MongoClient is None:
+        raise RuntimeError("the MongoDB driver (python3-pymongo) is not installed")
+    if not MONGODB_URI:
+        raise RuntimeError("MONGODB_URI is not set")
+    client = _client
+    if client is None:
+        with _client_lock:
+            if _client is None:
+                _client = MongoClient(
+                    MONGODB_URI,
+                    # Every one of these is a hard stop. Together they mean no
+                    # request to this service can hang, whatever the database does.
+                    serverSelectionTimeoutMS=DB_TIMEOUT_MS,
+                    connectTimeoutMS=DB_TIMEOUT_MS,
+                    socketTimeoutMS=DB_TIMEOUT_MS,
+                    maxPoolSize=DB_POOL_MAX,
+                    retryReads=True,
+                    appname="queue-agent-service",
+                )
+            client = _client
+    return client[MONGODB_DATABASE]
 
-    def __init__(self):
-        self.conn = None
 
-    def __enter__(self):
-        with _pool_lock:
-            conn = _pool.pop() if _pool else None
-        if conn is not None:
-            try:
-                conn.ping(reconnect=True)
-                self.conn = conn
-                return conn
-            except Exception:
-                try:
-                    conn.close()
-                except Exception:
-                    pass
-        self.conn = _new_connection()
-        return self.conn
+def find_docs(collection, query, projection=None, limit=0, sort=None):
+    cursor = get_database()[collection].find(query, projection)
+    if sort:
+        cursor = cursor.sort(sort)
+    if limit:
+        cursor = cursor.limit(limit)
+    return list(cursor)
 
-    def __exit__(self, exc_type, exc, tb):
-        conn = self.conn
-        self.conn = None
-        if conn is None:
-            return False
-        # A connection that was in the middle of a failure is not safe to hand to
-        # the next caller, so it is dropped rather than returned to the set.
-        if exc_type is not None:
-            try:
-                conn.close()
-            except Exception:
-                pass
-            return False
-        with _pool_lock:
-            if len(_pool) < DB_POOL_MAX:
-                _pool.append(conn)
-                return False
+
+def find_one_doc(collection, query, projection=None):
+    return get_database()[collection].find_one(query, projection)
+
+
+def update_doc(collection, query, changes):
+    result = get_database()[collection].update_one(query, changes)
+    return bool(getattr(result, "matched_count", 0))
+
+
+def reference_values(key, oid=None):
+    """Every form one reference can take.
+
+    A queue is pointed at by its own record reference. That reference is stored
+    as a database id, but arrives from the switch as plain text, and older
+    records elsewhere hold it as text too. Looking for both costs nothing and
+    means a queue is never missed on a technicality.
+    """
+    key = (key or "").strip()
+    if not key:
+        return []
+    values = [key]
+    factory = oid if oid is not None else ObjectId
+    if factory is not None and re.fullmatch(r'[0-9a-fA-F]{24}', key):
         try:
-            conn.close()
+            values.insert(0, factory(key))
         except Exception:
             pass
-        return False
+    return values
 
 
-_table_cache = {}
-_table_cache_lock = threading.Lock()
-TABLE_CACHE_SECONDS = 60.0
+AGENT_FIELDS = {
+    "_id": 0, "queue_uuid": 1, "name": 1, "contact": 1, "user_detail": 1, "type": 1,
+    "status": 1, "state": 1, "max_no_answer": 1, "wrap_up_time": 1,
+    "last_bridge_start": 1, "last_bridge_end": 1, "last_offered_call": 1,
+    "last_status_change": 1, "no_answer_count": 1, "calls_answered": 1,
+    "talk_time": 1, "ready_time": 1,
+}
 
-
-def table_exists(name, now=None):
-    """Whether an optional table is present.
-
-    Queue records and the running order of people inside a queue are still being
-    moved into this database. Checking first means a half-finished move shows up
-    as "fewer details available", never as a failed call.
-    """
-    now = now if now is not None else time.time()
-    with _table_cache_lock:
-        cached = _table_cache.get(name)
-        if cached and cached[0] > now:
-            return cached[1]
-    found = False
-    try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT 1 AS present FROM information_schema.TABLES "
-                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s LIMIT 1",
-                    (name,),
-                )
-                found = cur.fetchone() is not None
-    except Exception as e:
-        log("error", "table check failed", table=name, error=str(e))
-        found = False
-    with _table_cache_lock:
-        _table_cache[name] = (now + TABLE_CACHE_SECONDS, found)
-    return found
-
-
-AGENT_COLUMNS = (
-    "uuid, queue_uuid, name, user_detail, type, contact, status, state, "
-    "max_no_answer, wrap_up_time, reject_delay_time, busy_delay_time, "
-    "no_answer_delay_time, last_bridge_start, last_bridge_end, last_offered_call, "
-    "last_status_change, no_answer_count, calls_answered, talk_time, ready_time"
-)
+QUEUE_FIELDS = {
+    "_id": 1, "name": 1, "extension": 1, "domain": 1, "type": 1,
+    "settings": 1, "wrap_seconds": 1, "max_wait_time": 1,
+}
 
 
 def load_queue(queue_key):
-    """The queue's own record, when this database has one yet.
-
-    Only used for extra detail: the switch already tells us the queue and how it
-    should ring, so a missing record never stops a call being answered.
-    """
-    if not table_exists("queues"):
-        return None
+    """The queue's own record. Used for the settings the switch does not send:
+    how long somebody spends writing up notes, and the ring order to fall back on."""
     ident, domain = split_agent_name(queue_key)
+    values = reference_values(queue_key)
+    if not values:
+        return None
     try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                if domain:
-                    cur.execute(
-                        "SELECT uuid, extension, company_uuid, domain, name, settings "
-                        "FROM queues WHERE (uuid = %s OR extension = %s) AND domain = %s LIMIT 1",
-                        (queue_key, ident, domain),
-                    )
-                else:
-                    cur.execute(
-                        "SELECT uuid, extension, company_uuid, domain, name, settings "
-                        "FROM queues WHERE uuid = %s OR extension = %s LIMIT 1",
-                        (queue_key, ident),
-                    )
-                return cur.fetchone()
+        row = find_one_doc(QUEUES, {"_id": {"$in": values}}, QUEUE_FIELDS)
+        if row:
+            return row
+        # Not a record reference, so it is being called by its extension. The
+        # company's domain is part of the lookup because two companies can each
+        # have a queue on the same extension number.
+        query = {"extension": ident}
+        if domain:
+            query["domain"] = domain
+        return find_one_doc(QUEUES, query, QUEUE_FIELDS)
     except Exception as e:
         log("error", "queue lookup failed", queue=queue_key, error=str(e))
         return None
 
 
 def load_tiers(queue_idents):
-    """Who is in this queue and in what order, when that is recorded separately.
+    """Who is in this queue and in what order.
 
-    Returns a lookup of person to their round and position. Missing means every
-    person in the queue is treated as equal, which is how a simple queue behaves.
+    Returns a lookup of person to their round and position. Empty means everybody
+    in the queue is treated as equal, which is how a simple queue behaves.
     """
-    if not queue_idents or not table_exists("tiers"):
+    if not queue_idents:
         return {}
-    placeholders = ", ".join(["%s"] * len(queue_idents))
     try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT agent, level, position, state FROM tiers "
-                    "WHERE queue IN (%s)" % placeholders,
-                    tuple(queue_idents),
-                )
-                rows = cur.fetchall() or []
+        rows = find_docs(
+            TIERS,
+            {"queue": {"$in": list(queue_idents)}},
+            {"_id": 0, "agent": 1, "level": 1, "position": 1, "state": 1},
+        )
     except Exception as e:
-        log("error", "tier lookup failed", queues=queue_idents, error=str(e))
+        log("error", "tier lookup failed", queues=list(queue_idents), error=str(e))
         return {}
     tiers = {}
     for row in rows:
         name = (row.get("agent") or "").strip()
         if name:
             tiers[name] = {
-                "level": int(row.get("level") or 0),
-                "position": int(row.get("position") or 0),
+                "level": _as_int(row.get("level")),
+                "position": _as_int(row.get("position")),
                 "state": (row.get("state") or "").strip(),
             }
     return tiers
 
 
-def load_agents(queue_uuid=None, names=None):
+def load_agents(queue_id=None, names=None):
     """The people attached to a queue, with the counters that decide who is next."""
     try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                if queue_uuid:
-                    cur.execute(
-                        "SELECT " + AGENT_COLUMNS + " FROM agents WHERE queue_uuid = %s",
-                        (queue_uuid,),
-                    )
-                elif names:
-                    placeholders = ", ".join(["%s"] * len(names))
-                    cur.execute(
-                        "SELECT " + AGENT_COLUMNS + " FROM agents WHERE name IN (%s)" % placeholders,
-                        tuple(names),
-                    )
-                else:
-                    return []
-                return cur.fetchall() or []
+        if queue_id is not None:
+            values = reference_values(queue_id) if isinstance(queue_id, str) else [queue_id]
+            if not values:
+                return []
+            return find_docs(AGENTS, {"queue_uuid": {"$in": values}}, AGENT_FIELDS)
+        if names:
+            return find_docs(AGENTS, {"name": {"$in": list(names)}}, AGENT_FIELDS)
+        return []
     except Exception as e:
-        log("error", "agent lookup failed", queue=queue_uuid, error=str(e))
+        log("error", "agent lookup failed", queue=queue_id, error=str(e))
         return []
 
 
 def load_agent_by_name(name):
     try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT " + AGENT_COLUMNS + " FROM agents WHERE name = %s LIMIT 1",
-                    (name,),
-                )
-                return cur.fetchone()
+        return find_one_doc(AGENTS, {"name": name}, AGENT_FIELDS)
     except Exception as e:
         log("error", "agent by name lookup failed", agent=name, error=str(e))
         return None
@@ -341,30 +277,24 @@ def update_agent(name, queue_id, assignments, increments=None):
 
     Everything here is bookkeeping. If it fails, the worst outcome is that the
     next routing decision is made on slightly older figures, so a failure is
-    logged and swallowed rather than passed back to the switch.
+    logged and swallowed rather than passed back to whoever reported it.
     """
     if not name:
         return False
-    sets = []
-    values = []
-    for column, value in (assignments or {}).items():
-        sets.append("`%s` = %%s" % column)
-        values.append(value)
-    for column, amount in (increments or {}).items():
-        sets.append("`%s` = `%s` + %%s" % (column, column))
-        values.append(amount)
-    if not sets:
+    changes = {}
+    if assignments:
+        changes["$set"] = assignments
+    if increments:
+        changes["$inc"] = increments
+    if not changes:
         return False
-    sql = "UPDATE agents SET " + ", ".join(sets) + " WHERE name = %s"
-    values.append(name)
+    query = {"name": name}
     if queue_id:
-        sql += " AND queue_uuid = %s"
-        values.append(queue_id)
+        values = reference_values(queue_id)
+        if values:
+            query["queue_uuid"] = {"$in": values}
     try:
-        with borrowed_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, tuple(values))
-                return cur.rowcount > 0
+        return update_doc(AGENTS, query, changes)
     except Exception as e:
         log("error", "agent update failed", agent=name, error=str(e))
         return False
@@ -443,7 +373,36 @@ def resolve_extension(row, user_detail):
     return ""
 
 
-def duty_state(row, now):
+def queue_wrap_seconds(queue):
+    """How long somebody spends writing up notes after a call on this queue.
+
+    It is set per queue, not per person: every agent record on this platform
+    holds nought, and the real number lives on the queue. Reading only the agent
+    record would mean nobody was ever given time to finish their notes.
+    """
+    if not queue:
+        return 0
+    settings = queue.get("settings") if isinstance(queue.get("settings"), dict) else {}
+    return _as_int(settings.get("wrapup_time")) or _as_int(queue.get("wrap_seconds"))
+
+
+def queue_ring_strategy(queue):
+    """The ring order saved against the queue, used only when the switch does not
+    say which one it wants."""
+    if not queue:
+        return ""
+    settings = queue.get("settings") if isinstance(queue.get("settings"), dict) else {}
+    strategy = settings.get("ring_strategy")
+    if isinstance(strategy, dict):
+        return str(strategy.get("value") or "")
+    return str(strategy or "")
+
+
+def wrap_seconds_for(row, wrap_default=0):
+    return _as_int(row.get("wrap_up_time")) or _as_int(wrap_default)
+
+
+def duty_state(row, now, wrap_default=0):
     """What somebody is doing right now, in the same words the rest of the product
     uses. Being free is not the same as being on duty for this queue: somebody can
     be at their desk and deliberately not taking queue calls, which is why "busy"
@@ -463,7 +422,7 @@ def duty_state(row, now):
     if status in BREAK_STATUSES:
         return BUSY
     if status in AVAILABLE_STATUSES:
-        wrap = _as_int(row.get("wrap_up_time"))
+        wrap = wrap_seconds_for(row, wrap_default)
         last_end = _as_int(row.get("last_bridge_end"))
         if wrap > 0 and last_end > 0 and now < last_end + wrap:
             return WRAPPING_UP
@@ -471,11 +430,11 @@ def duty_state(row, now):
     return OFF_DUTY
 
 
-def seconds_until_free(row, now):
+def seconds_until_free(row, now, wrap_default=0):
     """How long until somebody finishing their notes can be rung again."""
-    if duty_state(row, now) != WRAPPING_UP:
+    if duty_state(row, now, wrap_default) != WRAPPING_UP:
         return None
-    remaining = _as_int(row.get("last_bridge_end")) + _as_int(row.get("wrap_up_time")) - now
+    remaining = _as_int(row.get("last_bridge_end")) + wrap_seconds_for(row, wrap_default) - now
     return remaining if remaining > 0 else 0
 
 
@@ -498,12 +457,12 @@ def missed_too_many(row, now):
     return True
 
 
-def is_ringable(row, now):
+def is_ringable(row, now, wrap_default=0):
     if not str(row.get("contact") or "").strip():
         return False
     if missed_too_many(row, now):
         return False
-    return duty_state(row, now) == AVAILABLE
+    return duty_state(row, now, wrap_default) == AVAILABLE
 
 
 def agent_payload(row):
@@ -594,7 +553,7 @@ def order_agents(rows, strategy, tiers, now):
 
 
 def decide_ring(rows, tiers, strategy, waited_seconds, already_tried=(),
-                now=None, step_seconds=None):
+                now=None, step_seconds=None, wrap_default=0):
     """Who this caller should ring right now, and why.
 
     A queue can widen: the first group is tried first, and a wider group is added
@@ -622,7 +581,7 @@ def decide_ring(rows, tiers, strategy, waited_seconds, already_tried=(),
         level = (tiers.get(row.get("name")) or {}).get("level", 0)
         if level > open_level:
             continue
-        if is_ringable(row, now):
+        if is_ringable(row, now, wrap_default):
             ringable.append(row)
 
     ordered = order_agents(ringable, strategy, tiers, now)
@@ -640,17 +599,15 @@ def decide_ring(rows, tiers, strategy, waited_seconds, already_tried=(),
         if fresh:
             ordered = fresh
 
-    changes_in = None
     candidates = []
     if step_seconds > 0 and step_index < len(levels) - 1:
         candidates.append(int((step_index + 1) * step_seconds - waited_seconds))
     for row in rows:
-        remaining = seconds_until_free(row, now)
+        remaining = seconds_until_free(row, now, wrap_default)
         if remaining:
             candidates.append(int(remaining))
     candidates = [c for c in candidates if c and c > 0]
-    if candidates:
-        changes_in = min(candidates)
+    changes_in = min(candidates) if candidates else None
 
     return {
         "agents": ordered,
@@ -658,11 +615,13 @@ def decide_ring(rows, tiers, strategy, waited_seconds, already_tried=(),
         "step": step_index + 1,
         "steps": len(levels),
         "changes_in_seconds": changes_in,
-        "reason": explain(rows, ordered, strategy, step_index, len(levels), skipped_as_tried, now),
+        "reason": explain(rows, ordered, strategy, step_index, len(levels),
+                          skipped_as_tried, now, wrap_default),
     }
 
 
-def explain(rows, ordered, strategy, step_index, step_count, skipped_as_tried, now):
+def explain(rows, ordered, strategy, step_index, step_count, skipped_as_tried, now,
+            wrap_default=0):
     """Say in plain words why the list looks like this, so somebody reading the
     log can see what the queue did without reading the code."""
     if ordered:
@@ -674,10 +633,11 @@ def explain(rows, ordered, strategy, step_index, step_count, skipped_as_tried, n
         return "%s%s: %s.%s" % (prefix, how, who, tail)
     if not rows:
         return "Nobody is in this queue at all."
-    wrapping = sum(1 for r in rows if duty_state(r, now) == WRAPPING_UP)
-    on_call = sum(1 for r in rows if duty_state(r, now) == ON_A_CALL)
-    on_break = sum(1 for r in rows if duty_state(r, now) == BUSY)
-    signed_out = sum(1 for r in rows if duty_state(r, now) == OFF_DUTY)
+    states = [duty_state(r, now, wrap_default) for r in rows]
+    wrapping = states.count(WRAPPING_UP)
+    on_call = states.count(ON_A_CALL)
+    on_break = states.count(BUSY)
+    signed_out = states.count(OFF_DUTY)
     missed = sum(1 for r in rows if missed_too_many(r, now))
     parts = [text for text in (
         "%d finishing notes" % wrapping if wrapping else "",
@@ -707,14 +667,14 @@ def cached_queue_agents(queue_key, loader, now=None):
     with _cache_lock:
         hit = _agent_cache.get(queue_key)
         if hit and hit[0] > now:
-            return hit[1], hit[2]
-    rows, tiers = loader(queue_key)
+            return hit[1]
+    answer = loader(queue_key)
     with _cache_lock:
-        _agent_cache[queue_key] = (now + AGENT_CACHE_SECONDS, rows, tiers)
+        _agent_cache[queue_key] = (now + AGENT_CACHE_SECONDS, answer)
         if len(_agent_cache) > 2000:
             for key in [k for k, v in _agent_cache.items() if v[0] <= now]:
                 _agent_cache.pop(key, None)
-    return rows, tiers
+    return answer
 
 
 def call_memory(call_uuid, now=None):
@@ -765,7 +725,7 @@ def tried_names(entry, call_timeout, now=None):
 
 
 # ---------------------------------------------------------------------------
-# Putting a queue key together with the people in it
+# Putting a queue together with the people in it
 # ---------------------------------------------------------------------------
 
 def queue_identifiers(queue_key, queue_row):
@@ -776,7 +736,7 @@ def queue_identifiers(queue_key, queue_row):
     if key:
         idents.append(key)
     if queue_row:
-        for value in (queue_row.get("uuid"), queue_row.get("extension"), queue_row.get("name")):
+        for value in (queue_row.get("_id"), queue_row.get("extension"), queue_row.get("name")):
             value = str(value or "").strip()
             if value and value not in idents:
                 idents.append(value)
@@ -790,22 +750,23 @@ def queue_identifiers(queue_key, queue_row):
 
 
 def load_queue_roster(queue_key):
-    """Everyone in a queue, however this database happens to record it today.
+    """Everyone in a queue, the queue's own settings, and the order they sit in.
 
     The direct link from a person to their queue is tried first because it is the
-    one that always exists. The separate running-order table is used when it is
-    there, and simply skipped when it is not.
+    one that always exists and is the one the database is indexed for. The
+    separate running-order records are used where they exist and skipped where
+    they do not.
     """
     queue_row = load_queue(queue_key)
     idents = queue_identifiers(queue_key, queue_row)
 
-    queue_uuid = str((queue_row or {}).get("uuid") or "").strip() or queue_key
-    rows = load_agents(queue_uuid=queue_uuid)
+    queue_id = (queue_row or {}).get("_id") or queue_key
+    rows = load_agents(queue_id=queue_id)
 
     tiers = load_tiers(idents)
     if not rows and tiers:
         rows = load_agents(names=sorted(tiers.keys()))
-    return rows, tiers
+    return rows, tiers, (queue_row or {})
 
 
 # ---------------------------------------------------------------------------
@@ -931,15 +892,21 @@ class QueueAgentHandler(BaseHTTPRequestHandler):
         waited = max(0.0, started - entry.get("first_seen", started))
 
         try:
-            rows, tiers = cached_queue_agents(queue_key, load_queue_roster, started)
+            rows, tiers, queue = cached_queue_agents(queue_key, load_queue_roster, started)
         except Exception as e:
             log("error", "could not read the queue", queue=queue_key, error=str(e))
-            rows, tiers = [], {}
+            rows, tiers, queue = [], {}, {}
+
+        # The switch normally says how the queue should ring. When it does not,
+        # the queue's own saved setting is used rather than a guess.
+        if not (strategy or "").strip():
+            strategy = queue_ring_strategy(queue)
 
         decision = decide_ring(
             rows, tiers, strategy, waited,
             already_tried=tried_names(entry, call_timeout, started),
             now=now,
+            wrap_default=queue_wrap_seconds(queue),
         )
         chosen = decision["agents"]
 
@@ -994,7 +961,6 @@ class QueueAgentHandler(BaseHTTPRequestHandler):
 
         assignments = {"last_status_change": now}
         increments = {}
-        recorded = False
 
         if action == "state":
             state = str(body.get("state") or "").strip()
@@ -1067,29 +1033,28 @@ def _housekeeping():
 
 
 def main():
-    if pymysql is None:
-        log("fatal", "pymysql is required but is not installed")
-        return
-    if not MYSQL_DSN:
-        log("fatal", "MYSQL_DSN environment variable is required")
-        return
-
     host, port = LISTEN_ADDR.rsplit(":", 1)
     host = host if host and host != "localhost" else "127.0.0.1"
     port = int(port)
 
-    try:
-        with borrowed_connection() as conn:
-            conn.ping()
-        log("info", "MySQL connection verified OK")
-    except Exception as e:
-        # Not fatal on purpose. Starting up and answering "nobody is free" is far
-        # better than refusing to start, which would leave the port dead again.
-        log("error", "MySQL connection failed at start-up", error=str(e))
+    # Both of these are wrong-but-survivable on purpose. Refusing to start would
+    # leave the port dead, which is the exact problem this service exists to fix.
+    # Started and answering "nobody is free" is the better of the two failures,
+    # and it says so loudly in the log every time it is asked.
+    if MongoClient is None:
+        log("error", "the MongoDB driver is missing - install python3-pymongo. "
+                     "Until then every queue will be answered as nobody free")
+    if not MONGODB_URI:
+        log("error", "MONGODB_URI is not set - every queue will be answered as nobody free")
 
-    for table in ("queues", "tiers"):
-        if not table_exists(table):
-            log("warn", "optional table is missing, carrying on without it", table=table)
+    try:
+        database = get_database()
+        database.command("ping")
+        log("info", "MongoDB connection verified OK", database=MONGODB_DATABASE,
+            queues=database[QUEUES].estimated_document_count(),
+            agents=database[AGENTS].estimated_document_count())
+    except Exception as e:
+        log("error", "MongoDB connection failed at start-up", error=str(e))
 
     threading.Thread(target=_housekeeping, daemon=True).start()
 
