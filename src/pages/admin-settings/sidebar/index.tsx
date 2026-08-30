@@ -116,7 +116,21 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'ExtensionIcon',
           path: '/admin-settings/people',
         },
+        /* Access is one decision made in four steps, so the four screens are
+           listed in the order they should be used rather than alphabetically or
+           in the order they happened to be built. The reference table sits last:
+           it explains the model but decides nothing. */
         {
+          /* Step 1 — the front door, and the only screen that says what order
+             the rest go in. */
+          title: 'How access works',
+          icon: 'LockFilled',
+          path: '/admin-settings/access-control',
+          enabled: IS_ADMIN,
+          visible: IS_ADMIN,
+        },
+        {
+          /* Step 2 — what a role can do. */
           title: 'Roles',
           icon: 'RoleIcon',
           path: '/admin-settings/roles',
@@ -124,7 +138,16 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: IS_ADMIN,
         },
         {
-          /* What a role should hold, as opposed to what one happens to hold. */
+          /* Step 3 — roles say what somebody may do. This says who to. */
+          title: 'Admin scope',
+          icon: 'LockFilled',
+          path: '/admin-settings/admin-scope',
+          enabled: IS_ADMIN,
+          visible: IS_ADMIN,
+        },
+        {
+          /* Step 4 — what a role should hold, as opposed to what one happens
+             to hold, and what a brand-new person starts on. */
           title: 'Default permissions',
           icon: 'RoleIcon',
           path: '/admin-settings/default-permissions',
@@ -132,10 +155,10 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: IS_ADMIN,
         },
         {
-          /* Roles say what somebody may do. This says who they may do it to. */
-          title: 'Admin scope',
-          icon: 'LockFilled',
-          path: '/admin-settings/admin-scope',
+          /* The reference table. Every capability against every kind of person. */
+          title: 'What each role can do',
+          icon: 'RoleIcon',
+          path: '/admin-settings/capability-matrix',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
