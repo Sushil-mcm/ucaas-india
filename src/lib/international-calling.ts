@@ -32,15 +32,16 @@
  *
  *   3. Nothing configured means everything allowed. Today the platform places
  *      every call, everywhere, for everybody. An account that has never opened
- *      this screen must keep behaving exactly that way. Only a restriction an
- *      admin deliberately turned on may stop a call. Silently cutting off every
- *      company that never configured this would be a far worse fault than the
- *      gap being fixed.
+ *      these screens must keep behaving exactly that way. Only a restriction an
+ *      admin deliberately turned on — on the company, or on that one person —
+ *      may stop a call. Silently cutting off every company that never
+ *      configured this would be a far worse fault than the gap being fixed.
  *
- *   4. The company list is the ceiling. A person can be refused a country the
- *      company allows. A person can never be granted a country the company
- *      forbids — which falls out of the order the checks run in, not out of a
- *      rule someone has to remember.
+ *   4. The company list is the ceiling, and the person can only narrow it
+ *      further. A person can be refused a country the company allows, including
+ *      inside a company that has restricted nothing at all. A person can never
+ *      be granted a country the company forbids — which falls out of the order
+ *      the checks run in, not out of a rule someone has to remember.
  *
  *   5. A number we cannot make sense of is never blocked. Emergency numbers,
  *      feature codes like *67, empty boxes and unrecognisable strings all pass.
