@@ -267,21 +267,6 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       ].filter(Boolean),
     },
     {
-      /* The outbound dialer had no entry in Admin at all. The only "Campaigns"
-         this nav carried was the 10DLC SMS registration under Compliance — a
-         different object entirely — so an admin looking for outbound campaigns
-         landed somewhere unrelated. This links the real dialer campaigns, and
-         the 10DLC item below is now named "SMS Campaigns" so the two cannot be
-         read as the same thing. Guards mirror the `/campaign` routes. */
-      key: 'admin-settings.outbound_campaigns',
-      id: 'outbound_campaigns',
-      title: 'Outbound Campaigns',
-      path: '/campaign/all-campaigns',
-      icon: 'DialerIcon',
-      enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
-      visible: Boolean(features?.plan_features?.campaign?.action?.view),
-    },
-    {
       title: 'AI Tools',
       type: 'accordion',
       value: 'knowledge',

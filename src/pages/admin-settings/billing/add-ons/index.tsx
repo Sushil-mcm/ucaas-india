@@ -60,11 +60,33 @@ const AddOnCard = ({ addOn, state }: { addOn: AddOn; state: AddOnState }) => {
         label="How it is charged"
         description={addOn.billing}
         control={
-          /* Not a price. Nothing supplies one, and this is the one screen where
-             a made-up figure would be believed and budgeted against. */
-          <span className="text-xs text-gray-500">{priceText()}</span>
+          addOn.monthlyPrice === undefined ? (
+            /* Still no price for this one. Better a plain admission than a
+               figure somebody budgets against. */
+            <span className="text-xs text-gray-500">{priceText()}</span>
+          ) : (
+            <span className="text-sm font-semibold tabular-nums text-gray-900">
+              ${addOn.monthlyPrice.toFixed(2)}
+              <span className="ml-1 text-xs font-normal text-gray-500">a month</span>
+            </span>
+          )
         }
       />
+
+      {addOn.included !== undefined ? (
+        <SettingRow
+          label="What that includes"
+          description={`${addOn.included.toLocaleString()} ${addOn.includedUnit ?? ''} each month. Unused ones do not carry over.`.trim()}
+          control={
+            addOn.overageRate !== undefined ? (
+              <span className="text-xs text-gray-600 tabular-nums">
+                then ${addOn.overageRate.toFixed(2)} per{' '}
+                {(addOn.includedUnit ?? 'unit').replace(/s$/, '')}
+              </span>
+            ) : undefined
+          }
+        />
+      ) : null}
 
       {addOn.detail?.length ? (
         <>
@@ -115,7 +137,7 @@ const AddOns = () => {
               : `${counts.included} of ${ADD_ONS.length} are on your plan already.`
           }
           status="coming-soon"
-          note="Prices are not shown because the platform does not publish them yet, and add-ons cannot be bought from here. To add or remove one, speak to your account manager — they take effect as licences on your plan."
+          note="Where a price is shown it is the current monthly price. Add-ons cannot be bought from here yet — to add or remove one, speak to your account manager. They take effect as licences on your plan."
         >
           <SettingRow
             label="An add-on is a licence, not a switch"

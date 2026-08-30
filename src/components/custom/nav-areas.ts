@@ -37,10 +37,11 @@ export const NAV_AREAS: NavArea[] = [
      * moving the item to Admin would light the Admin tab while the user is on
      * the dialer and open a two-icon rail on top of the Admin Hub sidebar.
      *
-     * The admin's way in is a separate concern and lives where an admin looks:
-     * "Outbound Campaigns" in `pages/admin-settings/sidebar`. Before that entry
-     * existed the only "Campaigns" in Admin was 10DLC SMS registration, which
-     * is a different object.
+     * Admin has no entry for it, by request. Outbound campaigns are run, not
+     * configured, so Activity is the only way in. The "SMS Campaigns" item under
+     * Compliance keeps that name: it is 10DLC registration, a different object,
+     * and the clearer name is worth keeping whether or not the dialer is
+     * listed alongside it.
      */
     id: 'activity',
     label: 'Activity',
