@@ -106,3 +106,70 @@ quietly.
 Items 1, 2 and 4 look like they belong to `default-api`, which has no source. Worth
 confirming before any of it is scheduled — see `docs/queue-stats-backend-plan.md` for how
 that has bitten already.
+
+---
+
+## Verified against the running API, 31 August 2026
+
+Before building any of the above I checked what the backend can actually do. Most of it
+cannot be built, and the reason is the same one every time.
+
+### Deleted users and restore — blocked, but closer than it looks
+
+**The data is already there.** The `User` model in `default-api` is `paranoid: true`, so a
+removal is a soft delete: the row survives with a `deleted_at` stamp. Our own
+"Joining and leaving" page says the same in plain words — *"Their record is kept rather than
+destroyed, but nothing lists removed people."*
+
+**What is missing is two endpoints.** Nothing in the list controller can return deleted rows
+— no `paranoid: false`, no include-deleted flag — and there is no restore route. So the
+records sit in the database, unreachable.
+
+That is a small backend change. It is blocked only because `default-api` ships as compiled
+`dist/` with no source and no git.
+
+### Move someone to another site — unconfirmed
+
+`site_uuid` appears throughout the user controller, but only in read attribute lists. Whether
+the update handler will write a new one could not be established from compiled code. Do not
+schedule this until it is checked.
+
+### Bulk delete — recommend NOT building it
+
+`deleteMember` is per-user, so a bulk action would be a loop. That is possible. It is also
+the wrong thing to build **while restore is impossible**: it makes an irreversible action
+easy to perform on many people at once, with no way back. Build restore first, then this.
+
+Bulk *admin access* is already covered — `assignRoleBulkUsers` does bulk role change from
+both People and Roles.
+
+### A workaround I looked at and rejected
+
+`tenant-api` has full TypeScript source and could be given a `User` model pointing at the
+same table, exposing list-deleted and restore. It would work.
+
+I am not recommending it. Queue statistics belonged in `esl-manager` because live call state
+is genuinely that service's domain. Users are `default-api`'s domain, and putting a
+user-restore endpoint in `tenant-api` would be placing it in the wrong service for
+convenience — the kind of shortcut that is invisible for a year and then very expensive.
+
+### What was built
+
+The **email column** on People. The row already carried the address and it was being thrown
+away; two people with the same name were indistinguishable. Front end only, no API change.
+
+---
+
+## The ask, made concrete
+
+This module is one small change away from the feature that matters, and that change cannot be
+made. So the `default-api` source is no longer a background risk — it is **the** blocker here.
+
+When you find whoever deployed version 1.2.9, the specific ask is:
+
+1. `GET /api/user/list` — accept a flag that includes soft-deleted rows
+2. `POST /api/user/restore/:uuid` — clear `deleted_at`
+3. Confirm whether `POST /api/user/update/:uuid` writes `site_uuid`
+
+Items 1 and 2 are perhaps an hour's work for someone holding the source. They turn deleting a
+colleague from an unrecoverable mistake into a recoverable one.

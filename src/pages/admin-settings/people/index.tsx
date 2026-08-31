@@ -177,6 +177,16 @@ const UsersExtension: FC = () => {
     //   cell: ({ getValue }) => <NumberWithFlag number={getValue()} />,
     // },
     {
+      /* Two people called Sam Patel are indistinguishable in this list. The
+         reference product leads with the email address for exactly that reason,
+         and the row already carries it — it was fetched and thrown away. */
+      header: 'Email',
+      accessorKey: 'email',
+      cell: ({ row }: any) => (
+        <span className="text-gray-600">{row?.original?.email || '—'}</span>
+      ),
+    },
+    {
       header: 'Caller Id',
       accessorKey: 'caller_id',
       cell: ({ getValue, row }) => {
