@@ -12,6 +12,7 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomAvatar from '../custom-avatar';
+import CompanyLogoMark from '../company-logo-mark';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import SideDrawer from '../side-drawer';
@@ -655,6 +656,7 @@ const Header = () => {
                   onOpenChange={(val) => setProfileState(val ? 'profile' : null)}
                 >
                   <PopoverTrigger className="cursor-pointer flex items-center gap-4 h-9 p-1 pr-2 rounded-xl border border-transparent hover:bg-ucass-primary-200">
+                    <CompanyLogoMark />
                     <CustomAvatar
                       name={`${user?.user_info?.first_name} ${user?.user_info?.last_name || ''}`}
                       showPresence

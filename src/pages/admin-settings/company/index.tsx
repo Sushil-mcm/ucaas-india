@@ -5,6 +5,7 @@ import CompanyDetails from './company-details';
 import LocationFacts from './location-facts';
 import CompanyRecord from './company-record';
 import CompanySettingsCard from './company-settings-card';
+import CompanyLogo from './company-logo';
 import SetupGuide from '@/components/mcm/setup-guide';
 import { Button } from '@/components/ui/button';
 import NewSiteSteps from './new-site-steps';
@@ -209,6 +210,7 @@ const CompanyInfo = () => {
             {/* Company-wide rules belong on the company screen, which is where
                 established systems put them and where an admin looks. The editor
                 itself stays under Phone System — one editor, one record. */}
+            <CompanyLogo />
             <CompanySettingsCard />
 
             {/* A location is not a label — it decides how calls behave for
