@@ -24,7 +24,7 @@ import { SettingCard } from '@/components/mcm/setting-card';
 import {
   PLANS,
   PLAN_ADD_ONS,
-  describeAllowance,
+  describeIncludedAllowance,
   isUnlimited,
   yearlySavingPercent,
   type PlanDefinition,
@@ -44,7 +44,7 @@ const ROWS: Row[] = [
   {
     label: 'Domestic calling',
     counted: true,
-    value: (p) => describeAllowance(p.includes.domesticMinutes, 'minutes'),
+    value: (p) => describeIncludedAllowance(p.includes.domesticMinutes, 'minutes'),
     /* No rate line where calling is unlimited: there is no "then", because the
        allowance cannot run out. Printing one would imply it could. */
     rate: (p) =>
@@ -55,7 +55,7 @@ const ROWS: Row[] = [
   {
     label: 'Text messages',
     counted: true,
-    value: (p) => describeAllowance(p.includes.sms, 'texts'),
+    value: (p) => describeIncludedAllowance(p.includes.sms, 'texts'),
     rate: (p) =>
       !isUnlimited(p.includes.sms) && p.overage?.smsRate !== undefined
         ? `then ${formatMoney(p.overage.smsRate)} each`
@@ -91,16 +91,21 @@ const PlanComparison = () => (
                 >
                   <span className="block text-sm font-semibold text-gray-900">{plan.name}</span>
                   <span className="block text-xs font-normal tabular-nums text-gray-600">
-                    {moneyOrUnavailable(plan.monthlyPerSeat)} a month
+                    {plan.monthlyPerSeat === 0
+                      ? 'No monthly fee'
+                      : `${moneyOrUnavailable(plan.monthlyPerSeat)} a month`}
                   </span>
-                  {/* The yearly price beside the monthly one, because paying for
-                      a year is cheaper and somebody comparing plans should not
-                      have to find that out on the next screen. The saving is
-                      worked out from the two prices rather than written down, so
-                      it cannot disagree with them. */}
-                  <span className="block text-xs font-normal tabular-nums text-gray-500">
-                    {moneyOrUnavailable(plan.yearlyPerSeat)} a year
-                    {yearlySavingPercent(plan) ? ` · save ${yearlySavingPercent(plan)}%` : ''}
+                  {/* A year is priced individually now, so there is no figure
+                      to show. yearlyPerSeat is null rather than 0 for exactly
+                      this reason - printing "$0 a year" would read as free, and
+                      omitting the line entirely would leave somebody assuming
+                      the monthly price is the only way to buy. */}
+                  <span className="block text-xs font-normal text-gray-500">
+                    {plan.yearlyPerSeat === null
+                      ? 'Annual billing on request'
+                      : `${moneyOrUnavailable(plan.yearlyPerSeat)} a year${
+                          yearlySavingPercent(plan) ? ` · save ${yearlySavingPercent(plan)}%` : ''
+                        }`}
                   </span>
                 </th>
               ))}

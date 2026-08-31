@@ -12,8 +12,28 @@ import { durationMap, PlanDurationMap, PRICE_FEATURES } from '../admin-settings/
 import { Check, InfoIcon } from '@/assets/icons';
 import { getEnv } from '@/lib/utils';
 import { useOrganization } from '@/hooks/use-organisation';
+import { PLANS } from '@/lib/plan-catalogue';
 
 export type PricingDropdownKey = 'virtual_phone' | 'international_calling' | 'sms' | 'learn';
+
+/* The plans shown here come from the billing catalogue, so a price on this page
+   cannot disagree with the price a customer is actually charged. This page used
+   to carry three hardcoded plan names with one identical price caption repeated
+   under every one of them, matching nothing we sell.
+
+   Only paid plans get a column - a free plan has no per-seat price to compare
+   and belongs in its own section rather than in a price grid. */
+const PAID_PLANS = PLANS.filter((plan) => plan.monthlyPerSeat > 0);
+
+/* A year is quoted individually, so there is no annual figure to print. Saying
+   that plainly beats printing a number nobody honours. */
+const planPriceLine = (plan?: (typeof PAID_PLANS)[number]): string => {
+  if (!plan) return '';
+  const monthly = `$${plan.monthlyPerSeat} per user, per month`;
+  return plan.yearlyPerSeat === null
+    ? `${monthly} · annual billing quoted on request`
+    : `${monthly} · $${plan.yearlyPerSeat} per user, per year`;
+};
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -620,14 +640,14 @@ const Pricing = () => {
                       <div className="flex flex-col items-center justify-center gap-1 w-full min-h-20">
                         <div className="flex items-center gap-3">
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
-                            Basic
+                            {PAID_PLANS[0]?.name ?? ''}
                           </h2>
                           <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
                             Popular
                           </span>
                         </div>
                         <small className="text-gray-800 font-normal">
-                          Annually: $20 | Monthly: $30
+                          {planPriceLine(PAID_PLANS[0])}
                         </small>
                       </div>
                     </div>
@@ -781,11 +801,11 @@ const Pricing = () => {
                       <div className="flex flex-col items-center justify-center gap-1 w-full min-h-20">
                         <div className="flex items-center gap-3">
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
-                            Pro
+                            {PAID_PLANS[1]?.name ?? ''}
                           </h2>
                         </div>
                         <small className="text-gray-800 font-normal">
-                          Annually: $20 | Monthly: $30
+                          {planPriceLine(PAID_PLANS[1])}
                         </small>
                       </div>
                     </div>
@@ -963,11 +983,11 @@ const Pricing = () => {
                       <div className="flex flex-col items-center justify-center gap-1 w-full min-h-20">
                         <div className="flex items-center gap-3">
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
-                            Enterprise
+                            {PAID_PLANS[2]?.name ?? ''}
                           </h2>
                         </div>
                         <small className="text-gray-800 font-normal">
-                          Annually: $20 | Monthly: $30
+                          {planPriceLine(PAID_PLANS[2])}
                         </small>
                       </div>
                     </div>

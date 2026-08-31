@@ -50,15 +50,27 @@ export const allowanceLeft = (allowance: Allowance, used: number): Allowance => 
 export const describeAllowance = (allowance: Allowance, unit: string): string =>
   isUnlimited(allowance) ? `Unlimited ${unit}` : `${Number(allowance).toLocaleString()} ${unit}`;
 
+/* The same thing, but for what a PLAN INCLUDES rather than what is left.
+ *
+ * Zero means two completely different things in those two places. Left over,
+ * zero means the allowance is spent. Included, zero means the plan never had
+ * one - you pay per unit from the first one. Printing "0 minutes" on a pricing
+ * table for a plan that works perfectly well reads as a mistake, so this says
+ * what is actually true. */
+export const describeIncludedAllowance = (allowance: Allowance, unit: string): string => {
+  if (isUnlimited(allowance)) return `Unlimited ${unit}`;
+  return Number(allowance) === 0 ? 'Pay as you go' : `${Number(allowance).toLocaleString()} ${unit}`;
+};
+
 export interface PlanDefinition {
   id: string;
   name: string;
   /* Per seat, per month, in US dollars, when billed monthly. */
   monthlyPerSeat: number;
-  /* Per seat for a whole year, billed once. Lower than twelve monthly payments
-     - that discount is the reason a yearly plan exists, so it is stored rather
-     than worked out from the monthly price by anybody who needs it. */
-  yearlyPerSeat: number;
+  /* Per seat for a whole year, billed once, or null where a year is priced
+     individually and the customer has to talk to us. null is not zero and must
+     never be shown as a price - the screens say "Contact us" instead. */
+  yearlyPerSeat: number | null;
   summary: string;
   /* What one seat includes each month. */
   includes: {
@@ -92,10 +104,32 @@ export interface PlanDefinition {
  * record - see UNLIMITED_STORED_THRESHOLD at the foot of this file for why. */
 export const PLANS: PlanDefinition[] = [
   {
+    id: 'basic',
+    name: 'Basic',
+    monthlyPerSeat: 0,
+    yearlyPerSeat: null,
+    summary: 'No monthly fee. You pay for the numbers you keep and the calls you make.',
+    /* Nothing is included, which is the point of this plan - it is not an
+       allowance of zero that ran out, it is pay-as-you-go from the first
+       minute. The screens say so in words rather than printing "0 minutes",
+       which reads like something went wrong. */
+    includes: { domesticMinutes: 0, sms: 0, numbers: 0 },
+    overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
+    maps: {
+      cost: '0 monthly',
+      free_calls: '0',
+      free_sms: '0',
+      did_count: '0',
+    },
+    notes: [
+      'There is no seat charge, so a number costs the same whether one person uses it or nobody does.',
+    ],
+  },
+  {
     id: 'starter',
     name: 'Starter',
     monthlyPerSeat: 18,
-    yearlyPerSeat: 162,
+    yearlyPerSeat: null,
     summary: '1,000 domestic minutes and 100 texts a month, per seat.',
     includes: { domesticMinutes: 1000, sms: 100, numbers: 1 },
     overage: { domesticMinuteRate: 0.02, smsRate: 0.04 },
@@ -110,7 +144,7 @@ export const PLANS: PlanDefinition[] = [
     id: 'professional',
     name: 'Professional',
     monthlyPerSeat: 30,
-    yearlyPerSeat: 270,
+    yearlyPerSeat: null,
     summary: 'Unlimited domestic calling and 500 texts a month, per seat.',
     includes: { domesticMinutes: UNLIMITED, sms: 500, numbers: 1 },
     /* No minute rate: domestic calling cannot run out on this plan. */
@@ -123,10 +157,10 @@ export const PLANS: PlanDefinition[] = [
     },
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
+    id: 'ultimate',
+    name: 'Ultimate',
     monthlyPerSeat: 42,
-    yearlyPerSeat: 378,
+    yearlyPerSeat: null,
     summary: 'Unlimited domestic calling and 1,000 texts a month, per seat.',
     includes: { domesticMinutes: UNLIMITED, sms: 1000, numbers: 1 },
     overage: { smsRate: 0.04 },
@@ -157,9 +191,13 @@ export const planByName = (planName: string | undefined | null): PlanDefinition 
    Worked out rather than written down, so the saving cannot disagree with the
    two prices it is the difference between. */
 export const yearlySavingPercent = (plan: PlanDefinition): number | null => {
+  const yearly = plan.yearlyPerSeat;
+  /* null means the year is priced individually. Checked before any arithmetic,
+     because Number(null) is 0 and would report a 100% saving. */
+  if (yearly === null || yearly === undefined) return null;
   const twelve = plan.monthlyPerSeat * 12;
-  if (!(twelve > 0) || !(plan.yearlyPerSeat > 0) || plan.yearlyPerSeat >= twelve) return null;
-  return Math.round(((twelve - plan.yearlyPerSeat) / twelve) * 100);
+  if (!(twelve > 0) || !(yearly > 0) || yearly >= twelve) return null;
+  return Math.round(((twelve - yearly) / twelve) * 100);
 };
 
 export interface AddOnDefinition {

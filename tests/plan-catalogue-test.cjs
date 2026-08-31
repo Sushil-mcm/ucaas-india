@@ -12,6 +12,7 @@ const {
   planByName,
   ratesForPlan,
   yearlySavingPercent,
+  describeIncludedAllowance,
   describeAllowance,
   describeStoredAllowance,
   storedAllowanceIsUnlimited,
@@ -34,15 +35,15 @@ const is = (name, actual, expected) => {
 };
 
 /* What is on sale, in the order a customer sees it. */
-is('three plans are sold', PLANS.map((p) => p.name), ['Starter', 'Professional', 'Enterprise']);
+is('four plans are sold', PLANS.map((p) => p.name), ['Basic', 'Starter', 'Professional', 'Ultimate']);
 
 /* The prices, per seat. */
 is('Starter is eighteen a month', planByName('Starter').monthlyPerSeat, 18);
-is('and a hundred and sixty-two a year', planByName('Starter').yearlyPerSeat, 162);
+is('with no published yearly price', planByName('Starter').yearlyPerSeat, null);
 is('Professional is thirty a month', planByName('Professional').monthlyPerSeat, 30);
-is('and two hundred and seventy a year', planByName('Professional').yearlyPerSeat, 270);
-is('Enterprise is forty-two a month', planByName('Enterprise').monthlyPerSeat, 42);
-is('and three hundred and seventy-eight a year', planByName('Enterprise').yearlyPerSeat, 378);
+is('nor does Professional', planByName('Professional').yearlyPerSeat, null);
+is('Ultimate is forty-two a month', planByName('Ultimate').monthlyPerSeat, 42);
+is('nor does Ultimate', planByName('Ultimate').yearlyPerSeat, null);
 
 /* The allowances. */
 is('Starter includes a thousand minutes', planByName('Starter').includes.domesticMinutes, 1000);
@@ -54,19 +55,21 @@ is(
 );
 is('with five hundred texts', planByName('Professional').includes.sms, 500);
 is(
-  'Enterprise calling is unlimited',
-  planByName('Enterprise').includes.domesticMinutes,
+  'Ultimate calling is unlimited',
+  planByName('Ultimate').includes.domesticMinutes,
   UNLIMITED,
 );
-is('with a thousand texts', planByName('Enterprise').includes.sms, 1000);
+is('with a thousand texts', planByName('Ultimate').includes.sms, 1000);
 
-/* A yearly plan saves a quarter against paying monthly, on every plan. */
-is('Starter saves a quarter over the year', yearlySavingPercent(planByName('Starter')), 25);
-is('so does Professional', yearlySavingPercent(planByName('Professional')), 25);
-is('and so does Enterprise', yearlySavingPercent(planByName('Enterprise')), 25);
+/* A year is priced individually now, so there is no saving to show. null is
+   the honest answer - and it matters that it is null rather than 0, because a
+   screen printing "save 0%" would be claiming a yearly plan exists. */
+is('no yearly saving on Starter', yearlySavingPercent(planByName('Starter')), null);
+is('nor on Professional', yearlySavingPercent(planByName('Professional')), null);
+is('nor on Ultimate', yearlySavingPercent(planByName('Ultimate')), null);
 
 /* Looking a plan up by the name the platform reports. */
-is('the lookup is not case-sensitive', planByName('enterprise').id, 'enterprise');
+is('the lookup is not case-sensitive', planByName('ultimate').id, 'ultimate');
 is('an unknown plan is refused rather than guessed', planByName('Platinum'), null);
 is('and so is no plan at all', planByName(''), null);
 is('as is nothing', planByName(null), null);
@@ -75,11 +78,11 @@ is('as is nothing', planByName(null), null);
 is('Starter charges for minutes past the allowance', ratesForPlan('Starter').domesticMinuteRate, 0.02);
 is('and four cents a text', ratesForPlan('Starter').smsRate, 0.04);
 is(
-  'Enterprise has no minute rate, because minutes cannot run out',
-  ratesForPlan('Enterprise').domesticMinuteRate,
+  'Ultimate has no minute rate, because minutes cannot run out',
+  ratesForPlan('Ultimate').domesticMinuteRate,
   undefined,
 );
-is('but texts still have one', ratesForPlan('Enterprise').smsRate, 0.04);
+is('but texts still have one', ratesForPlan('Ultimate').smsRate, 0.04);
 is('a plan we do not recognise gets no rates at all', ratesForPlan('Legacy Gold'), null);
 
 /* Unlimited, in both the forms it comes in. */
@@ -98,6 +101,38 @@ is(
   'Not available yet',
 );
 is('a real allowance is grouped for reading', describeStoredAllowance(1000, 'minutes'), '1,000 minutes');
+
+
+/* The entry plan - no seat charge, nothing included, pay per unit.
+   Its zero is a real zero and must not be mistaken for "unknown". */
+is('Basic costs nothing per seat', planByName('Basic').monthlyPerSeat, 0);
+is('and includes no minutes', planByName('Basic').includes.domesticMinutes, 0);
+is('and no texts', planByName('Basic').includes.sms, 0);
+is('and no numbers', planByName('Basic').includes.numbers, 0);
+is('but every minute has a price', ratesForPlan('Basic').domesticMinuteRate, 0.02);
+is('and so does every text', ratesForPlan('Basic').smsRate, 0.04);
+
+/* Zero included is not the same sentence as zero left. */
+is(
+  'an included zero reads as pay as you go',
+  describeIncludedAllowance(0, 'minutes'),
+  'Pay as you go',
+);
+is(
+  'a real allowance still reads as a number',
+  describeIncludedAllowance(1000, 'minutes'),
+  '1,000 minutes',
+);
+is(
+  'and unlimited still reads as unlimited',
+  describeIncludedAllowance('unlimited', 'minutes'),
+  'Unlimited minutes',
+);
+
+/* The old name must not quietly resolve to the renamed plan - a customer
+   record still saying "Enterprise" is unknown to us, not Ultimate. */
+is('the retired name resolves to nothing', planByName('Enterprise'), null);
+is('and has no rates', ratesForPlan('Enterprise'), null);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
