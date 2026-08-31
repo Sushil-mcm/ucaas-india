@@ -84,8 +84,12 @@ new = '''    if business_hours_state(company_operational_hours(db_name)) == OPER
 
 s = s.replace(old, new, 1)
 
-if s.count('closed-hours destination') != 2:
-    raise SystemExit('ABORT: expected two closed-hours log lines, found %d' % s.count('closed-hours destination'))
+# Count the LOG lines, not the phrase - it also appears in a comment, which is
+# what made the first version of this check fire on a correct patch.
+if s.count('outside opening hours, using the closed-hours destination') != 1:
+    raise SystemExit('ABORT: destination log line not inserted once')
+if s.count('outside opening hours but no closed-hours destination') != 1:
+    raise SystemExit('ABORT: fall-through log line not inserted once')
 if s.count('using voicemail') != 1:
     raise SystemExit('ABORT: voicemail fallback not inserted once')
 
