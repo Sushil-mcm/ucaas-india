@@ -60,6 +60,22 @@ import {
 export const RING_MIN_SECONDS = 5;
 export const RING_MAX_SECONDS = 60;
 
+/**
+ * The longest ring time a BULK change may set, which is deliberately shorter
+ * than what one person may choose for themselves.
+ *
+ * Setting one phone to ring for a minute is a preference. Setting every phone
+ * in the company to ring for a minute is an outage that looks like a working
+ * system: callers wait, nobody answers, and whoever made the change is the last
+ * to hear about it. One person choosing sixty seconds is reversible by that
+ * person; two hundred people set to sixty seconds is a support queue.
+ *
+ * So the ceiling is lower here than on the individual screen. It is a different
+ * constant rather than a smaller RING_MAX_SECONDS, because the individual limit
+ * is a real product choice and should not be quietly reduced to serve this one.
+ */
+export const RING_BULK_MAX_SECONDS = 45;
+
 /** Five seconds is one ring — how the shipped ring-time labels count. */
 const SECONDS_PER_RING = 5;
 
@@ -179,12 +195,15 @@ export const ringTimeLabel = (seconds: number): string => {
  * number outside the range the product's own screens allow is not a ring time,
  * and quietly rounding one into range would set a number nobody chose.
  */
-export const parseRingSeconds = (raw: unknown): number | null => {
+export const parseRingSeconds = (
+  raw: unknown,
+  maxSeconds: number = RING_MAX_SECONDS,
+): number | null => {
   if (raw === null || typeof raw === 'undefined' || raw === '') return null;
   const value = Number(raw);
   if (!Number.isFinite(value)) return null;
   if (!Number.isInteger(value)) return null;
-  if (value < RING_MIN_SECONDS || value > RING_MAX_SECONDS) return null;
+  if (value < RING_MIN_SECONDS || value > maxSeconds) return null;
   return value;
 };
 
@@ -414,13 +433,13 @@ export const planBulkUserUpdate = (person: any, choices: BulkChoices): BulkUserP
   }
 
   if (typeof choices.ring_seconds !== 'undefined') {
-    const wanted = parseRingSeconds(choices.ring_seconds);
+    const wanted = parseRingSeconds(choices.ring_seconds, RING_BULK_MAX_SECONDS);
     const devices = readDeviceOptions(callForwarding);
 
     if (wanted === null) {
       skipped.push({
         field: 'ring_seconds',
-        message: `A ring time must be a whole number of seconds between ${RING_MIN_SECONDS} and ${RING_MAX_SECONDS}.`,
+        message: `A ring time set for many people at once must be a whole number of seconds between ${RING_MIN_SECONDS} and ${RING_BULK_MAX_SECONDS}. One person can still choose up to ${RING_MAX_SECONDS} on their own settings.`,
       });
     } else if (devices.length === 0) {
       skipped.push({

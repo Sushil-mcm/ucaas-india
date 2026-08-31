@@ -1,5 +1,5 @@
 const {
-  RING_MIN_SECONDS, RING_MAX_SECONDS,
+  RING_MIN_SECONDS, RING_MAX_SECONDS, RING_BULK_MAX_SECONDS,
   asObject, ringTimeLabel, parseRingSeconds,
   readRecordingDirection, readOnDemandRecording, readVoicemailToText,
   readTranscription, readDeviceOptions, readRingSeconds,
@@ -78,6 +78,20 @@ t('a word is refused', parseRingSeconds('soon') === null);
 t('a fraction is refused rather than rounded', parseRingSeconds(12.5) === null);
 t('below the minimum is refused, not clamped', parseRingSeconds(RING_MIN_SECONDS - 1) === null);
 t('above the maximum is refused, not clamped', parseRingSeconds(RING_MAX_SECONDS + 1) === null);
+
+/* A bulk change may not ring every phone as long as one person may ring their
+   own. One phone at a minute is a preference; two hundred phones at a minute is
+   an outage that looks like a working system - callers wait, nobody answers,
+   and whoever made the change hears about it last. */
+t('the bulk ceiling is lower than the individual one', RING_BULK_MAX_SECONDS < RING_MAX_SECONDS);
+t('and it is forty-five seconds', RING_BULK_MAX_SECONDS === 45);
+t('a bulk ring time at the cap is accepted', parseRingSeconds(45, RING_BULK_MAX_SECONDS) === 45);
+t('one second over the cap is refused', parseRingSeconds(46, RING_BULK_MAX_SECONDS) === null);
+t('so is the individual maximum, in bulk', parseRingSeconds(60, RING_BULK_MAX_SECONDS) === null);
+t('but one person may still choose sixty', parseRingSeconds(60) === 60);
+t('the individual ceiling was not quietly lowered', RING_MAX_SECONDS === 60);
+t('the floor is shared and still refuses four', parseRingSeconds(4, RING_BULK_MAX_SECONDS) === null);
+t('the floor itself is accepted', parseRingSeconds(5, RING_BULK_MAX_SECONDS) === 5);
 t('the label counts rings the way the shipped list does', ringTimeLabel(30) === '6 times / 30 secs');
 t('one ring is singular', ringTimeLabel(5) === '1 time / 5 secs');
 
