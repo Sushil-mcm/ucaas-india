@@ -81,6 +81,8 @@ const GreetingNotification: FC<IGREETINGPROPS> = () => {
       <SettingCard
         title="Recorded messages"
         description="What a caller hears at each point. Each one is off until you turn it on and choose a recording."
+        status="coming-soon"
+        note="Your choices are saved, but no caller hears them yet — call routing does not play recordings at all. Nothing is lost: whatever you set here starts playing when it does."
       >
         {mediaOptionsGreetingNotifications.map(({ name, label, title, blurb }) => (
           <div key={name} className="user-settings-template-greeting-row">

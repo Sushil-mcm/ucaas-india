@@ -566,6 +566,17 @@ const CompanyHolidays = () => {
           </div>
           <div className="min-w-0">
             <p className="text-base font-semibold text-gray-900">Your holiday list</p>
+            {/* Honest about reach. Dates saved here are a company-wide list; what
+                actually closes a line is the holiday list inside that line's own
+                opening hours, which is a separate store. The two are bridged by
+                src/lib/company-holiday-import.ts, and nothing calls it yet - so
+                an admin who declares Christmas here and expects calls to divert
+                would be wrong, and needs telling on the screen rather than in a
+                document. */}
+            <p className="mt-1 text-xs text-amber-700">
+              Saved here, but not yet applied to your numbers on its own. A date only changes what
+              a caller hears once it is on that line&rsquo;s opening hours below.
+            </p>
             <p className="mt-0.5 text-xs text-gray-600">
               One list of the days your company is closed, kept in one place instead of typed again
               into every IVR, queue and user.
