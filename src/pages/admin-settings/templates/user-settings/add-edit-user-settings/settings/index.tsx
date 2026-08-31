@@ -160,7 +160,7 @@ const SettingPermission: FC<any> = ({ data }) => {
         <SettingCard
           title="Call recording"
           status="coming-soon"
-          note="Saved, but nothing is being recorded. Recording worked until 22 August and stopped when the call router was rebuilt; restoring it is separate from this setting."
+          note="Saved, but nothing is being recorded and nothing has been. Across 5,987 calls no recording has ever been made — this has not yet been built rather than having stopped working, so there is nothing missing from your account to recover."
           description="Whether calls are recorded automatically, or only when somebody chooses to start recording."
           aside={
             <Button
