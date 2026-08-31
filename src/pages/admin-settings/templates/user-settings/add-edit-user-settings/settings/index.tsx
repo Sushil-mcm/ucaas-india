@@ -100,8 +100,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="Where this company works"
-          status="coming-soon"
-          note="Saved, but no call uses it yet. The country and time zone here are what opening hours will be judged against once that is switched on."
+          status="active"
+          note="The time zone here is what opening hours are judged against on every incoming call."
           description="The country and clock everything else is measured against - opening hours, holidays, and the times shown in reports."
           aside={
             <Button type="button" variant="outline" onClick={() => openModal('regionalModal')}>
@@ -131,8 +131,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="When you are open"
-          status="coming-soon"
-          note="Saved, but calls are not routed by it yet — a call at 2am is treated exactly like one at 2pm. Nothing here changes what a caller hears until the switch reads it."
+          status="active"
+          note="Outside these hours, a number that rings a person goes to their voicemail instead of ringing an empty desk. Numbers pointed at a menu or a queue are not diverted yet — those still ring through at any hour."
           description="Calls outside these hours are handled differently - that is what the closed-hours action on your numbers and queues points at."
           aside={
             <Button
