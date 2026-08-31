@@ -159,8 +159,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="Call recording"
-          status="coming-soon"
-          note="Saved, but nothing is being recorded and nothing has been. Across 5,987 calls no recording has ever been made — this has not yet been built rather than having stopped working, so there is nothing missing from your account to recover."
+          status="active"
+          note="Recording itself is live for calls that come in to a person — the call is recorded, stored, and appears against that call in your call logs. Two things are not working yet, and both matter before you switch this on for real customers: the announcement is NOT played to the caller, so nobody is told the call is being recorded, and calls you make out or that arrive at a menu or a queue are not recorded at all. Most countries require the caller to be told, so treat this as ready to test rather than ready to use."
           description="Whether calls are recorded automatically, or only when somebody chooses to start recording."
           aside={
             <Button
