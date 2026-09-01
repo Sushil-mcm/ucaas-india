@@ -122,9 +122,20 @@ const SelectRole: FC<any> = ({
       {!viewPermission && (
         <div className="flex w-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
           <div className="flex w-full flex-col gap-3">
+            {/* The list below is ADMIN, SUB-ADMIN, MANAGER, AGENT, sitting
+                directly under a free-text name box. It reads as "which of these
+                is this person" rather than "which one shall I copy", so the role
+                being built looks like it has to be one of them. It does not: the
+                name above is the role, and this only decides what it starts
+                with. */}
             <h5 className="font-semibold text-gray-900 text-md">
-              Select a role to use as a starting point.
+              Which role should this one start from?
             </h5>
+            <p className="text-sm text-gray-600">
+              Its permissions are copied in as a starting point, then you change what you need.
+              The role you pick is not affected, and your new role keeps the name you typed
+              above.
+            </p>
             <RadioGroup
               className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
               value={selectedRole?.role_uuid}
@@ -151,17 +162,44 @@ const SelectRole: FC<any> = ({
       )}
       <div className="flex w-full rounded-xl border border-gray-200 bg-white">
         <div className="flex w-full flex-col gap-4 p-3 sm:p-4">
+          {/* Nothing was shown here until a starting point had been chosen — no
+              list, no message, just an empty white box. A new role therefore
+              looked like a form with no permissions in it, and the reasonable
+              conclusion was that nothing could be ticked. The step above is
+              required; it now says so here, where the missing thing is. */}
+          {!selectedRole?.permission && !viewPermission && (
+            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+              <p className="text-sm font-semibold text-gray-900">
+                Choose a starting point above first
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                Everything that role can do appears here, and you change what you need from
+                there. It is a copy — the role you pick is not affected.
+              </p>
+            </div>
+          )}
           {selectedRole?.permission && (
             // <RolePsermisions
             //   companyJson={companyJson}
             //   userJson={selectedRole?.permission?.plan_features}
             //   isRolesViewOnly={viewPermission}
             // />
-            <PermissionsAccordion
-              companyJson={companyJson}
-              userJson={extractPlanFeatures(selectedRole.permission)}
-              readOnly={viewPermission}
-            />
+            <>
+              {!viewPermission && (
+                /* The tree disables every other box in a group until that
+                   group's own "view" is ticked, which reads as half the list
+                   being broken unless somebody says why. */
+                <p className="mb-2 text-xs text-gray-600">
+                  Tick <b>view</b> in a section first — the rest of that section stays greyed
+                  out until somebody can see it at all.
+                </p>
+              )}
+              <PermissionsAccordion
+                companyJson={companyJson}
+                userJson={extractPlanFeatures(selectedRole.permission)}
+                readOnly={viewPermission}
+              />
+            </>
           )}
         </div>
       </div>
