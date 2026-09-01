@@ -11,6 +11,11 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AddCallQueue from './add-edit-call-queue';
 import { QUEUES_PATH, QUEUE_DEFAULT_TAB } from './queue-tabs';
 import { CALL_DISTRIBUTION_DATA } from './constant';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { allNumbersList } from '@/services/api';
+import { poolSummary } from '@/lib/queue-numbers';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Plus } from '@/assets/icons';
@@ -86,6 +91,15 @@ const CallQueues: FC = () => {
   const queryClient: any = useQueryClient();
   const debouncedSearch = useDebounce(searchedText || '', 1000);
   const { features } = useCompanyFeatures();
+
+  /* Every number the company owns, so the list can show which ones ring each
+     queue. Same key and endpoint the numbers screens use, so this shares their
+     cache rather than fetching a second copy. */
+  const { data: allNumbers = [] } = useQuery({
+    queryKey: ['numbersByLine'],
+    queryFn: () => fetchAllPages(allNumbersList),
+    staleTime: 60 * 1000,
+  });
   const phoneSystem = features?.plan_features?.phone_system_action;
 
   const hasQueueAccess = Boolean(phoneSystem?.access?.QUEUE);
@@ -136,6 +150,28 @@ const CallQueues: FC = () => {
     {
       header: 'Extension',
       accessorKey: 'extension',
+    },
+    {
+      /* Which outside numbers reach this queue. A queue does not store them -
+         each number stores where it forwards - so this is that relationship
+         read backwards. Without it, "no caller can reach this queue" and "this
+         queue is busy" looked identical from the list. */
+      header: 'Numbers',
+      accessorKey: 'did_numbers',
+      cell: ({ row }: any) => {
+        const pool = poolSummary(allNumbers, row?.original?._id);
+        if (!pool.count) {
+          return <span className="text-amber-700">No number</span>;
+        }
+        return (
+          <span className="flex flex-wrap items-center gap-1">
+            <NumberWithFlag number={pool.primary} />
+            {pool.count > 1 && (
+              <span className="text-gray-500">+{pool.count - 1}</span>
+            )}
+          </span>
+        );
+      },
     },
     {
       /* How calls are shared out. This was invisible from the list, so telling

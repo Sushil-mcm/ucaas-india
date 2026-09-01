@@ -36,6 +36,7 @@ import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
+import { BackButton } from './section-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -168,7 +169,7 @@ const FieldRow = ({
   control: React.ReactNode;
 }) => (
   <SettingRow label={label} description={description} status="coming-soon">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className="cs-savebar">
       <label className="flex cursor-pointer items-center gap-2">
         <Checkbox checked={included} onCheckedChange={onToggle} disabled={disabled} />
         <span className="text-xs font-semibold text-gray-900">
@@ -352,16 +353,16 @@ const CompanyBulkSettings = () => {
     (preview?.changed || 0) > 0;
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
         <p className="text-lg font-semibold text-gray-900">Apply to many people</p>
         <p className="text-xs text-gray-500">
           Set the same answer on everybody at once, instead of opening each person in turn.
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full min-h-0 max-w-[1040px] flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
             <p className="text-xs text-gray-700">
@@ -580,7 +581,7 @@ const CompanyBulkSettings = () => {
             )}
           </SettingCard>
 
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="cs-block flex flex-col gap-3">
             {!hasAnyChoice(choices) ? (
               <p className="text-xs text-gray-500">
                 Tick at least one setting above to see what would happen.
@@ -605,7 +606,15 @@ const CompanyBulkSettings = () => {
                 People are saved one at a time, so a long list takes a moment. Please leave this
                 page open until it finishes.
               </p>
-              <Button type="button" variant="primary" onClick={() => run()} disabled={!canRun}>
+              <BackButton />
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="cs-save"
+                onClick={() => run()}
+                disabled={!canRun}
+              >
                 {running
                   ? 'Applying...'
                   : `Apply to ${preview?.changed || 0} ${

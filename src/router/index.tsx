@@ -64,9 +64,6 @@ const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page
 const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
 const CompanyVoicemailPage = lazy(() => import('@/pages/admin-settings/company/page-voicemail'));
 const CompanyHolidaysPage = lazy(() => import('@/pages/admin-settings/company/page-holidays'));
-const CompanyAwayDatesPage = lazy(
-  () => import('@/pages/admin-settings/company/company-away-dates'),
-);
 const CompanyEmergency = lazy(
   () => import('@/pages/admin-settings/company/company-emergency-address'),
 );
@@ -75,13 +72,7 @@ const CompanyCalling = lazy(
 );
 const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/company-messaging'));
 const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
-const CompanyBulkSettingsPage = lazy(
-  () => import('@/pages/admin-settings/company/company-bulk-settings'),
-);
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
-const CompanyProfileFieldsPage = lazy(
-  () => import('@/pages/admin-settings/company/company-profile-fields'),
-);
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 const Performance = lazy(() => import('@/pages/performance'));
 const Login = lazy(() => import('@/pages/login'));
@@ -650,33 +641,9 @@ export const router = createBrowserRouter([
                   { path: 'voicemail', element: <CompanyVoicemailPage /> },
                   { path: 'emergency-address', element: <CompanyEmergency /> },
                   { path: 'holidays', element: <CompanyHolidaysPage /> },
-                  {
-                    /* Administrator-only, like Apply to people below: this
-                       writes every person's own settings record, which is a
-                       different order of thing to hand to whoever can merely
-                       view the phone system. */
-                    path: 'away-dates',
-                    element: (
-                      <ProtectedRoute element={<CompanyAwayDatesPage />} guard={{ adminOnly: true }} />
-                    ),
-                  },
                   { path: 'calling', element: <CompanyCalling /> },
                   { path: 'messaging', element: <CompanyMessagingPage /> },
                   { path: 'policies', element: <CompanyPoliciesPage /> },
-                  {
-                    /* Administrator-only, like Security below. Everything else
-                       in this area changes one company record; this one writes
-                       every person's own settings, which is a different order of
-                       thing to hand to whoever can view the phone system. */
-                    path: 'apply-to-people',
-                    element: (
-                      <ProtectedRoute
-                        element={<CompanyBulkSettingsPage />}
-                        guard={{ adminOnly: true }}
-                      />
-                    ),
-                  },
-                  { path: 'profile-fields', element: <CompanyProfileFieldsPage /> },
                   {
                     /* Administrator-only. It holds the sign-in policy, and the
                            phone-system permission is far too wide a key for that. */

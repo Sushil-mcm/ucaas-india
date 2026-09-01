@@ -11,6 +11,7 @@ import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import Loader from '@/components/custom/loader';
 import { useUser } from '@/hooks/use-user';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Icon } from '@/assets/icons/icon';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -118,6 +119,19 @@ const Login = () => {
   const navigate = useNavigate();
   const signUpResponseData = useRef<any>(null);
   const loginAccessTokenRef = useRef('');
+  /* Kept so a trusted device can finish sign-in from the /login response alone,
+     without a verify-otp round trip. */
+  const loginResponseRef = useRef<any>(null);
+  /* The choice has to outlive the session it was made in — it is read on the
+     next sign-in, before any code is sent. */
+  const REMEMBER_DEVICE_KEY = 'ucaas-remember-device';
+  const [rememberDevice, setRememberDevice] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(REMEMBER_DEVICE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState('');
   const [formData, setFormData] = useState<{ email: string; password: string }>();
@@ -149,12 +163,18 @@ const Login = () => {
       turnstileRef.current?.reset();
       const { auth, token } = getAuthResponseData(data);
       loginAccessTokenRef.current = token;
+      loginResponseRef.current = data;
       signUpResponseData.current = {
         ...auth,
         ...(token ? { token } : {}),
       };
       const email = auth?.email;
-      if (email) mutateSendOtp({ email, device_id: getDeviceId() });
+      if (email)
+        mutateSendOtp({
+          email,
+          device_id: getDeviceId(),
+          remember_device: rememberDevice,
+        });
     },
     onError: (err: any) => {
       const data = err?.response?.data || {};
@@ -265,9 +285,91 @@ const Login = () => {
   //     console.log({ err });
   //   },
   // });
+  /* Finishes sign-in once identity is settled — either the code was verified, or
+     the server recognised this device and skipped the code. Both paths land here
+     so they route identically. */
+  const finishSignIn = (data: any) => {
+    const {
+      result: userData,
+      auth: verifiedAuth,
+      token: verifiedToken,
+    } = getAuthResponseData(data);
+    const token =
+      verifiedToken ||
+      String(signUpResponseData.current?.token || loginAccessTokenRef.current || '').trim();
+    const auth = {
+      ...(signUpResponseData.current || {}),
+      ...verifiedAuth,
+      ...(token ? { token } : {}),
+    };
+
+    signUpResponseData.current = {
+      ...auth,
+      ...(token ? { token } : {}),
+    };
+
+    if (token) {
+      localStorage.setItem(SESSION_NAME, token);
+    }
+
+    const isPlanPaymentPending =
+      auth?.isPlanPaymentPending === true || auth?.isPlanPayemntPending === true;
+
+    if (token && isPlanPaymentPending) {
+      const msg =
+        data?.data?.data?.message ||
+        'Your current plan is no longer active. Please renew to avoid service interruptions.';
+      localStorage.setItem(SESSION_NAME, token);
+      if (auth?.company_uuid) {
+        sessionStorage.setItem(PLAN_PENDING_COMPANY_UUID_KEY, auth.company_uuid);
+      }
+      handleAlert({ text: msg, type: 'error' });
+      sessionStorage.setItem(RENEW_PLAN_FROM_APP_KEY, '1');
+      navigate('/renew-plan', { replace: true });
+      return;
+    }
+
+    const paymentVerified = auth?.payment_verified;
+    const freeDID = auth?.free_did;
+
+    if (!paymentVerified) {
+      navigate(`/payment`, {
+        state: {
+          isLogin: true,
+          signUpResponseData,
+          accessToken: token,
+          planUuid: auth?.plan_uuid,
+        },
+      });
+    } else if (paymentVerified && !freeDID) {
+      navigate('/phone-lines', {
+        state: {
+          isLogin: true,
+          signUpResponseData,
+          accessToken: token,
+          planUuid: auth?.plan_uuid,
+        },
+      });
+    } else {
+      sessionStorage.setItem('welcomePopup', 'true');
+      handleSetUser({ ...userData, token });
+      window.location.reload();
+    }
+  };
+
   const { mutate: mutateSendOtp, isPending: isSendOtpPending } = useMutation({
     mutationFn: sendOtp,
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      /* The server skips the code on a device that passed one recently. */
+      const payload = (data as any)?.data ?? {};
+      const otpRequired = payload?.otp_required ?? payload?.data?.otp_required;
+
+      if (otpRequired === false) {
+        handleAlert({ text: 'Signed in on a recognised device', type: 'success' });
+        finishSignIn(loginResponseRef.current);
+        return;
+      }
+
       handleAlert({ text: 'OTP sent successfully', type: 'success' });
       setShowOtp(true);
     },
@@ -276,85 +378,7 @@ const Login = () => {
     mutationFn: verifyOtp,
     onSuccess: (data: any) => {
       handleAlert({ text: 'OTP Verified successfully', type: 'success' });
-      // const payload = {
-      //   ...formData,
-      //   device_type: 'W',
-      //   device_id: getDeviceId(),
-      //   version: packageJson.version,
-      // };
-      const {
-        result: userData,
-        auth: verifiedAuth,
-        token: verifiedToken,
-      } = getAuthResponseData(data);
-      const token =
-        verifiedToken ||
-        String(signUpResponseData.current?.token || loginAccessTokenRef.current || '').trim();
-      const auth = {
-        ...(signUpResponseData.current || {}),
-        ...verifiedAuth,
-        ...(token ? { token } : {}),
-      };
-
-      signUpResponseData.current = {
-        ...auth,
-        ...(token ? { token } : {}),
-      };
-
-      if (token) {
-        localStorage.setItem(SESSION_NAME, token);
-      }
-
-      const isPlanPaymentPending =
-        auth?.isPlanPaymentPending === true || auth?.isPlanPayemntPending === true;
-
-      if (token && isPlanPaymentPending) {
-        const msg =
-          data?.data?.data?.message ||
-          'Your current plan is no longer active. Please renew to avoid service interruptions.';
-        localStorage.setItem(SESSION_NAME, token);
-        if (auth?.company_uuid) {
-          sessionStorage.setItem(PLAN_PENDING_COMPANY_UUID_KEY, auth.company_uuid);
-        }
-        handleAlert({ text: msg, type: 'error' });
-        sessionStorage.setItem(RENEW_PLAN_FROM_APP_KEY, '1');
-        navigate('/renew-plan', { replace: true });
-        return;
-      }
-
-      // return;
-
-      const paymentVerified = auth?.payment_verified;
-      console.log('🚀 ~ Login ~ paymentVerified:', paymentVerified);
-      const freeDID = auth?.free_did;
-      console.log('🚀 ~ Login ~ freeDID:', freeDID);
-
-      if (!paymentVerified) {
-        navigate(`/payment`, {
-          state: {
-            isLogin: true,
-            signUpResponseData,
-            accessToken: token,
-            planUuid: auth?.plan_uuid,
-          },
-        });
-      } else if (paymentVerified && !freeDID) {
-        navigate('/phone-lines', {
-          state: {
-            isLogin: true,
-            signUpResponseData,
-            accessToken: token,
-            planUuid: auth?.plan_uuid,
-          },
-        });
-      } else {
-        sessionStorage.setItem('welcomePopup', 'true');
-        handleSetUser({ ...userData, token });
-        window.location.reload();
-        // navigate('/dashboard')
-      }
-      // setOtp('');
-      // mutateFinalLogin(payload);
+      finishSignIn(data);
     },
     onError: (err: any) => {
       const res = err?.response?.data;
@@ -469,9 +493,27 @@ const Login = () => {
                               )}
                             />
                           </div>
-                          <div className="flex justify-end gap-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <Checkbox
+                                className="cursor-pointer"
+                                checked={rememberDevice}
+                                onCheckedChange={(value) => {
+                                  const next = value === true;
+                                  setRememberDevice(next);
+                                  try {
+                                    localStorage.setItem(REMEMBER_DEVICE_KEY, next ? '1' : '0');
+                                  } catch {
+                                    /* private mode — the choice just won't persist */
+                                  }
+                                }}
+                              />
+                              <span className="text-sm text-gray-600">
+                                Skip the code on this device for 30 days
+                              </span>
+                            </label>
                             <div
-                              className="text-primary hover:text-primary/80 text-sm font-semibold cursor-pointer"
+                              className="text-primary hover:text-primary/80 text-sm font-semibold cursor-pointer whitespace-nowrap"
                               onClick={() => navigate('/forgot-password')}
                             >
                               Forgot password

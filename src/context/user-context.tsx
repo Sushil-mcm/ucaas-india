@@ -25,6 +25,10 @@ export const UserContext = createContext<UserContextType>({
   setIsDialerEnable: () => {},
 });
 
+// Comfortably inside the relay credential's lifetime (TURN_VALIDITY on the API,
+// 24 hours today), so a missed refresh or two still leaves working credentials.
+const TURN_CREDENTIAL_REFRESH_MS = 6 * 60 * 60 * 1000;
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setCurrentUser] = useState<any>(() => {
     const token = localStorage.getItem(SESSION_NAME);
@@ -44,6 +48,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     select: (data) => data?.data?.data?.result,
     enabled: Boolean(user?.token) || Boolean(localStorage.getItem(SESSION_NAME)),
     retry: 3,
+    // This response carries the softphone's relay (TURN) credentials, and those
+    // expire. They used to be fetched once at login and never again, so a tab
+    // left open past their lifetime lost its relay and calls went silent - then
+    // died about fifteen seconds in when the carrier gave up. Refreshing well
+    // inside that window keeps them valid. It does not disturb an established
+    // call: the SIP connection is only rebuilt when the server, domain or
+    // extension changes, and the relay password is read fresh for each new call.
+    refetchInterval: TURN_CREDENTIAL_REFRESH_MS,
+    refetchIntervalInBackground: true,
   });
 
   const hasStoredSession = Boolean(localStorage.getItem(SESSION_NAME));

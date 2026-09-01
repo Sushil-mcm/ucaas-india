@@ -6,12 +6,22 @@ import {
   QUEUE_TIMEOUT_LIMITS,
 } from './constant';
 import { optionalString, requiredString } from '@/lib/schema';
+import { checkQueueName } from '@/lib/queue-naming';
 import { holidaySchema } from '../../constants';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
 
 export const upsertCallQueueSchema = [
   yup.object().shape({
-    name: requiredString('Name'),
+    /* Judged on the stored name, which carries the "Inbound - " prefix. A
+       plain max here would measure what was typed and then store ten more
+       characters than it allowed. */
+    name: yup
+      .string()
+      .required('Name is required')
+      .test('queue-name', function (value) {
+        const result = checkQueueName(value);
+        return result.ok || this.createError({ message: result.reason });
+      }),
     extension: requiredExtension(),
     script_data: optionalString('Description', 10, 500),
     site_uuid: yup.mixed().required('Site is required'),

@@ -6,6 +6,7 @@ import { Flag, Globe, Headphones, Mic, PhoneOutgoing, Voicemail, Archive } from 
 import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionActions } from './section-actions';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
@@ -434,8 +435,8 @@ const CompanyPolicies = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
         <p className="text-lg font-semibold text-gray-900">Policies</p>
         <p className="text-xs text-gray-500">
           One set of rules for the whole company — prompt language, voicemail, call recording, how
@@ -443,8 +444,8 @@ const CompanyPolicies = () => {
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-gray-900">
@@ -729,18 +730,22 @@ const CompanyPolicies = () => {
             </div>
           </SettingCard>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-gray-500">
               Saved for your whole company. Your other settings are not affected.
             </p>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-            >
-              {isSaving ? 'Saving...' : 'Save policies'}
-            </Button>
+            <SectionActions>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="cs-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save settings'}
+              </Button>
+            </SectionActions>
           </div>
         </div>
       </div>

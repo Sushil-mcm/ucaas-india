@@ -103,12 +103,30 @@ const GreetingContent: FC = () => {
   const handleDeleteGreeting = async () => {
     try {
       const result = await mutateDeleteGreeting(greetingData?.uuid);
-      await mutateDeleteMedia({
-        uuid: user?.company_info?.uuid,
-        type: greetingData?.type,
-        file_name: greetingData?.filename,
-      });
+
+      /* Always `greeting`, never the row's own type. Every recording is stored
+         in that one folder whatever it is called - the upload sends `greeting`
+         and every playback URL in the app reads `<media>/<company>/greeting/`.
+         Passing the row's type here asked the server to delete a voicemail or a
+         prompt from a folder it was never in, so the audio of every one of
+         those ever deleted is still sitting on the server. */
+      try {
+        await mutateDeleteMedia({
+          uuid: user?.company_info?.uuid,
+          type: 'greeting',
+          file_name: greetingData?.filename,
+        });
+      } catch (mediaError) {
+        /* The row is already gone, so the recording has left the product either
+           way. A leftover file is a housekeeping problem, not something to
+           report as a failed deletion - and the old code let this throw, which
+           skipped the refresh and the confirmation entirely: the row vanished
+           on the next load and the admin was never told anything had happened. */
+        console.error('greeting row deleted, its audio file was not: ', mediaError);
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['greetingList'] });
+      await queryClient.invalidateQueries({ queryKey: ['greetings'] });
       setModalState({ isDelete: false });
       setGreetingData(null);
       handleAlert({
@@ -116,7 +134,8 @@ const GreetingContent: FC = () => {
         type: 'success',
       });
     } catch (error) {
-      console.error('FAILED TO ADD GREETING: ', error);
+      console.error('FAILED TO DELETE GREETING: ', error);
+      handleAlert({ text: 'That recording could not be deleted.', type: 'error' });
     }
   };
 

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
+import { SettingCard, SettingNest, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, ScrollText, Voicemail } from 'lucide-react';
+import { Mail, ScrollText, Voicemail } from 'lucide-react';
 
 import Loader from '@/components/custom/loader';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { SectionActions } from './section-actions';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import {
@@ -62,7 +63,13 @@ import {
  *   and write each person's own value, never this one, so changing it here
  *   turns transcription on for nobody who already exists.
  *
- * `value` (the PIN) — STORED. No screen in this product asks for a voicemail
+ * `value` (the PIN) — STORED, AND NO LONGER EDITED HERE. The control was taken
+ *   off this screen because nothing on the switch ever asks for a PIN: grepped
+ *   again on 1 Sep 2026 across `save-voicemail.lua`, `read-voicemail.lua` and
+ *   `functions.lua`, with no hit. The key itself is left alone — the save
+ *   spreads the stored block through untouched rather than writing `value` from
+ *   a form that no longer holds it, so an existing PIN is preserved rather than
+ *   blanked. Put the control back only alongside a mailbox that asks for one. No screen in this product asks for a voicemail
  *   PIN at any point; the key is only carried between form and record
  *   (src/pages/settings/general/index.tsx:177,
  *   src/components/common-settings/voicemail-dialog/index.tsx:62). Nothing
@@ -76,23 +83,69 @@ import {
 
 const VOICEMAIL_KEY = 'voicemail_pin';
 
-const PIN_MIN_LENGTH = 4;
-const PIN_MAX_LENGTH = 10;
+/* WHAT WOULD MAKE THE EMAIL ACTUALLY SEND, checked on the switch 1 Sep 2026.
+ * Everything except one hop already exists:
+ *
+ *   - `notification-api` is running on this box and answers
+ *     `POST 127.0.0.1:3002/api/v1/send-email` with `{email, subject, body}`.
+ *     It is bound to loopback only, which is right - the switch is a local
+ *     caller, and nothing off-box should be able to send mail through it.
+ *   - Its SMTP is configured and points at Gmail (`smtp.gmail.com:587`) with a
+ *     dedicated sender, `notifications@mycountrymobile.com`.
+ *   - `voicemail_save()` in the FreeSWITCH `functions.lua` already holds every
+ *     fact the mail needs by the time the caller hangs up: `accountcode`,
+ *     `vm_msgfile`, the duration, and the caller's number.
+ *
+ * The missing hop is that `voicemail_save()` records to disk and stops. It
+ * tells nothing that a message arrived. Until that call is added, this card
+ * records the choice and no mail is sent, which is what its note says.
+ * The patch lives in `backend-patches/fs-xml-api/`.
+ */
+
+/* A key of its own rather than another field inside `voicemail_pin`. That block
+   is copied wholesale onto a person when an admin sets them up, and an address
+   is the one thing on this page that must NOT be copied that way - forty people
+   provisioned from one record would all mail their voicemail to the same
+   inbox. */
+const NOTIFY_KEY = 'voicemail_notify';
+
+/* Deliberately narrow. `person` is the address already on the mailbox owner's
+   own record, so it is right for every person without an admin typing anything;
+   `address` is one fixed inbox, for a shared line - reception, sales, support -
+   where there is no single owner to send to. */
+type NotifyTarget = 'person' | 'address';
+
+/* Not a full RFC 5322 check, which no regex does correctly. This rejects the
+   mistakes people actually make - a missing @, a missing dot, a stray space -
+   and leaves the rest to the mail server, which is the only thing that can
+   really answer. */
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface VoicemailForm {
-  /* Blank means "no company PIN recorded", which is the shipped state. */
-  pin: string;
   voicemail_to_text: boolean;
   override: boolean;
+  /* Email a copy of each new message. */
+  notify_enabled: boolean;
+  notify_target: NotifyTarget;
+  notify_address: string;
+  /* Whether the recording travels with the mail or only a link back into the
+     app. Off by default: a voicemail can carry card numbers, health details or
+     a home address, and once it is an attachment it is in an inbox nobody here
+     controls, forwardable, and outside any retention rule this product sets. */
+  notify_attach_audio: boolean;
+  notify_override: boolean;
 }
 
 const DEFAULT_FORM: VoicemailForm = {
-  pin: '',
-  /* Both flags start off. `override` off is the safer of its two readings:
-     nobody is silently handed a company PIN, and the personal lock behaves the
-     way it did before this page existed. */
+  /* Both flags start off. `override` off is the safer of its two readings, and
+     the personal lock behaves the way it did before this page existed. */
   voicemail_to_text: false,
   override: false,
+  notify_enabled: false,
+  notify_target: 'person',
+  notify_address: '',
+  notify_attach_audio: false,
+  notify_override: false,
 };
 
 const toSettingsObject = (rawSettings: any): Record<string, any> => {
@@ -113,28 +166,36 @@ const toGreetingsObject = (rawGreetings: any): Record<string, any> =>
 
 const buildFormFromSettings = (settings: Record<string, any>): VoicemailForm => {
   const voicemail = settings?.[VOICEMAIL_KEY] || {};
-  const pin = voicemail?.value;
+  const notify = settings?.[NOTIFY_KEY] || {};
 
   return {
-    pin: typeof pin === 'number' || typeof pin === 'string' ? String(pin) : DEFAULT_FORM.pin,
     /* Stored as the strings 'YES'/'NO', never as a boolean. Anything else — an
        older record, a missing key — reads as off rather than as on. */
     voicemail_to_text: voicemail?.voicemail_to_text === 'YES',
     override: voicemail?.override === true,
+    notify_enabled: notify?.enabled === true,
+    /* Anything that is not the one other value we write reads as `person`. A
+       record with a target we do not recognise must not silently become a fixed
+       address somebody cannot see. */
+    notify_target: notify?.send_to === 'address' ? 'address' : 'person',
+    notify_address: typeof notify?.address === 'string' ? notify.address : '',
+    notify_attach_audio: notify?.attach_audio === true,
+    notify_override: notify?.override === true,
   };
 };
 
+/* An address is only required when one is actually going to be used. Validating
+   a field the admin cannot see - because the target is `person`, or the whole
+   card is off - would block a save for a reason nothing on screen explains. */
 const validateForm = (form: VoicemailForm): Record<string, string> => {
   const errors: Record<string, string> = {};
-  const pin = form.pin.trim();
 
-  /* Blank is allowed and means no company PIN. A PIN that has been typed must
-     be digits only, because a mailbox is opened from a phone keypad. */
-  if (pin) {
-    if (!/^\d+$/.test(pin)) {
-      errors.pin = 'Use digits only — a PIN is typed on a phone keypad';
-    } else if (pin.length < PIN_MIN_LENGTH || pin.length > PIN_MAX_LENGTH) {
-      errors.pin = `Enter between ${PIN_MIN_LENGTH} and ${PIN_MAX_LENGTH} digits`;
+  if (form.notify_enabled && form.notify_target === 'address') {
+    const address = form.notify_address.trim();
+    if (!address) {
+      errors.notify_address = 'Enter the address the messages should go to';
+    } else if (!EMAIL_SHAPE.test(address)) {
+      errors.notify_address = 'That does not look like an email address';
     }
   }
 
@@ -210,10 +271,26 @@ const CompanyVoicemail = () => {
     const nextSettings = {
       ...savedSettings,
       [VOICEMAIL_KEY]: {
+        /* `value` holds the company PIN. It is deliberately NOT written here
+           any more: the PIN control has been removed from this screen, and
+           writing the field from a form that no longer edits it would blank
+           whatever an admin had already saved. The spread above carries it
+           through untouched. */
         ...(savedSettings?.[VOICEMAIL_KEY] || {}),
-        value: form.pin.trim(),
         voicemail_to_text: form.voicemail_to_text ? 'YES' : 'NO',
         override: form.override,
+      },
+      [NOTIFY_KEY]: {
+        ...(savedSettings?.[NOTIFY_KEY] || {}),
+        enabled: form.notify_enabled,
+        send_to: form.notify_target,
+        /* Trimmed, and only kept when it is the target in use. Leaving a stale
+           address behind on a record set back to `person` is how somebody's
+           messages start going to a leaver's inbox the day it is switched
+           over again. */
+        address: form.notify_target === 'address' ? form.notify_address.trim() : '',
+        attach_audio: form.notify_attach_audio,
+        override: form.notify_override,
       },
     };
 
@@ -233,8 +310,8 @@ const CompanyVoicemail = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
         <p className="text-lg font-semibold text-gray-900">Voicemail</p>
         <p className="text-xs text-gray-500">
           The voicemail settings the company starts people on, and whether a person may change them
@@ -242,8 +319,8 @@ const CompanyVoicemail = () => {
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
             <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-gray-900">
@@ -274,7 +351,7 @@ const CompanyVoicemail = () => {
           >
             <SettingRow
               label="Let people change their own voicemail settings"
-              description="Left off, a person cannot open their own voicemail settings and an admin changes them instead. Be aware of the second reading: a new person set up from this record then also starts with the PIN and the voicemail-to-text choice below, so everyone set up that way shares one PIN."
+              description="Left off, a person cannot open their own voicemail settings and an admin changes them instead. Be aware of the second reading: a new person set up from this record also starts with the voicemail-to-text choice below, and with any PIN already stored against the company."
               control={
                 <Switch
                   checked={form.override}
@@ -282,6 +359,86 @@ const CompanyVoicemail = () => {
                 />
               }
             />
+          </SettingCard>
+
+          {/* Before "Voicemail to text" on purpose: getting the message is the
+              first thing an admin wants; having it written out is a refinement
+              of a message they are already receiving. */}
+          <SettingCard
+            icon={<Mail className="h-5 w-5" />}
+            title="Email a copy of new voicemail"
+            description="Send an email the moment somebody leaves a message, so nobody has to dial in to find out."
+            note="Saved here, but nothing sends the email yet. The switch records a voicemail to disk and stops there — it does not tell anything a message arrived. Everything else is ready: the mail service is running and configured to send through Gmail."
+          >
+            <SettingRow
+              label="Send an email for every new message"
+              description="One email per message, as soon as the caller hangs up. It carries who rang, the number they rang, when, and how long the message is."
+              control={
+                <Switch
+                  checked={form.notify_enabled}
+                  onCheckedChange={(checked: boolean) => updateForm({ notify_enabled: checked })}
+                />
+              }
+            />
+
+            <SettingNest when={form.notify_enabled}>
+              <SettingRow
+                label="Send it to the person whose mailbox it is"
+                description="Uses the email address already on their own record, so this works for everybody without an address being typed here. Turn it off to send every message to one fixed inbox instead — right for a shared line like reception or sales, where no single person owns the mailbox."
+                control={
+                  <Switch
+                    checked={form.notify_target === 'person'}
+                    onCheckedChange={(checked: boolean) =>
+                      updateForm({ notify_target: checked ? 'person' : 'address' })
+                    }
+                  />
+                }
+              />
+
+              <SettingNest when={form.notify_target === 'address'}>
+                <div className="flex flex-col gap-1">
+                  <Input
+                    label="Send every message to"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="off"
+                    placeholder="reception@yourcompany.com"
+                    value={form.notify_address}
+                    error={errors.notify_address}
+                    onChange={(event) => updateForm({ notify_address: event.target.value })}
+                  />
+                  <p className="text-xs text-gray-500">
+                    One address. Every message from every mailbox goes here, whoever it was left
+                    for — so use a shared inbox rather than one person&apos;s, or messages stop
+                    arriving the day they leave.
+                  </p>
+                </div>
+              </SettingNest>
+
+              <SettingRow
+                label="Attach the recording to the email"
+                description="Off, the email says a message is waiting and links back here to hear it. On, the audio travels with it and can be played from any mail app — but it also sits in an inbox outside this system, forwardable, and outside any retention rule set here. A voicemail can carry card numbers or health details, so leave this off unless you have decided otherwise."
+                control={
+                  <Switch
+                    checked={form.notify_attach_audio}
+                    onCheckedChange={(checked: boolean) =>
+                      updateForm({ notify_attach_audio: checked })
+                    }
+                  />
+                }
+              />
+
+              <SettingRow
+                label="Let people change this for themselves"
+                description="On — a person can turn their own voicemail emails on or off, and change where they go. Off — only an admin can."
+                control={
+                  <Switch
+                    checked={form.notify_override}
+                    onCheckedChange={(checked: boolean) => updateForm({ notify_override: checked })}
+                  />
+                }
+              />
+            </SettingNest>
           </SettingCard>
 
           <SettingCard
@@ -303,45 +460,22 @@ const CompanyVoicemail = () => {
             />
           </SettingCard>
 
-          <SettingCard
-            icon={<KeyRound className="h-5 w-5" />}
-            title="Voicemail PIN"
-            description="The PIN a person would type to hear their messages from a phone."
-            status="coming-soon"
-            note="Coming soon. Mailboxes do not ask for a PIN yet, so this one guards nothing today. Anyone you set up from these settings still receives it, so choose a PIN you are happy to share."
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <Input
-                  label="Starting PIN"
-                  inputMode="numeric"
-                  maxLength={PIN_MAX_LENGTH}
-                  placeholder="Leave blank for no PIN"
-                  value={form.pin}
-                  error={errors.pin}
-                  onChange={(event) => updateForm({ pin: event.target.value })}
-                />
-                <p className="text-xs text-gray-500">
-                  Digits only, {PIN_MIN_LENGTH} to {PIN_MAX_LENGTH} of them. Six or more is the
-                  usual advice, because a four-digit PIN can be guessed by hand. Blank means no
-                  company PIN is recorded.
-                </p>
-              </div>
-            </div>
-          </SettingCard>
-
-          <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-gray-500">
               Saved for your whole company. Your other settings are not affected.
             </p>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-            >
-              {isSaving ? 'Saving...' : 'Save voicemail settings'}
-            </Button>
+            <SectionActions>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="cs-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save settings'}
+              </Button>
+            </SectionActions>
           </div>
         </div>
       </div>

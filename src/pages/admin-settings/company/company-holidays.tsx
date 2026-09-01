@@ -9,11 +9,22 @@
  * other established systems keeps RRULE schedules grouped into open/closed/holiday sets. This is
  * the same idea at the level where it belongs — the company.
  *
- * IMPORTANT, AND SAID OUT LOUD IN THE UI: this calendar is recorded only. Call
- * routing still reads each object's own holiday list, so nothing here closes a
- * line by itself. The panel says so at the top rather than in a tooltip, because
- * an admin who believes their numbers close on Christmas and finds out otherwise
- * on the day has been actively misled by the software.
+ * This list is now read at call time. The inbound dialplan
+ * (`/opt/fs-xml-api-1.2.5/dialplan_service.py`) looks the company record up on
+ * every incoming call and, if today is on this list, treats the company as
+ * closed - so the caller gets the number's closed-hours destination instead of
+ * its normal one. Until 1 Sep 2026 it did not: the dialplan read the holiday
+ * date off the keys `date`/`day`/`value`/`start`, and a stored holiday carries
+ * none of them, so every holiday in the system silently missed. That is fixed in
+ * `backend-patches/fs-xml-api/`.
+ *
+ * NOTHING ON THE SCREEN EXPLAINS THIS ANY MORE. Both notes were removed on
+ * request - first the warning banner, then the pair that replaced it. So the one
+ * real gap is recorded here and nowhere a customer will see it: a number pointed
+ * at a menu or a queue with no closed-hours destination has nothing to divert
+ * to, and rings through on a holiday like any other day. A main line pointed at
+ * an auto attendant is the commonest setup there is, so this will be somebody's
+ * surprise eventually. Raise it again before it is.
  *
  * Storage is the company level of the settings cascade — the reserved
  * `user_template` row named "Company Default" whose `settings` field is an
@@ -23,9 +34,9 @@
  * cannot wipe the company's business hours or voicemail rules.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, CalendarDays, Info, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { CalendarDays, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +44,10 @@ import { Switch } from '@/components/ui/switch';
 import CustomSelect from '@/components/custom/custom-select';
 import { CustomDatePicker } from '@/components/custom/custom-datepicker';
 import { handleAlert } from '@/lib/utils';
+/* The rules that turn "United States, 2026" into eleven dates live in their own
+   module so they can be run and checked without React - see
+   `scripts/verify-holiday-presets.mjs`. */
+import { buildPreset, COUNTRY_PRESETS } from '@/lib/holiday-presets';
 /* One definition of "the company record", shared by every company-level screen.
    This file originally carried a local copy of these helpers because it was
    built on a branch that predated the shared module. Two definitions of where
@@ -111,9 +126,6 @@ const pad = (value: number) => `${value}`.padStart(2, '0');
 const toIso = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-const utcToIso = (date: Date) =>
-  `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
-
 /* Parsed into a local-noon Date so a browser west of UTC cannot render
    2026-12-25 as the 24th. */
 const isoToDate = (iso: string): Date | null => {
@@ -132,230 +144,6 @@ const prettyRange = (item: CompanyHoliday) =>
   item.to && item.to !== item.from
     ? `${prettyDate(item.from)} – ${prettyDate(item.to)}`
     : prettyDate(item.from);
-
-/* --------------------------------------------------- public-holiday presets */
-
-/* Every date below is either a fixed calendar date or produced by a rule that
-   computes exactly for any year, so nothing is transcribed from a year-specific
-   table that would rot. Holidays that follow the lunar calendars — Diwali, Holi,
-   Eid, and the state-by-state Indian lists — are deliberately absent: there is
-   no rule for them here, and a guessed Diwali is worse than no Diwali. The panel
-   says so where the picker is. */
-
-type PresetRule = {
-  name: string;
-  /* Fixed date. */
-  month?: number;
-  day?: number;
-  /* Nth weekday of a month; nth = -1 means the last one. 0 = Sunday. */
-  weekday?: number;
-  nth?: number;
-  /* Days from Easter Sunday (Good Friday = -2, Easter Monday = +1). */
-  easterOffset?: number;
-  /* The Monday strictly before month/day — Canada's Victoria Day. */
-  mondayBefore?: boolean;
-};
-
-/* Meeus/Jones/Butcher. Cross-checked by hand against Easter Sunday 20 Apr 2025,
-   5 Apr 2026 and 28 Mar 2027. */
-const easterSunday = (year: number): Date => {
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31);
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(Date.UTC(year, month - 1, day));
-};
-
-const nthWeekdayOf = (year: number, month: number, weekday: number, nth: number): Date => {
-  if (nth < 0) {
-    const lastDay = new Date(Date.UTC(year, month, 0));
-    const back = (lastDay.getUTCDay() - weekday + 7) % 7;
-    return new Date(Date.UTC(year, month - 1, lastDay.getUTCDate() - back));
-  }
-  const first = new Date(Date.UTC(year, month - 1, 1));
-  const forward = (weekday - first.getUTCDay() + 7) % 7;
-  return new Date(Date.UTC(year, month - 1, 1 + forward + (nth - 1) * 7));
-};
-
-const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
-
-const ruleDate = (rule: PresetRule, year: number): Date => {
-  if (typeof rule.easterOffset === 'number') {
-    return addDays(easterSunday(year), rule.easterOffset);
-  }
-  if (rule.mondayBefore && rule.month && rule.day) {
-    const anchor = new Date(Date.UTC(year, rule.month - 1, rule.day));
-    /* Strictly before: when the anchor is itself a Monday, step back a week. */
-    const back = (anchor.getUTCDay() + 6) % 7 || 7;
-    return addDays(anchor, -back);
-  }
-  if (typeof rule.weekday === 'number' && rule.month && rule.nth) {
-    return nthWeekdayOf(year, rule.month, rule.weekday, rule.nth);
-  }
-  return new Date(Date.UTC(year, (rule.month || 1) - 1, rule.day || 1));
-};
-
-/* A rule lands on the same calendar date every year only when it is a plain
-   fixed date that was not moved off a weekend. */
-const isFixedDate = (rule: PresetRule) =>
-  typeof rule.easterOffset !== 'number' && !rule.mondayBefore && typeof rule.weekday !== 'number';
-
-type ObservanceRule = 'none' | 'uk' | 'us';
-
-interface CountryPreset {
-  code: string;
-  label: string;
-  /* What the list actually covers, shown next to the picker. Every one of these
-     countries has holidays this list does not have. */
-  scope: string;
-  observance: ObservanceRule;
-  rules: PresetRule[];
-}
-
-const COUNTRY_PRESETS: CountryPreset[] = [
-  {
-    code: 'US',
-    label: 'United States',
-    scope: 'The 11 federal public holidays. States and cities add their own.',
-    /* 5 U.S.C. § 6103(b): a holiday on a Saturday is observed the Friday before,
-       one on a Sunday the Monday after. */
-    observance: 'us',
-    rules: [
-      { name: "New Year's Day", month: 1, day: 1 },
-      { name: 'Martin Luther King Jr. Day', month: 1, weekday: 1, nth: 3 },
-      { name: "Washington's Birthday (Presidents' Day)", month: 2, weekday: 1, nth: 3 },
-      { name: 'Memorial Day', month: 5, weekday: 1, nth: -1 },
-      { name: 'Juneteenth National Independence Day', month: 6, day: 19 },
-      { name: 'Independence Day', month: 7, day: 4 },
-      { name: 'Labor Day', month: 9, weekday: 1, nth: 1 },
-      { name: 'Columbus Day', month: 10, weekday: 1, nth: 2 },
-      { name: 'Veterans Day', month: 11, day: 11 },
-      { name: 'Thanksgiving Day', month: 11, weekday: 4, nth: 4 },
-      { name: 'Christmas Day', month: 12, day: 25 },
-    ],
-  },
-  {
-    code: 'GB',
-    label: 'United Kingdom (England & Wales)',
-    scope: 'Bank holidays for England and Wales. Scotland and Northern Ireland differ.',
-    /* A bank holiday falling on a weekend moves to the next weekday that is not
-       already a bank holiday — which is what produces 27 and 28 December when
-       Christmas lands on a Saturday. */
-    observance: 'uk',
-    rules: [
-      { name: "New Year's Day", month: 1, day: 1 },
-      { name: 'Good Friday', easterOffset: -2 },
-      { name: 'Easter Monday', easterOffset: 1 },
-      { name: 'Early May bank holiday', month: 5, weekday: 1, nth: 1 },
-      { name: 'Spring bank holiday', month: 5, weekday: 1, nth: -1 },
-      { name: 'Summer bank holiday', month: 8, weekday: 1, nth: -1 },
-      { name: 'Christmas Day', month: 12, day: 25 },
-      { name: 'Boxing Day', month: 12, day: 26 },
-    ],
-  },
-  {
-    code: 'IN',
-    label: 'India',
-    scope:
-      'The three national holidays plus Christmas. Diwali, Holi, Eid and the state lists move every year and are not included.',
-    /* India does not substitute a weekday when a gazetted holiday falls on a
-       weekend, so these are left on their real dates. */
-    observance: 'none',
-    rules: [
-      { name: 'Republic Day', month: 1, day: 26 },
-      { name: 'Independence Day', month: 8, day: 15 },
-      { name: 'Gandhi Jayanti', month: 10, day: 2 },
-      { name: 'Christmas Day', month: 12, day: 25 },
-    ],
-  },
-  {
-    code: 'CA',
-    label: 'Canada (federal)',
-    scope: 'The federal general holidays. Every province adds more.',
-    observance: 'uk',
-    rules: [
-      { name: "New Year's Day", month: 1, day: 1 },
-      { name: 'Good Friday', easterOffset: -2 },
-      { name: 'Victoria Day', month: 5, day: 25, mondayBefore: true },
-      { name: 'Canada Day', month: 7, day: 1 },
-      { name: 'Labour Day', month: 9, weekday: 1, nth: 1 },
-      { name: 'National Day for Truth and Reconciliation', month: 9, day: 30 },
-      { name: 'Thanksgiving Day', month: 10, weekday: 1, nth: 2 },
-      { name: 'Remembrance Day', month: 11, day: 11 },
-      { name: 'Christmas Day', month: 12, day: 25 },
-      { name: 'Boxing Day', month: 12, day: 26 },
-    ],
-  },
-];
-
-interface GeneratedHoliday {
-  title: string;
-  iso: string;
-  repeats_yearly: boolean;
-  note?: string;
-}
-
-const buildPreset = (preset: CountryPreset, year: number): GeneratedHoliday[] => {
-  const dated = preset.rules
-    .map((rule) => ({ rule, date: ruleDate(rule, year) }))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  const taken = new Set(dated.map((entry) => utcToIso(entry.date)));
-  const results: GeneratedHoliday[] = [];
-
-  dated.forEach(({ rule, date }) => {
-    let observed = date;
-    let moved = false;
-
-    if (preset.observance === 'us') {
-      const weekday = date.getUTCDay();
-      if (weekday === 6) {
-        observed = addDays(date, -1);
-        moved = true;
-      } else if (weekday === 0) {
-        observed = addDays(date, 1);
-        moved = true;
-      }
-    } else if (preset.observance === 'uk') {
-      while (
-        observed.getUTCDay() === 0 ||
-        observed.getUTCDay() === 6 ||
-        (moved && taken.has(utcToIso(observed)))
-      ) {
-        observed = addDays(observed, 1);
-        moved = true;
-      }
-    }
-
-    const iso = utcToIso(observed);
-    taken.add(iso);
-
-    results.push({
-      title: rule.name,
-      iso,
-      /* Only an untouched fixed date is safe to repeat. A moved date and a
-         weekday-or-Easter rule both land somewhere else next year. */
-      repeats_yearly: isFixedDate(rule) && !moved,
-      note: moved
-        ? `Observed on this day; the holiday itself is ${prettyDate(utcToIso(date))}`
-        : isFixedDate(rule)
-          ? undefined
-          : 'Falls on a different date each year',
-    });
-  });
-
-  return results.sort((a, b) => a.iso.localeCompare(b.iso));
-};
 
 /* ------------------------------------------------------------------ the UI */
 
@@ -379,7 +167,15 @@ const YEAR_OPTIONS = (() => {
   }));
 })();
 
-const CompanyHolidays = () => {
+/* The list owns the save, but the page below it owns the row of buttons that
+   closes every settings tab. Rather than move the save up — it depends on this
+   screen's draft state, its dirty flag and its mutation — the screen hands the
+   page a handle to call. One save, reachable from either place. */
+export interface CompanyHolidaysHandle {
+  save: () => void;
+}
+
+const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<CompanyDefaultTemplate | null>({
@@ -391,6 +187,17 @@ const CompanyHolidays = () => {
   const [items, setItems] = useState<CompanyHoliday[]>([]);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [isAdding, setIsAdding] = useState(false);
+  /* The add/edit panel renders at the FOOT of this card, under the presets and
+     the whole holiday list, because the list it changes has to stay visible
+     while you type. On an account with a year of holidays saved that is a long
+     way below the button that opens it, so pressing Add appeared to do nothing
+     at all - the panel opened somewhere the admin could not see, and the button
+     greyed itself out, which read as broken rather than busy. */
+  const draftPanelRef = useRef<HTMLDivElement | null>(null);
+  const draftNameRef = useRef<HTMLInputElement | null>(null);
+  /* Bumped on every open, so pressing Add again while the panel is already open
+     scrolls back to it rather than doing nothing. */
+  const [draftOpenedAt, setDraftOpenedAt] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [country, setCountry] = useState<{ label: string; value: string } | null>(null);
   const [year, setYear] = useState<{ label: string; value: string }>(YEAR_OPTIONS[0]);
@@ -401,6 +208,18 @@ const CompanyHolidays = () => {
     if (dirty) return;
     setItems(readCalendar(data?.settings));
   }, [data, dirty]);
+
+  /* Runs after the panel is in the DOM, which is why this is an effect and not
+     part of the click handler. */
+  useEffect(() => {
+    if (!isAdding) return;
+    draftPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    /* Focus follows the scroll rather than racing it: focusing first makes the
+       browser jump to the field, which fights the smooth scroll and lands in the
+       wrong place. */
+    const focus = window.setTimeout(() => draftNameRef.current?.focus(), 250);
+    return () => window.clearTimeout(focus);
+  }, [isAdding, draftOpenedAt]);
 
   const sorted = useMemo(
     () => [...items].sort((a, b) => a.from.localeCompare(b.from) || a.title.localeCompare(b.title)),
@@ -453,9 +272,14 @@ const CompanyHolidays = () => {
     },
   });
 
+  /* Declared after the mutation above: `save` is a const, so reading it any
+     earlier in the body throws before the screen can render. */
+  useImperativeHandle(ref, () => ({ save: () => save() }), [save]);
+
   const openAdd = () => {
     setDraft(EMPTY_DRAFT);
     setIsAdding(true);
+    setDraftOpenedAt((count) => count + 1);
   };
 
   const openEdit = (item: CompanyHoliday) => {
@@ -467,6 +291,7 @@ const CompanyHolidays = () => {
       repeats_yearly: item.repeats_yearly,
     });
     setIsAdding(true);
+    setDraftOpenedAt((count) => count + 1);
   };
 
   const closeDraft = () => {
@@ -558,7 +383,7 @@ const CompanyHolidays = () => {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="cs-block">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
@@ -566,68 +391,40 @@ const CompanyHolidays = () => {
           </div>
           <div className="min-w-0">
             <p className="text-base font-semibold text-gray-900">Your holiday list</p>
-            {/* Honest about reach. Dates saved here are a company-wide list; what
-                actually closes a line is the holiday list inside that line's own
-                opening hours, which is a separate store. The two are bridged by
-                src/lib/company-holiday-import.ts, and nothing calls it yet - so
-                an admin who declares Christmas here and expects calls to divert
-                would be wrong, and needs telling on the screen rather than in a
-                document. */}
-            <p className="mt-1 text-xs text-amber-700">
-              Saved here, but not yet applied to your numbers on its own. A date only changes what
-              a caller hears once it is on that line&rsquo;s opening hours below.
-            </p>
-            <p className="mt-0.5 text-xs text-gray-600">
-              One list of the days your company is closed, kept in one place instead of typed again
-              into every IVR, queue and user.
+            <p className="mt-1 text-xs text-gray-600">
+              The days your company is shut, written down once instead of typed again into every
+              menu, queue and person. Callers get your out-of-hours option on these dates.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={openAdd} disabled={isAdding}>
+          {/* Never disabled. While the panel is open this button is the way
+              back to it, and a greyed-out control is exactly what made this look
+              broken in the first place. */}
+          <Button type="button" variant="outline" size="sm" onClick={openAdd}>
             <Plus className="h-3.5 w-3.5" />
             Add holiday
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => save()}
-            disabled={!dirty || isPending || isLoading}
-          >
-            {isPending ? 'Saving…' : 'Save'}
-          </Button>
-        </div>
-      </div>
+          {/* Only there when there is something to save. Sitting greyed out with
+              nothing to do, it read as a broken control rather than a finished
+              one - the same complaint that got Add holiday fixed above.
 
-      {/* The one thing an admin must not misunderstand, at the top, in the
-          colour the app uses for "read this". */}
-      <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-900">
-            This list is recorded, but it does not close your lines yet
-          </p>
-          <p className="mt-0.5 text-xs text-gray-700">
-            Calls are still routed from each object&apos;s own holiday list, set inside its
-            business-hours dialog. Adding Christmas here does not make your IVR, queues or users
-            close on Christmas — you still have to enter it on each of them. This page is the
-            company&apos;s record of the dates; connecting it to routing is a separate piece of work
-            that has not been done.
-          </p>
+              NOT removed outright: it is the only way this list reaches the
+              server. Hidden while `dirty` is false and back the instant anything
+              changes, alongside the "Unsaved changes" flag over the list. */}
+          {dirty && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => save()}
+              disabled={isPending || isLoading}
+            >
+              {isPending ? 'Saving…' : 'Save'}
+            </Button>
+          )}
         </div>
-      </div>
-
-      <div className="mt-3 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
-        <p className="text-xs text-gray-700">
-          <span className="font-semibold text-gray-900">What a holiday means.</span> On a holiday
-          the normal open-hours routing is skipped for the whole day and the closed-hours action
-          applies instead — whatever each object is set to do outside business hours, usually
-          voicemail, a forward, or a closed greeting. A holiday does not have its own separate
-          action; it borrows the closed-hours one.
-        </p>
       </div>
 
       {/* Presets. The point of the panel: a year of holidays in one click rather
@@ -761,7 +558,10 @@ const CompanyHolidays = () => {
       {/* Add / edit row. Inline rather than a dialog: the list it changes stays
           visible, so a duplicate is obvious before it is added. */}
       {isAdding && (
-        <div className="mt-3 rounded-lg border border-ucass-primary-200 bg-white p-3">
+        <div
+          ref={draftPanelRef}
+          className="mt-3 rounded-lg border border-ucass-primary-200 bg-white p-3"
+        >
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-gray-900">
               {draft.id ? 'Edit holiday' : 'New holiday'}
@@ -779,6 +579,7 @@ const CompanyHolidays = () => {
           <div className="mt-2 flex flex-wrap items-end gap-2">
             <div className="w-full sm:w-64">
               <Input
+                ref={draftNameRef}
                 label="Name"
                 placeholder="Christmas Day"
                 value={draft.title}
@@ -834,6 +635,9 @@ const CompanyHolidays = () => {
       )}
     </div>
   );
-};
+});
+
+CompanyHolidays.displayName = 'CompanyHolidays';
+
 
 export default CompanyHolidays;

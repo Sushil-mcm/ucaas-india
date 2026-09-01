@@ -256,6 +256,16 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
     );
   }, [data, contactsByNumber, search, filterMissedLocally]);
 
+  /* liveNumber is just the other party's number on the in-progress session —
+     it has no call id to match against, so every past call to/from that same
+     number would otherwise get tagged "Live now" too. Only the most recent
+     matching row (rows are already sorted newest-first) is the actual call. */
+  const liveRowId = useMemo(() => {
+    if (!liveNumber) return null;
+    const match = rows.find((row) => row.number && row.number.endsWith(liveNumber.slice(-7)));
+    return match ? match.id : null;
+  }, [rows, liveNumber]);
+
   const sources: { key: ConsoleLogSource; label: string; show: boolean }[] = [
     { key: 'call', label: 'Calls', show: true },
     { key: 'recording', label: 'Recordings', show: Boolean(callAccess?.RECORDING) },
@@ -353,8 +363,7 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
         ) : (
           <>
             {rows.map((row) => {
-              const isLive =
-                !!liveNumber && !!row.number && row.number.endsWith(liveNumber.slice(-7));
+              const isLive = !!liveRowId && row.id === liveRowId;
               return (
                 <div
                   key={row.id}

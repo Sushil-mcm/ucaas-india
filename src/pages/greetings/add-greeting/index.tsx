@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +25,11 @@ import CustomSelect from '@/components/custom/custom-select';
 interface IAddgreetings extends AddGreetingProps {
   refetch?: () => void;
   isRefetchable?: boolean;
+  /* Fires with the recording that was just made, so a caller that opened this
+     drawer to fill one slot can select it straight away. Without it the drawer
+     closes and the admin is left looking at the same empty dropdown, with the
+     thing they just recorded somewhere in a list they now have to search. */
+  onCreated?: (greeting: { label: string; value: string }) => void;
 }
 
 const AddGreeting: FC<IAddgreetings> = ({
@@ -32,6 +37,7 @@ const AddGreeting: FC<IAddgreetings> = ({
   greetingType,
   refetch = () => {},
   isRefetchable = true,
+  onCreated,
 }) => {
   const { user } = useUser();
   const queryClient = useQueryClient();
@@ -49,6 +55,12 @@ const AddGreeting: FC<IAddgreetings> = ({
     },
   });
   const { watch, reset, setValue, register } = formInstance;
+  /* The mutation's own success handler does not receive the payload that was
+     sent, and the create endpoint answers with a message rather than the row.
+     The name and filename are both known here at the moment of sending, so they
+     are held for the handler rather than read back out of a later list fetch
+     that may not have landed yet. */
+  const lastCreated = useRef<{ label: string; value: string } | null>(null);
   const [WatchUploadFile, WatchTextFile] = watch(['greetingFile', 'textFile']);
 
   const handleTabChange = (tab: string) => {
@@ -86,6 +98,8 @@ const AddGreeting: FC<IAddgreetings> = ({
         text: data?.data?.message || 'Greeting Created Successfully',
         type: 'success',
       });
+      if (lastCreated.current) onCreated?.(lastCreated.current);
+      lastCreated.current = null;
       refetch();
       // reset();
     },
@@ -128,6 +142,13 @@ const AddGreeting: FC<IAddgreetings> = ({
         return;
       }
 
+      /* Every recording is filed under `greeting` whatever its type, because
+         that is the one folder the playback URLs read from - the library and
+         the picker both build `<media>/<company>/greeting/<file>` regardless of
+         type. Filing a voicemail under `voicemail` here would store it where
+         nothing looks for it. (`deleteMedia` in the library does pass the row's
+         own type, which is why deleting a voicemail leaves its file behind -
+         a separate bug, in the other direction.) */
       const uploadMediaResponse = await uploadMediaMutate({
         uuid: user?.company_info?.uuid,
         type: 'greeting',
@@ -167,6 +188,7 @@ const AddGreeting: FC<IAddgreetings> = ({
         });
 
         if (uploadFileResponse.status === 200) {
+          lastCreated.current = { label: greetingPayload.name, value: file_name };
           upsertGreetingsMutate(greetingPayload);
         }
       }

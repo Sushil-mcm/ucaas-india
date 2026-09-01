@@ -5,6 +5,7 @@ import { KeyRound, ShieldCheck, Timer, Network, Info, UserMinus } from 'lucide-r
 
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionActions } from './section-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -488,8 +489,8 @@ const CompanySecurity = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
         <p className="text-lg font-semibold text-gray-900">Security</p>
         <p className="text-xs text-gray-500">
           Security rules for everyone in the company. The Security &amp; Privacy page under My
@@ -497,10 +498,10 @@ const CompanySecurity = () => {
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {/* Loud, once, at the top — then specifically again on every card. */}
-          <div className="rounded-xl border border-red-300 bg-red-50 p-4">
+          <div className="rounded-lg border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-900">
               Signing people out when idle is active. The rest is recorded as your policy and is not
               switched on yet.
@@ -911,18 +912,22 @@ const CompanySecurity = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-gray-500">
               Saved for your whole company. Your other settings are not affected.
             </p>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-            >
-              {isSaving ? 'Saving...' : 'Save security settings'}
-            </Button>
+            <SectionActions>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="cs-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save settings'}
+              </Button>
+            </SectionActions>
           </div>
         </div>
       </div>

@@ -25,7 +25,12 @@ const getWeeklyScheduleName = (obj: WeeklySchedule = {}): string =>
     .map((day) => WEEKLY_SCHEDULE_MAP[day])
     .join(', ');
 
-const SettingPermission: FC<any> = ({ data }) => {
+/* `footer` renders inside this screen's own scrolling box, which is
+   the only place content can sit and still scroll with the settings. Anything
+   passed as a sibling of this component lands outside that box and stays put
+   while the settings move under it. Optional, and unused by the other screens
+   that render this. */
+const SettingPermission: FC<any> = ({ data, footer, containerClass }) => {
   const { features } = useCompanyFeatures();
   const [bussinessHourError, setBussinessHourEror] = useState<string | null>('');
   const [initialRegionalSettings, setInitialRegionalSettings] = useState<any>(null);
@@ -89,7 +94,17 @@ const SettingPermission: FC<any> = ({ data }) => {
 
   return (
     <>
-      <div className="user-settings-template-settings flex h-[calc(100vh_-_15rem)] flex-col gap-4 overflow-auto">
+      <div
+        className={
+          /* The default is a box of its own fixed height that scrolls inside
+             itself. A caller whose page already scrolls passes its own layout
+             instead, so the settings scroll with that page rather than in a
+             second scrollbar within it. The identifying class stays either way,
+             because this screen's other styles are keyed to it. */
+          containerClass ??
+          'user-settings-template-settings flex h-[calc(100vh_-_15rem)] flex-col gap-4 overflow-auto'
+        }
+      >
         <div className="user-settings-template-settings-name-wrap mt-2 w-full max-w-sm">
           <Input
             label="Name"
@@ -105,7 +120,7 @@ const SettingPermission: FC<any> = ({ data }) => {
           note="The time zone here is what opening hours are judged against on every incoming call."
           description="The country and clock everything else is measured against - opening hours, holidays, and the times shown in reports."
           aside={
-            <Button type="button" variant="outline" onClick={() => openModal('regionalModal')}>
+            <Button type="button" variant="outline" className="cs-btn-soft" onClick={() => openModal('regionalModal')}>
               Change
             </Button>
           }
@@ -139,6 +154,7 @@ const SettingPermission: FC<any> = ({ data }) => {
             <Button
               type="button"
               variant="outline"
+              className="cs-btn-soft"
               onClick={() => openModal('bussinessHoursModal')}
             >
               Change
@@ -167,6 +183,7 @@ const SettingPermission: FC<any> = ({ data }) => {
             <Button
               type="button"
               variant="outline"
+              className="cs-btn-soft"
               onClick={() => openModal('automaticRecordingModal')}
             >
               Change
@@ -243,7 +260,7 @@ const SettingPermission: FC<any> = ({ data }) => {
           note="This one does reach the call: it is the number shown on the other person's phone."
           description="What shows on the other person's phone when somebody here calls out."
           aside={
-            <Button type="button" variant="outline" onClick={() => openModal('displayNumberModal')}>
+            <Button type="button" variant="outline" className="cs-btn-soft" onClick={() => openModal('displayNumberModal')}>
               Change
             </Button>
           }
@@ -265,6 +282,8 @@ const SettingPermission: FC<any> = ({ data }) => {
           />
           <OverrideRow path="settings.display_number.override" what="caller ID" />
         </SettingCard>
+
+        {footer}
       </div>
 
       {modalState?.regionalModal && (

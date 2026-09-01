@@ -9,6 +9,7 @@ import { AlertTriangle, MapPinIcon, PhoneCall } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { BackButton } from './section-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import CustomSelect from '@/components/custom/custom-select';
@@ -360,8 +361,10 @@ const CompanyEmergencyAddress = () => {
   }
 
   return (
-    <section className="flex w-full flex-col gap-4">
-      <div className="flex items-start gap-3">
+    <section className="cs-section flex w-full flex-col gap-4">
+      {/* On a panel, like the heading block every other section opens with. It
+          was the one section whose title sat bare on the page ground. */}
+      <div className="cs-block flex items-start gap-3">
         <MapPinIcon className="mt-0.5 h-4.5 w-4.5 text-primary" />
         <div className="flex flex-col gap-0.5">
           <h5 className="text-base font-semibold tracking-wide text-gray-900">
@@ -374,36 +377,27 @@ const CompanyEmergencyAddress = () => {
         </div>
       </div>
 
-      {/* The whole point of this panel: say plainly that nothing routes on it. */}
+      {/* Small, but still a warning and still amber - not the plain grey note
+          the other screens use for "saved, nothing reads it yet". Everywhere
+          else that pattern costs somebody a setting that does not apply; here it
+          is whether an ambulance arrives. Shortened to the three things a reader
+          has to leave with: it is not used, keep another phone, and saving does
+          not make you compliant. The detail that used to be here - which part of
+          the system does not read it, and what building it needs - is in the
+          file header, where the next engineer will look for it. */}
       <div
         role="alert"
-        className="rounded-xl border-2 border-red-300 bg-red-50 p-4 text-red-900 shadow-sm"
+        className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3"
       >
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-bold uppercase tracking-wide text-red-700">
-              This address is written down. It is not used to route emergency calls.
-            </p>
-            <p className="text-sm font-medium">
-              If someone dials 911 or another emergency number from a desk phone or from this app,
-              the call is <span className="font-bold">not</span> sent using this address, and this
-              address is <span className="font-bold">not</span> passed to the responders. The part
-              of the system that connects the call does not read this field at all. Building that
-              needs work with our phone carrier and our call switch, and it has not been done yet.
-            </p>
-            <p className="text-sm font-medium">
-              Until that work is finished, keep a normal phone line or a mobile phone available for
-              emergencies, and tell everyone at this address not to rely on this system to call for
-              help.
-            </p>
-            <p className="text-sm font-medium">
-              In the US, Kari&apos;s Law and the RAY BAUM&apos;S Act require emergency calls to work
-              and to carry a usable address. Saving this form does{' '}
-              <span className="font-bold">not</span> make the account compliant with either law.
-            </p>
-          </div>
-        </div>
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <p className="text-xs text-gray-800">
+          <span className="font-semibold text-gray-900">
+            This address is recorded here only.
+          </span>{' '}
+          A 999 or 911 call does not use it, and responders are not sent it — so keep a normal
+          phone or a mobile available for emergencies. In the US, saving this does not make the
+          account compliant with Kari&apos;s Law or the RAY BAUM&apos;S Act.
+        </p>
       </div>
 
       {isLoading ? (
@@ -572,7 +566,7 @@ const CompanyEmergencyAddress = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
             <p className="text-xs font-medium text-amber-900">
               A PO box will be rejected. Emergency responders need a street address they can drive
               to, so a mailbox is not accepted here - this matches what carriers and other providers
@@ -598,21 +592,17 @@ const CompanyEmergencyAddress = () => {
           </div>
 
           {canEdit && (
-            <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-4">
+            <div className="cs-savebar">
+              <BackButton />
               <Button
-                type="button"
-                variant="secondary"
-                disabled={isSaving || !isDirty}
-                onClick={() => {
-                  reset();
-                  setAcknowledged(false);
-                }}
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="cs-save"
+                disabled={isSaving}
               >
-                Reset
-              </Button>
-              <Button type="submit" variant="primary" disabled={isSaving || !acknowledged}>
                 {isSaving ? <Loader variant="white" size="xs" /> : null}
-                Save emergency address
+                Save settings
               </Button>
             </div>
           )}

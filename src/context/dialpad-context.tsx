@@ -47,6 +47,7 @@ type SipCredentials = {
   turn_password?: string;
   stun_url?: string;
   turn_url?: string;
+  turn_urls?: string[];
   wss_url: string;
   extension: string;
   password: string;
@@ -619,20 +620,29 @@ const parseRemoteMetaDataHeader = (request: any): SessionRemoteMetaData => {
 };
 
 const buildPcConfig = (credentials: SipCredentials) => {
-  const { stun_url, turn_url, turn_username, turn_password } = credentials;
+  const { stun_url, turn_url, turn_urls, turn_username, turn_password } = credentials;
   const stunUrl = stun_url || DEFAULT_STUN_URL;
-  const turnUrl = turn_url || '';
   const turnUsername = turn_username || '';
   const turnPassword = turn_password || '';
-  const iceServers: Array<{ urls: string; username?: string; credential?: string }> = [];
+  const iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> = [];
 
   if (stunUrl) {
     iceServers.push({ urls: stunUrl });
   }
 
-  if (turnUrl && turnPassword) {
+  // Every relay address the API offers, not just the first. A browser on a
+  // network that blocks outbound UDP gathers no relay candidate from a UDP-only
+  // list, and the call then dies about fifteen seconds in - it dials, it rings,
+  // and the carrier gives up because no audio ever reached it. The TCP and TLS
+  // entries exist for that case. Older API builds send only turn_url, so fall
+  // back to it rather than losing the relay entirely.
+  const relayUrls = (turn_urls?.length ? turn_urls : [turn_url])
+    .map((url) => `${url || ''}`.trim())
+    .filter((url) => url.length > 0);
+
+  if (relayUrls.length > 0 && turnPassword) {
     iceServers.push({
-      urls: turnUrl,
+      urls: relayUrls,
       username: turnUsername,
       credential: turnPassword,
     });
@@ -734,6 +744,7 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       turn_password: credentials.turn_password,
       stun_url: credentials.stun_url,
       turn_url: credentials.turn_url,
+      turn_urls: credentials.turn_urls,
       wss_url: credentials.wss_url,
       extension: credentials.extension,
       password: credentials.password,
@@ -2864,9 +2875,9 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
     const session = sessionRef.current[sessionId];
     if (!session || !tone) return;
     session.sendDTMF(tone, {
-      duration: 100,
+      duration: 160,
       interToneGap: 500,
-      transportType: 'INFO',
+      transportType: 'RFC2833',
     });
   }, []);
 

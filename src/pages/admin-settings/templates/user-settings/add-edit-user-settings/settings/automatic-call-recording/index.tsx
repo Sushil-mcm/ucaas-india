@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ModalProps } from '@/interfaces/common-interface';
-import { getEnv } from '@/lib/utils';
 import { AuthenticatedAudio } from '@/components/custom/authenticated-media';
 
 import { FC } from 'react';
@@ -21,7 +20,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
   const { watch, setValue } = useFormContext();
   return (
     <Dialog open={modalState} onOpenChange={(val) => setModalState(val)}>
-      <DialogContent className="sm:w-1/2  md:w-1/4 w-full p-3" showCloseButton={false}>
+      <DialogContent className="sm:w-1/2  md:w-1/4 w-full p-3 max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <div className="flex flex-col gap-1.5  text-900/80">
           <div className="font-semibold truncate text-md flex items-center justify-between">
             Automatic & On Demand Call Recording
@@ -76,7 +75,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
                 <Label>Call Recording Announcement</Label>
                 <AuthenticatedAudio
                   controls
-                  src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3`}
+                  src={"/recording-announcement.mp3?v=2"}
                   className="w-full h-10"
                 />
               </div>
@@ -111,7 +110,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
                   <Label>Announcement on Start</Label>
                   <AuthenticatedAudio
                     controls
-                    src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34331.mp3`}
+                    src={"/recording-on-demand-start.mp3?v=2"}
                     className="w-full h-10"
                   />
                 </div>
@@ -119,7 +118,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
                   <Label>Announcement on Stop</Label>
                   <AuthenticatedAudio
                     controls
-                    src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34332.mp3`}
+                    src={"/recording-on-demand-stop.mp3?v=2"}
                     className="w-full h-10"
                   />
                 </div>
@@ -133,7 +132,14 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
             <Button type="button" variant={'transparent'} onClick={() => setModalState(false)}>
               Cancel
             </Button>
-            <Button type="button" variant={'outline'} onClick={() => setModalState(false)}>
+            <Button
+              type="button"
+              variant={'outline'}
+              onClick={() => {
+                (document.getElementById('company-phone-rules-form') as HTMLFormElement | null)?.requestSubmit?.();
+                setModalState(false);
+              }}
+            >
               Submit
             </Button>
           </div>

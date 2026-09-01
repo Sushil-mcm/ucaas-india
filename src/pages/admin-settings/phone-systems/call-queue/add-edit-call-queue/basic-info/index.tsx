@@ -11,6 +11,8 @@ import { generateRandomExtension } from '@/lib/utils';
 import { FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { MAX_WAITING_CALLERS_LIMITS, QUEUE_TIMEOUT_LIMITS } from '../../constant';
+import QueueNumbersPanel from './queue-numbers-panel';
+import { FULL_PREFIX, buildQueueName, stripInboundPrefix } from '@/lib/queue-naming';
 
 interface IAddMembersProps {
   queueDetails: any;
@@ -35,13 +37,41 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
       <div className="mt-1 flex flex-col gap-4 sm:mt-2">
         <SettingCard
           title="What this queue is"
-          description="The name people see in reports and on transfers, and the extension used to reach it."
+          description="The name people see in reports and on transfers. Callers reach it on the numbers you add below."
         >
           <SettingRow
             label="Name"
             description="Shown wherever this queue appears - reports, transfer lists, the queue list."
             control={
-              <Input placeholder="Enter name" {...register('name')} error={errors?.name?.message} />
+              /* The word is fixed and the admin types only the team. Every queue
+                 here is an inbound line - outbound work is a campaign, a
+                 different record - and a report read at month end shows a name,
+                 not a type. Putting the word in the name is what carries the
+                 distinction into reports and transfer lists, which a badge on
+                 this one screen would not reach. */
+              <div className="flex w-full flex-col gap-1">
+                <div className="flex w-full items-stretch">
+                  <span className="flex items-center whitespace-nowrap rounded-l-md border border-r-0 border-gray-200 bg-gray-50 px-3 text-sm text-gray-600">
+                    {FULL_PREFIX.trim()}
+                  </span>
+                  <Input
+                    className="rounded-l-none"
+                    placeholder="Sales Team"
+                    value={stripInboundPrefix(watch('name'))}
+                    onChange={(event) =>
+                      setValue('name', buildQueueName(event.target.value), {
+                        shouldValidate: true,
+                      })
+                    }
+                    error={errors?.name?.message}
+                  />
+                </div>
+                {stripInboundPrefix(watch('name')) ? (
+                  <p className="text-xs text-gray-500">
+                    Saved and reported as <strong>{buildQueueName(watch('name'))}</strong>
+                  </p>
+                ) : null}
+              </div>
             }
           />
 
@@ -75,12 +105,27 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
             }
           />
 
+        </SettingCard>
+
+        <QueueNumbersPanel
+          queueDetails={queueDetails}
+          pendingUuids={watch('pending_did_uuids') || []}
+          onPendingChange={(uuids) => setValue('pending_did_uuids', uuids)}
+        />
+
+        {/* Below the numbers on purpose. The extension is the internal door - a
+            colleague pushing a call in - and leading with it is what made admins
+            think it was how customers get through. */}
+        <SettingCard
+          title="Internal extension"
+          description="A short number your own people dial to reach this queue, or transfer a caller into it."
+        >
           <SettingRow
             label="Extension"
             description={
               queueDetails
-                ? 'Fixed once the queue exists, because people dial it and other screens point at it.'
-                : 'The internal number people dial to reach this queue.'
+                ? 'Not a number a customer can call. Fixed once the queue exists, because other screens point at it.'
+                : 'Not a number a customer can call - add those above. This is for your own people only.'
             }
             control={
               <div className="flex w-full items-start gap-2">

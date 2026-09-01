@@ -22,11 +22,6 @@ export const COMPANY_SECTIONS: CompanySection[] = [
   { path: 'calling', label: 'Calling' },
   { path: 'messaging', label: 'Messaging' },
   { path: 'policies', label: 'Policies' },
-  /* Sits straight after Policies on purpose. Policies is where an admin decides
-     the company's answer; this is where that answer is put onto the people who
-     already work here, who none of the other screens reach. */
-  { path: 'apply-to-people', label: 'Apply to people' },
-  { path: 'profile-fields', label: 'Profile fields' },
   { path: 'security', label: 'Security' },
 ];
 
@@ -41,4 +36,8 @@ export const COMPANY_DEFAULT_SECTION = 'phone-rules';
  * recording consent and data retention — not the hours, ring time and voicemail
  * those three describe. Anyone following them landed on the wrong screen. They
  * now share this one constant, so a future move cannot separate them again. */
-export const COMPANY_RULES_PATH = `/admin-settings/company/${COMPANY_DEFAULT_SECTION}`;
+/* The address this whole area hangs off. Exported so the layout, the trail and
+   the section buttons all measure from the same string. */
+export const COMPANY_ROOT = '/admin-settings/company';
+
+export const COMPANY_RULES_PATH = `${COMPANY_ROOT}/${COMPANY_DEFAULT_SECTION}`;

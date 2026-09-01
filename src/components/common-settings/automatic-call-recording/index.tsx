@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ModalProps } from '@/interfaces/common-interface';
-import { getEnv } from '@/lib/utils';
 import { AuthenticatedAudio } from '@/components/custom/authenticated-media';
 
 import { FC } from 'react';
@@ -31,7 +30,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
   return (
     <Dialog open={modalState} onOpenChange={(val) => setModalState(val)}>
       <DialogContent
-        className="sm:w-1/2 md:w-1/3  p-3 max-h-[99%] overflow-y-auto"
+        className="sm:w-1/2 md:w-1/3  p-3 max-h-[85vh] overflow-y-auto"
         showCloseButton={false}
       >
         <div className="flex flex-col gap-1.5  text-900/80">
@@ -88,7 +87,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Call Recording Announcement</Label>
                 <AuthenticatedAudio
                   controls
-                  src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3`}
+                  src={"/recording-announcement.mp3?v=2"}
                   className="w-full h-10"
                 />
               </div>
@@ -122,7 +121,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Announcement on Start</Label>
                 <AuthenticatedAudio
                   controls
-                  src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34331.mp3`}
+                  src={"/recording-on-demand-start.mp3?v=2"}
                   className="w-full h-10"
                 />
               </div>
@@ -130,7 +129,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Announcement on Stop</Label>
                 <AuthenticatedAudio
                   controls
-                  src={`${getEnv().VITE_API_BASE_URL}/api/media/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34332.mp3`}
+                  src={"/recording-on-demand-stop.mp3?v=2"}
                   className="w-full h-10"
                 />
               </div>

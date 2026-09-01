@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { GreetingItem, useGetGreetings } from '@/hooks/common';
 import { useIsStarterPlan } from '@/hooks/use-is-starter-plan';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 interface ICompanyInfo {
@@ -12,10 +12,15 @@ interface ICompanyInfo {
 }
 
 interface IGREETINGPROPS {
-  company_info: ICompanyInfo;
+  company_info?: ICompanyInfo;
+  intro?: ReactNode;
+  footer?: ReactNode;
 }
 
-const GreetingNotification: FC<IGREETINGPROPS> = () => {
+/* See SettingPermission for why this renders inside the scrolling box rather
+   than beside this component: outside it, it stays put while the settings
+   scroll under it. Optional, and unused by the other screens here. */
+const GreetingNotification: FC<IGREETINGPROPS> = ({ footer, containerClass }: any) => {
   const { greetingList, voicemailList } = useGetGreetings();
   const isStarterPlan = useIsStarterPlan();
   const optionsData: Record<string, GreetingItem[]> = {
@@ -77,11 +82,22 @@ const GreetingNotification: FC<IGREETINGPROPS> = () => {
   };
 
   return (
-    <div className="user-settings-template-greetings flex h-[calc(100vh_-_15rem)] flex-col gap-4 overflow-auto pt-2">
+    <div
+      className={
+        /* See SettingPermission: a caller whose page already scrolls passes its
+           own layout so this does not scroll inside itself as well. */
+        containerClass ??
+        'user-settings-template-greetings flex h-[calc(100vh_-_15rem)] flex-col gap-4 overflow-auto pt-2'
+      }
+    >
+      {/* No badge. `status` is dropped rather than set to something softer:
+          with neither `status` nor `enforced`, `resolveStatus` returns undefined
+          and the header renders no chip at all. The note below is untouched -
+          it is the part that actually tells an admin recordings do not reach a
+          caller yet, and it has to stay until they do. */}
       <SettingCard
         title="Recorded messages"
         description="What a caller hears at each point. Each one is off until you turn it on and choose a recording."
-        status="coming-soon"
         note="Your choices are saved, but no caller hears them yet — call routing does not play recordings at all. Nothing is lost: whatever you set here starts playing when it does."
       >
         {mediaOptionsGreetingNotifications.map(({ name, label, title, blurb }) => (
@@ -107,7 +123,15 @@ const GreetingNotification: FC<IGREETINGPROPS> = () => {
               >
                 <SelectGreeting
                   name={name == 'voicemail' ? 'voicemail' : 'greeting'}
-                  isShowUpload={name !== 'ring_tone'}
+                  /* Every slot can have one made for it, ringback included. It
+                     was the one row with no way to add anything, so on an
+                     account with no recordings yet its dropdown was empty and
+                     stayed empty however long you looked at it. */
+                  isShowUpload
+                  /* This screen is a full-width settings page, not a column in
+                     a form, so the add button stays put after a choice is made
+                     and a new recording drops straight into the slot. */
+                  alwaysAllowAdd
                   onChangeMedia={(e) =>
                     setValue(`greetings.${name}.value`, e as ISELECTVALUE, {
                       shouldValidate: true,
@@ -141,6 +165,8 @@ const GreetingNotification: FC<IGREETINGPROPS> = () => {
           </div>
         ))}
       </SettingCard>
+
+      {footer}
     </div>
   );
 };

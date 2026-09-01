@@ -1,11 +1,20 @@
 /* Putting the company holiday list onto many lines at once.
  *
- * The company calendar next door (`company-holidays.tsx`) is a record only.
- * Routing still reads each line's own holiday list, so today an admin who has
- * declared Christmas once has to open every queue, every IVR menu, every person
- * and every number and press "Import company holidays" inside each one's
- * business-hours dialog. Forty-four lines is forty-four trips. established systems applies
- * one holiday to many lines from a single screen; this is that.
+ * This panel is no longer what makes a holiday work. Since 1 Sep 2026 the
+ * inbound dialplan reads the company list itself on every incoming call
+ * (see `company-holidays.tsx` and `backend-patches/fs-xml-api/`), so declaring
+ * Christmas once is enough to close the lines. What this still does is keep each
+ * line's OWN holiday list in step with the company one, so a queue's or a
+ * person's own business-hours screen shows the same dates the company declared
+ * rather than looking empty. The panel says that plainly rather than implying a
+ * run is needed - an admin who thinks holidays are broken until they press this
+ * button has been misled just as surely as one who thinks they work when they
+ * do not.
+ *
+ * Without it an admin who wanted those per-line lists filled in would open every
+ * queue, every IVR menu, every person and every number and press "Import company
+ * holidays" inside each one's business-hours dialog. Forty-four lines is
+ * forty-four trips.
  *
  * Nothing here is new logic. `buildHolidayImport` already decides what a line
  * should receive, and the same rules apply whether it is called once from a
@@ -675,7 +684,7 @@ const CompanyHolidayApply = () => {
   };
 
   return (
-    <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4">
+    <div className="cs-block">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
@@ -683,12 +692,14 @@ const CompanyHolidayApply = () => {
           </div>
           <div className="min-w-0">
             <p className="text-base font-semibold text-gray-900">
-              Put these holidays on your lines
+              Copy these holidays onto your lines{' '}
+              <span className="text-xs font-normal text-gray-500">— optional</span>
             </p>
             <p className="mt-0.5 text-xs text-gray-600">
-              Put the {companyHolidays.length} holiday
-              {companyHolidays.length === 1 ? '' : 's'} above onto your queues, IVR menus, people
-              and numbers in one go, instead of opening each one.
+              You do not need this for holidays to work; the list above already closes your lines
+              on its own. Use it to copy the {companyHolidays.length} date
+              {companyHolidays.length === 1 ? '' : 's'} onto your queues, menus, people and numbers
+              so their own screens show them too, instead of opening each one.
             </p>
           </div>
         </div>
@@ -709,10 +720,12 @@ const CompanyHolidayApply = () => {
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
         <p className="text-xs text-gray-700">
           <span className="font-semibold text-gray-900">What this writes.</span> Each holiday is
-          added to the line with the action that line already uses when it is closed — a holiday
-          does not have its own separate action, it borrows the closed-hours one. Holidays already
-          on a line are left exactly as they are, and a line that has no closed-hours action set is
-          skipped and named rather than saved with a broken one.
+          added to the line&apos;s own holiday list with the action that line already uses when it
+          is closed — a holiday has no separate action, it borrows the closed-hours one. Dates
+          already on a line are left exactly as they are, and a line with no closed-hours action
+          set is skipped and named rather than saved with a broken one. This changes what each
+          line&apos;s screen shows; it does not change how a call is routed, because the router
+          already reads the company list.
         </p>
       </div>
 

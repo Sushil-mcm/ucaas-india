@@ -25,6 +25,12 @@ interface IGREETINGPROPS {
   onGreetingUploadStart?: () => void;
   onGreetingUploadSuccess?: () => void;
   width?: string;
+  /* Keeps the add button available after a recording has been chosen, and
+     selects whatever gets made. Off by default: the forms that embed this
+     control - IVR keys, queue settings, a person's phone tab - lay it out in a
+     narrow column where a third button next to the dropdown and the play button
+     wraps the row. Screens with room ask for it. */
+  alwaysAllowAdd?: boolean;
 }
 
 interface GreetingSelectValue extends ISELECTVALUE {
@@ -46,6 +52,7 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
   refetch = () => {},
   onGreetingUploadStart = () => {},
   onGreetingUploadSuccess = () => {},
+  alwaysAllowAdd = false,
 }) => {
   const { user } = useUser();
   const { company_info } = user;
@@ -102,7 +109,10 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
               <Play className="w-5 h-5" />
             </Button>
           )}
-          {isShowUpload && !isPlay && !value?.value && (
+          {/* Without `alwaysAllowAdd` this disappeared the moment a recording
+              was chosen, so the only way to add a second one was to clear the
+              first - on a screen whose whole job is choosing recordings. */}
+          {isShowUpload && !isPlay && (alwaysAllowAdd || !value?.value) && (
             <Button
               variant={'outline'}
               type="button"
@@ -125,7 +135,9 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
         <SideDrawer
           width={width}
           isOpen={drawerState?.addGreeting}
-          title="Upload File"
+          /* It uploads, records from the microphone, and reads typed text
+             aloud. "Upload File" named one of the three. */
+          title="Add a recording"
           handleClose={() =>
             setDrawerState((prev) => ({ ...prev, addGreeting: false, greetingType: '' }))
           }
@@ -141,6 +153,10 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
                 refetch();
                 onGreetingUploadSuccess();
               }}
+              /* Straight into the slot it was made for. The drawer was opened
+                 from this dropdown to fill it, so leaving the admin to find the
+                 new recording in the list afterwards is a step with no purpose. */
+              onCreated={alwaysAllowAdd ? (greeting) => onChangeMedia(greeting) : undefined}
               isRefetchable={isRefetchable}
             />
           }

@@ -1,0 +1,1 @@
+import{w as o}from"./withMetadataArgument-Dt4rkWOL.js";import{dQ as n,dR as m}from"./index-DdklLgUG.js";function s(){var r=n(arguments),t=r.text,e=r.options,a=r.metadata;return m(t,e,a)}function p(){return o(s,arguments)}export{p};
