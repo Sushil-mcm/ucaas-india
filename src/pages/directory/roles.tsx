@@ -92,24 +92,6 @@ const Roles = () => {
       <DirectoryPage
         title="Roles"
         description="What each person sees in this app — and how many people hold each role."
-        /* The description used to say "what each person is allowed to do", which
-           is the one thing a role here does not decide. The three screens that
-           only describe this model — the capability table, Admin scope and
-           Default permissions — all warn that the platform does not check
-           permissions when it answers a request. This screen and the permission
-           tick-boxes are where an administrator actually builds and saves the
-           thing, and they were the two carrying no warning at all, so the
-           caveat was on the map and not on the controls. */
-        note={
-          <>
-            <b>These decide what the app shows, not what the platform allows.</b> A role is checked
-            when this app draws a screen, and it is not checked again when the platform answers a
-            request. So tightening a role makes the product simpler for the person using it rather
-            than locking anything away, and it is not a security control on its own. The one thing
-            that does hold is the kind of person somebody is — administrator, agent — which is
-            checked properly.
-          </>
-        }
         actions={
           isAdmin ? (
             <button type="button" className="btn primary" onClick={() => setCreating(true)}>

@@ -86,12 +86,8 @@ const CapabilityMatrixPage = () => {
           status="app-only"
           note={
             <>
-              Works in this app. Permissions decide what this app puts on screen, and nothing behind
-              it checks them again — so a tighter role makes the product simpler for the person
-              using it rather than locking anything away. Reach is the part that is coming soon:
-              which departments somebody looks after is not stored yet, so a Department
-              Admin&rsquo;s permissions currently apply to every department, not only theirs. Admin
-              scope, step 3, is where reach is written down ready for that.
+              This table is the model rather than a report on your company. What your own roles
+              hold is on the Roles screen.
             </>
           }
         >
@@ -121,7 +117,7 @@ const CapabilityMatrixPage = () => {
           icon={<Table2 className="h-4 w-4" />}
           description="A tick means this kind of person gets it by default. A dash means it is held back on purpose — hover any row heading for the reason."
           status="app-only"
-          note="Works in this app: permissions decide what this app puts on screen, and nothing behind it checks them again. Two things this table is not — it is the model rather than a report on your company. What your own roles actually hold is on the Roles screen, and Default permissions shows how far each one has drifted from this."
+          note="This table is the model rather than a report on your company. What your own roles actually hold is on the Roles screen, and Default permissions shows how far each one has drifted from this."
         >
           {/* Wide on purpose: seven columns do not fold onto a phone, so the
               table scrolls inside its own box rather than the whole page moving
