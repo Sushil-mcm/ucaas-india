@@ -9,6 +9,7 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import AddNewRole from '@/pages/admin-settings/roles/add-new-role';
 import AssignUsersModal from '@/pages/admin-settings/roles/assign-users-modal';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import { roleDisplayName, roleDisplayDescription } from '@/lib/role-display-names';
 
 /**
  * Directory ▸ Roles — what people are allowed to do.
@@ -144,8 +145,13 @@ const Roles = () => {
                 return (
                   <tr key={role?.uuid || role?.role_uuid || role?.name}>
                     <td>
-                      <div className="list-row-name">{role?.name || '—'}</div>
-                      <div className="list-row-sub">{role?.description || 'No description'}</div>
+                      {/* The stored name is an authorisation gate - the platform
+                          compares role strings directly - so only the label
+                          changes here, never the value. */}
+                      <div className="list-row-name">{roleDisplayName(role?.name)}</div>
+                      <div className="list-row-sub">
+                        {roleDisplayDescription(role?.name, role?.description) || 'No description'}
+                      </div>
                     </td>
                     <td>
                       <span className={system ? 'tag neu' : 'tag acc'}>
@@ -159,8 +165,8 @@ const Roles = () => {
                           <button
                             type="button"
                             className="mini"
-                            title={`Assign people to ${role?.name}`}
-                            aria-label={`Assign people to ${role?.name}`}
+                            title={`Assign people to ${roleDisplayName(role?.name)}`}
+                            aria-label={`Assign people to ${roleDisplayName(role?.name)}`}
                             onClick={() => setAssigning(role)}
                           >
                             <Ic n="users" size={12} />
@@ -178,8 +184,8 @@ const Roles = () => {
                           <button
                             type="button"
                             className="mini"
-                            title={`See what ${role?.name} can do`}
-                            aria-label={`See what ${role?.name} can do`}
+                            title={`See what ${roleDisplayName(role?.name)} can do`}
+                            aria-label={`See what ${roleDisplayName(role?.name)} can do`}
                             onClick={() => setEditing(role)}
                           >
                             <Ic n="eye" size={12} />
@@ -206,7 +212,7 @@ const Roles = () => {
                             className="mini"
                             title={
                               system
-                                ? `Make my own copy of ${role?.name}`
+                                ? `Make my own copy of ${roleDisplayName(role?.name)}`
                                 : `Duplicate ${role?.name}`
                             }
                             aria-label={`Duplicate ${role?.name}`}

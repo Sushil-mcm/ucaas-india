@@ -1,5 +1,17 @@
 /* Ready-made roles, so a company does not have to invent them.
  *
+ * ONE SET OF NAMES, EVERYWHERE A PERSON LOOKS
+ *
+ * These are the same five names the built-in roles are shown under - see
+ * src/lib/role-display-names.ts. There were briefly three vocabularies on this
+ * screen: the stored ADMIN/MANAGER/SUB-ADMIN/AGENT, a set of presets, and a set
+ * of display labels. Three names for one idea is worse than an ugly name.
+ *
+ * The stored strings stay as they are because the platform compares them
+ * directly as an authorisation gate - `role !== "ADMIN"` in AuthMiddleware and
+ * 32 other places - so they are internal identifiers, like a primary key, and
+ * nobody sees them.
+ *
  * Until now a new role started from nothing or from a copy of ADMIN, SUB-ADMIN,
  * MANAGER or AGENT. Neither helps somebody who wants the ordinary thing every
  * company wants: a person who runs reports, or handles people, and touches
@@ -53,27 +65,27 @@ export interface RolePreset {
 
 export const ROLE_PRESETS: RolePreset[] = [
   {
-    id: 'account-admin',
-    name: 'Account admin',
+    id: 'account-owner',
+    name: 'Account owner',
     description: 'Runs the whole account. Everything the company has.',
     features: null,
   },
   {
     id: 'people-admin',
     name: 'People admin',
-    description: 'Adds and removes people, sets their roles and numbers. No billing, no reports.',
+    description: 'Adds and removes people, and looks after numbers. No billing.',
     features: [FEATURE_KEYS.people, FEATURE_KEYS.numbers, FEATURE_KEYS.settings],
   },
   {
-    id: 'reports-only',
-    name: 'Reports only',
-    description: 'Reads reports and live activity. Changes nothing.',
+    id: 'account-admin',
+    name: 'Account admin',
+    description: 'Runs the account day to day. Everything except the account itself.',
     features: [FEATURE_KEYS.reports, FEATURE_KEYS.monitoring],
   },
   {
     id: 'call-reviewer',
     name: 'Call reviewer',
-    description: 'Listens to recordings and reviews calls. No access to people or settings.',
+    description: 'Listens to recordings and reads reports. Changes no settings.',
     features: [FEATURE_KEYS.reports, FEATURE_KEYS.monitoring],
   },
   {
