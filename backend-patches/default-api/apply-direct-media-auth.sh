@@ -2,8 +2,26 @@
 #
 # Close the media route that serves files to anybody, with no login.
 #
-# NOT APPLIED. Written 1 Sep 2026. The write to the API box was refused by a
-# permission rule in the session that wrote it, so this is ready and unrun.
+# NOT APPLIED to any running box. Written 1 Sep 2026. The write to the API box
+# was refused by a permission rule in the session that wrote it.
+#
+# THE SOURCE IS ALREADY PATCHED. mcm-repos/default-api/src/routers/mediaRoute.ts
+# carries the same guard, and `npx tsc --noEmit` over the whole project is clean.
+# So a future build ships the fix; this script is only for the running dist,
+# which is ahead of source (see F8 in the audit tracker).
+#
+# HOW WIDE IT IS - probed 1 Sep 12:0x, no credentials, from off-box:
+#
+#   api.mycountrymobile.com    direct = 200   (control, authed route = 401)
+#   api2.mycountrymobile.com   direct = 200   (control = 401)
+#   api3.mycountrymobile.com   direct = 200   (control = 401)
+#   api4.mycountrymobile.com   no DNS from here - unconfirmed, not cleared
+#
+# Three public hostnames serve it. api2 is 142.93.121.121 and this session can
+# reach it. api3 is 151.106.57.254 and this session has NO ssh key for it -
+# `Permission denied (publickey,password)`. Whether `api` is its own box or an
+# alias of api2 could not be told apart from outside; the sweep at the bottom
+# settles it after the first box is done.
 #
 # THE HOLE
 #
@@ -120,14 +138,22 @@ cat <<'CHECKS'
 A 401 on the first, 404 on the second and 401 on the third is the pass. A 401 on
 the second means fax sending has been broken and this must be rolled back.
 
-== also needed ==
+== then sweep every hostname, and let the sweep tell you what is left ==
 
-  * The same file on the other API boxes - api3 (151.106.57.254) and api4
-    (167.99.4.91) serve unified3/5 and unified2/4. Check each before assuming
-    api2 is the whole exposure.
-  * The same one-line change in source, mcm-repos/default-api/src/routers/
-    mediaRoute.ts:23, or the next build reopens it. See F8 in the audit tracker:
-    the running dist is already ahead of source in four places.
+  for h in api api2 api3 api4; do
+    printf '%-5s ' $h
+    curl -s -o /dev/null -w '%{http_code}\n' --max-time 20 \
+      https://$h.mycountrymobile.com/api/media/direct/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3
+  done
+
+  Every one must read 401. A hostname still reading 200 is a second box that
+  has not been patched - that is also how you learn whether `api` is its own
+  box or an alias of api2, which cannot be told apart from outside beforehand.
+
+  api3 (151.106.57.254) will need doing separately: this session has no ssh key
+  for it. api4 has no DNS from here and has NOT been cleared.
+
+  Source is already patched (src/routers/mediaRoute.ts), typecheck clean.
 
 == revert ==
 
