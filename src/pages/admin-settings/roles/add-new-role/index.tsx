@@ -73,7 +73,10 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
       name: pendingSave.name,
       description: pendingSave.description,
       permission: { plan_features: pendingSave.permission },
-      role_uuid: selectedRole?.role_uuid,
+      /* The blank starting point names no real role, so it is not sent. */
+      ...(selectedRole?.role_uuid && selectedRole.role_uuid !== '__blank__'
+        ? { role_uuid: selectedRole.role_uuid }
+        : {}),
       ...(roleData?.uuid ? { uuid: roleData.uuid } : {}),
     });
     setPendingSave(null);

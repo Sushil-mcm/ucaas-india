@@ -10,6 +10,10 @@ import { ROLE_DESCRIPTION_MAX_LENGTH, ROLE_NAME_MAX_LENGTH } from '../schema';
 import { sanitizePlainTextInput } from '@/lib/utils';
 import { extractPlanFeatures } from '@/hooks/rbac';
 
+/* Chosen as the value for "start empty". It is never sent to the API — the
+   save strips it, because it names no real role. */
+const BLANK_ROLE = '__blank__';
+
 const SelectRole: FC<any> = ({
   rolesListData,
   setSelectedRole,
@@ -28,13 +32,39 @@ const SelectRole: FC<any> = ({
   const descriptionLength = Math.min(descriptionValue.length, ROLE_DESCRIPTION_MAX_LENGTH);
 
   useEffect(() => {
+    /* A new role starts empty, not pre-copied from whichever role happened to be
+       first in the list. Copying by default is how an administrator ends up with
+       an Assistant that quietly holds everything ADMIN holds, having never
+       chosen any of it. Starting empty makes every permission on the new role
+       something somebody decided to grant. */
     if (rolesListData?.length && !roleData) {
-      setSelectedRole(rolesListData[0]);
-      setValue('permission', extractPlanFeatures(rolesListData[0]?.permission));
+      setSelectedRole({
+        role_uuid: BLANK_ROLE,
+        name: 'Nothing',
+        permission: { plan_features: {} },
+      });
+      setValue('permission', {});
     }
   }, [rolesListData, setValue]);
 
   const handleRoleChange = (role_uuid: string) => {
+    /* Starting from nothing.
+    
+       Every new role had to be copied from ADMIN, SUB-ADMIN, MANAGER or AGENT,
+       which meant an administrator could not build a category of their own --
+       an Assistant, a Billing clerk -- without first inheriting somebody else's
+       permissions and then hunting through them for what to take away. That is
+       backwards: the point of a custom role is deciding what it holds, not
+       editing what it inherited.
+    
+       The whole menu comes from the company's own plan, not from the role being
+       copied, so nothing is lost by starting empty: every permission the company
+       has is listed, all of it unticked. */
+    if (role_uuid === BLANK_ROLE) {
+      setSelectedRole({ role_uuid: BLANK_ROLE, name: 'Nothing', permission: { plan_features: {} } });
+      setValue('permission', {});
+      return;
+    }
     const findRoleObj = rolesListData?.find((item: any) => item?.role_uuid === role_uuid);
     if (getObjectLength(findRoleObj)) {
       setSelectedRole(findRoleObj);
@@ -132,9 +162,9 @@ const SelectRole: FC<any> = ({
               Which role should this one start from?
             </h5>
             <p className="text-sm text-gray-600">
-              Its permissions are copied in as a starting point, then you change what you need.
-              The role you pick is not affected, and your new role keeps the name you typed
-              above.
+              Pick <b>Nothing</b> to choose every permission yourself, or copy an existing role
+              and adjust it. Either way the role you pick is not affected, and your new role keeps
+              the name you typed above.
             </p>
             <RadioGroup
               className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
@@ -142,6 +172,12 @@ const SelectRole: FC<any> = ({
               onValueChange={(value) => handleRoleChange(value)}
               disabled={selectedRole?.type === 'custom' && roleData}
             >
+              <div className="flex items-center gap-3">
+                <RadioGroupItem value={BLANK_ROLE} id={BLANK_ROLE} className="cursor-pointer" />
+                <Label htmlFor={BLANK_ROLE} className="cursor-pointer break-words font-semibold">
+                  Nothing — start empty
+                </Label>
+              </div>
               {filteredRoleListData && filteredRoleListData?.length > 0
                 ? filteredRoleListData?.map((role: any, index: number) => (
                     <div className="flex items-center gap-3" key={index}>
@@ -173,8 +209,8 @@ const SelectRole: FC<any> = ({
                 Choose a starting point above first
               </p>
               <p className="mt-1 text-sm text-gray-600">
-                Everything that role can do appears here, and you change what you need from
-                there. It is a copy — the role you pick is not affected.
+                Choose <b>Nothing</b> to start empty and tick only what this role should have,
+                or copy an existing role and adjust it.
               </p>
             </div>
           )}
