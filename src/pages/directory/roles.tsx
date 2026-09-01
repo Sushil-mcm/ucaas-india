@@ -166,6 +166,62 @@ const Roles = () => {
                             <Ic n="users" size={12} />
                           </button>
                         ) : null}
+                        {/* Looking at a built-in role.
+
+                            Manager, Agent and Sub-admin showed one button —
+                            assign people — and nothing else, so there was no way
+                            to see what they actually permit. The drawer already
+                            copes: it hides its Save button for a platform role,
+                            so opening one is read-only without any extra work.
+                            It simply had nothing to open it. */}
+                        {isAdmin && system ? (
+                          <button
+                            type="button"
+                            className="mini"
+                            title={`See what ${role?.name} can do`}
+                            aria-label={`See what ${role?.name} can do`}
+                            onClick={() => setEditing(role)}
+                          >
+                            <Ic n="eye" size={12} />
+                          </button>
+                        ) : null}
+
+                        {/* Copying any role into one you own.
+
+                            A built-in role cannot be edited, and that is right:
+                            its owner is the literal string PREDEFINED rather
+                            than any company, so it is shared by every company on
+                            the platform and changing it would change it for all
+                            of them. What was missing was the way forward —
+                            "Manager, but without billing" meant rebuilding it
+                            from nothing.
+
+                            Passing the role WITHOUT its uuid is what makes this
+                            a copy rather than an edit: the form sends a uuid
+                            only when it has one. Leaving the company off is what
+                            brings the Save button back. */}
+                        {isAdmin ? (
+                          <button
+                            type="button"
+                            className="mini"
+                            title={
+                              system
+                                ? `Make my own copy of ${role?.name}`
+                                : `Duplicate ${role?.name}`
+                            }
+                            aria-label={`Duplicate ${role?.name}`}
+                            onClick={() =>
+                              setEditing({
+                                name: `${role?.name} (copy)`,
+                                description: role?.description,
+                                permission: (role as any)?.permission,
+                              } as Role)
+                            }
+                          >
+                            <Ic n="copy" size={12} />
+                          </button>
+                        ) : null}
+
                         {/* Predefined roles belong to the platform — the
                             platform's own screen refuses these too. */}
                         {isAdmin && !system ? (
@@ -208,7 +264,16 @@ const Roles = () => {
       {(creating || editing) && (
         <SideDrawer
           isOpen={creating || Boolean(editing)}
-          title={editing ? `Update role (${editing?.name || ''})` : 'New role'}
+          /* A copy has a name but no uuid, so it is a new role being created and
+             must not say "Update" — the heading is the main thing telling an
+             admin whether they are about to change a role people already hold. */
+          title={
+            editing?.uuid
+              ? `Update role (${editing?.name || ''})`
+              : editing
+                ? `New role (from ${editing?.name || ''})`
+                : 'New role'
+          }
           width="min(980px, 80vw)"
           isTab={false}
           enableResponsive
