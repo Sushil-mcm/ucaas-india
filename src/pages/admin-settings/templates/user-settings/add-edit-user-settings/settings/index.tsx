@@ -12,6 +12,7 @@ import { Weekday, WEEKLY_ORDER, WEEKLY_SCHEDULE_MAP } from '@/pages/admin-settin
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Input } from '@/components/ui/input';
 import RegionalModal from '@/components/common-settings/regional-dialog';
+import { describeRecording } from '@/lib/recording-description';
 
 interface DaySchedule {
   open: boolean;
@@ -159,8 +160,8 @@ const SettingPermission: FC<any> = ({ data }) => {
 
         <SettingCard
           title="Call recording"
-          status="active"
-          note="Recording itself is live for calls that come in to a person — the call is recorded, stored, and appears against that call in your call logs. Two things are not working yet, and both matter before you switch this on for real customers: the announcement is NOT played to the caller, so nobody is told the call is being recorded, and calls you make out or that arrive at a menu or a queue are not recorded at all. Most countries require the caller to be told, so treat this as ready to test rather than ready to use."
+          status="app-only"
+          note="Recording is live for calls to a person, in whichever direction you choose above, and each one appears against its call in your call logs. Still missing, and worth knowing before you switch this on for real customers: the announcement is NOT played, so nobody is told the call is being recorded, and calls arriving at a menu or a queue are not recorded. Most countries require the caller to be told, so this is ready to test rather than ready to use."
           description="Whether calls are recorded automatically, or only when somebody chooses to start recording."
           aside={
             <Button
@@ -174,11 +175,11 @@ const SettingPermission: FC<any> = ({ data }) => {
         >
           <SettingRow
             label="What gets recorded"
-            description={
-              recording?.automatic?.enabled || recording?.on_demand?.enabled
-                ? `${recording?.automatic?.enabled ? 'Every call is recorded automatically.' : ''} ${recording?.on_demand?.enabled ? 'People can start a recording during a call.' : ''}`.trim()
-                : 'Nothing is recorded.'
-            }
+            description={describeRecording({
+              automaticEnabled: recording?.automatic?.enabled,
+              onDemandEnabled: recording?.on_demand?.enabled,
+              direction: recording?.automatic?.value,
+            })}
           />
           <OverrideRow path="settings.recording.override" what="recording setting" />
         </SettingCard>
