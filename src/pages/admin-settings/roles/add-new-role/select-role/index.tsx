@@ -88,9 +88,6 @@ const SelectRole: FC<any> = ({
     }
   };
 
-  const filteredRoleListData =
-    rolesListData?.filter((role: { company_uuid: string }) => role.company_uuid === 'PREDEFINED') ||
-    [];
   return (
     <div className="flex w-full flex-col gap-4">
       {viewPermission ? (
@@ -182,54 +179,74 @@ const SelectRole: FC<any> = ({
               and adjust it. Either way the role you pick is not affected, and your new role keeps
               the name you typed above.
             </p>
+            {/* One option per line, always.
+
+                This was a wrapping row on wider screens. Once the ready-made
+                roles arrived — each two lines, a name above a description — they
+                wrapped around the older single-line ones and the list came out
+                jumbled: nine choices at three different heights, "Nothing"
+                stranded mid-row. A list of things you pick exactly one of reads
+                down, not across.
+
+                The five are the answer for most companies, so they come first
+                and stand alone. Copying an existing role is the rarer case and
+                sits below a divider, out of the way of the decision. */}
             <RadioGroup
-              className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
+              className="flex flex-col gap-1"
               value={selectedRole?.role_uuid}
               onValueChange={(value) => handleRoleChange(value)}
               disabled={selectedRole?.type === 'custom' && roleData}
             >
-              {/* The ready-made roles, offered before the raw copies. Most
-                  companies want one of these and should not have to assemble it
-                  a checkbox at a time. */}
               {ROLE_PRESETS.map((preset) => (
-                <div className="flex items-start gap-3" key={preset.id}>
+                <label
+                  key={preset.id}
+                  htmlFor={`${PRESET_PREFIX}${preset.id}`}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 hover:border-gray-200 hover:bg-gray-50"
+                >
                   <RadioGroupItem
                     value={`${PRESET_PREFIX}${preset.id}`}
                     id={`${PRESET_PREFIX}${preset.id}`}
-                    className="mt-1 cursor-pointer"
+                    className="mt-0.5 shrink-0 cursor-pointer"
                   />
-                  <Label
-                    htmlFor={`${PRESET_PREFIX}${preset.id}`}
-                    className="cursor-pointer break-words"
-                  >
-                    <span className="block font-semibold">{preset.name}</span>
-                    <span className="block text-xs font-normal text-gray-600">
-                      {preset.description}
-                    </span>
-                  </Label>
-                </div>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-gray-900">{preset.name}</span>
+                    <span className="block text-xs text-gray-600">{preset.description}</span>
+                  </span>
+                </label>
               ))}
 
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value={BLANK_ROLE} id={BLANK_ROLE} className="cursor-pointer" />
-                <Label htmlFor={BLANK_ROLE} className="cursor-pointer break-words font-semibold">
-                  Nothing — start empty
-                </Label>
+              <div className="my-2 border-t border-gray-200 pt-2">
+                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Or build it yourself
+                </p>
               </div>
-              {filteredRoleListData && filteredRoleListData?.length > 0
-                ? filteredRoleListData?.map((role: any, index: number) => (
-                    <div className="flex items-center gap-3" key={index}>
-                      <RadioGroupItem
-                        value={role.role_uuid}
-                        id={role?.uuid}
-                        className="cursor-pointer"
-                      />
-                      <Label htmlFor={role?.uuid} className="cursor-pointer break-words">
-                        {role.name}
-                      </Label>
-                    </div>
-                  ))
-                : null}
+
+              <label
+                htmlFor={BLANK_ROLE}
+                className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-2 py-2 hover:border-gray-200 hover:bg-gray-50"
+              >
+                <RadioGroupItem
+                  value={BLANK_ROLE}
+                  id={BLANK_ROLE}
+                  className="mt-0.5 shrink-0 cursor-pointer"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-gray-900">
+                    Nothing — start empty
+                  </span>
+                  <span className="block text-xs text-gray-600">
+                    Every permission your plan has, all switched off. Tick only what this role
+                    should hold.
+                  </span>
+                </span>
+              </label>
+
+              {/* MANAGER, AGENT and SUB-ADMIN used to be offered here as copy
+                  sources, which made nine choices for one decision and buried
+                  the five that answer it. Copying one of those is now the
+                  Duplicate button on the roles list, which does the same job
+                  from where you are already looking at the role you want to
+                  copy. */}
             </RadioGroup>
           </div>
         </div>
