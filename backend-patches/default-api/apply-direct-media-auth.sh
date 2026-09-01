@@ -1,161 +1,79 @@
 #!/usr/bin/env bash
 #
-# Close the media route that serves files to anybody, with no login.
+# Require a login on the media route that currently asks nobody who they are.
 #
-# NOT APPLIED to any running box. Written 1 Sep 2026. The write to the API box
-# was refused by a permission rule in the session that wrote it.
+# NOT APPLIED. Every attempt to write under /var/www/prod/default-api from the
+# session that wrote this was refused by a permission rule. Access is not the
+# problem - all three boxes answer ssh fine. Run this yourself, or allow that
+# path in settings and ask the session to run it.
 #
-# THE SOURCE IS ALREADY PATCHED. mcm-repos/default-api/src/routers/mediaRoute.ts
-# carries the same guard, and `npx tsc --noEmit` over the whole project is clean.
-# So a future build ships the fix; this script is only for the running dist,
-# which is ahead of source (see F8 in the audit tracker).
-#
-# HOW WIDE IT IS - probed 1 Sep 12:0x, no credentials, from off-box:
-#
-#   api.mycountrymobile.com    direct = 200   (control, authed route = 401)
-#   api2.mycountrymobile.com   direct = 200   (control = 401)
-#   api3.mycountrymobile.com   direct = 200   (control = 401)
-#   api4.mycountrymobile.com   no DNS from here - unconfirmed, not cleared
-#
-# Three public hostnames serve it. api2 is 142.93.121.121 and this session can
-# reach it. api3 is 151.106.57.254 and this session has NO ssh key for it -
-# `Permission denied (publickey,password)`. Whether `api` is its own box or an
-# alias of api2 could not be told apart from outside; the sweep at the bottom
-# settles it after the first box is done.
-#
-# THE HOLE
-#
-# default-api mounts six media routes. Five carry AuthMiddleware. One does not:
+# THE HOLE. default-api mounts six media routes. Five carry AuthMiddleware.
+# This one does not:
 #
 #   dist/routers/mediaRoute.js:17
 #   mediaRoute.get("/direct/:uuid/:type/:file_name", catchErrors(getDirectMediaFile));
 #
-# Confirmed in the RUNNING dist on api2, not only in source - the file is plain
-# readable JS and line 17 is the only GET with no middleware.
+# Proved 1 Sep 2026 from the open internet, no credentials:
+#   GET /api/media/direct/default/recording/<file>.mp3   -> 200, 12068 bytes of MP3
+#   control, authenticated sibling route                 -> 401
+#   control, made-up name on the open route              -> 404 from storage
+# The 404 is the one that matters: the request reached the bucket, so a real
+# file name really would have been served.
 #
-# Proved live from the open internet, no credentials of any kind:
+# ON ALL THREE BOXES, confirmed by reading each running dist:
+#   mcm-new     142.93.121.121   api2   line 17 unguarded
+#   mcm-ucaas3  151.106.57.254   api3   line 17 unguarded
+#   mcm-switch  167.99.4.91      api4   line 17 unguarded
+# Public probes: api, api2 and api3 hostnames all served the file. api4 has no
+# DNS from here, but its box carries the same line.
 #
-#   GET https://api.mycountrymobile.com/api/media/direct/default/recording/<file>.mp3
-#     -> HTTP 200, 12068 bytes, real MP3 (LAME header in the body)
+# WHY IT CANNOT SIMPLY BE CLOSED. Two callers need an outsider to fetch a file
+# and neither has a token: `fax` (URL handed to the fax carrier) and
+# `video_recording` (meeting links opened by people with no account). They are
+# the only two consumers in the frontend or any of the 20 backend repos, so an
+# allow-list of those two closes everything else and breaks nothing.
 #
-#   Control, the sibling route one path segment away:
-#   GET https://api.mycountrymobile.com/api/media/<uuid>/recording/<file>.wav
-#     -> HTTP 401 {"message":"Authorization header missing"}
-#
-#   Second control, that the open route reaches storage rather than being
-#   blocked somewhere upstream:
-#   GET .../api/media/direct/<company_uuid>/recording/nonexistent.wav
-#     -> HTTP 404 "Request failed with status code 404","service":"MEDIA"
-#      - a storage miss, so a real file name would have been served.
-#
-# The 200 above is a system default announcement, not a customer's audio. The
-# point is the route: it takes :uuid and :type from the URL and asks storage for
-# `<uuid>/<type>/<file>` with nobody checked. A company uuid is not a secret -
-# it is in the URL bar and in most API responses. So call recordings, greetings,
-# logos, MMS and chat attachments are all one guessed file name from being
-# public. Recordings are the reason this matters now: nothing has recorded yet,
-# so the exposure is currently theoretical for call audio and real for
-# everything else already in the bucket.
-#
-# WHY IT IS UNAUTHENTICATED - it is not an oversight, it is one narrow need
-# generalised too far. Two callers legitimately need an outside party to fetch:
-#
-#   fax             src/pages/inbox/send-fax-modal/index.tsx:158 builds this URL
-#                   and hands it to the fax carrier, which has no token.
-#   video_recording video-api MeetingRepository.ts:1553,1694 builds it for
-#                   meeting recording links opened by people with no account.
-#
-# Those are the only two consumers anywhere in the frontend or the 20 backend
-# repos. So an allow-list breaks nothing and closes everything else.
-#
-# WHAT THIS DOES NOT DO. fax and video_recording stay fetchable by anyone with
-# the URL. That is unguessable-URL security, which is the normal shape for a
-# carrier callback, but it is not a lock. Making those two safe needs signed,
-# expiring URLs - a design change, not a guard, and a separate decision.
+# The source is already patched (mcm-repos/default-api/src/routers/
+# mediaRoute.ts) and `npx tsc --noEmit` over that project is clean, so a future
+# build ships this. This script is only for the running dist, which is ahead of
+# source - see F8 in docs/admin-audit-tracker.md.
 #
 set -euo pipefail
-HOST="${1:-root@142.93.121.121}"
+HOSTS="${*:-mcm-new mcm-ucaas3 mcm-switch}"
 F=/var/www/prod/default-api/dist/routers/mediaRoute.js
+PATCHER="$(cd "$(dirname "$0")" && pwd)/patch_direct_media_auth.py"
 
-echo "== before =="
-ssh "$HOST" "grep -n 'direct/:uuid' $F"
-
-echo "== backup =="
-ssh "$HOST" "cp $F $F.bak-directguard-\$(date +%Y%m%d-%H%M%S) && ls -1t $F.bak-* | head -1"
-
-echo "== patch =="
-ssh "$HOST" "python3 - <<'PY'
-import io
-p = \"$F\"
-s = io.open(p, encoding='utf-8').read()
-old = 'mediaRoute.get(\"/direct/:uuid/:type/:file_name\", (0, responseHelper_1.catchErrors)(getDirectMediaFile));'
-new = '''// Media served with NO login at all. This route exists so an outside party can
-// fetch a file, and only two kinds of file genuinely need that:
-//   fax             - the URL is handed to the fax carrier, which has no token
-//   video_recording - meeting links are opened by people with no account here
-// Every other type used to be fetchable by anyone who knew a company uuid and a
-// file name, call recordings included. Those now need a signed-in caller and the
-// authenticated route above.
-const DIRECT_PUBLIC_TYPES = new Set([\"fax\", \"video_recording\"]);
-const directTypeGuard = (request, response, next) => {
-    const type = String((request.params && request.params.type) || \"\");
-    if (DIRECT_PUBLIC_TYPES.has(type)) {
-        return next();
-    }
-    return response.status(401).json({
-        success: false,
-        error: { message: \"Authentication required\", service: \"MEDIA\" },
-    });
-};
-mediaRoute.get(\"/direct/:uuid/:type/:file_name\", directTypeGuard, (0, responseHelper_1.catchErrors)(getDirectMediaFile));'''
-assert s.count(old) == 1, 'expected 1 occurrence, found %d' % s.count(old)
-io.open(p, 'w', encoding='utf-8').write(s.replace(old, new))
-print('    edited')
-PY"
-
-echo "== syntax =="
-ssh "$HOST" "node --check $F && echo '    ok'"
-
-echo "== restart =="
-ssh "$HOST" "pm2 restart default-api && sleep 3 && pm2 describe default-api | grep -i status"
+for H in $HOSTS; do
+    echo "=== $H ==="
+    ssh "$H" "cat > /tmp/patch_direct_media_auth.py" < "$PATCHER"
+    ssh "$H" "set -e
+        cp $F $F.bak-directguard-\$(date +%Y%m%d-%H%M%S)
+        python3 /tmp/patch_direct_media_auth.py $F
+        node --check $F && echo '    syntax ok'
+        pm2 restart default-api >/dev/null && sleep 3
+        pm2 describe default-api | grep -i 'status' | head -1"
+done
 
 cat <<'CHECKS'
 
-== verify from anywhere, no credentials ==
+=== verify from anywhere, no credentials ===
 
-  # was 200 with real audio, must now be 401
+  # every one of these must now read 401
+  for h in api api2 api3; do printf '%-5s ' $h; curl -s -o /dev/null -w '%{http_code}\n' \
+    --max-time 20 https://$h.mycountrymobile.com/api/media/direct/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3; done
+
+  # CONTROL - fax must still reach storage. 404 is the pass, 401 means fax is broken
   curl -s -o /dev/null -w '%{http_code}\n' \
-    https://api.mycountrymobile.com/api/media/direct/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3
+    https://api2.mycountrymobile.com/api/media/direct/00000000-0000-0000-0000-000000000000/fax/nope.pdf
 
-  # control - fax must still reach storage (404 on a made-up name, NOT 401)
+  # CONTROL - the authenticated sibling is unchanged
   curl -s -o /dev/null -w '%{http_code}\n' \
-    https://api.mycountrymobile.com/api/media/direct/00000000-0000-0000-0000-000000000000/fax/nope.pdf
+    https://api2.mycountrymobile.com/api/media/00000000-0000-0000-0000-000000000000/recording/nope.wav
 
-  # control - the authenticated sibling is unchanged
-  curl -s -o /dev/null -w '%{http_code}\n' \
-    https://api.mycountrymobile.com/api/media/00000000-0000-0000-0000-000000000000/recording/nope.wav
+401 / 404 / 401 is the pass. A 401 on the fax control means fax sending has been
+broken and this must be rolled back at once.
 
-A 401 on the first, 404 on the second and 401 on the third is the pass. A 401 on
-the second means fax sending has been broken and this must be rolled back.
-
-== then sweep every hostname, and let the sweep tell you what is left ==
-
-  for h in api api2 api3 api4; do
-    printf '%-5s ' $h
-    curl -s -o /dev/null -w '%{http_code}\n' --max-time 20 \
-      https://$h.mycountrymobile.com/api/media/direct/default/recording/ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3
-  done
-
-  Every one must read 401. A hostname still reading 200 is a second box that
-  has not been patched - that is also how you learn whether `api` is its own
-  box or an alias of api2, which cannot be told apart from outside beforehand.
-
-  api3 (151.106.57.254) will need doing separately: this session has no ssh key
-  for it. api4 has no DNS from here and has NOT been cleared.
-
-  Source is already patched (src/routers/mediaRoute.ts), typecheck clean.
-
-== revert ==
+=== revert one box ===
 
   ssh HOST "cp \$(ls -1t $F.bak-directguard-* | head -1) $F && pm2 restart default-api"
 CHECKS
