@@ -74,7 +74,11 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
       description: pendingSave.description,
       permission: { plan_features: pendingSave.permission },
       /* The blank starting point names no real role, so it is not sent. */
-      ...(selectedRole?.role_uuid && selectedRole.role_uuid !== '__blank__'
+      /* Neither the blank starting point nor a ready-made preset names a real
+         role, so their sentinels are not sent. */
+      ...(selectedRole?.role_uuid &&
+      selectedRole.role_uuid !== '__blank__' &&
+      !String(selectedRole.role_uuid).startsWith('__preset__:')
         ? { role_uuid: selectedRole.role_uuid }
         : {}),
       ...(roleData?.uuid ? { uuid: roleData.uuid } : {}),

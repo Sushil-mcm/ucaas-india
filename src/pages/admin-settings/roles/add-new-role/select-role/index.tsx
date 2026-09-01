@@ -8,11 +8,16 @@ import ErrorTooltip from '@/components/custom/error-tooltip';
 import { PermissionsAccordion } from '../role-permissions';
 import { ROLE_DESCRIPTION_MAX_LENGTH, ROLE_NAME_MAX_LENGTH } from '../schema';
 import { sanitizePlainTextInput } from '@/lib/utils';
+import { ROLE_PRESETS, buildPresetPermission } from '../role-presets';
 import { extractPlanFeatures } from '@/hooks/rbac';
 
 /* Chosen as the value for "start empty". It is never sent to the API — the
    save strips it, because it names no real role. */
 const BLANK_ROLE = '__blank__';
+
+/* Marks a radio value as one of the ready-made roles rather than a real role id.
+   Stripped before saving, like BLANK_ROLE. */
+const PRESET_PREFIX = '__preset__:';
 
 const SelectRole: FC<any> = ({
   rolesListData,
@@ -60,6 +65,17 @@ const SelectRole: FC<any> = ({
        The whole menu comes from the company's own plan, not from the role being
        copied, so nothing is lost by starting empty: every permission the company
        has is listed, all of it unticked. */
+    const preset = ROLE_PRESETS.find((entry) => `${PRESET_PREFIX}${entry.id}` === role_uuid);
+    if (preset) {
+      const permission = buildPresetPermission(preset, companyJson || {});
+      setSelectedRole({ role_uuid, name: preset.name, permission: { plan_features: permission } });
+      setValue('permission', permission);
+      /* The name and description are filled in too. A ready-made role that still
+         makes you type its name is only half a shortcut. Both stay editable. */
+      setValue('name', preset.name);
+      setValue('description', preset.description);
+      return;
+    }
     if (role_uuid === BLANK_ROLE) {
       setSelectedRole({ role_uuid: BLANK_ROLE, name: 'Nothing', permission: { plan_features: {} } });
       setValue('permission', {});
@@ -172,6 +188,28 @@ const SelectRole: FC<any> = ({
               onValueChange={(value) => handleRoleChange(value)}
               disabled={selectedRole?.type === 'custom' && roleData}
             >
+              {/* The ready-made roles, offered before the raw copies. Most
+                  companies want one of these and should not have to assemble it
+                  a checkbox at a time. */}
+              {ROLE_PRESETS.map((preset) => (
+                <div className="flex items-start gap-3" key={preset.id}>
+                  <RadioGroupItem
+                    value={`${PRESET_PREFIX}${preset.id}`}
+                    id={`${PRESET_PREFIX}${preset.id}`}
+                    className="mt-1 cursor-pointer"
+                  />
+                  <Label
+                    htmlFor={`${PRESET_PREFIX}${preset.id}`}
+                    className="cursor-pointer break-words"
+                  >
+                    <span className="block font-semibold">{preset.name}</span>
+                    <span className="block text-xs font-normal text-gray-600">
+                      {preset.description}
+                    </span>
+                  </Label>
+                </div>
+              ))}
+
               <div className="flex items-center gap-3">
                 <RadioGroupItem value={BLANK_ROLE} id={BLANK_ROLE} className="cursor-pointer" />
                 <Label htmlFor={BLANK_ROLE} className="cursor-pointer break-words font-semibold">
