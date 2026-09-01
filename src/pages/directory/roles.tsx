@@ -213,13 +213,24 @@ const Roles = () => {
                             title={
                               system
                                 ? `Make my own copy of ${roleDisplayName(role?.name)}`
-                                : `Duplicate ${role?.name}`
+                                : `Duplicate ${roleDisplayName(role?.name)}`
                             }
-                            aria-label={`Duplicate ${role?.name}`}
+                            aria-label={`Duplicate ${roleDisplayName(role?.name)}`}
                             onClick={() =>
                               setEditing({
-                                name: `${role?.name} (copy)`,
-                                description: role?.description,
+                                /* The name people see, not the one stored. A copy
+                                   of Manager opened as "MANAGER (copy)" carrying
+                                   "Default features for MANAGER (Ultimate)" --
+                                   the platform's own wording for a role this
+                                   company never named that. The list has said
+                                   Account admin for a while; the copy has to
+                                   agree with it or the rename only went half
+                                   way. */
+                                name: `${roleDisplayName(role?.name)} (copy)`,
+                                description: roleDisplayDescription(
+                                  role?.name,
+                                  role?.description,
+                                ),
                                 permission: (role as any)?.permission,
                               } as Role)
                             }

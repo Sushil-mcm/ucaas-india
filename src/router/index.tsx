@@ -64,6 +64,9 @@ const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page
 const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
 const CompanyVoicemailPage = lazy(() => import('@/pages/admin-settings/company/page-voicemail'));
 const CompanyHolidaysPage = lazy(() => import('@/pages/admin-settings/company/page-holidays'));
+const CompanyAwayDatesPage = lazy(
+  () => import('@/pages/admin-settings/company/company-away-dates'),
+);
 const CompanyEmergency = lazy(
   () => import('@/pages/admin-settings/company/company-emergency-address'),
 );
@@ -238,7 +241,6 @@ const BILLING_ELEMENTS: Record<string, ReactElement> = {
 const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
-const JoiningAndLeaving = lazy(() => import('@/pages/admin-settings/people/joining-and-leaving'));
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
 const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
 const AccessControl = lazy(() => import('@/pages/admin-settings/roles/access-control'));
@@ -648,6 +650,16 @@ export const router = createBrowserRouter([
                   { path: 'voicemail', element: <CompanyVoicemailPage /> },
                   { path: 'emergency-address', element: <CompanyEmergency /> },
                   { path: 'holidays', element: <CompanyHolidaysPage /> },
+                  {
+                    /* Administrator-only, like Apply to people below: this
+                       writes every person's own settings record, which is a
+                       different order of thing to hand to whoever can merely
+                       view the phone system. */
+                    path: 'away-dates',
+                    element: (
+                      <ProtectedRoute element={<CompanyAwayDatesPage />} guard={{ adminOnly: true }} />
+                    ),
+                  },
                   { path: 'calling', element: <CompanyCalling /> },
                   { path: 'messaging', element: <CompanyMessagingPage /> },
                   { path: 'policies', element: <CompanyPoliciesPage /> },
@@ -844,22 +856,6 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute
                 element={<DirectoryPeople />}
-                guard={{
-                  permission: 'account_setting.access.USER.action.view',
-                }}
-              />
-            ),
-          },
-          {
-            /* What somebody receives when they are added, and what happens when
-               they leave. Gated on the same permission as the people list
-               itself: it describes that list, and there is nothing on it
-               somebody who may see the list should be kept from. */
-            path: 'joining-and-leaving',
-            id: 'joining-and-leaving',
-            element: (
-              <ProtectedRoute
-                element={<JoiningAndLeaving />}
                 guard={{
                   permission: 'account_setting.access.USER.action.view',
                 }}
