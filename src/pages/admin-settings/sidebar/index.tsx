@@ -138,14 +138,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
-        {
-          /* Step 3 — roles say what somebody may do. This says who to. */
-          title: 'Admin scope',
-          icon: 'LockFilled',
-          path: '/admin-settings/admin-scope',
-          enabled: IS_ADMIN,
-          visible: IS_ADMIN,
-        },
+        /* Admin scope is not listed. It is a working screen -- a real form with a
+           real save -- but nothing reads what it saves: `canActOn` in
+           src/lib/admin-scope.ts is not called anywhere in the product, so an
+           administrator scoped to one location can still edit every other. The
+           screen says so itself, and being honest about it is right, but a
+           navigation entry is a claim that a thing is available. The route and
+           the code stay; put this back the day canActOn is wired into the
+           permission checks. */
         {
           /* Step 4 — what a role should hold, as opposed to what one happens
              to hold, and what a brand-new person starts on. */

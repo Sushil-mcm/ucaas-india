@@ -41,12 +41,6 @@ export const ACCESS_STEPS: AreaStep[] = [
   },
   {
     step: 3,
-    title: 'Admin scope',
-    path: '/admin-settings/admin-scope',
-    purpose: 'How far it reaches',
-  },
-  {
-    step: 4,
     title: 'Default permissions',
     path: '/admin-settings/default-permissions',
     purpose: 'What a new person starts on',
