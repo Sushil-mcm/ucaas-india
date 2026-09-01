@@ -5,8 +5,13 @@
  * company wants: a person who runs reports, or handles people, and touches
  * nothing else.
  *
- * The names follow the reference product's own five, so an administrator moving
- * across recognises them.
+ * The names are ours. An earlier version borrowed another product's five word
+ * for word, reasoning that somebody moving across would recognise them. That is
+ * a bad trade: it puts a competitor's vocabulary inside our product, where it
+ * stays for as long as the product does, in exchange for a moment of
+ * familiarity during one signup. These say what the person does instead, which
+ * is what the rest of this console already does - "What each role can do",
+ * rather than a job title.
  *
  * WHY THESE ARE FEATURE LISTS AND NOT PERMISSION TREES
  * `constants.ts` carries a warning worth repeating: a hard-coded permission tree
@@ -48,32 +53,32 @@ export interface RolePreset {
 
 export const ROLE_PRESETS: RolePreset[] = [
   {
-    id: 'administrator',
-    name: 'Administrator',
+    id: 'account-admin',
+    name: 'Account admin',
     description: 'Runs the whole account. Everything the company has.',
     features: null,
   },
   {
-    id: 'user-manager',
-    name: 'User Manager',
+    id: 'people-admin',
+    name: 'People admin',
     description: 'Adds and removes people, sets their roles and numbers. No billing, no reports.',
     features: [FEATURE_KEYS.people, FEATURE_KEYS.numbers, FEATURE_KEYS.settings],
   },
   {
-    id: 'analytics-manager',
-    name: 'Analytics Manager',
+    id: 'reports-only',
+    name: 'Reports only',
     description: 'Reads reports and live activity. Changes nothing.',
     features: [FEATURE_KEYS.reports, FEATURE_KEYS.monitoring],
   },
   {
-    id: 'call-qa-analyst',
-    name: 'Call QA Analyst',
+    id: 'call-reviewer',
+    name: 'Call reviewer',
     description: 'Listens to recordings and reviews calls. No access to people or settings.',
     features: [FEATURE_KEYS.reports, FEATURE_KEYS.monitoring],
   },
   {
-    id: 'conversation-design-manager',
-    name: 'Conversation Design Manager',
+    id: 'call-flow-builder',
+    name: 'Call flow builder',
     description: 'Builds menus, AI agents and knowledge. Does not manage people.',
     features: [FEATURE_KEYS.ai, FEATURE_KEYS.phoneSystem],
   },
@@ -99,7 +104,7 @@ export const buildPresetPermission = (
 
   /* Everything not named by the preset is switched OFF, not left as the company
      has it. Passing the company's own value through would hand the role whatever
-     the company happens to have enabled — so "Analytics Manager" would quietly
+     the company happens to have enabled — so "Reports only" would quietly
      carry billing and people as well, which is the opposite of what it says. */
   const disableEverything = (node: any): any => {
     if (typeof node === 'boolean') return false;
