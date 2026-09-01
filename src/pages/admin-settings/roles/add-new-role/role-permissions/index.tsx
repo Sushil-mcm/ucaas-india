@@ -62,6 +62,8 @@ const PermissionTree = ({
   basePath,
   readOnly,
   onToggle,
+  /* Kept as a prop rather than removed, so anywhere that ever does want
+     to lock an Access section has to say so on purpose. */
   lockAccessValues = false,
 }: {
   companyData: PermissionObject;
@@ -260,7 +262,14 @@ export const PermissionsAccordion = ({
                       userData={userPermissions}
                       basePath={[featureKey, 'access']}
                       readOnly={readOnly}
-                      lockAccessValues={featureKey !== 'phone_system_action'}
+                      /* Access used to be locked for every feature except
+                         phone_system_action, so a company that owns AI chat and
+                         voice could see those boxes and never tick them. The flag
+                         arrived inside an unrelated commit about queue wrap-up and
+                         was never explained. Access is plan-derived and role-
+                         configurable exactly like Actions, and the tree only ever
+                         renders keys the company's own plan contains. */
+                      lockAccessValues={false}
                       onToggle={handleToggle}
                     />
                   </div>
