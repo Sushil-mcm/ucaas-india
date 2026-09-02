@@ -2220,7 +2220,7 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
               if (data?.meetingId) {
                 window.open(`/video-meet?meetCode=${data.meetingId}`, '_blank');
               } else {
-                navigate('/video-meetings');
+                navigate('/video');
               }
             },
           });
@@ -5038,7 +5038,7 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
           onPointerDownOutside={(event) => event.preventDefault()}
           className="sm:max-w-[500px] overflow-hidden border-0 bg-white p-0 shadow-2xl dark:bg-slate-900"
         >
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 px-6 py-7 text-white">
+          <div className="relative overflow-hidden bg-gradient-to-br from-primary via-orange-500 to-amber-600 px-6 py-7 text-white">
             <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/10" />
             <div className="absolute -bottom-16 -left-8 h-32 w-32 rounded-full bg-white/10" />
             <div className="relative flex items-start gap-4">
@@ -5046,7 +5046,7 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
                 <Sparkles className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-100">
                   Product update
                 </p>
                 <h2 className="text-xl font-bold leading-tight">
@@ -5067,8 +5067,8 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
                 'We have released new improvements. Refresh to start using the latest version.'}
             </p>
 
-            <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 dark:border-blue-900/60 dark:bg-blue-950/30">
-              <p className="text-xs font-medium leading-5 text-blue-800 dark:text-blue-300">
+            <div className="mt-5 rounded-xl border border-orange-100 bg-orange-50/70 px-4 py-3 dark:border-orange-900/60 dark:bg-orange-950/30">
+              <p className="text-xs font-medium leading-5 text-orange-800 dark:text-orange-300">
                 Refresh the page to apply this update.
               </p>
             </div>
@@ -5092,13 +5092,13 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
 
       {showRoleUpdateReloadModal && (
         <div className="fixed bottom-4 right-4 z-[99999] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-3 sm:bottom-5 sm:right-5 animate-in fade-in slide-in-from-bottom-5 duration-300">
-          <div className="overflow-hidden rounded-2xl border border-blue-100/60 bg-white/95 backdrop-blur-md shadow-2xl ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900/95">
+          <div className="overflow-hidden rounded-2xl border border-orange-100/60 bg-white/95 backdrop-blur-md shadow-2xl ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900/95">
             {/* Top gradient indicator */}
-            <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-primary" />
+            <div className="h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-primary" />
 
             <div className="flex items-start gap-4 p-5">
               {/* Circular Icon Container */}
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400 shadow-sm">
                 <ShieldAlert className="h-5.5 w-5.5" />
               </div>
 

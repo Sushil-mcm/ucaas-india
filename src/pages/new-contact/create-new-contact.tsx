@@ -120,7 +120,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
         : createdContact;
       setTabData?.(mergedContactData);
       if (!keepFormDataAfterSave) {
-        navigate(`/contact/${createdContact?.uuid}`);
+        navigate('/contact');
         setDrawerState(false);
         reset();
         setValue('avatar', null);
@@ -447,14 +447,25 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
       // notes,
       ...rest
     } = data;
-    console.log(belongsTo, 'belongsTobelongsTo');
-
     const selectedBelongsTo = Array.isArray(belongsTo)
       ? belongsTo
           ?.map((item: any) => item?.value)
           ?.filter((value: string) => Boolean(value))
           ?.join(',')
       : belongsTo?.value || '';
+
+    const filledSocial = Object.entries({
+      twitter,
+      facebook,
+      linkedin,
+      whatsapp,
+      instagram,
+      telegram,
+    }).reduce<Record<string, string>>((acc, [key, value]) => {
+      const handle = String(value ?? '').trim();
+      if (handle) acc[key] = handle;
+      return acc;
+    }, {});
 
     const payload: Record<string, any> = {
       name: {
@@ -480,27 +491,20 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
         zipcode: zipcode || '',
         ...(country?.value ? { country: country } : {}),
       },
-      social: {
-        twitter: twitter || '',
-        facebook: facebook || '',
-        linkedin: linkedin || '',
-        whatsapp: whatsapp || '',
-        instagram: instagram || '',
-        telegram: telegram || '',
-      },
+      /* Only the handles that were actually filled in. Sending the whole map
+         with empty strings had the API reject the save outright with
+         `"social.whatsapp" is not allowed`, so no contact could be created at
+         all — and when none are filled the key is left off entirely. */
+      ...(Object.keys(filledSocial).length ? { social: filledSocial } : {}),
       type: isLead ? 'LEAD' : 'CONTACT',
       ...(selectedBelongsTo ? { belongsTo: selectedBelongsTo } : {}),
     };
-
-    console.log(payload, 'payloadpayload');
 
     if (contactData?._id) payload.contact_uuid = contactData._id;
     try {
       setShowLoader(true);
 
-      console.log('add chla', contactData?.contactPic, contactData);
       if ((!contactData?.contactPic && avatar) || avatar instanceof File) {
-        console.log('add chla   1', contactData?.contactPic, contactData);
         const uploadMediaResponse = await uploadMediaMutate({
           uuid: user?.company_info?.uuid,
           type: 'contact',
@@ -522,8 +526,6 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
           }
         }
       } else if (contactData?.contactPic && !avatar) {
-        console.log('update chla');
-
         payload.profile.contactPic = null;
         if (contactData?._id) {
           upsertUserContact(payload);

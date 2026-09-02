@@ -22,7 +22,21 @@ import {
  * feeds turned out trustworthy and which did not.
  */
 
-export const KPI_REFRESH_MS = 2000;
+/* How often the live numbers are re-read.
+ *
+ * This was 2s for every query below, which meant four report POSTs per tab per
+ * two seconds — plus the directory's roster on the same clock. On Performance,
+ * Home and Directory together that was enough to trip the API's rate limiter,
+ * so the screens ended up showing *less* live data than a slower poll would:
+ * a 429 returns nothing at all. */
+export const KPI_REFRESH_MS = 10000;
+
+/* Queues and the user roster are configuration, not live state — they change
+ * when somebody edits them, not every few seconds. They are still refetched so
+ * a newly added queue or user appears without a reload, just on a clock that
+ * matches how often they actually change. Live call and agent presence arrive
+ * over the socket, so nothing here gates how fast the board reacts to a call. */
+export const CONFIG_REFRESH_MS = 5 * 60 * 1000;
 
 const INTERACTING_STATUSES = ['answered', 'bridged', 'on_hold'];
 
@@ -59,7 +73,7 @@ export const useLiveContactCentre = (selectedRange: any) => {
     queryKey: ['performanceQueueList'],
     queryFn: () => callQueueList({ page: 1, limit: 200, filters: [], search: '' }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
-    refetchInterval: KPI_REFRESH_MS,
+    refetchInterval: CONFIG_REFRESH_MS,
   });
 
   const queues: LiveQueue[] = useMemo(
@@ -84,7 +98,7 @@ export const useLiveContactCentre = (selectedRange: any) => {
     queryKey: ['performanceUserRoster'],
     queryFn: () => getUserList({ page: 1, limit: 200 }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
-    refetchInterval: KPI_REFRESH_MS,
+    refetchInterval: CONFIG_REFRESH_MS,
   });
 
   const { data: agentStatsRows = [] } = useQuery({

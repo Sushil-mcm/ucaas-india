@@ -15,6 +15,11 @@ import { logout, updateMemberForwading, userUpdateStatus } from '@/services/api'
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
+import { KeyRound, LogOut, User, Wallet } from 'lucide-react';
+
+/* Shared by the menu's navigation rows. Sign out keeps its own red variant. */
+const menuItemClass =
+  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-gray-700 cursor-pointer transition-colors hover:bg-ucass-primary-100 hover:text-primary';
 
 const AvatarContent = ({ setProfileState }: any) => {
   const { user, handleRemoveUser } = useUser();
@@ -198,27 +203,30 @@ const AvatarContent = ({ setProfileState }: any) => {
       <DropdownMenuSeparator />
       <div className="flex flex-col gap-2 mt-2">
         <div
-          className="text-sm text-gray-700 cursor-pointer hover:text-primary"
+          className={menuItemClass}
           {...getRoutePrefetchHandlers('/admin-settings/account/basic-info')}
           onClick={() => {
             navigate('/admin-settings/account/basic-info');
             setProfileState(false);
           }}
         >
+          <User className="w-4 h-4" />
           My Profile
         </div>
         <div
-          className="text-sm text-gray-700 cursor-pointer hover:text-primary"
+          className={menuItemClass}
           onClick={(val) => setProfileState(val ? 'changePassword' : null)}
         >
+          <KeyRound className="w-4 h-4" />
           Change Password
         </div>
         {features?.plan_features?.billing?.action?.view && (
           <div
-            className="text-sm text-gray-700 cursor-pointer hover:text-primary"
+            className={menuItemClass}
             {...getRoutePrefetchHandlers('/admin-settings/billing/purchase')}
             onClick={handleAddFunds}
           >
+            <Wallet className="w-4 h-4" />
             Add Funds
           </div>
         )}
@@ -226,13 +234,14 @@ const AvatarContent = ({ setProfileState }: any) => {
           onClick={() => {
             logoutDevice();
           }}
-          className="text-sm cursor-pointer text-red-700 flex justify-start"
+          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-red-600 cursor-pointer transition-colors hover:bg-red-50"
         >
+          <LogOut className="w-4 h-4" />
           Sign out
         </button>
-        <DropdownMenuSeparator />
-        <p className="text-xs text-gray-700 cursor-pointer text-right">v{packageJson.version}</p>
       </div>
+      <DropdownMenuSeparator className="my-1" />
+      <p className="text-[11px] text-gray-400 text-right px-2 pb-1">v{packageJson.version}</p>
     </div>
   );
 };

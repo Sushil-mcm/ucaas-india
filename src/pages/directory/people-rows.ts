@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDepartmentList, getUserList } from '@/services/api';
 import { useGetSite } from '@/hooks/common';
 import { useSocketEvents } from '@/hooks/use-socket-events';
-import { useLiveContactCentre, KPI_REFRESH_MS } from '@/hooks/use-live-contact-centre';
+import { useLiveContactCentre, CONFIG_REFRESH_MS } from '@/hooks/use-live-contact-centre';
 import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { getAgentLiveState } from '@/pages/performance/agent-rows';
 
@@ -86,7 +86,7 @@ export const usePeopleRows = () => {
     queryKey: ['directoryPeople'],
     queryFn: () => getUserList({ page: 1, limit: 500 }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
-    refetchInterval: KPI_REFRESH_MS,
+    refetchInterval: CONFIG_REFRESH_MS,
   });
 
   /* Sites carry city/country; the user row only carries the site's name. Joining

@@ -47,6 +47,8 @@ const NotificationContent = ({ setNotificationState }: { setNotificationState: a
       ? ongoingMeetingData?.data?.data?.result?.rows
       : [];
 
+  // SideDrawer stays permanently mounted now, so a mount-only fetch would
+  // only ever run once — fetch fresh notifications on every open instead.
   useEffect(() => {
     getNotifications();
   }, []);
@@ -66,65 +68,94 @@ const NotificationContent = ({ setNotificationState }: { setNotificationState: a
       setMutatedNotifications([]);
     }
   }, [notificationArr, notificationFilterValue]);
+  const unreadTotal = mutatedNotifications?.filter((n: any) => n?.unread)?.length || 0;
+  const isFiltered = notificationFilterValue?.value?.[0] !== 'all';
+
   return (
-    <div className="w-full mx-auto ">
-      <div className="flex flex-col  gap-2 px-1 py-2">
-        <div className="flex justify-between items-center ">
-          <div className=" text-gray-900 font-semibold flex gap-2 items-center justify-between w-full">
-            <div className="flex items-center gap-3 ">
-              <div className="flex w-5 h-5">{notificationFilterValue?.icon}</div>
-              <div className="flex text-lg">{notificationFilterValue?.label}</div>
-            </div>
-            <div className="flex items-center gap-3">
-              {mutatedNotifications && mutatedNotifications?.length > 0 ? (
-                <div
-                  className="text-xs text-primary cursor-pointer"
-                  onClick={() => {
-                    markReadNotification('all');
-                    setNotificationState(false);
-                    handleAlert({
-                      text: 'All the notifications has been marked as read.',
-                      type: 'success',
-                    });
-                  }}
-                >
-                  Mark all as read
-                </div>
-              ) : null}
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <div
-                    className={
-                      'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white'
-                    }
-                  >
-                    <FilterIcon className="w-5 h-5" />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {notificationFilters?.map((filter: any) => {
-                    return (
-                      <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={() => setNotificationFilterValue(filter)}
-                      >
-                        <div className="w-6 h-6 p-1 bg-gray-50 border-gray-200 border rounded-full flex items-center justify-center">
-                          {filter?.icon}
-                        </div>
-                        {filter?.label}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+    <div className="flex h-full min-h-0 w-full flex-col">
+      {/* The drawer pins its own close button at top-right, so the header
+          reserves that corner rather than sliding its controls underneath it —
+          which is what buried the filter button behind the X. */}
+      <div className="flex shrink-0 items-center justify-between gap-3 pr-12 pt-1 pb-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-ucass-primary-100)]">
+            <span className="flex h-[18px] w-[18px]">{notificationFilterValue?.icon}</span>
+          </span>
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold leading-tight text-[var(--foreground)]">
+              {notificationFilterValue?.label}
+            </h2>
+            <p className="truncate text-xs leading-tight text-[var(--muted-foreground)]">
+              {unreadTotal > 0
+                ? `${unreadTotal} unread`
+                : `${mutatedNotifications?.length || 0} notification${
+                    mutatedNotifications?.length === 1 ? '' : 's'
+                  }`}
+            </p>
           </div>
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Filter notifications"
+              title="Filter notifications"
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--color-ucass-primary-100)] hover:text-[var(--color-ucass-active)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+            >
+              <FilterIcon className="h-[18px] w-[18px]" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-52">
+            {notificationFilters?.map((filter: any) => {
+              const isActive = filter?.id === notificationFilterValue?.id;
+              return (
+                <DropdownMenuItem
+                  key={filter?.id}
+                  className={`cursor-pointer gap-2.5 ${isActive ? 'text-[var(--color-ucass-active)]' : ''}`}
+                  onClick={() => setNotificationFilterValue(filter)}
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-ucass-primary-100)] p-1">
+                    {filter?.icon}
+                  </span>
+                  <span className="flex-1">{filter?.label}</span>
+                  {isActive ? (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />
+                  ) : null}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <hr className="text-gray-400 p-2 mt-1" />
-      <div className="w-full overflow-auto h-[calc(100vh_-_5rem)] pr-1">
+
+      <div className="h-px w-full shrink-0 bg-[var(--border)]" />
+
+      {unreadTotal > 0 ? (
+        <div className="flex shrink-0 justify-end pt-2">
+          <button
+            type="button"
+            className="cursor-pointer rounded-md px-2 py-1 text-xs font-medium text-[var(--color-ucass-active)] transition-colors hover:bg-[var(--color-ucass-primary-100)]"
+            onClick={() => {
+              markReadNotification('all');
+              setNotificationState(false);
+              handleAlert({
+                text: 'All the notifications has been marked as read.',
+                type: 'success',
+              });
+            }}
+          >
+            Mark all as read
+          </button>
+        </div>
+      ) : null}
+      <div className="mt-2 min-h-0 w-full flex-1 space-y-2 overflow-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-ucass-primary-200)] [scrollbar-width:thin]">
         {notificationLoading && mutatedNotifications?.length == 0 ? (
-          <div className="flex justify-center items-center h-full">
+          <div
+            role="status"
+            aria-label="Loading notifications"
+            className="flex justify-center items-center h-full"
+          >
             <Loader variant="blue" />
           </div>
         ) : mutatedNotifications && mutatedNotifications?.length > 0 ? (
@@ -135,7 +166,6 @@ const NotificationContent = ({ setNotificationState }: { setNotificationState: a
                 : notification?.type;
             const Icon =
               notificationIconLookup?.[notificationtype] || notificationIconLookup?.['default'];
-            console.log(notification?.type, 'notification');
             const eventStartTime =
               notification?.details?.startUtc &&
               (notification?.type === NOTIFICATION_TYPE_CONST.CALL_BACK_SCHEDULE ||
@@ -250,36 +280,50 @@ const NotificationContent = ({ setNotificationState }: { setNotificationState: a
             return (
               <div
                 key={notification?._id}
-                className={`relative w-full p-3 mt-2 bg-gray-50 border rounded-lg border-gray-200 flex cursor-pointer flex-shrink-0 ${shouldShowJoinNowForInvite ? 'pb-12' : ''} ${
-                  notification?.unread ? 'opacity-100' : 'opacity-60'
-                }`}
                 onClick={() => markReadNotification(notification?._id)}
+                className={`relative flex w-full flex-shrink-0 cursor-pointer gap-3 rounded-xl border p-3 transition-colors ${
+                  notification?.unread
+                    ? 'border-[var(--color-ucass-primary-200)] bg-[var(--color-ucass-primary-100)]'
+                    : 'border-[var(--border)] bg-[var(--card)] hover:bg-[var(--muted)]'
+                } ${shouldShowJoinNowForInvite ? 'pb-12' : ''}`}
               >
                 <div
-                  aria-label="group icon"
-                  role="img"
-                  className="focus:outline-none w-11 h-11 border rounded-full border-gray-200 bg-white flex flex-shrink-0 items-center justify-center p-2"
+                  aria-hidden
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--background)] p-2"
                 >
-                  {Icon ? <div className="flex w-5 h-5">{Icon}</div> : null}
+                  {Icon ? <div className="flex h-5 w-5">{Icon}</div> : null}
                 </div>
-                <div className="pl-3 w-full">
-                  <div className="flex items-center justify-between w-full text-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm leading-snug text-[var(--foreground)]">
                     {notification?.description}
                   </div>
-                  <p className="focus:outline-none text-xs leading-3 pt-1 text-gray-500">
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
+                    {notification?.unread ? (
+                      <span
+                        aria-label="Unread"
+                        className="inline-block h-1.5 w-1.5 flex-none rounded-full bg-[var(--primary)]"
+                      />
+                    ) : null}
                     {formatNotificationDate(notification?.createdAt)}
                   </p>
                 </div>
-                {actionIcon && <div className="flex items-start gap-2 ml-2">{actionIcon}</div>}
+                {actionIcon && <div className="flex items-start gap-2">{actionIcon}</div>}
                 {actionButton && <div className="absolute bottom-3 right-3">{actionButton}</div>}
               </div>
             );
           })
         ) : (
-          <div className="w-full max-w-96 min-h-52  h-full p-4 rounded-lg   m-auto border border-gray-100 flex flex-col items-center justify-center gap-2">
-            <img src={NotFound} alt="BusyImage" className="min-w-28 w-28" />
-            <p className="flex items-center justify-center text-gray-900  font-medium">
-              No Notification(s) Found!
+          <div className="flex h-full min-h-60 flex-col items-center justify-center gap-3 px-6 text-center">
+            <img src={NotFound} alt="" aria-hidden className="w-28 max-w-full opacity-90" />
+            <p className="text-sm font-semibold text-[var(--foreground)]">
+              {isFiltered
+                ? `No ${notificationFilterValue?.label} notifications`
+                : "You're all caught up"}
+            </p>
+            <p className="max-w-60 text-xs leading-relaxed text-[var(--muted-foreground)]">
+              {isFiltered
+                ? 'Nothing matches this filter yet. Try another one.'
+                : 'Calls, voicemails and messages you miss will show up here.'}
             </p>
           </div>
         )}

@@ -2,8 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Favicon set from org API (fav_icon); no default to avoid flash before API loads -->
-    <!-- <link rel="icon" type="image/svg+xml" href="/fav.ico" /> -->
+    <!-- The org API's fav_icon still wins: organization-context.tsx rewrites this
+         link once the branding call returns. This is the default that stands in
+         until then, so the tab shows the mark immediately instead of asking for
+         /favicon.ico, getting a 404 and sitting on the browser's blank page icon
+         for a whole API round-trip.
+
+         It was previously left out to avoid flashing the wrong icon before the
+         API answered. That risk is gone: public/fav.ico is byte-identical to the
+         icon the API serves for this org, so nothing changes when the swap
+         happens. Keep the two in step if either is ever replaced.
+
+         The old commented-out version declared type="image/svg+xml" for a file
+         that is an ICO — the type is corrected here. -->
+    <link rel="icon" type="image/x-icon" href="/fav.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

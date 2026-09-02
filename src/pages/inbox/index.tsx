@@ -4,7 +4,6 @@ import './inbox-theme.css';
 import ListItem from './list-item';
 import CustomSelect from '@/components/custom/custom-select';
 import {
-  getDLCStatus,
   getFaxAssignedDidNumbers,
   getSMSList,
   mediaUploadUrl,
@@ -73,12 +72,12 @@ import { useFetchContact } from '@/hooks/common';
 import SideDrawer from '@/components/custom/side-drawer';
 import Flag from '@/components/flag';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import DLCVerificationPopup from '@/components/custom/dlc-verification-popup';
 import countryList from '@/lib/countries.json';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import useDebounce from '@/hooks/use-debounce';
 import { useMediaBlob } from '@/pages/messenger/chat/message-item/use-media-blob';
 import { useAuthenticatedMediaUrl } from '@/hooks/use-authenticated-media';
+import { HOME_COUNTRY } from '@/lib/india';
 
 const messageStatus = function (key: string = '') {
   const status = {
@@ -918,7 +917,6 @@ const InboxContent = ({
   // text area auto height
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   useClickOutside({ current: [emojiContainerRef.current] }, () => setEmojiOpen(false));
-  const [showDLCPopup, setShowDLCPopup] = useState(false);
   const [sendMsgAlert, setSendMsgAlert] = useState<boolean>(false);
   const [isSending, setIsSending] = useState<boolean>(false);
 
@@ -934,15 +932,10 @@ const InboxContent = ({
     enabled: !!(params?.chatId && selectedDID),
   });
 
-  /* Company messaging rules, read alongside the registration status they work
-     with. */
+  /* Company messaging rules. The US carrier-registration check that used to sit
+     beside this is gone: 10DLC is a US A2P regime and this platform sends from
+     Indian numbers only. */
   const { canSendTo } = useMessagingPermissions();
-
-  const { data: dlcStatus } = useQuery({
-    queryKey: ['getDLCStatus'],
-    queryFn: () => getDLCStatus(),
-    select: (data) => data?.data?.data?.result,
-  });
   const otherNumber =
     selectedDID?.value?.replace('+', '') === selectedChat?.from?.replace('+', '')
       ? selectedChat?.to
@@ -954,7 +947,7 @@ const InboxContent = ({
 
   useEffect(() => {
     if (otherNumber && otherNumber?.length > 0 && countryList && countryList?.length > 0) {
-      const { countryCode = 'US' } = checkPhoneNumberCountry(otherNumber);
+      const { countryCode = HOME_COUNTRY } = checkPhoneNumberCountry(otherNumber);
       seCountryCode(countryCode);
     }
   }, [otherNumber]);
@@ -977,7 +970,6 @@ const InboxContent = ({
     allow_country?.some(({ country_code_iso2 }: any) => country_code_iso2 === countryCode) &&
     freeSms > sms_used;
   const freeSmsLeft = isSmsFree ? freeSms - sms_used : 0;
-  const totalSmsCharges = Number(sms_rates?.rate || 0) * smsCountData.messages;
   const balanceAmount = Number(user?.company_info?.amount || 0);
   const chargeableSmsCount = Math.max(smsCountData.messages - freeSmsLeft, 0);
 
@@ -988,6 +980,13 @@ const InboxContent = ({
     phone: otherNumber,
     alpha2code: countryCode,
   });
+  /* The confirm dialog has to price the send the same way the screen does.
+     `sms_rates` is destructured with a default of `[]`, so `.rate` is undefined
+     on any response that omits it — the rate-card figure was then 0, which the
+     alert read as "cannot afford a single message". The applied cost from
+     `useSmsRateCredits` is the number already rendered as "SMS Charges"; the
+     rate card is only the fallback. */
+  const totalSmsCharges = smsCredits > 0 ? smsCredits : smsRate * smsCountData.messages;
 
   const { mutateAsync: sendSMSMutate, isPending: sendSMSLoad } = useMutation({
     mutationKey: ['sendSmsNew'],
@@ -1114,20 +1113,11 @@ const InboxContent = ({
 
     // Check if the receiver number is USA or international
     const receiverNumber = otherNumber?.startsWith('+') ? otherNumber : `+${otherNumber}`;
-    const { isUSA } = checkPhoneNumberCountry(receiverNumber);
 
-    // Check if DLC verification is required for US numbers
-    if (isUSA && dlcStatus?.verified === false) {
-      setShowDLCPopup(true);
-      return;
-    }
-
-    /* The company's messaging rules. Runs after the registration check above so
-       a number blocked there is refused once, with one explanation, rather than
-       twice with two. A guard rail, not a lock: the send endpoint accepts the
-       request regardless, so this tells someone before they send rather than
-       making it impossible. */
-    const messagingCheck = canSendTo(receiverNumber, { dlcVerified: dlcStatus?.verified });
+    /* The company's messaging rules. A guard rail, not a lock: the send endpoint
+       accepts the request regardless, so this tells someone before they send
+       rather than making it impossible. */
+    const messagingCheck = canSendTo();
     if (!messagingCheck.allowed) {
       handleAlert({ type: 'error', text: messagingCheck.message || 'Texting is switched off.' });
       return;
@@ -1684,7 +1674,6 @@ const InboxContent = ({
           </div>
         </div>
       )}
-      <DLCVerificationPopup open={showDLCPopup} setOpen={setShowDLCPopup} />
       {!isMMSMode && sendMsgAlert && (
         <AlertConfirm
           open={sendMsgAlert}
