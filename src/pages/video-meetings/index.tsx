@@ -70,7 +70,7 @@ const VideoMeetings = () => {
       />
 
       <div className="relative hidden h-full md:block">
-        <PageSidebarLayout isTab={false} title="Meetings" content={<Sidebar />} />
+        <PageSidebarLayout isTab={false} title="Meetings" hideHeading content={<Sidebar />} />
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
