@@ -99,20 +99,19 @@ const SharedWithMe = () => {
     <>
       <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3 overflow-auto bg-transparent p-3 sm:p-4">
         <div className="mx-auto max-w-250 w-full flex min-h-0 flex-1 flex-col gap-3">
-          <div className="flex flex-wrap items-end gap-3.5 rounded-2xl border border-white/70 bg-white/45 p-4 backdrop-blur-xl shadow-[0_4px_20px_rgba(154,52,18,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] sm:justify-between">
+          <div className="flex flex-wrap items-end gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:justify-between">
             <div className="flex min-w-0 flex-col gap-[3px]" style={{ flex: '1 1 320px' }}>
               <div className="flex items-center gap-1.5">
-                <h4 className="text-[23px] font-extrabold leading-[1.1] tracking-[-0.035em] text-[#0d1526]">
+                <h4 className="text-[23px] font-extrabold leading-[1.1] tracking-[-0.035em] text-gray-900">
                   Shared with me
                 </h4>
-                <CustomTooltip text="Manage recordings, archives, and meeting transcripts." side="bottom" className="max-w-xs">
-                  <button
-                    type="button"
-                    className="mcm-acthead-info"
-                    aria-label="About Shared with me"
-                  >
-                    <Info size={15} aria-hidden="true" />
-                  </button>
+                <CustomTooltip
+                  text="Manage recordings, archives, and meeting transcripts."
+                  side="bottom"
+                  className="max-w-[240px] rounded-xl bg-gray-900 px-3.5 py-2.5 text-[13px] leading-snug shadow-lg"
+                  arrowClassName="fill-gray-900"
+                >
+                  <Info className="h-4 w-4 shrink-0 cursor-help text-gray-400" />
                 </CustomTooltip>
               </div>
             </div>

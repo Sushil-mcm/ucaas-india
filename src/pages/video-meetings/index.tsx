@@ -8,7 +8,6 @@ import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar, { meetingSidebarArr } from './sidebar';
-import ActivityPageHead from '@/components/custom/activity-page-head';
 
 const VideoMeetings = () => {
   const { features } = useCompanyFeatures();
@@ -40,11 +39,6 @@ const VideoMeetings = () => {
   }, [IS_ADMIN, features]);
 
   return (
-    <div className="mcm-actpage">
-      <ActivityPageHead
-        title="Video"
-        description="Meetings you host or are invited to, their recordings, and the calendar behind them."
-      />
     <div
       className="relative flex h-full min-h-0 w-full flex-col overflow-hidden md:flex-row"
       style={{
@@ -70,7 +64,7 @@ const VideoMeetings = () => {
       />
 
       <div className="relative hidden h-full md:block">
-        <PageSidebarLayout isTab={false} title="Meetings" hideHeading content={<Sidebar />} />
+        <PageSidebarLayout isTab={false} title="Meetings" content={<Sidebar />} />
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
@@ -117,7 +111,6 @@ const VideoMeetings = () => {
           <SuspenseOutlet />
         </div>
       </div>
-    </div>
     </div>
   );
 };
