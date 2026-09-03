@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import moment from 'moment';
 import { AlarmClock, PhoneIncoming } from 'lucide-react';
 import { useSearchParamManager } from '@/hooks/use-search-params';
@@ -53,15 +53,6 @@ const TABS = [
 ];
 
 const SHOW_KPI_HEADER_TABS = new Set(['queues-activity', 'campaign-activity', 'dashboards']);
-
-// Maps onto the shared status tokens in mcm-page.css rather than raw colours,
-// so the band stays legible in dark mode.
-const KPI_TONE_STYLES: Record<string, string> = {
-  default: '',
-  success: 'good',
-  warning: 'warnv',
-  danger: 'bad',
-};
 
 const slaTone = (sla: number | null): 'default' | 'success' | 'warning' | 'danger' => {
   if (sla === null) return 'default';
