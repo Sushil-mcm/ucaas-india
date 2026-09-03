@@ -74,16 +74,16 @@ function WidgetViewModal({ modalState, setModalState, data }: IWidgetViewModalPr
 
   return (
     <Dialog open={modalState} onOpenChange={(val) => setModalState(val)}>
-      <DialogContent className="w-1/3 p-4 max-h-[95vh] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg min-h-[300px]">
+      <DialogContent className="w-1/3 p-4 max-h-[95vh] overflow-y-auto rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-lg min-h-[300px]">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader variant="custom" />
-            <p className="text-sm text-gray-400 animate-pulse">Loading agent configuration...</p>
+            <p className="text-sm text-[#9A948F] animate-pulse">Loading agent configuration...</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <h3 className="text-base font-semibold text-gray-800">Code Preview</h3>
+              <h3 className="text-base font-semibold text-[#2E2D35]">Code Preview</h3>
 
               <div className="flex justify-between items-end">
                 <div className="flex gap-1 p-1 bg-gray-100 rounded-md w-fit">
@@ -111,7 +111,7 @@ function WidgetViewModal({ modalState, setModalState, data }: IWidgetViewModalPr
                   onClick={handleCopy}
                   variant="ghost"
                   size="sm"
-                  className="text-gray-600 hover:text-black hover:bg-gray-100 cursor-pointer h-9"
+                  className="text-[#9A948F] hover:text-black hover:bg-[#FBE2C8]/40 cursor-pointer h-9"
                 >
                   {copied ? (
                     <>
@@ -126,7 +126,7 @@ function WidgetViewModal({ modalState, setModalState, data }: IWidgetViewModalPr
               </div>
             </div>
 
-            <div className="rounded-md border border-gray-300 overflow-hidden">
+            <div className="rounded-md border border-[#EEE7DD] overflow-hidden">
               <pre className="bg-[#1e1e1e] text-sm text-gray-100 p-4 overflow-x-auto font-mono">
                 <code className="whitespace-pre-wrap">{codeToShow}</code>
               </pre>

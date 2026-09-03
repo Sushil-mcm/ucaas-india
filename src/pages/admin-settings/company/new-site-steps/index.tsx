@@ -142,11 +142,11 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       className="flex h-full min-h-0 flex-col justify-between gap-4 pt-3 sm:pt-4"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
-        <div className="mx-auto flex w-full max-w-[940px] flex-col items-center rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-          <h3 className="mb-2 text-center text-base font-semibold text-gray-900 sm:text-lg">
+        <div className="mx-auto flex w-full max-w-[940px] flex-col items-center rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-4 sm:p-5">
+          <h3 className="mb-2 text-center text-base font-semibold text-[#2E2D35] sm:text-lg">
             {isEdit ? 'Edit Site' : 'Create New Site'}
           </h3>
-          <p className="text-center text-sm leading-6 text-gray-500">
+          <p className="text-center text-sm leading-6 text-[#9A948F]">
             Use this feature to add different office locations or branch sites for your company.
             This allows you to group users by their specific location (e.g., London, Dubai, or
             Singapore) while keeping everything under one central billing account.
@@ -160,7 +160,7 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
         {/* <div className=" w-full max-w-[940px] rounded-xl mx-auto  p-5 border border-gray-200 bg-white"> */}
         <div className="mx-auto w-full max-w-[940px]">{stepLookUp[currentStep]}</div>
       </div>
-      <div className="flex flex-col-reverse gap-2 border-t border-gray-200 pt-3 sm:flex-row sm:justify-end sm:pt-4">
+      <div className="flex flex-col-reverse gap-2 border-t border-[#EEE7DD] pt-3 sm:flex-row sm:justify-end sm:pt-4">
         <Button
           onClick={() => {
             if (currentStep === 1) {

@@ -69,6 +69,7 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
       <div className="flex w-full flex-col justify-between gap-4 lg:flex-row">
         <Input
           label="IVR Name"
+          required
           placeholder="Enter IVR name"
           {...register('name')}
           error={errors.name?.message}
@@ -76,6 +77,7 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
 
         <CustomSelect
           label={'Site'}
+          required
           options={siteList.map((item: any) => ({ label: item?.name, value: item?.uuid }))}
           handleChange={(e: ISELECTVALUE | null) => {
             setValue('site', e || null, { shouldValidate: true, shouldDirty: true });
@@ -90,6 +92,7 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
         <div className="flex w-full items-end gap-2 lg:w-[49%]">
           <Input
             label="IVR Extension"
+            required
             placeholder="Enter extension"
             type="number"
             {...register('extension')}

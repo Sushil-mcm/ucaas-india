@@ -35,6 +35,7 @@ import ExportContacts from '../leads/export-contacts.tsx/index.tsx';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useGetGroupList } from '@/hooks/common';
 import CustomSelect from '@/components/custom/custom-select';
+import '@/styles/warm-glass.css';
 
 interface IDrawerState {
   addContact: boolean;
@@ -264,7 +265,7 @@ const NewContact: FC = () => {
 
   return (
     <>
-      <section className="mcm-page flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <section className="mcm-page mcm-warm-glass flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
         {!canViewContact ? null : selectedGroupForContactLogs ? (
           <LeadContactLogs
             groupData={selectedGroupForContactLogs}
@@ -276,8 +277,8 @@ const NewContact: FC = () => {
         ) : (
           <>
             {/* Header bar */}
-            <div className="border-b border-gray-200 bg-white">
-              <div className="flex flex-col gap-3 px-3 py-3 sm:py-0 lg:flex-row lg:items-center lg:justify-between">
+            <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+              <div className="flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="w-full shrink-0 overflow-x-auto lg:w-auto lg:min-w-0 lg:shrink lg:flex-1">
                   <Tabs
                     value={tabName}
@@ -305,7 +306,7 @@ const NewContact: FC = () => {
                   <Button
                     onClick={() => login()}
                     variant="outline"
-                    className="btn ghost w-full sm:w-auto md:max-lg:shrink-0"
+                    className="h-9 min-h-9 w-full rounded-lg border-primary bg-white font-medium text-primary shadow-sm hover:bg-primary hover:text-white hover:shadow sm:w-auto md:max-lg:shrink-0"
                   >
                     Sync With Google
                   </Button>
@@ -319,7 +320,7 @@ const NewContact: FC = () => {
                       onChange={(e) => {
                         setSearch(e.target.value);
                       }}
-                      Icon={<SearchLine className="text-gray-700" />}
+                      Icon={<SearchLine className="text-[#8a7a67] w-4 h-4" />}
                     />
                     {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
                       <>

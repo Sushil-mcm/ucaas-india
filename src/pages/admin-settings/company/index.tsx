@@ -175,10 +175,10 @@ const CompanyInfo = () => {
   };
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-gray-200/15">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-gray-200 bg-white px-4 py-3">
-        <p className="text-gray-900 font-semibold text-lg">Company &amp; Locations</p>
-        <p className="text-gray-500 text-xs">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-[#2E2D35] font-semibold text-lg">Company &amp; Locations</p>
+        <p className="text-[#9A948F] text-xs">
           Your company record and every place it operates from — address, timezone and the people
           who work there.
         </p>
@@ -186,8 +186,8 @@ const CompanyInfo = () => {
       {!canViewSites ? (
         <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-3 sm:px-4">
           <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 You do not have permission to view sites
               </p>
             </div>
@@ -210,48 +210,47 @@ const CompanyInfo = () => {
             {/* Company-wide rules belong on the company screen, which is where
                 established systems put them and where an admin looks. The editor
                 itself stays under Phone System — one editor, one record. */}
-            <CompanyLogo />
             <CompanySettingsCard />
 
             {/* A location is not a label — it decides how calls behave for
                 everyone assigned to it. Saying so here saves an admin working it
                 out from the fields. */}
-            <div className="rounded-lg border border-gray-200 bg-white p-3">
-              <p className="text-sm font-semibold text-gray-900">What a location decides</p>
-              <p className="mt-1 text-xs text-gray-600">
+            <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
+              <p className="text-sm font-semibold text-[#2E2D35]">What a location decides</p>
+              <p className="mt-1 text-xs text-[#9A948F]">
                 Add a location for each place your company works from — London, Dubai, Singapore —
                 all under one billing account. For everyone assigned to it, the location sets:
               </p>
               <ul className="mt-2 grid gap-1.5 sm:grid-cols-3">
-                <li className="text-xs text-gray-700">
-                  <span className="font-semibold text-gray-900">The clock.</span> Opening and
+                <li className="text-xs text-[#2E2D35]">
+                  <span className="font-semibold text-[#2E2D35]">The clock.</span> Opening and
                   closing times are read in the location&rsquo;s timezone.
                 </li>
-                <li className="text-xs text-gray-700">
-                  <span className="font-semibold text-gray-900">The number shown.</span> What people
+                <li className="text-xs text-[#2E2D35]">
+                  <span className="font-semibold text-[#2E2D35]">The number shown.</span> What people
                   here display when they call out.
                 </li>
-                <li className="text-xs text-gray-700">
-                  <span className="font-semibold text-gray-900">The address on record.</span> Used
+                <li className="text-xs text-[#2E2D35]">
+                  <span className="font-semibold text-[#2E2D35]">The address on record.</span> Used
                   when buying local numbers and for regulatory checks.
                 </li>
               </ul>
             </div>
             <div id="setup-locations" className="flex items-center gap-3 rounded-xl">
-              <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-gray-900">
+              <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-[#2E2D35]">
                 <Briefcase className="h-4.5 w-4.5 text-primary" />
                 Default location
               </p>
             </div>
             {defaultSite ? (
-              <div className="rounded-xl border-t-3 border-primary bg-white shadow-sm">
+              <div className="rounded-xl border-t-3 border-primary bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
                 <div className="flex gap-3 p-4">
                   <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
                     <Icon name="CompayIcon" className="h-6 w-6" />
                     <span className="absolute bottom-0 -right-1 h-3 w-3 rounded-full border border-white bg-green-500" />
                   </div>
                   <div className="flex flex-1 flex-col">
-                    <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 pb-4">
+                    <div className="flex flex-wrap items-start gap-3 border-b border-[#EEE7DD] pb-4">
                       <div className="flex min-w-[220px] flex-1 flex-wrap items-center gap-2">
                         <button
                           type="button"
@@ -265,7 +264,7 @@ const CompanyInfo = () => {
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[#9A948F]">
                           Location ID:{' '}
                           {defaultSite?.site_id || defaultSite?.id || defaultSite?.uuid || '---'}
                         </p>
@@ -274,7 +273,7 @@ const CompanyInfo = () => {
                             type="button"
                             aria-label="Edit the default location"
                             title="Edit the default location"
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-500 hover:bg-primary hover:text-white"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[#9A948F] hover:bg-primary hover:text-white"
                             onClick={() => handleEditSite(defaultSite)}
                           >
                             <Icon name="EditStrokIcon" className="h-4 w-4" />
@@ -282,14 +281,14 @@ const CompanyInfo = () => {
                         )}
                       </div>
                     </div>
-                    <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div className="mt-4 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 px-4 py-3">
                       <div className="flex items-start gap-2">
                         <MapPinIcon className="h-4 w-4 text-primary" />
                         <div>
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             Primary Address
                           </p>
-                          <p className="text-sm font-medium text-gray-700">
+                          <p className="text-sm font-medium text-[#2E2D35]">
                             {defaultSite?.address || '---'}
                           </p>
                         </div>
@@ -297,42 +296,42 @@ const CompanyInfo = () => {
                     </div>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                        <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                           Country
                         </p>
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-[#2E2D35]">
                           {defaultSite?.country || '---'}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                        <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                           State
                         </p>
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-[#2E2D35]">
                           {defaultSite?.state || '---'}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                        <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                           City
                         </p>
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-[#2E2D35]">
                           {defaultSite?.city || '---'}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                        <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                           Postal Code
                         </p>
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-[#2E2D35]">
                           {defaultSite?.postal_code || '---'}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                        <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                           Timezone
                         </p>
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-[#2E2D35]">
                           {defaultSite?.timezone || '---'}
                         </p>
                       </div>
@@ -342,8 +341,8 @@ const CompanyInfo = () => {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-                <p className="text-sm font-semibold text-gray-900">No default location found</p>
+              <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8 text-center">
+                <p className="text-sm font-semibold text-[#2E2D35]">No default location found</p>
               </div>
             )}
             <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -351,10 +350,10 @@ const CompanyInfo = () => {
                 <MapPin className="h-4.5 w-4.5 text-primary mt-0.75" />
 
                 <div className="flex flex-col gap-0.5">
-                  <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-gray-900">
+                  <p className="flex items-center gap-2 text-base font-semibold capitalize tracking-wide text-[#2E2D35]">
                     Other locations
                   </p>
-                  <p className="text-xs text-gray-700 font-medium">
+                  <p className="text-xs text-[#2E2D35] font-medium">
                     Manage the physical locations or virtual boundaries associated with your
                     account.
                   </p>
@@ -372,7 +371,7 @@ const CompanyInfo = () => {
                       if (value.startsWith(' ')) return;
                       setSearch(e.target.value);
                     }}
-                    Icon={<SearchLine className=" text-gray-700" />}
+                    Icon={<SearchLine className=" text-[#2E2D35]" />}
                   />
                 </div>
                 {/* Comparing locations is a different job from reading one, and
@@ -399,15 +398,15 @@ const CompanyInfo = () => {
             </div>
             <div className="w-full flex flex-col gap-3 pb-3">
               {isSitesLoading ? (
-                <div className="rounded-xl border border-gray-200 bg-white px-4 py-8">
+                <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8">
                   <div className="flex items-center justify-center">
                     <Loader variant="blue" size="md" />
                   </div>
                 </div>
               ) : !filteredSites.length ? (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
-                  <p className="text-sm font-semibold text-gray-900">No additional sites found</p>
-                  <p className="text-xs text-gray-600">
+                <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8 text-center">
+                  <p className="text-sm font-semibold text-[#2E2D35]">No additional sites found</p>
+                  <p className="text-xs text-[#9A948F]">
                     Try a different search, or create a location.
                   </p>
                 </div>
@@ -416,8 +415,8 @@ const CompanyInfo = () => {
                   const isDefault = site?.is_default === '1';
                   const siteId = site?.site_id || site?.id || site?.uuid || '---';
                   return (
-                    <div key={site?.uuid || siteId} className="rounded-xl bg-white p-4 shadow-sm">
-                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-4">
+                    <div key={site?.uuid || siteId} className="rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EEE7DD] pb-4">
                         <div className="flex items-start gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
                             <Icon name="CompayIcon" className="h-5 w-5" />
@@ -437,7 +436,7 @@ const CompanyInfo = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500">Location ID: {siteId}</p>
+                            <p className="text-xs text-[#9A948F]">Location ID: {siteId}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -446,7 +445,7 @@ const CompanyInfo = () => {
                               type="button"
                               disabled={isSettingMain}
                               title="Make this the main location"
-                              className="cursor-pointer rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              className="cursor-pointer rounded-full border border-[#EEE7DD] px-3 py-1.5 text-xs font-semibold text-[#9A948F] hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
                               onClick={() => makeMainLocation(site)}
                             >
                               Make main
@@ -456,7 +455,7 @@ const CompanyInfo = () => {
                             <button
                               type="button"
                               aria-label={`Edit ${site?.name || 'site'}`}
-                              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-500 hover:bg-primary hover:text-white"
+                              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[#9A948F] hover:bg-primary hover:text-white"
                               onClick={() => {
                                 handleEditSite(site);
                               }}
@@ -470,7 +469,7 @@ const CompanyInfo = () => {
                               disabled={isDefault}
                               className={`flex h-8 w-8 items-center justify-center rounded-full border ${
                                 isDefault
-                                  ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-300'
+                                  ? 'cursor-not-allowed border-[#EEE7DD] bg-[#FBE2C8]/40 text-gray-300'
                                   : 'cursor-pointer border-red-100 bg-red-100 text-red-500 hover:bg-red-500 hover:text-white'
                               }`}
                               onClick={() => {
@@ -481,18 +480,18 @@ const CompanyInfo = () => {
                             </button>
                           )}
                           {!canEditSites && !canDeleteSites && (
-                            <span className="text-xs font-medium text-gray-400">---</span>
+                            <span className="text-xs font-medium text-[#9A948F]">---</span>
                           )}
                         </div>
                       </div>
-                      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                      <div className="mt-4 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 px-4 py-3">
                         <div className="flex items-start gap-2">
                           <MapPinIcon className="h-4 w-4 text-primary" />
                           <div>
-                            <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                            <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                               Primary Address
                             </p>
-                            <p className="text-sm font-medium text-gray-700">
+                            <p className="text-sm font-medium text-[#2E2D35]">
                               {site?.address || '---'}
                             </p>
                           </div>
@@ -500,42 +499,42 @@ const CompanyInfo = () => {
                       </div>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                         <div className="space-y-1">
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             Country
                           </p>
-                          <p className="text-sm font-semibold text-gray-700">
+                          <p className="text-sm font-semibold text-[#2E2D35]">
                             {site?.country || '---'}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             State
                           </p>
-                          <p className="text-sm font-semibold text-gray-700">
+                          <p className="text-sm font-semibold text-[#2E2D35]">
                             {site?.state || '---'}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             City
                           </p>
-                          <p className="text-sm font-semibold text-gray-700">
+                          <p className="text-sm font-semibold text-[#2E2D35]">
                             {site?.city || '---'}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             Postal Code
                           </p>
-                          <p className="text-sm font-semibold text-gray-700">
+                          <p className="text-sm font-semibold text-[#2E2D35]">
                             {site?.postal_code || '---'}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[11px] font-semibold capitalize tracking-wide text-gray-500">
+                          <p className="text-[11px] font-semibold capitalize tracking-wide text-[#9A948F]">
                             Timezone
                           </p>
-                          <p className="text-sm font-semibold text-gray-700">
+                          <p className="text-sm font-semibold text-[#2E2D35]">
                             {site?.timezone || '---'}
                           </p>
                         </div>

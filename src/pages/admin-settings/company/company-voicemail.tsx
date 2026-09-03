@@ -122,6 +122,8 @@ type NotifyTarget = 'person' | 'address';
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface VoicemailForm {
+  /* Blank means "no company PIN recorded", which is the shipped state. */
+  pin: string;
   voicemail_to_text: boolean;
   override: boolean;
   /* Email a copy of each new message. */
@@ -310,23 +312,23 @@ const CompanyVoicemail = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Voicemail</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Voicemail</p>
+        <p className="text-xs text-[#9A948F]">
           The voicemail settings the company starts people on, and whether a person may change them
           on their own phone.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved settings
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 What you see below are the built-in defaults, not your saved values. Reload before
                 you save, or you may overwrite settings you cannot currently see.
               </p>
@@ -334,9 +336,9 @@ const CompanyVoicemail = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-gray-900">No company voicemail saved yet</p>
-              <p className="text-xs text-gray-500">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+              <p className="text-sm font-semibold text-[#2E2D35]">No company voicemail saved yet</p>
+              <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>

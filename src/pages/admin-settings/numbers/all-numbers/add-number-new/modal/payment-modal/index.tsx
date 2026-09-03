@@ -115,7 +115,6 @@ const PaymentModal = ({
       },
     );
   };
-  console.log(data, 'data-x');
   const onSuccessPayment = (paymentMethod: any) => {
     const didCity =
       data?.areaCode?.label ||

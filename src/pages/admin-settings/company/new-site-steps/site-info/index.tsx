@@ -169,6 +169,7 @@ const SiteInfo = ({ formInstance }: any) => {
             <div className="relative flex w-full gap-1">
               <Input
                 label="Location Name"
+                required
                 {...register('name')}
                 error={errors?.name?.message}
                 placeholder={'Enter name'}
@@ -189,7 +190,7 @@ const SiteInfo = ({ formInstance }: any) => {
             <div className="relative flex w-full gap-1">
               <div className="flex w-full flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-1">
-                  <Label>Street Address</Label>
+                  <Label required>Street Address</Label>
                   {errors?.address?.message && <ErrorTooltip text={errors?.address?.message} />}
                 </div>
                 <textarea
@@ -209,6 +210,7 @@ const SiteInfo = ({ formInstance }: any) => {
               >
                 <CustomSelect
                   label={'Country'}
+                  required
                   options={countryList?.map((country) => ({
                     label: country?.name || '',
                     value: country?.name || '',
@@ -225,6 +227,7 @@ const SiteInfo = ({ formInstance }: any) => {
                 <div className="relative flex w-full gap-1 md:w-1/2">
                   <CustomSelect
                     label="State"
+                    required
                     placeholder="Select State"
                     options={stateOptions || []}
                     handleChange={(value) => {
@@ -249,6 +252,7 @@ const SiteInfo = ({ formInstance }: any) => {
                 <div className="relative flex w-full gap-1 md:w-1/2">
                   <CustomSelect
                     label="City"
+                    required
                     placeholder="Select City"
                     options={cityOptions || []}
                     handleChange={(value) => {
@@ -271,6 +275,7 @@ const SiteInfo = ({ formInstance }: any) => {
               >
                 <Input
                   label="Postal Code"
+                  required
                   {...register('postal_code')}
                   error={errors?.postal_code?.message}
                   placeholder={'Enter Postal Code'}
@@ -285,6 +290,7 @@ const SiteInfo = ({ formInstance }: any) => {
               <div className="relative flex w-full gap-1 md:w-1/2">
                 <CustomSelect
                   label="Timezone"
+                  required
                   placeholder="Select Timezone"
                   options={timezonesList?.map((item: any) => ({
                     label: item?.zoneName,

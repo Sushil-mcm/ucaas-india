@@ -93,7 +93,6 @@ function AiAgent() {
   }, []);
 
   const handleTestChatClick = async (rowData: any) => {
-    // console.log();
 
     // if (rowData?.domain !== window.location.hostname) {
     //   handleAlert({

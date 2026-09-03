@@ -20,7 +20,7 @@ interface Member {
   uuid: string;
   profile?: string;
   custom_role_data?: { name: string };
-  role_data?: { name: string };
+  role_data?: { name: string; slug?: string };
   value?: string;
   label?: string;
 }
@@ -84,11 +84,11 @@ const ManagerRadioCell = ({ memberData }: { memberData: Member }) => {
   const members = useWatch({ control, name: 'members', defaultValue: [] });
   const manager = useWatch({ control, name: 'manager', defaultValue: { value: '' } });
   // memberData?.custom_role_data?.name ||
-  const role = memberData?.role_data?.name || memberData?.role;
+  const role = (memberData?.role_data?.slug || memberData?.role || '').toUpperCase();
   const isEnabled =
     Array.isArray(members) &&
     members.some((item: any) => item?.value === memberData?.extension) &&
-    ['MANAGER', 'ADMIN', 'SUB-ADMIN'].includes(role);
+    ['MANAGER', 'ADMIN', 'SUB-ADMIN', 'SUB_ADMIN'].includes(role);
 
   const handleManagerChange = useCallback(
     (value: string) => {

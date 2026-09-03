@@ -40,7 +40,6 @@ function AttachGlobalKnowledgeBase({
     resolver: yupResolver(addGlobalIngestionSchema),
     mode: 'all',
   });
-  console.log('errors', errors);
   const { data: typeListData = [] } = useQuery({
     queryKey: ['getAgentList'],
     queryFn: () => getAgentList(),

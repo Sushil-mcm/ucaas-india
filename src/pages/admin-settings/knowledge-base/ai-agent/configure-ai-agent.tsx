@@ -571,7 +571,6 @@ const ConfigureAiAgent = () => {
   );
   const [managerSearch, setManagerSearch] = useState('');
 
-  // console.log(selectedTopicId, 'selectedTopicId', initialData);
 
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
   const [widgetColors] = useState({
@@ -1530,8 +1529,8 @@ const ConfigureAiAgent = () => {
               setAgentName(e.target.value);
               setStepErrors((p) => ({ ...p, agentName: '' }));
             }}
-            className={`mt-3 h-11 w-full rounded-xl border bg-white px-4 text-sm text-[#091A3A] outline-none shadow-sm focus:border-primary ${
-              stepErrors.agentName ? 'border-red-400' : 'border-gray-200'
+            className={`mt-3 h-11 w-full rounded-xl border bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 text-sm text-[#091A3A] outline-none shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] focus:border-primary ${
+              stepErrors.agentName ? 'border-red-400' : 'border-[rgba(225,200,165,0.9)]'
             }`}
             placeholder="Enter AI Agent name"
           />
@@ -1545,24 +1544,24 @@ const ConfigureAiAgent = () => {
           <div className="relative mt-3">
             <div
               onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
-              className="flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 shadow-sm transition-all hover:border-primary/50"
+              className="flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] transition-all hover:border-primary/50"
             >
               <div className="flex items-center gap-3">
-                <Zap className="h-5 w-5 text-gray-400" />
+                <Zap className="h-5 w-5 text-[#9A948F]" />
                 <span className="text-sm font-medium text-[#667085]">Topic:</span>
-                <span className="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-[#091A3A]">
+                <span className="rounded-lg bg-[#FBE2C8]/40 px-3 py-1 text-sm font-semibold text-[#091A3A]">
                   {selectedTopic ? selectedTopic.title : 'Select a template'}
                 </span>
               </div>
               <ChevronDown
-                className={`h-5 w-5 text-gray-400 transition-transform ${
+                className={`h-5 w-5 text-[#9A948F] transition-transform ${
                   isTemplateDropdownOpen ? 'rotate-180' : ''
                 }`}
               />
             </div>
 
             {isTemplateDropdownOpen && (
-              <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+              <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-xl">
                 <div className="max-h-[320px] overflow-y-auto p-2 scrollbar-hide">
                   {dynamicTopics?.length
                     ? dynamicTopics?.map((topic: any) => {
@@ -1582,14 +1581,14 @@ const ConfigureAiAgent = () => {
                               // }
                             }}
                             className={`flex cursor-pointer items-start gap-4 rounded-xl p-4 transition-colors ${
-                              isSelected ? 'bg-primary/5' : 'hover:bg-gray-50'
+                              isSelected ? 'bg-primary/5' : 'hover:bg-[#FBE2C8]/45'
                             }`}
                           >
                             <div
                               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                                 isSelected
                                   ? 'bg-white text-primary shadow-sm'
-                                  : 'bg-gray-100 text-gray-500'
+                                  : 'bg-[#FBE2C8]/40 text-[#9A948F]'
                               }`}
                             >
                               <TopicIcon className="h-5 w-5" />
@@ -1621,24 +1620,24 @@ const ConfigureAiAgent = () => {
           <div className="relative mt-3">
             <div
               onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-              className="flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 shadow-sm transition-all hover:border-primary/50"
+              className="flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] transition-all hover:border-primary/50"
             >
               <div className="flex items-center gap-3">
-                <Globe className="h-5 w-5 text-gray-400" />
+                <Globe className="h-5 w-5 text-[#9A948F]" />
                 <span className="text-sm font-medium text-[#667085]">Language:</span>
-                <span className="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-[#091A3A]">
+                <span className="rounded-lg bg-[#FBE2C8]/40 px-3 py-1 text-sm font-semibold text-[#091A3A]">
                   {languageOptions.find((l) => l.value === selectedLanguage)?.label}
                 </span>
               </div>
               <ChevronDown
-                className={`h-5 w-5 text-gray-400 transition-transform ${
+                className={`h-5 w-5 text-[#9A948F] transition-transform ${
                   isLanguageDropdownOpen ? 'rotate-180' : ''
                 }`}
               />
             </div>
 
             {isLanguageDropdownOpen && (
-              <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+              <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-xl">
                 <div className="p-2">
                   {languageOptions.map((lang) => {
                     const isSelected = selectedLanguage === lang.value;
@@ -1660,7 +1659,7 @@ const ConfigureAiAgent = () => {
                         className={`flex cursor-pointer items-center justify-between rounded-xl p-3 px-4 transition-colors ${
                           isSelected
                             ? 'bg-primary/5 text-primary font-semibold'
-                            : 'hover:bg-gray-50 text-[#091A3A]'
+                            : 'hover:bg-[#FBE2C8]/45 text-[#091A3A]'
                         }`}
                       >
                         <span className="text-sm uppercase tracking-wide">{lang.label}</span>
@@ -1672,7 +1671,7 @@ const ConfigureAiAgent = () => {
               </div>
             )}
           </div>
-          <p className="mt-3 text-xs text-[#667085] flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p className="mt-3 text-xs text-[#667085] flex items-start gap-2 bg-[#FBE2C8]/45 p-3 rounded-xl border border-gray-100">
             <Info className="w-4 h-4 shrink-0 text-primary mt-0.5" />
             <span>
               <strong>Note:</strong> Selecting a primary language enables your AI Agent to
@@ -1698,7 +1697,7 @@ const ConfigureAiAgent = () => {
               className="min-h-[160px] w-full resize-none border-none p-5 text-sm leading-6 text-[#091A3A] outline-none"
             />
           </div>
-          <p className="mt-3 text-xs text-[#667085] flex items-start gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <p className="mt-3 text-xs text-[#667085] flex items-start gap-2 bg-[#FBE2C8]/45 p-3 rounded-xl border border-gray-100">
             <Info className="w-4 h-4 shrink-0 text-primary mt-0.5" />
             <span>
               <strong>Note:</strong> Please write the welcome message in the selected language only.
@@ -1799,7 +1798,7 @@ const ConfigureAiAgent = () => {
               </div>
 
               {items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4 text-sm text-[#667085]">
+                <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 text-sm text-[#667085]">
                   <p>{emptyLabel}</p>
                 </div>
               ) : (
@@ -1983,7 +1982,7 @@ const ConfigureAiAgent = () => {
               ))}
               <option value="none">None (Skip this step)</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9A948F]" />
           </div>
         </div>
 
@@ -1992,16 +1991,16 @@ const ConfigureAiAgent = () => {
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Regional Settings Card */}
 
-            <div className="flex flex-col bg-white justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
+            <div className="flex flex-col bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
               <div className="flex justify-between">
                 <div className="flex flex-col gap-1.5 overflow-hidden">
                   <div className="flex items-center gap-1">
                     <Globe className="h-4 w-4 text-primary" />
-                    <p className="font-semibold truncate text-md text-gray-900 leading-tight">
+                    <p className="font-semibold truncate text-md text-[#2E2D35] leading-tight">
                       Regional Settings
                     </p>
                   </div>
-                  <p className="text-gray-600 truncate text-xs">
+                  <p className="text-[#9A948F] truncate text-xs">
                     {(operational_hours?.regional?.country as any)?.value &&
                     (operational_hours?.regional?.timezone as any)?.value
                       ? `${(operational_hours.regional.timezone as any).value}, ${(operational_hours.regional.country as any).value}`
@@ -2023,16 +2022,16 @@ const ConfigureAiAgent = () => {
             </div>
 
             {/* Business Hours Card */}
-            <div className="flex bg-white justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
+            <div className="flex bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
               <div className="flex flex-col gap-1.5 overflow-hidden">
                 <div className="flex items-center gap-1">
                   <Clock3 className="h-4 w-4 text-primary" />
-                  <p className="font-semibold truncate text-md text-gray-900 leading-tight">
+                  <p className="font-semibold truncate text-md text-[#2E2D35] leading-tight">
                     Business Hours
                   </p>
                 </div>
                 <p
-                  className={`${bussinessHourError ? 'text-red-500 font-medium' : 'text-gray-600'} truncate text-xs`}
+                  className={`${bussinessHourError ? 'text-red-500 font-medium' : 'text-[#9A948F]'} truncate text-xs`}
                 >
                   {bussinessHourError
                     ? bussinessHourError
@@ -2082,8 +2081,8 @@ const ConfigureAiAgent = () => {
                   </div>
                 ))
               ) : (
-                <div className="rounded-lg bg-gray-100/50 p-4 border border-dashed border-gray-200">
-                  <p className="text-sm text-gray-500 italic">
+                <div className="rounded-lg bg-[#FBE2C8]/20 p-4 border border-dashed border-[#EEE7DD]">
+                  <p className="text-sm text-[#9A948F] italic">
                     No active operating hours selected. The AI will handle inquiries based on
                     general knowledge.
                   </p>
@@ -2152,7 +2151,7 @@ const ConfigureAiAgent = () => {
         </p>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+      <div className="mt-6 rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h4 className="text-base font-semibold text-[#091A3A]">
@@ -2202,25 +2201,25 @@ const ConfigureAiAgent = () => {
         </div>
 
         {enableHumanHandoff && (
-          <div className="mt-6 border-t border-gray-200 pt-6">
+          <div className="mt-6 border-t border-[#EEE7DD] pt-6">
             <div className="space-y-4">
-              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+              <div className="rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-6">
                 <h4 className="text-base font-semibold text-[#091A3A]">Forwarding Destination</h4>
                 <p className="mt-1 text-sm text-[#667085]">
                   Select the queue where calls should be routed.
                 </p>
-                <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+                <div className="mt-4 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className={`min-w-0 ${committedShouldShowForwardTo ? '' : 'flex-1'}`}>
-                      <p className="text-xs text-gray-500">Forward Type</p>
-                      <p className="truncate text-sm font-medium text-gray-900">
+                      <p className="text-xs text-[#9A948F]">Forward Type</p>
+                      <p className="truncate text-sm font-medium text-[#2E2D35]">
                         {committedForwardTypeLabel}
                       </p>
                     </div>
                     {committedShouldShowForwardTo && (
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-500">{committedForwardValueFieldLabel}</p>
-                        <p className="truncate text-sm font-medium text-gray-900">
+                        <p className="text-xs text-[#9A948F]">{committedForwardValueFieldLabel}</p>
+                        <p className="truncate text-sm font-medium text-[#2E2D35]">
                           {committedForwardValueDisplay || committedForwardValueLabel}
                         </p>
                       </div>
@@ -2239,7 +2238,7 @@ const ConfigureAiAgent = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+              <div className="rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-6">
                 <h4 className="text-base font-semibold text-[#091A3A]">Manager Configuration</h4>
                 <p className="mt-1 text-sm text-[#667085]">Select a manager</p>
                 <div className="mt-4">
@@ -2333,9 +2332,9 @@ const ConfigureAiAgent = () => {
                 valueLabel={forwardValueFieldLabel}
                 isShowUpload={false}
               />
-              <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">Selected</p>
-                <p className="text-sm font-medium text-gray-900">
+              <div className="mt-4 rounded-lg border border-gray-100 bg-[#FBE2C8]/45 p-3">
+                <p className="text-xs text-[#9A948F]">Selected</p>
+                <p className="text-sm font-medium text-[#2E2D35]">
                   {shouldShowForwardTo
                     ? `${selectedForwardTypeLabel} - ${selectedForwardValueDisplay || selectedForwardValueLabel}`
                     : selectedForwardTypeLabel}
@@ -2371,7 +2370,7 @@ const ConfigureAiAgent = () => {
       </div>
 
       <div className="mt-6 space-y-4">
-        {/* <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        {/* <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Call Recording</h4>
@@ -2384,7 +2383,7 @@ const ConfigureAiAgent = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Enable Transcripts</h4>
@@ -2395,7 +2394,7 @@ const ConfigureAiAgent = () => {
             <Switch checked={enableTranscripts} disabled onCheckedChange={setEnableTranscripts} />
           </div>
         </div> */}
-        {/* <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        {/* <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Enable Call Monitoring</h4>
@@ -2407,7 +2406,7 @@ const ConfigureAiAgent = () => {
           </div>
         </div> */}
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Temperature</h4>
@@ -2419,7 +2418,7 @@ const ConfigureAiAgent = () => {
               <select
                 value={temperature}
                 onChange={(e) => setTemperature(e.target.value)}
-                className="h-11 w-full appearance-none rounded-xl border border-gray-300 bg-white px-3 pr-10 text-sm text-[#091A3A] outline-none focus:border-primary"
+                className="h-11 w-full appearance-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 pr-10 text-sm text-[#091A3A] outline-none focus:border-primary"
               >
                 {TEMPERATURE_OPTIONS.map((item) => (
                   <option key={item} value={item}>
@@ -2427,12 +2426,12 @@ const ConfigureAiAgent = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9A948F]" />
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-base font-semibold text-[#091A3A]">Data Collection</h4>
             <Switch
@@ -2501,7 +2500,7 @@ const ConfigureAiAgent = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Max Session Duration</h4>
@@ -2512,7 +2511,7 @@ const ConfigureAiAgent = () => {
             <select
               value={maxSessionDuration}
               onChange={(e) => setMaxSessionDuration(Number(e.target.value))}
-              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
+              className="h-10 rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
             >
               {MAX_SESSION_DURATION_OPTIONS.map((minutes) => (
                 <option key={minutes} value={minutes}>
@@ -2523,7 +2522,7 @@ const ConfigureAiAgent = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Idle Reminder</h4>
@@ -2534,7 +2533,7 @@ const ConfigureAiAgent = () => {
             <select
               value={idleReminder}
               onChange={(e) => setIdleReminder(Number(e.target.value))}
-              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
+              className="h-10 rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
             >
               {IDLE_REMINDER_OPTIONS.map((seconds) => (
                 <option key={seconds} value={seconds}>
@@ -2545,7 +2544,7 @@ const ConfigureAiAgent = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="text-base font-semibold text-[#091A3A]">Idle Reminder Retry</h4>
@@ -2556,7 +2555,7 @@ const ConfigureAiAgent = () => {
             <select
               value={idleReminderRetry}
               onChange={(e) => setIdleReminderRetry(Number(e.target.value))}
-              className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
+              className="h-10 rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#091A3A] outline-none focus:border-primary"
             >
               {IDLE_REMINDER_RETRY_OPTIONS.map((count) => (
                 <option key={count} value={count}>
@@ -2589,9 +2588,9 @@ const ConfigureAiAgent = () => {
   };
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div className="text-gray-900 font-semibold text-lg flex items-center gap-2">
+    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+        <div className="text-[#2E2D35] font-semibold text-lg flex items-center gap-2">
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -2600,7 +2599,7 @@ const ConfigureAiAgent = () => {
             >
               AI Agents
             </button>
-            <div className="-rotate-90 text-gray-800">
+            <div className="-rotate-90 text-[#2E2D35]">
               <Icon name="ChevronIcon" className="w-5 h-5" />
             </div>
             <span className="text-primary text-md">AI Chatbot Agents</span>
@@ -2618,7 +2617,7 @@ const ConfigureAiAgent = () => {
 
       <div className="w-full h-full p-3 pt-0 flex flex-col gap-2 overflow-auto mt-4">
         <FormProvider {...formInstance}>
-          <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6">
+          <div className="rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 md:p-6">
             <div className="grid grid-cols-2 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
               {STEP_ITEMS.map((step, index) => {
                 const StepIcon = step.icon;
@@ -2638,7 +2637,7 @@ const ConfigureAiAgent = () => {
                           ? 'border-red-400 text-red-500 bg-red-50'
                           : isActive
                             ? 'border-primary text-primary bg-ucass-active-bg'
-                            : 'border-gray-300 text-gray-400'
+                            : 'border-[#EEE7DD] text-[#9A948F]'
                       }`}
                     >
                       <StepIcon className="h-4 w-4" />

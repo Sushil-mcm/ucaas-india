@@ -120,7 +120,7 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
                   }}
                 />
               </div>
-              <div className="flex flex-col-reverse gap-2 border-t border-gray-200 pt-3 sm:flex-row sm:justify-end sm:pt-4">
+              <div className="gp-role-form-footer flex flex-col-reverse gap-2 border-t border-gray-200 pt-3 sm:flex-row sm:justify-end sm:pt-4">
                 <Button
                   type="button"
                   variant={'transparent'}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Timer from '@/components/timer';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import './wallboard-theme.css';
 
 export type WallboardTile = {
   key: string;
@@ -25,10 +26,10 @@ export type WallboardQueueRow = {
 };
 
 const slaColor = (sla: number | null) => {
-  if (sla === null) return '#7e8ca8';
-  if (sla >= 80) return '#4fe0cd';
-  if (sla >= 60) return '#ffc65c';
-  return '#ff8a8a';
+  if (sla === null) return '#93a1ba';
+  if (sla >= 80) return '#059669';
+  if (sla >= 60) return '#d97706';
+  return '#e11d48';
 };
 
 /**

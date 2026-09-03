@@ -46,10 +46,18 @@ const SendWhatsappMessage = ({
   handleClose,
   selectedChannelType,
   initialNumber,
+  /* Additive only — default '' leaves every other caller (e.g. External
+     Contacts' own WhatsApp drawer) exactly as it was; only a caller that
+     wraps this in its own themed container needs to pass a class here so
+     the template dropdown's `react-select` control (styled by a fixed,
+     unscoped `.custom-react-select__control` rule) can be re-themed to
+     match, the same way the Contact view toolbar's Group/Tag filters are. */
+  selectClassName = '',
 }: {
   handleClose: any;
   selectedChannelType?: any;
   initialNumber?: string;
+  selectClassName?: string;
 }) => {
   console.log('initialNumber', initialNumber);
   const emojiContainerRef = useRef(null);
@@ -263,6 +271,7 @@ const SendWhatsappMessage = ({
                           setSelectedTemplate(e);
                         }}
                         value={selectedTemplate}
+                        inputClass={selectClassName}
                       />
                       <Button
                         onClick={() => {

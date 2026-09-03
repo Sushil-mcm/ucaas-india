@@ -258,23 +258,23 @@ const CompanyRingTime = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Ring time</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Ring time</p>
+        <p className="text-xs text-[#9A948F]">
           How long a phone rings before the call stops ringing and moves on. One number for the
           whole company, so a new person is not set up by hand.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-[1040px] flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved ring time
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 What you see below is the built-in default, not your saved value. Reload before you
                 save, or you may overwrite a setting you cannot currently see.
               </p>
@@ -282,9 +282,9 @@ const CompanyRingTime = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-gray-900">No ring time saved yet</p>
-              <p className="text-xs text-gray-500">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+              <p className="text-sm font-semibold text-[#2E2D35]">No ring time saved yet</p>
+              <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
@@ -307,7 +307,7 @@ const CompanyRingTime = () => {
                     updateForm({ seconds: option?.value || DEFAULT_FORM.seconds })
                   }
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Between {MIN_SECONDS} and {MAX_SECONDS} seconds. Rings are counted at about five
                   seconds each, which is what a caller hears.
                 </p>
@@ -317,18 +317,18 @@ const CompanyRingTime = () => {
             {/* An unlabelled number is worse than a wrong one: an admin cannot
                 judge 30 without knowing what anyone else does. Both vendors'
                 figures are on screen, including why the list stops at 60. */}
-            <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
-              <p className="text-sm font-semibold text-gray-900">Where these numbers come from</p>
-              <ul className="flex flex-col gap-1 text-xs text-gray-600">
+            <div className="flex flex-col gap-2 rounded-lg border border-[#EEE7DD] p-3">
+              <p className="text-sm font-semibold text-[#2E2D35]">Where these numbers come from</p>
+              <ul className="flex flex-col gap-1 text-xs text-[#9A948F]">
                 <li>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-[#2E2D35]">
                     Most desk phones ring for {COMMON_DEFAULT_SECONDS} seconds
                   </span>{' '}
                   — about {ringCount(COMMON_DEFAULT_SECONDS)} rings. That is the default here too,
                   because it is also what this product already falls back to everywhere else.
                 </li>
                 <li>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-[#2E2D35]">
                     Contact centres use about {CONTACT_CENTRE_SECONDS} seconds
                   </span>{' '}
                   and rarely go above {MAX_SECONDS}. A short ring moves an unanswered call to the
@@ -366,29 +366,29 @@ const CompanyRingTime = () => {
               ringing stops; what happens next is a different setting, in a
               different place, and an admin who changes one and not the other
               gets silence at the end of the call. */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+          <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+            <div className="flex flex-wrap items-start gap-3 border-b border-[#EEE7DD] p-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
                 <PhoneCall className="h-5 w-5" />
               </div>
               <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-                <p className="text-base font-semibold text-gray-900">
+                <p className="text-base font-semibold text-[#2E2D35]">
                   Ring time is only half the answer
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   It says when the ringing stops. It does not say what the caller gets next.
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-[#2E2D35]">
                 When the ring time runs out, the call follows the &ldquo;what happens when nobody
                 answers&rdquo; action set on that particular line — voicemail, another person, a
                 menu, a queue, or simply hanging up. That action is not set here. It is part of each
                 number&rsquo;s call handling, on the Business Hours step, and it can be different
                 for every number you own.
               </p>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-[#2E2D35]">
                 So a caller giving up is rarely just the ring time. If people say calls end in
                 silence, check that action first: a line with no action set will stop ringing and
                 then do nothing at all, no matter what number you choose above.
@@ -406,8 +406,8 @@ const CompanyRingTime = () => {
             </div>
           </div>
 
-          <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
             <SectionActions>

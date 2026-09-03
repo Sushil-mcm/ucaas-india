@@ -626,7 +626,7 @@ const TextEditor = (
               <button
                 type="button"
                 onClick={toggleExpand}
-                className="ml-auto p-1 rounded hover:bg-gray-200 text-gray-500 transition-colors flex items-center justify-center cursor-pointer"
+                className="ml-auto p-1 rounded hover:bg-[#F0DFC5] text-[#9A948F] transition-colors flex items-center justify-center cursor-pointer"
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
                 {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -670,7 +670,7 @@ const TextEditor = (
         {target && filteredUsers && filteredUsers?.length > 0 && (
           <div
             ref={textRef}
-            className="fixed z-50 p-2 shadow-2xl bg-white border border-gray-200 rounded-lg max-w-xs min-w-48 backdrop-blur-sm"
+            className="fixed z-50 p-2 shadow-2xl bg-[rgba(251,249,246,0.88)] border border-[rgba(225,200,165,0.9)] rounded-lg max-w-xs min-w-48 backdrop-blur-[12px]"
             style={{
               maxHeight: '200px',
               overflowY: 'auto',
@@ -709,7 +709,7 @@ const TextEditor = (
                         }
                       }}
                       className={`px-2 py-1 cursor-pointer mb-1 rounded text-sm transition-colors ${
-                        i === index ? 'bg-ucass-active-bg text-ucass-active' : 'hover:bg-gray-100 '
+                        i === index ? 'bg-ucass-active-bg text-ucass-active' : 'hover:bg-[#FBE2C8]/40 '
                       }`}
                     >
                       <div className="flex gap-2 items-center">
@@ -722,7 +722,7 @@ const TextEditor = (
                         <div className="flex flex-col gap-1">
                           <div className="font-medium truncate max-w-40">{displayName}</div>
                           {user.email && (
-                            <div className="text-xs text-gray-500 truncate max-w-40">
+                            <div className="text-xs text-[#9A948F] truncate max-w-40">
                               {user.email}
                             </div>
                           )}

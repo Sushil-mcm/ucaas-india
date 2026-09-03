@@ -383,14 +383,14 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
   };
 
   return (
-    <div className="cs-block">
+    <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
             <CalendarDays className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-semibold text-gray-900">Your holiday list</p>
+            <p className="text-base font-semibold text-[#2E2D35]">Your holiday list</p>
             <p className="mt-1 text-xs text-gray-600">
               The days your company is shut, written down once instead of typed again into every
               menu, queue and person. Callers get your out-of-hours option on these dates.
@@ -430,8 +430,8 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
       {/* Presets. The point of the panel: a year of holidays in one click rather
           than twelve rows typed by hand. */}
       <div className="mt-3 rounded-lg border border-ucass-primary-200 bg-ucass-primary-200/40 p-3">
-        <p className="text-xs font-semibold text-gray-900">Add a country&apos;s public holidays</p>
-        <p className="mt-0.5 text-xs text-gray-600">
+        <p className="text-xs font-semibold text-[#2E2D35]">Add a country&apos;s public holidays</p>
+        <p className="mt-0.5 text-xs text-[#9A948F]">
           Pick a country and a year, and the public holidays are added to the list below. You can
           edit or remove any of them afterwards.
         </p>
@@ -474,8 +474,8 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
         </div>
 
         {selectedPreset && (
-          <p className="mt-2 text-xs text-gray-600">
-            <span className="font-semibold text-gray-900">{selectedPreset.label}:</span>{' '}
+          <p className="mt-2 text-xs text-[#9A948F]">
+            <span className="font-semibold text-[#2E2D35]">{selectedPreset.label}:</span>{' '}
             {selectedPreset.scope} Check the list against your own working year before you rely on
             it.
           </p>
@@ -485,10 +485,10 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
       {/* The list. */}
       <div className="mt-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-gray-500">
+          <p className="text-xs font-semibold text-[#9A948F]">
             {items.length} holiday{items.length === 1 ? '' : 's'}
             {items.length > 0 && (
-              <span className="font-normal text-gray-500">
+              <span className="font-normal text-[#9A948F]">
                 {' '}
                 · {repeatingCount} repeat every year · {items.length - repeatingCount} need
                 re-adding next year
@@ -499,11 +499,11 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
         </div>
 
         {isLoading ? (
-          <p className="mt-3 text-sm text-gray-500">Loading…</p>
+          <p className="mt-3 text-sm text-[#9A948F]">Loading…</p>
         ) : sorted.length === 0 && !isAdding ? (
-          <div className="mt-2 rounded-lg border border-dashed border-gray-300 p-4 text-center">
-            <p className="text-xs font-semibold text-gray-900">No company holidays yet</p>
-            <p className="mt-0.5 text-xs text-gray-600">
+          <div className="mt-2 rounded-lg border border-dashed border-[#EEE7DD] p-4 text-center">
+            <p className="text-xs font-semibold text-[#2E2D35]">No company holidays yet</p>
+            <p className="mt-0.5 text-xs text-[#9A948F]">
               Add a country&apos;s public holidays above, or add one by hand.
             </p>
           </div>
@@ -512,12 +512,12 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
             {sorted.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-gray-200 p-3"
+                className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[#EEE7DD] p-3"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
-                  <p className="mt-0.5 text-xs text-gray-600">{prettyRange(item)}</p>
-                  {item.note && <p className="mt-0.5 text-xs text-gray-500">{item.note}</p>}
+                  <p className="truncate text-sm font-medium text-[#2E2D35]">{item.title}</p>
+                  <p className="mt-0.5 text-xs text-[#9A948F]">{prettyRange(item)}</p>
+                  {item.note && <p className="mt-0.5 text-xs text-[#9A948F]">{item.note}</p>}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -526,7 +526,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
                       checked={item.repeats_yearly}
                       onCheckedChange={() => toggleRepeat(item.id)}
                     />
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-[#9A948F]">
                       {item.repeats_yearly ? 'Every year' : 'This year only'}
                     </span>
                   </label>
@@ -563,14 +563,14 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
           className="mt-3 rounded-lg border border-ucass-primary-200 bg-white p-3"
         >
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-gray-900">
+            <p className="text-xs font-semibold text-[#2E2D35]">
               {draft.id ? 'Edit holiday' : 'New holiday'}
             </p>
             <button
               type="button"
               onClick={closeDraft}
               aria-label="Cancel"
-              className="cursor-pointer rounded-md p-1 text-gray-500 hover:bg-gray-50"
+              className="cursor-pointer rounded-md p-1 text-[#9A948F] hover:bg-[#FBE2C8]/45"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -620,14 +620,14 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
                 checked={draft.repeats_yearly}
                 onCheckedChange={(checked) => setDraft({ ...draft, repeats_yearly: !!checked })}
               />
-              <span className="text-xs text-gray-600">Repeats every year</span>
+              <span className="text-xs text-[#9A948F]">Repeats every year</span>
             </label>
             <Button type="button" variant="primary" onClick={commitDraft}>
               {draft.id ? 'Update' : 'Add'}
             </Button>
           </div>
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-[#9A948F]">
             Turn off &quot;repeats every year&quot; for anything that moves — Thanksgiving, Easter,
             Diwali, Eid — and add next year&apos;s date when you know it.
           </p>

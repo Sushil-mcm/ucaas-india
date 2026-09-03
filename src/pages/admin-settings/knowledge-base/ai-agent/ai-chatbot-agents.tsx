@@ -91,7 +91,7 @@ const sentimentBadgeClass = (sentiment: string) => {
   if (sentiment === 'positive') return 'bg-emerald-100 text-emerald-700';
   if (sentiment === 'negative') return 'bg-red-100 text-red-700';
   if (sentiment === 'neutral') return 'bg-slate-100 text-slate-700';
-  return 'bg-gray-100 text-gray-500';
+  return 'bg-[#FBE2C8]/40 text-[#9A948F]';
 };
 
 const sentimentEmoji = (sentiment: string) => {
@@ -757,18 +757,18 @@ function AiChatbotAgents() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[140px] bg-white border border-gray-200 shadow-lg rounded-xl p-1 z-50 animate-none"
+                className="w-[140px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] shadow-lg rounded-xl p-1 z-50 animate-none"
               >
                 <DropdownMenuItem
                   onClick={() => handleStatusChange('live')}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-900"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-[#FBE2C8]/45 text-[#2E2D35]"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   <span>Live</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStatusChange('inactive')}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-900"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-[#FBE2C8]/45 text-[#2E2D35]"
                 >
                   <span className="h-2 w-2 rounded-full bg-slate-400" />
                   <span>Paused</span>
@@ -824,7 +824,7 @@ function AiChatbotAgents() {
 
           if (!chats || !score) {
             return (
-              <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">
+              <span className="inline-flex rounded-full bg-[#FBE2C8]/40 px-2 py-1 text-xs font-semibold text-[#9A948F]">
                 Not analyzed
               </span>
             );
@@ -913,13 +913,13 @@ function AiChatbotAgents() {
             agentAccess?.edit && {
               icon: 'EditStrokIcon' as IconName,
               onClick: () => openConfigureAgent(agent),
-              className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+              className: 'bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white',
               tooltipText: 'Edit agent',
             },
             agentAccess?.edit && {
               icon: 'Chat' as IconName,
               onClick: () => openPromptEditor(agent),
-              className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+              className: 'bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white',
               tooltipText: 'Edit prompt',
             },
             agentAccess?.delete &&
@@ -982,7 +982,7 @@ function AiChatbotAgents() {
   return (
     <>
       <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f4f5f7]">
-        <div className="flex min-h-[64px] flex-col gap-3 border-b border-gray-200 bg-white px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-h-[64px] flex-col gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-3 text-[18px] font-bold text-slate-950">
               <button
@@ -1027,7 +1027,7 @@ function AiChatbotAgents() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-5">
+        <div className="flex items-center gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-5">
           <div className="relative max-w-full flex-1 sm:max-w-[440px]">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -1035,7 +1035,7 @@ function AiChatbotAgents() {
               onChange={(event) => setSearch(sanitizeAiSearchText(event.target.value, 50))}
               placeholder="Search agents by name..."
               maxLength={50}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-700 outline-none transition-colors placeholder:text-gray-500 hover:border-gray-300 focus:border-primary"
+              className="h-11 w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pl-10 pr-4 text-sm text-[#2E2D35] outline-none transition-colors placeholder:text-[#9A948F] hover:border-[rgba(225,200,165,0.9)] focus:border-primary"
             />
           </div>
           <button
@@ -1044,7 +1044,7 @@ function AiChatbotAgents() {
             className={`h-9 rounded-full border px-4 text-sm font-bold transition-colors ${
               statusFilter === 'all'
                 ? 'border-primary bg-primary text-white'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                : 'border-[#EEE7DD] bg-white text-[#9A948F] hover:border-[rgba(225,200,165,0.9)]'
             }`}
           >
             All <span>{totalAgentsCount}</span>
@@ -1055,7 +1055,7 @@ function AiChatbotAgents() {
             className={`h-9 rounded-full border px-4 text-sm font-bold transition-colors ${
               statusFilter === 'live'
                 ? 'border-primary bg-primary text-white'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                : 'border-[#EEE7DD] bg-white text-[#9A948F] hover:border-[rgba(225,200,165,0.9)]'
             }`}
           >
             Live <span>{liveAgentsCount}</span>
@@ -1067,7 +1067,7 @@ function AiChatbotAgents() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="relative min-h-[86px] rounded-[10px] border border-gray-200 bg-white px-4 py-3 shadow-sm transition-colors hover:border-primary"
+                className="relative min-h-[86px] rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] transition-colors hover:border-primary"
               >
                 {(isStatsFetching || isMetricsFetching) && <StatCardLoader />}
                 <p className="text-[11px] font-medium text-slate-500">{stat.label}</p>
@@ -1091,7 +1091,7 @@ function AiChatbotAgents() {
             clientSideSearch={false}
             customClass="shadow-sm [&_table]:table-fixed [&_thead]:bg-[#f8fafc] [&_th]:px-2 [&_th]:py-3 [&_th]:text-[11px] [&_th]:font-extrabold [&_th]:uppercase [&_th]:tracking-[0.04em] [&_th]:text-slate-500 [&_th:first-child]:w-[27%] [&_td:first-child]:w-[27%] [&_th:last-child]:w-[180px] [&_td]:h-[70px] [&_td]:px-2 [&_td]:py-2.5 [&_td:last-child]:w-[180px]"
             loaderTableClass="min-h-[320px]"
-            getRowClassName={() => 'transition-colors hover:bg-gray-50/70'}
+            getRowClassName={() => 'transition-colors hover:bg-[#FBE2C8]/60'}
             emptyTablePlaceholder="No chat agents found"
             descriptionEmptyTable="Try a different search or create a new chat agent."
           />

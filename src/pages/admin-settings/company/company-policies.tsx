@@ -398,7 +398,7 @@ const CompanyPolicies = () => {
                 } as Partial<PoliciesForm>)
               }
             />
-            <p className="text-xs text-gray-500">{helper}</p>
+            <p className="text-xs text-[#9A948F]">{helper}</p>
           </div>
           {value.mode === 'days' && (
             <div className="flex flex-col gap-1">
@@ -415,7 +415,7 @@ const CompanyPolicies = () => {
                   } as Partial<PoliciesForm>)
                 }
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 Between {RETENTION_MIN_DAYS} and {RETENTION_MAX_DAYS} days, counted from the day the
                 file was created.
               </p>
@@ -435,23 +435,23 @@ const CompanyPolicies = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Policies</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Policies</p>
+        <p className="text-xs text-[#9A948F]">
           One set of rules for the whole company — prompt language, voicemail, call recording, how
           long we keep files and who may dial abroad.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved policies
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 What you see below are the built-in defaults, not your saved values. Reload before
                 you save, or you may overwrite settings you cannot currently see.
               </p>
@@ -459,9 +459,9 @@ const CompanyPolicies = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-gray-900">No policies saved yet</p>
-              <p className="text-xs text-gray-500">
+            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+              <p className="text-sm font-semibold text-[#2E2D35]">No policies saved yet</p>
+              <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
@@ -484,7 +484,7 @@ const CompanyPolicies = () => {
                     updateForm({ default_language: option?.value || DEFAULT_FORM.default_language })
                   }
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   New greetings you record will open in this language.
                 </p>
               </div>
@@ -556,7 +556,7 @@ const CompanyPolicies = () => {
                   error={errors.voicemail_min_pin_length}
                   onChange={(event) => updateForm({ voicemail_min_pin_length: event.target.value })}
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Between {PIN_MIN} and {PIN_MAX} digits. Six or more is the usual advice, because a
                   four-digit PIN is guessable by hand.
                 </p>
@@ -573,7 +573,7 @@ const CompanyPolicies = () => {
                     updateForm({ voicemail_max_message_minutes: event.target.value })
                   }
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Between {MESSAGE_MIN_MINUTES} and {MESSAGE_MAX_MINUTES} minutes. Longer messages
                   cost more storage and are rarely listened to in full.
                 </p>
@@ -610,7 +610,7 @@ const CompanyPolicies = () => {
                     updateForm({ recording_mode: option?.value || DEFAULT_FORM.recording_mode })
                   }
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Off, record everything, or let agents start a recording themselves during a call.
                   Per-user exceptions are not part of this record yet.
                 </p>
@@ -635,8 +635,8 @@ const CompanyPolicies = () => {
             {form.recording_announcement && (
               <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-semibold text-gray-900">Announcement wording</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-[#2E2D35]">Announcement wording</p>
+                  <p className="text-xs text-[#9A948F]">
                     It must say two things: that the call is recorded or transcribed,{' '}
                     <strong>and</strong> that a third party may be doing it. Saying only the first
                     is the most common mistake.
@@ -650,7 +650,7 @@ const CompanyPolicies = () => {
                     updateForm({ recording_announcement_text: event.target.value })
                   }
                   placeholder="This call may be recorded or transcribed by us, or by a third party acting on our behalf."
-                  className="w-full rounded-lg border border-gray-200 p-2 text-sm text-gray-900 focus:border-primary focus:outline-none"
+                  className="w-full rounded-lg border border-[#EEE7DD] p-2 text-sm text-[#2E2D35] focus:border-primary focus:outline-none"
                 />
 
                 {form.recording_announcement_text.trim() && (
@@ -667,13 +667,13 @@ const CompanyPolicies = () => {
                 )}
 
                 <div className="flex flex-col gap-1">
-                  <p className="text-[11px] font-semibold text-gray-500">Wording you can use</p>
+                  <p className="text-[11px] font-semibold text-[#9A948F]">Wording you can use</p>
                   {COMPLIANT_RECORDING_ANNOUNCEMENTS.map((example) => (
                     <button
                       key={example.id}
                       type="button"
                       onClick={() => updateForm({ recording_announcement_text: example.text })}
-                      className="cursor-pointer rounded-md border border-gray-200 p-2 text-left text-xs text-gray-700 hover:border-primary hover:bg-ucass-primary-200/30"
+                      className="cursor-pointer rounded-md border border-[#EEE7DD] p-2 text-left text-xs text-[#2E2D35] hover:border-primary hover:bg-ucass-primary-200/30"
                     >
                       {example.text}
                     </button>
@@ -722,7 +722,7 @@ const CompanyPolicies = () => {
                     })
                   }
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Applies to users created after you save. It is a starting point per user, so an
                   admin can still allow or block any individual later.
                 </p>
@@ -730,8 +730,8 @@ const CompanyPolicies = () => {
             </div>
           </SettingCard>
 
-          <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
             <SectionActions>

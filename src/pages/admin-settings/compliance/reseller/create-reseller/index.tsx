@@ -48,7 +48,6 @@ const CreateReseller = ({
   const { mutate, isPending } = useMutation({
     mutationFn: resellerCreate,
     onSuccess: ({ data }) => {
-      console.log('🚀 ~ Create10DLCBrand ~ data:', data);
       queryClient.invalidateQueries(['getUsersDetails'], {
         exact: true,
       });
@@ -60,7 +59,6 @@ const CreateReseller = ({
     },
   });
   const onSubmit = (values: any) => {
-    console.log('RESLLER SUBMIT:', values);
     // API CALL HERE
     mutate(values);
   };

@@ -20,7 +20,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({ modalState, setModalState
   const { watch, setValue } = useFormContext();
   return (
     <Dialog open={modalState} onOpenChange={(val) => setModalState(val)}>
-      <DialogContent className="sm:w-1/2  md:w-1/4 w-full p-3 max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+      <DialogContent className="sm:w-1/2  md:w-1/4 w-full p-3" showCloseButton={false}>
         <div className="flex flex-col gap-1.5  text-900/80">
           <div className="font-semibold truncate text-md flex items-center justify-between">
             Automatic & On Demand Call Recording

@@ -578,6 +578,7 @@ const AddUserInfo = ({
             <div className="w-full">
               <Input
                 label="First Name"
+                required
                 type="text"
                 placeholder="First Name"
                 {...register(`users.${index}.first_name`)}
@@ -588,6 +589,7 @@ const AddUserInfo = ({
             <div className="w-full">
               <Input
                 label="Last Name"
+                required
                 type="text"
                 placeholder="Last Name"
                 {...register(`users.${index}.last_name`)}
@@ -598,6 +600,7 @@ const AddUserInfo = ({
             <div className="w-full">
               <Input
                 label="Email"
+                required
                 type="email"
                 placeholder="Email"
                 {...register(`users.${index}.email`)}
@@ -614,7 +617,7 @@ const AddUserInfo = ({
 
             <div className="flex flex-col gap-1.5 w-full">
               <div className="flex items-center justify-between">
-                <Label>Phone</Label>
+                <Label required>Phone</Label>
                 <div className="flex items-start">
                   {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
                 </div>
@@ -638,6 +641,7 @@ const AddUserInfo = ({
             <div className="w-full">
               <CustomSelect
                 label="Role"
+                required
                 value={watch(`users.${index}.role`)}
                 options={roleList.map(
                   (role: { name: string; role_uuid: string; type: string; uuid: string }) => ({
@@ -698,6 +702,7 @@ const AddUserInfo = ({
             <div className="w-full">
               <Input
                 label="Extension"
+                required
                 type="text"
                 placeholder="Extension"
                 value={watch(`users.[${index}].extension`)}

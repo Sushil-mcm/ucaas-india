@@ -451,12 +451,12 @@ function CreateAgent() {
       ];
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col gap-3">
-      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div className="text-gray-900 font-semibold text-lg flex items-center gap-2">
+    <section className="w-full flex flex-col gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+        <div className="text-[#2E2D35] font-semibold text-lg flex items-center gap-2">
           <div className="flex items-center gap-1">
             AI Tools
-            <div className="-rotate-90 text-gray-800">
+            <div className="-rotate-90 text-[#2E2D35]">
               <Icon name="ChevronIcon" className="w-5 h-5" />
             </div>
             <span className="text-primary text-md">Chat Agents</span>
@@ -470,17 +470,17 @@ function CreateAgent() {
       <div className="w-full h-full p-3 flex flex-col gap-3">
         {instantStep === 'none' && (
           <div className="w-full lg:max-w-[75%] xxl:max-w-[60%] h-full mx-auto flex items-center justify-center flex-col gap-3">
-            <h4 className="text-gray-900 font-semibold text-lg">
+            <h4 className="text-[#2E2D35] font-semibold text-lg">
               How would you like to build your Chat AI agent?
             </h4>
-            <p className="text-gray-500 text-sm text-center max-w-150">
+            <p className="text-[#9A948F] text-sm text-center max-w-150">
               Select an initial framework for your AI assistant. You can completely customize its
               behavior, knowledge, and integrations in subsequent steps.
             </p>
 
             <div className="flex gap-4 w-full">
               <div
-                className="flex flex-col gap-3 items-start justify-center bg-white rounded-xl px-6  border border-gray-200 cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
+                className="flex flex-col gap-3 items-start justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl px-6  border border-[rgba(225,200,165,0.9)] cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
                 onClick={() => {
                   setHasWebsite(true);
                   setInstantStep('website');
@@ -489,8 +489,8 @@ function CreateAgent() {
                 <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md group-hover:bg-primary group-hover:text-white">
                   <AIChatIcon className="w-6 h-6" />
                 </span>
-                <h4 className="text-gray-900 font-semibold text-md">Instant Agent</h4>
-                <p className="text-gray-500 font-normal text-sm">
+                <h4 className="text-[#2E2D35] font-semibold text-md">Instant Agent</h4>
+                <p className="text-[#9A948F] font-normal text-sm">
                   The most efficient way to launch. Deploys an AI assistant pre-configured with
                   Acepeak&apos;s optimal conversational standards, smart fallback handling, and core
                   capabilities ready out-of-the-box.
@@ -503,7 +503,7 @@ function CreateAgent() {
               {active === 'chat' ? (
                 <div className="w-full flex flex-col gap-3 max-w-80">
                   <div
-                    className="flex flex-col gap-3 items-start justify-center bg-white rounded-xl p-4 py-6 border border-gray-200 cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
+                    className="flex flex-col gap-3 items-start justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 py-6 border border-[rgba(225,200,165,0.9)] cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
                     onClick={() =>
                       navigate('/admin-settings/knowledge/create-agent', {
                         state: { fromTab: 'knowledge', agentData: { agentType: 'chat' } },
@@ -513,16 +513,16 @@ function CreateAgent() {
                     <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                       <Chat className="w-6 h-6" />
                     </span>
-                    <h4 className="text-gray-900 font-semibold text-md text-center">
+                    <h4 className="text-[#2E2D35] font-semibold text-md text-center">
                       Start From Scratch
                     </h4>
-                    <p className="text-gray-500 font-normal text-sm">
+                    <p className="text-[#9A948F] font-normal text-sm">
                       Design a custom AI agent from the ground up with precise behavioral controls.
                     </p>
                   </div>
 
                   <div
-                    className="flex flex-col gap-3 items-start justify-center bg-white rounded-xl p-4 py-6 border border-gray-200 cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
+                    className="flex flex-col gap-3 items-start justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 py-6 border border-[rgba(225,200,165,0.9)] cursor-pointer w-full hover:border-primary transition-colors duration-200 group"
                     onClick={() =>
                       navigate('/admin-settings/knowledge/browse-templates', {
                         state: { fromTab: 'knowledge', agentType: 'chat' },
@@ -532,8 +532,8 @@ function CreateAgent() {
                     <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                       <Grid2X2 className="w-6 h-6" />
                     </span>
-                    <h4 className="text-gray-900 font-semibold text-md">Use a Template</h4>
-                    <p className="text-gray-500 font-normal text-sm">
+                    <h4 className="text-[#2E2D35] font-semibold text-md">Use a Template</h4>
+                    <p className="text-[#9A948F] font-normal text-sm">
                       Clone an industry-specific blueprint tailored for specialized support
                       scenarios.
                     </p>
@@ -542,7 +542,7 @@ function CreateAgent() {
               ) : (
                 <div className="w-full flex items-center justify-center gap-3">
                   <div
-                    className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 w-1/3 min-h-56 cursor-pointer hover:border-primary transition-colors duration-200 group"
+                    className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] w-1/3 min-h-56 cursor-pointer hover:border-primary transition-colors duration-200 group"
                     onClick={() =>
                       navigate('/admin-settings/knowledge/create-agent', {
                         state: { fromTab: 'knowledge', agentData: { agentType: 'data' } },
@@ -552,16 +552,16 @@ function CreateAgent() {
                     <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                       <MicIcon className="w-5 h-5" />
                     </span>
-                    <h4 className="text-gray-900 font-semibold text-md text-center">
+                    <h4 className="text-[#2E2D35] font-semibold text-md text-center">
                       Start from Scratch
                     </h4>
-                    <p className="text-gray-500 font-normal text-sm text-center">
+                    <p className="text-[#9A948F] font-normal text-sm text-center">
                       Build your AI Agent from the ground up
                     </p>
                   </div>
 
                   <div
-                    className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 w-1/3 min-h-56 cursor-pointer hover:border-primary transition-colors duration-200 group"
+                    className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] w-1/3 min-h-56 cursor-pointer hover:border-primary transition-colors duration-200 group"
                     onClick={() =>
                       navigate('/admin-settings/knowledge/browse-templates', {
                         state: { fromTab: 'knowledge', agentType: 'data' },
@@ -571,10 +571,10 @@ function CreateAgent() {
                     <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                       <Grid2X2 className="w-6 h-6" />
                     </span>
-                    <h4 className="text-gray-900 font-semibold text-md text-center">
+                    <h4 className="text-[#2E2D35] font-semibold text-md text-center">
                       Browse our Templates
                     </h4>
-                    <p className="text-gray-500 font-normal text-sm text-center">
+                    <p className="text-[#9A948F] font-normal text-sm text-center">
                       Get inspired by our templates to get started
                     </p>
                   </div>
@@ -590,15 +590,15 @@ function CreateAgent() {
               <div className="w-18 h-18 rounded-2xl border border-primary/20 bg-ucass-primary-200 flex items-center justify-center text-primary">
                 <Globe className="w-8 h-8" />
               </div>
-              <h3 className="text-gray-900 text-xl font-semibold text-center">
+              <h3 className="text-[#2E2D35] text-xl font-semibold text-center">
                 Accelerate Training with Your Website
               </h3>
-              <p className="text-gray-500 text-center text-sm max-w-187.5">
+              <p className="text-[#9A948F] text-center text-sm max-w-187.5">
                 Provide your domain, and our system will securely scan your public pages to
                 instantly build a comprehensive knowledge base, saving you hours of manual data
                 entry.
               </p>
-              <h4 className="text-gray-900 text-xl font-semibold text-center">
+              <h4 className="text-[#2E2D35] text-xl font-semibold text-center">
                 Do you have a Website?
               </h4>
 
@@ -612,24 +612,24 @@ function CreateAgent() {
                   className={`relative min-h-62 rounded-2xl border p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${
                     hasWebsite
                       ? 'border-primary bg-ucass-primary-200/40'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] hover:border-[rgba(225,200,165,0.9)]'
                   }`}
                 >
                   <span
                     className={`absolute top-4 right-4 w-5 h-5 rounded-full border flex items-center justify-center ${
-                      hasWebsite ? 'border-primary text-primary' : 'border-gray-300 text-gray-300'
+                      hasWebsite ? 'border-primary text-primary' : 'border-[#EEE7DD] text-gray-300'
                     }`}
                   >
                     {hasWebsite && <Check className="w-3 h-3" />}
                   </span>
                   <span
                     className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      hasWebsite ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                      hasWebsite ? 'bg-primary text-white' : 'bg-[#FBE2C8]/40 text-[#9A948F]'
                     }`}
                   >
                     <Check className="w-7 h-7" />
                   </span>
-                  <p className="text-gray-900 text-base text-center font-medium">
+                  <p className="text-[#2E2D35] text-base text-center font-medium">
                     Yes, I have a website, scan my website
                   </p>
                 </button>
@@ -643,24 +643,24 @@ function CreateAgent() {
                   className={`relative min-h-[250px] rounded-2xl border p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${
                     !hasWebsite
                       ? 'border-primary bg-ucass-primary-200/40'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] hover:border-[rgba(225,200,165,0.9)]'
                   }`}
                 >
                   <span
                     className={`absolute top-4 right-4 w-5 h-5 rounded-full border flex items-center justify-center ${
-                      !hasWebsite ? 'border-primary text-primary' : 'border-gray-300 text-gray-300'
+                      !hasWebsite ? 'border-primary text-primary' : 'border-[#EEE7DD] text-gray-300'
                     }`}
                   >
                     {!hasWebsite && <Check className="w-3 h-3" />}
                   </span>
                   <span
                     className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      !hasWebsite ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                      !hasWebsite ? 'bg-primary text-white' : 'bg-[#FBE2C8]/40 text-[#9A948F]'
                     }`}
                   >
                     <X className="w-7 h-7" />
                   </span>
-                  <p className="text-gray-900 text-base  text-center font-medium">
+                  <p className="text-[#2E2D35] text-base  text-center font-medium">
                     No, I don&apos;t have a website.
                   </p>
                 </button>
@@ -681,14 +681,14 @@ function CreateAgent() {
               <div className="w-18 h-18 rounded-2xl border border-primary/20 bg-ucass-primary-200 flex items-center justify-center text-primary">
                 <Upload className="w-8 h-8" />
               </div>
-              <h3 className="text-gray-900 text-xl font-semibold text-center">
+              <h3 className="text-[#2E2D35] text-xl font-semibold text-center">
                 Provide Training Data via PDF
               </h3>
-              <p className="text-gray-500 text-center text-sm  max-w-125">
+              <p className="text-[#9A948F] text-center text-sm  max-w-125">
                 Extract structured data from operational manuals, product guides, and company policy
                 documents.
               </p>
-              <h4 className="text-gray-900 text-xl  font-semibold text-center">
+              <h4 className="text-[#2E2D35] text-xl  font-semibold text-center">
                 Do you have a PDF to use as for knowledge base?
               </h4>
 
@@ -702,24 +702,24 @@ function CreateAgent() {
                   className={`relative min-h-[250px] rounded-2xl border p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${
                     hasPdf
                       ? 'border-primary bg-ucass-primary-200/40'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] hover:border-[rgba(225,200,165,0.9)]'
                   }`}
                 >
                   <span
                     className={`absolute top-4 right-4 w-5 h-5 rounded-full border flex items-center justify-center ${
-                      hasPdf ? 'border-primary text-primary' : 'border-gray-300 text-gray-300'
+                      hasPdf ? 'border-primary text-primary' : 'border-[#EEE7DD] text-gray-300'
                     }`}
                   >
                     {hasPdf && <Check className="w-3 h-3" />}
                   </span>
                   <span
                     className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      hasPdf ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                      hasPdf ? 'bg-primary text-white' : 'bg-[#FBE2C8]/40 text-[#9A948F]'
                     }`}
                   >
                     <Check className="w-7 h-7" />
                   </span>
-                  <p className="text-gray-900 text-base text-center font-medium">
+                  <p className="text-[#2E2D35] text-base text-center font-medium">
                     Yes, I have a PDF
                   </p>
                 </button>
@@ -733,24 +733,24 @@ function CreateAgent() {
                   className={`relative min-h-[250px] rounded-2xl border p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${
                     !hasPdf
                       ? 'border-primary bg-ucass-primary-200/40'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] hover:border-[rgba(225,200,165,0.9)]'
                   }`}
                 >
                   <span
                     className={`absolute top-4 right-4 w-5 h-5 rounded-full border flex items-center justify-center ${
-                      !hasPdf ? 'border-primary text-primary' : 'border-gray-300 text-gray-300'
+                      !hasPdf ? 'border-primary text-primary' : 'border-[#EEE7DD] text-gray-300'
                     }`}
                   >
                     {!hasPdf && <Check className="w-3 h-3" />}
                   </span>
                   <span
                     className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      !hasPdf ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                      !hasPdf ? 'bg-primary text-white' : 'bg-[#FBE2C8]/40 text-[#9A948F]'
                     }`}
                   >
                     <X className="w-7 h-7" />
                   </span>
-                  <p className="text-gray-900 text-base text-center font-medium">
+                  <p className="text-[#2E2D35] text-base text-center font-medium">
                     No, I don&apos;t have a PDF.
                   </p>
                 </button>
@@ -776,22 +776,22 @@ function CreateAgent() {
                 <FileText className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-gray-900 text-xl font-semibold">Create Custom Content</h3>
-                <p className="text-gray-500 text-sm mt-1">
+                <h3 className="text-[#2E2D35] text-xl font-semibold">Create Custom Content</h3>
+                <p className="text-[#9A948F] text-sm mt-1">
                   Manually draft the foundational knowledge for your AI agent. Add FAQs, brand
                   guidelines, or any instructions.
                 </p>
               </div>
             </div>
 
-            <div className="w-full bg-white rounded-2xl border border-gray-200 min-h-[calc(100vh-321px)] max-h-[calc(100vh-321px)] overflow-hidden flex flex-col">
-              <div className="px-5 py-3 border-b border-gray-200 text-gray-700 text-sm font-semibold bg-gray-50 flex items-center gap-2">
+            <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-2xl border border-[rgba(225,200,165,0.9)] min-h-[calc(100vh-321px)] max-h-[calc(100vh-321px)] overflow-hidden flex flex-col">
+              <div className="px-5 py-3 border-b border-[#EEE7DD] text-[#2E2D35] text-sm font-semibold bg-[#FBE2C8]/45 flex items-center gap-2">
                 <TypeIcon width={16} height={16} /> CONTENT EDITOR
               </div>
               <textarea
                 value={customContent}
                 onChange={(e) => setCustomContent(e?.target?.value || '')}
-                className="w-full flex-1 p-6 text-base text-gray-700 outline-none resize-none"
+                className="w-full flex-1 p-6 text-base text-[#2E2D35] outline-none resize-none"
                 placeholder='Type or paste your content here... E.g. "Our company policy states that..."'
               />
             </div>
@@ -838,22 +838,22 @@ function CreateAgent() {
           }}
         >
           <DialogContent
-            className="w-[95vw] max-w-[1100px] h-[90vh] p-0 overflow-hidden border-gray-200"
+            className="w-[95vw] max-w-[1100px] h-[90vh] p-0 overflow-hidden border-[#EEE7DD]"
             showCloseButton={false}
           >
-            <div className="w-full h-full flex flex-col bg-white">
-              <div className="px-6 py-4 border-b border-gray-200">
+            <div className="w-full h-full flex flex-col bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+              <div className="px-6 py-4 border-b border-[#EEE7DD]">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="text-lg text-gray-900 font-semibold">Curated Content Summary</h4>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h4 className="text-lg text-[#2E2D35] font-semibold">Curated Content Summary</h4>
+                    <p className="text-sm text-[#9A948F] mt-1">
                       Review the synthesized knowledge and highlighted facts extracted from your
                       provided source.
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    className="text-[#9A948F] hover:text-[#9A948F] cursor-pointer"
                     onClick={() => setIsSummaryModalOpen(false)}
                   >
                     <X className="w-6 h-6" />
@@ -861,15 +861,15 @@ function CreateAgent() {
                 </div>
               </div>
 
-              <div className="px-6 py-4 flex-1 overflow-y-auto bg-gray-50 max-h-[calc(100vh-230px)] overflow-auto">
-                <div className="w-fit mx-auto mb-5 border border-gray-200 bg-white rounded-xl p-1 flex items-center gap-1">
+              <div className="px-6 py-4 flex-1 overflow-y-auto bg-[#FBE2C8]/45 max-h-[calc(100vh-230px)] overflow-auto">
+                <div className="w-fit mx-auto mb-5 border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-1 flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setSummaryTab('descriptive')}
                     className={`px-6 py-2 rounded-lg text-sm md:text-base ${
                       summaryTab === 'descriptive'
-                        ? 'border border-gray-900 text-gray-900'
-                        : 'text-gray-600'
+                        ? 'border border-gray-900 text-[#2E2D35]'
+                        : 'text-[#9A948F]'
                     }`}
                   >
                     Descriptive
@@ -879,8 +879,8 @@ function CreateAgent() {
                     onClick={() => setSummaryTab('faq')}
                     className={`px-6 py-2 rounded-lg text-sm md:text-base ${
                       summaryTab === 'faq'
-                        ? 'border border-gray-900 text-gray-900'
-                        : 'text-gray-600'
+                        ? 'border border-gray-900 text-[#2E2D35]'
+                        : 'text-[#9A948F]'
                     }`}
                   >
                     FAQ View
@@ -888,16 +888,16 @@ function CreateAgent() {
                 </div>
 
                 {summaryTab === 'descriptive' ? (
-                  <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                    <h5 className="text-xl font-semibold text-gray-900 mb-1">Business Overview</h5>
-                    <p className="text-base  text-gray-600 leading-7">{summaryParagraph}</p>
+                  <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-2xl border border-[rgba(225,200,165,0.9)] p-6">
+                    <h5 className="text-xl font-semibold text-[#2E2D35] mb-1">Business Overview</h5>
+                    <p className="text-base  text-[#9A948F] leading-7">{summaryParagraph}</p>
 
-                    <h6 className="text-sm font-medium text-gray-900 mt-6 min-h-7">
+                    <h6 className="text-sm font-medium text-[#2E2D35] mt-6 min-h-7">
                       Key Extracted Highlights
                     </h6>
-                    <div className="space-y-3 border-t border-gray-200 pt-4">
+                    <div className="space-y-3 border-t border-[#EEE7DD] pt-4">
                       {highlightLines.map((line, index) => (
-                        <div key={`${line}-${index}`} className="flex gap-3 text-sm  text-gray-700">
+                        <div key={`${line}-${index}`} className="flex gap-3 text-sm  text-[#2E2D35]">
                           <span className="text-primary mt-0.5">*</span>
                           <span>{line}</span>
                         </div>
@@ -905,18 +905,18 @@ function CreateAgent() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5 ">
+                  <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-2xl border border-[rgba(225,200,165,0.9)] p-6 space-y-5 ">
                     <div className="flex justify-between items-center gap-4 w-full mb-8">
-                      <h6 className="text-xl font-bold text-gray-900">Learned Knowledge (FAQs)</h6>
+                      <h6 className="text-xl font-bold text-[#2E2D35]">Learned Knowledge (FAQs)</h6>
                       <Button type="button" variant="outline">
                         <PlusIcon width={18} height={18} /> Add Manual Entry
                       </Button>
                     </div>
                     {faqItems.map((item, index) => (
-                      <div className="flex justify-between items-start gap-4 border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-start gap-4 border-t border-[#EEE7DD] pt-4">
                         <div key={`${item.q}-${index}`} className="w-full flex flex-col">
-                          <h6 className="text-base  text-gray-900 font-semibold">{item.q}</h6>
-                          <p className="text-sm text-gray-600 mt-2">{item.a}</p>
+                          <h6 className="text-base  text-[#2E2D35] font-semibold">{item.q}</h6>
+                          <p className="text-sm text-[#9A948F] mt-2">{item.a}</p>
                         </div>
                         <div className="px-3 py-1 bg-ucass-primary-200 rounded-sm text-[11px] text-primary whitespace-nowrap font-medium">
                           SOURCE: INTEGRATIONS PAGE
@@ -940,7 +940,7 @@ function CreateAgent() {
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-200 bg-white flex items-center justify-between">
+              <div className="px-6 py-4 border-t border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] flex items-center justify-between">
                 <Button
                   type="button"
                   className="min-w-24"
@@ -970,21 +970,21 @@ function CreateAgent() {
       {isUrlModalOpen && (
         <Dialog open={isUrlModalOpen} onOpenChange={(val) => (!val ? closeUrlModal() : null)}>
           <DialogContent
-            className="w-[600px] max-w-[95vw] p-0 overflow-hidden border-gray-200"
+            className="w-[600px] max-w-[95vw] p-0 overflow-hidden border-[#EEE7DD]"
             showCloseButton={false}
           >
             {urlModalStep === 'input' && (
               <div className="p-6 flex flex-col gap-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="text-lg text-gray-900 font-semibold">Get from URL</h4>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h4 className="text-lg text-[#2E2D35] font-semibold">Get from URL</h4>
+                    <p className="text-sm text-[#9A948F] mt-1">
                       Enter a web address to automatically extract conversational knowledge.
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    className="text-[#9A948F] hover:text-[#9A948F] cursor-pointer"
                     onClick={closeUrlModal}
                   >
                     <X className="w-6 h-6" />
@@ -1021,17 +1021,17 @@ function CreateAgent() {
 
             {(urlModalStep === 'discovering' || urlModalStep === 'discovered') && (
               <div className="flex flex-col h-[620px]">
-                <div className="p-6 pb-4 border-b border-gray-200">
+                <div className="p-6 pb-4 border-b border-[#EEE7DD]">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="text-lg text-gray-900 font-semibold">Discovered Sitemap</h4>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <h4 className="text-lg text-[#2E2D35] font-semibold">Discovered Sitemap</h4>
+                      <p className="text-sm text-[#9A948F] mt-1">
                         Select the specific pages you want the AI to read, process, and learn from.
                       </p>
                     </div>
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                      className="text-[#9A948F] hover:text-[#9A948F] cursor-pointer"
                       onClick={closeUrlModal}
                     >
                       <X className="w-6 h-6" />
@@ -1040,19 +1040,19 @@ function CreateAgent() {
                 </div>
 
                 {urlModalStep === 'discovering' || isDiscovering ? (
-                  <div className="flex-1 bg-gray-50 flex flex-col items-center justify-center gap-4">
+                  <div className="flex-1 bg-[#FBE2C8]/45 flex flex-col items-center justify-center gap-4">
                     <div className="w-18 h-18 rounded-full bg-ucass-primary-200 flex items-center justify-center text-primary animate-pulse">
                       <Globe className="w-7 h-7" />
                     </div>
-                    <h5 className="text-lg text-gray-700 font-medium">
+                    <h5 className="text-lg text-[#2E2D35] font-medium">
                       Discovering website links...
                     </h5>
-                    <p className="text-sm text-gray-500">Scanning the URL for available pages</p>
+                    <p className="text-sm text-[#9A948F]">Scanning the URL for available pages</p>
                   </div>
                 ) : (
                   <>
-                    <div className="px-6 py-3 border-b border-gray-200 bg-white">
-                      <div className="flex items-center gap-2 text-gray-800">
+                    <div className="px-6 py-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+                      <div className="flex items-center gap-2 text-[#2E2D35]">
                         <Globe className="w-4 h-4 text-primary shrink-0" />
                         <span className="font-semibold text-base">
                           Pages Found ({filteredDiscoveredLinks.length}
@@ -1068,15 +1068,15 @@ function CreateAgent() {
                       </div>
                     </div>
 
-                    <div className="flex-1 bg-gray-50 p-4 overflow-y-auto">
-                      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="flex-1 bg-[#FBE2C8]/45 p-4 overflow-y-auto">
+                      <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl overflow-hidden">
                         {filteredDiscoveredLinks.length > 0 ? (
                           filteredDiscoveredLinks.map((link, index) => (
                             <div
                               key={link}
                               className={`px-4 py-4 flex items-center gap-3 ${
                                 index !== filteredDiscoveredLinks.length - 1
-                                  ? 'border-b border-gray-200'
+                                  ? 'border-b border-[#EEE7DD]'
                                   : ''
                               }`}
                             >
@@ -1084,13 +1084,13 @@ function CreateAgent() {
                                 checked={selectedLinks.includes(link)}
                                 onCheckedChange={(value) => onToggleLink(value === true, link)}
                               />
-                              <span className="text-gray-700 text-sm break-all">
+                              <span className="text-[#2E2D35] text-sm break-all">
                                 [{link}]({link})
                               </span>
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-10 text-sm text-gray-500 text-center">
+                          <div className="px-4 py-10 text-sm text-[#9A948F] text-center">
                             No pages match your search.
                           </div>
                         )}
@@ -1099,7 +1099,7 @@ function CreateAgent() {
                   </>
                 )}
 
-                <div className="px-6 py-4 border-t border-gray-200 bg-white flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] flex items-center justify-between">
                   <Button
                     type="button"
                     className="min-w-24"

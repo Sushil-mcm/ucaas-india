@@ -23,6 +23,8 @@ interface IUserSettingsState {
   isAddEdit: boolean;
   tempDetails: any;
   isDeleteAlert: boolean;
+  isApply: boolean;
+  isBulkDeleteAlert: boolean;
 }
 
 const UserSettings: FC = () => {
@@ -65,7 +67,7 @@ const UserSettings: FC = () => {
            editing a template. */
         if (row?.original?.name === COMPANY_DEFAULT_TEMPLATE_NAME) {
           return (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               <span
                 onClick={() => navigate('/admin-settings/company/policies')}
                 className="text-primary hover:text-primary/80 underline-offset-4 cursor-pointer"
@@ -152,7 +154,7 @@ const UserSettings: FC = () => {
         return (
           <div className="flex items-center gap-2">
             {actions?.map((action, index) => (
-              <CustomTooltip text={action.tooltipText} side="top">
+              <CustomTooltip key={index} text={action.tooltipText} side="top">
                 <div
                   key={index}
                   className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8 ${action.className}`}
@@ -171,16 +173,16 @@ const UserSettings: FC = () => {
   ];
   return (
     <>
-      <section className="w-full flex flex-col bg-gray-200/15">
+      <section className="w-full flex flex-col bg-gradient-to-b from-[#fdf3e7] via-[#fbe9d5] to-[#f7dcc0] min-h-full">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-[#f0d6b4] min-h-[65px] bg-white/60 backdrop-blur-md">
           <div>
             <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
               Templates
               <div className="-rotate-90 text-gray-800">
                 <Icon name="ChevronIcon" className="w-5 h-5" />
               </div>
-              <span className="text-primary text-md">User Settings</span>
+              <span className="text-[#b5502f] text-md">User Settings</span>
             </p>
             <p className="text-gray-500 text-xs">
               Saved bundles of user settings you can apply when creating or editing someone.

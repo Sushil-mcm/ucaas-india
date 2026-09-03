@@ -287,7 +287,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-[#9A948F]">
                     Purchased At: {data?.createdAt ? getFullFormateDate(data?.createdAt) : 'NA'}
                   </p>
                 </div>
@@ -314,12 +314,12 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                         data?.user?.role}
                     </small>
                   </div>
-                  <div className="flex items-center gap-1 text-gray-500">
+                  <div className="flex items-center gap-1 text-[#9A948F]">
                     <Icon name="Grid" className="w-4 h-4 " />
                     <div>{data?.user?.extension}</div>
                   </div>
                 </div>
-                <div className="text-gray-500 flex justify-between">
+                <div className="text-[#9A948F] flex justify-between">
                   <div>{data?.user?.email}</div>
                 </div>
               </div>
@@ -340,7 +340,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           if (data?.is_license_revoked && !isDowngradClicked && !user_uuid) {
             return (
               <CustomTooltip text={revokedNoticeText} side="top">
-                <div className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8">
+                <div className="cursor-pointer bg-[#F0DFC5] border-transparent flex items-center justify-center rounded-full w-8 h-8">
                   <Icon name={'NoticeLine'} className={`w-5 h-5}`} />
                 </div>
               </CustomTooltip>
@@ -368,13 +368,13 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                       if (userInfo?.uuid === data?.user?.uuid) return;
                       openRevokeConfirm(data, 'revert');
                     }}
-                    className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8 hover:bg-black hover:text-white"
+                    className="cursor-pointer bg-[#F0DFC5] border-transparent flex items-center justify-center rounded-full w-8 h-8 hover:bg-black hover:text-white"
                   >
                     <Icon name={'UndoIcon'} className={`w-5 h-5}`} />
                   </div>
                 </CustomTooltip>
                 <CustomTooltip text={revokedNoticeText} side="top">
-                  <div className="cursor-pointer bg-gray-200 border-transparent flex items-center justify-center rounded-full w-8 h-8">
+                  <div className="cursor-pointer bg-[#F0DFC5] border-transparent flex items-center justify-center rounded-full w-8 h-8">
                     <Icon name={'NoticeLine'} className={`w-5 h-5}`} />
                   </div>
                 </CustomTooltip>
@@ -386,7 +386,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             return (
               <CustomTooltip text="Remove this seat from the next bill" side="top">
                 <div
-                  className={` hover:bg-red-500 ${userInfo?.uuid === data?.user?.uuid ? 'cursor-not-allowed bg-gray-100 text-gray-900/80' : `cursor-pointer bg-red-100 text-red-500`}  hover:text-white flex items-center justify-center rounded-full w-8 h-8`}
+                  className={` hover:bg-red-500 ${userInfo?.uuid === data?.user?.uuid ? 'cursor-not-allowed bg-[#FBE2C8]/40 text-[#2E2D35]/80' : `cursor-pointer bg-red-100 text-red-500`}  hover:text-white flex items-center justify-center rounded-full w-8 h-8`}
                   onClick={() => {
                     if (userInfo?.uuid === data?.user?.uuid) return;
                     openRevokeConfirm(data, 'delete');
@@ -417,7 +417,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   const renderConfirmBody = () => {
     if (confirmState?.type === 'revert') {
       return (
-        <span className="block text-sm text-gray-700">
+        <span className="block text-sm text-[#2E2D35]">
           This seat is currently scheduled to be removed on {nextBillingDateLabel}. Keeping it means
           it stays on your plan and you keep paying {offTheBill(1, 'for')} it.
         </span>
@@ -426,8 +426,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
 
     if (confirmState?.type === 'bulk-idle') {
       return (
-        <span className="block text-sm text-gray-700">
-          <span className="block font-medium text-gray-900">
+        <span className="block text-sm text-[#2E2D35]">
+          <span className="block font-medium text-[#2E2D35]">
             Remove {confirmState.licenses.length} unused seat
             {confirmState.licenses.length === 1 ? '' : 's'} from your plan?
           </span>
@@ -436,7 +436,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             {offTheBill(confirmState.licenses.length, 'what they cost')} off your bill from{' '}
             {nextBillingDateLabel}.
           </span>
-          <span className="block mt-2 text-gray-500">
+          <span className="block mt-2 text-[#9A948F]">
             The current billing period is not refunded. You can undo this at any time before{' '}
             {nextBillingDateLabel}.
           </span>
@@ -446,8 +446,8 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
 
     if (confirmIsAssigned) {
       return (
-        <span className="block text-sm text-gray-700">
-          <span className="block font-medium text-gray-900">
+        <span className="block text-sm text-[#2E2D35]">
+          <span className="block font-medium text-[#2E2D35]">
             {confirmUserName} is still using this seat.
           </span>
           <span className="block mt-2">
@@ -460,7 +460,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             somebody else in the meantime. On {nextBillingDateLabel} the seat is deleted and{' '}
             {confirmUserName}&apos;s account is deactivated.
           </span>
-          <span className="block mt-2 text-gray-500">
+          <span className="block mt-2 text-[#9A948F]">
             The current billing period is not refunded. You can undo this at any time before{' '}
             {nextBillingDateLabel}.
           </span>
@@ -469,15 +469,15 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
     }
 
     return (
-      <span className="block text-sm text-gray-700">
-        <span className="block font-medium text-gray-900">
+      <span className="block text-sm text-[#2E2D35]">
+        <span className="block font-medium text-[#2E2D35]">
           Remove this unused seat from your plan?
         </span>
         <span className="block mt-2">
           Nobody is assigned to it. Removing it takes {offTheBill(1, 'what it costs')} off your bill
           from {nextBillingDateLabel}.
         </span>
-        <span className="block mt-2 text-gray-500">
+        <span className="block mt-2 text-[#9A948F]">
           The current billing period is not refunded. You can undo this at any time before{' '}
           {nextBillingDateLabel}.
         </span>
@@ -488,15 +488,15 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
   return (
     <>
       <div className="h-full w-full  flex flex-col gap-2  overflow-y-auto pr-1">
-        <div className="border border-grey-200 bg-gray-50 p-3 rounded-xl mt-2 flex flex-col gap-3">
+        <div className="border border-grey-200 bg-[#FBE2C8]/45 p-3 rounded-xl mt-2 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Seats in use</h4>
-            <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+            <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2">Seats in use</h4>
+            <h4 className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
               {usedLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+            <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2 flex items-center gap-2">
               Paid but unassigned
               <CustomTooltip
                 text="Seats you are paying for that nobody is assigned to. Deleting a user puts their seat here — it does not stop the charge."
@@ -509,14 +509,14 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
             </h4>
             <h4
               className={`font-semibold flex items-center justify-end gap-2 text-sm w-1/2 ${
-                idleLicenses > 0 ? 'text-amber-700' : 'text-gray-700'
+                idleLicenses > 0 ? 'text-amber-700' : 'text-[#2E2D35]'
               }`}
             >
               {idleLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+            <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2 flex items-center gap-2">
               Scheduled for removal
               <CustomTooltip
                 text={`These seats leave your plan on ${nextBillingDateLabel}. They are already excluded from your next bill.`}
@@ -527,18 +527,18 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                 </span>
               </CustomTooltip>
             </h4>
-            <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+            <h4 className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
               {revokedLicenses}
             </h4>
           </div>
           <div className="flex items-center justify-between gap-3 ">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2">Total seats on plan</h4>
-            <h4 className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+            <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2">Total seats on plan</h4>
+            <h4 className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
               {totalLicenses}
             </h4>
           </div>
-          <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
-            <h4 className="font-semibold text-gray-900  text-sm w-1/2 flex items-center gap-2">
+          <div className="flex items-center justify-between gap-3 border-t border-[#EEE7DD] pt-2">
+            <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2 flex items-center gap-2">
               Seats you pay for next
               <CustomTooltip
                 text={`Total seats minus seats scheduled for removal. Billed on ${nextBillingDateLabel}.`}
@@ -549,19 +549,19 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                 </span>
               </CustomTooltip>
             </h4>
-            <h4 className="font-semibold text-gray-900 flex items-center justify-end gap-2  text-sm w-1/2">
+            <h4 className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
               {payableLicenses}
               {perSeatPrice !== null && perSeatPrice > 0 && (
-                <span className="font-normal text-gray-500">
+                <span className="font-normal text-[#9A948F]">
                   ({currency(payableLicenses * perSeatPrice)}/{periodLabel})
                 </span>
               )}
             </h4>
           </div>
 
-          <p className="text-xs text-gray-500 leading-relaxed border-t border-gray-200 pt-2">
+          <p className="text-xs text-[#9A948F] leading-relaxed border-t border-[#EEE7DD] pt-2">
             A seat is something you buy, not something a user owns. Deleting a user in{' '}
-            <span className="font-medium text-gray-700">Users</span> frees their seat but keeps it
+            <span className="font-medium text-[#2E2D35]">Users</span> frees their seat but keeps it
             on your bill — you have to remove the seat here as well. Seat removals take effect on{' '}
             {nextBillingDateLabel}; the current period is never refunded.
           </p>
@@ -594,11 +594,11 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   {idleSeatRows.slice(0, 10).map((seat: any) => (
                     <div
                       key={seat?.uuid}
-                      className="flex items-center justify-between gap-2 text-xs text-gray-700 py-1"
+                      className="flex items-center justify-between gap-2 text-xs text-[#2E2D35] py-1"
                     >
                       <span>
                         Unassigned seat
-                        <span className="text-gray-500">
+                        <span className="text-[#9A948F]">
                           {' '}
                           · purchased{' '}
                           {seat?.createdAt ? getFullFormateDate(seat?.createdAt) : 'unknown'}
@@ -614,7 +614,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                     </div>
                   ))}
                   {idleSeatRows.length > 10 && (
-                    <p className="text-[11px] text-gray-500 pt-1">
+                    <p className="text-[11px] text-[#9A948F] pt-1">
                       and {idleSeatRows.length - 10} more.
                     </p>
                   )}
@@ -682,7 +682,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           {showCounter && (
             <>
               <div className="w-full flex items-center gap-2 justify-between mt-2">
-                <h4 className="font-semibold text-gray-900  text-sm w-1/2">Number of Licenses</h4>
+                <h4 className="font-semibold text-[#2E2D35]  text-sm w-1/2">Number of Licenses</h4>
                 <div className="w-full flex items-center gap-2 justify-end ">
                   <button
                     onClick={() => {
@@ -747,19 +747,19 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   for free instead of buying more.
                 </p>
               )}
-              <div className="border border-grey-100 bg-white p-3 rounded-xl flex flex-col gap-2">
+              <div className="border border-grey-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 rounded-xl flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-3 ">
-                  <div className="font-medium text-gray-500  text-sm w-1/2">Monthly Cost</div>
-                  <div className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+                  <div className="font-medium text-[#9A948F]  text-sm w-1/2">Monthly Cost</div>
+                  <div className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
                     {isLoading ? (
-                      <Skeleton className="h-3 w-[55px] bg-gray-200" />
+                      <Skeleton className="h-3 w-[55px] bg-[#F0DFC5]" />
                     ) : (
                       <>${getTaxes?.plan_cost || 0}</>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 ">
-                  <div className="font-medium text-gray-500  text-sm w-1/2 flex items-center gap-2">
+                  <div className="font-medium text-[#9A948F]  text-sm w-1/2 flex items-center gap-2">
                     Prorated Amount
                     <CustomTooltip
                       text="Calculated based on the remaining days until your next billing date."
@@ -770,9 +770,9 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                       </span>
                     </CustomTooltip>
                   </div>
-                  <div className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+                  <div className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
                     {isLoading ? (
-                      <Skeleton className="h-3 w-[150px] bg-gray-200" />
+                      <Skeleton className="h-3 w-[150px] bg-[#F0DFC5]" />
                     ) : (
                       /* A quote, so nothing here may fall back to zero: a
                          prorated amount of $0.00 reads as "these seats are free
@@ -785,10 +785,10 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 ">
-                  <div className="font-medium text-gray-500  text-sm w-1/2">Total Tax</div>
-                  <div className="font-semibold text-gray-700 flex items-center justify-end gap-1 text-sm w-1/2">
+                  <div className="font-medium text-[#9A948F]  text-sm w-1/2">Total Tax</div>
+                  <div className="font-semibold text-[#2E2D35] flex items-center justify-end gap-1 text-sm w-1/2">
                     {isLoading ? (
-                      <Skeleton className="h-3 w-[90px] bg-gray-200" />
+                      <Skeleton className="h-3 w-[90px] bg-[#F0DFC5]" />
                     ) : (
                       <>
                         {moneyOrUnavailable(getTaxes?.tax_amount)}
@@ -799,13 +799,13 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
-                  <div className="font-medium text-gray-700  text-sm w-1/2">
+                <div className="flex items-center justify-between gap-3 border-t border-[#EEE7DD] pt-2">
+                  <div className="font-medium text-[#2E2D35]  text-sm w-1/2">
                     Total Payable Amount
                   </div>
-                  <div className="font-semibold text-gray-700 flex items-center justify-end gap-2  text-sm w-1/2">
+                  <div className="font-semibold text-[#2E2D35] flex items-center justify-end gap-2  text-sm w-1/2">
                     {isLoading ? (
-                      <Skeleton className="h-3 w-[55px] bg-gray-200" />
+                      <Skeleton className="h-3 w-[55px] bg-[#F0DFC5]" />
                     ) : (
                       <>{moneyOrUnavailable(getTaxes?.total_amount)}</>
                     )}
@@ -816,7 +816,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
           )}
           {isDowngradClicked && (
             <div className="w-full flex flex-col gap-2 mt-2">
-              <p className="text-xs text-gray-600 leading-relaxed bg-white border border-gray-200 rounded-lg p-2">
+              <p className="text-xs text-[#9A948F] leading-relaxed bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-lg p-2">
                 Pick the seats to take off your plan. Removals apply on {nextBillingDateLabel} and
                 the current period is not refunded. Removing a seat that is{' '}
                 <span className="font-medium">still assigned to someone</span> does not lock them
@@ -887,7 +887,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
       {isPaymentInitiate && (
         <Dialog open={isPaymentInitiate} onOpenChange={setIsPaymentInitiate}>
           <DialogContent
-            className="w-2/5 p-3 max-h-[99%] overflow-y-auto bg-white"
+            className="w-2/5 p-3 max-h-[99%] overflow-y-auto bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
             onEscapeKeyDown={(e) => e.preventDefault()}
             onPointerDownOutside={(e) => e.preventDefault()}
             showCloseButton={false}
@@ -897,7 +897,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
                 Purchase License
                 <div
                   onClick={() => setIsPaymentInitiate(false)}
-                  className="cursor-pointer text-gray-500 ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+                  className="cursor-pointer text-[#9A948F] ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
                 >
                   <CloseIcon className="w-3 h-3" />
                 </div>

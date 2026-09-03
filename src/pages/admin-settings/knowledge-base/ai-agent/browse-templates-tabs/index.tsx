@@ -55,9 +55,9 @@ function BrowseTemplates() {
   }, [agentTypeData]);
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col  gap-3">
-      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div className="text-gray-900 font-semibold text-lg flex items-center gap-2">
+    <section className="w-full flex flex-col  gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+        <div className="text-[#2E2D35] font-semibold text-lg flex items-center gap-2">
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -66,7 +66,7 @@ function BrowseTemplates() {
             >
               AI Agents
             </button>
-            <div className="-rotate-90 text-gray-800">
+            <div className="-rotate-90 text-[#2E2D35]">
               <Icon name="ChevronIcon" className="w-5 h-5" />
             </div>
             <span className="text-primary text-md">AI Chatbot Agents</span>
@@ -77,7 +77,7 @@ function BrowseTemplates() {
         </Button>
       </div>
       <div className="w-full h-full  p-3 pt-0 flex flex-col  gap-3">
-        <div className="w-full h-full  p-3 bg-white rounded-xl flex flex-col  gap-3 border border-gray-200">
+        <div className="w-full h-full  p-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl flex flex-col  gap-3 border border-[rgba(225,200,165,0.9)]">
           <div className="w-full h-[calc(100vh-14.5rem)] overflow-y-auto pr-1">
             <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {dynamicAgents?.map((item: any, index: number) => (
@@ -114,16 +114,16 @@ export default BrowseTemplates;
 function AgentCard({ title, description, onClick, icon }: any) {
   return (
     <div
-      className="flex flex-col gap-5 border border-gray-200 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all"
+      className="flex flex-col gap-5 border border-[#EEE7DD] rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all"
       onClick={onClick}
     >
       <div className="flex gap-3">
-        <div className="w-12 min-w-12 h-12 bg-gray-50 text-gray-500 border border-gray-200 rounded-md flex items-center justify-center p-2">
+        <div className="w-12 min-w-12 h-12 bg-[#FBE2C8]/45 text-[#9A948F] border border-[#EEE7DD] rounded-md flex items-center justify-center p-2">
           {icon}
         </div>
 
         <div className="w-full flex flex-col gap-2">
-          <h3 className="text-gray-900 text-sm font-semibold">{title || ''}</h3>
+          <h3 className="text-[#2E2D35] text-sm font-semibold">{title || ''}</h3>
 
           {/* <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-md bg-ucass-primary-200 text-primary text-sm font-medium inline-flex items-center gap-1">
@@ -133,7 +133,7 @@ function AgentCard({ title, description, onClick, icon }: any) {
           </div> */}
         </div>
       </div>
-      <h6 className="text-gray-500 text-sm line-clamp-4 leading-6">{description || ''}</h6>
+      <h6 className="text-[#9A948F] text-sm line-clamp-4 leading-6">{description || ''}</h6>
     </div>
   );
 }

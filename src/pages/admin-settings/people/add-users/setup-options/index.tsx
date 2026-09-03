@@ -69,6 +69,7 @@ const SetupOption = ({
                 <Input
                   type="password"
                   label="Password"
+                  required
                   placeholder="Password"
                   {...register(`password`)}
                   error={errors?.password?.message}
@@ -79,6 +80,7 @@ const SetupOption = ({
                 <Input
                   type="password"
                   label="Confirm Password"
+                  required
                   placeholder="Confirm Password"
                   {...register(`confirm_password`)}
                   error={errors?.confirm_password?.message}

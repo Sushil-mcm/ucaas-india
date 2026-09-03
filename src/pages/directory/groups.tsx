@@ -8,6 +8,7 @@ import SideDrawer from '@/components/custom/side-drawer';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import './groups-glass.css';
 
 /**
  * Directory ▸ Groups — the departments people belong to.

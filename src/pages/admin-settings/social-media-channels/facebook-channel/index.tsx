@@ -36,7 +36,6 @@ const FacebookChannel = () => {
     );
 
   const isFacebookConnected = !!facebookData;
-  console.log(isFacebookConnected, 'isFacebookConnected', channelList, facebookData);
 
   const handleConnect = () => {
     connectMetaChannel('messenger', setLoading, user?.company_info?.uuid);

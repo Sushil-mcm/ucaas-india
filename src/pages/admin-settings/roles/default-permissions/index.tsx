@@ -258,9 +258,11 @@ const DefaultPermissionsPage = () => {
               status="app-only"
               note={
                 <>
-                  There is no setting yet for which office or team somebody looks after, so a
-                  manager&rsquo;s permissions reach every team. Admin scope, next door, is where
-                  that will live.
+                  Works in this app. Permissions decide what this app puts on screen, and nothing
+                  behind it checks them again — so a tighter role makes the product simpler for the
+                  person using it rather than locking anything away. Reach is coming soon: there is
+                  no setting yet for which office or team somebody looks after, so a manager&rsquo;s
+                  permissions reach every team. Admin scope, next door, records that missing half.
                 </>
               }
             >

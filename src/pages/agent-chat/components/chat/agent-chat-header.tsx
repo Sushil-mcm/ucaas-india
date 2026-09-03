@@ -80,14 +80,14 @@ const AgentChatHeader = ({
   };
 
   return (
-    <div className="w-full min-h-16 border-b border-gray-200 bg-white px-3 sm:px-4 md:px-5">
+    <div className="w-full min-h-16 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 sm:px-4 md:px-5">
       <div className="flex min-h-16 items-center justify-between gap-2 sm:min-h-[74px] sm:gap-3">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {onBackToList ? (
             <button
               type="button"
               onClick={onBackToList}
-              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 md:hidden"
+              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] text-[#9A948F] hover:bg-[#FBE2C8]/45 md:hidden"
               aria-label="Back to chat list"
             >
               <ArrowLeft className="h-4 w-4" />

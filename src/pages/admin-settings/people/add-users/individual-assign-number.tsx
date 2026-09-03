@@ -502,7 +502,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
                                   <Loader variant="blue" />
                                 </div>
                               ) : didAvailableData?.length > 0 ? (
-                                <div className="flex w-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:items-center">
+                                <div className="flex w-full flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 sm:items-center">
                                   <div className="flex flex-col gap-0.5 pb-1 sm:px-3">
                                     <h6 className="flex gap-2 text-sm font-semibold">
                                       Available DID Number
@@ -529,7 +529,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
 
                                       return (
                                         <div
-                                          className="flex min-w-0 items-start gap-2 rounded-lg border border-gray-200 px-3 py-2 sm:items-center"
+                                          className="flex min-w-0 items-start gap-2 rounded-lg border border-[#EEE7DD] px-3 py-2 sm:items-center"
                                           key={`${didId}-${didNumber}`}
                                         >
                                           <RadioGroupItem value={didId} id={`did-${didId}`} />
@@ -546,7 +546,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
                                 </div>
                               ) : (
                                 <div className="w-full">
-                                  <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-center">
+                                  <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 text-center">
                                     <div className="pb-1 flex flex-col gap-0.5 px-3">
                                       <h6 className="flex gap-2 text-sm font-semibold">
                                         No DID found
@@ -579,7 +579,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
                                 </div>
                               )
                             ) : (
-                              <h5 className="flex w-full justify-center py-2 text-center text-base font-normal text-gray-800">
+                              <h5 className="flex w-full justify-center py-2 text-center text-base font-normal text-[#2E2D35]">
                                 Choose a number for your account
                               </h5>
                             )}
@@ -594,7 +594,7 @@ const IndividualAssignNumber = ({ rowData, handleClose }: any) => {
           </>
         )}
       </div>
-      <div className="flex shrink-0 flex-row gap-2 border-t border-gray-200 bg-white pt-3">
+      <div className="flex shrink-0 flex-row gap-2 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pt-3">
         <Button
           variant={'transparent'}
           type="button"

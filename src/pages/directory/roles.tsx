@@ -10,6 +10,7 @@ import AddNewRole from '@/pages/admin-settings/roles/add-new-role';
 import AssignUsersModal from '@/pages/admin-settings/roles/assign-users-modal';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
 import { roleDisplayName, roleDisplayDescription } from '@/lib/role-display-names';
+import './roles-glass.css';
 
 /**
  * Directory ▸ Roles — what people are allowed to do.

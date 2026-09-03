@@ -169,10 +169,10 @@ const FieldRow = ({
   control: React.ReactNode;
 }) => (
   <SettingRow label={label} description={description} status="coming-soon">
-    <div className="cs-savebar">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <label className="flex cursor-pointer items-center gap-2">
         <Checkbox checked={included} onCheckedChange={onToggle} disabled={disabled} />
-        <span className="text-xs font-semibold text-gray-900">
+        <span className="text-xs font-semibold text-[#2E2D35]">
           {included ? 'Will be changed' : 'Leave this one alone'}
         </span>
       </label>
@@ -353,20 +353,20 @@ const CompanyBulkSettings = () => {
     (preview?.changed || 0) > 0;
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Apply to many people</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Apply to many people</p>
+        <p className="text-xs text-[#9A948F]">
           Set the same answer on everybody at once, instead of opening each person in turn.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
-          <div className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-3">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-gray-500" />
-            <p className="text-xs text-gray-700">
-              <span className="font-semibold text-gray-900">What this writes.</span> Each person you
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full min-h-0 max-w-[1040px] flex-col gap-4">
+          <div className="flex items-start gap-2 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#9A948F]" />
+            <p className="text-xs text-[#2E2D35]">
+              <span className="font-semibold text-[#2E2D35]">What this writes.</span> Each person you
               pick is saved with only the settings you ticked changed — everything else on their
               record is written back exactly as it was. Somebody already set the way you asked is
               counted and left alone rather than saved again. This is the same change their own
@@ -504,7 +504,7 @@ const CompanyBulkSettings = () => {
             title="Choose who this applies to"
             description="Only the people you tick are written. Nobody else is touched."
             aside={
-              <span className="text-xs font-semibold text-gray-700">
+              <span className="text-xs font-semibold text-[#2E2D35]">
                 {chosenPeople.length} of {people.length} chosen
               </span>
             }
@@ -532,9 +532,9 @@ const CompanyBulkSettings = () => {
             {loadingPeople ? (
               <Loader />
             ) : (
-              <div className="max-h-[320px] overflow-y-auto rounded-lg border border-gray-200">
+              <div className="max-h-[320px] overflow-y-auto rounded-lg border border-[#EEE7DD]">
                 {visible.length === 0 ? (
-                  <p className="p-4 text-center text-xs text-gray-500">
+                  <p className="p-4 text-center text-xs text-[#9A948F]">
                     Nobody matches that search.
                   </p>
                 ) : (
@@ -544,7 +544,7 @@ const CompanyBulkSettings = () => {
                     return (
                       <label
                         key={person.uuid}
-                        className="flex cursor-pointer items-start gap-3 border-b border-gray-100 p-3 last:border-b-0 hover:bg-gray-50"
+                        className="flex cursor-pointer items-start gap-3 border-b border-gray-100 p-3 last:border-b-0 hover:bg-[#FBE2C8]/45"
                       >
                         <Checkbox
                           className="mt-0.5"
@@ -558,18 +558,18 @@ const CompanyBulkSettings = () => {
                           }
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-xs font-semibold text-gray-900">
+                          <span className="block text-xs font-semibold text-[#2E2D35]">
                             {person.name}
                           </span>
                           {person.detail ? (
-                            <span className="block text-xs text-gray-500">{person.detail}</span>
+                            <span className="block text-xs text-[#9A948F]">{person.detail}</span>
                           ) : null}
                           {result && Icon ? (
                             <span
                               className={`mt-1 flex items-start gap-1 text-xs ${OUTCOME_COLOUR[result.outcome]}`}
                             >
                               <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                              <span className="text-gray-700">{result.text}</span>
+                              <span className="text-[#2E2D35]">{result.text}</span>
                             </span>
                           ) : null}
                         </span>
@@ -581,16 +581,16 @@ const CompanyBulkSettings = () => {
             )}
           </SettingCard>
 
-          <div className="cs-block flex flex-col gap-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
             {!hasAnyChoice(choices) ? (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 Tick at least one setting above to see what would happen.
               </p>
             ) : chosenPeople.length === 0 ? (
-              <p className="text-xs text-gray-500">Choose at least one person.</p>
+              <p className="text-xs text-[#9A948F]">Choose at least one person.</p>
             ) : (
-              <p className="text-xs text-gray-700">
-                <span className="font-semibold text-gray-900">Before you run this.</span>{' '}
+              <p className="text-xs text-[#2E2D35]">
+                <span className="font-semibold text-[#2E2D35]">Before you run this.</span>{' '}
                 {preview?.changed || 0} of {chosenPeople.length} would be changed.{' '}
                 {(preview?.unchanged || 0) > 0
                   ? `${preview?.unchanged} are already set that way and will not be saved. `
@@ -602,7 +602,7 @@ const CompanyBulkSettings = () => {
             )}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 People are saved one at a time, so a long list takes a moment. Please leave this
                 page open until it finishes.
               </p>

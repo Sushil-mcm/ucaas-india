@@ -10,7 +10,7 @@ import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 
 const CAPTAIN_API_BASE = '/captain-api/api/captain';
 const textAreaClass =
-  'w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
+  'w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all placeholder:text-[#9A948F] hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
 
 type Document = {
   id: string;
@@ -248,11 +248,11 @@ const CaptainDocuments = () => {
         </div>
       )}
 
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-5">
+      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/50 p-5">
         <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary/10">
           <BookOpenText className="size-7 text-primary" />
         </div>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[#9A948F]">
           A document in Captain serves as a knowledge resource for the assistant. By connecting your help center
           pages or guides, Captain can analyze the content and generate accurate FAQs for customer inquiries.
         </p>
@@ -263,12 +263,12 @@ const CaptainDocuments = () => {
       )}
 
       {isLoading ? (
-        <div className="flex h-40 items-center justify-center text-sm text-gray-500">Loading...</div>
+        <div className="flex h-40 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
       ) : documents.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white py-16 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] py-16 text-center">
           <FileText className="size-8 text-gray-300" />
-          <div className="text-lg font-semibold text-gray-900">No documents available</div>
-          <div className="max-w-sm text-sm text-gray-500">
+          <div className="text-lg font-semibold text-[#2E2D35]">No documents available</div>
+          <div className="max-w-sm text-sm text-[#9A948F]">
             Documents are used by your assistant to generate FAQs. Import a document to provide context for your
             assistant.
           </div>
@@ -280,10 +280,10 @@ const CaptainDocuments = () => {
       ) : (
         <div className="flex flex-col gap-3 overflow-auto">
           {documents.map((doc) => (
-            <div key={doc.id} className="flex items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4">
+            <div key={doc.id} className="flex items-start justify-between gap-4 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-5 py-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="truncate text-sm font-semibold text-gray-950">{doc.name}</div>
+                  <div className="truncate text-sm font-semibold text-[#2E2D35]">{doc.name}</div>
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       doc.status === 'ready'
@@ -303,7 +303,7 @@ const CaptainDocuments = () => {
                     )}
                   </span>
                 </div>
-                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#9A948F]">
                   {doc.type === 'url' ? <Link2 className="size-3.5 shrink-0" /> : <FileText className="size-3.5 shrink-0" />}
                   {doc.source_url ? (
                     <a href={doc.source_url} target="_blank" rel="noreferrer" className="truncate text-primary hover:underline">
@@ -318,9 +318,9 @@ const CaptainDocuments = () => {
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-gray-400">{timeAgo(doc.created_at)}</span>
+                <span className="text-xs text-[#9A948F]">{timeAgo(doc.created_at)}</span>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600">
+                  <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-[#9A948F] outline-none hover:bg-[#FBE2C8]/40 hover:text-[#9A948F]">
                     <MoreVertical className="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -349,8 +349,8 @@ const CaptainDocuments = () => {
         }}
       >
         <DialogContent className="w-full max-w-md rounded-2xl p-6">
-          <DialogTitle className="text-base font-bold text-gray-950">Add a document</DialogTitle>
-          <p className="-mt-2 text-sm text-gray-500">
+          <DialogTitle className="text-base font-bold text-[#2E2D35]">Add a document</DialogTitle>
+          <p className="-mt-2 text-sm text-[#9A948F]">
             Enter the URL of the document to add it as a knowledge source, or upload a PDF.
           </p>
 
@@ -360,7 +360,7 @@ const CaptainDocuments = () => {
               <select
                 value={createType}
                 onChange={(e) => setCreateType(e.target.value as 'url' | 'pdf')}
-                className="min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
               >
                 <option value="url">URL</option>
                 <option value="pdf">PDF File</option>
@@ -378,14 +378,14 @@ const CaptainDocuments = () => {
                   <select
                     value={createMaxPages}
                     onChange={(e) => setCreateMaxPages(Number(e.target.value))}
-                    className="min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
                   >
                     <option value={1}>Just this page</option>
                     <option value={5}>Up to 5 pages</option>
                     <option value={10}>Up to 10 pages</option>
                     <option value={20}>Up to 20 pages</option>
                   </select>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[#9A948F]">
                     Discovers linked pages on the same site (one level deep) and adds each as its own document —
                     bigger sites need more pages, so pick a size that covers what you need.
                   </p>
@@ -399,7 +399,7 @@ const CaptainDocuments = () => {
                   type="file"
                   accept="application/pdf"
                   onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary"
+                  className="w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary"
                 />
               </div>
             )}
@@ -443,7 +443,7 @@ const CaptainDocuments = () => {
       {/* Edit / generate FAQs modal */}
       <Dialog open={!!editingDoc} onOpenChange={(open) => !open && setEditingDoc(null)}>
         <DialogContent className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6">
-          <DialogTitle className="text-base font-bold text-gray-950">Edit document</DialogTitle>
+          <DialogTitle className="text-base font-bold text-[#2E2D35]">Edit document</DialogTitle>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
@@ -467,13 +467,13 @@ const CaptainDocuments = () => {
             )}
 
             {generatedFaqs && (
-              <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                <div className="text-sm font-semibold text-gray-800">
+              <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-4">
+                <div className="text-sm font-semibold text-[#2E2D35]">
                   Suggested FAQs ({generatedFaqs.filter((f) => f.selected).length} selected)
                 </div>
                 <div className="flex flex-col gap-2">
                   {generatedFaqs.map((f, i) => (
-                    <div key={i} className="flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white p-3">
+                    <div key={i} className="flex items-start gap-2.5 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
                       <Checkbox
                         checked={f.selected}
                         onCheckedChange={(checked) =>
@@ -484,8 +484,8 @@ const CaptainDocuments = () => {
                         className="mt-0.5"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900">{f.question}</div>
-                        <div className="mt-0.5 text-xs text-gray-500">{f.answer}</div>
+                        <div className="text-sm font-medium text-[#2E2D35]">{f.question}</div>
+                        <div className="mt-0.5 text-xs text-[#9A948F]">{f.answer}</div>
                       </div>
                     </div>
                   ))}

@@ -16,6 +16,7 @@ import {
   findReport,
 } from './reports/catalog';
 import type { ReportTable } from './reports/builders';
+import './reports-theme.css';
 
 type LinkedReport = {
   title: string;

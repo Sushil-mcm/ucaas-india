@@ -236,7 +236,7 @@ const CallRules: FC<CallRulesProps> = ({
           <span className="mcm-callsummary-l">When someone calls you now</span>
           <p>{summary}</p>
         </div>
-        {/* <div className="border border-gray-200 rounded-xl flex flex-col"> */}
+        {/* <div className="border border-[#EEE7DD] rounded-xl flex flex-col"> */}
         {/* <div className="divide-y divide-gray-200"> */}
         {/* Said once, above the whole list. Nothing in the call path reads these
             rules - the service that decides which device to ring dials whatever
@@ -301,12 +301,12 @@ const CallRules: FC<CallRulesProps> = ({
           )}
         </div>
 
-        {/* <div className="border border-gray-200 bg-white rounded-xl p-3">
+        {/* <div className="border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-3">
           <span className="block max-h-14 overflow-hidden transition-all duration-300 peer-checked/showLabel:max-h-fit">
             <div className="flex items-center justify-between gap-2 h-14 px-3">
               <div className="flex gap-3 items-center">
                 <span className="block w-4 h-4 border border-red-500 rounded-full"></span>
-                <label htmlFor='busy' className="cursor-pointer font-semibold truncate text-md text-gray-900 ">Busy</label>
+                <label htmlFor='busy' className="cursor-pointer font-semibold truncate text-md text-[#2E2D35] ">Busy</label>
               </div>
               <div className="flex items-center gap-3">
                 <Switch
@@ -373,7 +373,7 @@ const CallRules: FC<CallRulesProps> = ({
             {collapse?.incomingCall && (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col items-start gap-5 px-3 sm:flex-row sm:items-center">
-                  <p className="text-gray-800 text-sm w-full">
+                  <p className="text-[#2E2D35] text-sm w-full">
                     Which of your devices ring, in what order, and for how long before the call is
                     treated as missed.{' '}
                   </p>
@@ -410,8 +410,8 @@ const CallRules: FC<CallRulesProps> = ({
 
                 {incomingCall?.deviceOptionValue?.value === 'simultaneously' && (
                   <div className="overflow-x-auto">
-                    <div className="flex min-w-[720px] flex-col rounded-xl border border-gray-200">
-                      <div className="flex justify-between rounded-t-xl bg-gray-100 p-2">
+                    <div className="flex min-w-[720px] flex-col rounded-xl border border-[#EEE7DD]">
+                      <div className="flex justify-between rounded-t-xl bg-[#FBE2C8]/40 p-2">
                         <p className="w-1/5 font-medium text-sm">&nbsp;</p>
                         <p className="w-full font-medium text-sm">Active</p>
                         <p className="w-full font-medium text-sm">Name</p>
@@ -419,13 +419,13 @@ const CallRules: FC<CallRulesProps> = ({
                         <p className="w-1/5 font-medium text-sm">&nbsp;</p>
                         {/* <p className="w-1/4 font-medium text-sm">Action</p> */}
                       </div>
-                      <div className="border-b-0 border-gray-200">
+                      <div className="border-b-0 border-[#EEE7DD]">
                         {incomingCall?.deviceOptions &&
                           Object.keys(incomingCall?.deviceOptions)?.map((objKey) => {
                             return (
                               <div
                                 key={objKey}
-                                className="flex min-w-[720px] items-center justify-between border-b border-gray-200 p-2 last:border-b-0"
+                                className="flex min-w-[720px] items-center justify-between border-b border-[#EEE7DD] p-2 last:border-b-0"
                               >
                                 <p className="w-1/5 font-medium text-sm">&nbsp;</p>
                                 <p className="w-full text-sm">
@@ -542,8 +542,8 @@ const CallRules: FC<CallRulesProps> = ({
                 )}
                 {incomingCall?.deviceOptionValue?.value === 'sequential' && (
                   <div className="overflow-x-auto">
-                    <div className="flex min-w-[720px] flex-col rounded-xl border border-gray-200">
-                      <div className="flex justify-between rounded-t-xl bg-gray-100 p-2">
+                    <div className="flex min-w-[720px] flex-col rounded-xl border border-[#EEE7DD]">
+                      <div className="flex justify-between rounded-t-xl bg-[#FBE2C8]/40 p-2">
                         <p className="w-1/5 font-medium text-sm">&nbsp;</p>
                         <p className="w-full font-medium text-sm">Active</p>
                         <p className="w-full font-medium text-sm">Name</p>
@@ -601,7 +601,7 @@ const CallRules: FC<CallRulesProps> = ({
             )}
           </span>
         </div>
-        <div className="border border-gray-200 bg-white rounded-xl p-3">
+        <div className="border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-3">
           <span className={`block transition-all duration-300 `}>
             <div
               className="flex items-center justify-between gap-2 h-14 cursor-pointer px-3"
@@ -628,16 +628,16 @@ const CallRules: FC<CallRulesProps> = ({
 
             {collapse?.outgoingCall && (
               <div className="flex flex-col gap-5 px-3 pb-3">
-                <div className="border border-gray-200 rounded-xl">
-                  <div className="flex flex-col divide-gray-200">
+                <div className="border border-[#EEE7DD] rounded-xl">
+                  <div className="flex flex-col divide-[#EEE7DD]">
                     <label>
                       <span className="block max-h-36 transition-all duration-300 peer-checked/showLabel:max-h-72">
                         <div className="flex sm:flex-row flex-col items-center justify-between gap-2 min-h-16 cursor-pointer p-3">
                           <div className="flex flex-col gap-1.5">
-                            <p className="font-semibold truncate text-md text-gray-900">
+                            <p className="font-semibold truncate text-md text-[#2E2D35]">
                               Default Caller ID
                             </p>
-                            <p className="text-gray-800 text-sm">
+                            <p className="text-[#2E2D35] text-sm">
                               Select the number that will be displayed to the people that you called
                             </p>
                           </div>

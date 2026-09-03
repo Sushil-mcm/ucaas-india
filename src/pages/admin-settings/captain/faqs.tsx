@@ -19,7 +19,7 @@ type Faq = {
 
 const emptyForm = { question: '', answer: '', status: 'approved' as const };
 const textAreaClass =
-  'w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
+  'w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all placeholder:text-[#9A948F] hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
 
 const CaptainFaqs = () => {
   const { assistants, selectedId, selectAssistant } = useSelectedAssistant();
@@ -124,7 +124,7 @@ const CaptainFaqs = () => {
       </div>
 
       <div className="relative w-full max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
         <Input
           type="text"
           value={search}
@@ -138,22 +138,22 @@ const CaptainFaqs = () => {
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
       )}
 
-      <div className="flex-1 overflow-auto rounded-2xl border border-gray-200 bg-white">
+      <div className="flex-1 overflow-auto rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         {isLoading ? (
-          <div className="flex h-40 items-center justify-center text-sm text-gray-500">Loading...</div>
+          <div className="flex h-40 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
         ) : faqs.length === 0 ? (
           <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
             <HelpCircle className="size-6 text-gray-300" />
-            <div className="text-sm font-medium text-gray-700">No FAQs yet</div>
-            <div className="text-xs text-gray-500">Click "Add FAQ" to create your first one.</div>
+            <div className="text-sm font-medium text-[#2E2D35]">No FAQs yet</div>
+            <div className="text-xs text-[#9A948F]">Click "Add FAQ" to create your first one.</div>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {faqs.map((faq) => (
-              <div key={faq.id} className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50">
+              <div key={faq.id} className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-[#FBE2C8]/45">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <div className="text-sm font-semibold text-gray-950">{faq.question}</div>
+                    <div className="text-sm font-semibold text-[#2E2D35]">{faq.question}</div>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         faq.status === 'approved'
@@ -164,7 +164,7 @@ const CaptainFaqs = () => {
                       {faq.status}
                     </span>
                   </div>
-                  <div className="mt-1 text-sm text-gray-600">{faq.answer}</div>
+                  <div className="mt-1 text-sm text-[#9A948F]">{faq.answer}</div>
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(faq)}>
@@ -190,7 +190,7 @@ const CaptainFaqs = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="w-full max-w-lg rounded-2xl p-6">
-          <DialogTitle className="text-base font-bold text-gray-950">
+          <DialogTitle className="text-base font-bold text-[#2E2D35]">
             {editingId ? 'Edit FAQ' : 'Add FAQ'}
           </DialogTitle>
 
@@ -221,7 +221,7 @@ const CaptainFaqs = () => {
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as 'draft' | 'approved' }))}
-                className="min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
               >
                 <option value="approved">Approved</option>
                 <option value="draft">Draft</option>

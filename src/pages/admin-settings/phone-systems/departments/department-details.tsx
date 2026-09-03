@@ -30,7 +30,7 @@ const DepartmentDetails = ({ tabData = {}, handleBack = () => {} }: any) => {
     <>
       {tabData?.uuid && (
         <div className="w-full p-3 flex flex-col gap-3">
-          <div className="flex items-center w-full px-3 h-16 gap-2 rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center w-full px-3 h-16 gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
             <div className="relative">
               {tabData?.profile ? (
                 <div className="w-10 h-10 p-1 rounded-full bg-gray-500 flex items-center justify-center">
@@ -46,10 +46,10 @@ const DepartmentDetails = ({ tabData = {}, handleBack = () => {} }: any) => {
             </div>
             <div className="flex items-center justify-between w-[calc(100%_-_3rem)]">
               <div className="flex flex-col">
-                <p className="font-semibold text-gray-900 truncate text-md">
+                <p className="font-semibold text-[#2E2D35] truncate text-md">
                   {tabData?.name || ''}
                 </p>
-                <p className="text-gray-800 truncate text-sm">{managerInfo?.label || ''}</p>
+                <p className="text-[#2E2D35] truncate text-sm">{managerInfo?.label || ''}</p>
               </div>
             </div>
 
@@ -59,29 +59,29 @@ const DepartmentDetails = ({ tabData = {}, handleBack = () => {} }: any) => {
             </Button>
           </div>
           <div className="flex flex-col gap-3 h-[calc(100vh_-_14.3rem)] overflow-auto">
-            <div className="border border-gray-200 rounded-xl p-3 bg-white">
+            <div className="border border-[rgba(225,200,165,0.9)] rounded-xl p-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
-                <p className="font-semibold text-gray-900 text-md">Description</p>
-                <p className="text-gray-800 text-sm">
+                <p className="font-semibold text-[#2E2D35] text-md">Description</p>
+                <p className="text-[#2E2D35] text-sm">
                   {tabData?.description || 'No description provided '}
                 </p>
               </div>
             </div>
-            <div className="border border-gray-200 rounded-xl p-3 bg-white">
-              <p className="font-semibold text-gray-900 truncate text-md">Manager</p>
-              <p className="text-gray-800 truncate text-sm capitalize">
+            <div className="border border-[rgba(225,200,165,0.9)] rounded-xl p-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+              <p className="font-semibold text-[#2E2D35] truncate text-md">Manager</p>
+              <p className="text-[#2E2D35] truncate text-sm capitalize">
                 {managerInfo?.label || ''}
               </p>
             </div>
-            <div className="border border-gray-200 rounded-xl p-3 bg-white">
+            <div className="border border-[rgba(225,200,165,0.9)] rounded-xl p-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
               <div className="flex flex-col gap-1">
-                <p className="font-semibold text-gray-900 truncate text-md mb-2">Members</p>
+                <p className="font-semibold text-[#2E2D35] truncate text-md mb-2">Members</p>
                 <div className="w-full flex flex-col gap-3">
                   {departmentMembers.length > 0 ? (
                     departmentMembers.map((member: any) => {
                       return (
                         <div
-                          className="flex items-center justify-between border border-gray-200 bg-gray-100 rounded-xl w-full p-3 gap-1 "
+                          className="flex items-center justify-between border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl w-full p-3 gap-1 "
                           key={member?.uuid}
                         >
                           <CustomAvatar name={member?.label || ''} />
@@ -89,15 +89,15 @@ const DepartmentDetails = ({ tabData = {}, handleBack = () => {} }: any) => {
                             <div className="flex items-center justify-between gap-2">
                               <p className="capitalize text-md truncate">{member?.label || ''}</p>
                               <div className="flex gap-1">
-                                <Grid className="w-4 h-4 text-gray-500" />
-                                <div className="text-gray-500 truncate text-xs">
+                                <Grid className="w-4 h-4 text-[#9A948F]" />
+                                <div className="text-[#9A948F] truncate text-xs">
                                   {member?.extension || member?.value || ''}
                                 </div>
                               </div>
                             </div>
 
                             <div className="flex flex-col gap-1">
-                              <small className="text-gray-500 truncate text-sm">
+                              <small className="text-[#9A948F] truncate text-sm">
                                 {member?.email || ''}
                               </small>
                             </div>

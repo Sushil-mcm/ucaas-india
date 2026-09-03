@@ -16,6 +16,8 @@ const BasicInformation: FC<any> = ({
   setChooseTemplate,
   isSiteDisabled = false,
   customClass = 'xxl:max-h-[calc(100vh-450px)] xxl:h-[calc(100vh_-_21rem)]',
+  firstNamePlaceholder = 'Enter first name',
+  lastNamePlaceholder = 'Enter last name',
 }) => {
   const { data: dataSiteList = [], isLoading } = useGetSite();
 
@@ -105,7 +107,7 @@ const BasicInformation: FC<any> = ({
           <div className="mcm-field">
             <Input
               label="First Name"
-              placeholder="Enter first name"
+              placeholder={firstNamePlaceholder}
               {...register('basic.first_name')}
               error={(errors.basic as any)?.first_name?.message}
               maxLength={50}
@@ -114,7 +116,7 @@ const BasicInformation: FC<any> = ({
           <div className="mcm-field">
             <Input
               label="Last Name"
-              placeholder="Enter last name"
+              placeholder={lastNamePlaceholder}
               {...register('basic.last_name')}
               error={(errors.basic as any)?.last_name?.message}
               maxLength={50}
@@ -153,11 +155,13 @@ const BasicInformation: FC<any> = ({
                 value: site?.uuid,
               }))}
               handleChange={(e: ISELECTVALUE | null) => {
-                if (!isSiteDisabled) setValue(`basic.site`, e || { label: '', value: '' });
+                if (!isSiteDisabled)
+                  setValue(`basic.site`, e || { label: '', value: '' }, { shouldValidate: true });
               }}
               value={watch('basic.site')}
               isLoading={isLoading}
               isDisabled={isSiteDisabled}
+              error={(errors.basic as any)?.site?.value?.message}
             />
           </div>
           <div className="mcm-field">

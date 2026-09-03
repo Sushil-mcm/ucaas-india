@@ -120,7 +120,7 @@ const SettingPermission: FC<any> = ({ data, footer, containerClass }) => {
           note="The time zone here is what opening hours are judged against on every incoming call."
           description="The country and clock everything else is measured against - opening hours, holidays, and the times shown in reports."
           aside={
-            <Button type="button" variant="outline" className="cs-btn-soft" onClick={() => openModal('regionalModal')}>
+            <Button type="button" variant="outline" onClick={() => openModal('regionalModal')}>
               Change
             </Button>
           }
@@ -154,7 +154,6 @@ const SettingPermission: FC<any> = ({ data, footer, containerClass }) => {
             <Button
               type="button"
               variant="outline"
-              className="cs-btn-soft"
               onClick={() => openModal('bussinessHoursModal')}
             >
               Change
@@ -183,7 +182,6 @@ const SettingPermission: FC<any> = ({ data, footer, containerClass }) => {
             <Button
               type="button"
               variant="outline"
-              className="cs-btn-soft"
               onClick={() => openModal('automaticRecordingModal')}
             >
               Change
@@ -260,7 +258,7 @@ const SettingPermission: FC<any> = ({ data, footer, containerClass }) => {
           note="This one does reach the call: it is the number shown on the other person's phone."
           description="What shows on the other person's phone when somebody here calls out."
           aside={
-            <Button type="button" variant="outline" className="cs-btn-soft" onClick={() => openModal('displayNumberModal')}>
+            <Button type="button" variant="outline" onClick={() => openModal('displayNumberModal')}>
               Change
             </Button>
           }

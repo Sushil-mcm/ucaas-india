@@ -179,7 +179,7 @@ const AgentChatFooter = ({
   };
 
   return (
-    <div className="relative flex w-full flex-col gap-2 border-t border-gray-200 bg-white px-2 py-2 sm:px-3">
+    <div className="relative flex w-full flex-col gap-2 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-2 py-2 sm:px-3">
       {typingText ? (
         <div className="px-1 text-[11px] text-ucass-active sm:text-xs">{typingText}</div>
       ) : null}
@@ -242,7 +242,7 @@ const AgentChatFooter = ({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="w-[calc(100vw-2rem)] max-w-80 p-0 overflow-hidden rounded-xl border border-gray-200/80 shadow-xl"
+                  className="w-[calc(100vw-2rem)] max-w-80 p-0 overflow-hidden rounded-xl border border-[rgba(225,200,165,0.9)] shadow-xl"
                   side="top"
                 >
                   <div className="border-b border-gray-100 bg-gradient-to-br from-sky-50 to-indigo-50 px-3 py-2.5">
@@ -250,11 +250,11 @@ const AgentChatFooter = ({
                       <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white bg-white/80 shadow-sm">
                         <Sparkles className="h-4 w-4 text-ucass-active" />
                       </span>
-                      <p className="text-sm font-semibold text-gray-900">AI Assist Setup</p>
+                      <p className="text-sm font-semibold text-[#2E2D35]">AI Assist Setup</p>
                     </div>
                   </div>
                   <div className="space-y-3 p-3">
-                    <p className="text-xs leading-5 text-gray-600">
+                    <p className="text-xs leading-5 text-[#9A948F]">
                       Set up an agent in AI Settings to start using AI-generated assistance.
                     </p>
                     <div className="flex justify-end">

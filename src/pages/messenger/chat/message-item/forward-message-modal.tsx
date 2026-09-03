@@ -42,9 +42,9 @@ const TargetList = ({
   toggleSelection: (id: string) => void;
 }) => {
   return (
-    <div className="h-full overflow-y-auto rounded-xl border border-gray-200 bg-gray-50/40">
+    <div className="h-full overflow-y-auto rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/18">
       {!list.length ? (
-        <div className="flex h-full items-center justify-center px-3 text-sm text-gray-500">
+        <div className="flex h-full items-center justify-center px-3 text-sm text-[#9A948F]">
           No chats found
         </div>
       ) : (
@@ -56,15 +56,15 @@ const TargetList = ({
               type="button"
               onClick={() => toggleSelection(item.chatId)}
               className={cn(
-                'flex w-full items-center justify-between border-b border-gray-200 bg-white px-3 py-2.5 text-left last:border-b-0',
-                isSelected ? 'bg-primary/10' : 'hover:bg-gray-50',
+                'flex w-full items-center justify-between border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-left last:border-b-0',
+                isSelected ? 'bg-primary/10' : 'hover:bg-[#FBE2C8]/45',
               )}
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <div
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-full',
-                    isSelected ? 'bg-primary/20 text-primary' : 'bg-gray-100 text-gray-600',
+                    isSelected ? 'bg-primary/20 text-primary' : 'bg-[#FBE2C8]/40 text-[#9A948F]',
                   )}
                 >
                   {item.isGroupChat ? (
@@ -74,8 +74,8 @@ const TargetList = ({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium text-gray-900">{item.name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="truncate text-sm font-medium text-[#2E2D35]">{item.name}</div>
+                  <div className="text-xs text-[#9A948F]">
                     {item.isGroupChat ? 'Team Chat' : 'Direct Chat'}
                   </div>
                 </div>
@@ -402,9 +402,9 @@ const ForwardMessageModal = ({ handleClose, showForwardModal }: any) => {
 
   return (
     <Dialog open={true} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-lg overflow-hidden border border-gray-200 bg-white p-0">
+      <DialogContent className="w-[95vw] max-w-lg overflow-hidden border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-0">
         <div className="flex h-[80vh] min-h-[420px] max-h-[80vh] flex-col sm:h-[520px] sm:max-h-[520px]">
-          <DialogHeader className="border-b gap-1 border-gray-200 px-4 pt-3 pb-2">
+          <DialogHeader className="border-b gap-1 border-[#EEE7DD] px-4 pt-3 pb-2">
             <DialogTitle className="text-base mb-0">
               {Array.isArray(showForwardModal) ? 'Forward Messages' : 'Forward Message'}
             </DialogTitle>
@@ -415,7 +415,7 @@ const ForwardMessageModal = ({ handleClose, showForwardModal }: any) => {
 
           <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3">
             <Input
-              Icon={<Search className="h-4 w-4 text-gray-500" />}
+              Icon={<Search className="h-4 w-4 text-[#9A948F]" />}
               IconPosition="left-0 pl-3 inset-y-0"
               className="pl-9"
               value={searchQuery}
@@ -431,17 +431,17 @@ const ForwardMessageModal = ({ handleClose, showForwardModal }: any) => {
               <TabsList className="h-auto w-full justify-start gap-6 rounded-none bg-transparent p-0">
                 <TabsTrigger
                   value="users"
-                  className="h-auto flex-none rounded-none border-0 border-b-2 border-transparent px-0 pb-2 pt-0 text-base font-medium text-gray-700 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                  className="h-auto flex-none rounded-none border-0 border-b-2 border-transparent px-0 pb-2 pt-0 text-base font-medium text-[#2E2D35] data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   <span className="truncate">Users</span>
-                  <span className="text-xs font-medium text-gray-500">({usersList.length})</span>
+                  <span className="text-xs font-medium text-[#9A948F]">({usersList.length})</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="teams"
-                  className="h-auto flex-none rounded-none border-0 border-b-2 border-transparent px-0 pb-2 pt-0 text-base font-medium text-gray-700 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
+                  className="h-auto flex-none rounded-none border-0 border-b-2 border-transparent px-0 pb-2 pt-0 text-base font-medium text-[#2E2D35] data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none"
                 >
                   <span className="truncate">Teams</span>
-                  <span className="text-xs font-medium text-gray-500">({teamsList.length})</span>
+                  <span className="text-xs font-medium text-[#9A948F]">({teamsList.length})</span>
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="users" className="mt-2 min-h-0 flex-1">
@@ -461,8 +461,8 @@ const ForwardMessageModal = ({ handleClose, showForwardModal }: any) => {
             </Tabs>
           </div>
 
-          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
-            <div className="text-xs text-gray-600">Selected: {selectedChatIds.length}</div>
+          <div className="flex items-center justify-between border-t border-[#EEE7DD] px-4 py-3">
+            <div className="text-xs text-[#9A948F]">Selected: {selectedChatIds.length}</div>
             <div className="flex items-center gap-2">
               <Button
                 type="button"

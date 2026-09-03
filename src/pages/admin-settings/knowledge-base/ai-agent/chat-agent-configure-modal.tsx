@@ -580,8 +580,8 @@ const ChatAgentConfigureModal = ({
         showCloseButton={false}
         className="h-[100dvh] max-h-[100dvh] w-screen max-w-none gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-[min(820px,94dvh)] sm:max-h-[94dvh] sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)] sm:rounded-xl sm:border xl:max-w-7xl"
       >
-        <div className="flex h-full min-h-0 flex-col bg-white text-[#07142f]">
-          <div className="flex min-h-[60px] shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-3 py-3 sm:min-h-[66px] sm:px-5 sm:py-4">
+        <div className="flex h-full min-h-0 flex-col bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] text-[#07142f]">
+          <div className="flex min-h-[60px] shrink-0 items-start justify-between gap-3 border-b border-[#EEE7DD] px-3 py-3 sm:min-h-[66px] sm:px-5 sm:py-4">
             <div className="min-w-0">
               <DialogTitle className="truncate text-base font-bold text-gray-950 sm:text-lg">
                 Finish setting up {getAgentName(agent)}
@@ -602,7 +602,7 @@ const ChatAgentConfigureModal = ({
           </div>
 
           <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden md:grid-cols-[210px_minmax(0,1fr)] md:grid-rows-1 lg:grid-cols-[228px_minmax(0,1fr)]">
-            <aside className="flex gap-2 overflow-x-auto border-b border-gray-200 bg-slate-50 px-3 py-2 md:block md:overflow-y-auto md:border-b-0 md:border-r md:px-4 md:py-5">
+            <aside className="flex gap-2 overflow-x-auto border-b border-[#EEE7DD] bg-slate-50 px-3 py-2 md:block md:overflow-y-auto md:border-b-0 md:border-r md:px-4 md:py-5">
               {[
                 {
                   key: 'design' as const,
@@ -725,10 +725,10 @@ const ChatAgentConfigureModal = ({
                         return (
                           <label
                             key={field.key}
-                            className="rounded-lg border border-gray-200 bg-white p-3"
+                            className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3"
                           >
                             <span className="text-xs font-bold text-slate-600">{field.label}</span>
-                            <span className="mt-2 flex items-center gap-2 rounded-md border border-gray-200 px-2 py-1.5">
+                            <span className="mt-2 flex items-center gap-2 rounded-md border border-[#EEE7DD] px-2 py-1.5">
                               <input
                                 type="color"
                                 value={isValidHex(value) ? value : '#000000'}
@@ -814,7 +814,7 @@ const ChatAgentConfigureModal = ({
                       value={allowedDomain}
                       onChange={(event) => setAllowedDomain(event.target.value)}
                       placeholder="example.com"
-                      className="mt-2 h-10 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-primary"
+                      className="mt-2 h-10 w-full rounded-lg border border-[#EEE7DD] px-3 text-sm outline-none focus:border-primary"
                     />
                   </label>
 
@@ -848,7 +848,7 @@ const ChatAgentConfigureModal = ({
             </main>
           </div>
 
-          <div className="flex min-h-[58px] shrink-0 items-center justify-between gap-2 border-t border-gray-200 px-3 py-2 sm:min-h-[62px] sm:px-5 sm:py-3">
+          <div className="flex min-h-[58px] shrink-0 items-center justify-between gap-2 border-t border-[#EEE7DD] px-3 py-2 sm:min-h-[62px] sm:px-5 sm:py-3">
             <Button
               type="button"
               variant="outline"

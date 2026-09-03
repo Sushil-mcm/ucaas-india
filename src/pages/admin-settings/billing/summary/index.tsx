@@ -64,22 +64,22 @@ const Tile = ({
   loading?: boolean;
   tone?: 'warning';
 }) => (
-  <div className="rounded-lg border border-gray-200 bg-white p-4">
+  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
     {loading ? (
-      <Skeleton className="h-7 w-24 bg-gray-200" />
+      <Skeleton className="h-7 w-24 bg-[#F0DFC5]" />
     ) : (
       <p
         className={`text-2xl font-semibold tabular-nums leading-tight ${
-          tone === 'warning' ? 'text-amber-600' : 'text-gray-900'
+          tone === 'warning' ? 'text-amber-600' : 'text-[#2E2D35]'
         }`}
       >
         {value}
       </p>
     )}
-    <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+    <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#9A948F]">
       {label}
     </p>
-    {hint ? <p className="mt-0.5 text-xs text-gray-600">{hint}</p> : null}
+    {hint ? <p className="mt-0.5 text-xs text-[#9A948F]">{hint}</p> : null}
   </div>
 );
 
@@ -245,10 +245,10 @@ const BillingSummary = () => {
             />
           ) : planLoading ? (
             <>
-              <SettingRow label="Plan" description="" control={<Skeleton className="h-4 w-32 bg-gray-200" />} />
-              <SettingRow label="Included each month" description="" control={<Skeleton className="h-4 w-40 bg-gray-200" />} />
-              <SettingRow label="Per licence" description="" control={<Skeleton className="h-4 w-20 bg-gray-200" />} />
-              <SettingRow label="Next bill" description="" control={<Skeleton className="h-4 w-24 bg-gray-200" />} />
+              <SettingRow label="Plan" description="" control={<Skeleton className="h-4 w-32 bg-[#F0DFC5]" />} />
+              <SettingRow label="Included each month" description="" control={<Skeleton className="h-4 w-40 bg-[#F0DFC5]" />} />
+              <SettingRow label="Per licence" description="" control={<Skeleton className="h-4 w-20 bg-[#F0DFC5]" />} />
+              <SettingRow label="Next bill" description="" control={<Skeleton className="h-4 w-24 bg-[#F0DFC5]" />} />
             </>
           ) : (
             <>
@@ -256,7 +256,7 @@ const BillingSummary = () => {
                 label="Plan"
                 description={current?.plan_name || 'No plan chosen yet'}
                 control={
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className="text-sm font-semibold text-[#2E2D35]">
                     {current?.plan_duration ? `Billed every ${current.plan_duration}` : UNAVAILABLE}
                   </span>
                 }
@@ -271,7 +271,7 @@ const BillingSummary = () => {
                 label="Included each month"
                 description="Per seat. Past an allowance the service keeps working and each further minute or text comes off your credit."
                 control={
-                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                  <span className="text-sm font-semibold tabular-nums text-[#2E2D35]">
                     {describeStoredAllowance(current?.call_duration, 'minutes')} ·{' '}
                     {describeStoredAllowance(current?.sms, 'texts')}
                   </span>
@@ -281,7 +281,7 @@ const BillingSummary = () => {
                 label="Per licence"
                 description="What one seat costs for a full billing cycle."
                 control={
-                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                  <span className="text-sm font-semibold tabular-nums text-[#2E2D35]">
                     {moneyOrUnavailable(perSeat)}
                   </span>
                 }
@@ -290,7 +290,7 @@ const BillingSummary = () => {
                 label="Licences on the bill"
                 description="Seats you are charged for. Removed seats stop being charged from the next cycle."
                 control={
-                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                  <span className="text-sm font-semibold tabular-nums text-[#2E2D35]">
                     {knownNumber(licences?.payable_licenses) === null
                       ? UNAVAILABLE
                       : String(licences.payable_licenses)}
@@ -305,7 +305,7 @@ const BillingSummary = () => {
                     : `You'll be charged on ${dateOrUnavailable(next?.next_billing_date ?? current?.plan_expiration_date)}.`
                 }
                 control={
-                  <span className="text-base font-semibold tabular-nums text-gray-900">
+                  <span className="text-base font-semibold tabular-nums text-[#2E2D35]">
                     {expired ? UNAVAILABLE : moneyOrUnavailable(next?.next_billing_amount)}
                   </span>
                 }
@@ -371,7 +371,7 @@ const BillingSummary = () => {
           }
         >
           {cardsLoading ? (
-            <SettingRow label="Card" description="" control={<Skeleton className="h-4 w-40 bg-gray-200" />} />
+            <SettingRow label="Card" description="" control={<Skeleton className="h-4 w-40 bg-[#F0DFC5]" />} />
           ) : primaryCard ? (
             <>
               <SettingRow
@@ -382,7 +382,7 @@ const BillingSummary = () => {
                     : 'This is the one that gets charged.'
                 }
                 control={
-                  <span className="text-sm tabular-nums text-gray-700">
+                  <span className="text-sm tabular-nums text-[#2E2D35]">
                     {primaryCard?.exp_month && primaryCard?.exp_year
                       ? `Expires ${String(primaryCard.exp_month).padStart(2, '0')}/${primaryCard.exp_year}`
                       : UNAVAILABLE}
@@ -456,7 +456,7 @@ const BillingSummary = () => {
                   key={i}
                   label="Invoice"
                   description=""
-                  control={<Skeleton className="h-4 w-16 bg-gray-200" />}
+                  control={<Skeleton className="h-4 w-16 bg-[#F0DFC5]" />}
                 />
               ))}
             </>
@@ -472,7 +472,7 @@ const BillingSummary = () => {
                 label={inv?.bill_no ? `Invoice ${inv.bill_no}` : 'Charge'}
                 description={`${dateOrUnavailable(inv?.created_at)}${inv?.desc ? ` — ${inv.desc}` : ''}`}
                 control={
-                  <span className="text-sm font-semibold tabular-nums text-gray-900">
+                  <span className="text-sm font-semibold tabular-nums text-[#2E2D35]">
                     {moneyOrUnavailable(inv?.tax_detail?.total_amount ?? inv?.total_amount)}
                   </span>
                 }

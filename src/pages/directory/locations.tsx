@@ -9,6 +9,8 @@ import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
 import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import { usePeopleRows } from './people-rows';
+import './groups-glass.css';
+import './locations-glass.css';
 
 /**
  * Directory ▸ Locations — the organisation's sites.

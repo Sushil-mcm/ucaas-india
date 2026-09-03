@@ -684,7 +684,7 @@ const CompanyHolidayApply = () => {
   };
 
   return (
-    <div className="cs-block">
+    <div className="mt-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
@@ -732,7 +732,7 @@ const CompanyHolidayApply = () => {
       {!loadingCompany && companyHolidays.length === 0 && (
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="text-xs text-gray-700">
+          <p className="text-xs text-[#2E2D35]">
             There are no company holidays yet. Add some to the list above and save them first.
           </p>
         </div>
@@ -740,17 +740,17 @@ const CompanyHolidayApply = () => {
 
       {open && (
         <>
-          <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 p-3">
+          <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-[#EEE7DD] p-3">
             <Switch
               checked={personalFallback}
               onCheckedChange={(checked) => setPersonalFallback(!!checked)}
               disabled={running}
             />
             <span className="min-w-0">
-              <span className="block text-xs font-semibold text-gray-900">
+              <span className="block text-xs font-semibold text-[#2E2D35]">
                 For people with no closed-hours action, use their own voicemail
               </span>
-              <span className="mt-0.5 block text-xs text-gray-600">
+              <span className="mt-0.5 block text-xs text-[#9A948F]">
                 Off by default. A person&apos;s own mailbox is the one fallback that means what it
                 says; queues, menus and numbers are always skipped instead, because choosing what
                 they do on a holiday is a routing decision, not a default.
@@ -770,8 +770,8 @@ const CompanyHolidayApply = () => {
                 const allOn = groupLines.length > 0 && chosen === groupLines.length;
 
                 return (
-                  <div key={group.type} className="rounded-lg border border-gray-200">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 p-3">
+                  <div key={group.type} className="rounded-lg border border-[#EEE7DD]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEE7DD] bg-[#FBE2C8]/45 p-3">
                       <label className="flex cursor-pointer items-center gap-2">
                         <Checkbox
                           checked={allOn}
@@ -779,19 +779,19 @@ const CompanyHolidayApply = () => {
                           disabled={running || groupLines.length === 0}
                           aria-label={`Select all ${group.label}`}
                         />
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-[#2E2D35]">
                           {group.label}{' '}
-                          <span className="font-normal text-gray-500">({groupLines.length})</span>
+                          <span className="font-normal text-[#9A948F]">({groupLines.length})</span>
                         </span>
                       </label>
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-[#9A948F]">
                         {chosen > 0 ? `${chosen} selected · ` : ''}
                         {group.blurb}
                       </span>
                     </div>
 
                     {groupLines.length === 0 ? (
-                      <p className="p-3 text-xs text-gray-500">None on this account.</p>
+                      <p className="p-3 text-xs text-[#9A948F]">None on this account.</p>
                     ) : (
                       <div className="flex max-h-72 flex-col overflow-y-auto">
                         {groupLines.map((line) => {
@@ -800,7 +800,7 @@ const CompanyHolidayApply = () => {
                           return (
                             <label
                               key={line.key}
-                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-gray-50"
+                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-[#FBE2C8]/45"
                             >
                               <span className="flex min-w-0 items-center gap-2">
                                 <Checkbox
@@ -810,11 +810,11 @@ const CompanyHolidayApply = () => {
                                   aria-label={`Select ${line.name}`}
                                 />
                                 <span className="min-w-0">
-                                  <span className="block truncate text-sm text-gray-900">
+                                  <span className="block truncate text-sm text-[#2E2D35]">
                                     {line.name}
                                   </span>
                                   {line.detail && (
-                                    <span className="block truncate text-xs text-gray-500">
+                                    <span className="block truncate text-xs text-[#9A948F]">
                                       {line.detail}
                                     </span>
                                   )}
@@ -829,7 +829,7 @@ const CompanyHolidayApply = () => {
                                   <span className="max-w-[22rem] text-right">{result.text}</span>
                                 </span>
                               ) : hint ? (
-                                <span className="shrink-0 text-xs text-gray-500">{hint}</span>
+                                <span className="shrink-0 text-xs text-[#9A948F]">{hint}</span>
                               ) : null}
                             </label>
                           );
@@ -843,7 +843,7 @@ const CompanyHolidayApply = () => {
           )}
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-[#9A948F]">
               {progress
                 ? `${progress.done} of ${progress.total} done${running ? '…' : ''}`
                 : `${selectedLines.length} line${selectedLines.length === 1 ? '' : 's'} selected`}
@@ -875,7 +875,7 @@ const CompanyHolidayApply = () => {
             </div>
           </div>
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-[#9A948F]">
             Lines are saved one at a time, not all at once, so a big run does not hit the switch in
             one burst. You can stop part-way — the lines already saved keep their holidays.
           </p>

@@ -296,42 +296,42 @@ const CompanyProfileFields = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Profile fields</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Profile fields</p>
+        <p className="text-xs text-[#9A948F]">
           The extra details you keep about the people who work here — an employee number, a
           department code, a start date, a desk.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full min-h-0 max-w-[1040px] flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load your saved fields
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 The list below is empty because nothing could be read, not because you have no
                 fields. Reload before you save, or you may wipe fields you cannot currently see.
               </p>
             </div>
           )}
 
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
+          <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+            <div className="flex flex-wrap items-start gap-3 border-b border-[#EEE7DD] p-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
                 <IdCard className="h-5 w-5" />
               </div>
               <div className="flex min-w-[220px] flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-base font-semibold text-gray-900">Your fields</p>
+                  <p className="text-base font-semibold text-[#2E2D35]">Your fields</p>
                   <span className="rounded-sm bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">
                     Coming soon
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   Set out the details you want to keep, in the order you want to see them.
                 </p>
               </div>
@@ -352,9 +352,9 @@ const CompanyProfileFields = () => {
               </p>
 
               {!fields.length ? (
-                <div className="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center">
-                  <p className="text-sm font-semibold text-gray-900">No extra fields yet</p>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                <div className="rounded-lg border border-dashed border-[#EEE7DD] px-4 py-8 text-center">
+                  <p className="text-sm font-semibold text-[#2E2D35]">No extra fields yet</p>
+                  <p className="mt-0.5 text-xs text-[#9A948F]">
                     Most companies start with an employee number and a start date.
                   </p>
                 </div>
@@ -368,10 +368,10 @@ const CompanyProfileFields = () => {
                   return (
                     <div
                       key={field.id}
-                      className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3"
+                      className="flex flex-col gap-3 rounded-lg border border-[#EEE7DD] p-3"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-gray-500">
+                        <p className="text-xs font-semibold text-[#9A948F]">
                           Field {index + 1} of {fields.length}
                         </p>
                         <div className="flex items-center gap-1">
@@ -418,7 +418,7 @@ const CompanyProfileFields = () => {
                               updateField(field.id, { label: event.target.value })
                             }
                           />
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[#9A948F]">
                             This is what people see. You can reword it later without losing anything
                             already filled in.
                           </p>
@@ -433,13 +433,13 @@ const CompanyProfileFields = () => {
                               updateField(field.id, { type: toFieldType(option?.value) })
                             }
                           />
-                          <p className="text-xs text-gray-500">{TYPE_HELPER[field.type]}</p>
+                          <p className="text-xs text-[#9A948F]">{TYPE_HELPER[field.type]}</p>
                         </div>
                       </div>
 
                       {field.type === 'choice' && (
                         <div className="flex flex-col gap-1">
-                          <p className="text-sm font-medium text-gray-700">The options</p>
+                          <p className="text-sm font-medium text-[#2E2D35]">The options</p>
                           <textarea
                             rows={4}
                             value={field.choicesText}
@@ -447,14 +447,14 @@ const CompanyProfileFields = () => {
                             onChange={(event) =>
                               updateField(field.id, { choicesText: event.target.value })
                             }
-                            className={`w-full rounded-xl border bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none ${
+                            className={`w-full rounded-xl border bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none ${
                               choicesError
                                 ? 'border-red-500'
-                                : 'border-gray-300 hover:border-primary focus:border-primary'
+                                : 'border-[rgba(225,200,165,0.9)] hover:border-primary focus:border-primary'
                             }`}
                           />
                           <p
-                            className={`text-xs ${choicesError ? 'text-red-600' : 'text-gray-500'}`}
+                            className={`text-xs ${choicesError ? 'text-red-600' : 'text-[#9A948F]'}`}
                           >
                             {choicesError ||
                               `One option per line, at least two. Up to ${MAX_CHOICES}; blank lines and repeats are dropped.`}
@@ -462,10 +462,10 @@ const CompanyProfileFields = () => {
                         </div>
                       )}
 
-                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#FBE2C8]/45 px-3 py-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900">Must be filled in</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-[#2E2D35]">Must be filled in</p>
+                          <p className="text-xs text-[#9A948F]">
                             Nobody&apos;s profile counts as complete without it.
                           </p>
                         </div>
@@ -480,10 +480,10 @@ const CompanyProfileFields = () => {
 
                       {isConfirming && (
                         <div className="flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                          <p className="text-xs font-semibold text-gray-900">
+                          <p className="text-xs font-semibold text-[#2E2D35]">
                             Remove &quot;{field.label.trim() || 'this field'}&quot;?
                           </p>
-                          <p className="text-xs text-gray-700">
+                          <p className="text-xs text-[#2E2D35]">
                             Anything already filled in against this field stays where it is but
                             becomes impossible to see or search, and adding the field back later
                             will not bring it into view — the new one is treated as a different
@@ -514,8 +514,8 @@ const CompanyProfileFields = () => {
             </div>
           </div>
 
-          <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Nobody&apos;s own profile is changed by saving here.
             </p>
             <SectionActions>

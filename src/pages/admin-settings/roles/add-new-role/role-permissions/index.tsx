@@ -62,8 +62,6 @@ const PermissionTree = ({
   basePath,
   readOnly,
   onToggle,
-  /* Kept as a prop rather than removed, so anywhere that ever does want
-     to lock an Access section has to say so on purpose. */
   lockAccessValues = false,
 }: {
   companyData: PermissionObject;
@@ -216,6 +214,21 @@ export const PermissionsAccordion = ({
 
   return (
     <>
+      {/* The tick-boxes below are the place an administrator actually builds a
+          permission set, and they carried no note about how far it reaches while
+          the three screens that merely DESCRIBE the model — the capability
+          table, Admin scope and Default permissions — all carried one. So the
+          caveat was on the map and not on the controls. Worded to match those
+          three, so the four screens say the same thing. */}
+      <div className="mb-3 rounded-md border-l-[3px] border-l-muted-foreground/50 bg-muted/40 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
+        <span className="font-semibold">
+          These decide what the app shows, not what the platform allows.
+        </span>{' '}
+        Every box below is checked when this app draws a screen, and is not checked again when the
+        platform answers a request. Untick something and it disappears from that person&rsquo;s
+        screens — it is not sealed off behind them. Treat this as tidying the product for each kind
+        of person, not as a security control.
+      </div>
       <Accordion
         type="multiple"
         value={openItems}
@@ -247,14 +260,7 @@ export const PermissionsAccordion = ({
                       userData={userPermissions}
                       basePath={[featureKey, 'access']}
                       readOnly={readOnly}
-                      /* Access used to be locked for every feature except
-                         phone_system_action, so a company that owns AI chat and
-                         voice could see those boxes and never tick them. The flag
-                         arrived inside an unrelated commit about queue wrap-up and
-                         was never explained. Access is plan-derived and role-
-                         configurable exactly like Actions, and the tree only ever
-                         renders keys the company's own plan contains. */
-                      lockAccessValues={false}
+                      lockAccessValues={featureKey !== 'phone_system_action'}
                       onToggle={handleToggle}
                     />
                   </div>

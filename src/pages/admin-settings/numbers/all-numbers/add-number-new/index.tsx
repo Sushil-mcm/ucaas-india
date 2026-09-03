@@ -153,7 +153,6 @@ const AddNumber = ({ handleClose }: any) => {
         // toaster.success(data?.data?.[0]?.msg || 'Success.');
         // navigate('/identity');
       } catch (err) {
-        console.log(err);
         // toaster.error('One or more uploads failed.');
       }
     },

@@ -58,7 +58,6 @@ const WhatsappChannel = () => {
     channelList?.find((item: { name: string; type: string }) => item?.type === 'whatsapp');
 
   const isWhatsappConnected = !!whatsappData;
-  console.log(isWhatsappConnected, 'isWhatsappConnected', channelList, whatsappData);
 
   const handleConnect = () => {
     connectMetaChannel('whatsapp', setLoading, user?.company_info?.uuid);

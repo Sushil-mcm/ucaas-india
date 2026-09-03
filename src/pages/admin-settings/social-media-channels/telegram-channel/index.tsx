@@ -142,7 +142,6 @@ const TelegramChannel = () => {
     );
 
   const isTelegramConnected = !!telegramData;
-  console.log(isTelegramConnected, 'isTelegramConnected', channelList);
 
   const syncTelegramForm = () => {
     const { token = '', username = '' } = telegramData || {};

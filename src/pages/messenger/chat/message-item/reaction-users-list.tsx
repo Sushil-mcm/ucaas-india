@@ -52,24 +52,24 @@ const ReactionUsersList = ({
 
   if (reactedUsers.length === 0) {
     return (
-      <div className="w-64 py-6 text-center bg-white rounded-lg shadow-xl border">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-2">
-          <Users className="w-5 h-5 text-gray-400" />
+      <div className="w-64 py-6 text-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg shadow-xl border">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FBE2C8]/40 mb-2">
+          <Users className="w-5 h-5 text-[#9A948F]" />
         </div>
-        <div className="text-xs text-gray-400">No reactions found</div>
+        <div className="text-xs text-[#9A948F]">No reactions found</div>
       </div>
     );
   }
 
   return (
-    <div className="w-64 bg-white rounded-lg shadow-xl border overflow-hidden">
+    <div className="w-64 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg shadow-xl border overflow-hidden">
       <div className="px-3 py-2 border-b border-gray-100 bg-gradient-to-r from-amber-50/60 to-orange-50/40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white border border-gray-200">
               <span className="text-base">{renderableEmoji}</span>
             </div>
-            <div className="text-xs font-semibold text-gray-700">Reacted by</div>
+            <div className="text-xs font-semibold text-[#2E2D35]">Reacted by</div>
           </div>
           <div className="px-2 py-0.5 rounded-full bg-amber-600 text-white text-xs font-semibold">
             {reactedUsers.length}
@@ -100,7 +100,7 @@ const ReactionUsersList = ({
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold text-gray-800 truncate">
+                  <span className="text-sm font-semibold text-[#2E2D35] truncate">
                     {user?.name || 'Unknown User'}
                   </span>
                   {user?.isCurrentUser ? (

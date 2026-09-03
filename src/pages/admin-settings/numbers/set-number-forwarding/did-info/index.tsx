@@ -50,6 +50,7 @@ const DIDInfo: FC<DidInfoProps> = ({
             <div className="flex w-full gap-1 relative">
               <Input
                 label="Name"
+                required
                 placeholder="Enter name"
                 {...register('did_info.did_name')}
                 error={(errors?.did_info as any)?.did_name?.message}
@@ -58,6 +59,7 @@ const DIDInfo: FC<DidInfoProps> = ({
             <div className="flex w-full gap-1 relative">
               <CustomSelect
                 label={'Site'}
+                required
                 options={dataSiteList.map((site: { name: string; uuid: string }) => ({
                   label: site?.name,
                   value: site?.uuid,

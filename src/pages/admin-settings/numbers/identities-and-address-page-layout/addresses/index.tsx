@@ -186,7 +186,6 @@ const Addresses = ({ search }: { search: string }) => {
     addressProofs?: any;
     rest?: object;
   }) => {
-    // console.log(requirements_country, requirements_type, number_type);
     const payload = {
       ...rest,
       identity_id: rowData?.isEdit ? rowData?.formData?.identity_id : rowData?.formData?.id,

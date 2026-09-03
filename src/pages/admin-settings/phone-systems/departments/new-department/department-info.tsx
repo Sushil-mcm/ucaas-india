@@ -48,6 +48,7 @@ const DepartmentInfo = ({
                 <Input
                   {...register(`name`)}
                   label="Name"
+                  required
                   placeholder="Enter department name"
                   error={errors?.name?.message}
                   maxLength={50}
@@ -56,6 +57,7 @@ const DepartmentInfo = ({
               <div className="relative flex w-full gap-1 md:w-1/2">
                 <CustomSelect
                   label="Location"
+                  required
                   options={dataSiteList?.map((site: any) => ({
                     label: site?.name,
                     value: site?.uuid,
@@ -92,6 +94,7 @@ const DepartmentInfo = ({
                 <div className="flex w-full items-end gap-2">
                   <Input
                     label={'Extension'}
+                    required
                     placeholder="Enter extension"
                     type="number"
                     min={0}
@@ -121,6 +124,7 @@ const DepartmentInfo = ({
                 <div className="relative flex w-full gap-1 sm:max-w-[320px]">
                   <CustomSelect
                     label="Member Ring Timeout (Sec)"
+                    required
                     options={getDepartmentTimeoutOptions(
                       companyDefaults?.settings,
                       watch('timeout'),

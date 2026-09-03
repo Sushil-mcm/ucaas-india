@@ -44,6 +44,7 @@ import { canUseOmniChannel, getAllowedOmniChannels } from './omni-permissions';
 import useDebounce from '@/hooks/use-debounce';
 import { useLoadMoreUsersObserver, useMessengerUsers } from './hooks/use-messenger-users';
 import '@/components/mcm/mcm-page.css';
+import '@/styles/warm-glass.css';
 
 type ChannelType = keyof typeof CHANNELS_ICON;
 
@@ -265,7 +266,7 @@ const NotificationBadge = ({
 
   return (
     <>
-      {isMuted && <BellOff className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
+      {isMuted && <BellOff className="w-3.5 h-3.5 text-[#9A948F] shrink-0" />}
       {count > 0 && (
         <span className="bg-primary min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-white text-[11px]">
           {count > 99 ? '99+' : count}
@@ -362,7 +363,7 @@ const ListItem = ({
   // Handle available user case
   if (chat?.isAvailableUser) {
     return (
-      <div className="flex hover:bg-gray cursor-pointer" onClick={() => onChatSelect(chat)}>
+      <div className="flex hover:bg-[#FBE2C8]/40 cursor-pointer" onClick={() => onChatSelect(chat)}>
         <div className="flex items-center w-full px-3 h-16 gap-2">
           <div className="relative">
             <CustomAvatar
@@ -375,8 +376,8 @@ const ListItem = ({
           <div className="flex flex-col justify-between text-sm w-[calc(100%_-_3rem)] gap-1">
             <div className="flex justify-between gap-2">
               <div className="flex items-center gap-1 w-full ">
-                <LucideUser className="w-4 min-w-4 h-4 text-gray-700" />
-                <p className="text-gray-900 truncate font-medium">
+                <LucideUser className="w-4 min-w-4 h-4 text-[#9A948F]" />
+                <p className="text-[#2E2D35] truncate font-medium">
                   {otherUserData?.first_name}&nbsp;
                   {otherUserData?.last_name}
                 </p>
@@ -451,8 +452,8 @@ const ListItem = ({
     >
       <div className="w-full flex flex-col gap-1 ">
         <div
-          className={`flex justify-between w-full items-center pl-3 pr-2 min-h-[60px] group relative  transition-all border-b border-gray-200 duration-200 
-             ${isChatOpened ? 'bg-gray-100  ' : 'bg-transparent hover:bg-gray-100 '}`}
+          className={`flex justify-between w-full items-center pl-3 pr-2 min-h-[60px] group relative  transition-all border-b border-[#EEE7DD] duration-200
+             ${isChatOpened ? 'bg-[#FBE2C8]/40  ' : 'bg-transparent hover:bg-[#FBE2C8]/40 '}`}
         >
           <div className="flex w-full min-w-0 items-center gap-2">
             <div className="text-xs font-medium flex items-center gap-1">
@@ -476,10 +477,10 @@ const ListItem = ({
                 <NotificationBadge count={unreadMsgCount} isMuted={isMuted} />
               </div>
               {isOwnChat ? (
-                <div className="text-gray-500 italic">(You)</div>
+                <div className="text-[#9A948F] italic">(You)</div>
               ) : (
                 <div
-                  className={`truncate text-xs ${isTyping ? 'text-primary' : shouldShowDraftPreview ? 'text-amber-600 font-medium' : 'text-gray-500'}`}
+                  className={`truncate text-xs ${isTyping ? 'text-primary' : shouldShowDraftPreview ? 'text-amber-600 font-medium' : 'text-[#9A948F]'}`}
                 >
                   {isTyping
                     ? typingText
@@ -498,24 +499,24 @@ const ListItem = ({
                   className="focus:outline-none"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="min-w-6 max-h-10 max-w-6 cursor-pointer invisible flex items-center justify-end group-hover:visible group-focus-within:flex text-gray-500">
+                  <div className="min-w-6 max-h-10 max-w-6 cursor-pointer invisible flex items-center justify-end group-hover:visible group-focus-within:flex text-[#9A948F]">
                     <EllipsisVertical width={18} height={18} />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white rounded-lg shadow-lg border border-gray-200 p-1 min-w-[200px]">
+                <DropdownMenuContent className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg shadow-lg border border-[rgba(225,200,165,0.9)] p-1 min-w-[200px]">
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-gray-50"
+                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleUnread({ chatId: chat?.chatId, type: 'read' }, true);
                     }}
                   >
-                    {/* <LetterOpenedLine className="text-gray-900 w-4 h-4" /> */}
-                    <LetterOpenedLine className="w-3.5 h-3.5 text-gray-600" />
-                    <span className="text-gray-700">Mark as read</span>
+                    {/* <LetterOpenedLine className="text-[#2E2D35] w-4 h-4" /> */}
+                    <LetterOpenedLine className="w-3.5 h-3.5 text-[#9A948F]" />
+                    <span className="text-[#2E2D35]">Mark as read</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-gray-50"
+                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(chat);
@@ -523,18 +524,18 @@ const ListItem = ({
                   >
                     {isFavorited ? (
                       <>
-                        <StarOff className="w-3.5 h-3.5 text-gray-600" />
-                        <span className="text-gray-700">Remove from favorites</span>
+                        <StarOff className="w-3.5 h-3.5 text-[#9A948F]" />
+                        <span className="text-[#2E2D35]">Remove from favorites</span>
                       </>
                     ) : (
                       <>
-                        <Star className="w-3.5 h-3.5 text-gray-600" />
-                        <span className="text-gray-700">Add to favorites</span>
+                        <Star className="w-3.5 h-3.5 text-[#9A948F]" />
+                        <span className="text-[#2E2D35]">Add to favorites</span>
                       </>
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-gray-50"
+                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
                     onClick={(e) => {
                       e.stopPropagation();
                       togglePinConversation(chat);
@@ -542,20 +543,20 @@ const ListItem = ({
                   >
                     {isConversationPinned ? (
                       <>
-                        <PinOff className="w-3.5 h-3.5 text-gray-600" />
-                        <span className="text-gray-700">Unpin conversation</span>
+                        <PinOff className="w-3.5 h-3.5 text-[#9A948F]" />
+                        <span className="text-[#2E2D35]">Unpin conversation</span>
                       </>
                     ) : (
                       <>
-                        <Pin className="w-3.5 h-3.5 text-gray-600" />
-                        <span className="text-gray-700">Pin conversation</span>
+                        <Pin className="w-3.5 h-3.5 text-[#9A948F]" />
+                        <span className="text-[#2E2D35]">Pin conversation</span>
                       </>
                     )}
                   </DropdownMenuItem>
 
                   {!isOwnChat && (
                     <DropdownMenuItem
-                      className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-gray-50"
+                      className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleMute(chat);
@@ -563,13 +564,13 @@ const ListItem = ({
                     >
                       {isMuted ? (
                         <>
-                          <Bell className="w-3.5 h-3.5 text-gray-600" />
-                          <span className="text-gray-700">Unmute conversation</span>
+                          <Bell className="w-3.5 h-3.5 text-[#9A948F]" />
+                          <span className="text-[#2E2D35]">Unmute conversation</span>
                         </>
                       ) : (
                         <>
-                          <BellOff className="w-3.5 h-3.5 text-gray-600" />
-                          <span className="text-gray-700">Mute conversation</span>
+                          <BellOff className="w-3.5 h-3.5 text-[#9A948F]" />
+                          <span className="text-[#2E2D35]">Mute conversation</span>
                         </>
                       )}
                     </DropdownMenuItem>
@@ -579,7 +580,7 @@ const ListItem = ({
             )}
 
             {(chat?.lastMessage?.createdAt || chat?.metaData?.lastMessageTimeStamp) && (
-              <div className="text-xs whitespace-nowrap text-gray-500">
+              <div className="text-xs whitespace-nowrap text-[#9A948F]">
                 {getSimpleDateString(
                   chat?.lastMessage?.createdAt || chat?.metaData?.lastMessageTimeStamp,
                 )}
@@ -1071,7 +1072,7 @@ const SidebarContent = ({
 
   return (
     <div className="w-full h-full min-h-0 bg-white flex flex-col">
-      <div className="min-h-16 flex items-center px-3 sm:px-4 justify-between border-b border-gray-200">
+      <div className="min-h-16 flex items-center px-3 sm:px-4 justify-between border-b border-[#EEE7DD]">
         <div className="flex gap-3 w-full">
           {searchOpen ? (
             <div className="w-full h-full flex items-center justify-between gap-2">
@@ -1083,7 +1084,7 @@ const SidebarContent = ({
                 className="border-none min-h-14 h-full w-full focus-visible:ring-0 px-0"
               />
               <button
-                className="flex cursor-pointer text-gray-700"
+                className="flex cursor-pointer text-[#2E2D35]"
                 onClick={() => {
                   setSearchOpen(false);
                   setSearchQuery('');
@@ -1095,7 +1096,7 @@ const SidebarContent = ({
             </div>
           ) : (
             <div className="flex items-center justify-between gap-2 w-full">
-              <div className="text-xl font-semibold w-full min-w-0 truncate text-gray-900">
+              <div className="text-xl font-semibold w-full min-w-0 truncate text-[#2E2D35]">
                 {pageTitle}
               </div>
               {!isAgentChat ? (
@@ -1104,7 +1105,7 @@ const SidebarContent = ({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white"
+                          className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
                           aria-label="Add"
                         >
                           <Plus width={18} height={18} />
@@ -1118,7 +1119,7 @@ const SidebarContent = ({
                               setShowCreateChatModal('direct');
                             }}
                           >
-                            <UserLine className="text-gray-900 w-8 h-8" /> Direct Message
+                            <UserLine className="text-[#2E2D35] w-8 h-8" /> Direct Message
                           </DropdownMenuItem>
                         )}
                         {chatAccess?.access?.TEAM_MESSAGE && (
@@ -1128,7 +1129,7 @@ const SidebarContent = ({
                               setShowCreateChatModal('team');
                             }}
                           >
-                            <UsersGroupLine className="text-gray-900 w-8 h-8" />
+                            <UsersGroupLine className="text-[#2E2D35] w-8 h-8" />
                             Create New Team
                           </DropdownMenuItem>
                         )}
@@ -1136,7 +1137,7 @@ const SidebarContent = ({
                     </DropdownMenu>
                   ) : (
                     <button
-                      className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-gray-100 text-gray-700 hover:bg-primary hover:text-white"
+                      className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
                       aria-label="Add"
                     >
                       <Plus width={18} height={18} />
@@ -1144,7 +1145,7 @@ const SidebarContent = ({
                   )}
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <div className="cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white">
+                      <div className="cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
                         <FilterIcon className="w-6 h-6" />
                       </div>
                     </DropdownMenuTrigger>
@@ -1186,7 +1187,7 @@ const SidebarContent = ({
       </div>
 
       {!isAgentChat ? (
-        <div className="border-b border-gray-200 px-2">
+        <div className="border-b border-[#EEE7DD] px-2">
           <div className="flex min-h-10 items-center gap-2 overflow-x-auto">
             {tabOptions.map((tab) => (
               <button
@@ -1194,7 +1195,7 @@ const SidebarContent = ({
                 className={`px-2 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                   activeTab === tab.value
                     ? 'text-primary border-primary'
-                    : 'text-gray-700 border-transparent hover:text-primary'
+                    : 'text-[#2E2D35] border-transparent hover:text-primary'
                 }`}
                 onClick={() => {
                   setActiveTab(tab.value);
@@ -1215,7 +1216,7 @@ const SidebarContent = ({
 
       <div className="px-3 py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100">
         <Input
-          Icon={<SearchLine className="text-gray-500" />}
+          Icon={<SearchLine className="text-[#9A948F]" />}
           IconPosition="left-0 pl-3 inset-y-0"
           className="pl-9"
           value={searchQuery}
@@ -1225,7 +1226,7 @@ const SidebarContent = ({
         {!isAgentChat ? (
           <div className="w-full sm:min-w-28 sm:w-28">
             <select
-              className="border border-gray-300 rounded-xl px-3 min-h-10 text-sm w-full text-gray-700 bg-white"
+              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as MessageStatus)}
             >
@@ -1245,10 +1246,10 @@ const SidebarContent = ({
                   <MessageSquareIcon className="h-9 w-9 text-primary" />
                 </div>
 
-                <div className="text-lg font-semibold text-gray-800">
+                <div className="text-lg font-semibold text-[#2E2D35]">
                   {isAgentChat ? 'No chats available' : 'Create a new chat'}
                 </div>
-                <div className="text-gray-500 mt-2 text-sm">
+                <div className="text-[#9A948F] mt-2 text-sm">
                   {isAgentChat
                     ? 'Chats will appear here once they are available.'
                     : 'Click on the plus icon to create a new chat'}
@@ -1263,7 +1264,7 @@ const SidebarContent = ({
               return (
                 <div key={group?.label} className="w-full">
                   {group?.label && !isAgentChat ? (
-                    <div className="text-xs uppercase tracking-wider font-medium text-gray-500 flex gap-2 py-0 items-center bg-transparent min-h-9 justify-start max-h-9 px-2">
+                    <div className="text-xs uppercase tracking-wider font-medium text-[#9A948F] flex gap-2 py-0 items-center bg-transparent min-h-9 justify-start max-h-9 px-2">
                       {group?.label}
                     </div>
                   ) : null}
@@ -1456,13 +1457,13 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
   };
 
   return (
-    <div className="mcm-page mcm-admin">
+    <div className="mcm-page mcm-admin mcm-warm-glass">
       <div className="w-full h-full min-h-0 flex overflow-hidden bg-white">
         {chatType === 'chat' ? (
           <>
             <section
               className={cn(
-                'h-full min-h-0 border-r border-gray-200 bg-white lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]',
+                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]',
                 activeChatId ? 'hidden lg:block' : 'w-full',
               )}
             >
@@ -1492,7 +1493,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
           <>
             <section
               className={cn(
-                'h-full min-h-0 border-r border-gray-200 bg-white lg:max-w-[19rem] lg:min-w-[19rem] xl:max-w-[22rem] xl:min-w-[22rem]',
+                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:max-w-[19rem] lg:min-w-[19rem] xl:max-w-[22rem] xl:min-w-[22rem]',
                 selectedChat ? 'hidden lg:block' : 'block w-full',
               )}
             >

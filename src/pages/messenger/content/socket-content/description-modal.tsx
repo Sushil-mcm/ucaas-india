@@ -837,7 +837,7 @@ const DescriptionModal = ({
           onValueChange={(value) => setActiveTab(value as InfoTab)}
           className="min-h-full w-full gap-0"
         >
-          <div className="shrink-0 border-b border-gray-200 bg-white">
+          <div className="shrink-0 border-b border-[rgba(225,200,165,0.9)] bg-white">
             <div className="relative flex flex-col items-center px-4 pb-4 pt-5 text-center">
               <input
                 ref={fileInputRef}
@@ -948,14 +948,14 @@ const DescriptionModal = ({
                 <HeaderActionButton
                   label="Video"
                   icon={<Video className="h-5 w-5" />}
-                  iconClassName="bg-blue-100 text-blue-500"
+                  iconClassName="bg-orange-100 text-orange-500"
                   onClick={() => handleStartInfoCall('video')}
                 />
                 {selectedChat?.isGroupChat || selectedChat?.groupType === 'CHANNEL' ? (
                   <HeaderActionButton
                     label="Add"
                     icon={<UserPlus className="h-5 w-5" />}
-                    iconClassName="bg-slate-100 text-blue-500"
+                    iconClassName="bg-slate-100 text-orange-500"
                     onClick={() => setActiveState('members')}
                   />
                 ) : null}
@@ -1233,8 +1233,8 @@ const ViewToggle = ({
           aria-label={option.label}
           onClick={() => onChange(option.value)}
           className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-blue-50 hover:text-primary',
-            value === option.value && 'bg-blue-50 text-primary ring-1 ring-blue-100',
+            'flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-orange-50 hover:text-primary',
+            value === option.value && 'bg-orange-50 text-primary ring-1 ring-orange-100',
           )}
         >
           {option.icon}
@@ -1543,11 +1543,11 @@ const LinksTab = ({
                       rel="noopener noreferrer"
                       className="flex min-h-14 items-center gap-3 border-b border-slate-100 px-3 py-2 transition-colors hover:bg-slate-50"
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-500">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
                         <Link2 className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold text-blue-500">
+                        <span className="block truncate text-xs font-semibold text-orange-500">
                           {item.url}
                         </span>
                         <span className="mt-0.5 block truncate text-xs font-medium text-slate-400">
@@ -1771,7 +1771,7 @@ const MembersTab = ({
                     className={cn(
                       'shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase',
                       isCreatorAdmin
-                        ? 'bg-blue-50 text-blue-500 ring-1 ring-blue-100'
+                        ? 'bg-orange-50 text-orange-500 ring-1 ring-orange-100'
                         : 'bg-emerald-50 text-emerald-500 ring-1 ring-emerald-100',
                     )}
                   >
@@ -1782,7 +1782,7 @@ const MembersTab = ({
                 {!isMe ? (
                   <button
                     type="button"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-blue-500 transition-colors hover:bg-blue-50"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-orange-500 transition-colors hover:bg-orange-50"
                     onClick={() => onDirectChat(member)}
                     title="Direct message"
                   >
@@ -1845,7 +1845,7 @@ const FileIconBadge = ({ item }: { item: InfoAttachment }) => {
       ) : (
         <File className="h-5 w-5" />
       ),
-      className: 'bg-blue-50 text-blue-500',
+      className: 'bg-orange-50 text-orange-500',
     };
   })();
 

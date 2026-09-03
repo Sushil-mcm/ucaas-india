@@ -1,0 +1,383 @@
+/* ============================================================
+   Performance › Campaigns — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-campaigns`, the tab's own root element, the same way
+   `callbacks-theme.css` scopes to `.perf-callbacks`. The embedded
+   `<Campaign />` component (src/pages/auto-dialer/campaign) renders its OWN
+   nested `.mcm-page.cmp` panel inside this tab — it is also used stand­alone
+   at `/campaign` for the dialer team, so nothing here reaches its classes
+   through anything but a `.perf-campaigns` ancestor, and the standalone
+   route (no `.perf-campaigns` wrapper there) is untouched.
+
+   The ambient gradient is painted on `.perf-campaigns` itself rather than
+   through the generic `body.perf-warm-backdrop .mcm-page` rule in
+   live-theme.css: the embedded `<Campaign />` panel carries its own nested
+   `.mcm-page` (deliberately `background: transparent` while embedded, see
+   `.cmp.embedded` in campaign.css), and that rule's selector specificity
+   would have painted a second, misaligned copy of the gradient directly
+   onto that panel instead of letting it show the page's gradient through.
+   ============================================================ */
+
+.perf-campaigns {
+  --ca-accent: #f97316;
+  --ca-accent-ink: #ea580c;
+  --ca-wash: #fff1eb;
+  --ca-muted: #666666;
+  --ca-ink: #1a1a1a;
+
+  --ca-glass: rgba(255, 255, 255, 0.85);
+  --ca-glass-border: rgba(255, 255, 255, 0.95);
+  --ca-glass-blur: blur(20px) saturate(190%);
+  --ca-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-campaigns {
+  --ca-wash: #2a1710;
+  --ca-muted: #93a1ba;
+  --ca-ink: #f4f6fb;
+  --ca-glass: rgba(17, 24, 39, 0.72);
+  --ca-glass-border: rgba(251, 146, 60, 0.18);
+  --ca-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* `--warn` (the design system's generic "warning" token) is what
+   `OutcomeBar`/`OutcomeLegend` paint the "No answer" segment with — an
+   amber-orange close enough in hue to this view's own brand orange that it
+   read as a second, off-tone copy of the accent rather than a distinct
+   status colour. Slate and gold were both tried and pulled back — slate
+   fought the all-warm palette, gold still read as an orange variant.
+   Settled on a plain neutral blue: far enough from orange, teal (Answered)
+   and red (DNC) in hue to read as its own clearly separate status.
+   Redeclared on `.cmp` too: the embedded `<Campaign />` panel carries its
+   own nested `.mcm-page`, which redefines `--warn` again on itself, so
+   setting it only on `.perf-campaigns` would be overridden right back by
+   that closer redeclaration. */
+.perf-campaigns,
+.perf-campaigns .cmp {
+  --warn: #3b82f6;
+  --warn-wash: #dbeafe;
+}
+.dark .perf-campaigns,
+.dark .perf-campaigns .cmp {
+  --warn: #60a5fa;
+  --warn-wash: #1e3a5f;
+}
+
+/* Ambient backdrop — see header note on why this paints here and not via
+   the shared `body.perf-warm-backdrop .mcm-page` rule. */
+body.perf-warm-backdrop .perf-campaigns {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
+    #fdf6ee;
+}
+.dark body.perf-warm-backdrop .perf-campaigns {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
+    #0a0f1a;
+}
+
+/* ------------------------------------------------------------
+   1. Metric summary cards (Performance's own stat grid — the embedded
+   Campaign component's KPI strip is hidden while embedded, so this is the
+   only stat row on screen)
+   ------------------------------------------------------------ */
+.perf-campaigns .stat {
+  background: var(--ca-glass);
+  backdrop-filter: var(--ca-glass-blur);
+  -webkit-backdrop-filter: var(--ca-glass-blur);
+  border: 1px solid var(--ca-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--ca-glass-shadow);
+}
+.perf-campaigns .stat .k {
+  color: var(--ca-muted);
+  letter-spacing: 0.1em;
+}
+.perf-campaigns .stat .v {
+  color: var(--ca-ink);
+  font-weight: 800;
+}
+.perf-campaigns .stat .d {
+  color: var(--ca-muted) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   2. Filter toolbar — search box and status/dial-mode pills
+   ------------------------------------------------------------ */
+/* The plain 70%-white/faint-border version blended straight into the warm
+   page gradient behind it — barely readable as an input at all, let alone
+   one you could tell was empty vs. focused. Opaque background, a border
+   with actual contrast, and dark/muted text so it reads as a real field. */
+.perf-campaigns .cmp-search input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: var(--ca-glass-blur);
+  -webkit-backdrop-filter: var(--ca-glass-blur);
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+  box-shadow: 0 1px 2px rgba(60, 40, 30, 0.05);
+  color: var(--ca-ink) !important;
+}
+.dark .perf-campaigns .cmp-search input {
+  background: rgba(17, 24, 39, 0.7) !important;
+  border-color: rgba(251, 146, 60, 0.28) !important;
+  color: var(--ca-ink) !important;
+}
+.perf-campaigns .cmp-search input::placeholder {
+  color: var(--ca-muted) !important;
+}
+.perf-campaigns .cmp-search .ic {
+  color: var(--ca-accent-ink) !important;
+  opacity: 0.7;
+}
+.perf-campaigns .cmp-search input:focus {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.perf-campaigns .fchip {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(249, 115, 22, 0.15);
+  color: #64748b;
+  font-weight: 600;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+.perf-campaigns .fchip:hover {
+  background: rgba(255, 241, 235, 0.75);
+  color: var(--ca-accent-ink);
+  border-color: rgba(249, 115, 22, 0.25);
+}
+.perf-campaigns .fchip.on {
+  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%);
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 4px 14px -2px rgba(249, 115, 22, 0.25);
+  color: var(--ca-accent-ink);
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------
+   3. Campaigns data table — container, header, rows
+   ------------------------------------------------------------ */
+.perf-campaigns .panel-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: var(--ca-glass-shadow);
+}
+.dark .perf-campaigns .panel-card {
+  background: rgba(17, 24, 39, 0.75);
+  border-color: rgba(251, 146, 60, 0.18);
+}
+
+.perf-campaigns .table-scroll {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.perf-campaigns .table-scroll thead {
+  background: rgba(255, 246, 238, 0.97);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+}
+.dark .perf-campaigns .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-campaigns .table-scroll thead th {
+  color: var(--ca-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+}
+.perf-campaigns .table-scroll tbody tr {
+  background: transparent;
+  transition: background-color 0.16s ease;
+}
+.perf-campaigns .table-scroll tbody tr:hover,
+.perf-campaigns .table-scroll tbody tr.rowlink:hover {
+  background: rgba(255, 241, 235, 0.5);
+}
+.perf-campaigns .table-scroll tbody td {
+  color: #334155;
+}
+.dark .perf-campaigns .table-scroll tbody td {
+  color: var(--ca-muted);
+}
+
+/* Empty state — dark charcoal title over the frosted panel. */
+.perf-campaigns .panel-card .text-gray-900 {
+  color: var(--ca-ink);
+}
+.perf-campaigns .panel-card .text-gray-700 {
+  color: var(--ca-muted);
+}
+
+/* pc-head / pc-foot sit directly on the now-glass panel-card, so their own
+   background goes transparent rather than double-painting a surface. */
+.perf-campaigns .pc-head,
+.perf-campaigns .pc-foot {
+  background: transparent;
+  border-color: rgba(249, 115, 22, 0.12);
+}
+.perf-campaigns .pc-head h3 {
+  color: var(--ca-ink);
+}
+
+/* The "live" provenance chip (`.src.live` in mcm-page.css) reads its colour
+   off `--live`/`--live-wash` — a teal pulled from the design system's own
+   status palette, unrelated to this view's orange. Sitting in the corner of
+   an otherwise all-warm header, it looked like a stray mismatched sticker
+   rather than part of the page. Restyled as the same glass "live" pill the
+   Performance toolbar uses elsewhere on this view: a pulsing green dot
+   (the semantic "this is live" signal, kept) on a neutral glass chip
+   instead of a solid teal block. */
+.perf-campaigns .pc-head .src.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.dark .perf-campaigns .pc-head .src.live {
+  background: rgba(17, 24, 39, 0.5);
+  color: var(--ca-muted);
+}
+.perf-campaigns .pc-head .src.live svg {
+  display: none;
+}
+.perf-campaigns .pc-head .src.live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.28);
+  animation: perf-campaigns-live-pulse 2s ease-out infinite;
+}
+@keyframes perf-campaigns-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.28);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .perf-campaigns .pc-head .src.live::before {
+    animation: none;
+  }
+}
+
+/* Contact outcomes bar — the same warm-glass capsule + gradient-segment
+   treatment as Speech & Text's sentiment distribution bar
+   (`.hbar-t i:only-child` in speech-theme.css), so the two read as one
+   system rather than two different progress-bar styles. The flat
+   `--live`/`--warn`/`--crit` fills read fine on their own but flat next to
+   an otherwise all-gradient page — `!important` because `OutcomeBar` (a
+   component shared with the standalone dialer) still paints them inline
+   via CSS variables, which this file can't reach any other way, the same
+   trick used for the topic Volume bars on Speech & Text. */
+.perf-campaigns .segbar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 2px 0 rgba(60, 40, 30, 0.08);
+}
+.dark .perf-campaigns .segbar {
+  background: rgba(251, 146, 60, 0.14);
+  border-color: rgba(251, 146, 60, 0.16);
+}
+.perf-campaigns .segbar i.ans {
+  background: linear-gradient(90deg, #34d399 0%, #059669 100%) !important;
+}
+.perf-campaigns .segbar i.na {
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+.perf-campaigns .segbar i.dnc {
+  background: linear-gradient(90deg, #fb7185 0%, #e11d48 100%) !important;
+}
+
+/* Legend dots (OutcomeLegend, in the table's pc-foot) — gradient swatches
+   to match the bar they describe, in the same order the legend renders:
+   Answered, No answer, DNC/blocked, Pending. Pending stays flat: it is the
+   bar's empty track colour, not a painted segment, so a gradient there
+   would describe a segment that doesn't exist. */
+.perf-campaigns .legend:nth-of-type(1) .swatch {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+}
+.perf-campaigns .legend:nth-of-type(2) .swatch {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+.perf-campaigns .legend:nth-of-type(3) .swatch {
+  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+}
+
+/* Row action buttons (`.mini.ic` — e.g. "Refresh analytics") default to a
+   flat white/gray chip with a violet hover (`--ai-edge`/`--ai-ink`, the
+   design system's AI accent) — both mismatched here. Warm glass circle to
+   match every other row action on this view (Live's monitor buttons,
+   Callbacks' Play button). */
+.perf-campaigns .mini.ic {
+  width: 26px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--ca-accent-ink);
+  box-shadow: 0 1px 2px rgba(249, 115, 22, 0.06);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+.perf-campaigns .mini.ic:hover {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: transparent;
+  color: #fff;
+}
+.perf-campaigns .mini.ic:disabled {
+  opacity: 0.55;
+}
+
+/* Pagination footer's own refresh button (table-manager.tsx) carries its
+   own cream/tan pill as Tailwind arbitrary-value classes, which the design
+   system's `.mcm-page button:not([data-slot='tabs-trigger'])` reset strips
+   anyway — same mcm-page button-reset fight fixed elsewhere in this theme.
+   The outer bar (a `<div>`) is untouched by that reset already. */
+.perf-campaigns button[class*='backdrop-blur'] {
+  background: rgba(251, 249, 246, 0.88) !important;
+  border: 1px solid rgba(225, 200, 165, 0.9) !important;
+}
+
+/* The pager group (« ‹ 1 › ») is intentionally left at its global default
+   (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
+   page — per explicit request to match that look exactly rather than
+   re-theming it warm like the rest of this page. */

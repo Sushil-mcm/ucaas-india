@@ -6,11 +6,19 @@ import { handleDate } from './constant';
 import CustomSelect from '../custom-select';
 import { Button } from '@/components/ui/button';
 import useMediaQuery from '@/hooks/use-media-query';
+import './date-picker-theme.css';
+
+/* The closed pill shows this instead of the full option label — "Last 30
+   Days" becomes "30 Days" — for callers tight on horizontal space (the
+   phone console's calls-tabs-row). The open menu is unaffected: it always
+   lists the full label. */
+const shortenDateLabel = (label: string) => String(label || '').replace(/^Last\s+/i, '');
 
 const DateDropdown = ({
   dropdownVal,
   setDropdownVal = () => {},
   customPickerPlacement = 'inline',
+  shortenSelectedLabel = false,
 }: any) => {
   const isCompact = useMediaQuery('(max-width: 767px)');
   const showCustomPickerBelow = customPickerPlacement === 'bottom';
@@ -55,13 +63,22 @@ const DateDropdown = ({
           handleChange={(selectedOption) => {
             updateDateState(selectedOption?.value);
           }}
+          FormatOptionLabel={
+            shortenSelectedLabel
+              ? ({ option, context }: any) => (
+                  <span>
+                    {context === 'value' ? shortenDateLabel(option?.label) : option?.label}
+                  </span>
+                )
+              : null
+          }
         />
       </div>
       {date_type && date_type === 'Custom' ? (
         <div
           className={
             showCustomPickerBelow
-              ? 'absolute right-0 top-full z-50 mt-2 flex w-72 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg'
+              ? 'absolute right-0 top-full z-50 mt-2 flex w-72 max-w-[calc(100vw-2rem)] items-center gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2 shadow-lg'
               : 'flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap'
           }
         >
@@ -81,7 +98,7 @@ const DateDropdown = ({
                 startDate={dateRange.from ? new Date(dateRange.from) : undefined}
                 endDate={dateRange.to ? new Date(dateRange.to) : undefined}
                 monthsShown={isCompact ? 1 : 2}
-                className="h-9 min-h-9 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 pr-8 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
+                className="h-9 min-h-9 w-full min-w-0 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 pr-8 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
                 showMonthDropdown
                 showYearDropdown
                 peekNextMonth
@@ -130,7 +147,7 @@ const DateDropdown = ({
                   to: date,
                 }));
               }}
-              className="h-9 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
+              className="h-9 w-full min-w-0 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
               showMonthDropdown
               showYearDropdown
               peekNextMonth
@@ -154,7 +171,7 @@ const DateDropdown = ({
                   to: newEndTime,
                 }));
               }}
-              className="h-9 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
+              className="h-9 w-full min-w-0 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
               showTimeSelect
               showTimeSelectOnly
               timeFormat="HH:mm"
@@ -171,7 +188,7 @@ const DateDropdown = ({
                   to: moment(time).format('HH:mm'),
                 }));
               }}
-              className="h-9 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
+              className="h-9 w-full min-w-0 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm shadow-none hover:border-primary focus:border-primary focus:outline-none"
               showTimeSelect
               showTimeSelectOnly
               timeFormat="HH:mm"

@@ -110,17 +110,17 @@ function AllKnowledgeBase() {
   // }, [rowData?.form]);
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex  flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
+      <div className="flex  flex-col sm:flex-row items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         <div className="flex gap-2 items-center cursor-pointer" onClick={handleBackNavigation}>
           <ArrowLeft className="w-6 h-5" />
-          <h3 className="font-semibold text-gray-900">Add Knowledge Base</h3>
+          <h3 className="font-semibold text-[#2E2D35]">Add Knowledge Base</h3>
         </div>
       </div>
       <div className="w-full p-3 flex flex-col items-center gap-3 overflow-y-auto">
         <div className="w-full h-[calc(100vh-2rem)] max-w-[90%] flex items-center justify-center flex-col gap-3">
-          <h4 className="text-gray-900 font-semibold text-2xl">Add Knowledge Base</h4>
-          <h5 className="text-gray-700 font-medium text-sm">
+          <h4 className="text-[#2E2D35] font-semibold text-2xl">Add Knowledge Base</h4>
+          <h5 className="text-[#2E2D35] font-medium text-sm">
             You can upload PDFs, create documents, or link web pages.
           </h5>
           <div
@@ -129,7 +129,7 @@ function AllKnowledgeBase() {
             }`}
           >
             <div
-              className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 min-h-56 cursor-pointer"
+              className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] min-h-56 cursor-pointer"
               onClick={() =>
                 setActions((prev) => ({
                   ...prev,
@@ -140,13 +140,13 @@ function AllKnowledgeBase() {
               <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                 <UploadLineIcon className="w-6 h-6" />
               </span>
-              <h4 className="text-gray-900 font-semibold text-md text-center">Upload PDF File</h4>
-              <p className="text-gray-500 font-normal text-sm text-center">
+              <h4 className="text-[#2E2D35] font-semibold text-md text-center">Upload PDF File</h4>
+              <p className="text-[#9A948F] font-normal text-sm text-center">
                 Directly upload your file with the required information.
               </p>
             </div>
             <div
-              className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 min-h-56 cursor-pointer"
+              className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] min-h-56 cursor-pointer"
               onClick={() =>
                 setActions((prev) => ({
                   ...prev,
@@ -157,13 +157,13 @@ function AllKnowledgeBase() {
               <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                 <FileBlankIcon className="w-6 h-6" />
               </span>
-              <h4 className="text-gray-900 font-semibold text-md text-center"> Create Content</h4>
-              <p className="text-gray-500 font-normal text-sm text-center">
+              <h4 className="text-[#2E2D35] font-semibold text-md text-center"> Create Content</h4>
+              <p className="text-[#9A948F] font-normal text-sm text-center">
                 Manually add the information to a blank document.
               </p>
             </div>
             <div
-              className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 min-h-56 cursor-pointer"
+              className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] min-h-56 cursor-pointer"
               onClick={() =>
                 setActions((prev) => ({
                   ...prev,
@@ -174,14 +174,14 @@ function AllKnowledgeBase() {
               <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                 <AttachLine className="w-6 h-6 rotate-45" />
               </span>
-              <h4 className="text-gray-900 font-semibold text-md text-center"> Get From URL</h4>
-              <p className="text-gray-500 font-normal text-sm text-center">
+              <h4 className="text-[#2E2D35] font-semibold text-md text-center"> Get From URL</h4>
+              <p className="text-[#9A948F] font-normal text-sm text-center">
                 Scan information from URL link to document or website.
               </p>
             </div>
             {!shouldHideAttachGlobalKnowledge && (
               <div
-                className="flex flex-col gap-3 items-center justify-center bg-white rounded-xl p-4 border border-gray-200 min-h-56 cursor-pointer"
+                className="flex flex-col gap-3 items-center justify-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-4 border border-[rgba(225,200,165,0.9)] min-h-56 cursor-pointer"
                 onClick={() =>
                   setActions((prev) => ({
                     ...prev,
@@ -192,10 +192,10 @@ function AllKnowledgeBase() {
                 <span className="p-1 w-12 h-12 flex items-center justify-center bg-ucass-primary-200 text-primary rounded-md">
                   <GlobeIcon className="w-6 h-6" />
                 </span>
-                <h4 className="text-gray-900 font-semibold text-md text-center">
+                <h4 className="text-[#2E2D35] font-semibold text-md text-center">
                   Attach Global Knowledge Base
                 </h4>
-                <p className="text-gray-500 font-normal text-sm text-center">
+                <p className="text-[#9A948F] font-normal text-sm text-center">
                   Connect predefined global knowledge sources to your agent.
                 </p>
               </div>

@@ -4,6 +4,7 @@ import { useUser } from '@/hooks/use-user';
 import TableManager from '@/components/custom/table-manager';
 import PerfStatCard from './stat-card';
 import { formatSecsToClock } from './format';
+import './speech-theme.css';
 
 /** Sentiment tone, on the shared status tokens rather than raw colours. */
 const toneColor = (value: number) =>
@@ -132,7 +133,7 @@ const SpeechTextTab = () => {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-4 px-[22px] py-4">
+    <div className="perf-speech flex w-full flex-col gap-4 px-[22px] pt-5 pb-32">
       <p className="page-note">
         Sentiment for AI receptionist / chatbot handled calls, sourced from the same live data as
         the AI Wallboard. Human-agent call sentiment isn't aggregated yet — see individual calls'
@@ -192,7 +193,7 @@ const SpeechTextTab = () => {
           <div className="k">Sentiment distribution</div>
           {sentimentBuckets.length ? (
             <>
-              <div className="hbar-t" style={{ display: 'flex', marginTop: 9 }}>
+              <div className="hbar-t" style={{ display: 'flex', gap: 2, marginTop: 9 }}>
                 {sentimentBuckets.map((bucket: any, index: number) => (
                   <i
                     key={bucket?.label || index}

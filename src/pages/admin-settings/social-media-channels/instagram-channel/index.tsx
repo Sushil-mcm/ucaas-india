@@ -57,7 +57,6 @@ const InstagramChannel = () => {
     channelList?.find((item: { name: string; type: string }) => item?.type === 'instagram');
 
   const isInstagramConnected = !!instagramData;
-  console.log(isInstagramConnected, 'isInstagramConnected', channelList, instagramData);
 
   const handleConnect = () => {
     connectMetaChannel('instagram', setLoading, user?.company_info?.uuid);

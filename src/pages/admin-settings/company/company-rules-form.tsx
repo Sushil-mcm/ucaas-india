@@ -129,7 +129,7 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
   const footer = (
     <div className="flex flex-col gap-3">
       {isRules && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700">
+        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700 mb-3">
           <p className="font-semibold text-gray-900 mb-1">How these settings are used</p>
           <p className="mb-1">
             These are what everybody at your company starts with. Each one has a{' '}
@@ -186,7 +186,7 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
         <form
           id="company-phone-rules-form"
           onSubmit={handleSubmit(onSubmit)}
-          className="mcm-page mcm-userform user-settings-template-form cs-section-form flex w-full flex-col"
+          className="mcm-page mcm-userform user-settings-template-form flex-1 min-h-0"
         >
           {isRules ? (
             <SettingPermission

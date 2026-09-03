@@ -64,8 +64,8 @@ const CaptainPlayground = () => {
     <div className="flex h-full w-full flex-col gap-5 p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-lg font-bold text-gray-950">Playground</div>
-          <div className="text-sm text-gray-500">Test your assistant live before deploying it.</div>
+          <div className="text-lg font-bold text-[#2E2D35]">Playground</div>
+          <div className="text-sm text-[#9A948F]">Test your assistant live before deploying it.</div>
         </div>
         <select
           value={assistantId}
@@ -73,7 +73,7 @@ const CaptainPlayground = () => {
             setAssistantId(e.target.value);
             setMessages([]);
           }}
-          className="min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+          className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
         >
           {assistants.map((a) => (
             <option key={a.id} value={a.id}>
@@ -89,10 +89,10 @@ const CaptainPlayground = () => {
 
       <div
         ref={scrollRef}
-        className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50/60 p-5"
+        className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-5"
       >
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-gray-400">
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-[#9A948F]">
             <Bot className="size-8 text-gray-300" />
             Send a message to start testing this assistant.
           </div>
@@ -109,7 +109,7 @@ const CaptainPlayground = () => {
                 className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm ${
                   m.role === 'user'
                     ? 'rounded-br-sm bg-primary text-white'
-                    : 'rounded-bl-sm border border-gray-100 bg-white text-gray-800'
+                    : 'rounded-bl-sm border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] text-[#2E2D35]'
                 }`}
               >
                 {m.content}
@@ -126,7 +126,7 @@ const CaptainPlayground = () => {
                     <span
                       key={s.id}
                       title={`Similarity ${s.score}`}
-                      className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-500"
+                      className="inline-flex items-center gap-1 rounded-full border border-[#EEE7DD] bg-white px-2.5 py-1 text-xs text-[#9A948F]"
                     >
                       <BookOpen className="size-3" />
                       {s.question}
@@ -136,7 +136,7 @@ const CaptainPlayground = () => {
               )}
             </div>
             {m.role === 'user' && (
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#F0DFC5] text-[#9A948F]">
                 <User className="size-4" />
               </div>
             )}
@@ -147,7 +147,7 @@ const CaptainPlayground = () => {
             <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Bot className="size-4" />
             </div>
-            <div className="rounded-2xl rounded-bl-sm border border-gray-100 bg-white px-3.5 py-2.5 text-sm text-gray-400 shadow-sm">
+            <div className="rounded-2xl rounded-bl-sm border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3.5 py-2.5 text-sm text-[#9A948F] shadow-sm">
               Typing...
             </div>
           </div>

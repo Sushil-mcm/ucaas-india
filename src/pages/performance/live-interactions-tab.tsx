@@ -9,6 +9,7 @@ import {
 import { STATE_TYPE_NAME } from '@/pages/monitoring/constants';
 import PerfStatCard from './stat-card';
 import Timer from '@/components/timer';
+import './live-theme.css';
 
 const LiveInteractionsTab = () => {
   const { liveCalls, eventLiveCallsData } = useSocketEvents();
@@ -48,8 +49,8 @@ const LiveInteractionsTab = () => {
   );
 
   return (
-    <div className="flex w-full flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+    <div className="perf-live flex w-full flex-col gap-4 px-[22px] py-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <PerfStatCard label="Total live calls" value={String(activeCalls.length)} />
         <PerfStatCard
           label="By state"

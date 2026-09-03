@@ -105,11 +105,11 @@ const CompanySettingsCard = () => {
   const hasDefaults = Boolean(data?.uuid);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-semibold text-gray-900">Company phone rules</p>
-          <p className="mt-0.5 text-xs text-gray-600">
+          <p className="text-base font-semibold text-[#2E2D35]">Company phone rules</p>
+          <p className="mt-0.5 text-xs text-[#9A948F]">
             The settings everyone at your company starts with, and which of them a person may change
             on their own phone.
           </p>
@@ -121,11 +121,11 @@ const CompanySettingsCard = () => {
       </div>
 
       {isLoading ? (
-        <p className="mt-3 text-sm text-gray-500">Loading…</p>
+        <p className="mt-3 text-sm text-[#9A948F]">Loading…</p>
       ) : !hasDefaults ? (
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-semibold text-gray-900">No company rules set yet</p>
-          <p className="mt-0.5 text-xs text-gray-700">
+          <p className="text-xs font-semibold text-[#2E2D35]">No company rules set yet</p>
+          <p className="mt-0.5 text-xs text-[#2E2D35]">
             Without them, each person is set up individually and nothing is applied consistently.
           </p>
         </div>
@@ -134,13 +134,13 @@ const CompanySettingsCard = () => {
           {rows.map((row) => (
             <div
               key={row.label}
-              className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3"
+              className="flex items-start justify-between gap-3 rounded-lg border border-[#EEE7DD] p-3"
             >
               <div className="flex min-w-0 items-start gap-2">
                 <span className="mt-0.5 text-primary">{row.icon}</span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-500">{row.label}</p>
-                  <p className="text-sm font-medium text-gray-900">{row.value}</p>
+                  <p className="text-xs font-semibold text-[#9A948F]">{row.label}</p>
+                  <p className="text-sm font-medium text-[#2E2D35]">{row.value}</p>
                 </div>
               </div>
               {/* Whether staff may override is the half admins forget, so it is
@@ -148,7 +148,7 @@ const CompanySettingsCard = () => {
               <span
                 className={`shrink-0 rounded-sm px-1.5 py-0.5 text-[11px] font-semibold ${
                   row.staffMayChange
-                    ? 'bg-gray-100 text-gray-600'
+                    ? 'bg-[#FBE2C8]/40 text-[#9A948F]'
                     : 'bg-ucass-primary-200 text-primary'
                 }`}
               >

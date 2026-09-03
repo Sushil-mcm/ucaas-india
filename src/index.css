@@ -1,15 +1,22 @@
+/* MCM Unified Console typeface pair. Plus Jakarta Sans for UI, IBM Plex
+   Mono for anything numeric — durations, counts, timestamps — so digits
+   stay tabular and stop jittering as they tick.
+
+   This must be the FIRST statement in the file. Every `@import` below is
+   inlined in place — Tailwind alone is ~13k lines — so a font import
+   placed after any of them lands deep in the bundle, where `@import` is
+   no longer legal. Postcss drops it and the fonts silently never load. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+
+
 /* Loaded once here rather than from each page. Every rule in it is scoped to
    an .mcm- class, so it changes nothing on pages that do not use them, and it
    means a shared class like .mcm-stickyfoot works wherever it is applied
    instead of only on the 31 files that happened to import the stylesheet. */
 @import './components/mcm/mcm-page.css';
 
-/* MCM Unified Console typeface pair. Plus Jakarta Sans for UI, IBM Plex
-   Mono for anything numeric — durations, counts, timestamps — so digits
-   stay tabular and stop jittering as they tick. */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @theme {
   --color-ucass-gray: oklch(0.9612 0 0);
@@ -173,8 +180,36 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  /* --primary: set dynamically from mainSiteInfo.primary_color (fallback below) */
-  --primary: oklch(0.18 0 0);
+  /* --primary is normally set dynamically from mainSiteInfo.primary_color
+     (an inline style on <html>, from the org's branding API). The
+     !important here is deliberate: it is the only way an author stylesheet
+     can outrank that inline style, so this orange sticks regardless of what
+     the org's API returns. */
+  --primary: #f2994a !important;
+  /* Same problem as --primary, but these tokens are declared inside
+     Tailwind's @theme block, which strips !important before it reaches the
+     generated stylesheet — so overriding them there did nothing against the
+     org API's inline blue (--color-ucass-primary-100/200 and
+     --color-ucass-active(-bg)/-login-bg are all set inline from
+     mainSiteInfo by organization-context.tsx, several of them without
+     !important). A plain :root rule doesn't have that limitation.
+
+     --color-ucass-primary-200 in particular MUST stay a light wash, not the
+     solid --primary orange: it's what every hover/active state built on
+     bg-ucass-primary-200 reads (bell, theme toggle, avatar chip, quick-menu
+     icons, nav items) alongside hover:text-primary — pairing a solid
+     background with solid-orange text made the icon disappear into its own
+     background, which is what "the notification bell turned into a blank
+     orange square" actually was. This block previously redefined the same
+     custom properties twice with a duplicate :root block (light-wash, then
+     solid) that had been carried over from a since-reverted merge; the
+     second definition silently won and broke every hover state that reads
+     it. Keep this as the one definition. */
+  --color-ucass-primary-100: #fff1e0 !important;
+  --color-ucass-primary-200: #fde9d2 !important;
+  --color-ucass-active: #c96f1f !important;
+  --color-ucass-active-bg: #fde9d2 !important;
+  --color-ucass-login-bg: #fff1e0 !important;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -243,8 +278,16 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.6536 0.124 225.17);
+  /* Dark theme gets the same !important protection as the light theme's
+     --primary, and the matching ucass-* overrides — same runtime-override
+     risk from organization-context.tsx applies here too. */
+  --primary: #ffab5e !important;
   --primary-foreground: oklch(0.205 0 0);
+  --color-ucass-primary-100: #2b1f12 !important;
+  --color-ucass-primary-200: #ffab5e !important;
+  --color-ucass-active: #ffc98a !important;
+  --color-ucass-active-bg: #2b1f12 !important;
+  --color-ucass-login-bg: #2b1f12 !important;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -278,13 +321,38 @@
   body {
     height: 100%;
     font-family: var(--mcm-sans);
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Warm gradient backdrop for the glassmorphism pass — the blurred
+       panels need something with color behind them or the blur has
+       nothing to show. Fixed so it doesn't scroll away under long pages. */
+    background:
+      radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+      radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+      radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+      radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+      linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+    background-attachment: fixed;
+  }
+
+  /* The same backdrop for dark mode. Without it the light warm gradient
+     stayed put under dark-mode surfaces and light body text, which left
+     whole screens unreadable. Same four warm pools, dropped to embers
+     over a near-black base so the frosted panels still have something to
+     pick up. */
+  .dark body {
+    background:
+      radial-gradient(1000px 750px at 4% -6%, rgba(255, 138, 46, 0.2), transparent 58%),
+      radial-gradient(900px 700px at 102% -4%, rgba(255, 105, 30, 0.16), transparent 55%),
+      radial-gradient(950px 700px at 50% 118%, rgba(255, 160, 90, 0.14), transparent 60%),
+      radial-gradient(650px 500px at 100% 100%, rgba(255, 130, 60, 0.12), transparent 55%),
+      linear-gradient(160deg, #0b1018 0%, #171019 100%);
+    background-attachment: fixed;
   }
 
   #root,
   html {
     height: 100%;
-    background-color: var(--color-gray-100);
+    background-color: transparent;
   }
 
   input,
@@ -307,7 +375,7 @@
 
   ::-webkit-scrollbar-track {
     border-radius: 100%;
-    background: #f4fcff;
+    background: #fff8f0;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -317,7 +385,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #baf1ff;
+    background: #f2994a;
   }
 
   .tableSelect .custom-react-select__control {
@@ -696,6 +764,48 @@
     padding-bottom: 0.35rem !important;
   }
 
+  /* Directory ▸ Contact view's Group/Tag toolbar filters — same
+     `.custom-react-select__control` component used everywhere, given its
+     own prefix (via `CustomSelect`'s `inputClass` prop) so only these two
+     dropdowns on this one page pick up the warm, rounded look matching the
+     rest of that toolbar (Search input, tabs). */
+  .contact-toolbar-select.custom-react-select__control {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 10px !important;
+    border-color: rgba(225, 200, 165, 0.9) !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
+  }
+  .contact-toolbar-select.custom-react-select__control:hover,
+  .contact-toolbar-select.custom-react-select__control--is-focused {
+    border-color: var(--primary) !important;
+  }
+
+  /* Contact view's "Send WhatsApp Message" drawer (`SendWhatsappMessage`,
+     opted in via its own `selectClassName`/wrapper class only from this
+     page — External Contacts' separate WhatsApp drawer doesn't pass either,
+     so it is unaffected). Same reasoning as `.contact-toolbar-select`
+     above: the template dropdown and the phone number field both carry
+     fixed, unscoped styling (`.custom-react-select__control`,
+     `react-phone-input-2`'s `.form-control`) that a plain `.mcm-warm-glass`
+     ancestor can't reach. */
+  .whatsapp-drawer-select.custom-react-select__control {
+    border-radius: 10px !important;
+    border-color: rgba(225, 200, 165, 0.9) !important;
+    background-color: rgba(255, 255, 255, 0.7) !important;
+  }
+  .whatsapp-drawer-select.custom-react-select__control:hover,
+  .whatsapp-drawer-select.custom-react-select__control--is-focused {
+    border-color: var(--primary) !important;
+  }
+  .whatsapp-drawer-glass .form-control {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgba(225, 200, 165, 0.9) !important;
+  }
+  .whatsapp-drawer-glass .form-control:focus {
+    border-color: var(--primary) !important;
+  }
+
   .epr-search-container input {
     border: 1px solid var(--color-gray-300) !important;
     background-color: var(--color-white) !important;
@@ -786,7 +896,7 @@
   .react-datepicker__month-select:focus,
   .react-datepicker__year-select:focus {
     outline: none !important;
-    border: 1px solid #009fc9 !important;
+    border: 1px solid #f2994a !important;
     box-shadow: none !important;
   }
 
@@ -836,7 +946,7 @@
     .react-datepicker__time-box
     ul.react-datepicker__time-list
     li.react-datepicker__time-list-item--selected {
-    background-color: #009fc9 !important;
+    background-color: #f2994a !important;
     color: #ffffff !important;
   }
 
@@ -911,6 +1021,35 @@
     color: var(--color-gray-500) !important;
     cursor: not-allowed !important;
     opacity: 50 !important;
+  }
+
+  /* Calendar day cells are buttons, but they are not form controls. The
+     rule above paints every disabled button with a grey-100 fill and
+     grey-500 text, which put filled grey discs behind the greyed-out days
+     of a month and coloured them from a different neutral family than the
+     rest of the panel — the one visibly "off" colour in the sidebar.
+
+     This has to stay inside `@layer base` alongside that rule: for
+     `!important` declarations the cascade reverses layer order and treats
+     unlayered styles as lowest priority, so an override outside the layer
+     would lose. Within the layer, specificity decides and this wins. */
+  .mcm-daycell:disabled {
+    background-color: transparent !important;
+    border: 0 !important;
+    color: var(--mcm-ink-4) !important;
+  }
+
+  /* Same story for the pagination arrows. On a single page all four are
+     disabled, and the form-control rule filled each with a grey pill —
+     four grey blobs around one orange page number. They should read as
+     dimmed, not as filled controls. Inside the layer for the same reason
+     as the rule above. */
+  .mcm-pager-btn:disabled {
+    background-color: transparent !important;
+    border: 0 !important;
+    color: var(--mcm-ink-4) !important;
+    opacity: 0.4 !important;
+    cursor: default !important;
   }
 
   input[type='radio']:disabled,
@@ -1015,20 +1154,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #e2dcd3;
+  border-radius: 999px;
+  padding: 0 16px;
   height: 38px;
   transition:
     border-color 0.2s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    background 0.2s;
 }
 
 .global-search-input-wrapper:focus-within,
 .global-search-input-wrapper.is-open {
-  border-color: #cbd5e1;
+  border-color: #f2994a;
   background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
 }
 
 .global-search-input {
@@ -1172,7 +1313,7 @@
 .global-search-item-badge {
   font-size: 14px;
   font-weight: 400;
-  color: #0ea5e9;
+  color: #f2994a;
   background: transparent;
   padding: 0;
   flex-shrink: 0;
@@ -1231,8 +1372,8 @@
 /* Message highlight animation */
 .message-highlight {
   animation: highlightMessage 0.5s ease-in-out;
-  background-color: #f0f9ff !important;
-  border: 2px solid #009fc9 !important;
+  background-color: #fff1e0 !important;
+  border: 2px solid #f2994a !important;
   border-radius: 0.5rem;
   padding: 0.5rem;
   margin: 0.25rem 0;
@@ -1245,14 +1386,41 @@
   }
 
   50% {
-    background-color: #e0f2fe;
-    border-color: #009fc9;
+    background-color: #ffe6c7;
+    border-color: #f2994a;
   }
 
   100% {
-    background-color: #f0f9ff;
-    border-color: #009fc9;
+    background-color: #fff1e0;
+    border-color: #f2994a;
   }
+}
+
+/* A refresh click's only feedback used to be swapping the icon for a
+   spinner - too easy to miss when the underlying fetch resolves in well
+   under 100ms. A quick shake plus a nudge along the arrow's own direction
+   reads as "this was clicked" instantly, without changing what icon is on
+   screen. */
+@keyframes refreshNudge {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(-1.5px) rotate(-6deg);
+  }
+  45% {
+    transform: translateX(2px) rotate(22deg);
+  }
+  70% {
+    transform: translateX(-1px) rotate(10deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+.animate-refresh-nudge {
+  animation: refreshNudge 0.45s ease-in-out;
 }
 
 @media (max-width: 1024px) {
@@ -1558,7 +1726,7 @@
 .mcm-areanav {
   display: none;
   align-items: center;
-  gap: 2px;
+  gap: 0px;
   height: 100%;
   min-width: 0;
 }
@@ -1572,15 +1740,24 @@
 .mcm-areanav-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 20px;
+  justify-content: center;
+  gap: 6px;
+  /* min-width, not width: a hard fixed width forced every tab to the same
+     size, but "Directory" and "Performance" don't fit 90px next to a 16px
+     icon with white-space: nowrap. Flexbox had nowhere else to take the
+     overflow from but the icon (shrinkable) since the text can't wrap —
+     so the icon collapsed toward 0 instead of the tab widening. */
+  min-width: 60px;
+  height: 30px;
+  padding: 6px 6px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.01em;
   white-space: nowrap;
   color: #64748b;
   background: none;
-  border: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
   border-bottom: 3px solid transparent;
   cursor: pointer;
   transition:
@@ -1589,9 +1766,12 @@
     border-color 0.15s;
 }
 
+.mcm-areanav-btn svg {
+  flex-shrink: 0;
+}
+
 .mcm-areanav-btn:hover {
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--primary);
 }
 
 .mcm-areanav-btn.is-active {
@@ -1606,8 +1786,15 @@
   .mcm-areanav-btn span {
     display: none;
   }
-  /* icon-only at this width, so the tint needs to sit evenly around it */
+  /* icon-only at this width, so the tint needs to sit evenly around it.
+     min-width: 90px (set to stop the icon getting squeezed to 0 next to a
+     long label — see the flex-shrink comment above) has no label to
+     protect here, so it was just holding each tab at 90px around a 16px
+     icon. Across 5 tabs that is ~370px of dead width, which is what was
+     pushing bell/theme-toggle/avatar off the right edge of the header on
+     laptop-width screens. */
   .mcm-areanav-btn {
+    min-width: 0;
     padding: 9px 13px;
   }
 }
@@ -1634,21 +1821,17 @@
 }
 
 .mcm-brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
   flex: none;
   display: grid;
   place-items: center;
-  overflow: hidden;
-  background: color-mix(in oklab, var(--primary) 12%, #ffffff);
 }
 
 .mcm-brand-mark img {
-  width: 100%;
-  height: 100%;
+  width: 96.27px;
+  height: 48px;
   object-fit: contain;
-  padding: 4px;
+  display: block;
+  margin: 0 auto;
 }
 
 .mcm-brand-text {
@@ -1696,7 +1879,7 @@
   cursor: pointer;
 }
 .mcm-presence-admin:hover:not(:disabled) {
-  border-color: #c3d6ff;
+  border-color: #ffd9ad;
   color: #0d1526;
 }
 .mcm-presence-admin:disabled {
@@ -1731,14 +1914,14 @@
   padding: 5px 13px;
   border: 0;
   border-radius: 999px;
-  background: #2563eb;
+  background: #f2994a;
   color: #fff;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
 }
 .mcm-newbuild button:hover {
-  background: #1d4ed8;
+  background: #c96f1f;
 }
 
 /* Customer initial, shown when they have not uploaded a logo. Never the
@@ -1750,8 +1933,8 @@
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  background: #e8efff;
-  color: #1d4ed8;
+  background: #fff1e0;
+  color: #c96f1f;
   font-size: 15px;
   font-weight: 800;
 }
@@ -1907,13 +2090,13 @@
   border-radius: 8px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #1d4ed8;
+  color: #c96f1f;
   text-decoration: none;
   white-space: nowrap;
 }
 .mcm-setupguide-action:hover {
-  background: #eef3ff;
-  border-color: #c3d6ff;
+  background: #fff1e0;
+  border-color: #ffd9ad;
 }
 @media (max-width: 640px) {
   .mcm-setupguide li {
@@ -1926,33 +2109,505 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
-   ucaas.in brand lock.
+/* ==================================================================
+   Calendar sidebar — tonal grading.
 
-   organization-context.tsx:126-138 writes --primary, --color-ucass-primary-200,
-   --color-ucass-active, --color-ucass-active-bg and --color-ucass-login-bg onto
-   documentElement.style from the organisation row in the database. Those inline
-   values would otherwise repaint the console in whatever colour that row holds
-   — which, on a database copied from another brand, is blue.
+   The panel was #f6f8fc, nine points off white, and the month/year pills
+   and the empty-state box were both plain #ffffff with no shadow. So a
+   raised control and a recessed well were painted identically and neither
+   separated from the panel behind them: one flat field of near-white.
 
-   An inline style set through setProperty() carries no !important, so a rule
-   marked !important here outranks it. That is what pins the brand regardless of
-   what the organisation row says.
-   --------------------------------------------------------------------------- */
-:root {
-  --primary: #f2994a !important;
-  --color-ucass-primary-100: #fff1e0 !important;
-  --color-ucass-primary-200: #fde9d2 !important;
-  --color-ucass-active: #c96f1f !important;
-  --color-ucass-active-bg: #fde9d2 !important;
-  --color-ucass-login-bg: #fff1e0 !important;
+   Three levels instead, warmed so the panel belongs with the app's orange
+   backdrop rather than sitting in a cool slate of its own:
+
+     well    #f2e9dd   recessed — empty states, read as a hollow
+     panel   #faf5ef   the sidebar itself
+     raised  #ffffff   controls, lifted with a hairline and a shadow
+
+   Each step is ~13 points apart, so the boundaries are visible without
+   any of them turning into a hard box.
+   ================================================================== */
+.mcm-calpanel {
+  --cal-panel: #faf5ef;
+  --cal-raised: #ffffff;
+  --cal-well: #f2e9dd;
+  --cal-line: #ecdfd0;
+  --cal-line-strong: #d9c6ae;
+  --cal-muted: #9c8a76;
+
+  background: var(--cal-panel);
+  border-right: 1px solid var(--cal-line);
 }
 
-.dark {
-  --primary: #ffab5e !important;
-  --color-ucass-primary-100: #2b1f12 !important;
-  --color-ucass-primary-200: #ffab5e !important;
-  --color-ucass-active: #ffc98a !important;
-  --color-ucass-active-bg: #2b1f12 !important;
-  --color-ucass-login-bg: #2b1f12 !important;
+/* Raised: month, year and the two month-step arrows. */
+.mcm-calpanel .mcm-cal-ctrl {
+  background: var(--cal-raised);
+  border-color: var(--cal-line);
+  box-shadow: 0 1px 2px rgba(120, 85, 45, 0.06);
+}
+.mcm-calpanel .mcm-cal-ctrl:hover {
+  background: var(--cal-raised);
+  border-color: var(--cal-line-strong);
+  box-shadow: 0 2px 6px rgba(120, 85, 45, 0.1);
+}
+
+/* Recessed: the empty state is a hollow in the panel, not a card on it. */
+.mcm-calpanel .mcm-cal-well {
+  background: var(--cal-well);
+  border-color: var(--cal-line-strong);
+}
+
+/* The weekday header reads as a label row, not as more dates. */
+.mcm-calpanel .mcm-cal-weekdays {
+  color: var(--cal-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Days outside the shown month, warmed off the cool blue-grey so they sit
+   in the same family as everything else here. */
+.mcm-calpanel .mcm-daycell.is-outside,
+.mcm-calpanel .mcm-daycell:disabled {
+  color: var(--cal-muted) !important;
+}
+
+/* A rule between the calendar block and the events list below it. */
+.mcm-calpanel .mcm-cal-divider {
+  border-top: 1px solid var(--cal-line);
+  padding-top: 14px;
+}
+
+/* Density dots under each mini-calendar day. Colours are the big calendar's
+   legend — events #00a9ff, tasks #34C38F — so the two views agree on what a
+   colour means. The row keeps its height when empty so the weeks stay on a
+   even rhythm. */
+/* One size for every dot, and a gap derived from it rather than set on its
+   own — so the row keeps the same proportion whatever `--cal-dot` becomes,
+   instead of the spacing having to be re-guessed each time the size moves.
+   At 5px the gap lands on 3px, and three dots span 21px inside a 28px
+   cell. */
+.mcm-calpanel {
+  --cal-dot: 5px;
+  --cal-dot-gap: calc(var(--cal-dot) * 0.6);
+}
+
+.mcm-calpanel .mcm-cal-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cal-dot-gap);
+  height: var(--cal-dot);
+}
+
+.mcm-calpanel .mcm-cal-dot {
+  display: block;
+  /* Fixed on both axes and `flex: none`: in a flex row a dot would
+     otherwise shrink when three of them crowd a narrow cell, and the set
+     would stop being uniform exactly when it matters most. */
+  flex: none;
+  width: var(--cal-dot);
+  height: var(--cal-dot);
+  border-radius: 999px;
+}
+.mcm-calpanel .mcm-cal-dot.is-event {
+  background: #00a9ff;
+}
+.mcm-calpanel .mcm-cal-dot.is-task {
+  background: #34c38f;
+}
+/* Meeting, the third calendar category — violet, matching colour id 4 in
+   the calendar's `findColors` and the dot on its month previews. */
+.mcm-calpanel .mcm-cal-dot.is-meeting {
+  background: #a78bfa;
+}
+
+/* ==================================================================
+   Task Listing table (Calendar > Tasks List View).
+
+   Scoped through `.mcm-tasktable`, which the page passes to TableManager
+   as `customClass`. TableManager backs roughly eighty tables, so none of
+   this may be written against its own selectors.
+   ================================================================== */
+
+/* Content-sized columns with Title absorbing the slack. Measured before
+   this pass: Title truncated at 134px while "Created By" held 94px of
+   empty cells beside it. Sizing by content means a title clips only when
+   the viewport genuinely cannot fit it, never because a neighbour is
+   hoarding width. Columns are sized here rather than with percentages
+   because none of these cells can compress below their content. */
+.mcm-tasktable thead th,
+.mcm-tasktable tbody td {
+  width: 1%;
+  white-space: nowrap;
+}
+.mcm-tasktable thead th:nth-child(2),
+.mcm-tasktable tbody td:nth-child(2) {
+  width: 100%;
+  /* `max-width: 0` against `width: 100%` is what lets this cell fall below
+     its content width. Without it the cell reports its full title as a
+     minimum, the table cannot compress, and it overflows its container
+     instead -- 27px past the edge at a 1100px viewport. Title is the only
+     column that should give up space: every other one holds a date, a
+     chip or a control that cannot compress at all. */
+  max-width: 0;
+  /* ...but only down to a point. Left unbounded it reached 63px in a
+     800px container, which is narrower than the word "Onboarding" and
+     shows nothing useful. Past this floor the wrapper scrolls, which is
+     the honest outcome for a table that has genuinely run out of room. */
+  min-width: 170px;
+}
+
+/* 8px on all four sides was the same inset between two dense columns as
+   at the table's outer edge, which is what made the rows feel crowded
+   and unfinished. Vertical air is what a two-line cell actually needs. */
+/* 13px rather than the 16 this started at: seven columns pay for side
+   padding twice each, so the wider inset alone put the table 11px past
+   its container at 1280 and forced a horizontal scroll. The vertical
+   figure is what the two-line cells actually needed. */
+.mcm-tasktable tbody td,
+.mcm-tasktable thead th {
+  padding: 10px 13px;
+}
+.mcm-tasktable tbody td:first-child,
+.mcm-tasktable thead th:first-child {
+  padding-left: 18px;
+}
+.mcm-tasktable tbody td:last-child,
+.mcm-tasktable thead th:last-child {
+  padding-right: 18px;
+}
+
+/* `height` on a cell behaves as a minimum, so short rows match the
+   two-line ones instead of collapsing. Rows measured 49/69/49/49 before
+   this -- the 69 was the countdown badge taking a third line. */
+.mcm-tasktable tbody td {
+  height: 56px;
+  vertical-align: middle;
+}
+
+.mcm-tasktable thead th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Both date columns. They had drifted apart -- one 12px slate-600 over a
+   10px uppercase time, the other 12px medium slate-700 over a 10px time
+   that was not uppercase -- so two adjacent columns of the same data
+   type read as unrelated. */
+.mcm-tasktable .mcm-task-when {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.35;
+}
+.mcm-tasktable .mcm-task-date {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #334155;
+}
+.mcm-tasktable .mcm-task-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  /* Times sit directly above one another down the column. */
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+  /* Fixed line box so the countdown badge cannot make its row taller
+     than the rest. Without it that row came out 1.4px over. */
+  min-height: 16px;
+}
+
+/* The countdown is a shared component styled for a card, where a top
+   margin and a 112px floor are right. Neutralised for this row rather
+   than changed at the source, which would move it for its other callers.
+   The pulse goes too: one row breathing in a still list draws the eye
+   away from whatever the reader was actually reading. */
+.mcm-tasktable .mcm-task-time > span {
+  margin-top: 0;
+  min-width: 0;
+  animation: none;
+  height: 16px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
+}
+
+.mcm-tasktable .mcm-task-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.mcm-tasktable .mcm-task-source {
+  font-size: 12px;
+  color: #475569;
+  text-transform: capitalize;
+}
+
+/* Placeholder, not data: a bare "--" inherited body ink and read as
+   loudly as a real value. */
+.mcm-tasktable .mcm-task-empty {
+  color: #cbd5e1;
+  user-select: none;
+}
+
+/* The pager is TableManager's next sibling and the two bordered cards sat
+   with a 0px gap between them, so the table's bottom edge and the pager's
+   top edge read as one doubled line. */
+.mcm-tasktable + div {
+  margin-top: 10px;
+}
+
+/* TableManager sizes the scroll box from `window.innerHeight` less a flat
+   66px, but the panel it sits in ends 12px above the window bottom, so
+   the pager was already hanging 3px into the clip before the gap above
+   pushed it to 13. `max-height` wins over the inline `height` it sets, so
+   this caps the box without touching a component ~80 tables share.
+
+   Budget below the scroll box: 57 pager + 10 gap + 12 panel inset + 12
+   gutter, against a 133px offset from the top of the viewport, which is
+   fixed by this page's chrome and so does not vary with window height. */
+.mcm-tasktable {
+  max-height: calc(100vh - 224px);
+}
+
+/* The trigger only revealed itself on hover, so the control looked like
+   loose punctuation until the pointer found it. */
+.mcm-tasktable tbody td:last-child button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-tasktable tbody tr:hover td:last-child button {
+  border-color: rgba(225, 200, 165, 0.9);
+  background: rgba(255, 255, 255, 0.7);
+  color: #475569;
+}
+
+/* ==================================================================
+   Table pagination.
+
+   One segmented control rather than six loose targets: the arrows and the
+   page numbers share a bordered group, all at the same size and radius,
+   with only the current page carrying colour.
+
+   The `!important`s are doing real work. These arrows are `Button`
+   components whose own variant classes set a grey fill and a 12px radius,
+   which beat plain selectors here — the result was pill-shaped grey
+   arrows sitting next to a 7px orange square, which is what made the
+   group look mismatched.
+
+   Global on purpose: TableManager renders on ~79 screens and they should
+   all page the same way.
+   ================================================================== */
+.mcm-pager {
+  gap: 2px !important;
+  padding: 4px;
+  border: 1px solid var(--mcm-line);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(13, 21, 38, 0.04);
+}
+
+.mcm-pager-btn,
+.mcm-pager-page {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: var(--mcm-ink-3) !important;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+/* Only live controls answer the pointer. */
+.mcm-pager-btn:not(:disabled):hover,
+.mcm-pager-page:not(.is-current):hover {
+  background: var(--mcm-surface-2) !important;
+  color: var(--mcm-ink) !important;
+}
+
+/* Nowhere to go: present but plainly inert, so the control still reads as
+   a complete set rather than losing buttons at the edges. */
+
+
+/* The page you are on — the one piece of colour in the group. */
+.mcm-pager-page.is-current {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 45%, transparent) !important;
+}
+
+.dark .mcm-pager {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.dark .mcm-pager-btn:not(:disabled):hover,
+.dark .mcm-pager-page:not(.is-current):hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ==================================================================
+   Schedule dialog — bright glass.
+
+   Not scoped under `.mcm-page`: Radix portals its dialogs to the end of
+   `body`, outside the page wrapper, so a `.mcm-page` selector would
+   never match here.
+
+   Two rules this block has to keep:
+
+   1. Fields are addressed by tag or by their own component class, never
+      by shape. An earlier version used `[class*='rounded'][class*='border']`,
+      which is equally true of the submit button and the selected duration
+      chip -- it painted them white while their text stayed white, and
+      "Schedule Meeting" became an invisible label on a blank button.
+   2. Disabled controls keep their grey. On the Task tab the date and time
+      fields really are disabled, so lifting them to match the live fields
+      would throw away the only signal saying so.
+   ================================================================== */
+.mcm-glassform {
+  /* 0.94, not 0.76. What sits behind this dialog is not the page's warm
+     gradient -- Radix lays a `bg-black/50` scrim at z-50 directly beneath
+     it, so anything meaningfully translucent composites toward black and
+     the whole panel goes grey. The glass has to come from the blur and
+     the bright edge, not from letting a black scrim through. */
+  background: rgba(255, 253, 250, 0.94) !important;
+  backdrop-filter: blur(22px) saturate(185%);
+  -webkit-backdrop-filter: blur(22px) saturate(185%);
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 24px 64px rgba(120, 72, 30, 0.16),
+    0 2px 10px rgba(120, 72, 30, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* The action bar ships with its own `bg-white`, which on a frosted panel
+   read as an opaque slab with a band of panel showing beneath it -- the
+   white-bar-over-grey-strip in the footer.
+
+   `px-2` also left its buttons 4px right of every field above: the scroll
+   area above carries pr-2 *plus* a 4px custom scrollbar, so matching the
+   fields means 8 + 4. */
+.mcm-glassform .border-t.bg-white {
+  background-color: transparent !important;
+  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  padding-right: 12px;
+}
+
+/* The banded cards -- timezone strip, Reminder row -- were slate-50,
+   which is a cool grey block sitting on a warm panel. */
+.mcm-glassform .bg-slate-50,
+.mcm-glassform .bg-slate-100,
+.mcm-glassform .bg-gray-50,
+.mcm-glassform .bg-gray-100 {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Fields carry more white than the panel they sit on, so they still read
+   as somewhere to type against a translucent ground. Tag-scoped, and
+   never while disabled. */
+.mcm-glassform input:not([type='checkbox']):not([type='radio']):not(:disabled),
+.mcm-glassform textarea:not(:disabled),
+.mcm-glassform select:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(226, 232, 240, 0.95);
+}
+
+/* react-select renders its own div rather than a <select>, so it needs
+   its own line -- again only when it is not the disabled variant. */
+.mcm-glassform
+  .custom-react-select__control:not(.custom-react-select__control--is-disabled) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(226, 232, 240, 0.95) !important;
+}
+.mcm-glassform .custom-react-select__menu {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Brighter than the flat #e6e6e6 these ship with. */
+.mcm-glassform .custom-react-select__indicator-separator {
+  background-color: rgba(203, 213, 225, 0.55) !important;
+}
+
+/* Hairlines go bright instead of grey, or they cut the frosted panel into
+   visible boxes. */
+.mcm-glassform .border-slate-100,
+.mcm-glassform .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dark .mcm-glassform {
+  background: rgba(24, 30, 41, 0.86) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .mcm-glassform input:not(:disabled),
+.dark .mcm-glassform textarea:not(:disabled),
+.dark .mcm-glassform select:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* "Mark all as read" toast — react-toastify's default green success skin
+   read as a generic system alert rather than something from this console.
+   Warm-orange icon and a proper pill for Undo (was plain underlined text)
+   match the notification drawer it's confirming an action from. */
+.mcm-toast-markread {
+  border-radius: 12px !important;
+  box-shadow:
+    0 12px 28px -6px rgba(194, 98, 46, 0.22),
+    0 2px 8px rgba(194, 98, 46, 0.12) !important;
+}
+.mcm-toast-markread .Toastify__toast-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f2794f, #ea5c34);
+}
+.mcm-toast-markread .Toastify__progress-bar {
+  background: linear-gradient(90deg, #f2794f, #ea5c34) !important;
+}
+.mcm-toast-undo {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ea6b42;
+  background: #fff1e0;
+  border: 1px solid #ffd9ad;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.mcm-toast-undo:hover {
+  background: linear-gradient(135deg, #f2794f, #ea5c34);
+  color: #fff;
+  border-color: transparent;
 }

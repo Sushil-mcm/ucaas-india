@@ -328,12 +328,12 @@ const AssignItem = ({
                       {watchCity?.value && watchState?.value ? (
                         didAvailableLoading ? (
                           // <div className="w-full flex justify-center min-h-32 p-2">
-                          <div className="bg-white border border-gray-200 rounded-xl p-3 gap-3 flex flex-col items-center">
+                          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col items-center">
                             <Loader variant="blue" />
                           </div>
                         ) : didAvailableData?.length > 0 ? (
-                          // <div className="bg-white border border-gray-200 rounded-xl p-3 gap-3 flex flex-col items-center">
-                          <div className="bg-white border border-gray-200 rounded-xl p-3 gap-3 flex flex-col ">
+                          // <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col items-center">
+                          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col ">
                             <div className="pb-1 flex flex-col gap-0.5 px-3">
                               <h6 className="flex gap-2 text-sm font-semibold">
                                 Available DID Number
@@ -385,10 +385,10 @@ const AssignItem = ({
                           </div>
                         ) : (
                           <div className="w-full">
-                            <div className="bg-white border border-gray-200 rounded-xl p-3 gap-3 flex flex-col items-center">
+                            <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col items-center">
                               <div className="pb-1 flex flex-col gap-1.5 px-3">
                                 <img src={NotFound} alt="BusyImage" className="w-20 min-w-20" />
-                                <p className="text-sm text-center font-medium text-gray-700">
+                                <p className="text-sm text-center font-medium text-[#2E2D35]">
                                   No DID found
                                 </p>
                               </div>
@@ -396,7 +396,7 @@ const AssignItem = ({
                           </div>
                         )
                       ) : (
-                        <h5 className="text-base text-gray-800 font-normal w-full text-center mt-[-1rem] flex justify-center">
+                        <h5 className="text-base text-[#2E2D35] font-normal w-full text-center mt-[-1rem] flex justify-center">
                           Choose a number for your account
                         </h5>
                       )}

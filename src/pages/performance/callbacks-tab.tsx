@@ -14,6 +14,7 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import PerfStatCard from './stat-card';
 import moment from 'moment';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
+import './callbacks-theme.css';
 
 const CallbacksTab = () => {
   const { user } = useUser();
@@ -159,8 +160,8 @@ const CallbacksTab = () => {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+    <div className="perf-callbacks flex w-full flex-col gap-4 px-[22px] py-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <PerfStatCard label="Scheduled tasks" value={String(tasks.length)} />
         <PerfStatCard
           label="Overdue tasks"

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import Campaign from '@/pages/auto-dialer/campaign';
 import { campaignList } from '@/services/api';
 import PerfStatCard from './stat-card';
+import './campaigns-theme.css';
 
 const parseMembers = (members: any) => {
   try {
@@ -59,8 +60,8 @@ const CampaignActivityTab = () => {
   const dialMethodEntries = Object.entries(totals.byDialMethod).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="flex w-full flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
+    <div className="perf-campaigns flex w-full flex-col gap-4 px-[22px] py-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
         <PerfStatCard
           label="Total leads"
           value={String(totals.assignedLeads)}

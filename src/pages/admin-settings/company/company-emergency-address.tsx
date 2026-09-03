@@ -352,8 +352,8 @@ const CompanyEmergencyAddress = () => {
 
   if (!canView) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
-        <p className="text-sm font-semibold text-gray-900">
+      <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8 text-center">
+        <p className="text-sm font-semibold text-[#2E2D35]">
           You do not have permission to view the emergency address
         </p>
       </div>
@@ -367,10 +367,10 @@ const CompanyEmergencyAddress = () => {
       <div className="cs-block flex items-start gap-3">
         <MapPinIcon className="mt-0.5 h-4.5 w-4.5 text-primary" />
         <div className="flex flex-col gap-0.5">
-          <h5 className="text-base font-semibold tracking-wide text-gray-900">
+          <h5 className="text-base font-semibold tracking-wide text-[#2E2D35]">
             Emergency address (E911)
           </h5>
-          <p className="text-xs font-medium text-gray-700">
+          <p className="text-xs font-medium text-[#2E2D35]">
             The street address emergency responders would be sent to, and the number they would call
             back on.
           </p>
@@ -387,7 +387,7 @@ const CompanyEmergencyAddress = () => {
           file header, where the next engineer will look for it. */}
       <div
         role="alert"
-        className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3"
+        className="rounded-xl border-2 border-red-300 bg-red-50 p-4 text-red-900 shadow-sm"
       >
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
         <p className="text-xs text-gray-800">
@@ -401,26 +401,26 @@ const CompanyEmergencyAddress = () => {
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-10">
+        <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-10">
           <div className="flex items-center justify-center">
             <Loader variant="blue" size="md" />
           </div>
         </div>
       ) : isError ? (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-semibold text-gray-900">
+        <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-8 text-center">
+          <p className="text-sm font-semibold text-[#2E2D35]">
             Could not load the saved emergency address
           </p>
-          <p className="text-xs text-gray-600">Refresh the page and try again.</p>
+          <p className="text-xs text-[#9A948F]">Refresh the page and try again.</p>
         </div>
       ) : (
         <form
           onSubmit={handleSubmit(onSubmit as any)}
-          className="flex flex-col gap-5 rounded-xl bg-white p-4 shadow-sm"
+          className="flex flex-col gap-5 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]"
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 pb-3">
-            <p className="text-sm font-semibold text-gray-900">Emergency address</p>
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEE7DD] pb-3">
+            <p className="text-sm font-semibold text-[#2E2D35]">Emergency address</p>
+            <p className="text-xs text-[#9A948F]">
               {hasSavedAddress && savedAt
                 ? `Last saved ${savedAt.toLocaleString()} - recorded only, not routed`
                 : 'Nothing saved yet'}
@@ -552,13 +552,13 @@ const CompanyEmergencyAddress = () => {
                 placeholder="e.g. +14155550123"
                 maxLength={16}
                 disabled={!canEdit}
-                Icon={<PhoneCall className="h-4 w-4 text-gray-500" />}
+                Icon={<PhoneCall className="h-4 w-4 text-[#9A948F]" />}
                 error={errors?.callback_number?.message}
                 {...register('callback_number')}
               />
             </div>
             <div className="flex w-full items-end md:w-1/2">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 The number responders would ring if the emergency call drops. Today nothing dials it
                 automatically - it is stored for your records and for whoever you hand this address
                 to.
@@ -566,7 +566,7 @@ const CompanyEmergencyAddress = () => {
             </div>
           </div>
 
-          <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
             <p className="text-xs font-medium text-amber-900">
               A PO box will be rejected. Emergency responders need a street address they can drive
               to, so a mailbox is not accepted here - this matches what carriers and other providers
@@ -574,7 +574,7 @@ const CompanyEmergencyAddress = () => {
             </p>
           </div>
 
-          <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 px-4 py-3">
             <Checkbox
               id="emergency-address-acknowledgement"
               checked={acknowledged}
@@ -584,7 +584,7 @@ const CompanyEmergencyAddress = () => {
             />
             <Label
               htmlFor="emergency-address-acknowledgement"
-              className="cursor-pointer items-start text-xs font-medium leading-5 text-gray-800"
+              className="cursor-pointer items-start text-xs font-medium leading-5 text-[#2E2D35]"
             >
               I understand this address is only written down. It does not route emergency calls and
               it is not sent to emergency responders.

@@ -22,13 +22,13 @@ const aiMarkdownClassName = [
   '[&_ul]:mb-2 [&_ul]:list-disc [&_ul]:pl-5',
   '[&_ol]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5',
   '[&_li]:mb-1 [&_li>p]:mb-1',
-  '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:text-gray-700',
-  '[&_pre]:my-2 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-gray-50 [&_pre]:p-2',
-  '[&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px]',
+  '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-[#EEE7DD] [&_blockquote]:pl-3 [&_blockquote]:text-[#2E2D35]',
+  '[&_pre]:my-2 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-[#FBE2C8]/45 [&_pre]:p-2',
+  '[&_code]:rounded [&_code]:bg-[#FBE2C8]/40 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px]',
   '[&_pre_code]:bg-transparent [&_pre_code]:p-0',
   '[&_table]:my-2 [&_table]:border-collapse [&_table]:text-xs',
-  '[&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left',
-  '[&_td]:border [&_td]:border-gray-200 [&_td]:px-2 [&_td]:py-1',
+  '[&_th]:border [&_th]:border-[#EEE7DD] [&_th]:bg-[#FBE2C8]/45 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left',
+  '[&_td]:border [&_td]:border-[#EEE7DD] [&_td]:px-2 [&_td]:py-1',
 ].join(' ');
 
 const aiMarkdownComponents: Components = {
@@ -254,8 +254,8 @@ const AiAssist = ({
     <div
       className={
         isEmbedded
-          ? 'h-full min-h-0 w-full max-w-none bg-white border-l border-ucass-active-bg overflow-hidden flex flex-col'
-          : 'rounded-[22px] bg-white shadow-[0_10px_35px_rgba(2,37,92,0.16)] border border-ucass-active-bg overflow-hidden fixed bottom-16 right-5 w-full max-w-[360px] z-[60]'
+          ? 'h-full min-h-0 w-full max-w-none bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border-l border-ucass-active-bg overflow-hidden flex flex-col'
+          : 'rounded-[22px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_10px_35px_rgba(2,37,92,0.16)] border border-ucass-active-bg overflow-hidden fixed bottom-16 right-5 w-full max-w-[360px] z-[60]'
       }
     >
       {/* Chat Head */}
@@ -276,7 +276,7 @@ const AiAssist = ({
         </span>
       </div>
       <div className="px-3 pt-2 pb-3 bg-ucass-active-bg/60 border-b border-ucass-active-bg">
-        <p className="text-sm text-gray-700 font-medium mb-2">Quick Actions</p>
+        <p className="text-sm text-[#2E2D35] font-medium mb-2">Quick Actions</p>
         <div className="flex flex-wrap gap-2">
           {quickActions.map((action) => (
             <button
@@ -330,7 +330,7 @@ const AiAssist = ({
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 px-0.5">
+                  <p className="text-xs text-[#9A948F] px-0.5">
                     {formatMessageTime(item?.timestamp || item?.createdAt)}
                   </p>
                 </div>
@@ -344,9 +344,9 @@ const AiAssist = ({
         ) : null}
       </div>
       {/* Chat Footer */}
-      <div className="p-3 bg-gray-50 w-full flex items-center gap-2 border-t border-gray-200 relative">
+      <div className="p-3 bg-[#FBE2C8]/45 w-full flex items-center gap-2 border-t border-[#EEE7DD] relative">
         <textarea
-          className={`w-full h-full max-h-[46px] ${lineHeight} p-2 pr-[44px] rounded-xl text-sm overflow-y-auto placeholder:text-gray-500 focus:ring-0 focus-visible:shadow-none focus-visible:outline-0 text-gray-900 shadow-none resize-none border border-gray-200 bg-white`}
+          className={`w-full h-full max-h-[46px] ${lineHeight} p-2 pr-[44px] rounded-xl text-sm overflow-y-auto placeholder:text-[#9A948F] focus:ring-0 focus-visible:shadow-none focus-visible:outline-0 text-[#2E2D35] shadow-none resize-none border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]`}
           placeholder="Ask AI anything..."
           value={text}
           disabled={isAiLoading || isLoading}
@@ -362,7 +362,7 @@ const AiAssist = ({
           // disabled={isSendingMessage}
         />
         <div
-          className={`${isLoading || !text.trim() ? 'cursor-not-allowed bg-gray-100 text-gray-400' : 'cursor-pointer bg-ucass-active text-white hover:bg-primary'} absolute bottom-[20px] right-[20px] flex items-center justify-center rounded-full w-[30px] min-w-[30px] h-[30px] transition-colors`}
+          className={`${isLoading || !text.trim() ? 'cursor-not-allowed bg-[#FBE2C8]/40 text-[#9A948F]' : 'cursor-pointer bg-ucass-active text-white hover:bg-primary'} absolute bottom-[20px] right-[20px] flex items-center justify-center rounded-full w-[30px] min-w-[30px] h-[30px] transition-colors`}
           onClick={() => handleSendChat(text)}
         >
           <button

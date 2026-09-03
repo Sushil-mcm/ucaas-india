@@ -7,7 +7,6 @@ const PaymentAndConfirmation = ({ formInstance }: { formInstance: UseFormReturn<
     control,
     formState: { errors },
   } = formInstance;
-  console.log('🚀 ~ PaymentAndConfirmation ~ errors:', errors);
 
   return (
     <div className="w-full min-h-0 flex flex-col gap-3 overflow-y-auto pr-1">

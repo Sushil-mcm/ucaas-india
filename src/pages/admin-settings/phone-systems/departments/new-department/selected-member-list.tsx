@@ -56,10 +56,10 @@ const DraggableMember = ({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="bg-white border-b border-gray-200 h-8"
+      className="bg-white border-b border-[#EEE7DD] h-8"
     >
       <TableCell className="w-1/12 text-center cursor-move px-4 py-2 border-r" {...listeners}>
-        <DragLineIcon className="mx-auto w-3 h-3 text-gray-500" />
+        <DragLineIcon className="mx-auto w-3 h-3 text-[#9A948F]" />
       </TableCell>
 
       <TableCell className="px-4 py-2">
@@ -71,12 +71,12 @@ const DraggableMember = ({
                 <p className="capitalize font-medium text-sm">{label}</p>
                 <p className="text-primary text-[11px]">{role}</p>
               </div>
-              <div className="flex items-center gap-1 text-gray-500 text-sm">
+              <div className="flex items-center gap-1 text-[#9A948F] text-sm">
                 <Icon name="Grid" className="w-4 h-4" />
                 <span>{value}</span>
               </div>
             </div>
-            {email && <p className="text-gray-500 text-[11px] truncate">{email}</p>}
+            {email && <p className="text-[#9A948F] text-[11px] truncate">{email}</p>}
           </div>
         </div>
       </TableCell>

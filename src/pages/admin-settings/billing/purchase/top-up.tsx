@@ -64,7 +64,6 @@ const TopUp = () => {
       {
         onSuccess: (data) => {
           const fundData = data?.data?.data?.result;
-          console.log(fundData, 'buyDatabuyData 2', data);
           if (fundData?.requires_action) {
             paymentRef.current.handle3DSPayment(fundData?.payment_intent_id);
             return;

@@ -567,7 +567,7 @@ const Sidebar = () => {
                   className={`flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors ${
                     isCurrent
                       ? 'border-primary bg-ucass-primary-200/60 text-primary'
-                      : 'border-gray-200 bg-white text-gray-700'
+                      : 'border-[#EEE7DD] bg-white text-[#2E2D35]'
                   } ${item?.enabled === false ? 'cursor-not-allowed opacity-60' : ''}`}
                   disabled={item?.enabled === false}
                 >
@@ -587,9 +587,9 @@ const Sidebar = () => {
         </div>
 
         {!!activeResponsiveChildren.length && (
-          <div className="min-h-[9rem] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <div className="min-h-[9rem] overflow-hidden rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+            <div className="border-b border-[#EEE7DD] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
                 {activeResponsiveItem?.title}
               </p>
             </div>
@@ -610,7 +610,7 @@ const Sidebar = () => {
                       className={`flex min-h-11 w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left text-sm font-medium last:border-b-0 ${
                         isChildActive
                           ? 'bg-ucass-primary-200/50 text-primary'
-                          : 'bg-white text-gray-700'
+                          : 'bg-white text-[#2E2D35]'
                       } ${enabled === false ? 'cursor-not-allowed opacity-60' : ''}`}
                     >
                       <Icon name={icon as IconType} className="h-4.5 w-4.5 shrink-0 p-0.5" />
@@ -624,7 +624,7 @@ const Sidebar = () => {
         )}
       </div>
 
-      <div className="hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col">
+      <div className="hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col [scrollbar-gutter:stable]">
         <div className="mcm-adminnav-search">
           <Icon name={'SearchLine' as IconType} className="h-4 w-4" />
           <input
@@ -644,7 +644,7 @@ const Sidebar = () => {
           <Icon name={'Grid' as IconType} className="h-4 w-4" />
           All admin screens
         </NavLink>
-        <div className="mcm-adminnav h-full min-h-0 divide-y divide-gray-200">
+        <div className="mcm-adminnav h-full min-h-0 divide-y divide-[#EEE7DD]">
           {!searchedItems?.length ? (
             <p className="mcm-adminnav-empty">No section matches that.</p>
           ) : null}
@@ -710,7 +710,7 @@ const Tile = ({ title, path, icon, extraActiveTab, children, enabled }: any) => 
   const isChildrenExist = Boolean(children && children?.length);
   return (
     <div
-      className={`flex items-center w-full px-3 min-h-14 h-14 gap-2 cursor-pointer ${isActive ? (isChildrenExist ? 'text-primary' : 'text-primary bg-ucass-primary-200/50 border-r-primary border-r-2') : 'text-gray-900/80'} ${isChildrenExist ? 'pl-10' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
+      className={`flex items-center w-full px-3 min-h-14 h-14 gap-2 cursor-pointer ${isActive ? (isChildrenExist ? 'text-primary' : 'text-primary bg-ucass-primary-200/50 border-r-primary border-r-2') : 'text-[#2E2D35]/80'} ${isChildrenExist ? 'pl-10' : ''} ${!isEnabled ? 'text-[#9A948F] opacity-60' : ''}`}
       {...getRoutePrefetchHandlers(path)}
       onClick={() => {
         if (!isEnabled || !path) return;
@@ -718,7 +718,7 @@ const Tile = ({ title, path, icon, extraActiveTab, children, enabled }: any) => 
       }}
     >
       <Icon name={icon as IconType} className="w-5 h-5 p-0.5" />
-      <p title={title} className="font-medium truncate text-sm">
+      <p title={title} className="font-medium truncate">
         {title}
       </p>
       {!isEnabled && <span className="text-xs">🔒</span>}

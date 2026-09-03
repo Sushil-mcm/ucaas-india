@@ -35,7 +35,6 @@ const CampaignDetails = ({ formInstance }: { formInstance: any }) => {
     queryFn: getGCPLIST,
     select: (data) => data?.data?.data?.result,
   });
-  console.log('🚀 ~ CampaignDetails ~ resellerList:', gcpList);
 
   return (
     <div className="w-full min-h-0 flex flex-col gap-3 overflow-y-auto pr-1">

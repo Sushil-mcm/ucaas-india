@@ -293,7 +293,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
             className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
           >
             <div className="min-h-0 flex-1 overflow-y-auto">{stepLookUp?.[currentStep]}</div>
-            <div className="mt-2 shrink-0 border-t border-gray-200 bg-white pt-4 lg:mt-0 lg:border-t-0 lg:bg-transparent lg:pt-0">
+            <div className="mt-2 shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pt-4 lg:mt-0 lg:border-t-0 lg:bg-transparent lg:pt-0">
               <div className="flex min-w-max flex-nowrap justify-start gap-2 overflow-x-auto overflow-y-hidden sm:justify-end lg:min-w-0 lg:justify-end lg:overflow-visible">
                 <button
                   onClick={() => {

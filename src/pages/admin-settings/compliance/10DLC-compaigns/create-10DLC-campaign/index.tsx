@@ -124,7 +124,6 @@ const Create10DLCCampaign = ({ setDrawerState }: { drawerState: boolean; setDraw
 
   const onSubmit = (data: any) => {
     const { brand_type, resellerId, cnp, payment_terms: _, ...rest } = data || {};
-    console.log(_);
     const payload = {
       ...rest,
       brandId: brand_type?.value,
@@ -143,12 +142,12 @@ const Create10DLCCampaign = ({ setDrawerState }: { drawerState: boolean; setDraw
           onValueChange={(val) => handleTabChange(val as TabKey)}
           className="flex w-full min-h-0 flex-col"
         >
-          <div className="w-full overflow-x-auto overflow-y-hidden border-b border-gray-200">
+          <div className="w-full overflow-x-auto overflow-y-hidden border-b border-[#EEE7DD]">
             <TabsList className="flex min-w-max flex-nowrap text-sm font-semibold text-center p-0 rounded-none bg-transparent min-h-10">
               {Object.entries(DLC_CAMPAIGN_CONST).map(([key, value]) => {
                 return (
                   <TabsTrigger
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-3 sm:px-6 text-gray-700 cursor-pointer h-full rounded-none min-w-max relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs whitespace-nowrap"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-3 sm:px-6 text-[#2E2D35] cursor-pointer h-full rounded-none min-w-max relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs whitespace-nowrap"
                     key={key}
                     value={key}
                   >
@@ -165,7 +164,7 @@ const Create10DLCCampaign = ({ setDrawerState }: { drawerState: boolean; setDraw
             className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
           >
             <div className="min-h-0 flex-1 overflow-y-auto">{stepLookUp?.[currentStep]}</div>
-            <div className="mt-2 shrink-0 border-t border-gray-200 bg-white pt-4 sm:mt-4">
+            <div className="mt-2 shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pt-4 sm:mt-4">
               <div className="flex min-w-max flex-nowrap justify-start gap-2 overflow-x-auto overflow-y-hidden sm:justify-end">
                 <Button
                   variant="transparent"

@@ -163,13 +163,13 @@ function AnalyticsPanel({
 }) {
   return (
     <div
-      className={`relative rounded-[10px] border border-gray-200 bg-white p-4 shadow-sm ${className}`}
+      className={`relative rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] ${className}`}
     >
       {isLoading && <CardLoader dark={dark} />}
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <h3 className={`text-[14px] font-bold ${dark ? 'text-white' : 'text-gray-950'}`}>
+            <h3 className={`text-[14px] font-bold ${dark ? 'text-white' : 'text-[#2E2D35]'}`}>
               {title}
             </h3>
             {tip ? <InfoTip text={tip} /> : null}
@@ -200,11 +200,11 @@ function KpiCard({
   isLoading?: boolean;
 }) {
   return (
-    <div className="relative min-h-[86px] rounded-[10px] border border-gray-200 bg-white px-4 py-3 shadow-sm">
+    <div className="relative min-h-[86px] rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
       {isLoading && <CardLoader />}
       <div className="text-[12px] font-medium leading-4 text-slate-500">{label}</div>
-      <div className="mt-2 text-[25px] font-black leading-8 text-gray-950">{value}</div>
-      <div className={`mt-1 text-[12px] font-medium ${bad ? 'text-red-500' : 'text-emerald-500'}`}>
+      <div className="mt-2 text-[25px] font-black leading-8 text-[#2E2D35]">{value}</div>
+      <div className={`mt-1 text-[12px] font-medium ${bad ? 'text-[#DC5049]' : 'text-emerald-500'}`}>
         {delta}
       </div>
     </div>
@@ -213,7 +213,7 @@ function KpiCard({
 
 function TopicProgressRow({ name, value }: { name: string; value: number }) {
   return (
-    <div className="flex items-center gap-3 border-b border-gray-100 py-2.5 last:border-b-0">
+    <div className="flex items-center gap-3 border-b border-[#EEE7DD] py-2.5 last:border-b-0">
       <span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-700">{name}</span>
       <span className="h-2 w-32 overflow-hidden rounded-full bg-slate-100">
         <span
@@ -763,8 +763,8 @@ export default function ReceptionistAnalytics({
   if (ANALYTICS_COMING_SOON) {
     // Existing analytics implementation is preserved below; temporarily show a simple placeholder.
     return (
-      <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f3f4f6] text-[#07142f]">
-        <div className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
+      <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-[#07142f]">
+        <div className="flex min-h-[64px] shrink-0 items-center justify-between border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
             <button
               type="button"
@@ -782,7 +782,7 @@ export default function ReceptionistAnalytics({
               AI Receptionists
             </button>
             <span>/</span>
-            <span className="font-semibold text-gray-950">Analytics</span>
+            <span className="font-semibold text-[#2E2D35]">Analytics</span>
           </div>
           <Button type="button" variant="outline" onClick={onClose}>
             <ArrowLeft className="h-4 w-4" />
@@ -797,8 +797,8 @@ export default function ReceptionistAnalytics({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f3f4f6] text-[#07142f]">
-      <div className="flex min-h-[72px] shrink-0 flex-col gap-3 border-b border-gray-200 bg-white px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden text-[#07142f]">
+      <div className="flex min-h-[72px] shrink-0 flex-col gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
           <button
             type="button"
@@ -812,7 +812,7 @@ export default function ReceptionistAnalytics({
             AI Receptionists
           </button>
           <span>/</span>
-          <span className="font-semibold text-gray-950">Analytics & Reports</span>
+          <span className="font-semibold text-[#2E2D35]">Analytics & Reports</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
@@ -820,7 +820,7 @@ export default function ReceptionistAnalytics({
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as any)}
-              className="h-[34px] cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-800 outline-none transition-colors hover:border-gray-300 focus:border-primary"
+              className="h-[34px] cursor-pointer appearance-none rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-800 outline-none transition-colors hover:border-[rgba(225,200,165,0.9)] focus:border-primary"
             >
               <option value="today">Today</option>
               <option value="yesterday">Yesterday</option>
@@ -828,14 +828,14 @@ export default function ReceptionistAnalytics({
               <option value="30d">Last 30 days</option>
               <option value="90d">Last 90 days</option>
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9A948F] pointer-events-none" />
           </div>
 
           <div className="relative">
             <select
               value={selectedRepId}
               onChange={(e) => setSelectedRepId(e.target.value)}
-              className="h-[34px] cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-800 outline-none transition-colors hover:border-gray-300 focus:border-primary"
+              className="h-[34px] cursor-pointer appearance-none rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-800 outline-none transition-colors hover:border-[rgba(225,200,165,0.9)] focus:border-primary"
             >
               <option value="all">All receptionists</option>
               {activeReceptionists.map((r) => (
@@ -844,14 +844,14 @@ export default function ReceptionistAnalytics({
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#9A948F] pointer-events-none" />
           </div>
 
           <Button
             type="button"
             variant="outline"
             onClick={exportAnalyticsCsv}
-            className="h-[34px] gap-1 text-xs font-semibold text-slate-700 bg-white border border-gray-200"
+            className="h-[34px] gap-1 text-xs font-semibold text-slate-700 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)]"
           >
             <Download className="h-3.5 w-3.5" />
             Export CSV
@@ -862,7 +862,7 @@ export default function ReceptionistAnalytics({
             variant="outline"
             onClick={() => void exportAnalyticsPdf()}
             disabled={isExportingPdf}
-            className="h-[34px] gap-1 text-xs font-semibold text-slate-700 bg-white border border-gray-200"
+            className="h-[34px] gap-1 text-xs font-semibold text-slate-700 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)]"
           >
             <FileText className="h-3.5 w-3.5" />
             {isExportingPdf ? 'Generating PDF...' : 'PDF Report'}
@@ -910,11 +910,11 @@ export default function ReceptionistAnalytics({
             isLoading={isLoading}
           >
             <div className="mt-4 flex items-center justify-end">
-              <span className="rounded-full border border-gray-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+              <span className="rounded-full border border-[#EEE7DD] bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 All receptionists
               </span>
             </div>
-            <div className="mt-2 divide-y divide-gray-100">
+            <div className="mt-2 divide-y divide-[#EEE7DD]">
               {activeReceptionists.map((rep) => (
                 <div
                   key={rep.id}
@@ -929,7 +929,7 @@ export default function ReceptionistAnalytics({
                       {rep.initials}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="truncate text-sm font-bold text-gray-950">{rep.name}</h4>
+                      <h4 className="truncate text-sm font-bold text-[#2E2D35]">{rep.name}</h4>
                       <p className="text-xs text-slate-500 truncate">{rep.subtitle}</p>
                     </div>
                   </div>
@@ -1013,7 +1013,7 @@ export default function ReceptionistAnalytics({
               <div className="relative h-[150px] w-[150px] shrink-0">
                 <div className="absolute inset-0 z-10 grid place-items-center text-center pointer-events-none">
                   <div>
-                    <div className="text-[22px] font-black leading-6 text-gray-950">
+                    <div className="text-[22px] font-black leading-6 text-[#2E2D35]">
                       {metrics.totalCalls}
                     </div>
                     <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.04em] text-slate-400">
@@ -1090,7 +1090,7 @@ export default function ReceptionistAnalytics({
               <div className="relative h-[150px] w-[150px] shrink-0">
                 <div className="absolute inset-0 z-10 grid place-items-center text-center pointer-events-none">
                   <div>
-                    <div className="text-[22px] font-black leading-6 text-gray-950">
+                    <div className="text-[22px] font-black leading-6 text-[#2E2D35]">
                       {talkPercent}%
                     </div>
                     <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.04em] text-slate-400">
@@ -1154,7 +1154,7 @@ export default function ReceptionistAnalytics({
                   />
                 ))
               ) : (
-                <div className="rounded-lg border border-dashed border-gray-200 bg-slate-50 px-4 py-7 text-center text-xs font-semibold text-slate-500">
+                <div className="rounded-lg border border-dashed border-[#EEE7DD] bg-slate-50 px-4 py-7 text-center text-xs font-semibold text-slate-500">
                   No topic data yet
                 </div>
               )}
@@ -1170,14 +1170,14 @@ export default function ReceptionistAnalytics({
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-100 text-[10px] font-bold uppercase tracking-[0.04em] text-slate-400">
+                  <tr className="border-b border-[#EEE7DD] text-[10px] font-bold uppercase tracking-[0.04em] text-slate-400">
                     <th className="py-2.5">Receptionist</th>
                     <th className="py-2.5 text-right">Calls</th>
                     <th className="py-2.5 text-right">Res%</th>
                     <th className="py-2.5 text-right">Sent</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#EEE7DD]">
                   {activeReceptionists.slice(0, 5).map((rep) => (
                     <tr
                       key={rep.id}
@@ -1247,7 +1247,7 @@ export default function ReceptionistAnalytics({
               {activeReceptionists.slice(0, 4).map((rep) => (
                 <div
                   key={rep.id}
-                  className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:bg-slate-50"
+                  className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-[#EEE7DD] p-3 transition-colors hover:bg-slate-50"
                 >
                   <div className="flex items-center gap-3">
                     <div

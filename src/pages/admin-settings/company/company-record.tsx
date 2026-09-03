@@ -58,8 +58,8 @@ interface CompanyRecordProps {
 
 const Field = ({ label, value }: { label: string; value?: string }) => (
   <div className="space-y-0.5">
-    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-    <p className="text-sm font-medium text-gray-900 break-words">{value?.trim() ? value : '—'}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9A948F]">{label}</p>
+    <p className="text-sm font-medium text-[#2E2D35] break-words">{value?.trim() ? value : '—'}</p>
   </div>
 );
 
@@ -322,15 +322,15 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
             <Building2 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-semibold text-gray-900">{name || 'Your company'}</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-base font-semibold text-[#2E2D35]">{name || 'Your company'}</p>
+            <p className="text-xs text-[#9A948F]">
               The company record. Every location below belongs to it.
             </p>
           </div>
@@ -342,7 +342,7 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
               type="button"
               onClick={handleCopyId}
               title="Copy company ID"
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-[#EEE7DD] px-2 py-1 text-xs font-medium text-[#9A948F] transition-colors hover:bg-[#FBE2C8]/45"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-green-600" />
@@ -376,15 +376,15 @@ const CompanyRecord = ({ companyInfo, defaultSite }: CompanyRecordProps) => {
           which keeps the old name until the API allows a change. */}
       {serverRefused && (
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-semibold text-gray-900">
+          <p className="text-xs font-semibold text-[#2E2D35]">
             These details cannot be changed from here yet
           </p>
-          <p className="mt-1 text-xs text-gray-700">
+          <p className="mt-1 text-xs text-[#2E2D35]">
             The name shown above is your main location&rsquo;s name, and you <strong>can</strong>{' '}
             change that — edit the main location below and the name here follows. That corrects what
             everyone sees.
           </p>
-          <p className="mt-1 text-xs text-gray-700">
+          <p className="mt-1 text-xs text-[#2E2D35]">
             Your registered address is held on a separate billing record, which only your provider
             can change today. Invoices and number purchases read that record, so ask them to update
             it if it is wrong.

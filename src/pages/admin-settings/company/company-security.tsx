@@ -489,19 +489,19 @@ const CompanySecurity = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Security</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Security</p>
+        <p className="text-xs text-[#9A948F]">
           Security rules for everyone in the company. The Security &amp; Privacy page under My
           Account covers only your own password and devices — this one is company-wide.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
           {/* Loud, once, at the top — then specifically again on every card. */}
-          <div className="rounded-lg border border-red-300 bg-red-50 p-4">
+          <div className="rounded-xl border border-red-300 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-900">
               Signing people out when idle is active. The rest is recorded as your policy and is not
               switched on yet.
@@ -518,11 +518,11 @@ const CompanySecurity = () => {
           </div>
 
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved security settings
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 What you see below are the built-in defaults, not your saved values. Reload before
                 you save, or you may overwrite settings you cannot currently see.
               </p>
@@ -530,9 +530,9 @@ const CompanySecurity = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-gray-900">No security settings saved yet</p>
-              <p className="text-xs text-gray-500">
+            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+              <p className="text-sm font-semibold text-[#2E2D35]">No security settings saved yet</p>
+              <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
@@ -565,14 +565,14 @@ const CompanySecurity = () => {
             note="Coming soon, along with the requirement above. Nobody is being asked for a second step yet, so nobody is being let off one."
           >
             {!form.mfa_required && (
-              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+              <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
                 MFA is not required, so an exception list has nothing to except anyone from. Turn
                 the requirement on above to edit it. Any names already saved are kept but are
                 cleared from the stored record while the requirement is off.
               </p>
             )}
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[#9A948F]">
               established systems&rsquo;s hard rule: Company, Office and Regional Admins can never
               be added to the exception list — the accounts with the most power are the ones that
               must not skip the second factor. This account&rsquo;s equivalents are the Admin and
@@ -600,12 +600,12 @@ const CompanySecurity = () => {
               <p className="text-xs font-semibold text-red-600">{errors.mfa_exempt_user_uuids}</p>
             )}
 
-            <div className="max-h-[320px] overflow-y-auto rounded-lg border border-gray-200">
+            <div className="max-h-[320px] overflow-y-auto rounded-lg border border-[#EEE7DD]">
               {isRosterLoading && (
-                <p className="px-3 py-4 text-xs text-gray-500">Loading people…</p>
+                <p className="px-3 py-4 text-xs text-[#9A948F]">Loading people…</p>
               )}
               {!isRosterLoading && !filteredRoster.length && (
-                <p className="px-3 py-4 text-xs text-gray-500">
+                <p className="px-3 py-4 text-xs text-[#9A948F]">
                   {roster.length
                     ? 'Nobody matches that search.'
                     : 'No people were returned for this account.'}
@@ -625,16 +625,16 @@ const CompanySecurity = () => {
                       onCheckedChange={(checked) => toggleExempt(person, checked === true)}
                     />
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <p className="truncate text-sm text-gray-900">
+                      <p className="truncate text-sm text-[#2E2D35]">
                         {person.name}
                         {person.extension ? (
-                          <span className="text-gray-500"> · ext {person.extension}</span>
+                          <span className="text-[#9A948F]"> · ext {person.extension}</span>
                         ) : null}
                       </p>
-                      <p className="truncate text-xs text-gray-500">{person.roleName}</p>
+                      <p className="truncate text-xs text-[#9A948F]">{person.roleName}</p>
                     </div>
                     {person.isAdmin && (
-                      <span className="shrink-0 rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                      <span className="shrink-0 rounded-sm bg-[#FBE2C8]/40 px-2 py-1 text-[11px] font-semibold text-[#9A948F]">
                         Admin — cannot be exempted
                       </span>
                     )}
@@ -674,14 +674,14 @@ const CompanySecurity = () => {
                     error={errors.idle_timeout_minutes}
                     onChange={(event) => updateForm({ idle_timeout_minutes: event.target.value })}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[#9A948F]">
                     Between {IDLE_MIN_MINUTES} minutes and {IDLE_MAX_MINUTES} minutes (8 hours) —
                     the same range the usual range is, which it stores as 300 to 28800 seconds.
                     Stored here in seconds too.
                   </p>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                  <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
                     other established systems forces HIPAA-enabled organisations down to{' '}
                     {IDLE_HIPAA_MINUTES} minutes and does not let them choose. This platform has no
                     HIPAA flag, so nothing is forced here. If you are handling health data, set{' '}
@@ -714,7 +714,7 @@ const CompanySecurity = () => {
             {form.ip_allowlist_enabled && (
               <>
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="ip-allowlist">
+                  <label className="text-sm font-medium text-[#2E2D35]" htmlFor="ip-allowlist">
                     CIDR blocks, one per line
                   </label>
                   <textarea
@@ -728,7 +728,7 @@ const CompanySecurity = () => {
                     value={form.ip_allowlist_text}
                     onChange={(event) => updateForm({ ip_allowlist_text: event.target.value })}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[#9A948F]">
                     {cidrBlocks.length} of {MAX_CIDR_BLOCKS} blocks used. IPv4 only — other
                     established systems does not accept IPv6 here, so neither does this. A single
                     address is written as /32.
@@ -794,7 +794,7 @@ const CompanySecurity = () => {
                       error={errors.sso_idp_entity_id}
                       onChange={(event) => updateForm({ sso_idp_entity_id: event.target.value })}
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#9A948F]">
                       The identifier the provider puts in the Issuer field of every assertion.
                     </p>
                   </div>
@@ -806,14 +806,14 @@ const CompanySecurity = () => {
                       error={errors.sso_idp_sso_url}
                       onChange={(event) => updateForm({ sso_idp_sso_url: event.target.value })}
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#9A948F]">
                       Where people would be sent to sign in. Must be https.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="sso-certificate">
+                  <label className="text-sm font-medium text-[#2E2D35]" htmlFor="sso-certificate">
                     IdP signing certificate (PEM)
                   </label>
                   <textarea
@@ -827,7 +827,7 @@ const CompanySecurity = () => {
                     value={form.sso_idp_certificate}
                     onChange={(event) => updateForm({ sso_idp_certificate: event.target.value })}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[#9A948F]">
                     Paste the whole block, BEGIN and END lines included. It is used to check that an
                     assertion really came from your provider.
                   </p>
@@ -849,7 +849,7 @@ const CompanySecurity = () => {
                         updateForm({ sso_single_logout_uri: event.target.value })
                       }
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#9A948F]">
                       Optional. Signing out here would also end the session at the provider. Leave
                       blank if your provider does not offer one.
                     </p>
@@ -859,50 +859,50 @@ const CompanySecurity = () => {
             )}
           </SettingCard>
 
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-start gap-3 border-b border-gray-200 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+          <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+            <div className="flex flex-wrap items-start gap-3 border-b border-[#EEE7DD] p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FBE2C8]/40 text-[#9A948F]">
                 <Info className="h-5 w-5" />
               </div>
               <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-                <p className="text-base font-semibold text-gray-900">
+                <p className="text-base font-semibold text-[#2E2D35]">
                   Things you cannot change, on the platforms this page follows
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   These are handled for you and there is no setting to change.
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
-              <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="rounded-lg border border-[#EEE7DD] p-3">
+                <p className="text-sm font-semibold text-[#2E2D35]">
                   Password reuse — other established systems
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   other established systems blocks reuse of the last 10 passwords. It is fixed: an
                   admin cannot raise, lower or switch off that history.
                 </p>
               </div>
-              <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="rounded-lg border border-[#EEE7DD] p-3">
+                <p className="text-sm font-semibold text-[#2E2D35]">
                   Failed sign-ins — other established systems
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   After 6 failed logins other established systems locks the account for 5 minutes.
                   Also fixed — there is no threshold or duration to set.
                 </p>
               </div>
-              <div className="rounded-lg border border-gray-200 p-3">
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="rounded-lg border border-[#EEE7DD] p-3">
+                <p className="text-sm font-semibold text-[#2E2D35]">
                   Session length — established systems
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9A948F]">
                   established systems fixes its session at 30 days and gives admins no way to
                   shorten it. That is why the idle timeout above is modelled on other established
                   systems, which does let you choose.
                 </p>
               </div>
-              <p className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+              <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#2E2D35]">
                 These three describe established business phone systems, not this platform. What
                 this platform does about password history, failed sign-ins and session length has
                 not been confirmed from the code — the sign-in behaviour lives in the backend, which
@@ -912,8 +912,8 @@ const CompanySecurity = () => {
             </div>
           </div>
 
-          <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
             <SectionActions>

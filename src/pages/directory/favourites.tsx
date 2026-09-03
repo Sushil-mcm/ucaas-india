@@ -11,6 +11,7 @@ import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import './list-page-glass.css';
 import { usePeopleRows, type PersonRow } from './people-rows';
 import { useDirectoryFavourites } from './use-directory-favourites';
+import '@/styles/warm-glass.css';
 
 /**
  * Directory ▸ Favourites — the people you keep coming back to.
@@ -223,7 +224,7 @@ const Favourites = () => {
                             dial(row.dialTarget, { forceRefreshContactInfo: true })
                           }
                         >
-                          <Ic n="phone" size={12} />
+                          <Ic n="send" size={12} />
                         </button>
                         <button
                           type="button"

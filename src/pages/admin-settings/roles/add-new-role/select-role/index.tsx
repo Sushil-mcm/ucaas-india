@@ -91,16 +91,16 @@ const SelectRole: FC<any> = ({
   return (
     <div className="flex w-full flex-col gap-4">
       {viewPermission ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-4">
           <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-start">
-            <span className="font-medium text-gray-900">Description:</span>
-            <div className="font-normal text-gray-700 break-words">
+            <span className="font-medium text-[#2E2D35]">Description:</span>
+            <div className="font-normal text-[#2E2D35] break-words">
               {sanitizePlainTextInput(selectedRole?.description, ROLE_DESCRIPTION_MAX_LENGTH)}
             </div>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-4 sm:p-5">
           {/* <div className="flex flex-col gap-1">
           <h5 className="font-semibold text-gray-900 text-md">Describe User Role</h5>
           <p className="text-gray-800 text-sm">Describe your user role here.</p>
@@ -123,9 +123,9 @@ const SelectRole: FC<any> = ({
               <div className="flex w-full gap-1 relative">
                 <div className="flex flex-col gap-1.5 w-full">
                   <div className="flex items-center justify-between">
-                    <Label>Description</Label>
+                    <Label required>Description</Label>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-gray-500">
+                      <span className="text-[11px] font-medium text-[#9A948F]">
                         {descriptionLength}/{ROLE_DESCRIPTION_MAX_LENGTH}
                       </span>
                       {errors?.description?.message && (
@@ -141,7 +141,7 @@ const SelectRole: FC<any> = ({
                       <textarea
                         className={`border normal-case focus:outline-none
   disabled:bg-gray-300 disabled:text-slate-500 disabled:border-gray-200 disabled:shadow-none
-  text-gray-700 placeholder:text-gray-700 bg-white text-sm
+  text-[#2E2D35] placeholder:text-[#2E2D35] bg-white text-sm
   rounded-xl w-full p-3 min-h-10 resize-none
   ${
     errors?.description
@@ -163,7 +163,7 @@ const SelectRole: FC<any> = ({
         </div>
       )}
       {!viewPermission && (
-        <div className="flex w-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+        <div className="flex w-full flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:p-5">
           <div className="flex w-full flex-col gap-3">
             {/* The list below is ADMIN, SUB-ADMIN, MANAGER, AGENT, sitting
                 directly under a free-text name box. It reads as "which of these
@@ -192,7 +192,7 @@ const SelectRole: FC<any> = ({
                 and stand alone. Copying an existing role is the rarer case and
                 sits below a divider, out of the way of the decision. */}
             <RadioGroup
-              className="flex flex-col gap-1"
+              className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
               value={selectedRole?.role_uuid}
               onValueChange={(value) => handleRoleChange(value)}
               disabled={selectedRole?.type === 'custom' && roleData}
@@ -251,7 +251,7 @@ const SelectRole: FC<any> = ({
           </div>
         </div>
       )}
-      <div className="flex w-full rounded-xl border border-gray-200 bg-white">
+      <div className="flex w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         <div className="flex w-full flex-col gap-4 p-3 sm:p-4">
           {/* Nothing was shown here until a starting point had been chosen — no
               list, no message, just an empty white box. A new role therefore

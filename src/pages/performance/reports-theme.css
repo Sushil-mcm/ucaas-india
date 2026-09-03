@@ -1,0 +1,494 @@
+/* ============================================================
+   Performance › Reports — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-reports`, the tab's own root element, the same pattern
+   `speech-theme.css`/`campaigns-theme.css` use — nothing outside this
+   component is reachable from here. The toolbar and table here are plain
+   inline-styled markup (not `TableManager`/`.fchip`), so this file also
+   introduces a few small class hooks (`rp-toolbar`, `rp-select`,
+   `rp-notice`) on the elements that used to carry their colour inline, so
+   the theme can actually reach and override them.
+   ============================================================ */
+
+.perf-reports {
+  --rp-accent: #f97316;
+  --rp-accent-ink: #ea580c;
+  --rp-wash: #fff1eb;
+  --rp-muted: #666666;
+  --rp-ink: #1a1a1a;
+
+  --rp-glass: rgba(255, 255, 255, 0.85);
+  --rp-glass-border: rgba(255, 255, 255, 0.95);
+  --rp-glass-blur: blur(20px) saturate(190%);
+  --rp-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-reports {
+  --rp-wash: #2a1710;
+  --rp-muted: #93a1ba;
+  --rp-ink: #f4f6fb;
+  --rp-glass: rgba(17, 24, 39, 0.72);
+  --rp-glass-border: rgba(251, 146, 60, 0.18);
+  --rp-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Ambient backdrop, wired via the shared `perf-warm-backdrop` toggle —
+   painted on `.perf-reports` itself, consistent with Campaigns/Speech. */
+body.perf-warm-backdrop .perf-reports {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
+    #fdf6ee;
+}
+.dark body.perf-warm-backdrop .perf-reports {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
+    #0a0f1a;
+}
+
+/* ------------------------------------------------------------
+   1. Top KPI summary cards
+   ------------------------------------------------------------ */
+.perf-reports .stat {
+  background: var(--rp-glass);
+  backdrop-filter: var(--rp-glass-blur);
+  -webkit-backdrop-filter: var(--rp-glass-blur);
+  border: 1px solid var(--rp-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--rp-glass-shadow);
+}
+.perf-reports .stat .k {
+  color: var(--rp-muted);
+  letter-spacing: 0.1em;
+}
+.perf-reports .stat .v {
+  color: var(--rp-ink);
+  font-weight: 800;
+}
+.perf-reports .stat .d {
+  color: var(--rp-muted) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   2. Report selector & action toolbar
+   ------------------------------------------------------------ */
+/* Flat cream tint, the same panel tone the rail/toolbar use elsewhere in
+   Performance — not a per-control background. */
+.perf-reports .rp-toolbar {
+  background: #fffaf4;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(234, 88, 12, 0.05);
+}
+.dark .perf-reports .rp-toolbar {
+  background: rgba(23, 15, 10, 0.6);
+  border-color: rgba(251, 146, 60, 0.18);
+}
+
+/* Groups related controls (picker vs. date vs. export) so the bar reads as
+   sections rather than a flat row of loose controls. */
+.perf-reports .rp-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.perf-reports .rp-toolbar-divider {
+  width: 1px;
+  height: 22px;
+  flex: none;
+  background: rgba(249, 115, 22, 0.16);
+}
+.dark .perf-reports .rp-toolbar-divider {
+  background: rgba(251, 146, 60, 0.2);
+}
+
+/* Report selector — a custom dropdown (Radix DropdownMenu) rather than a
+   native `<select>`. A native select's open list is drawn by the OS, not
+   the page, so its hover/selected highlight is whatever blue the platform
+   defaults to and cannot be reached by CSS at all — a custom dropdown is
+   the only way to theme it. Same options, same selection behaviour as the
+   select it replaces. */
+/* Radix's DropdownMenuTrigger renders this as a bare `<button>` via
+   `asChild`, which picks up Tailwind Preflight's browser-default button
+   reset (`font: inherit` off a 16px body, no border) at a layer priority
+   this plain stylesheet can't out-rank on its own — `!important` on the
+   properties Preflight actually touches is what makes them stick. */
+.perf-reports .rp-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  max-width: 250px;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(249, 115, 22, 0.18) !important;
+  color: var(--rp-ink) !important;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.dark .perf-reports .rp-select-trigger {
+  background: rgba(17, 24, 39, 0.55) !important;
+  color: var(--rp-ink) !important;
+}
+.perf-reports .rp-select-trigger:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+.perf-reports .rp-select-trigger[data-state='open'] {
+  outline: none;
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+.perf-reports .rp-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perf-reports .rp-select-chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--rp-muted);
+  transition: transform 0.16s ease;
+}
+.perf-reports .rp-select-trigger[data-state='open'] .rp-select-chevron {
+  transform: rotate(180deg);
+  color: var(--rp-accent-ink);
+}
+
+/* The dropdown's own content renders through a portal to `document.body`,
+   outside `.perf-reports` — its own class carries the theme instead of an
+   ancestor selector. */
+.rp-report-menu {
+  min-width: 260px;
+  max-width: 320px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  background: rgba(255, 250, 244, 0.98);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow:
+    0 14px 35px -8px rgba(234, 88, 12, 0.22),
+    0 4px 12px -2px rgba(60, 40, 30, 0.1);
+}
+.dark .rp-report-menu {
+  background: rgba(23, 15, 10, 0.98);
+  border-color: rgba(251, 146, 60, 0.22);
+}
+.rp-report-menu-group + .rp-report-menu-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(249, 115, 22, 0.12);
+}
+.dark .rp-report-menu-group + .rp-report-menu-group {
+  border-top-color: rgba(251, 146, 60, 0.16);
+}
+.rp-report-menu-label {
+  padding: 6px 8px 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #666666;
+}
+.dark .rp-report-menu-label {
+  color: #93a1ba;
+}
+.rp-report-menu-item {
+  border-radius: 8px;
+  padding: 7px 9px !important;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+.dark .rp-report-menu-item {
+  color: #f4f6fb;
+}
+.rp-report-menu-item:focus,
+.rp-report-menu-item:hover:not([data-disabled]) {
+  background: rgba(255, 241, 235, 0.9) !important;
+  color: #ea580c !important;
+}
+.dark .rp-report-menu-item:focus,
+.dark .rp-report-menu-item:hover:not([data-disabled]) {
+  background: rgba(251, 146, 60, 0.14) !important;
+  color: #fdba74 !important;
+}
+.rp-report-menu-item[data-selected] {
+  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%);
+  color: #c2410c;
+  font-weight: 700;
+}
+.dark .rp-report-menu-item[data-selected] {
+  background: rgba(251, 146, 60, 0.22);
+  color: #fdba74;
+}
+.rp-report-menu-item[data-disabled] {
+  opacity: 0.6;
+}
+.rp-report-menu-hint {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #93a1ba;
+  white-space: nowrap;
+}
+.rp-report-menu-lock {
+  flex: none;
+  color: #93a1ba;
+}
+
+/* Date range — a quiet chip rather than plain text floating in the bar. */
+.perf-reports .rp-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.06);
+  color: var(--rp-ink) !important;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dark .perf-reports .rp-range {
+  background: rgba(251, 146, 60, 0.1);
+}
+.perf-reports .rp-range svg {
+  color: var(--rp-accent-ink);
+  flex: none;
+}
+.perf-reports .rp-range-arrow {
+  color: var(--rp-muted);
+  font-weight: 500;
+}
+.perf-reports .rp-range-hint {
+  color: var(--rp-muted) !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* "All reports" toggle and "Export CSV" — warm glass hover, matching every
+   other row/toolbar action across the Performance theme (e.g. Campaigns'
+   `.mini.ic`). `.btn.primary` (the toggle when the catalog is open) is left
+   alone, same reasoning as the toolbar's own primary CTA: it already reads
+   solid accent orange from the global design system. */
+.perf-reports .rp-toolbar .btn.ghost.sm {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 999px;
+  color: var(--rp-accent-ink);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.perf-reports .rp-toolbar .btn.ghost.sm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 14px -2px rgba(249, 115, 22, 0.35);
+}
+
+/* ------------------------------------------------------------
+   3. Info/SL notice banner
+   ------------------------------------------------------------ */
+.perf-reports .rp-notice {
+  background: linear-gradient(135deg, #fff1eb 0%, #ffe4d1 100%);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  color: var(--rp-accent-ink);
+}
+.dark .perf-reports .rp-notice {
+  background: rgba(154, 82, 30, 0.22);
+  border-color: rgba(251, 146, 60, 0.28);
+  color: #fdba74;
+}
+
+/* ------------------------------------------------------------
+   4. Panels (catalog, main report table, linked report pages) — frosted
+   glass card, the same treatment `panel-card` gets on Campaigns/Live.
+   ------------------------------------------------------------ */
+.perf-reports .panel-card {
+  background: var(--rp-glass);
+  backdrop-filter: var(--rp-glass-blur);
+  -webkit-backdrop-filter: var(--rp-glass-blur);
+  border: 1px solid var(--rp-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--rp-glass-shadow);
+}
+.perf-reports .pc-head {
+  background: transparent;
+  border-color: rgba(249, 115, 22, 0.12);
+}
+.perf-reports .pc-head h3 {
+  color: var(--rp-ink);
+}
+.perf-reports .pc-right {
+  color: var(--rp-muted) !important;
+}
+.perf-reports .sect-title {
+  color: var(--rp-muted);
+}
+
+/* Report catalog cards — a plain-token grid (var(--surface)/var(--line))
+   that looked flat and off-brand sitting inside an otherwise all-warm-glass
+   panel. Themed as its own small glass card so it reads as part of the
+   same system as the toolbar/table around it. */
+.perf-reports .rp-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+/* mcm-page.css resets every plain button's border/background/color
+   (`.mcm-page button:not([data-slot='tabs-trigger'])`, specificity 0,2,1)
+   so the design system's own buttons start unstyled. That beats a
+   `!important` two-class selector like `.perf-reports .rp-catalog-card`
+   (0,2,0) on specificity even though importance normally wins regardless —
+   in practice here it doesn't, so the fix is to match its own specificity
+   by also selecting the `button` element, not just outrun it with
+   `!important` (kept anyway, as a second guard). */
+.perf-reports button.rp-catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.14) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+.dark .perf-reports button.rp-catalog-card {
+  background: rgba(17, 24, 39, 0.45) !important;
+  border-color: rgba(251, 146, 60, 0.16) !important;
+}
+.perf-reports button.rp-catalog-card:hover:not(.is-locked) {
+  transform: translateY(-2px);
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  box-shadow: 0 10px 24px -8px rgba(234, 88, 12, 0.22);
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+.dark .perf-reports button.rp-catalog-card:hover:not(.is-locked) {
+  background: rgba(17, 24, 39, 0.65) !important;
+}
+.perf-reports button.rp-catalog-card.is-selected {
+  border-color: #f97316 !important;
+  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%) !important;
+  box-shadow: 0 6px 18px -6px rgba(234, 88, 12, 0.28);
+}
+.dark .perf-reports button.rp-catalog-card.is-selected {
+  background: rgba(251, 146, 60, 0.18) !important;
+}
+.perf-reports button.rp-catalog-card.is-locked {
+  cursor: not-allowed;
+  border-style: dashed !important;
+  border-color: rgba(249, 115, 22, 0.16) !important;
+  background: rgba(249, 115, 22, 0.04) !important;
+  opacity: 0.75;
+}
+.perf-reports button.rp-catalog-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+.dark .perf-reports button.rp-catalog-card.is-locked {
+  background: rgba(17, 24, 39, 0.3) !important;
+}
+.perf-reports .rp-catalog-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--rp-ink);
+}
+.perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
+  color: #c2410c;
+}
+.dark .perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
+  color: #fdba74;
+}
+.perf-reports .rp-catalog-card.is-locked .rp-catalog-title {
+  color: var(--rp-muted);
+}
+.perf-reports .rp-catalog-lock {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--rp-muted);
+}
+.perf-reports .rp-catalog-desc {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--rp-muted);
+}
+
+/* ------------------------------------------------------------
+   5. Main report data table — sticky, near-opaque header, warm row hover,
+   crisp typography.
+   ------------------------------------------------------------ */
+.perf-reports .rp-table-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+}
+.perf-reports .rp-table-wrap table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(255, 246, 238, 0.97);
+  backdrop-filter: var(--rp-glass-blur);
+  -webkit-backdrop-filter: var(--rp-glass-blur);
+  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.12);
+}
+.dark .perf-reports .rp-table-wrap table thead th {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-reports .rp-table-wrap table tbody tr {
+  transition: background-color 0.16s ease;
+}
+.perf-reports .rp-table-wrap table tbody tr:hover {
+  background: rgba(255, 241, 235, 0.5);
+}
+.dark .perf-reports .rp-table-wrap table tbody tr:hover {
+  background: rgba(251, 146, 60, 0.08);
+}
+.perf-reports .rp-table-wrap table tbody tr.rp-total-row {
+  background: rgba(249, 115, 22, 0.08);
+}
+.dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row {
+  background: rgba(251, 146, 60, 0.12);
+}
+.perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
+  color: var(--rp-ink);
+}
+
+/* Row cell colour is set inline as `#334155` (slate-700, readable on the
+   light glass) / `var(--rp-ink)` for the first column — neither adapts to
+   dark mode on its own, so both are restated here for the dark surface. */
+.dark .perf-reports .rp-table-wrap table tbody td {
+  color: var(--rp-muted) !important;
+}
+.dark .perf-reports .rp-table-wrap table tbody td:first-child {
+  color: var(--rp-ink) !important;
+}
+.dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
+  color: var(--rp-ink) !important;
+}

@@ -89,7 +89,7 @@ const sentimentBadgeClass = (sentiment: string) => {
   if (sentiment === 'positive') return 'bg-emerald-100 text-emerald-700';
   if (sentiment === 'negative') return 'bg-red-100 text-red-700';
   if (sentiment === 'neutral') return 'bg-slate-100 text-slate-700';
-  return 'bg-gray-100 text-gray-500';
+  return 'bg-[#FBE2C8]/40 text-[#9A948F]';
 };
 
 const sentimentScoreText = (counts: any) => {
@@ -326,18 +326,18 @@ const ForwardTypeCell = ({ data, onUpdate, optionsData, userExtension }: any) =>
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-3">
         <div className="flex items-start justify-between gap-3">
           <div className={`min-w-0 ${summaryShouldShowForwardTo ? '' : 'flex-1'}`}>
-            <p className="text-xs xxl:text-sm text-gray-500">Forward Type</p>
-            <p className="truncate text-xs xxl:text-sm font-medium text-gray-900">
+            <p className="text-xs xxl:text-sm text-[#9A948F]">Forward Type</p>
+            <p className="truncate text-xs xxl:text-sm font-medium text-[#2E2D35]">
               {originalTypeLabel}
             </p>
           </div>
           {showForwardToForType(originalType) && (
             <div className="min-w-0">
-              <p className="text-xs text-gray-500">{forwardValueFieldLabel}</p>
-              <p className="truncate text-xs xxl:text-sm font-medium text-gray-900">
+              <p className="text-xs text-[#9A948F]">{forwardValueFieldLabel}</p>
+              <p className="truncate text-xs xxl:text-sm font-medium text-[#2E2D35]">
                 {originalValueLabel}
               </p>
             </div>
@@ -383,9 +383,9 @@ const ForwardTypeCell = ({ data, onUpdate, optionsData, userExtension }: any) =>
               forwardValueClass="w-full"
               selectCustomClassSecond="w-full"
             />
-            <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-              <p className="text-xs text-gray-500">Selected</p>
-              <p className="text-sm font-medium text-gray-900">
+            <div className="mt-4 rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-3">
+              <p className="text-xs text-[#9A948F]">Selected</p>
+              <p className="text-sm font-medium text-[#2E2D35]">
                 {shouldShowForwardTo
                   ? `${selectedTypeLabel} - ${selectedValueLabel}`
                   : selectedTypeLabel}
@@ -807,7 +807,7 @@ const AiReceptionist = () => {
         accessorKey: 'agentName',
         cell: ({ row }: any) => (
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100  font-semibold text-gray-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FBE2C8]/40  font-semibold text-[#9A948F]">
               {row.original.agentName?.substring(0, 2).toUpperCase()}
             </div>
             <p className=" font-semibold text-primary">{row.original.agentName}</p>
@@ -833,7 +833,7 @@ const AiReceptionist = () => {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-8 items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 text-xs font-semibold cursor-pointer outline-none transition-colors duration-200 hover:bg-gray-100/80 text-gray-700"
+                  className="inline-flex h-8 items-center gap-2 rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 text-xs font-semibold cursor-pointer outline-none transition-colors duration-200 hover:bg-[#FBE2C8]/80 text-[#2E2D35]"
                   style={
                     isLive
                       ? {
@@ -862,18 +862,18 @@ const AiReceptionist = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[140px] bg-white border border-gray-200 shadow-lg rounded-xl p-1 z-50 animate-none"
+                className="w-[140px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] shadow-lg rounded-xl p-1 z-50 animate-none"
               >
                 <DropdownMenuItem
                   onClick={() => handleStatusChange('live')}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-900"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-[#FBE2C8]/45 text-[#2E2D35]"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   <span>Live</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStatusChange('inactive')}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-900"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer rounded-lg hover:bg-[#FBE2C8]/45 text-[#2E2D35]"
                 >
                   <span className="h-2 w-2 rounded-full bg-slate-400" />
                   <span>Paused</span>
@@ -897,7 +897,7 @@ const AiReceptionist = () => {
 
           if (!calls) {
             return (
-              <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">
+              <span className="inline-flex rounded-full bg-[#FBE2C8]/40 px-2 py-1 text-xs font-semibold text-[#9A948F]">
                 Not analyzed
               </span>
             );
@@ -1056,11 +1056,11 @@ const AiReceptionist = () => {
         cell: ({ row }: any) => {
           const date = row?.original?.updatedAt || row?.original?.updated_at;
           return date ? (
-            <span className="text-xs xxl:text-sm font-medium text-gray-600">
+            <span className="text-xs xxl:text-sm font-medium text-[#9A948F]">
               {convertDateFormateApis(date, 'DD/MM/YYYY hh:mm A')}
             </span>
           ) : (
-            <div className="text-center font-medium text-gray-600">---</div>
+            <div className="text-center font-medium text-[#9A948F]">---</div>
           );
         },
       },
@@ -1089,7 +1089,7 @@ const AiReceptionist = () => {
                     setPromptModalOpen(true);
                   },
                   className:
-                    'flex h-8 cursor-pointer w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:border-primary hover:text-primary',
+                    'flex h-8 cursor-pointer w-8 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] hover:border-primary hover:text-primary',
                   icon: <MessageSquare className="h-4 w-4" />,
                 },
                 agentAccess?.edit && {
@@ -1102,7 +1102,7 @@ const AiReceptionist = () => {
                     setActiveView('create-scratch');
                   },
                   className:
-                    'flex h-8 cursor-pointer w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:border-primary hover:text-primary',
+                    'flex h-8 cursor-pointer w-8 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] hover:border-primary hover:text-primary',
                   icon: <Pencil className="h-4 w-4" />,
                 },
                 agentAccess?.delete && {
@@ -1144,18 +1144,18 @@ const AiReceptionist = () => {
   );
   return (
     <>
-      <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
-        <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div className="text-gray-900 font-semibold text-lg flex items-center gap-2">
+      <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+          <div className="text-[#2E2D35] font-semibold text-lg flex items-center gap-2">
             <div>
               <div className="flex items-center gap-1">
                 AI Tools
-                <div className="-rotate-90 text-gray-800">
+                <div className="-rotate-90 text-[#2E2D35]">
                   <Icon name="ChevronIcon" className="w-5 h-5" />
                 </div>
                 <span className="text-primary text-md">AI Receptionist</span>
               </div>
-              <p className="text-gray-500 text-xs font-medium">
+              <p className="text-[#9A948F] text-xs font-medium">
                 An AI that answers calls, understands what the caller wants, and routes them.
               </p>
             </div>
@@ -1170,7 +1170,7 @@ const AiReceptionist = () => {
               <Input
                 placeholder="Search"
                 className="pl-10 w-full min-h-9 rounded-lg"
-                IconPosition="left-0 pl-2 inset-y-0 text-gray-700"
+                IconPosition="left-0 pl-2 inset-y-0 text-[#2E2D35]"
                 value={search}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
                 Icon={<SearchLine />}
@@ -1318,7 +1318,7 @@ const AiReceptionist = () => {
           )}
 
           {activeView === 'template-choice' && (
-            <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-4 md:p-6">
+            <div className="mt-5 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 md:p-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {dynamicTemplateOptions?.length
                   ? dynamicTemplateOptions?.map((template: any) => {
@@ -1336,7 +1336,7 @@ const AiReceptionist = () => {
                             setPreselectKnowledgeBase(null);
                             setActiveView('create-scratch');
                           }}
-                          className="group rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-primary hover:bg-ucass-active-bg"
+                          className="group rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 text-left transition-colors hover:border-primary hover:bg-ucass-active-bg"
                         >
                           <div className="flex items-start gap-3">
                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAECF0] text-primary transition-colors group-hover:bg-primary group-hover:text-white">

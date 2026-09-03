@@ -1,0 +1,272 @@
+/* ============================================================
+   Performance › Callbacks — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-callbacks`, the tab's own root element, exactly the way
+   `live-theme.css` scopes to `.perf-live` — nothing outside this component
+   is reachable from here, so no other Performance tab, the shared toolbar,
+   or the rail is affected.
+   ============================================================ */
+
+.perf-callbacks {
+  --pc-accent: #f97316;
+  --pc-accent-ink: #ea580c;
+  --pc-wash: #fff1eb;
+  --pc-muted: #666666;
+  --pc-ink: #1a1a1a;
+
+  --pc-glass: rgba(255, 255, 255, 0.85);
+  --pc-glass-border: rgba(255, 255, 255, 0.95);
+  --pc-glass-blur: blur(20px) saturate(190%);
+  --pc-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-callbacks {
+  --pc-wash: #2a1710;
+  --pc-muted: #93a1ba;
+  --pc-ink: #f4f6fb;
+  --pc-glass: rgba(17, 24, 39, 0.72);
+  --pc-glass-border: rgba(251, 146, 60, 0.18);
+  --pc-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ------------------------------------------------------------
+   1. Metric summary cards (Scheduled tasks, Overdue, Tasks by source,
+   Voicemails today, Voicemail time)
+   ------------------------------------------------------------ */
+.perf-callbacks .stat {
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  border: 1px solid var(--pc-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--pc-glass-shadow);
+}
+.perf-callbacks .stat .k {
+  color: var(--pc-muted);
+  letter-spacing: 0.1em;
+}
+.perf-callbacks .stat .v {
+  color: var(--pc-ink);
+  font-weight: 800;
+}
+.perf-callbacks .stat .d {
+  color: var(--pc-muted) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   2. Sub-tab switcher ("Scheduled tasks" / "Queue voicemail")
+   ------------------------------------------------------------ */
+/* The shadcn Tabs component now paints its own default off-white background
+   on the list container (`rgba(251,249,246,.85)`) at higher specificity
+   than a plain class rule beats — since the list is rectangular while the
+   pills inside it are pill-shaped, that background showed through as a
+   flat white block in the gap between them. `!important` clears it back
+   to transparent, the same fix used for the triggers just below. */
+.perf-callbacks [data-slot='tabs-list'] {
+  background: transparent !important;
+  gap: 6px;
+  padding: 0;
+  height: auto;
+}
+
+/* `.mcm-page button[data-slot='tabs-trigger']` (mcm-page.css) sets
+   `background: none` at higher specificity (adds the `button` element to
+   the same attribute selector) than a plain `[data-slot='tabs-trigger']`
+   class rule can out-rank — `!important` on `background` is what makes it
+   stick, the same fix used elsewhere in this theme for the identical
+   mcm-page button-reset fight. */
+.perf-callbacks [data-slot='tabs-trigger'] {
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+.dark .perf-callbacks [data-slot='tabs-trigger'] {
+  color: #cbd5e1;
+  background: rgba(17, 24, 39, 0.5) !important;
+  border-color: rgba(251, 146, 60, 0.28);
+}
+.perf-callbacks [data-slot='tabs-trigger']:hover {
+  background: rgba(255, 241, 235, 0.9) !important;
+  border-color: rgba(249, 115, 22, 0.4);
+  color: var(--pc-accent-ink);
+}
+.dark .perf-callbacks [data-slot='tabs-trigger']:hover {
+  background: rgba(251, 146, 60, 0.14) !important;
+}
+.perf-callbacks [data-slot='tabs-trigger'][data-state='active'],
+.perf-callbacks [data-slot='tabs-trigger'][data-state='active']:hover {
+  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%) !important;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 2px 8px -3px rgba(249, 115, 22, 0.22);
+  color: var(--pc-accent-ink);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   3. Main data container — table + pagination, and the empty state
+   ------------------------------------------------------------ */
+.perf-callbacks .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--pc-glass-border);
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  box-shadow: var(--pc-glass-shadow);
+}
+.perf-callbacks .table-scroll thead {
+  background: rgba(255, 246, 238, 0.97);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+}
+.dark .perf-callbacks .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-callbacks .table-scroll thead th {
+  color: var(--pc-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+}
+.perf-callbacks .table-scroll tbody tr {
+  background: transparent;
+  transition: background-color 0.16s ease;
+}
+.perf-callbacks .table-scroll tbody tr:hover {
+  background: rgba(255, 241, 235, 0.5);
+}
+.perf-callbacks .table-scroll tbody td {
+  color: #334155;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+.dark .perf-callbacks .table-scroll tbody td {
+  color: var(--pc-muted);
+}
+
+/* The first column carries the row's own subject — task title, or who left
+   the voicemail — so it reads bolder and darker than the supporting
+   Created/Due/DID columns beside it, the same weight Live gives a caller's
+   name. */
+.perf-callbacks .table-scroll tbody td:first-child {
+  color: var(--pc-ink);
+  font-weight: 600;
+}
+.dark .perf-callbacks .table-scroll tbody td:first-child {
+  color: #f1f5f9;
+}
+
+/* Timestamp-shaped columns (Created, Due, Left at, Length) get tabular
+   figures so the numbers stop jittering column to column. */
+.perf-callbacks .table-scroll tbody td:nth-child(2),
+.perf-callbacks .table-scroll tbody td:nth-child(3),
+.perf-callbacks .table-scroll tbody td:nth-child(4) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Task status ("Pending", "Completed", ...) renders as bare text via
+   `.capitalize` in callbacks-tab.tsx — the same soft rounded pill Live uses
+   for its Status/Direction columns, rather than plain text sitting loose in
+   the cell. */
+.perf-callbacks .table-scroll tbody td .capitalize {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--pc-wash);
+  color: var(--pc-accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.dark .perf-callbacks .table-scroll tbody td .capitalize {
+  background: rgba(251, 146, 60, 0.16);
+  color: #fdba74;
+}
+
+/* Voicemail row actions (Play, Call back) — the same warm circular button
+   Live uses for its monitoring actions: glass at rest, filled on hover.
+   Call back keeps its own green (a distinct action from Play, same as
+   Live's separate red Hangup), just softened to the rounded, bordered
+   style instead of a flat tint. */
+.perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-ucass-active-bg'] {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--pc-accent-ink);
+  box-shadow: 0 1px 2px rgba(249, 115, 22, 0.06);
+}
+.perf-callbacks
+  .table-scroll
+  tbody
+  td
+  [class*='rounded-full'][class*='bg-ucass-active-bg']:hover {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: transparent;
+  color: #fff;
+}
+.perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-green-100'] {
+  background: rgba(220, 252, 231, 0.9);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 1px 2px rgba(34, 197, 94, 0.06);
+}
+
+/* Empty state — dark charcoal title, muted description, matching the rest
+   of the view rather than the plain gray TableManager ships by default. */
+.perf-callbacks .table-scroll .text-gray-900 {
+  color: var(--pc-ink);
+}
+.perf-callbacks .table-scroll .text-gray-700 {
+  color: var(--pc-muted);
+}
+
+/* Pagination bar under the table. `.table-scroll` also carries `rounded-xl
+   border-gray-200` (table-manager.tsx), so `:not(.table-scroll)` is load
+   bearing here — without it this rule also matched the table container
+   itself and, being more specific than the plain `.table-scroll` rule
+   above, silently overrode its transparent background/border/shadow with
+   a second, overlapping glass card right on top of it. */
+.perf-callbacks div[class*='rounded-xl'][class*='border-gray-200']:not(.table-scroll) {
+  border-radius: 18px;
+  border: 1px solid var(--pc-glass-border);
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  box-shadow: var(--pc-glass-shadow);
+}
+.perf-callbacks div[class*='rounded-xl'][class*='border-gray-200']:not(.table-scroll) label {
+  color: var(--pc-muted);
+}
+
+/* Pagination footer's own refresh button (table-manager.tsx) carries its
+   own cream/tan pill as Tailwind arbitrary-value classes, which the design
+   system's `.mcm-page button:not([data-slot='tabs-trigger'])` reset strips
+   anyway — same mcm-page button-reset fight fixed elsewhere in this theme.
+   The outer bar (a `<div>`) is untouched by that reset already. */
+.perf-callbacks button[class*='backdrop-blur'] {
+  background: rgba(251, 249, 246, 0.88) !important;
+  border: 1px solid rgba(225, 200, 165, 0.9) !important;
+}
+
+/* The pager group (« ‹ 1 › ») is intentionally left at its global default
+   (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
+   page — per explicit request to match that look exactly rather than
+   re-theming it warm like the rest of this page. */

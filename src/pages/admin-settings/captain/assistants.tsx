@@ -49,7 +49,7 @@ const emptyForm = {
 };
 
 const textAreaClass =
-  'w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none transition-all placeholder:text-gray-400 hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
+  'w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all placeholder:text-[#9A948F] hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
 
 const CaptainAssistants = () => {
   const [assistants, setAssistants] = useState<Assistant[]>([]);
@@ -196,8 +196,8 @@ const CaptainAssistants = () => {
     <div className="flex h-full w-full flex-col gap-5 p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-lg font-bold text-gray-950">Assistants</div>
-          <div className="text-sm text-gray-500">
+          <div className="text-lg font-bold text-[#2E2D35]">Assistants</div>
+          <div className="text-sm text-[#9A948F]">
             AI personas that power your Captain chatbot — instructions, guardrails, and behavior.
           </div>
         </div>
@@ -211,26 +211,26 @@ const CaptainAssistants = () => {
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
       )}
 
-      <div className="flex-1 overflow-auto rounded-2xl border border-gray-200 bg-white">
+      <div className="flex-1 overflow-auto rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         {isLoading ? (
-          <div className="flex h-40 items-center justify-center text-sm text-gray-500">Loading...</div>
+          <div className="flex h-40 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
         ) : assistants.length === 0 ? (
-          <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-gray-500">
+          <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-[#9A948F]">
             <Sparkles className="size-6 text-gray-300" />
             No assistants yet.
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {assistants.map((a) => (
-              <div key={a.id} className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50">
+              <div key={a.id} className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-[#FBE2C8]/45">
                 <div className="flex flex-1 items-start gap-3">
                   <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Sparkles className="size-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-gray-950">{a.name}</div>
-                    <div className="mt-0.5 text-sm text-gray-600">{a.description}</div>
-                    <div className="mt-1 line-clamp-1 text-xs text-gray-400">{a.config?.instructions}</div>
+                    <div className="text-sm font-semibold text-[#2E2D35]">{a.name}</div>
+                    <div className="mt-0.5 text-sm text-[#9A948F]">{a.description}</div>
+                    <div className="mt-1 line-clamp-1 text-xs text-[#9A948F]">{a.config?.instructions}</div>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -259,8 +259,8 @@ const CaptainAssistants = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-0">
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-100 bg-white px-6 py-4">
-            <DialogTitle className="text-base font-bold text-gray-950">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-4">
+            <DialogTitle className="text-base font-bold text-[#2E2D35]">
               {editingId ? 'Edit Assistant' : 'Add Assistant'}
             </DialogTitle>
           </div>
@@ -289,7 +289,7 @@ const CaptainAssistants = () => {
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <Label>Instructions</Label>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-[#9A948F]">
                   {form.instructions.length} / {INSTRUCTIONS_LIMIT}
                 </span>
               </div>
@@ -333,7 +333,7 @@ const CaptainAssistants = () => {
 
             <div className="flex flex-col gap-3">
               <Label>Features</Label>
-              <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-4">
                 {[
                   { key: 'feature_faq' as const, label: 'Generate FAQs from resolved conversations' },
                   { key: 'feature_memory' as const, label: 'Capture key details as memories from customer interactions.' },
@@ -346,7 +346,7 @@ const CaptainAssistants = () => {
                       checked={form[feat.key]}
                       onCheckedChange={(checked) => setForm((f) => ({ ...f, [feat.key]: checked === true }))}
                     />
-                    <Label htmlFor={feat.key} className="cursor-pointer text-sm font-normal text-gray-700">
+                    <Label htmlFor={feat.key} className="cursor-pointer text-sm font-normal text-[#2E2D35]">
                       {feat.label}
                     </Label>
                   </div>
@@ -356,30 +356,30 @@ const CaptainAssistants = () => {
 
             <div className="flex flex-col gap-1.5">
               <Label className="flex items-center gap-1.5">
-                <Wrench className="size-3.5 text-gray-400" />
+                <Wrench className="size-3.5 text-[#9A948F]" />
                 Customer tools
               </Label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 Turn a toolkit off to block it everywhere, in the Playground and in customer conversations.
               </p>
               {!editingId ? (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/60 px-4 py-3.5 text-sm text-gray-500">
+                <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/50 px-4 py-3.5 text-sm text-[#9A948F]">
                   Save this assistant first, then come back here to allow or block connected apps for it.
                 </div>
               ) : isLoadingComposioAccess ? (
-                <div className="flex h-14 items-center justify-center text-sm text-gray-500">Loading...</div>
+                <div className="flex h-14 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
               ) : composioAccess.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/60 px-4 py-3.5 text-sm text-gray-500">
+                <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/50 px-4 py-3.5 text-sm text-[#9A948F]">
                   No Actions connected yet.{' '}
                   <Link to="/admin-settings/captain/actions" className="font-medium text-primary hover:underline">
                     Connect apps in Actions
                   </Link>
                 </div>
               ) : (
-                <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-gray-200">
+                <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-[#EEE7DD]">
                   {composioAccess.map((c) => (
                     <div key={c.toolkit_slug} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                      <span className="text-sm text-gray-800">{c.toolkit_name}</span>
+                      <span className="text-sm text-[#2E2D35]">{c.toolkit_name}</span>
                       <Switch checked={c.allowed} onCheckedChange={(checked) => toggleComposioAccess(c.toolkit_slug, checked === true)} />
                     </div>
                   ))}
@@ -387,8 +387,8 @@ const CaptainAssistants = () => {
               )}
             </div>
 
-            <details className="group rounded-xl border border-gray-200">
-              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-gray-700 select-none">
+            <details className="group rounded-xl border border-[#EEE7DD]">
+              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-[#2E2D35] select-none">
                 Advanced — response guidelines &amp; guardrails
               </summary>
               <div className="flex flex-col gap-4 border-t border-gray-100 px-4 py-4">
@@ -420,7 +420,7 @@ const CaptainAssistants = () => {
             )}
           </div>
 
-          <div className="sticky bottom-0 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4">
+          <div className="sticky bottom-0 flex justify-end gap-2 border-t border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-4">
             <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>

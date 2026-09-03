@@ -71,7 +71,6 @@ const ChatSession = ({ handleClose, rowData }: any) => {
   //         });
 
   //         socket.on('authorized', () => {
-  //           console.log('under auth');
   //           setIsAiLoading(false);
   //           if (safeChat && !safeChat?.length) {
   //             socket.emit('question', {
@@ -136,7 +135,7 @@ const ChatSession = ({ handleClose, rowData }: any) => {
   //   }
 
   return (
-    <div className="rounded-xl bg-white shadow overflow-hidden absolute bottom-3 right-3 w-full max-w-[380px] z-50">
+    <div className="rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow overflow-hidden absolute bottom-3 right-3 w-full max-w-[380px] z-50">
       <div className="rounded-t-xl p-3 bg-primary/70 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {/* <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
@@ -152,7 +151,7 @@ const ChatSession = ({ handleClose, rowData }: any) => {
       </div>
       <div
         ref={scrollRef}
-        className=" p-3 bg-white w-full flex flex-col gap-2 min-h-[calc(100vh-11.5rem)] max-h-[calc(100vh-11.5rem)] overflow-y-auto"
+        className=" p-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] w-full flex flex-col gap-2 min-h-[calc(100vh-11.5rem)] max-h-[calc(100vh-11.5rem)] overflow-y-auto"
       >
         {/* left items */}
         {sessionChat?.length
@@ -163,15 +162,15 @@ const ChatSession = ({ handleClose, rowData }: any) => {
                   className="w-full flex flex-col gap-1"
                 >
                   <div
-                    className={`p-3 rounded-md ${item?.role === 'user' ? 'bg-primary rounded-br-xs w-fit max-w-[90%]' : 'bg-white border border-gray-200 rounded-bl-xs w-fit max-w-[90%] ml-auto'}`}
+                    className={`p-3 rounded-md ${item?.role === 'user' ? 'bg-primary rounded-br-xs w-fit max-w-[90%]' : 'bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-bl-xs w-fit max-w-[90%] ml-auto'}`}
                   >
                     <div
-                      className={`mb-1 text-xs font-semibold ${item?.role === 'user' ? 'text-white/80' : 'text-gray-700'}`}
+                      className={`mb-1 text-xs font-semibold ${item?.role === 'user' ? 'text-white/80' : 'text-[#2E2D35]'}`}
                     >
                       {item?.displayName || (item?.role === 'user' ? 'User' : 'Agent')}
                     </div>
                     <p
-                      className={`text-sm ${item?.role === 'user' ? 'text-white' : 'text-gray-900/80'}`}
+                      className={`text-sm ${item?.role === 'user' ? 'text-white' : 'text-[#2E2D35]/80'}`}
                     >
                       {/* {item?.me ? item?.text : item?.answer} */}
                       {item?.data}
@@ -179,7 +178,7 @@ const ChatSession = ({ handleClose, rowData }: any) => {
                   </div>
                   {item?.at ? (
                     <p
-                      className={`text-[11px] text-gray-500 ${item?.role === 'user' ? 'text-left' : 'text-right'}`}
+                      className={`text-[11px] text-[#9A948F] ${item?.role === 'user' ? 'text-left' : 'text-right'}`}
                     >
                       {formatMessageTime(item.at)}
                       {item?.role === 'assistant' &&
@@ -201,7 +200,7 @@ const ChatSession = ({ handleClose, rowData }: any) => {
         ) : null}
       </div>
       {/* Chat Footer */}
-      <div className=" p-4 bg-white text-gray-500 w-full text-center border-t border-gray-200 relative">
+      <div className=" p-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] text-[#9A948F] w-full text-center border-t border-[rgba(225,200,165,0.9)] relative">
         Chat session has been ended
       </div>
     </div>

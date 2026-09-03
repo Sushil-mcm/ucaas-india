@@ -1,0 +1,181 @@
+/* ============================================================
+   Performance › Speech & Text — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-speech`, the tab's own root element, the same pattern
+   `callbacks-theme.css`/`campaigns-theme.css` use — nothing outside this
+   component is reachable from here.
+   ============================================================ */
+
+.perf-speech {
+  --sp-accent: #f97316;
+  --sp-accent-ink: #ea580c;
+  --sp-wash: #fff1eb;
+  --sp-muted: #666666;
+  --sp-ink: #1a1a1a;
+
+  --sp-glass: rgba(255, 255, 255, 0.85);
+  --sp-glass-border: rgba(255, 255, 255, 0.95);
+  --sp-glass-blur: blur(20px) saturate(190%);
+  --sp-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-speech {
+  --sp-wash: #2a1710;
+  --sp-muted: #93a1ba;
+  --sp-ink: #f4f6fb;
+  --sp-glass: rgba(17, 24, 39, 0.72);
+  --sp-glass-border: rgba(251, 146, 60, 0.18);
+  --sp-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Ambient backdrop, wired via the shared `perf-warm-backdrop` toggle —
+   painted on `.perf-speech` itself (not the generic `.mcm-page` rule),
+   consistent with how Callbacks and Campaigns do it. */
+body.perf-warm-backdrop .perf-speech {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
+    #fdf6ee;
+}
+.dark body.perf-warm-backdrop .perf-speech {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
+    #0a0f1a;
+}
+
+/* Page note ("Sentiment for AI receptionist...") — `var(--ink-4)` is a
+   light cool gray meant for a plain background; low contrast against the
+   warm gradient, same issue fixed on the live-queue KPI band. */
+.perf-speech .page-note {
+  color: var(--sp-muted);
+}
+
+/* ------------------------------------------------------------
+   1. Metric summary cards — all three rows (grid3, grid4, PerfStatCard)
+   ------------------------------------------------------------ */
+/* `.grid3`/`.grid4` (mcm-page.css) use `auto-fit, minmax(...)`, which sizes
+   columns by how many fit the container and stretches whatever lands in a
+   half-empty last row to fill the leftover space — with 3 cards in grid3
+   and 8 in grid4 that produced visibly uneven widths row to row. Fixed
+   column counts make every card in every row the same width, and
+   `align-items: stretch` (grid's own default, restated because `.grid3`
+   sets `start`) gives them the same height too. */
+.perf-speech .grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+.perf-speech .grid4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .perf-speech .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .perf-speech .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .perf-speech .grid3,
+  .perf-speech .grid4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.perf-speech .stat {
+  background: var(--sp-glass);
+  backdrop-filter: var(--sp-glass-blur);
+  -webkit-backdrop-filter: var(--sp-glass-blur);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--sp-glass-shadow);
+  display: flex;
+  flex-direction: column;
+}
+.perf-speech .stat .k {
+  color: var(--sp-muted);
+  letter-spacing: 0.1em;
+}
+.perf-speech .stat .v {
+  color: var(--sp-ink);
+  font-weight: 800;
+}
+.perf-speech .stat .d {
+  color: var(--sp-muted) !important;
+  font-weight: 600;
+}
+
+/* Progress bar tracks (Sentiment distribution, topic Volume) — the flat
+   cool-gray track (`var(--surface-3)`) swapped for a warm peach one. */
+.perf-speech .hbar-t {
+  background: rgba(249, 115, 22, 0.12);
+}
+.dark .perf-speech .hbar-t {
+  background: rgba(251, 146, 60, 0.16);
+}
+/* Fill: warm gradient — but only for the topic Volume bars, which carry a
+   single fill segment (`:only-child`). Sentiment distribution's bar has
+   three segments coloured by sentimentBucketColor() in speech-text-tab.tsx
+   (Positive/Neutral/Negative); forcing one gradient onto all of them here
+   would erase that distinction and read as an odd two-tone blend instead
+   of three separate sentiments. */
+.perf-speech .hbar-t i:only-child {
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%) !important;
+}
+
+/* ------------------------------------------------------------
+   2. Topics & Agent sentiment ranking tables
+   ------------------------------------------------------------ */
+.perf-speech .sect-title {
+  color: var(--sp-muted);
+}
+
+.perf-speech .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--sp-glass-border);
+  background: var(--sp-glass);
+  backdrop-filter: var(--sp-glass-blur);
+  -webkit-backdrop-filter: var(--sp-glass-blur);
+  box-shadow: var(--sp-glass-shadow);
+}
+.perf-speech .table-scroll thead {
+  background: rgba(255, 246, 238, 0.97);
+  backdrop-filter: var(--sp-glass-blur);
+  -webkit-backdrop-filter: var(--sp-glass-blur);
+  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+}
+.dark .perf-speech .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-speech .table-scroll thead th {
+  color: var(--sp-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: transparent;
+}
+.perf-speech .table-scroll tbody tr {
+  background: transparent;
+  transition: background-color 0.16s ease;
+}
+.perf-speech .table-scroll tbody tr:hover {
+  background: rgba(255, 241, 235, 0.5);
+}
+.perf-speech .table-scroll tbody td {
+  color: #334155;
+}
+.dark .perf-speech .table-scroll tbody td {
+  color: var(--sp-muted);
+}
+.perf-speech .table-scroll tbody td:first-child {
+  color: var(--sp-ink);
+  font-weight: 600;
+}

@@ -636,14 +636,14 @@ const MessageItem = ({
         id={msgObj?.messageId || msgObj?._id}
         className={cn(
           `w-full flex ${messageDirection} relative rounded-md transition-colors duration-200`,
-          'hover:bg-gray-100',
+          'hover:bg-[#FBE2C8]/40',
         )}
       >
         <div className="flex gap-1 items-start px-2 max-w-full w-full">
           <div className="flex flex-col text-black text-xs w-full">
             <div
               className={cn(
-                'flex items-center gap-1 text-gray-500 text-xs mb-1',
+                'flex items-center gap-1 text-[#9A948F] text-xs mb-1',
                 isMine ? 'mr-10 justify-end' : 'ml-10',
               )}
             >
@@ -740,7 +740,7 @@ const MessageItem = ({
       <div className="my-1 flex w-full justify-center px-2 text-xs sm:px-0">
         <div
           className={cn(
-            'inline-flex max-w-[96%] flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-2xl  px-3 py-1.5 text-center text-[12px] leading-5 text-gray-500 transition-colors select-none sm:max-w-[85%] sm:rounded-full sm:text-[14px]',
+            'inline-flex max-w-[96%] flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-2xl  px-3 py-1.5 text-center text-[12px] leading-5 text-[#9A948F] transition-colors select-none sm:max-w-[85%] sm:rounded-full sm:text-[14px]',
             msgObj?.messageType === 'prompt' && msgObj?.meetLogId ? 'cursor-pointer' : '',
           )}
           onClick={() => {
@@ -1057,14 +1057,14 @@ const MessageItem = ({
       className={cn(
         `w-full flex ${messageDirection} relative rounded-md transition-all duration-200 pt-1`,
         msgObj?.isPinned ? 'bg-amber-50/50 border border-amber-200/50 py-2 my-2' : '',
-        isAgentChat ? '' : 'hover:bg-gray-100',
+        isAgentChat ? '' : 'hover:bg-[#FBE2C8]/40',
       )}
     >
       <div className="flex gap-1 items-start px-2 max-w-full w-full">
         <div className="flex flex-col text-black text-xs w-full">
           <div
             className={cn(
-              'flex items-center gap-1 text-gray-500 text-xs mb-1',
+              'flex items-center gap-1 text-[#9A948F] text-xs mb-1',
               isAgentChat
                 ? isMine
                   ? 'justify-end'
@@ -1100,7 +1100,7 @@ const MessageItem = ({
                 )}
                 <span className="text-[11px] text-muted-foreground">
                   {isMine ? (
-                    <span className={'text-gray-500 text-xs ml-1'}>{currentUserDisplayName}</span>
+                    <span className={'text-[#9A948F] text-xs ml-1'}>{currentUserDisplayName}</span>
                   ) : null}{' '}
                   {msgObj?.createdAt ? moment(msgObj.createdAt).format('hh:mm A') : ''}
                 </span>
@@ -1152,10 +1152,10 @@ const MessageItem = ({
                   {msgObj?.isEdited &&
                   !showSeenIcon &&
                   !['poll', 'event', 'task'].includes(msgObj?.messageType) ? (
-                    <PencilIcon width={14} height={14} className="text-gray-400" />
+                    <PencilIcon width={14} height={14} className="text-[#9A948F]" />
                   ) : null}
                   {msgObj?.isForwarded && !showSeenIcon ? (
-                    <Forward width={14} height={14} className="text-gray-400" />
+                    <Forward width={14} height={14} className="text-[#9A948F]" />
                   ) : null}
                 </div>
 
@@ -1246,7 +1246,7 @@ const MessageItem = ({
                         <button
                           type="button"
                           className={cn(
-                            'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 text-gray-500 hover:text-ucass-active',
+                            'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 text-[#9A948F] hover:text-ucass-active',
                             isMine ? '-left-7' : '-right-7',
                           )}
                         >
@@ -1322,7 +1322,7 @@ const MessageItem = ({
                           <Expand size={14} />
                         </button>
                       </div>
-                      <div className="mt-1 text-xs text-gray-500 flex items-center justify-between gap-2">
+                      <div className="mt-1 text-xs text-[#9A948F] flex items-center justify-between gap-2">
                         <span className="truncate">GIF - {msgObj?.gif?.title || 'GIF'}</span>
                         <button
                           type="button"
@@ -1335,9 +1335,9 @@ const MessageItem = ({
                           disabled={isGifDownloading}
                         >
                           {isGifDownloading ? (
-                            <Loader2 className="animate-spin text-gray-500 size-4" />
+                            <Loader2 className="animate-spin text-[#9A948F] size-4" />
                           ) : (
-                            <DownloadIcon className="text-gray-500 size-4" />
+                            <DownloadIcon className="text-[#9A948F] size-4" />
                           )}
                         </button>
                       </div>

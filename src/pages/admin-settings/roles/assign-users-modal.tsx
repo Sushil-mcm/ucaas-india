@@ -17,9 +17,12 @@ interface AssignUsersModalProps {
   open: boolean;
   roleData: any;
   setOpen: (state: boolean) => void;
+  /** Lets a caller theme this dialog without touching its other caller —
+      Admin ▸ Roles renders this too, and passes nothing, so it is unchanged. */
+  className?: string;
 }
 
-const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }) => {
+const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen, className = '' }) => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -200,7 +203,7 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen }
   return (
     <Dialog open={open} onOpenChange={(val) => (!val ? handleClose() : setOpen(true))}>
       <DialogContent
-        className="w-[760px] max-w-[calc(100%-2rem)] p-0 gap-0"
+        className={`w-[760px] max-w-[calc(100%-2rem)] p-0 gap-0 ${className}`}
         showCloseButton={false}
       >
         <div className="flex items-start justify-between p-5 border-b border-gray-200">

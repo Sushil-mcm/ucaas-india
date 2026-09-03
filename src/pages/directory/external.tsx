@@ -12,6 +12,7 @@ import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from
 import './list-page-glass.css';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import { useContactLabels } from './use-contact-labels';
+import '@/styles/warm-glass.css';
 
 /**
  * Directory ▸ External — people outside the organisation.

@@ -352,21 +352,21 @@ const CountryChooser = ({
         <Button type="button" variant="outline" size="sm" onClick={onClearAll}>
           Clear all
         </Button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-[#9A948F]">
           {selected.length} of {options.length} chosen
         </span>
       </div>
 
       {isPlanLimited ? (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-[#9A948F]">
           This list is the set of countries your plan covers. To call somewhere that is not on it,
           your plan has to change first.
         </p>
       ) : null}
 
-      <div className="max-h-[280px] overflow-y-auto rounded-lg border border-gray-200 bg-white">
+      <div className="max-h-[280px] overflow-y-auto rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         {visible.length === 0 ? (
-          <p className="px-3 py-4 text-xs text-gray-500">No country matches that search.</p>
+          <p className="px-3 py-4 text-xs text-[#9A948F]">No country matches that search.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {visible.map((option) => {
@@ -378,9 +378,9 @@ const CountryChooser = ({
                     disabled={isHome}
                     onCheckedChange={(value) => onToggle(option.value, value === true)}
                   />
-                  <span className="text-sm text-gray-900">{option.label}</span>
+                  <span className="text-sm text-[#2E2D35]">{option.label}</span>
                   {isHome ? (
-                    <span className="text-[11px] font-medium text-gray-500">
+                    <span className="text-[11px] font-medium text-[#9A948F]">
                       Your own country — always allowed
                     </span>
                   ) : null}
@@ -556,18 +556,18 @@ const CompanyCallingPermissions = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
-      <div className="cs-block">
-        <p className="text-lg font-semibold text-gray-900">Calling permissions</p>
-        <p className="text-xs text-gray-500">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+        <p className="text-lg font-semibold text-[#2E2D35]">Calling permissions</p>
+        <p className="text-xs text-[#9A948F]">
           Which countries your team can phone, which number they show when they call out, and where
           they may send a call once it is connected.
         </p>
       </div>
 
-      <div className="w-full">
-        <div className="flex w-full flex-col gap-4">
-          <div className="flex flex-wrap items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
+        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+          <div className="flex flex-wrap items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700">
               <ShieldAlert className="h-5 w-5" />
             </div>
@@ -588,11 +588,11 @@ const CompanyCallingPermissions = () => {
           </div>
 
           {isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-gray-900">
+            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved permissions
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9A948F]">
                 What you see below are the built-in defaults, not your saved values. Reload before
                 you save, or you may overwrite permissions you cannot currently see.
               </p>
@@ -600,9 +600,9 @@ const CompanyCallingPermissions = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
-              <p className="text-sm font-semibold text-gray-900">No permissions saved yet</p>
-              <p className="text-xs text-gray-500">
+            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+              <p className="text-sm font-semibold text-[#2E2D35]">No permissions saved yet</p>
+              <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
               </p>
             </div>
@@ -654,7 +654,7 @@ const CompanyCallingPermissions = () => {
               </SettingRow>
             ) : null}
 
-            <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
               This is the company's answer, and it is the ceiling: a single person can be refused a
               country you allow here, on their own record under People, but nobody can be given a
               country this list leaves out. Calls to your own country, internal extensions and
@@ -685,7 +685,7 @@ const CompanyCallingPermissions = () => {
               enforced={false}
               enforcementNote="Not active yet. Your number is still shown on outgoing calls. Dialling *67 before a number withholds it for that call, where your carrier supports it."
             />
-            <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
               How the pair works: if neither of these two is on, a team member with more than one
               line can only ever call out from their own primary number.
             </p>
@@ -762,8 +762,8 @@ const CompanyCallingPermissions = () => {
             />
           </SettingCard>
 
-          <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
             <SectionActions>

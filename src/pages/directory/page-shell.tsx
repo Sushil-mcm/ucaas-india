@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import './page-shell.css';
 
 /**
  * The shape every Directory page takes.

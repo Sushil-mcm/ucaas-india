@@ -26,6 +26,7 @@ import LiveDashboard from '@/pages/dashboard/live-dashboard';
 import AiWallboard from '@/pages/dashboard/ai-wallboard';
 import VideoDashboard from '@/pages/dashboard/video-dashboard';
 import CallQueueContent from '@/pages/dashboard/call-dashboard/Call-queue-content';
+import './live-theme.css';
 
 /**
  * Wallboards used to hang off Home as a second tab strip, which put a "Home"
@@ -306,9 +307,12 @@ const Performance = () => {
             settles them onto one baseline. */}
         <div className="tbar perf-tbar">
           <div className="perf-tbar-group">
-            <DateDropdown dropdownVal={dropdownVal} setDropdownVal={setDropdownVal} />
-            <span className="fchip">Division: All</span>
-            <span className="fchip">Media: All</span>
+            <div className="perf-filter-pill">
+              <DateDropdown dropdownVal={dropdownVal} setDropdownVal={setDropdownVal} />
+              {resolvedRangeLabel && <span className="pf-seg pf-range">{resolvedRangeLabel}</span>}
+              <span className="pf-seg">Division: All</span>
+              <span className="pf-seg">Media: All</span>
+            </div>
           </div>
 
           <div className="perf-tbar-group perf-tbar-end">

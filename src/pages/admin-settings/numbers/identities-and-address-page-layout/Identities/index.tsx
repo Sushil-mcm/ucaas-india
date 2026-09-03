@@ -113,7 +113,6 @@ const Identities = ({ search }: { search: string }) => {
         });
         setDrawerState((prev) => ({ ...prev, editIdentity: false }));
       } catch (err) {
-        console.log(err);
       }
     },
   });

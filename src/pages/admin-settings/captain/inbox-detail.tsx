@@ -89,7 +89,7 @@ const TABS = [
 ];
 
 function fieldClass() {
-  return 'min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10';
+  return 'min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none focus:border-primary focus:ring-4 focus:ring-primary/10';
 }
 
 function hoursBetween(open: string, close: string) {
@@ -198,7 +198,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
   };
 
   if (isLoading || !inbox) {
-    return <div className="flex h-40 items-center justify-center text-sm text-gray-500">Loading...</div>;
+    return <div className="flex h-40 items-center justify-center text-sm text-[#9A948F]">Loading...</div>;
   }
 
   const previewUrl = inbox.legacy_assistant_id
@@ -208,16 +208,16 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 p-6">
       <div className="flex flex-col gap-1">
-        <button type="button" onClick={onBack} className="flex w-fit items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-800">
+        <button type="button" onClick={onBack} className="flex w-fit items-center gap-1 text-xs font-medium text-[#9A948F] hover:text-[#2E2D35]">
           <ChevronLeft className="size-3.5" />
           Inboxes
         </button>
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-gray-950">{inbox.name}</h2>
+          <h2 className="text-lg font-bold text-[#2E2D35]">{inbox.name}</h2>
           {saved && <span className="text-xs font-medium text-green-600">Saved</span>}
         </div>
         {inbox.legacy_assistant_id && (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[#9A948F]">
             This is your existing embedded widget — changes you save here update the live script immediately.
           </p>
         )}
@@ -225,12 +225,12 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-col gap-4">
-          <TabsList className="h-auto w-full flex-wrap justify-start gap-5 rounded-none border-b border-gray-200 bg-transparent p-0">
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-5 rounded-none border-b border-[#EEE7DD] bg-transparent p-0">
             {TABS.map((t) => (
               <TabsTrigger
                 key={t.key}
                 value={t.key}
-                className="rounded-none border-b-2 border-transparent bg-transparent px-0.5 pb-2.5 text-sm font-medium text-gray-500 shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none"
+                className="rounded-none border-b-2 border-transparent bg-transparent px-0.5 pb-2.5 text-sm font-medium text-[#9A948F] shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-[#2E2D35] data-[state=active]:shadow-none"
               >
                 {t.label}
               </TabsTrigger>
@@ -260,15 +260,15 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                       key={opt.key}
                       type="button"
                       onClick={() => patch({ sender_name_type: opt.key })}
-                      className={`flex-1 rounded-xl border px-4 py-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}`}
+                      className={`flex-1 rounded-xl border px-4 py-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-[#EEE7DD] hover:border-[#EEE7DD]'}`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${selected ? 'border-primary' : 'border-gray-300'}`}>
+                        <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${selected ? 'border-primary' : 'border-[#EEE7DD]'}`}>
                           {selected && <span className="size-2 rounded-full bg-primary" />}
                         </span>
-                        <span className="text-sm font-medium text-gray-800">{opt.title}</span>
+                        <span className="text-sm font-medium text-[#2E2D35]">{opt.title}</span>
                       </div>
-                      <div className="mt-1 pl-6 text-xs text-gray-400">{opt.desc}</div>
+                      <div className="mt-1 pl-6 text-xs text-[#9A948F]">{opt.desc}</div>
                     </button>
                   );
                 })}
@@ -284,13 +284,13 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                 value={inbox.welcome_tagline || ''}
                 onChange={(e) => patch({ welcome_tagline: e.target.value.slice(0, 255) })}
                 rows={3}
-                className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
               />
             </div>
             <div className="flex gap-4">
               <div className="flex flex-1 flex-col gap-1.5">
                 <Label>Widget Color</Label>
-                <input type="color" value={inbox.widget_color} onChange={(e) => patch({ widget_color: e.target.value })} className="h-10 w-full cursor-pointer rounded-xl border border-gray-300" />
+                <input type="color" value={inbox.widget_color} onChange={(e) => patch({ widget_color: e.target.value })} className="h-10 w-full cursor-pointer rounded-xl border border-[#EEE7DD]" />
               </div>
               <div className="flex flex-1 flex-col gap-1.5">
                 <Label>Bubble Position</Label>
@@ -321,7 +321,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
             </div>
             <div className="flex flex-col gap-2">
               <Label>Widget features</Label>
-              <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+              <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-3">
                 {[
                   { key: 'allow_end_conversation', label: 'Allow visitors to end the conversation' },
                   { key: 'display_emoji_picker', label: 'Display emoji picker on the widget' },
@@ -334,39 +334,39 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                       checked={!!(inbox.feature_flags as any)[f.key]}
                       onCheckedChange={(checked) => patch({ feature_flags: { ...inbox.feature_flags, [f.key]: checked === true } })}
                     />
-                    <Label htmlFor={f.key} className="cursor-pointer text-sm font-normal text-gray-700">{f.label}</Label>
+                    <Label htmlFor={f.key} className="cursor-pointer text-sm font-normal text-[#2E2D35]">{f.label}</Label>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-4">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-4">
               <div className="flex items-center justify-between">
                 <Label>Enable channel greeting</Label>
                 <Switch checked={inbox.channel_greeting_enabled} onCheckedChange={(c) => patch({ channel_greeting_enabled: c === true })} />
               </div>
-              <p className="text-xs text-gray-400">Auto-greet visitors when they start a conversation and send their first message.</p>
+              <p className="text-xs text-[#9A948F]">Auto-greet visitors when they start a conversation and send their first message.</p>
               {inbox.channel_greeting_enabled && (
                 <Input type="text" value={inbox.channel_greeting_message || ''} onChange={(e) => patch({ channel_greeting_message: e.target.value })} placeholder="Hi! Thanks for reaching out." />
               )}
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
                 <Label>Enable email collect box</Label>
-                <p className="text-xs text-gray-400">Enable or disable email collect box on new conversation.</p>
+                <p className="text-xs text-[#9A948F]">Enable or disable email collect box on new conversation.</p>
               </div>
               <Switch checked={inbox.email_collect_enabled} onCheckedChange={(c) => patch({ email_collect_enabled: c === true })} />
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
                 <Label>Allow messages after conversation resolved</Label>
-                <p className="text-xs text-gray-400">Allow the end-user to send messages even after the conversation is resolved.</p>
+                <p className="text-xs text-[#9A948F]">Allow the end-user to send messages even after the conversation is resolved.</p>
               </div>
               <Switch checked={inbox.allow_messages_after_resolved} onCheckedChange={(c) => patch({ allow_messages_after_resolved: c === true })} />
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
                 <Label>Enable conversation continuity via email</Label>
-                <p className="text-xs text-gray-400">Conversations will continue over email if the contact's email address is available.</p>
+                <p className="text-xs text-[#9A948F]">Conversations will continue over email if the contact's email address is available.</p>
               </div>
               <Switch checked={inbox.continuity_via_email} onCheckedChange={(c) => patch({ continuity_via_email: c === true })} />
             </div>
@@ -390,21 +390,21 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
 
           <TabsContent value="collaborators" className="flex flex-col gap-4 pt-4">
             <Label>Agents</Label>
-            <p className="text-xs text-gray-400">Add or remove agents from this inbox. Leave empty to allow every agent.</p>
+            <p className="text-xs text-[#9A948F]">Add or remove agents from this inbox. Leave empty to allow every agent.</p>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
               <Input type="text" value={agentSearch} onChange={(e) => setAgentSearch(e.target.value)} placeholder="Search team members..." className="pl-9" />
             </div>
-            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-xl border border-gray-200">
+            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-xl border border-[#EEE7DD]">
               {filteredTeamMembers.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-gray-400">No team members found.</div>
+                <div className="px-4 py-6 text-center text-xs text-[#9A948F]">No team members found.</div>
               ) : (
                 filteredTeamMembers.map((m) => (
-                  <label key={m.uuid} className="flex cursor-pointer items-center gap-2.5 border-b border-gray-50 px-4 py-2.5 last:border-0 hover:bg-gray-50">
+                  <label key={m.uuid} className="flex cursor-pointer items-center gap-2.5 border-b border-gray-50 px-4 py-2.5 last:border-0 hover:bg-[#FBE2C8]/45">
                     <Checkbox checked={selectedAgents.has(m.uuid)} onCheckedChange={() => toggleAgent(m.uuid)} />
                     <div className="min-w-0">
-                      <div className="truncate text-sm text-gray-800">{m.name}</div>
-                      <div className="truncate text-xs text-gray-400">{m.email}</div>
+                      <div className="truncate text-sm text-[#2E2D35]">{m.name}</div>
+                      <div className="truncate text-xs text-[#9A948F]">{m.email}</div>
                     </div>
                   </label>
                 ))
@@ -424,10 +424,10 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
 
             <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4">
               <Label>Conversation Assignment</Label>
-              <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-800">Enable automatic conversation assignment</div>
-                  <p className="text-xs text-gray-400">Automatically assign incoming conversations to available agents.</p>
+                  <div className="text-sm font-medium text-[#2E2D35]">Enable automatic conversation assignment</div>
+                  <p className="text-xs text-[#9A948F]">Automatically assign incoming conversations to available agents.</p>
                 </div>
                 <Switch
                   checked={inbox.auto_assignment_enabled}
@@ -444,10 +444,10 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </TabsContent>
 
           <TabsContent value="business-hours" className="flex flex-col gap-4 pt-4">
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
-                <div className="text-sm font-medium text-gray-800">Enable business availability for this inbox</div>
-                <p className="text-xs text-gray-400">Shows available hours on the widget even when all agents are offline.</p>
+                <div className="text-sm font-medium text-[#2E2D35]">Enable business availability for this inbox</div>
+                <p className="text-xs text-[#9A948F]">Shows available hours on the widget even when all agents are offline.</p>
               </div>
               <Switch checked={inbox.business_hours_enabled} onCheckedChange={(c) => patch({ business_hours_enabled: c === true })} />
             </div>
@@ -456,7 +456,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
               value={inbox.business_hours_unavailable_message || ''}
               onChange={(e) => patch({ business_hours_unavailable_message: e.target.value })}
               rows={2}
-              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+              className="w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
             />
             <div className="flex flex-col gap-1.5">
               <Label>Timezone</Label>
@@ -466,7 +466,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                 ))}
               </select>
             </div>
-            <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-gray-200">
+            <div className="flex flex-col divide-y divide-gray-100 rounded-xl border border-[#EEE7DD]">
               {DAY_ORDER.map((d) => {
                 const sched = inbox.business_hours[d.key] || { enabled: false, open: '09:00', close: '17:00' };
                 return (
@@ -475,16 +475,16 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                       checked={sched.enabled}
                       onCheckedChange={(c) => patch({ business_hours: { ...inbox.business_hours, [d.key]: { ...sched, enabled: c === true } } })}
                     />
-                    <span className="w-24 text-gray-700">{d.label}</span>
+                    <span className="w-24 text-[#2E2D35]">{d.label}</span>
                     {sched.enabled ? (
                       <>
-                        <input type="time" value={sched.open} onChange={(e) => patch({ business_hours: { ...inbox.business_hours, [d.key]: { ...sched, open: e.target.value } } })} className="rounded-lg border border-gray-300 px-2 py-1 text-xs" />
-                        <span className="text-gray-400">—</span>
-                        <input type="time" value={sched.close} onChange={(e) => patch({ business_hours: { ...inbox.business_hours, [d.key]: { ...sched, close: e.target.value } } })} className="rounded-lg border border-gray-300 px-2 py-1 text-xs" />
-                        <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{hoursBetween(sched.open, sched.close)}</span>
+                        <input type="time" value={sched.open} onChange={(e) => patch({ business_hours: { ...inbox.business_hours, [d.key]: { ...sched, open: e.target.value } } })} className="rounded-lg border border-[#EEE7DD] px-2 py-1 text-xs" />
+                        <span className="text-[#9A948F]">—</span>
+                        <input type="time" value={sched.close} onChange={(e) => patch({ business_hours: { ...inbox.business_hours, [d.key]: { ...sched, close: e.target.value } } })} className="rounded-lg border border-[#EEE7DD] px-2 py-1 text-xs" />
+                        <span className="ml-auto rounded-full bg-[#FBE2C8]/40 px-2 py-0.5 text-[10px] text-[#9A948F]">{hoursBetween(sched.open, sched.close)}</span>
                       </>
                     ) : (
-                      <span className="text-xs text-gray-400">Unavailable</span>
+                      <span className="text-xs text-[#9A948F]">Unavailable</span>
                     )}
                   </div>
                 );
@@ -505,10 +505,10 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </TabsContent>
 
           <TabsContent value="csat" className="flex flex-col gap-4 pt-4">
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
-                <div className="text-sm font-medium text-gray-800">Enable CSAT</div>
-                <p className="text-xs text-gray-400">Automatically trigger CSAT surveys at the end of conversations.</p>
+                <div className="text-sm font-medium text-[#2E2D35]">Enable CSAT</div>
+                <p className="text-xs text-[#9A948F]">Automatically trigger CSAT surveys at the end of conversations.</p>
               </div>
               <Switch checked={inbox.csat_enabled} onCheckedChange={(c) => patch({ csat_enabled: c === true })} />
             </div>
@@ -520,7 +520,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                     key={opt}
                     type="button"
                     onClick={() => patch({ csat_display_type: opt })}
-                    className={`rounded-xl border px-4 py-2 text-sm ${inbox.csat_display_type === opt ? 'border-primary bg-primary/5' : 'border-gray-200'}`}
+                    className={`rounded-xl border px-4 py-2 text-sm ${inbox.csat_display_type === opt ? 'border-primary bg-primary/5' : 'border-[#EEE7DD]'}`}
                   >
                     {opt === 'emoji' ? '😡 😕 😐 🙂 😍' : '★ ★ ★ ★ ★'}
                   </button>
@@ -534,7 +534,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                 onChange={(e) => patch({ csat_message: e.target.value.slice(0, 200) })}
                 rows={2}
                 placeholder="Please enter a message to show users with the form"
-                className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -545,7 +545,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                 onChange={(e) => patch({ csat_survey_rule: { ...inbox.csat_survey_rule, labels: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) } })}
                 placeholder="e.g. sales, support"
               />
-              <p className="text-xs text-gray-400">Leave blank to send the survey on every resolved conversation.</p>
+              <p className="text-xs text-[#9A948F]">Leave blank to send the survey on every resolved conversation.</p>
             </div>
             <Button
               type="button"
@@ -559,10 +559,10 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </TabsContent>
 
           <TabsContent value="pre-chat-form" className="flex flex-col gap-4 pt-4">
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
-                <div className="text-sm font-medium text-gray-800">Enable pre chat form</div>
-                <p className="text-xs text-gray-400">Capture visitor information before they start a conversation.</p>
+                <div className="text-sm font-medium text-[#2E2D35]">Enable pre chat form</div>
+                <p className="text-xs text-[#9A948F]">Capture visitor information before they start a conversation.</p>
               </div>
               <Switch checked={inbox.pre_chat_form_enabled} onCheckedChange={(c) => patch({ pre_chat_form_enabled: c === true })} />
             </div>
@@ -571,13 +571,13 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
               onChange={(e) => patch({ pre_chat_message: e.target.value })}
               rows={2}
               placeholder="Share your queries or comments here."
-              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+              className="w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
             />
             <Label>Pre chat form fields</Label>
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-4">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-4">
               {inbox.pre_chat_fields.map((f, i) => (
                 <div key={f.name} className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                  <span className="w-28 text-sm text-gray-700">{f.label}</span>
+                  <span className="w-28 text-sm text-[#2E2D35]">{f.label}</span>
                   <Input
                     type="text"
                     value={f.label}
@@ -588,7 +588,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                     }}
                     className="w-40"
                   />
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <label className="flex items-center gap-1.5 text-xs text-[#9A948F]">
                     <Checkbox
                       checked={f.enabled}
                       onCheckedChange={(c) => {
@@ -599,7 +599,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                     />
                     Enabled
                   </label>
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <label className="flex items-center gap-1.5 text-xs text-[#9A948F]">
                     <Checkbox
                       checked={f.required}
                       onCheckedChange={(c) => {
@@ -625,23 +625,23 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </TabsContent>
 
           <TabsContent value="configuration" className="flex flex-col gap-5 pt-4">
-            <div className="flex flex-col gap-1.5 rounded-xl border border-gray-200 p-4">
+            <div className="flex flex-col gap-1.5 rounded-xl border border-[#EEE7DD] p-4">
               <Label>Allowed Domains</Label>
-              <p className="text-xs text-gray-400">Restrict which websites can embed your chat widget. Leave blank to allow all domains (not recommended for production).</p>
+              <p className="text-xs text-[#9A948F]">Restrict which websites can embed your chat widget. Leave blank to allow all domains (not recommended for production).</p>
               <Input type="text" value={inbox.allowed_domains || ''} onChange={(e) => patch({ allowed_domains: e.target.value })} placeholder="example.com, www.example.com" />
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-4">
               <div>
-                <div className="text-sm font-medium text-gray-800">Enable widget in mobile apps</div>
-                <p className="text-xs text-gray-400">Mobile apps don't send domain information, so allow this to avoid them being blocked.</p>
+                <div className="text-sm font-medium text-[#2E2D35]">Enable widget in mobile apps</div>
+                <p className="text-xs text-[#9A948F]">Mobile apps don't send domain information, so allow this to avoid them being blocked.</p>
               </div>
               <Switch checked={inbox.enable_widget_in_mobile_apps} onCheckedChange={(c) => patch({ enable_widget_in_mobile_apps: c === true })} />
             </div>
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-4">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-gray-800">Identity Validation</div>
-                  <p className="text-xs text-gray-400">Verify user authenticity with a signed HMAC token to prevent impersonation.</p>
+                  <div className="text-sm font-medium text-[#2E2D35]">Identity Validation</div>
+                  <p className="text-xs text-[#9A948F]">Verify user authenticity with a signed HMAC token to prevent impersonation.</p>
                 </div>
                 <Switch checked={inbox.identity_validation_enabled} onCheckedChange={(c) => patch({ identity_validation_enabled: c === true })} />
               </div>
@@ -649,7 +649,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                 <>
                   <Label>Secret Key</Label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 truncate rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">{inbox.identity_validation_secret}</code>
+                    <code className="flex-1 truncate rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">{inbox.identity_validation_secret}</code>
                     <Button
                       type="button"
                       variant="outline"
@@ -665,8 +665,8 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-gray-700">Require identity validation for all conversations</div>
-                      <p className="text-xs text-gray-400">Requests without a valid token are rejected.</p>
+                      <div className="text-sm text-[#2E2D35]">Require identity validation for all conversations</div>
+                      <p className="text-xs text-[#9A948F]">Requests without a valid token are rejected.</p>
                     </div>
                     <Switch checked={inbox.require_identity_validation} onCheckedChange={(c) => patch({ require_identity_validation: c === true })} />
                   </div>
@@ -698,7 +698,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
               <>
                 <div className="flex flex-col gap-1.5">
                   <Label>AI Assistant</Label>
-                  <p className="text-xs text-gray-400">Pick which Captain assistant answers this inbox automatically. Choose "None" for a human-only inbox.</p>
+                  <p className="text-xs text-[#9A948F]">Pick which Captain assistant answers this inbox automatically. Choose "None" for a human-only inbox.</p>
                   <select value={inbox.assistant_id || ''} onChange={(e) => patch({ assistant_id: e.target.value || null })} className={fieldClass()}>
                     <option value="">No AI assistant — human agents only</option>
                     {assistants.map((a: any) => (
@@ -721,20 +721,20 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </div>
         </Tabs>
 
-        <div className="flex min-h-0 flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-3">
+        <div className="flex min-h-0 flex-col gap-3 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
           <div className="flex items-center justify-between">
-            <div className="flex gap-1 rounded-lg bg-gray-100 p-0.5">
+            <div className="flex gap-1 rounded-lg bg-[#FBE2C8]/40 p-0.5">
               <button
                 type="button"
                 onClick={() => setPreviewTab('preview')}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium ${previewTab === 'preview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium ${previewTab === 'preview' ? 'bg-white text-[#2E2D35] shadow-sm' : 'text-[#9A948F]'}`}
               >
                 Preview
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewTab('script')}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium ${previewTab === 'script' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium ${previewTab === 'script' ? 'bg-white text-[#2E2D35] shadow-sm' : 'text-[#9A948F]'}`}
               >
                 Script
               </button>
@@ -743,11 +743,11 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
 
           {previewTab === 'preview' ? (
             <>
-              <div className="flex-1 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+              <div className="flex-1 overflow-hidden rounded-xl border border-gray-100 bg-[#FBE2C8]/45">
                 <iframe key={previewKey} src={previewUrl} title="Widget preview" className="h-full min-h-[420px] w-full border-0" />
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400">Reflects your last saved settings.</p>
+                <p className="text-xs text-[#9A948F]">Reflects your last saved settings.</p>
                 <button type="button" onClick={() => setPreviewKey((k) => k + 1)} className="text-xs font-medium text-primary hover:underline">
                   Refresh
                 </button>
@@ -755,10 +755,10 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
             </>
           ) : (
             <div className="flex flex-1 flex-col gap-2">
-              <p className="text-xs text-gray-500">Paste this before the closing &lt;/body&gt; tag of any page you want this chatbot on.</p>
-              <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                <code className="flex-1 overflow-x-auto whitespace-pre text-xs text-gray-700">{embedSnippet}</code>
-                <button type="button" onClick={copySnippet} className="shrink-0 text-gray-500 hover:text-primary" title="Copy">
+              <p className="text-xs text-[#9A948F]">Paste this before the closing &lt;/body&gt; tag of any page you want this chatbot on.</p>
+              <div className="flex items-start gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 p-3">
+                <code className="flex-1 overflow-x-auto whitespace-pre text-xs text-[#2E2D35]">{embedSnippet}</code>
+                <button type="button" onClick={copySnippet} className="shrink-0 text-[#9A948F] hover:text-primary" title="Copy">
                   {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
                 </button>
               </div>

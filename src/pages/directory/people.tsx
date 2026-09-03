@@ -28,6 +28,8 @@ import AssignCallerIdModal from '@/pages/admin-settings/people/add-users/assign-
 import AddUsers from '@/pages/admin-settings/people/add-users';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { buildRosterCsv, rosterFileName, toExportRow } from '@/lib/user-roster-export';
+import './people-glass.css';
+import './groups-glass.css';
 
 /**
  * Directory ▸ People — the organisation roster.
@@ -200,6 +202,7 @@ const People = () => {
 
   return (
     <>
+      <div className="gp-people">
       <DirectoryPage
         title="People"
         description="Everyone in the organisation, with live presence, skills and one-click contact."
@@ -288,7 +291,7 @@ const People = () => {
               <EmptyRow span={8} message="Loading the roster…" />
             ) : visible.length ? (
               visible.map((row: PersonRow) => (
-                <tr key={row.uuid}>
+                <tr key={row.uuid} className="gp-person-row" onClick={() => openPerson(row)}>
                   <td>
                     <span className="flex items-center gap-2.5">
                       <CustomAvatar name={row.name} image={row.image} size="30" />
@@ -352,7 +355,7 @@ const People = () => {
                       </select>
                     ) : null}
                   </td>
-                  <td>
+                  <td onClick={(event) => event.stopPropagation()}>
                     <span className="flex items-center gap-1">
                       <button
                         type="button"
@@ -370,7 +373,7 @@ const People = () => {
                         aria-pressed={isFavourite('person', row.uuid)}
                         onClick={() => toggleFavourite('person', row.uuid)}
                       >
-                        <Ic n="star" size={12} fill={isFavourite('person', row.uuid)} />
+                        <Ic n="star" size={16} fill={isFavourite('person', row.uuid)} />
                       </button>
                       <button
                         type="button"
@@ -382,7 +385,7 @@ const People = () => {
                           row.extension && dial(row.extension, { forceRefreshContactInfo: true })
                         }
                       >
-                        <Ic n="phone" size={12} />
+                        <Ic n="phone" size={16} />
                       </button>
                       <button
                         type="button"
@@ -391,7 +394,7 @@ const People = () => {
                         aria-label={`Message ${row.name}`}
                         onClick={() => navigate(`/messenger?chatId=${row.uuid}&chatType=chat`)}
                       >
-                        <Ic n="chat" size={12} />
+                        <Ic n="chat" size={16} />
                       </button>
                       <button
                         type="button"
@@ -406,7 +409,7 @@ const People = () => {
                           )
                         }
                       >
-                        <Ic n="video" size={12} />
+                        <Ic n="video" size={16} />
                       </button>
                       {canEdit ? (
                         <button
@@ -605,6 +608,7 @@ const People = () => {
           </DirectoryDrawer>
         ) : null}
       </DirectoryPage>
+      </div>
 
       {/* The platform's own add-user flow, opened in place rather than
           bouncing to Admin — the console keeps you in Directory. */}

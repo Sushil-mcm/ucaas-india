@@ -1,0 +1,204 @@
+/**
+ * A modern skin for the "Custom" range picker's react-datepicker popups.
+ * Scoped under `.mcm-datepicker` (passed as `calendarClassName`) so it only
+ * touches DateDropdown's own calendars — react-datepicker ships elsewhere
+ * in the app too, and this must not restyle those.
+ */
+
+/* Rendered via `portalId` into its own body-level node, so a nearby card's
+   own stacking context (several report pages give their stat tiles a
+   z-index of their own) can no longer sit on top of the open calendar. */
+#mcm-datepicker-portal {
+  position: relative;
+  z-index: 9999;
+}
+
+.mcm-datepicker.react-datepicker {
+  font-family: inherit;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 16px;
+  background: #fdfbf8;
+  box-shadow:
+    0 16px 32px -8px rgba(194, 98, 46, 0.2),
+    0 4px 10px rgba(194, 98, 46, 0.08);
+  overflow: hidden;
+  padding-bottom: 8px;
+}
+.mcm-datepicker .react-datepicker__triangle {
+  display: none;
+}
+.mcm-datepicker .react-datepicker__header {
+  background: rgba(251, 226, 200, 0.35);
+  border-bottom: 1px solid rgba(225, 200, 165, 0.6);
+  padding: 12px 8px 10px;
+}
+.mcm-datepicker .react-datepicker__current-month {
+  font-weight: 800;
+  font-size: 13px;
+  color: #2e2d35;
+  margin-bottom: 8px;
+}
+.mcm-datepicker .react-datepicker__day-name {
+  color: #9a948f;
+  font-weight: 700;
+  font-size: 10.5px;
+  width: 2rem;
+  text-transform: uppercase;
+}
+.mcm-datepicker .react-datepicker__month {
+  margin: 8px;
+}
+.mcm-datepicker .react-datepicker__day {
+  border-radius: 999px;
+  width: 2rem;
+  line-height: 2rem;
+  margin: 2px;
+  color: #2e2d35;
+  font-weight: 600;
+  font-size: 12.5px;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.mcm-datepicker .react-datepicker__day:hover {
+  background: rgba(251, 226, 200, 0.7);
+}
+.mcm-datepicker .react-datepicker__day--selected,
+.mcm-datepicker .react-datepicker__day--keyboard-selected,
+.mcm-datepicker .react-datepicker__day--in-selecting-range,
+.mcm-datepicker .react-datepicker__day--in-range {
+  background: #f2994a;
+  color: #fff;
+}
+.mcm-datepicker .react-datepicker__day--keyboard-selected:hover {
+  background: #f2994a;
+}
+.mcm-datepicker .react-datepicker__day--today:not(.react-datepicker__day--selected) {
+  font-weight: 800;
+  color: #f2994a;
+}
+.mcm-datepicker .react-datepicker__day--outside-month {
+  color: #d8d2c8;
+}
+.mcm-datepicker .react-datepicker__day--disabled {
+  color: #e3ddd3;
+  cursor: not-allowed;
+}
+.mcm-datepicker .react-datepicker__day--disabled:hover {
+  background: transparent;
+}
+.mcm-datepicker .react-datepicker__navigation {
+  top: 14px;
+}
+.mcm-datepicker .react-datepicker__navigation-icon::before {
+  border-color: #9a948f;
+  border-width: 2px 2px 0 0;
+}
+.mcm-datepicker .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #f2994a;
+}
+.mcm-datepicker .react-datepicker__month-select,
+.mcm-datepicker .react-datepicker__year-select {
+  border-radius: 8px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: #fff;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2e2d35;
+}
+.mcm-datepicker .react-datepicker__month-select:focus,
+.mcm-datepicker .react-datepicker__year-select:focus {
+  outline: none;
+  border-color: #f2994a;
+}
+
+/* The "From" / "To" cards that trigger each of the two calendars. */
+.mcm-date-field {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+/* One bordered card holding both the "FROM"/"TO" label and the picked date,
+   stacked top-to-bottom inside it, rather than a label floating above a
+   separate input box. */
+.mcm-date-input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 100%;
+  min-width: 108px;
+  border-radius: 10px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(46, 45, 53, 0.05);
+  padding: 0 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.mcm-date-input:hover {
+  border-color: #f2994a;
+}
+.mcm-date-input:focus,
+.mcm-date-input:focus-visible {
+  outline: none;
+  border-color: #f2994a;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
+}
+.mcm-date-field-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2e2d35;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-date-field-value.is-placeholder {
+  color: #b3ac9f;
+  font-weight: 500;
+}
+
+/* The app's own `.mcm-page button:not([data-slot="tabs-trigger"])` reset
+   (higher specificity than a lone `.bg-primary` utility class) strips every
+   plain button's background/border/color back to none — including this
+   Apply button. Beat it on specificity instead of fighting Tailwind's class
+   order. */
+.mcm-page button.mcm-date-apply-btn:not([data-slot='tabs-trigger']) {
+  background: #f2994a;
+  border: 1px solid #f2994a;
+  color: #ffffff;
+}
+.mcm-page button.mcm-date-apply-btn:not([data-slot='tabs-trigger']):hover:not(:disabled) {
+  background: #e0863a;
+  border-color: #e0863a;
+}
+.mcm-page button.mcm-date-apply-btn:not([data-slot='tabs-trigger']):disabled {
+  background: #f2c396;
+  border-color: #f2c396;
+  color: #ffffff;
+}
+
+/* The toolbar's Search input inherits a global a11y focus ring
+   (`.mcm-page :focus-visible`) that draws a thick offset outline square —
+   fine generically, but visually clashing next to the date cards' own
+   quieter border+glow focus style. Match it here instead. */
+.filters input:focus-visible {
+  outline: none !important;
+  border-color: #f2994a !important;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15) !important;
+}
+
+/* The clear ("x") button next to From/To used a translucent cream fill;
+   the rest of the toolbar (search, date cards, Apply) sit on solid white
+   cards, so match that instead of standing out as a different tone. */
+.mcm-page button.mcm-date-clear-btn:not([data-slot='tabs-trigger']) {
+  background: #ffffff;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  color: #9a948f;
+}
+.mcm-page button.mcm-date-clear-btn:not([data-slot='tabs-trigger']):hover {
+  border-color: #f2994a;
+  color: #f2994a;
+}

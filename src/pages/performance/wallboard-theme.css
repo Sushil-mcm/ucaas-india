@@ -1,0 +1,111 @@
+/* ============================================================
+   Performance › Contact centre wallboard — warm sunset orange
+   glassmorphism, matching the rest of the Performance module.
+
+   `.mcm-wall` (mcm-page.css) is used only by this one component — it
+   portals to `document.body`, outside `.mcm-page` entirely, so nothing
+   here can be reached from — or leak into — any other page. The base
+   rules there were the console's original near-black "control room"
+   look; this file re-themes every one of them rather than overriding a
+   handful, since the component has no other page to stay consistent with
+   except the rest of Performance.
+   ============================================================ */
+
+.mcm-wall {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(950px 720px at 102% -6%, rgba(255, 120, 40, 0.4), transparent 55%),
+    radial-gradient(1000px 720px at 50% 112%, rgba(255, 190, 120, 0.42), transparent 60%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  color: #1a1a1a;
+}
+
+/* ------------------------------------------------------------
+   1. Header — title, live pill, clock, exit
+   ------------------------------------------------------------ */
+.mcm-wall .wh h2 {
+  color: #1a1a1a;
+}
+.mcm-wall .wh .pulsing {
+  color: #059669 !important;
+}
+.mcm-wall .wclock {
+  color: #666666;
+}
+.mcm-wall .wh button {
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #ea580c !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-wall .wh button:hover {
+  border-color: rgba(249, 115, 22, 0.55) !important;
+  box-shadow: 0 3px 10px -3px rgba(249, 115, 22, 0.3);
+}
+
+/* ------------------------------------------------------------
+   2. KPI tiles — frosted glass, warm accent numbers
+   ------------------------------------------------------------ */
+.mcm-wall .wk {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.mcm-wall .wk .k {
+  color: #666666;
+}
+.mcm-wall .wk .v {
+  color: #1a1a1a;
+}
+.mcm-wall .wk.bad {
+  border-color: rgba(225, 29, 72, 0.35);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(254, 226, 226, 0.85) 100%);
+}
+.mcm-wall .wk.bad .v {
+  color: #e11d48;
+}
+.mcm-wall .wk.good .v {
+  color: #059669;
+}
+
+/* ------------------------------------------------------------
+   3. Queue table — frosted glass container, warm header
+   ------------------------------------------------------------ */
+.mcm-wall .wtbl {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06);
+}
+.mcm-wall table {
+  color: #334155;
+}
+.mcm-wall th {
+  background: rgba(255, 246, 238, 0.9);
+  color: #666666;
+  border-bottom: 1px solid rgba(249, 115, 22, 0.14);
+}
+.mcm-wall td {
+  border-bottom: 1px solid rgba(249, 115, 22, 0.1);
+}
+.mcm-wall tbody tr:hover td {
+  background: rgba(255, 241, 235, 0.6);
+}
+.mcm-wall .wqname {
+  color: #1a1a1a;
+}

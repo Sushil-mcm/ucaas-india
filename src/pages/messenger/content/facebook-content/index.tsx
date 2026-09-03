@@ -296,12 +296,12 @@ const FacebookContent = ({
     }
   }, [hasAiAssistAgent]);
   return (
-    <div className="w-full bg-gray-50 flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="w-full px-3 bg-white gap-2 flex items-center rounded-none border-b border-gray-200 min-h-[65px]">
+    <div className="w-full flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="w-full px-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] gap-2 flex items-center rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px]">
         {onBackToList ? (
           <button
             type="button"
-            className="xl:hidden w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 text-gray-700 hover:bg-gray-200 shrink-0"
+            className="xl:hidden w-9 h-9 rounded-full flex items-center justify-center bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-[#F0DFC5] shrink-0"
             onClick={onBackToList}
             aria-label="Back to conversations"
           >
@@ -313,7 +313,7 @@ const FacebookContent = ({
         </div>
         <div className="flex items-center justify-between min-w-0 flex-1">
           <div className="flex flex-col min-w-0">
-            <p className="font-semibold text-gray-900 truncate text-md">
+            <p className="font-semibold text-[#2E2D35] truncate text-md">
               {selectedChat?.toName || 'Unknown Contact'}
             </p>
           </div>
@@ -331,7 +331,7 @@ const FacebookContent = ({
               groupedMessage.map((item: any, itemIndex: number) => (
                 <React.Fragment key={item.date || itemIndex}>
                   <div className="flex items-center justify-center my-4 mx-auto w-[25%]">
-                    <p className="bg-gray-200 rounded-full px-4 text-sm py-1">
+                    <p className="bg-[#F0DFC5] rounded-full px-4 text-sm py-1">
                       {moment(item?.date).format('DD MMM')}
                     </p>
                   </div>
@@ -346,7 +346,7 @@ const FacebookContent = ({
                             <div className="flex justify-between items-center gap-1">
                               <div className="flex items-center gap-1 min-h-[20px]">
                                 {!message?.aiGenerated ? (
-                                  <p className="text-gray-900 text-xs font-medium">
+                                  <p className="text-[#2E2D35] text-xs font-medium">
                                     {direction === ACTIVITYLIST.Outbound
                                       ? 'You'
                                       : selectedChat?.toName || 'Unknown Contact'}
@@ -354,12 +354,12 @@ const FacebookContent = ({
                                 ) : (
                                   <CustomTooltip text="This message is from AI" side="top">
                                     <span className="inline-flex items-center cursor-pointer">
-                                      <Sparkles className="text-gray-600 w-5 h-5" />
+                                      <Sparkles className="text-[#9A948F] w-5 h-5" />
                                     </span>
                                   </CustomTooltip>
                                 )}
                               </div>
-                              <small className="text-gray-500 text-xs">
+                              <small className="text-[#9A948F] text-xs">
                                 {moment(message?.updatedAt).format('hh:mm a')}
                               </small>
                             </div>
@@ -413,8 +413,8 @@ const FacebookContent = ({
               <div className="w-full bg-white p-3 flex items-center justify-center h-full">
                 <div className="flex flex-col justify-center items-center gap-1 py-5 h-full w-full mx-auto">
                   <img src={NotFound} alt="BusyImage" className="min-w-36 w-36" />
-                  <p className="text-md font-medium text-gray-900"> No conversations yet</p>
-                  <p className="text-md  text-gray-700">
+                  <p className="text-md font-medium text-[#2E2D35]"> No conversations yet</p>
+                  <p className="text-md  text-[#2E2D35]">
                     Please add a user first to begin chatting.
                   </p>
                 </div>
@@ -429,7 +429,7 @@ const FacebookContent = ({
                   className="cursor-pointer relative flex items-center"
                   onClick={handleEmojiOpen}
                 >
-                  <EmojiICon className="text-gray-900/80 w-4 h-4" />
+                  <EmojiICon className="text-[#2E2D35]/80 w-4 h-4" />
                   <div
                     className="absolute bottom-[40px] left-[-.8rem] emoji-container"
                     ref={emojiPickerRef}
@@ -437,7 +437,7 @@ const FacebookContent = ({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <EmojiPicker
-                      className="border-gray-200"
+                      className="border-[#EEE7DD]"
                       open={emojiOpen}
                       lazyLoadEmojis
                       onEmojiClick={(data) => {
@@ -454,7 +454,7 @@ const FacebookContent = ({
                     className="cursor-pointer"
                     onClick={() => setIsAiAssistOpen((prev) => !prev)}
                   >
-                    <Sparkles className="text-gray-900/80 w-4 h-4" />
+                    <Sparkles className="text-[#2E2D35]/80 w-4 h-4" />
                   </span>
                 ) : (
                   <Popover>
@@ -464,11 +464,11 @@ const FacebookContent = ({
                         className="cursor-pointer inline-flex items-center"
                         aria-label="Set up AI assist agent"
                       >
-                        <Sparkles className="text-gray-900/80 w-4 h-4" />
+                        <Sparkles className="text-[#2E2D35]/80 w-4 h-4" />
                       </button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-[calc(100vw-2rem)] max-w-80 p-0 overflow-hidden rounded-xl border border-gray-200/80 shadow-xl"
+                      className="w-[calc(100vw-2rem)] max-w-80 p-0 overflow-hidden rounded-xl border border-[rgba(225,200,165,0.85)] shadow-xl"
                       side="top"
                     >
                       <div className="border-b border-gray-100 bg-gradient-to-br from-sky-50 to-indigo-50 px-3 py-2.5">
@@ -476,18 +476,18 @@ const FacebookContent = ({
                           <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white bg-white/80 shadow-sm">
                             <Sparkles className="h-4 w-4 text-primary" />
                           </span>
-                          <p className="text-sm font-semibold text-gray-900">AI Assist Setup</p>
+                          <p className="text-sm font-semibold text-[#2E2D35]">AI Assist Setup</p>
                         </div>
                       </div>
                       <div className="space-y-3 p-3">
-                        <p className="text-xs leading-5 text-gray-600">
+                        <p className="text-xs leading-5 text-[#9A948F]">
                           Set up an agent in AI Settings to start using AI-generated assistance.
                         </p>
                         <div className="flex justify-end">
                           <Button
                             type="button"
                             size={'sm'}
-                            className="rounded-md bg-[#0B69E3] px-2.5 max-h- text-[11px] font-medium text-white hover:bg-[#0B69E3] focus:bg-[#0B69E3] active:bg-[#0B69E3]"
+                            className="rounded-md bg-[#f2994a] px-2.5 max-h- text-[11px] font-medium text-white hover:bg-[#f2994a] focus:bg-[#f2994a] active:bg-[#f2994a]"
                             onClick={() => navigate('/admin-settings/knowledge/ai-settings')}
                           >
                             Open AI Settings
@@ -499,7 +499,7 @@ const FacebookContent = ({
                 )
               ) : null}
               <textarea
-                className={`w-full h-full max-h-[46px] ${lineHeight} p-2 rounded-full text-sm overflow-y-auto placeholder:text-gray-700 focus:ring-0 focus-visible:shadow-none focus-visible:outline-0 text-gray-900 shadow-none resize-none border border-gray-200`}
+                className={`w-full h-full max-h-[46px] ${lineHeight} p-2 rounded-full text-sm overflow-y-auto placeholder:text-[#9A948F] focus:ring-0 focus-visible:shadow-none focus-visible:outline-0 text-[#2E2D35] shadow-none resize-none border border-[#EEE7DD]`}
                 value={message}
                 ref={textareaRef}
                 onChange={(e) => {
@@ -533,7 +533,7 @@ const FacebookContent = ({
                   }
                 }}
               />
-              <div className="cursor-pointer flex items-center justify-center rounded-full w-[40px] min-w-[40px] h-[40px] bg-primary text-white hover:bg-gray-100 hover:text-gray-900/80">
+              <div className="cursor-pointer flex items-center justify-center rounded-full w-[40px] min-w-[40px] h-[40px] bg-primary text-white hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]/80">
                 {isPendingFacebookMessage ? (
                   <Loader variant="blue" />
                 ) : (
@@ -558,7 +558,7 @@ const FacebookContent = ({
           </div>
         </div>
         {isAiAssistOpen && hasAiAssistAgent && isDesktopAiLayout ? (
-          <div className="w-full h-[420px] border-t border-gray-200 lg:h-full lg:w-[360px] lg:min-w-[360px] lg:border-t-0">
+          <div className="w-full h-[420px] border-t border-[#EEE7DD] lg:h-full lg:w-[360px] lg:min-w-[360px] lg:border-t-0">
             <AiAssist
               lineHeight={lineHeight}
               onClose={() => setIsAiAssistOpen(false)}

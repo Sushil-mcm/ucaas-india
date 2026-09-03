@@ -512,8 +512,8 @@ const CaptainActions = () => {
           <MessageSquare className="size-5" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-gray-950">Actions</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-lg font-bold text-[#2E2D35]">Actions</h2>
+          <p className="text-sm text-[#9A948F]">
             Integrate Actions to give Captain AI access to your business data across CRM, Finance &amp; Accounting,
             HR &amp; Recruiting, Sales, E-commerce, File Storage, Issue Tracking, and more. Captain can look up
             contacts, invoices, employees, orders, and more directly from your connected apps.
@@ -523,11 +523,11 @@ const CaptainActions = () => {
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>}
 
-      <div className="flex items-center gap-5 border-b border-gray-200">
+      <div className="flex items-center gap-5 border-b border-[#EEE7DD]">
         <button
           type="button"
           onClick={() => setMainTab('my-actions')}
-          className={`flex items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium ${mainTab === 'my-actions' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500'}`}
+          className={`flex items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium ${mainTab === 'my-actions' ? 'border-primary text-[#2E2D35]' : 'border-transparent text-[#9A948F]'}`}
         >
           <Zap className="size-3.5" />
           My actions
@@ -535,7 +535,7 @@ const CaptainActions = () => {
         <button
           type="button"
           onClick={() => setMainTab('create-action')}
-          className={`flex items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium ${mainTab === 'create-action' ? 'border-primary text-gray-900' : 'border-transparent text-gray-500'}`}
+          className={`flex items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium ${mainTab === 'create-action' ? 'border-primary text-[#2E2D35]' : 'border-transparent text-[#9A948F]'}`}
         >
           <Plus className="size-3.5" />
           Create action
@@ -546,7 +546,7 @@ const CaptainActions = () => {
         <>
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
               <Input type="text" value={actionsSearch} onChange={(e) => setActionsSearch(e.target.value)} placeholder="Search your actions..." className="pl-9" />
             </div>
             <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
@@ -554,17 +554,17 @@ const CaptainActions = () => {
 
           {connections.length > 0 && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-bold text-gray-950">Connected Apps</h3>
+              <h3 className="text-sm font-bold text-[#2E2D35]">Connected Apps</h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {connections.map((conn) => {
                 const tk = toolkits.find((t) => t.slug === conn.toolkit_slug);
                 return (
-                  <div key={conn.id} className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4">
+                  <div key={conn.id} className="flex flex-col gap-2 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
                     <div className="flex items-center gap-2">
-                      {tk?.logo ? <img src={tk.logo} alt="" className="size-6 rounded" /> : <Plug className="size-5 text-gray-400" />}
-                      <div className="truncate text-sm font-semibold text-gray-900">{conn.toolkit_name}</div>
+                      {tk?.logo ? <img src={tk.logo} alt="" className="size-6 rounded" /> : <Plug className="size-5 text-[#9A948F]" />}
+                      <div className="truncate text-sm font-semibold text-[#2E2D35]">{conn.toolkit_name}</div>
                     </div>
-                    <p className="line-clamp-2 text-xs text-gray-400">{tk?.description || 'Connected app'}</p>
+                    <p className="line-clamp-2 text-xs text-[#9A948F]">{tk?.description || 'Connected app'}</p>
                     <div className="mt-auto flex items-center gap-2">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${conn.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : conn.status === 'INITIALIZING' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                         {conn.status}
@@ -592,51 +592,51 @@ const CaptainActions = () => {
               })}
               </div>
               {browseConnection && (
-                <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-col gap-3 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-bold text-gray-950">{browseConnection.toolkit_name} actions</div>
-                      <p className="text-xs text-gray-500">Turn on the specific actions this assistant is allowed to call.</p>
+                      <div className="text-sm font-bold text-[#2E2D35]">{browseConnection.toolkit_name} actions</div>
+                      <p className="text-xs text-[#9A948F]">Turn on the specific actions this assistant is allowed to call.</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">Enable all</span>
+                      <span className="text-xs text-[#9A948F]">Enable all</span>
                       <Switch checked={allBrowseActionsEnabled} onCheckedChange={(c) => setAllComposioActions(c === true)} />
-                      <button type="button" onClick={() => setBrowseConnection(null)} className="ml-1 rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600">
+                      <button type="button" onClick={() => setBrowseConnection(null)} className="ml-1 rounded-lg p-1.5 text-[#9A948F] hover:bg-[#FBE2C8]/45 hover:text-[#9A948F]">
                         ✕
                       </button>
                     </div>
                   </div>
 
                   {isLoadingActions ? (
-                    <div className="flex h-24 items-center justify-center text-sm text-gray-500">Loading actions...</div>
+                    <div className="flex h-24 items-center justify-center text-sm text-[#9A948F]">Loading actions...</div>
                   ) : (
                     <>
                       <div className="flex items-center gap-3">
                         <div className="relative flex-1">
-                          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+                          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
                           <Input type="text" value={browseSearch} onChange={(e) => setBrowseSearch(e.target.value)} placeholder="Search this app's actions..." className="pl-9" />
                         </div>
-                        <label className="flex shrink-0 items-center gap-1.5 text-xs text-gray-500">
+                        <label className="flex shrink-0 items-center gap-1.5 text-xs text-[#9A948F]">
                           <Checkbox checked={allBrowseActionsEnabled} onCheckedChange={(c) => setAllComposioActions(c === true)} />
                           Select all
                         </label>
                       </div>
-                      <div className="flex max-h-96 flex-col divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200">
+                      <div className="flex max-h-96 flex-col divide-y divide-gray-100 overflow-y-auto rounded-xl border border-[#EEE7DD]">
                         {visibleBrowseActions.length === 0 ? (
-                          <div className="px-4 py-6 text-center text-xs text-gray-400">No actions match your search.</div>
+                          <div className="px-4 py-6 text-center text-xs text-[#9A948F]">No actions match your search.</div>
                         ) : (
                           visibleBrowseActions.map((a) => (
-                            <div key={a.slug} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50">
+                            <div key={a.slug} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-[#FBE2C8]/45">
                               <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                                   <Plug className="size-4" />
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="truncate text-sm font-semibold text-gray-950">{a.name}</span>
+                                    <span className="truncate text-sm font-semibold text-[#2E2D35]">{a.name}</span>
                                     <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Composio</span>
                                   </div>
-                                  <div className="truncate text-xs text-gray-400">{a.slug}</div>
+                                  <div className="truncate text-xs text-[#9A948F]">{a.slug}</div>
                                 </div>
                               </div>
                               <div className="flex shrink-0 items-center gap-2">
@@ -645,7 +645,7 @@ const CaptainActions = () => {
                                     <button
                                       type="button"
                                       onClick={() => setBrowseTierPopoverSlug(browseTierPopoverSlug === a.slug ? null : a.slug)}
-                                      className={`flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-medium hover:bg-gray-100 ${a.security_tier ? TIER_META[a.security_tier].color : 'text-gray-400'}`}
+                                      className={`flex items-center gap-1 rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-2 py-1.5 text-xs font-medium hover:bg-[#FBE2C8]/40 ${a.security_tier ? TIER_META[a.security_tier].color : 'text-[#9A948F]'}`}
                                     >
                                       {a.security_tier ? (
                                         <>
@@ -662,8 +662,8 @@ const CaptainActions = () => {
                                     {browseTierPopoverSlug === a.slug && (
                                       <>
                                         <div className="fixed inset-0 z-40" onClick={() => setBrowseTierPopoverSlug(null)} />
-                                        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-gray-200 bg-white shadow-xl">
-                                          <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-800">Security level</div>
+                                        <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-xl">
+                                          <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-[#2E2D35]">Security level</div>
                                           <div className="py-1">
                                             {(['open', 'standard', 'secure'] as const).map((level) => {
                                               const meta = TIER_META[level];
@@ -674,12 +674,12 @@ const CaptainActions = () => {
                                                   key={level}
                                                   type="button"
                                                   onClick={() => { setBrowseActionTier(a, level); setBrowseTierPopoverSlug(null); }}
-                                                  className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 ${active ? 'bg-gray-50' : ''}`}
+                                                  className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-[#FBE2C8]/45 ${active ? 'bg-[#FBE2C8]/45' : ''}`}
                                                 >
-                                                  <Icon className={`mt-0.5 size-4 shrink-0 ${active ? meta.color : 'text-gray-400'}`} />
+                                                  <Icon className={`mt-0.5 size-4 shrink-0 ${active ? meta.color : 'text-[#9A948F]'}`} />
                                                   <span className="min-w-0 flex-1">
-                                                    <span className={`block text-xs font-medium ${active ? meta.color : 'text-gray-800'}`}>{meta.label}</span>
-                                                    <span className="block text-xs text-gray-400">{meta.desc}</span>
+                                                    <span className={`block text-xs font-medium ${active ? meta.color : 'text-[#2E2D35]'}`}>{meta.label}</span>
+                                                    <span className="block text-xs text-[#9A948F]">{meta.desc}</span>
                                                   </span>
                                                   {active && <Check className={`mt-0.5 size-3.5 shrink-0 ${meta.color}`} />}
                                                 </button>
@@ -691,7 +691,7 @@ const CaptainActions = () => {
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="rounded-lg bg-gray-50 px-2 py-1.5 text-xs text-gray-400" title="Write actions are staff-only — never exposed to customers">
+                                  <span className="rounded-lg bg-[#FBE2C8]/45 px-2 py-1.5 text-xs text-[#9A948F]" title="Write actions are staff-only — never exposed to customers">
                                     Staff only
                                   </span>
                                 )}
@@ -709,31 +709,31 @@ const CaptainActions = () => {
           )}
 
           {isLoading ? null : connections.length === 0 && filteredTools.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 px-5 py-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#EEE7DD] px-5 py-16 text-center">
               <Zap className="size-8 text-gray-300" />
-              <div className="text-sm font-semibold text-gray-800">No connected actions yet</div>
-              <p className="max-w-xs text-xs text-gray-400">Connect an app or add a custom tool from the Create action tab.</p>
+              <div className="text-sm font-semibold text-[#2E2D35]">No connected actions yet</div>
+              <p className="max-w-xs text-xs text-[#9A948F]">Connect an app or add a custom tool from the Create action tab.</p>
               <Button type="button" variant="primary" onClick={() => setMainTab('create-action')} disabled={!selectedId}>
                 Create action
               </Button>
             </div>
           ) : filteredTools.length > 0 ? (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-bold text-gray-950">Custom Actions</h3>
+              <h3 className="text-sm font-bold text-[#2E2D35]">Custom Actions</h3>
               {filteredTools.map((t) => (
-                <div key={t.id} className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4">
+                <div key={t.id} className="flex items-center justify-between gap-4 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-5 py-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       {t.kind === 'composio' ? <Plug className="size-4" /> : <Wrench className="size-4" />}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <div className="truncate text-sm font-semibold text-gray-950">{t.title}</div>
+                        <div className="truncate text-sm font-semibold text-[#2E2D35]">{t.title}</div>
                         {t.kind === 'composio' && (
                           <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Composio</span>
                         )}
                       </div>
-                      <div className="truncate text-xs text-gray-400">
+                      <div className="truncate text-xs text-[#9A948F]">
                         {t.kind === 'composio' ? t.composio_tool_slug : `${t.http_method} · ${t.endpoint_url} · ${t.auth_type !== 'none' ? `Auth: ${t.auth_type}` : 'No auth'}`}
                       </div>
                     </div>
@@ -744,7 +744,7 @@ const CaptainActions = () => {
                         <button
                           type="button"
                           onClick={() => setTierPopoverId(tierPopoverId === t.id ? null : t.id)}
-                          className={`flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs font-medium hover:bg-gray-100 ${t.security_tier ? TIER_META[t.security_tier].color : 'text-gray-400'}`}
+                          className={`flex items-center gap-1 rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-2 py-1.5 text-xs font-medium hover:bg-[#FBE2C8]/40 ${t.security_tier ? TIER_META[t.security_tier].color : 'text-[#9A948F]'}`}
                         >
                           {t.security_tier ? (
                             <>
@@ -761,8 +761,8 @@ const CaptainActions = () => {
                         {tierPopoverId === t.id && (
                           <>
                             <div className="fixed inset-0 z-40" onClick={() => setTierPopoverId(null)} />
-                            <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-gray-200 bg-white shadow-xl">
-                              <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-gray-800">Security level</div>
+                            <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-xl">
+                              <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold text-[#2E2D35]">Security level</div>
                               <div className="py-1">
                                 {(['open', 'standard', 'secure'] as const).map((level) => {
                                   const meta = TIER_META[level];
@@ -773,12 +773,12 @@ const CaptainActions = () => {
                                       key={level}
                                       type="button"
                                       onClick={() => setSecurityTier(t, level)}
-                                      className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-gray-50 ${active ? 'bg-gray-50' : ''}`}
+                                      className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-[#FBE2C8]/45 ${active ? 'bg-[#FBE2C8]/45' : ''}`}
                                     >
-                                      <Icon className={`mt-0.5 size-4 shrink-0 ${active ? meta.color : 'text-gray-400'}`} />
+                                      <Icon className={`mt-0.5 size-4 shrink-0 ${active ? meta.color : 'text-[#9A948F]'}`} />
                                       <span className="min-w-0 flex-1">
-                                        <span className={`block text-xs font-medium ${active ? meta.color : 'text-gray-800'}`}>{meta.label}</span>
-                                        <span className="block text-xs text-gray-400">{meta.desc}</span>
+                                        <span className={`block text-xs font-medium ${active ? meta.color : 'text-[#2E2D35]'}`}>{meta.label}</span>
+                                        <span className="block text-xs text-[#9A948F]">{meta.desc}</span>
                                       </span>
                                       {active && <Check className={`mt-0.5 size-3.5 shrink-0 ${meta.color}`} />}
                                     </button>
@@ -790,7 +790,7 @@ const CaptainActions = () => {
                         )}
                       </div>
                     ) : (
-                      <span className="rounded-lg bg-gray-50 px-2 py-1.5 text-xs text-gray-400" title="Write actions are staff-only — never exposed to customers">
+                      <span className="rounded-lg bg-[#FBE2C8]/45 px-2 py-1.5 text-xs text-[#9A948F]" title="Write actions are staff-only — never exposed to customers">
                         Staff only
                       </span>
                     )}
@@ -815,7 +815,7 @@ const CaptainActions = () => {
         <>
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
               <Input
                 type="text"
                 value={toolkitSearch}
@@ -835,26 +835,26 @@ const CaptainActions = () => {
             </select>
           </div>
 
-          <h3 className="text-sm font-bold text-gray-950">Browse apps to connect</h3>
+          <h3 className="text-sm font-bold text-[#2E2D35]">Browse apps to connect</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            <button type="button" onClick={openCreate} disabled={!selectedId} className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-4 text-left hover:border-primary hover:bg-primary/[0.02] disabled:opacity-50">
+            <button type="button" onClick={openCreate} disabled={!selectedId} className="flex flex-col items-start gap-2 rounded-2xl border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/50 p-4 text-left hover:border-primary hover:bg-primary/[0.02] disabled:opacity-50">
               <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Wrench className="size-4" />
               </div>
-              <div className="text-sm font-semibold text-gray-900">Custom action</div>
-              <p className="text-xs text-gray-400">Call any API, with your own auth and request/response templates.</p>
+              <div className="text-sm font-semibold text-[#2E2D35]">Custom action</div>
+              <p className="text-xs text-[#9A948F]">Call any API, with your own auth and request/response templates.</p>
             </button>
 
             {isLoadingToolkits ? (
-              <div className="col-span-full flex h-16 items-center justify-center text-sm text-gray-500">Loading apps...</div>
+              <div className="col-span-full flex h-16 items-center justify-center text-sm text-[#9A948F]">Loading apps...</div>
             ) : (
               visibleToolkits.filter((tk) => !connectionFor(tk.slug)).map((tk) => (
-                <div key={tk.slug} className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4">
+                <div key={tk.slug} className="flex flex-col gap-2 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
                   <div className="flex items-center gap-2">
-                    {tk.logo ? <img src={tk.logo} alt="" className="size-6 rounded" /> : <Plug className="size-5 text-gray-400" />}
-                    <div className="truncate text-sm font-semibold text-gray-900">{tk.name}</div>
+                    {tk.logo ? <img src={tk.logo} alt="" className="size-6 rounded" /> : <Plug className="size-5 text-[#9A948F]" />}
+                    <div className="truncate text-sm font-semibold text-[#2E2D35]">{tk.name}</div>
                   </div>
-                  <p className="line-clamp-2 text-xs text-gray-400">{tk.description}</p>
+                  <p className="line-clamp-2 text-xs text-[#9A948F]">{tk.description}</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -874,7 +874,7 @@ const CaptainActions = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6">
-          <DialogTitle className="mb-4 text-base font-bold text-gray-950">{editingId ? 'Edit Action' : 'Add Action'}</DialogTitle>
+          <DialogTitle className="mb-4 text-base font-bold text-[#2E2D35]">{editingId ? 'Edit Action' : 'Add Action'}</DialogTitle>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label>Title</Label>
@@ -929,7 +929,7 @@ const CaptainActions = () => {
                 className={`${textAreaClass} font-mono`}
                 placeholder="Order status: {{ response.status }}, expected {{ response.eta }}"
               />
-              <p className="text-xs text-gray-400">Leave blank to pass the raw JSON response straight to the model.</p>
+              <p className="text-xs text-[#9A948F]">Leave blank to pass the raw JSON response straight to the model.</p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -938,7 +938,7 @@ const CaptainActions = () => {
                 <Button type="button" variant="outline" size="sm" onClick={addParam}><Plus className="size-3" />Add</Button>
               </div>
               {form.param_schema.map((p, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-lg border border-gray-200 p-2">
+                <div key={i} className="flex items-center gap-2 rounded-lg border border-[#EEE7DD] p-2">
                   <Input type="text" value={p.name} onChange={(e) => updateParam(i, { name: e.target.value })} placeholder="order_id" className="w-32" />
                   <select value={p.type} onChange={(e) => updateParam(i, { type: e.target.value })} className={`${fieldClass} w-24`}>
                     <option value="string">string</option>
@@ -946,7 +946,7 @@ const CaptainActions = () => {
                     <option value="boolean">boolean</option>
                   </select>
                   <Input type="text" value={p.description} onChange={(e) => updateParam(i, { description: e.target.value })} placeholder="description" className="flex-1" />
-                  <label className="flex items-center gap-1 text-xs text-gray-500">
+                  <label className="flex items-center gap-1 text-xs text-[#9A948F]">
                     <Checkbox checked={p.required} onCheckedChange={(c) => updateParam(i, { required: c === true })} />
                     Required
                   </label>
@@ -955,7 +955,7 @@ const CaptainActions = () => {
               ))}
             </div>
 
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-3">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-3">
               <Label>Authentication</Label>
               <select value={form.auth_type} onChange={(e) => setForm((f) => ({ ...f, auth_type: e.target.value as any, auth_config: {} }))} className={fieldClass}>
                 <option value="none">None</option>
@@ -987,13 +987,13 @@ const CaptainActions = () => {
               )}
             </div>
 
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-3">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-3">
               <Label>Response data access</Label>
               <div className="flex gap-3">
                 {(['full', 'limited'] as const).map((opt) => (
-                  <button key={opt} type="button" onClick={() => setForm((f) => ({ ...f, data_access: opt }))} className={`flex-1 rounded-xl border px-3 py-2 text-left text-xs ${form.data_access === opt ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
-                    <div className="font-medium text-gray-800">{opt === 'full' ? 'Full response' : 'Limited fields'}</div>
-                    <div className="text-gray-400">{opt === 'full' ? 'The model sees the entire API response' : 'Only the fields you list below reach the model'}</div>
+                  <button key={opt} type="button" onClick={() => setForm((f) => ({ ...f, data_access: opt }))} className={`flex-1 rounded-xl border px-3 py-2 text-left text-xs ${form.data_access === opt ? 'border-primary bg-primary/5' : 'border-[#EEE7DD]'}`}>
+                    <div className="font-medium text-[#2E2D35]">{opt === 'full' ? 'Full response' : 'Limited fields'}</div>
+                    <div className="text-[#9A948F]">{opt === 'full' ? 'The model sees the entire API response' : 'Only the fields you list below reach the model'}</div>
                   </button>
                 ))}
               </div>
@@ -1002,27 +1002,27 @@ const CaptainActions = () => {
               )}
             </div>
 
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-3">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] p-3">
               <Label>Operation type</Label>
-              <p className="text-xs text-gray-400">Only read actions can ever be exposed to customers — write actions stay staff-only (Playground), no matter the security level.</p>
+              <p className="text-xs text-[#9A948F]">Only read actions can ever be exposed to customers — write actions stay staff-only (Playground), no matter the security level.</p>
               <div className="flex gap-3">
                 {(['read', 'write'] as const).map((opt) => (
-                  <button key={opt} type="button" onClick={() => setForm((f) => ({ ...f, operation_type: opt }))} className={`flex-1 rounded-xl border px-3 py-2 text-left text-xs capitalize ${form.operation_type === opt ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-gray-700'}`}>
+                  <button key={opt} type="button" onClick={() => setForm((f) => ({ ...f, operation_type: opt }))} className={`flex-1 rounded-xl border px-3 py-2 text-left text-xs capitalize ${form.operation_type === opt ? 'border-primary bg-primary/5 text-primary' : 'border-[#EEE7DD] text-[#2E2D35]'}`}>
                     {opt}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+            <div className="flex items-center justify-between rounded-xl border border-[#EEE7DD] p-3">
               <div>
                 <Label>Enabled</Label>
-                <p className="text-xs text-gray-400">Off means the assistant can never call this action.</p>
+                <p className="text-xs text-[#9A948F]">Off means the assistant can never call this action.</p>
               </div>
               <Switch checked={form.enabled} onCheckedChange={(c) => setForm((f) => ({ ...f, enabled: c === true }))} />
             </div>
 
-            <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+            <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-3">
               <Label>Test this action</Label>
               {form.param_schema.map((p) => (
                 <Input
@@ -1037,7 +1037,7 @@ const CaptainActions = () => {
                 <Play className="size-3.5" />
                 {isTesting ? 'Running...' : 'Run Test'}
               </Button>
-              {testResult && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-2 text-xs text-gray-700">{testResult}</pre>}
+              {testResult && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2 text-xs text-[#2E2D35]">{testResult}</pre>}
             </div>
           </div>
 

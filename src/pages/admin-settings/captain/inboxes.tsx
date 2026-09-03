@@ -322,8 +322,8 @@ const CaptainInboxes = () => {
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 p-6">
       <div>
-        <h2 className="text-lg font-bold text-gray-950">Inboxes</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-[#2E2D35]">Inboxes</h2>
+        <p className="text-sm text-[#9A948F]">
           A channel is the mode of communication your customer chooses to interact with you. An inbox is where you
           manage interactions for a specific channel — create as many as you need, independent of one another.
         </p>
@@ -335,11 +335,11 @@ const CaptainInboxes = () => {
 
       <div className="flex items-center justify-between gap-3">
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />
           <Input type="text" value={inboxSearch} onChange={(e) => setInboxSearch(e.target.value)} placeholder="Search inboxes..." className="pl-9" />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">{inboxes.length} inbox{inboxes.length === 1 ? '' : 'es'}</span>
+          <span className="text-xs text-[#9A948F]">{inboxes.length} inbox{inboxes.length === 1 ? '' : 'es'}</span>
           <Button type="button" variant="primary" size="sm" onClick={() => setIsAddInboxOpen(true)}>
             <Plus className="size-3.5" />
             Add Inbox
@@ -348,13 +348,13 @@ const CaptainInboxes = () => {
       </div>
 
       {isLoadingInboxes ? (
-        <div className="flex h-20 items-center justify-center text-sm text-gray-500">Loading...</div>
+        <div className="flex h-20 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
       ) : inboxes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-6 text-center text-sm text-gray-400">
+        <div className="rounded-2xl border border-dashed border-[#EEE7DD] px-5 py-6 text-center text-sm text-[#9A948F]">
           No inboxes yet — click "Add Inbox" to create your first one.
         </div>
       ) : Object.keys(groupedInboxes).length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-6 text-center text-sm text-gray-400">
+        <div className="rounded-2xl border border-dashed border-[#EEE7DD] px-5 py-6 text-center text-sm text-[#9A948F]">
           No inboxes match "{inboxSearch}".
         </div>
       ) : (
@@ -364,18 +364,18 @@ const CaptainInboxes = () => {
             const GroupIcon = meta.icon;
             const isCollapsed = collapsedGroups[channelType];
             return (
-              <div key={channelType} className="rounded-2xl border border-gray-200 bg-white">
+              <div key={channelType} className="rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
                 <button
                   type="button"
                   onClick={() => setCollapsedGroups((prev) => ({ ...prev, [channelType]: !prev[channelType] }))}
                   className="flex w-full items-center justify-between gap-2 px-4 py-3"
                 >
-                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                    <GroupIcon className="size-4 text-gray-400" />
+                  <span className="flex items-center gap-2 text-sm font-semibold text-[#2E2D35]">
+                    <GroupIcon className="size-4 text-[#9A948F]" />
                     {meta.label}
-                    <span className="font-normal text-gray-400">{rows.length} inbox{rows.length === 1 ? '' : 'es'}</span>
+                    <span className="font-normal text-[#9A948F]">{rows.length} inbox{rows.length === 1 ? '' : 'es'}</span>
                   </span>
-                  <ChevronDown className={`size-4 text-gray-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                  <ChevronDown className={`size-4 text-[#9A948F] transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
                 </button>
                 {!isCollapsed && (
                   <div className="flex flex-col divide-y divide-gray-100 border-t border-gray-100">
@@ -384,11 +384,11 @@ const CaptainInboxes = () => {
                       return (
                         <div key={inbox.id} className="flex items-center justify-between gap-4 px-5 py-4">
                           <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#FBE2C8]/40 text-[#9A948F]">
                               <MessageSquare className="size-4" />
                             </div>
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-medium text-gray-900">{inbox.name}</div>
+                              <div className="truncate text-sm font-medium text-[#2E2D35]">{inbox.name}</div>
                               <div className="truncate text-xs text-primary">
                                 {meta.label}{inbox.website_domain ? ` · ${inbox.website_domain}` : ''}{inbox.assistant_name ? ` · AI: ${inbox.assistant_name}` : ''}
                               </div>
@@ -399,7 +399,7 @@ const CaptainInboxes = () => {
                               type="button"
                               title="Conversations"
                               onClick={() => (isLegacy ? openConversations(inbox.legacy_assistant_id || undefined) : openInboxConversations(inbox.id))}
-                              className="flex size-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+                              className="flex size-8 items-center justify-center rounded-lg border border-[#EEE7DD] text-[#9A948F] hover:bg-[#FBE2C8]/45"
                             >
                               <MessagesSquare className="size-3.5" />
                             </button>
@@ -407,7 +407,7 @@ const CaptainInboxes = () => {
                               type="button"
                               title="Configure"
                               onClick={() => goToInbox(inbox.id)}
-                              className="flex size-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+                              className="flex size-8 items-center justify-center rounded-lg border border-[#EEE7DD] text-[#9A948F] hover:bg-[#FBE2C8]/45"
                             >
                               <Settings2 className="size-3.5" />
                             </button>
@@ -416,7 +416,7 @@ const CaptainInboxes = () => {
                                 type="button"
                                 title="Delete"
                                 onClick={() => deleteInbox(inbox.id)}
-                                className="flex size-8 items-center justify-center rounded-lg border border-gray-200 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                                className="flex size-8 items-center justify-center rounded-lg border border-[#EEE7DD] text-gray-300 hover:bg-red-50 hover:text-red-500"
                               >
                                 <Trash2 className="size-3.5" />
                               </button>
@@ -458,9 +458,9 @@ const CaptainInboxes = () => {
       <Dialog open={!!conversationsInboxId} onOpenChange={(v) => !v && setConversationsInboxId(null)}>
         <DialogContent className="grid h-[80vh] w-full max-w-3xl grid-cols-[220px_1fr] gap-0 overflow-hidden rounded-2xl p-0">
           <div className="flex flex-col overflow-y-auto border-r border-gray-100">
-            <div className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-950">Conversations</div>
+            <div className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-[#2E2D35]">Conversations</div>
             {inboxConversations.length === 0 ? (
-              <div className="px-4 py-6 text-center text-xs text-gray-400">
+              <div className="px-4 py-6 text-center text-xs text-[#9A948F]">
                 No conversations yet, or none assigned to you in this inbox.
               </div>
             ) : (
@@ -469,15 +469,15 @@ const CaptainInboxes = () => {
                   key={c.id}
                   type="button"
                   onClick={() => openInboxThread(c.id)}
-                  className={`flex flex-col gap-0.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-gray-50 ${
+                  className={`flex flex-col gap-0.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-[#FBE2C8]/45 ${
                     activeInboxConversationId === c.id ? 'bg-primary/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-800">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#2E2D35]">
                     {c.owner === 'human' ? <UserCheck className="size-3 text-amber-600" /> : <Bot className="size-3 text-primary" />}
                     {c.visitor_name || 'Visitor'}
                   </div>
-                  <div className="line-clamp-1 text-xs text-gray-500">{c.last_message}</div>
+                  <div className="line-clamp-1 text-xs text-[#9A948F]">{c.last_message}</div>
                 </button>
               ))
             )}
@@ -485,7 +485,7 @@ const CaptainInboxes = () => {
 
           <div className="flex flex-col">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-              <DialogTitle className="text-sm font-semibold text-gray-950">
+              <DialogTitle className="text-sm font-semibold text-[#2E2D35]">
                 {activeInboxConversation ? (activeInboxConversation.visitor_name || 'Visitor') : 'Select a conversation'}
               </DialogTitle>
               {activeInboxConversation?.owner === 'human' && (
@@ -495,18 +495,18 @@ const CaptainInboxes = () => {
               )}
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50/60 p-4">
+            <div className="flex-1 space-y-3 overflow-y-auto bg-[#FBE2C8]/50 p-4">
               {inboxThread.map((m) => (
                 <div key={m.id} className={`flex items-end gap-2 ${m.role === 'visitor' ? 'justify-start' : 'justify-end'}`}>
                   {m.role === 'visitor' && (
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500">
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#F0DFC5] text-[#9A948F]">
                       <User className="size-3.5" />
                     </div>
                   )}
                   <div
                     className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                       m.role === 'visitor'
-                        ? 'rounded-bl-sm border border-gray-100 bg-white text-gray-800'
+                        ? 'rounded-bl-sm border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] text-[#2E2D35]'
                         : m.role === 'agent'
                           ? 'rounded-br-sm bg-amber-500 text-white'
                           : 'rounded-br-sm bg-primary text-white'
@@ -522,7 +522,7 @@ const CaptainInboxes = () => {
                 </div>
               ))}
               {activeInboxConversationId && !inboxThread.length && (
-                <div className="pt-10 text-center text-xs text-gray-400">No messages yet.</div>
+                <div className="pt-10 text-center text-xs text-[#9A948F]">No messages yet.</div>
               )}
             </div>
 
@@ -549,9 +549,9 @@ const CaptainInboxes = () => {
       <Dialog open={isConversationsOpen} onOpenChange={setIsConversationsOpen}>
         <DialogContent className="grid h-[80vh] w-full max-w-3xl grid-cols-[220px_1fr] gap-0 overflow-hidden rounded-2xl p-0">
           <div className="flex flex-col overflow-y-auto border-r border-gray-100">
-            <div className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-950">Conversations</div>
+            <div className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-[#2E2D35]">Conversations</div>
             {conversations.length === 0 ? (
-              <div className="px-4 py-6 text-center text-xs text-gray-400">
+              <div className="px-4 py-6 text-center text-xs text-[#9A948F]">
                 No conversations yet, or none assigned to you in this inbox.
               </div>
             ) : (
@@ -560,15 +560,15 @@ const CaptainInboxes = () => {
                   key={c.id}
                   type="button"
                   onClick={() => openThread(c.id)}
-                  className={`flex flex-col gap-0.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-gray-50 ${
+                  className={`flex flex-col gap-0.5 border-b border-gray-50 px-4 py-3 text-left hover:bg-[#FBE2C8]/45 ${
                     activeConversationId === c.id ? 'bg-primary/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-800">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-[#2E2D35]">
                     {c.owner === 'human' ? <UserCheck className="size-3 text-amber-600" /> : <Bot className="size-3 text-primary" />}
                     {c.visitor_name || 'Visitor'}
                   </div>
-                  <div className="line-clamp-1 text-xs text-gray-500">{c.last_message}</div>
+                  <div className="line-clamp-1 text-xs text-[#9A948F]">{c.last_message}</div>
                 </button>
               ))
             )}
@@ -576,7 +576,7 @@ const CaptainInboxes = () => {
 
           <div className="flex flex-col">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-              <DialogTitle className="text-sm font-semibold text-gray-950">
+              <DialogTitle className="text-sm font-semibold text-[#2E2D35]">
                 {activeConversation ? (activeConversation.visitor_name || 'Visitor') : 'Select a conversation'}
               </DialogTitle>
               {activeConversation?.owner === 'human' && (
@@ -586,18 +586,18 @@ const CaptainInboxes = () => {
               )}
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50/60 p-4">
+            <div className="flex-1 space-y-3 overflow-y-auto bg-[#FBE2C8]/50 p-4">
               {thread.map((m) => (
                 <div key={m.id} className={`flex items-end gap-2 ${m.role === 'visitor' ? 'justify-start' : 'justify-end'}`}>
                   {m.role === 'visitor' && (
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-500">
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#F0DFC5] text-[#9A948F]">
                       <User className="size-3.5" />
                     </div>
                   )}
                   <div
                     className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                       m.role === 'visitor'
-                        ? 'rounded-bl-sm border border-gray-100 bg-white text-gray-800'
+                        ? 'rounded-bl-sm border border-gray-100 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] text-[#2E2D35]'
                         : m.role === 'agent'
                           ? 'rounded-br-sm bg-amber-500 text-white'
                           : 'rounded-br-sm bg-primary text-white'
@@ -613,7 +613,7 @@ const CaptainInboxes = () => {
                 </div>
               ))}
               {activeConversationId && !thread.length && (
-                <div className="pt-10 text-center text-xs text-gray-400">No messages yet.</div>
+                <div className="pt-10 text-center text-xs text-[#9A948F]">No messages yet.</div>
               )}
             </div>
 
