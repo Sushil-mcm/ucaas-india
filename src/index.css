@@ -16,6 +16,7 @@
    means a shared class like .mcm-stickyfoot works wherever it is applied
    instead of only on the 31 files that happened to import the stylesheet. */
 @import './components/mcm/mcm-page.css';
+@import './styles/recovered-inflight.css';
 
 
 @theme {
