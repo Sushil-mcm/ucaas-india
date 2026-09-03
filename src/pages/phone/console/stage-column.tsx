@@ -14,6 +14,9 @@ import { Ic } from './icons';
 import { useConsoleDialer } from './dial-number';
 import CallRecord from './call-record';
 import { isTerminalSession, mmss, type ConsoleCallState } from './use-console-call';
+import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
+import type { Call as TwilioCall } from '@twilio/voice-sdk';
+import type { CallerIdOption } from '@/components/dialpad/types';
 import {
   buildEnrichment,
   CHECKLIST,
@@ -370,6 +373,13 @@ const StageColumn = ({
     updateCallerIdSelection,
   } = useDialpadCallerIdOptions();
   const [callerIdOpen, setCallerIdOpen] = useState(false);
+  /* Twilio isn't one of the company's assigned DIDs, so useDialpadCallerIdOptions
+     never persists it as the account's default — updateCallerIdSelection() is a
+     no-op for it. Without this override the chip would keep showing whatever
+     the real persisted default is after picking "Twilio", even though the next
+     call correctly goes out through it. */
+  const [callerIdOverride, setCallerIdOverride] = useState<CallerIdOption | null>(null);
+  const effectiveCallerId = callerIdOverride ?? defaultCallerIdOption;
   const { users } = useUsersDirectory();
   const { dial: dial2 } = useConsoleDialer();
 
@@ -398,6 +408,24 @@ const StageColumn = ({
     }, 1000);
     return () => clearInterval(t);
   }, [demoCall?.phase]);
+
+  /* A real Twilio call, placed when the Twilio caller ID is selected. Not a
+     jssip session, so it never shows up in dialpad.sessions — this local
+     state is the only place its progress is tracked. */
+  const [twilioCall, setTwilioCall] = useState<null | {
+    number: string;
+    phase: 'dialing' | 'active';
+    secs: number;
+    call: TwilioCall | null;
+  }>(null);
+
+  useEffect(() => {
+    if (!twilioCall || twilioCall.phase !== 'active') return;
+    const t = setInterval(() => {
+      setTwilioCall((c) => (c ? { ...c, secs: c.secs + 1 } : c));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [twilioCall?.phase]);
 
   // same resolution order the dialpad's maxi side panel uses
   const scriptId = String(
@@ -437,6 +465,25 @@ const StageColumn = ({
   const placeCall = (target: string) => {
     const value = String(target || '').trim();
     if (!value) return;
+
+    if (effectiveCallerId?.number === TWILIO_CALLER_ID) {
+      setDial('');
+      setTwilioCall({ number: value, phase: 'dialing', secs: 0, call: null });
+      placeTwilioCall(value)
+        .then((call) => {
+          call.on('accept', () => setTwilioCall((c) => (c ? { ...c, phase: 'active' } : c)));
+          call.on('disconnect', () => setTwilioCall(null));
+          call.on('cancel', () => setTwilioCall(null));
+          call.on('error', () => setTwilioCall(null));
+          setTwilioCall((c) => (c ? { ...c, call } : c));
+        })
+        .catch((error) => {
+          console.error('Twilio call failed to start', error);
+          setTwilioCall(null);
+        });
+      return;
+    }
+
     if (!dialpad.isRegistered) {
       setDemoCall({ number: value, phase: 'dialing', secs: 0 });
       setDial('');
@@ -452,6 +499,40 @@ const StageColumn = ({
     }
     setDial((d) => d + key);
   };
+
+  /* ------------------------------------------------------- twilio call ---- */
+  if (state === 'idle' && twilioCall) {
+    const connected = twilioCall.phase === 'active';
+    const twilioSession = {
+      remoteNumber: twilioCall.number,
+      direction: 'outgoing',
+    } as unknown as DialpadSession;
+    return (
+      <div className="col stage">
+        <div className="stage-inner">
+          <CallerBlock
+            session={twilioSession}
+            state={connected ? 'active' : 'dialing'}
+            secs={twilioCall.secs}
+          />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              className="btn danger"
+              style={{ flex: 1, height: 46 }}
+              onClick={() => {
+                twilioCall.call?.disconnect();
+                setTwilioCall(null);
+              }}
+            >
+              <Ic n="hangup" size={18} fill />
+              {connected ? 'End call' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ---------------------------------------------------------- demo call ---- */
   if (state === 'idle' && demoCall) {
@@ -538,7 +619,7 @@ const StageColumn = ({
                   <Ic n="globe" size={12} />
                   {isCallerIdUpdating
                     ? 'Saving…'
-                    : defaultCallerIdOption?.number || 'No caller ID'}
+                    : effectiveCallerId?.number || 'No caller ID'}
                   {callerIdOptions.length > 1 ? <Ic n="chev" size={11} /> : null}
                 </button>
 
@@ -565,7 +646,7 @@ const StageColumn = ({
                       }}
                     >
                       {callerIdOptions.map((option) => {
-                        const active = option.id === defaultCallerIdOption?.id;
+                        const active = option.id === effectiveCallerId?.id;
                         return (
                           <button
                             key={option.id}
@@ -583,8 +664,13 @@ const StageColumn = ({
                             }}
                             onClick={async () => {
                               setCallerIdOpen(false);
-                              /* No-ops for the placeholder option, and the hook
-                                 refreshes the user so the label follows. */
+                              setCallerIdOverride(
+                                option.id === TWILIO_CALLER_ID_OPTION.id ? option : null,
+                              );
+                              /* No-ops for the placeholder option and for Twilio
+                                 (not an assigned DID) — the override above covers
+                                 Twilio's display, the hook refreshes the user so
+                                 a real DID's label follows. */
                               await updateCallerIdSelection(option);
                             }}
                           >
