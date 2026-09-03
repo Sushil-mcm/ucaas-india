@@ -60,6 +60,7 @@ const ChangePassword = ({ modalState, setModalState }: any) => {
             Icon={showPassword?.old_password ? <Icon name="EyeLineOff" /> : <Icon name="EyeLine" />}
             placeholder="Enter old password"
             label="Old Password"
+            required
             type={showPassword?.old_password ? 'text' : 'password'}
             {...register('old_password')}
             error={errors?.old_password?.message}
@@ -69,6 +70,7 @@ const ChangePassword = ({ modalState, setModalState }: any) => {
             Icon={showPassword?.new_password ? <Icon name="EyeLineOff" /> : <Icon name="EyeLine" />}
             placeholder="Enter new password"
             label="New Password"
+            required
             type={showPassword?.new_password ? 'text' : 'password'}
             {...register('new_password')}
             error={errors?.new_password?.message}
@@ -80,6 +82,7 @@ const ChangePassword = ({ modalState, setModalState }: any) => {
             }
             placeholder="Enter confirm password"
             label="Confirm Password"
+            required
             type={showPassword?.confirm_password ? 'text' : 'password'}
             {...register('confirm_password')}
             error={errors?.confirm_password?.message}

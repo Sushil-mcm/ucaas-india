@@ -90,7 +90,7 @@ export const TableManagerRow: FC<{
           return (
             <TableCell
               key={`${row.id}_${cell.column.id}_${cellIndex}`}
-              className="px-2 xl:px-4 py-2 border-b  border-gray-200 last-of-type:border-r-0 h-11 min-h-11 text-gray-900/80 font-normal"
+              className="px-2 xl:px-4 py-2 border-b  border-gray-200 last-of-type:border-r-0 h-11 min-h-11 text-black font-semibold"
             >
               {cell?.column?.id === 'action' ? (
                 <div className="flex items-center justify-center">

@@ -56,9 +56,14 @@ const SideDrawer: FC<SideDrawerProps> = ({
         <div
           data-state={isOpen ? 'open' : 'closed'}
           className={cn(
-            `fixed inset-0 ${isHeader ? 'z-30' : 'z-10'}  bg-black/50 transition-opacity`,
-            'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
-            'data-[state=open]:fade-in-0',
+            `fixed inset-0 ${isHeader ? 'z-30' : 'z-10'} bg-black/50 transition-opacity duration-300 ease-in-out`,
+            /* Plain opacity transition rather than the animate-in/out
+               keyframe utilities: those play on first paint regardless of
+               prior state, which flashes the backdrop the instant a
+               permanently-mounted drawer (see the notification drawer in
+               header/index.tsx) loads still closed. A transition only
+               plays when the class actually changes. */
+            isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
             backgroundStyle,
           )}
         ></div>
@@ -67,7 +72,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
       <div
         id="drawer-example"
         className={cn(
-          `fixed top-0 shadow-lg bg-white right-0 ${isHeader ? 'z-30' : 'z-10'} transition-transform ease-in-out duration-300 backdrop-blur-md gap-4 flex flex-col`,
+          `fixed top-0 shadow-lg bg-[rgba(251,249,246,0.88)] right-0 ${isHeader ? 'z-30' : 'z-10'} transition-transform ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col`,
           enableResponsive && isSmallScreen ? 'min-w-0 max-w-full' : 'min-w-84 sm:min-w-100',
           isHeader ? 'mt-0 h-full' : 'mt-16 h-[calc(100vh_-_4rem)]',
           isOpen ? 'translate-x-0 right-0' : 'translate-x-full right-[-1rem]',
@@ -82,7 +87,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
         {title && (
           <div
             className={cn(
-              'flex min-h-11 items-center justify-between gap-1.5 px-5 text-gray-900',
+              'flex min-h-11 items-center justify-between gap-1.5 px-5 text-[#2E2D35]',
               /* Room for the close button so a long title cannot run underneath it. */
               isCloseIcon && 'pr-16',
               headerClassName,
@@ -110,17 +115,30 @@ const SideDrawer: FC<SideDrawerProps> = ({
             aria-label="Close"
             title="Close"
             className={cn(
-              'absolute right-4 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center',
-              'rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors',
-              'hover:bg-gray-100 hover:text-gray-900',
+              'group absolute right-8 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center',
+              'rounded-full border border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] text-[#9A948F] shadow-sm',
+              'transition-all duration-200 ease-out',
+              'hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] hover:scale-110 hover:shadow-md',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
             )}
           >
-            <Icon name="CloseIcon" className="h-4 w-4" />
+            <Icon
+              name="CloseIcon"
+              className="h-4 w-4 transition-transform duration-200 ease-out group-hover:rotate-90"
+            />
           </button>
         )}
 
-        <div className="flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto md:overflow-hidden px-4 lg:px-5 pt-0 pb-5">
+        <div
+          className={cn(
+            'flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto md:overflow-hidden px-4 lg:px-5 pb-5',
+            /* No title row means nothing reserves space for the floating
+               close button above, so the content's own heading runs
+               underneath it - give the content the same clearance a title
+               row would have provided. */
+            title || !isCloseIcon ? 'pt-0' : 'pt-14',
+          )}
+        >
           {content}
         </div>
       </div>

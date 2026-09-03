@@ -502,12 +502,12 @@ const PhoneLines = () => {
   }, [locationOptions, setValue, watchLocation?.value]);
 
   return (
-    <div className="w-full flex h-full bg-gray-100">
+    <div className="w-full flex h-full">
       <section className="w-2/5 bg-white">
         <div className="m-auto h-full flex flex-col gap-16 items-center justify-center">
           <form className="flex flex-col pb-8 p-8 bg-white gap-3">
             <h3 className="text-2xl font-semibold">Choose a main number for your account</h3>
-            <div className={`flex flex-col border border-gray-200 bg-white rounded-xl p-3 gap-2`}>
+            <div className={`flex flex-col border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-3 gap-2`}>
               <div className="flex flex-col gap-4 py-4">
                 <CustomSelect
                   label="Country"
@@ -604,7 +604,7 @@ const PhoneLines = () => {
               {isShowTable ? (
                 <div className="w-full relative bg-white rounded-xl p-3">
                   {errors?.groupId?.value?.message && (
-                    <div className="text-red-500 font-medium text-xs pb-1 absolute top-2">
+                    <div className="text-[#DC5049] font-medium text-xs pb-1 absolute top-2">
                       {errors?.groupId?.value?.message}
                     </div>
                   )}
@@ -646,13 +646,13 @@ const PhoneLines = () => {
                             <Loader variant="blue" />
                           </div>
                         ) : didAvailableData?.length > 0 ? (
-                          <div className="bg-white w-full border border-gray-200 rounded-xl p-3 gap-3 flex flex-col">
+                          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] w-full border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col">
                             <div className="pb-1 flex flex-col gap-0.5 px-3">
                               <h6 className="flex gap-2 text-sm font-semibold">
                                 Please complete the purchase within {purchaseCountdown}
                               </h6>
                               {errors?.did_number?.value?.message && (
-                                <div className="text-red-500 font-medium text-xs pb-1 absolute top-2">
+                                <div className="text-[#DC5049] font-medium text-xs pb-1 absolute top-2">
                                   {errors?.did_number?.value?.message}
                                 </div>
                               )}
@@ -688,7 +688,7 @@ const PhoneLines = () => {
                           </div>
                         ) : (
                           <div>
-                            <div className="bg-white border border-gray-200 rounded-xl p-3 gap-3 flex flex-col items-center">
+                            <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col items-center">
                               <div className="pb-1 flex flex-col gap-0.5 px-3">
                                 <h6 className="flex gap-2 text-sm font-semibold">No DID found</h6>
                               </div>
@@ -719,8 +719,8 @@ const PhoneLines = () => {
                           </div>
                         )
                       ) : (
-                        <div className="rounded-lg m-auto border border-gray-200 bg-white p-3 text-center">
-                          <h5 className="text-base text-gray-800 font-normal w-full text-center flex justify-center">
+                        <div className="rounded-lg m-auto border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 text-center">
+                          <h5 className="text-base text-[#2E2D35] font-normal w-full text-center flex justify-center">
                             Choose a number for your account
                           </h5>
                         </div>

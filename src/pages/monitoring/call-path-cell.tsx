@@ -88,7 +88,10 @@ export const CallPathCell = ({ call, onOpen, secondary }: CallPathCellProps) => 
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
-        <div className="capitalize">{call?.current_context || '---'}</div>
+        {/* Empty, not a dash. A cell with no context has nothing to say;
+            '---' reads as a value that failed to load. The info button
+            beside it still opens the full path. */}
+        <div className="capitalize">{call?.current_context || ''}</div>
         {call ? (
           <CustomTooltip text="View call path" side="top">
             <button

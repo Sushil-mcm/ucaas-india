@@ -24,8 +24,8 @@ export const handleStatus = (status: any) => {
     'no answer': 'text-red-500 bg-red-50',
     'user busy': 'text-red-500 bg-red-50',
     unavailable: 'text-red-500 bg-red-50',
-    voicemail: 'text-blue-500 bg-blue-50',
-    transfer: 'text-blue-500 bg-blue-50',
+    voicemail: 'text-primary bg-primary-100',
+    transfer: 'text-primary bg-primary-100',
   };
   return statusClasses[status] || '';
 };

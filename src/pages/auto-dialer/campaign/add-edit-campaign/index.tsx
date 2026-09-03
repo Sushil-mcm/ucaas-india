@@ -346,13 +346,13 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
                   htmlFor={id}
                   className={`w-full flex items-start justify-between gap-2 px-4 py-3 border rounded-xl ${isEditMode ? 'pointer-events-none opacity-50' : 'cursor-pointer'} ${
                     dialMethod === item?.value
-                      ? 'border-gray-200 bg-gray-100'
-                      : 'border-gray-200 bg-white'
+                      ? 'border-[#EEE7DD] bg-[#FBE2C8]/40'
+                      : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]'
                   }`}
                 >
                   <div className="flex flex-col gap-1">
-                    <h3 className="text-gray-900 font-semibold text-md">{item.label}</h3>
-                    <p className="text-gray-500 font-normal text-sm">{item.description}</p>
+                    <h3 className="text-[#2E2D35] font-semibold text-md">{item.label}</h3>
+                    <p className="text-[#9A948F] font-normal text-sm">{item.description}</p>
                   </div>
                   <RadioGroupItem id={id} value={item.value} className="peer cursor-pointer" />
                 </label>
@@ -361,11 +361,11 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           </RadioGroup>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex w-full">
-            <div className="w-full overflow-x-auto border-b border-gray-200">
+            <div className="w-full overflow-x-auto border-b border-[#EEE7DD]">
               <TabsList className="flex min-h-10 min-w-max rounded-none bg-transparent p-0 text-center text-sm font-semibold sm:min-w-full">
                 {Object.entries(CAMPAIGN_UPSERT_TAB_CONSTANT).map(([key, value]) => (
                   <TabsTrigger
-                    className="relative flex h-full flex-none gap-1 rounded-none border-b-2 bg-transparent px-4 text-xs font-semibold text-gray-700 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary data-[state=active]:shadow-2xs sm:flex-1 sm:justify-center sm:px-6 sm:text-sm"
+                    className="relative flex h-full flex-none gap-1 rounded-none border-b-2 bg-transparent px-4 text-xs font-semibold text-[#2E2D35] data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary data-[state=active]:shadow-2xs sm:flex-1 sm:justify-center sm:px-6 sm:text-sm"
                     key={key}
                     value={value}
                   >

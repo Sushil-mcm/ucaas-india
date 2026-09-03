@@ -58,13 +58,13 @@ const CallVolume = () => {
       <ReportsPageLayout>
         <div className="w-full h-full flex flex-col sm:p-4 max-h-[cal(100vh-180px)] overflow-y-auto">
           <div className="w-full flex head">
-            <div className="w-full min-h-14 flex justify-center items-center text-sm bg-gray-200 border-r-0 border-l border-gray-200">
+            <div className="w-full min-h-14 flex justify-center items-center text-sm bg-[#F0DFC5] border-r-0 border-l border-[#EEE7DD]">
               Time
             </div>
             {activitiesDays?.map((dayKey: string) => {
               const dayKeyArr = dayKey ? dayKey?.split(' ') : '';
               return (
-                <div className="w-full min-h-14 flex flex-col justify-center items-center text-sm bg-gray-200 border-r-0 border-l border-gray-200">
+                <div className="w-full min-h-14 flex flex-col justify-center items-center text-sm bg-[#F0DFC5] border-r-0 border-l border-[#EEE7DD]">
                   <span className="sm:hidden">{getShortDayName(dayKeyArr?.[0])}</span>
                   <span className="hidden sm:inline">{dayKeyArr?.[0]}</span>
                   <span className="text-xs">({dayKeyArr?.[1]})</span>
@@ -76,14 +76,14 @@ const CallVolume = () => {
             return (
               <>
                 <div className="w-full flex">
-                  <div className="w-full min-h-14 flex justify-center items-center text-sm bg-white border-r-0 border-b border-l border-gray-200">
+                  <div className="w-full min-h-14 flex justify-center items-center text-sm bg-white border-r-0 border-b border-l border-[#EEE7DD]">
                     {formatTimeToAmPm(time)}
                   </div>
                   {activitiesDays?.map((dayKey: string) => {
                     const value = getActivityValue(dayKey, time);
                     return (
                       <div
-                        className={`w-full min-h-14 flex justify-center items-center text-sm border-r-0 last-of-type:border-r border-b border-l border-gray-200 ${getCallOpacity(value)}`}
+                        className={`w-full min-h-14 flex justify-center items-center text-sm border-r-0 last-of-type:border-r border-b border-l border-[#EEE7DD] ${getCallOpacity(value)}`}
                       >
                         {value}
                       </div>
@@ -94,9 +94,9 @@ const CallVolume = () => {
             );
           })}
         </div>
-        <div className="w-full bg-white p-4 flex items-center justify-center gap-2 border-t border-gray-200">
+        <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 flex items-center justify-center gap-2 border-t border-[rgba(225,200,165,0.9)]">
           <div className="flex items-center gap-1.5">
-            <span className="text-gray-700 text-sm font-medium">Low Engagement</span>
+            <span className="text-[#2E2D35] text-sm font-medium">Low Engagement</span>
             <span className="bg-gray-100 p-2.5 rounded-sm"></span>
             {/* <span className="text-gray-700 text-sm font-medium">Most Busy Hours</span> */}
           </div>
@@ -110,7 +110,7 @@ const CallVolume = () => {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="bg-gray-400 p-2.5 rounded-sm"></span>
-            <span className="text-gray-700 text-sm font-medium">High Engagement</span>
+            <span className="text-[#2E2D35] text-sm font-medium">High Engagement</span>
           </div>
         </div>
       </ReportsPageLayout>

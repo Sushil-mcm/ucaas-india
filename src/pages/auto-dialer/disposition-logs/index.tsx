@@ -133,16 +133,16 @@ const DispositionLogs = () => {
                       <div className="flex flex-col w-full">
                         <div className="flex items-center justify-between  gap-2">
                           <p className="capitalize text-xs">{fullName}</p>
-                          <div className="flex items-center gap-1 text-gray-500 text-xs">
+                          <div className="flex items-center gap-1 text-[#9A948F] text-xs">
                             <Icon name="Grid" className="w-3 h-3 " />
                             <div>{item?.assignedUser?.extension}</div>
                           </div>
                         </div>
-                        <p className="text-gray-500 flex justify-between text-xs">
+                        <p className="text-[#9A948F] flex justify-between text-xs">
                           {item?.assignedUser?.email}
                         </p>
                         {retryDate && (
-                          <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                          <div className="flex items-center gap-1 text-[#9A948F] mt-0.5">
                             <Icon name="TimerIcon" className="w-3 h-3" />
                             <span className="text-[11px] italic">
                               Retry: {convertDateFormateApis(retryDate, 'MMM DD, hh:mm A')}
@@ -173,7 +173,7 @@ const DispositionLogs = () => {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+      <div className="flex items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         <div
           className={`flex gap-2 items-center ${openDisposition?.dispositionId ? 'cursor-pointer' : ''}`}
           onClick={() => {
@@ -185,7 +185,7 @@ const DispositionLogs = () => {
           {openDisposition?.count && openDisposition?.dispositionId && (
             <ArrowLeft className="w-6 h-5" />
           )}
-          <h3 className="text-gray-900 font-semibold text-lg">
+          <h3 className="text-[#2E2D35] font-semibold text-lg">
             {openDisposition?.count && openDisposition?.dispositionId
               ? openDisposition?.dispositionName
               : 'Disposition Logs'}
@@ -215,7 +215,7 @@ const DispositionLogs = () => {
       ) : (
         <div className="p-3 flex flex-col gap-3">
           <div className="flex justify-between items-center">
-            <p className="text-gray-900 font-semibold text-md flex items-center  gap-1 ">
+            <p className="text-[#2E2D35] font-semibold text-md flex items-center  gap-1 ">
               Campaign Dispositions
             </p>
             <div>
@@ -243,7 +243,7 @@ const DispositionLogs = () => {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl py-3 px-2 overflow-auto h-[calc(100vh-12.5rem)]">
+          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl py-3 px-2 overflow-auto h-[calc(100vh-12.5rem)]">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <Loader variant="blue" />
@@ -257,15 +257,15 @@ const DispositionLogs = () => {
                       key={index}
                       onClick={() => handleDispositionClick(disposition)}
                     >
-                      <div className="flex justify-between border border-gray-200 rounded-md w-full p-3 gap-1 bg-white">
+                      <div className="flex justify-between border border-[rgba(225,200,165,0.9)] rounded-md w-full p-3 gap-1 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
                         <div className="flex flex-col gap-1">
                           <p
-                            className="font-semibold text-gray-900 truncate text-sm"
+                            className="font-semibold text-[#2E2D35] truncate text-sm"
                             style={{ color: disposition?.agentDisposition?.colorCode }}
                           >
                             {disposition?.dispositionName}
                           </p>
-                          <h2 className="text-gray-700 truncate text-xl font-semibold">
+                          <h2 className="text-[#2E2D35] truncate text-xl font-semibold">
                             {disposition?.count || 0}
                           </h2>
                         </div>

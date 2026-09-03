@@ -6,9 +6,11 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import type { DialpadSession } from '@/context/dialpad-context';
 import TranscriptInfo from '../../transcript-info';
 import { Ic } from '../icons';
-import { languageLabel, type ConsoleTurn } from '../copilot-adapter';
+import { isNumberLike, languageLabel, type ConsoleTurn } from '../copilot-adapter';
 import type { ConsoleCallRow } from '../call-list-column';
 import Turn from './turn';
+import { DEMO_ENABLED, demoTranscript } from '../demo-data';
+import DemoChip from './demo-chip';
 
 /**
  * Transcript — live while a call is up, the stored transcript for a past call.
@@ -165,6 +167,24 @@ const TranscriptPane = ({
           }}
           setTranscriptionState={setTranscriptState}
         />
+      </div>
+    );
+  }
+
+  if (selectedCall && DEMO_ENABLED) {
+    const demoTurns = demoTranscript(
+      selectedCall.number,
+      isNumberLike(selectedCall.name) ? 'Customer' : selectedCall.name,
+    );
+    return (
+      <div className="pscroll">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span className="eyebrow">Transcript</span>
+          <DemoChip />
+        </div>
+        {demoTurns.map((t) => (
+          <Turn key={t.id} turn={t as ConsoleTurn} />
+        ))}
       </div>
     );
   }

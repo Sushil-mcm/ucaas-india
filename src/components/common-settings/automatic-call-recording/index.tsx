@@ -30,7 +30,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
   return (
     <Dialog open={modalState} onOpenChange={(val) => setModalState(val)}>
       <DialogContent
-        className="sm:w-1/2 md:w-1/3  p-3 max-h-[85vh] overflow-y-auto"
+        className="sm:w-1/2 md:w-1/3  p-3 max-h-[99%] overflow-y-auto"
         showCloseButton={false}
       >
         <div className="flex flex-col gap-1.5  text-900/80">

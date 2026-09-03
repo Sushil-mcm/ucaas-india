@@ -93,12 +93,10 @@ export const Ic = ({
   </svg>
 );
 
-const SPRITE = `<g id="mcmp-trash"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></g>
-<g id="mcmp-refresh"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></g>
-<g id="mcmp-home"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></g>
+const SPRITE = `<g id="mcmp-home"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></g>
 <g id="mcmp-phone"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.4 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></g>
 <g id="mcmp-chat"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 4 12a8.4 8.4 0 0 1 8.5-8.5A8.4 8.4 0 0 1 21 11.5z"/></g>
-<g id="mcmp-video"><path d="M23 7l-7 5 7 5zM1 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" transform="translate(2)"/></g>
+<g id="mcmp-video"><path d="M23 7l-7 5 7 5zM1 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" transform="translate(1)"/></g>
 <g id="mcmp-inbox"><path d="M22 12h-6l-2 3h-4l-2-3H2M5.4 5.8 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.2A2 2 0 0 0 16.8 5H7.2a2 2 0 0 0-1.8.8z"/></g>
 <g id="mcmp-users"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></g>
 <g id="mcmp-route"><path d="M6 3v12M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9v3a6 6 0 0 1-6 6H9"/></g>

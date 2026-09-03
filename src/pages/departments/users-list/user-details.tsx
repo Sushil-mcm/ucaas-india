@@ -74,7 +74,7 @@ const UserDetails: FC = () => {
         );
       },
       className:
-        'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+        'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white',
       tooltipText: 'Chat',
       access: !isSelf,
     },
@@ -83,14 +83,14 @@ const UserDetails: FC = () => {
         icon: 'EditStrokIcon',
         onClick: () => setDrawerState({ isEdit: true }),
         className:
-          'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+          'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white',
         tooltipText: 'Edit',
         access: true,
       },
     userAccess?.is_call && {
       icon: 'PhoneIcon',
       onClick: () => handleMakeCall(user_name, tabData?.extension),
-      className: `${iamOnCall ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-500 hover:bg-green-400 hover:text-white cursor-pointer'}  flex items-center justify-center rounded-full w-9 h-9`,
+      className: `${iamOnCall ? 'bg-[#F0DFC5] text-[#9A948F] cursor-not-allowed' : 'bg-green-100 text-green-500 hover:bg-green-400 hover:text-white cursor-pointer'}  flex items-center justify-center rounded-full w-9 h-9`,
       tooltipText: 'Call',
       access: !isSelf || isMeOnCall || iamOnCall,
     },
@@ -100,7 +100,7 @@ const UserDetails: FC = () => {
       className: `flex items-center justify-center rounded-full w-9 h-9 
       ${
         isSelf
-          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          ? 'bg-[#F0DFC5] text-[#9A948F] cursor-not-allowed'
           : 'cursor-pointer bg-red-100 text-red-500 hover:bg-red-500 hover:text-white'
       }`,
       tooltipText: 'Delete',
@@ -109,18 +109,18 @@ const UserDetails: FC = () => {
   ].filter(Boolean);
 
   return (
-    <section className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden gap-3 h-full">
+    <section className="w-full min-w-0 flex flex-col overflow-hidden gap-3 h-full">
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-full">
           <Loader variant="blue" size="sm" />
         </div>
       ) : !tabData?.uuid ? (
-        <div className="m-auto flex flex-col items-center justify-center border border-gray-200 rounded-xl bg-white p-10 w-fit gap-7 max-w-80">
+        <div className="m-auto flex flex-col items-center justify-center border border-[rgba(225,200,165,0.9)] rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-10 w-fit gap-7 max-w-80">
           <div className="flex flex-col justify-center items-center gap-2">
             <Icon name="NotFound" />
           </div>
           <div className="flex flex-col items-center gap-2">
-            <p className="text-gray-800 text-sm whitespace-normal">
+            <p className="text-[#2E2D35] text-sm whitespace-normal">
               There is nothing to show here yet. Start by adding some users.
             </p>
             {userAccess?.add && (
@@ -137,7 +137,7 @@ const UserDetails: FC = () => {
         </div>
       ) : (
         <div className="w-full h-full">
-          <div className="w-full min-w-0 px-3 bg-white gap-2 flex items-center justify-between rounded-none border-b border-gray-200 min-h-[65px] ">
+          <div className="w-full min-w-0 px-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] gap-2 flex items-center justify-between rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px] ">
             <div className="relative w-10 h-10 shrink-0">
               <CustomAvatar
                 name={user_name}
@@ -148,7 +148,7 @@ const UserDetails: FC = () => {
             </div>
             <div className="flex min-w-0 items-center justify-between w-[calc(100%_-_3rem)]">
               <div className="flex min-w-0 flex-col">
-                <p className="font-semibold text-gray-900 truncate text-md">
+                <p className="font-semibold text-[#2E2D35] truncate text-md">
                   {capitalizeFirstLetter(user_name) || 'Unknown Contact'}
                 </p>
                 <div className="flex gap-1 items-center">
@@ -182,45 +182,45 @@ const UserDetails: FC = () => {
             ) : null}
           </div>
           <div className="p-3 gap-6 flex w-full flex-col h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)] overflow-y-auto max-w-full xl:max-w-[80%] mx-auto">
-            <div className="flex flex-col gap-4 p-4 bg-white rounded-lg border border-gray-200">
+            <div className="flex flex-col gap-4 p-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg border border-[rgba(225,200,165,0.9)]">
               <div className="flex flex-col gap-4 sm:flex-row">
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'First Name'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'First Name'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {capitalizeFirstLetter(tabData?.first_name) || 'NA'}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'Last Name'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Last Name'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {capitalizeFirstLetter(tabData?.last_name) || 'NA'}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'Email'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Email'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {tabData?.email}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'Phone'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Phone'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {tabData?.phone?.startsWith('+') ? tabData?.phone : `+${tabData?.phone}`}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'Site'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Site'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {tabData?.site?.name ?? 'NA'}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
-                  <p className="text-gray-900 font-medium text-sm">{'Extension'}</p>
-                  <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Extension'}</p>
+                  <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                     {tabData?.extension ?? 'NA'}
                   </p>
                 </div>
@@ -228,8 +228,8 @@ const UserDetails: FC = () => {
               {tabData?.caller_id ? (
                 <div className="flex flex-col gap-4 sm:flex-row">
                   <div className="flex flex-col gap-1.5 w-full">
-                    <p className="text-gray-900 font-medium text-sm">{'Caller ID'}</p>
-                    <p className="bg-gray-100 text-gray-500 px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
+                    <p className="text-[#2E2D35] font-medium text-sm">{'Caller ID'}</p>
+                    <p className="bg-[#FBE2C8]/40 text-[#9A948F] px-3 min-h-10 flex items-center break-all text-sm rounded-xl">
                       {tabData?.caller_id ?? 'NA'}
                     </p>
                   </div>
@@ -237,7 +237,7 @@ const UserDetails: FC = () => {
                 </div>
               ) : (
                 <div className="flex flex-col justify-between gap-2 w-full sm:flex-row sm:items-center">
-                  <p className="text-gray-900 font-medium text-sm">{'Caller ID'}</p>
+                  <p className="text-[#2E2D35] font-medium text-sm">{'Caller ID'}</p>
                   <Button
                     variant={'outline'}
                     type="button"
@@ -254,38 +254,38 @@ const UserDetails: FC = () => {
             >
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm">{'First Name'}</p>
-                <p className="text-gray-900 font-medium text-sm">
+                <p className="text-[#2E2D35] font-medium text-sm">
                   {capitalizeFirstLetter(tabData?.first_name) || 'NA'}
                 </p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm">{'Last Name'}</p>
-                <p className="text-gray-900 font-medium text-sm">
+                <p className="text-[#2E2D35] font-medium text-sm">
                   {capitalizeFirstLetter(tabData?.last_name) || 'NA'}
                 </p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm">{'Email'}</p>
-                <p className="text-gray-900 font-medium text-sm">{tabData?.email}</p>
+                <p className="text-[#2E2D35] font-medium text-sm">{tabData?.email}</p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm"> {'Phone'}</p>
-                <p className="text-gray-900 font-medium text-sm">
+                <p className="text-[#2E2D35] font-medium text-sm">
                   {tabData?.phone?.startsWith('+') ? tabData?.phone : `+${tabData?.phone}`}
                 </p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm"> {'Site'}</p>
-                <p className="text-gray-900 font-medium text-sm">{tabData?.site?.name ?? 'NA'}</p>
+                <p className="text-[#2E2D35] font-medium text-sm">{tabData?.site?.name ?? 'NA'}</p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm">{'Extension'}</p>
-                <p className="text-gray-900 font-medium text-sm">{tabData?.extension ?? 'NA'}</p>
+                <p className="text-[#2E2D35] font-medium text-sm">{tabData?.extension ?? 'NA'}</p>
               </li>
               <li className="py-3 flex justify-between first:pt-0">
                 <p className="text-gray-700 font-normal text-sm">{'Caller ID'}</p>
                 {tabData?.caller_id ? (
-                  <p className="text-gray-900 font-medium text-sm">{tabData?.caller_id}</p>
+                  <p className="text-[#2E2D35] font-medium text-sm">{tabData?.caller_id}</p>
                 ) : (
                   <Button
                     variant={'outline'}

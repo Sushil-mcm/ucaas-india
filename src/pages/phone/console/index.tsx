@@ -37,6 +37,11 @@ const PhoneConsole = () => {
      the query happened to refetch. This watches for hangup and refreshes. */
   useCallLogRefresh();
   const [selectedCall, setSelectedCall] = useState<ConsoleCallRow | null>(null);
+  /* A row picked from the list only takes over the stage (the dialer's own
+     "call record" view) when someone actually clicks it — landing the panel
+     on the newest call's data by itself, or going "back to dialer", must not
+     also swap the dialer out for a call record nobody asked to see. */
+  const [showCallRecord, setShowCallRecord] = useState(false);
   const [logSource, setLogSource] = useState<ConsoleLogSource>('call');
   // a request from the stage to open a specific panel tab (transcript for a leg)
   const [panelRequest, setPanelRequest] = useState<{
@@ -72,12 +77,15 @@ const PhoneConsole = () => {
           selectedId={selectedCall?.id || null}
           onSelect={(row) => {
             setSelectedCall(row);
+            setShowCallRecord(true);
             setPanelRequest(null);
           }}
+          onAutoSelect={(row) => setSelectedCall(row)}
           source={logSource}
           onSourceChange={(next) => {
             setLogSource(next);
             setSelectedCall(null);
+            setShowCallRecord(false);
             setPanelRequest(null);
           }}
           liveNumber={session?.remoteNumber}
@@ -90,8 +98,8 @@ const PhoneConsole = () => {
           turns={spoken}
           checklist={checklist}
           onEndWrapup={endWrapup}
-          selectedCall={selectedCall}
-          onBackToDialer={() => setSelectedCall(null)}
+          selectedCall={showCallRecord ? selectedCall : null}
+          onBackToDialer={() => setShowCallRecord(false)}
           onOpenTranscript={(leg) => setPanelRequest({ tab: 'transcript', leg, at: Date.now() })}
         />
         <PanelColumn

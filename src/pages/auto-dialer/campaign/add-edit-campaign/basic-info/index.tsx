@@ -90,6 +90,7 @@ const BasicInformation: FC<any> = ({
         <div className="flex flex-col gap-1.5 w-full">
           <Input
             label="Name"
+            required
             placeholder="Enter campaign name"
             {...register('name')}
             error={(errors as any)?.name?.message}
@@ -99,6 +100,7 @@ const BasicInformation: FC<any> = ({
         <div className="flex flex-col gap-1.5 w-full">
           <CustomSelect
             label={'Site'}
+            required
             placeholder="Select Option"
             isDisabled={campaignStatus !== '' && campaignStatus !== 'NEW'}
             options={dataSiteList?.map((site: { name: string; uuid: string }) => ({

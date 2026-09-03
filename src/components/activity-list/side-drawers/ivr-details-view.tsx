@@ -52,34 +52,34 @@ const IVRDetailsView = ({ rowData }: any) => {
         </div>
       ) : (
         <div className="w-full flex pt-3 flex-col gap-3 h-[calc(100vh_-_6.5rem)] overflow-auto">
-          <div className="bg-white p-3 border border-gray-200 rounded-xl">
-            <div className="font-semibold text-gray-900 truncate text-md mb-2">Basic Info</div>
+          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+            <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">Basic Info</div>
             <div className="grid grid-cols-3 gap-4 ">
-              <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                <p className="font-medium text-gray-900 text-sm">IVR Name</p>
-                <p className="text-sm text-gray-500">{name}</p>
+              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                <p className="font-medium text-[#2E2D35] text-sm">IVR Name</p>
+                <p className="text-sm text-[#9A948F]">{name}</p>
               </div>
-              <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                <p className="font-medium text-gray-900 text-sm">Location</p>
-                <p className="text-sm text-gray-500">{siteInfo?.label}</p>
+              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                <p className="font-medium text-[#2E2D35] text-sm">Location</p>
+                <p className="text-sm text-[#9A948F]">{siteInfo?.label}</p>
               </div>
-              <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                <p className="font-medium text-gray-900 text-sm">IVR Extension</p>
-                <p className="text-sm text-gray-500">{extension}</p>
+              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                <p className="font-medium text-[#2E2D35] text-sm">IVR Extension</p>
+                <p className="text-sm text-[#9A948F]">{extension}</p>
               </div>
             </div>
           </div>
-          <div className="bg-white p-3 border border-gray-200 rounded-xl flex flex-col gap-2">
-            <div className="font-semibold text-gray-900 truncate text-md">Manage Key Press</div>
-            <div className="grid grid-cols-3 gap-4 border-t border-gray-200 pt-2">
+          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
+            <div className="font-semibold text-[#2E2D35] truncate text-md">Manage Key Press</div>
+            <div className="grid grid-cols-3 gap-4 border-t border-[#EEE7DD] pt-2">
               <div className="w-full">
-                <p className="font-medium text-gray-900 text-sm">Key Press</p>
+                <p className="font-medium text-[#2E2D35] text-sm">Key Press</p>
               </div>
               <div className="w-full">
-                <p className="font-medium text-gray-900 text-sm">Action</p>
+                <p className="font-medium text-[#2E2D35] text-sm">Action</p>
               </div>
               <div className="w-full">
-                <p className="font-medium text-gray-900 text-sm">Value</p>
+                <p className="font-medium text-[#2E2D35] text-sm">Value</p>
               </div>
             </div>
             {IVROptions &&
@@ -87,18 +87,18 @@ const IVRDetailsView = ({ rowData }: any) => {
               IVROptions?.map((item: any) => {
                 return (
                   <div
-                    className="grid grid-cols-3 gap-4 border-t border-gray-200 pt-2"
+                    className="grid grid-cols-3 gap-4 border-t border-[#EEE7DD] pt-2"
                     key={item?.key}
                   >
                     <div className="w-full">
-                      <p className="text-sm text-gray-500">{item?.key}</p>
+                      <p className="text-sm text-[#9A948F]">{item?.key}</p>
                     </div>
                     <div className="w-full">
-                      <p className="text-sm text-gray-500 uppercase">{item?.type}</p>
+                      <p className="text-sm text-[#9A948F] uppercase">{item?.type}</p>
                     </div>
                     <div className="w-full">
                       {item?.type !== 'HANGUP' && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-[#9A948F]">
                           {item?.label || '--'}{' '}
                           {/* {isPlay ? (
                           <div className={`flex items-center gap-2`}>
@@ -133,8 +133,8 @@ const IVRDetailsView = ({ rowData }: any) => {
                 );
               })}
           </div>
-          <div className="bg-white p-3 border border-gray-200 rounded-xl flex flex-col gap-2">
-            {/* <div className="font-semibold text-gray-900 truncate text-md">Generic Key Press</div> */}
+          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
+            {/* <div className="font-semibold text-[#2E2D35] truncate text-md">Generic Key Press</div> */}
             {/* <div className="flex gap-5">
               <RadioGroup
                 disabled
@@ -154,7 +154,7 @@ const IVRDetailsView = ({ rowData }: any) => {
             </div> */}
             {/* {genericKeys?.enabled && ( */}
             <>
-              {/* <p className=" text-gray-500 truncate text-sm mt-4">
+              {/* <p className=" text-[#9A948F] truncate text-sm mt-4">
                   Customize your keyboard shortcuts and key bindings.
                 </p>
                 <div className="flex gap-5">
@@ -176,17 +176,17 @@ const IVRDetailsView = ({ rowData }: any) => {
                 </div> */}
               {/* {(genericKeys?.press_hash || genericKeys?.press_asterisk) && (
                   <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                      <p className="font-medium text-gray-900 text-sm">Press #</p>
-                      <p className="text-sm text-gray-500">{genericKeys?.press_hash}</p>
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                      <p className="font-medium text-[#2E2D35] text-sm">Press #</p>
+                      <p className="text-sm text-[#9A948F]">{genericKeys?.press_hash}</p>
                     </div>
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                      <p className="font-medium text-gray-900 text-sm">Press *</p>
-                      <p className="text-sm text-gray-500">{genericKeys?.press_asterisk}</p>
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                      <p className="font-medium text-[#2E2D35] text-sm">Press *</p>
+                      <p className="text-sm text-[#9A948F]">{genericKeys?.press_asterisk}</p>
                     </div>
                   </div>
                 )} */}
-              <p className=" text-gray-500 truncate text-sm mt-4">
+              <p className=" text-[#9A948F] truncate text-sm mt-4">
                 If caller enters no action after the prompt played 3 Times.
               </p>
               <div className="flex flex-col gap-2">
@@ -207,8 +207,8 @@ const IVRDetailsView = ({ rowData }: any) => {
                 </RadioGroup>
                 {genericKeys?.timeout_action?.type && (
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                      <p className="text-sm text-gray-500">
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                      <p className="text-sm text-[#9A948F]">
                         {
                           FORWARD_TYPES_LABEL[
                             genericKeys?.timeout_action?.type as keyof typeof FORWARD_TYPES_LABEL
@@ -216,7 +216,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                         }
                       </p>
                     </div>
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                       {FORWARD_TYPES.PHONE === genericKeys?.timeout_action?.type ? (
                         <PhoneInput
                           country={'us'}
@@ -230,16 +230,16 @@ const IVRDetailsView = ({ rowData }: any) => {
                           <ExtensionListView option={genericKeys?.timeout_action} />
                         </>
                       ) : (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[#9A948F]">
                           {genericKeys?.timeout_action?.label}
                         </p>
                       )}
-                      {/* <p className="text-sm text-gray-500">{genericKeys?.timeout_action?.status}</p> */}
+                      {/* <p className="text-sm text-[#9A948F]">{genericKeys?.timeout_action?.status}</p> */}
                     </div>
                   </div>
                 )}
               </div>
-              <p className=" text-gray-500 truncate text-sm mt-4">
+              <p className=" text-[#9A948F] truncate text-sm mt-4">
                 If caller enters invalid key after prompt plays 3 times.
               </p>
               <div className="flex flex-col gap-2">
@@ -260,8 +260,8 @@ const IVRDetailsView = ({ rowData }: any) => {
                 </RadioGroup>
                 {genericKeys?.failure_action?.type && (
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
-                      <p className="text-sm text-gray-500">
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+                      <p className="text-sm text-[#9A948F]">
                         {
                           FORWARD_TYPES_LABEL[
                             genericKeys?.failure_action?.type as keyof typeof FORWARD_TYPES_LABEL
@@ -269,7 +269,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                         }
                       </p>
                     </div>
-                    <div className="w-full border border-gray-200 bg-gray-100 rounded-xl p-3">
+                    <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                       {FORWARD_TYPES.PHONE === genericKeys?.failure_action?.type ? (
                         <PhoneInput
                           country={'us'}
@@ -283,7 +283,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                           <ExtensionListView option={genericKeys?.failure_action} />
                         </>
                       ) : (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[#9A948F]">
                           {genericKeys?.failure_action?.label}
                         </p>
                       )}

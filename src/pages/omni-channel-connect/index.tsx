@@ -141,7 +141,7 @@ const OmniChannelConnect: React.FC = () => {
         return {
           text: 'Connect Messenger',
           className:
-            'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-[0_4px_20px_rgba(59,130,246,0.15)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.3)]',
+            'bg-gradient-to-r from-primary to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-[0_4px_20px_rgba(242,153,74,0.15)] hover:shadow-[0_4px_24px_rgba(242,153,74,0.3)]',
           icon: <MessageSquare className="h-5 w-5" />,
         };
       default:
@@ -160,7 +160,7 @@ const OmniChannelConnect: React.FC = () => {
   return (
     <div className="relative min-h-screen w-screen bg-white overflow-hidden flex items-center justify-center p-4 sm:p-6">
       {/* Background decoration with soft, premium light hues */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-50/60 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-orange-50/60 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-50/60 blur-[130px] pointer-events-none" />
       <div className="absolute top-[30%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-purple-50/40 blur-[100px] pointer-events-none" />
 
@@ -217,8 +217,8 @@ const OmniChannelConnect: React.FC = () => {
 
         {/* Callback Processing State */}
         {isCallbackProcessing && (
-          <div className="mt-6 flex flex-col items-center justify-center p-8 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600">
-            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-600 mb-4" />
+          <div className="mt-6 flex flex-col items-center justify-center p-8 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600">
+            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-orange-600 mb-4" />
             <p className="font-bold text-sm text-slate-700 text-center animate-pulse">
               Finalizing Meta Integration...
             </p>

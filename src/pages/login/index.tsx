@@ -455,7 +455,7 @@ const Login = () => {
                     >
                       <div className="flex flex-col gap-5">
                         <div className="flex flex-col gap-1.5">
-                          <Label>Email</Label>
+                          <Label required>Email</Label>
                           <Controller
                             name="email"
                             control={control}
@@ -471,7 +471,7 @@ const Login = () => {
                         </div>
                         <div className="w-full flex flex-col gap-2">
                           <div className="flex flex-col gap-1.5">
-                            <Label>Password</Label>
+                            <Label required>Password</Label>
                             <Controller
                               name="password"
                               control={control}
@@ -513,7 +513,7 @@ const Login = () => {
                               </span>
                             </label>
                             <div
-                              className="text-primary hover:text-primary/80 text-sm font-semibold cursor-pointer whitespace-nowrap"
+                              className="text-primary hover:text-primary/80 text-sm font-semibold cursor-pointer"
                               onClick={() => navigate('/forgot-password')}
                             >
                               Forgot password

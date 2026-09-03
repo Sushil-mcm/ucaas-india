@@ -592,28 +592,38 @@ const MyCampaignListStandalone = () => {
 
   return (
     <>
-      <section className="w-full bg-[#F7F9FC] flex flex-col overflow-x-auto overflow-y-hidden h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200/90 min-h-[68px] bg-white">
+      {/* `mcm-page mcm-admin` opts this screen into the console's design
+          system, the way the other full-page routes do. Upstream has since
+          given the bar its own warm treatment, which is kept — the classes
+          matter because without them none of the console's shared rules
+          reach this route at all. */}
+      <section className="mcm-page mcm-admin w-full flex flex-col overflow-x-auto overflow-y-hidden h-full">
+        <div className="flex items-center justify-between p-4 border-b border-[rgba(225,200,165,0.9)] min-h-[68px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
           <div className="flex flex-col">
-            <p className="text-gray-900 font-semibold text-lg leading-tight">Campaign Workspace</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-[#2E2D35] font-semibold text-lg leading-tight">Campaign Workspace</p>
+            <p className="text-xs text-[#9A948F]">
               Running campaigns with quick join and assigned queues.
             </p>
           </div>
         </div>
 
         <div className="p-3 w-full h-full gap-2 flex flex-col">
-          <div className="bg-white w-full rounded-2xl border border-gray-200/90 h-[calc(100vh-11rem)] overflow-hidden flex flex-col">
-            <div className="border-b border-gray-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 w-full">
+          {/* Upstream's warm panel, but the strip and rail keep their
+              `mcm-tabstrip*` classes. Upstream's version is the slate/white
+              gradient over a grey rail that was invisible against the panel
+              — the tabs and the content below read as one undivided field.
+              Those classes shade each nested layer from the page's own
+              backdrop instead, and the tab buttons below already depend on
+              them. */}
+          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] w-full rounded-2xl border border-[rgba(225,200,165,0.9)] h-[calc(100vh-11rem)] overflow-hidden flex flex-col">
+            <div className="mcm-tabstrip w-full">
               <div className="sm:px-3 sm:pt-3 sm:pb-2 flex-col sm:flex items-center justify-between gap-3 w-full ">
-                <div className="inline-flex items-center sm:rounded-xl bg-gray-100 p-1 gap-1 w-full">
+                <div className="mcm-tabstrip-rail inline-flex items-center sm:rounded-xl p-1 gap-1 w-full">
                   <button
                     type="button"
                     onClick={() => setActiveTab('running-campaign')}
-                    className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold ${
-                      activeTab === 'running-campaign'
-                        ? 'bg-white text-slate-900'
-                        : 'text-slate-500 hover:text-slate-700'
+                    className={`mcm-tab relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold ${
+                      activeTab === 'running-campaign' ? 'is-on' : ''
                     }`}
                   >
                     <Icon name="Grid2" className="w-4 h-4" />
@@ -623,10 +633,8 @@ const MyCampaignListStandalone = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('assigned-queues')}
-                    className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold ${
-                      activeTab === 'assigned-queues'
-                        ? 'bg-white text-slate-900'
-                        : 'text-slate-500 hover:text-slate-700'
+                    className={`mcm-tab relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold ${
+                      activeTab === 'assigned-queues' ? 'is-on' : ''
                     }`}
                   >
                     <Icon name="CallQueue" className="w-4 h-4" />
@@ -910,9 +918,9 @@ const MyCampaignListStandalone = () => {
                       })}
                     </div>
                   ) : (
-                    <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-gray-500">
+                    <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-[#9A948F]">
                       <img src={NotFound} alt="BusyImage" className="min-w-36 max-w-36" />
-                      <p className="text-gray-900 text-sm whitespace-normal text-center">
+                      <p className="text-[#2E2D35] text-sm whitespace-normal text-center">
                         No campaigns found
                       </p>
                     </div>
@@ -931,7 +939,7 @@ const MyCampaignListStandalone = () => {
                         if (value.startsWith(' ')) return;
                         setQueueSearch(value);
                       }}
-                      Icon={<SearchLine className="text-gray-700" />}
+                      Icon={<SearchLine className="text-[#2E2D35]" />}
                     />
                     {isQueueLoading && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -942,7 +950,7 @@ const MyCampaignListStandalone = () => {
 
                   <div className="w-full flex-1 overflow-y-auto pr-1">
                     {isQueueError ? (
-                      <div className="w-full flex justify-center items-center py-10 text-gray-500">
+                      <div className="w-full flex justify-center items-center py-10 text-[#9A948F]">
                         Failed to load call queue data.
                       </div>
                     ) : isQueueLoading ? null : callQueueData?.length ? (
@@ -954,12 +962,12 @@ const MyCampaignListStandalone = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-gray-500">
+                      <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-[#9A948F]">
                         <img src={NotFound} alt="BusyImage" className="min-w-36 max-w-36" />
-                        <p className="flex items-center justify-center text-gray-900">
+                        <p className="flex items-center justify-center text-[#2E2D35]">
                           No call queue found.
                         </p>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-[#2E2D35]">
                           Call queues assigned to you will appear here.
                         </p>
                       </div>
@@ -980,18 +988,18 @@ const MyCampaignListStandalone = () => {
         }}
       >
         <DialogContent
-          className="w-[calc(100vw-2rem)] max-w-[520px] gap-0 rounded-xl border border-gray-200 bg-white p-0 shadow-2xl"
+          className="w-[calc(100vw-2rem)] max-w-[520px] gap-0 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-0 shadow-2xl"
           showCloseButton={false}
         >
           <div className="w-full px-5 py-4 sm:px-7 sm:py-6">
-            <div className="flex items-center justify-between gap-4 border-b border-gray-200 pb-4">
-              <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">
+            <div className="flex items-center justify-between gap-4 border-b border-[#EEE7DD] pb-4">
+              <h3 className="text-lg font-semibold text-[#2E2D35] sm:text-xl">
                 Microphone Permission Required
               </h3>
               <button
                 type="button"
                 aria-label="Close microphone permission dialog"
-                className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#9A948F] transition hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]"
                 onClick={() => {
                   setMicPermissionDialogOpen(false);
                   setPendingCampaign(null);
@@ -1006,7 +1014,7 @@ const MyCampaignListStandalone = () => {
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ucass-active-bg text-primary">
                   <Mic className="h-5 w-5" />
                 </span>
-                <p className="text-sm font-semibold leading-6 text-gray-800 sm:text-base">
+                <p className="text-sm font-semibold leading-6 text-[#2E2D35] sm:text-base">
                   Campaign calling needs microphone access before it can start.
                 </p>
               </div>
@@ -1015,7 +1023,7 @@ const MyCampaignListStandalone = () => {
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
                   <Info className="h-5 w-5" />
                 </span>
-                <p className="text-sm font-semibold leading-6 text-gray-800 sm:text-base">
+                <p className="text-sm font-semibold leading-6 text-[#2E2D35] sm:text-base">
                   {micPermissionState === 'denied'
                     ? 'Microphone permission is blocked in browser site settings. Please allow microphone for this site, then continue.'
                     : 'Click Allow Microphone and accept the browser permission prompt to continue.'}

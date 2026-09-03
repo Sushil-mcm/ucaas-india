@@ -9,17 +9,17 @@ const GeneralSettings = () => {
   const { user } = useUser();
 
   return (
-    <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
+    <div className="w-full min-w-0 flex flex-col overflow-hidden">
       <div className="mcm-intpage-head">
         <div className="mcm-intpage-eyebrow">Integration</div>
         <h1>General Settings</h1>
         <p>How call and message data is shared with the systems you have connected.</p>
       </div>
       <div className="w-full p-3 overflow-y-auto xs:max-h-[62vh] md:max-h-full">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-6">
+        <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-xl border border-[rgba(225,200,165,0.9)] space-y-6">
           <div className="flex flex-col gap-1">
             <div className="text-md font-semibold">App Credentials</div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-[#9A948F]">
               Use these to access the zapier platform. Keep them private and secure.
             </div>
           </div>
@@ -62,7 +62,7 @@ const CredentialItem = ({
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium">{label}</label>
-      <p className="text-sm text-gray-500">{description}</p>
+      <p className="text-sm text-[#9A948F]">{description}</p>
       <div className="flex flex-col gap-2 border p-2 sm:flex-row sm:items-center">
         <Input
           readOnly

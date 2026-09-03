@@ -76,6 +76,14 @@ interface AvatarProps {
   grouped?: boolean;
   isActivityInfo?: boolean;
   textClass?: string;
+  /* Wins over the status this component would otherwise derive from
+     usersOnlineStatus. For the signed-in user's own avatar (the header
+     chip), that derivation needs a live socket presence frame to ever
+     show anything but "offline" — useMyPresence's optimistic override
+     (set the instant a status is picked in the avatar menu) has nothing
+     to hook into here without this. Any other avatar (someone else's, in
+     a list) should leave this unset and keep reading the live feed. */
+  presenceOverride?: 'online' | 'busy' | 'dnd' | 'offline' | 'call';
 }
 const CustomAvatar = ({
   name = '',
@@ -87,6 +95,7 @@ const CustomAvatar = ({
   type = 'profile',
   isActivityInfo = true,
   textClass,
+  presenceOverride,
 }: AvatarProps) => {
   const { usersOnlineStatus, liveCalls, eventLiveCallsData } = useSocketEvents();
   const liveCallsData = getMonitoringLiveCalls(liveCalls, eventLiveCallsData);
@@ -178,7 +187,9 @@ const CustomAvatar = ({
 
   const isOnline = Boolean(activeUser?.online);
   const userStatus = String(activeUser?.status || '').toLowerCase();
-  const status = isOnCall ? 'call' : isOnline ? userStatus || 'online' : 'offline';
+  const status = isOnCall
+    ? 'call'
+    : presenceOverride || (isOnline ? userStatus || 'online' : 'offline');
 
   const NAME = name;
   const nameColour = stringToColour(NAME);

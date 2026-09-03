@@ -3,12 +3,26 @@ import * as LabelPrimitive from '@radix-ui/react-label';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * `required` marks the field mandatory with an asterisk.
+ *
+ * It lives here rather than being written out at each call site so every
+ * mandatory field is marked the same way and reads the same to a screen
+ * reader. The asterisk is `aria-hidden` and paired with visually hidden text,
+ * because a lone "*" is announced as "star" or skipped entirely.
+ *
+ * Rose rather than the brand accent: the console's accent is orange, and an
+ * orange asterisk on an orange-tinted form is exactly the marker someone
+ * scanning for required fields would miss.
+ */
 function Label({
   className,
   htmlFor,
+  required,
+  children,
   ref,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & { required?: boolean }) {
   const labelRef = React.useRef<HTMLLabelElement | null>(null);
   const generatedControlId = `control-${React.useId().replace(/:/g, '')}`;
   const [automaticHtmlFor, setAutomaticHtmlFor] = React.useState<string>();
@@ -56,7 +70,15 @@ function Label({
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {required ? (
+        <span className="-ml-1.5 font-normal text-rose-500">
+          <span aria-hidden="true">*</span>
+          <span className="sr-only"> (required)</span>
+        </span>
+      ) : null}
+    </LabelPrimitive.Root>
   );
 }
 

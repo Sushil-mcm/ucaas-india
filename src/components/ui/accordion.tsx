@@ -27,21 +27,21 @@ function AccordionTrigger({
   isActive,
   variant = 'sidebar',
   triggerIcon = true,
+  activeHeaderClassName = '[&>button[data-state=open]]:bg-ucass-primary-200/50 [&>button[data-state=open]]:text-primary [&>button[data-state=open]]:border-r-primary [&>button[data-state=open]]:border-r-2',
+  activeIconClassName = 'text-primary',
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
   isActive?: boolean;
   variant?: 'default' | 'sidebar';
   triggerIcon?: boolean;
+  activeHeaderClassName?: string;
+  activeIconClassName?: string;
 }) {
   const isSidebar = variant === 'sidebar';
 
   return (
     <AccordionPrimitive.Header
-      className={cn(
-        'flex',
-        isSidebar &&
-          'text-gray-900/80 [&>button[data-state=open]]:bg-ucass-primary-200/50 [&>button[data-state=open]]:text-primary [&>button[data-state=open]]:border-r-primary [&>button[data-state=open]]:border-r-2',
-      )}
+      className={cn('flex', isSidebar && ['text-gray-900/80', activeHeaderClassName])}
     >
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
@@ -61,7 +61,7 @@ function AccordionTrigger({
               isSidebar ? 'mr-3' : '',
               isSidebar
                 ? isActive
-                  ? 'text-primary'
+                  ? activeIconClassName
                   : 'text-gray-400'
                 : 'text-muted-foreground pointer-events-none',
             )}

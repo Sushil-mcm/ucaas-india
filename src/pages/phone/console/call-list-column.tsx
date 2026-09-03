@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import moment from 'moment';
 import { fetchPhone } from '@/services/api';
@@ -159,12 +159,24 @@ export const toCallRow = (raw: any, contactsByNumber: Record<string, any>): Cons
 type Props = {
   selectedId: string | null;
   onSelect: (row: ConsoleCallRow) => void;
+  /** Same data as onSelect, but for the list choosing a row on its own
+      (landing the panel on real content) rather than someone clicking one —
+      so it does not also pull the stage off the dialer and onto that call's
+      record the way an actual click does. */
+  onAutoSelect?: (row: ConsoleCallRow) => void;
   source: ConsoleLogSource;
   onSourceChange: (source: ConsoleLogSource) => void;
   liveNumber?: string;
 };
 
-const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumber }: Props) => {
+const CallListColumn = ({
+  selectedId,
+  onSelect,
+  onAutoSelect,
+  source,
+  onSourceChange,
+  liveNumber,
+}: Props) => {
   const { dial } = useConsoleDialer();
   const [direction, setDirection] = useState<'all' | 'in' | 'out' | 'miss'>('all');
   const [search, setSearch] = useState('');
@@ -190,7 +202,7 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
   const directionFilter =
     source === 'voicemail' || filterMissedLocally ? [] : activeDirection.filter;
 
-  const { data, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+  const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: [
         'console-call-list',
@@ -256,15 +268,16 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
     );
   }, [data, contactsByNumber, search, filterMissedLocally]);
 
-  /* liveNumber is just the other party's number on the in-progress session —
-     it has no call id to match against, so every past call to/from that same
-     number would otherwise get tagged "Live now" too. Only the most recent
-     matching row (rows are already sorted newest-first) is the actual call. */
-  const liveRowId = useMemo(() => {
-    if (!liveNumber) return null;
-    const match = rows.find((row) => row.number && row.number.endsWith(liveNumber.slice(-7)));
-    return match ? match.id : null;
-  }, [rows, liveNumber]);
+  /* Land the panel on real content instead of an empty "pick a call" one:
+     pick the newest row whenever nothing is selected — on first load, and
+     again whenever switching tabs clears the selection (onSourceChange in
+     index.tsx resets it), so Voicemails/Recordings land populated too, not
+     just Calls. Goes through onAutoSelect, not onSelect, so the stage stays
+     on the dialer — only clicking a row should pull it onto that record. */
+  useEffect(() => {
+    if (selectedId || !rows.length) return;
+    (onAutoSelect || onSelect)(rows[0]);
+  }, [rows, selectedId, source, onAutoSelect, onSelect]);
 
   const sources: { key: ConsoleLogSource; label: string; show: boolean }[] = [
     { key: 'call', label: 'Calls', show: true },
@@ -279,19 +292,20 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
           <h2>
             {source === 'call' ? 'Calls' : source === 'recording' ? 'Recordings' : 'Voicemails'}
           </h2>
-          <button
-            type="button"
-            className="thumb"
-            aria-label="Refresh"
-            title="Refresh"
-            onClick={() => refetch()}
-          >
-            <Ic n={isFetching ? 'clock' : 'merge'} size={14} />
-          </button>
+          <div className="console-datefilter">
+            <DateDropdown
+              dropdownVal={dropdownVal}
+              setDropdownVal={setDropdownVal}
+              customPickerPlacement="bottom"
+              shortenSelectedLabel
+            />
+          </div>
         </div>
 
-        {/* source tabs — same tabType values the old phone page sent */}
-        <div className="panel-tabs" style={{ padding: 0, margin: '0 0 2px' }}>
+        {/* source tabs — same tabType values the old phone page sent. The
+            date filter now sits next to the heading above, so this row is
+            just the tab strip. */}
+        <div className="panel-tabs" style={{ padding: 0, margin: 0 }}>
           {sources
             .filter((s) => s.show)
             .map((s) => (
@@ -332,14 +346,6 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
             aria-label="Search calls"
           />
         </div>
-
-        <div className="console-datefilter">
-          <DateDropdown
-            dropdownVal={dropdownVal}
-            setDropdownVal={setDropdownVal}
-            customPickerPlacement="bottom"
-          />
-        </div>
       </div>
 
       <div className="list">
@@ -363,7 +369,8 @@ const CallListColumn = ({ selectedId, onSelect, source, onSourceChange, liveNumb
         ) : (
           <>
             {rows.map((row) => {
-              const isLive = !!liveRowId && row.id === liveRowId;
+              const isLive =
+                !!liveNumber && !!row.number && row.number.endsWith(liveNumber.slice(-7));
               return (
                 <div
                   key={row.id}

@@ -62,7 +62,7 @@ const ParticipantChat = ({
   // }, [defaultTab]);
 
   return (
-    <div className="bg-white rounded-xl absolute right-8 bottom-20 m-auto flex h-[min(34rem,calc(100dvh-7.5rem))] min-h-[22rem] max-h-[calc(100dvh-7.5rem)] flex-col w-[400px] overflow-hidden shadow-lg border border-gray-200">
+    <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl absolute right-8 bottom-20 m-auto flex h-[min(34rem,calc(100dvh-7.5rem))] min-h-[22rem] max-h-[calc(100dvh-7.5rem)] flex-col w-[400px] overflow-hidden shadow-lg border border-[rgba(225,200,165,0.9)]">
       <div className="flex min-h-0 flex-1">
         <div className="flex h-full min-h-0 w-full flex-col">
           <div className="flex min-h-0 flex-1 items-start w-full p-2">

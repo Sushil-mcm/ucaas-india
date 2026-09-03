@@ -80,14 +80,14 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
 
   return (
     <div className={`w-full ${customClass} overflow-y-auto`}>
-      <div className="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-200 ">
+      <div className="flex flex-col gap-4 p-4 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] ">
         <div className="w-full">
           {visibleMediaOptions.map(({ name, label, icon, iconClass, disabled }) => (
             <div key={name} className="flex flex-col gap-4 w-full py-2 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center flex-wrap gap-1">
                   <Icon name={icon} className={iconClass} />
-                  <p className="text-gray-900 text-sm font-medium">{`Do you want to add "${capitalizeFirstLetter(label)} message" ?`}</p>
+                  <p className="text-[#2E2D35] text-sm font-medium">{`Do you want to add "${capitalizeFirstLetter(label)} message" ?`}</p>
                 </div>
 
                 {name === 'waiting' ? null : (

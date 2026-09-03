@@ -358,14 +358,14 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
                 image={getUserProfile(inviteUser)}
               />
               <div className="min-w-0">
-                <p className="truncate font-medium text-gray-900">
+                <p className="truncate font-medium text-[#2E2D35]">
                   {fullName || email}
                   {isCategoryTask && isSelf ? (
-                    <span className="ml-1.5 text-xs font-normal text-gray-500">(You)</span>
+                    <span className="ml-1.5 text-xs font-normal text-[#9A948F]">(You)</span>
                   ) : null}
                 </p>
                 {extension ? (
-                  <p className="truncate text-xs text-gray-500">Ext. {extension}</p>
+                  <p className="truncate text-xs text-[#9A948F]">Ext. {extension}</p>
                 ) : null}
               </div>
             </div>
@@ -421,18 +421,18 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
         showCloseButton={false}
       >
         <section className="flex h-full min-h-0 flex-col bg-white">
-          <header className="shrink-0 border-b border-gray-200 px-4 py-4 sm:px-6">
+          <header className="shrink-0 border-b border-[#EEE7DD] px-4 py-4 sm:px-6">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                <p className="mt-1 text-sm text-gray-700">
+                <h3 className="text-lg font-semibold text-[#2E2D35]">{title}</h3>
+                <p className="mt-1 text-sm text-[#2E2D35]">
                   Search the directory and choose members across pages.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeModal}
-                className="cursor-pointer text-gray-500 opacity-70 transition-opacity hover:opacity-100"
+                className="cursor-pointer text-[#9A948F] opacity-70 transition-opacity hover:opacity-100"
                 aria-label={`Close ${title}`}
               >
                 <CloseIcon className="h-3.5 w-3.5" />
@@ -441,13 +441,13 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
           </header>
 
           <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[1.6fr_1fr] lg:grid-rows-1">
-            <div className="flex min-h-0 flex-col border-b border-gray-200 lg:border-r lg:border-b-0">
-              <div className="shrink-0 space-y-3 border-b border-gray-200 px-4 py-4 sm:px-6">
+            <div className="flex min-h-0 flex-col border-b border-[#EEE7DD] lg:border-r lg:border-b-0">
+              <div className="shrink-0 space-y-3 border-b border-[#EEE7DD] px-4 py-4 sm:px-6">
                 <Input
                   placeholder="Search by name, email, or extension"
                   onChange={(event) => setSearchTerm(event.target.value)}
                   value={searchTerm}
-                  Icon={<Search className="h-4 w-4 text-gray-500" />}
+                  Icon={<Search className="h-4 w-4 text-[#9A948F]" />}
                   IconPosition="left-0 pl-3 inset-y-0"
                   className="pl-9"
                 />
@@ -464,9 +464,9 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
                             : false
                       }
                     />
-                    <Label className="text-sm text-gray-900">Select current page</Label>
+                    <Label className="text-sm text-[#2E2D35]">Select current page</Label>
                   </div>
-                  <span className="text-xs text-gray-700">
+                  <span className="text-xs text-[#2E2D35]">
                     {checkedCurrentPageCount}/{currentPageUsers.length} selected on this page
                   </span>
                 </div>
@@ -491,11 +491,11 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
             </div>
 
             <aside className="flex min-h-0 flex-col bg-white">
-              <div className="shrink-0 border-b border-gray-200 px-4 py-4 sm:px-6">
+              <div className="shrink-0 border-b border-[#EEE7DD] px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Selection</p>
-                    <p className="mt-1 text-2xl font-semibold text-gray-900">
+                    <p className="text-xs uppercase tracking-wide text-[#9A948F]">Selection</p>
+                    <p className="mt-1 text-2xl font-semibold text-[#2E2D35]">
                       {localSelected.length}
                     </p>
                   </div>
@@ -510,7 +510,7 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
                     </Button>
                   ) : null}
                 </div>
-                <p className="mt-2 text-xs text-gray-700">
+                <p className="mt-2 text-xs text-[#2E2D35]">
                   Selections are preserved while you search or change pages.
                 </p>
               </div>
@@ -523,18 +523,18 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
                       return (
                         <li
                           key={memberKey}
-                          className="flex items-center justify-between gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5"
+                          className="flex items-center justify-between gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2.5"
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-gray-900">
+                            <p className="truncate text-sm font-medium text-[#2E2D35]">
                               {member?.name || member?.email}
                             </p>
-                            <p className="truncate text-xs text-gray-700">{member?.email}</p>
+                            <p className="truncate text-xs text-[#2E2D35]">{member?.email}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleRemoveSelected(memberKey)}
-                            className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                            className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-[#9A948F] hover:bg-gray-100 hover:text-[#2E2D35]"
                             aria-label={`Remove ${member?.name || member?.email}`}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -545,15 +545,15 @@ const MemberSelectionModal: FC<MemberSelectionModalProps> = ({
                   </ul>
                 ) : (
                   <div className="flex min-h-[190px] flex-col items-center justify-center px-4 text-center">
-                    <p className="mt-3 text-sm text-gray-700">No members selected yet</p>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-3 text-sm text-[#2E2D35]">No members selected yet</p>
+                    <p className="mt-1 text-xs text-[#9A948F]">
                       Choose users from the table to build your final list.
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="mt-auto shrink-0 border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
+              <div className="mt-auto shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4 sm:px-6">
                 {errors?.members?.message ? (
                   <small className="mb-2 block text-red-500">{errors.members.message}</small>
                 ) : null}

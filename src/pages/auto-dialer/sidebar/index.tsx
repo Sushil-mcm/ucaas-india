@@ -128,13 +128,18 @@ const CampaignSidebar: FC = () => {
                   collapsible
                 >
                   <AccordionItem value={value} className="">
-                    <AccordionTrigger className="p-0 items-center" isActive={isActive}>
+                    <AccordionTrigger
+                      className="p-0 items-center"
+                      isActive={isActive}
+                      activeHeaderClassName="[&>button[data-state=open]]:bg-[#E78B50]/10 [&>button[data-state=open]]:text-[#B5642F]"
+                      activeIconClassName="text-[#B5642F]"
+                    >
                       <div className="flex h-12 min-w-max items-center gap-2 px-3 font-medium lg:h-14 lg:w-full lg:min-w-0">
                         <Icon name={icon as IconType} className="w-6 h-6 p-0.5" />
                         {label}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className=" bg-ucass-primary-200/20">
+                    <AccordionContent className="bg-[#E78B50]/[0.05]">
                       {children?.map(({ label, path, icon, enabled }: any, index: number) => {
                         return <Tile key={index} {...{ label, path, icon, children, enabled }} />;
                       })}
@@ -167,8 +172,8 @@ const Tile = ({ label, path, icon, children, extraPaths = [], enabled }: any) =>
       className={`flex h-12 min-w-max items-center gap-2 px-3 cursor-pointer lg:h-14 lg:w-full lg:min-w-0 ${
         isActive
           ? isChildrenExist
-            ? 'text-primary'
-            : 'text-primary bg-ucass-primary-200/50 border-b-2 border-b-primary lg:border-b-0 lg:border-r-2 lg:border-r-primary'
+            ? 'text-[#B5642F]'
+            : 'text-[#B5642F] bg-[#E78B50]/10 border-b-2 border-b-[#E78B50] lg:border-b-0 lg:border-r-2 lg:border-r-[#E78B50]'
           : 'text-gray-900/80'
       } ${isChildrenExist ? 'pl-10 lg:pl-10' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
       {...getRoutePrefetchHandlers(path)}

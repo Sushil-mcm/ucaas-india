@@ -263,7 +263,7 @@ const SignUpPayment = () => {
   }
 
   return (
-    <div className="w-full flex flex-col gap-4 h-full overflow-auto bg-gray-200/15">
+    <div className="w-full flex flex-col gap-4 h-full overflow-auto">
       <div className="w-full  flex items-center justify-between bg-white sm:px-12 px-3 py-4 shadow-sm">
         <div className="h-8 cursor-pointer sm:px-8" onClick={() => navigate('/')}>
           <img
@@ -276,7 +276,7 @@ const SignUpPayment = () => {
             className="h-full"
           />
         </div>
-        <p className="text-gray-900">
+        <p className="text-[#2E2D35]">
           Need help? <span className="text-primary cursor-pointer">(111) 111-1111</span>
         </p>
       </div>
@@ -296,7 +296,7 @@ const SignUpPayment = () => {
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-2">
                     <h1 className="text-2xl  font-bold">How many phone lines you require?</h1>
-                    <h6 className="text-base text-gray-500 font-normal">
+                    <h6 className="text-base text-[#9A948F] font-normal">
                       Each line comes with its own phone number and uses a single{' '}
                       {mainSiteInfo?.domain === 'mycountrymobile.com'
                         ? 'MyCountryMobile '
@@ -304,8 +304,8 @@ const SignUpPayment = () => {
                       license
                     </h6>
                   </div>
-                  <div className="flex flex-col gap-3 items-center border border-gray-200 bg-gray-50  p-4 rounded-lg">
-                    <p className="text-gray-500 text-sm font-medium">Number of Phone Lines</p>
+                  <div className="flex flex-col gap-3 items-center border border-[#EEE7DD] bg-[#FBE2C8]/45  p-4 rounded-lg">
+                    <p className="text-[#9A948F] text-sm font-medium">Number of Phone Lines</p>
                     <div className="flex items-center gap-6 ">
                       <div
                         onClick={() => {
@@ -332,21 +332,21 @@ const SignUpPayment = () => {
                         <Icon name="Plus" className="h-10" />
                       </div>
                     </div>
-                    <p className="text-gray-500 text-sm ">
+                    <p className="text-[#9A948F] text-sm ">
                       {isTrailPlan
                         ? 'Minimum 1 line, Maximum 1 lines'
                         : `Minimum ${minLicenses} line${minLicenses > 1 ? 's' : ''}${maxLicenses !== null ? `, Maximum ${maxLicenses} lines` : ', Unlimited'}`}
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-3 border-t border-gray-200 pt-4">
+                <div className="flex flex-col gap-3 border-t border-[#EEE7DD] pt-4">
                   <div className="flex flex-col gap-1">
                     <h1 className="text-xl font-semibold">Checkout</h1>
-                    <h6 className="text-base text-gray-500 font-normal">
+                    <h6 className="text-base text-[#9A948F] font-normal">
                       Select and add your payment information
                     </h6>
                   </div>
-                  <div className="flex border border-gray-200 bg-white rounded-xl p-3">
+                  <div className="flex border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-3">
                     <PaymentScreen
                       ref={paymentRef}
                       onSuccessPayment={onSuccessPayment}

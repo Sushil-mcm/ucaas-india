@@ -131,6 +131,7 @@ const ResetPassword = () => {
                         Icon={showPassword?.new_password ? <EyeLineOff /> : <EyeLine />}
                         placeholder="Enter new password"
                         label="New Password"
+                        required
                         type={showPassword?.new_password ? 'text' : 'password'}
                         {...register('password')}
                         error={errors?.password?.message}
@@ -142,6 +143,7 @@ const ResetPassword = () => {
                       Icon={showPassword?.confirm_password ? <EyeLineOff /> : <EyeLine />}
                       placeholder="Enter confirm password"
                       label="Confirm Password"
+                      required
                       type={showPassword?.confirm_password ? 'text' : 'password'}
                       {...register('confirm_password')}
                       error={errors?.confirm_password?.message}

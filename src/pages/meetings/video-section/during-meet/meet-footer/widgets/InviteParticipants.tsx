@@ -198,16 +198,16 @@ const InviteParticipants = ({
   return (
     <>
       {!isDirectModal && (
-        <div className="bg-white rounded-xl absolute bottom-20 px-4 pt-4 pb-5 flex flex-col items-center w-[530px] shadow-lg border border-gray-200">
+        <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl absolute bottom-20 px-4 pt-4 pb-5 flex flex-col items-center w-[530px] shadow-lg border border-[rgba(225,200,165,0.9)]">
           <div className="flex flex-col gap-1">
-            <small className="text-gray-900">Invite Participants</small>
+            <small className="text-[#2E2D35]">Invite Participants</small>
             <h5 className="text-primary-800 font-bold">General Meeting</h5>
             <div className="flex flex-col pt-2 gap-1.5">
               <div className="flex flex-col">
                 <small>Share this link with your participants</small>
                 <div className="flex items-center justify-between">
                   <small
-                    className="text-gray-900 font-semibold"
+                    className="text-[#2E2D35] font-semibold"
                     id="text-to-copy"
                   >{`${window.location.origin}/video-meet?meetCode=${meetState?.meetUniqueKey}`}</small>
                   <Button
@@ -227,7 +227,7 @@ const InviteParticipants = ({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <small>Meeting ID</small>
-                  <small className="text-gray-900 font-semibold">
+                  <small className="text-[#2E2D35] font-semibold">
                     {meetState?.meetUniqueKey ?? ''}{' '}
                   </small>
                 </div>
@@ -253,7 +253,7 @@ const InviteParticipants = ({
             </div>
           </div>
 
-          <div className="absolute polygon w-5 h-5 bg-white bottom-[-10px] left-4"></div>
+          <div className="absolute polygon w-5 h-5 bg-[rgba(251,249,246,0.88)] bottom-[-10px] left-4"></div>
         </div>
       )}
 

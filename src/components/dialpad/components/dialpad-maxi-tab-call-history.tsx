@@ -9,7 +9,7 @@ const DialpadMaxiTabCallHistory = ({ activeSession }: DialpadMaxiTabCallHistoryP
   const contactPhone = activeSession?.remoteNumber || activeSession?.liveCallData?.called_number;
 
   return activeSession ? (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex-1 flex flex-col min-h-0">
+    <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl overflow-hidden flex-1 flex flex-col min-h-0">
       <ContactCallLogContent
         phoneNumber={contactPhone}
         hideInnerHeader={true}
@@ -18,7 +18,7 @@ const DialpadMaxiTabCallHistory = ({ activeSession }: DialpadMaxiTabCallHistoryP
       />
     </div>
   ) : (
-    <div className="h-full rounded-2xl border border-ucass-active-bg bg-white px-3 py-3 max-[380px]:px-2.5 max-[380px]:py-2.5 sm:px-4 sm:py-4">
+    <div className="h-full rounded-2xl border border-ucass-active-bg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-3 max-[380px]:px-2.5 max-[380px]:py-2.5 sm:px-4 sm:py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#5a7396] max-[380px]:text-[10px] sm:text-xs">
         Call History
       </p>

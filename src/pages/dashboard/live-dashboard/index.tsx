@@ -110,10 +110,10 @@ type AgentStatus = 'AVAILABLE' | 'ON CALL' | 'RINGING' | 'WRAP UP' | 'ON HOLD' |
 const AGENT_PAGE_LIMIT = 25;
 
 const toneClasses: Record<MetricTone, string> = {
-  neutral: 'text-gray-900',
-  success: 'text-green-600',
+  neutral: 'text-[#2E2D35]',
+  success: 'text-[#4EAE6E]',
   warning: 'text-amber-600',
-  danger: 'text-red-500',
+  danger: 'text-[#DC5049]',
   primary: 'text-primary',
 };
 
@@ -123,7 +123,7 @@ const statusPillClass: Record<AgentStatus, string> = {
   RINGING: 'bg-indigo-100 text-indigo-700 border border-indigo-200',
   'WRAP UP': 'bg-amber-100 text-amber-700 border border-amber-200',
   'ON HOLD': 'bg-red-100 text-red-700 border border-red-200',
-  OFFLINE: 'bg-gray-100 text-gray-400 border border-gray-200',
+  OFFLINE: 'bg-[#FBE2C8]/40 text-[#9A948F] border border-[#EEE7DD]',
 };
 
 const getCallbackTaskContactPhone = (task: any) =>
@@ -147,9 +147,9 @@ const getCallbackTaskContactName = (task: any) =>
   ).trim();
 
 const getBarColor = (value: number) => {
-  if (value >= 80) return 'bg-green-500';
+  if (value >= 80) return 'bg-[#4EAE6E]';
   if (value >= 60) return 'bg-amber-500';
-  return 'bg-red-500';
+  return 'bg-[#DC5049]';
 };
 
 const getInitials = (name: string) =>
@@ -198,7 +198,7 @@ const ActionButtons = ({
     hasAnyActiveCallSession ||
     isMonitoringActionLocked;
 
-  if (isButtonDisabled) return <span className="text-xs text-gray-400">---</span>;
+  if (isButtonDisabled) return <span className="text-xs text-[#9A948F]">---</span>;
 
   const actionButtonClass =
     'cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white';
@@ -784,13 +784,13 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       label: 'Queued',
       value: Number(campaignCallFlowFunnel?.queued_percent || 0),
       count: Number(campaignCallFlowFunnel?.queued_count || 0),
-      color: 'bg-ucass-active',
+      color: 'bg-[#F0954E]',
     },
     {
       label: 'Assigned Agent',
       value: Number(campaignCallFlowFunnel?.assigned_agent_percent || 0),
       count: Number(campaignCallFlowFunnel?.assigned_agent_count || 0),
-      color: 'bg-green-500',
+      color: 'bg-[#4EAE6E]',
     },
   ];
 
@@ -928,7 +928,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
     {
       label: 'Logged In',
       value: String(usersOnlineStatus?.filter((u: any) => u.online).length || 0),
-      tone: 'text-gray-800',
+      tone: 'text-[#2E2D35]',
     },
     {
       label: 'Available',
@@ -940,7 +940,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
             !filteredActiveCalls?.some((call: any) => isMonitoringCallForMember(call, u?.userId)),
         ).length || 0,
       ),
-      tone: 'text-green-600',
+      tone: 'text-[#4EAE6E]',
     },
     {
       label: 'On Call',
@@ -973,12 +973,12 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           callLogSummary?.hold_calls ||
           0,
       ),
-      tone: 'text-red-500',
+      tone: 'text-[#DC5049]',
     },
     // {
     //   label: 'Aux Break',
     //   value: '0',
-    //   tone: 'text-gray-600',
+    //   tone: 'text-[#9A948F]',
     // },
     {
       label: 'Offline',
@@ -988,14 +988,14 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           (agents?.length || 0) - (usersOnlineStatus?.filter((u: any) => u.online).length || 0),
         ),
       ),
-      tone: 'text-gray-500',
+      tone: 'text-[#9A948F]',
     },
     {
       label: 'Occupancy',
       value: agents?.length
         ? `${Math.round(((liveCallsData?.length || 0) / agents.length) * 100)}%`
         : '0%',
-      tone: 'text-green-700',
+      tone: 'text-[#4EAE6E]',
     },
   ];
 
@@ -1042,7 +1042,11 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
   }, [selectedCallListMetric]);
 
   return (
-    <div className="h-full overflow-auto bg-gray-100/35 p-3">
+    <div className="live-wallboard-theme h-full overflow-auto p-3">
+      {/* Global --primary carries !important (src/index.css), so only another
+          !important author rule can out-cascade it here; a plain inline style
+          override would silently lose. */}
+      <style>{`.live-wallboard-theme { --primary: #EA8A3F !important; }`}</style>
       {/* TODO:on ERROR */}
       {/* <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1069,7 +1073,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
         </div> */}
 
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-800">Agent Performance Overview</h3>
+        <h3 className="text-base font-semibold text-[#2E2D35]">Agent Performance Overview</h3>
         <Button
           onClick={handleRefreshCampaignStats}
           variant="outline"
@@ -1102,22 +1106,22 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   openDashboardMetric();
                 }
               }}
-              className={`rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-xs hover:bg-green-50 hover:border-green-300 hover:text-green-700 justify-between flex-col flex ${
+              className={`rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] hover:bg-green-50 hover:border-green-300 hover:text-green-700 justify-between flex-col flex ${
                 isClickableMetric
                   ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30'
                   : ''
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                   {item.label}
                 </p>
                 <IconComp className={`h-3.5 w-3.5 ${toneClasses[item.tone]}`} />
               </div>
               <div className="mt-1 flex items-end gap-1.5">
                 <span className="v num">{item.value}</span>
-                {item.trend === 'up' && <ArrowUp className="mb-1 h-3.5 w-3.5 text-green-500" />}
-                {item.trend === 'down' && <ArrowDown className="mb-1 h-3.5 w-3.5 text-red-500" />}
+                {item.trend === 'up' && <ArrowUp className="mb-1 h-3.5 w-3.5 text-[#4EAE6E]" />}
+                {item.trend === 'down' && <ArrowDown className="mb-1 h-3.5 w-3.5 text-[#DC5049]" />}
               </div>
             </div>
           );
@@ -1126,16 +1130,16 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       <div className="mx-auto flex w-full max-w-[1880px] flex-col mt-3">
         <div className="flex w-full  gap-4 xl:flex-row flex-col">
           <div className="flex w-full flex-col sm:flex-row xl:flex-col gap-3 sm:max-w-full  xl:max-w-96 min-w-72">
-            <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-xs w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
                 Call Flow Funnel (Live)
               </h4>
               <div className="mt-3 flex flex-col gap-3">
                 {funnelData.map((item) => (
                   <div key={item.label} className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-gray-700">{item.label}</span>
-                      <span className="text-gray-500">
+                      <span className="font-medium text-[#2E2D35]">{item.label}</span>
+                      <span className="text-[#9A948F]">
                         {item.value}% - {item.count}
                       </span>
                     </div>
@@ -1143,14 +1147,15 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                       color={item.color}
                       outOfValue={100}
                       taskDoneValue={item.value}
+                      className="bg-[#F0DFC5]"
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-xs w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
                 Queue Status
               </h4>
               <div className="mt-3 space-y-2.5 max-h-86 overflow-auto">
@@ -1160,29 +1165,29 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                     return (
                       <div
                         key={queue?.queue}
-                        className="rounded-lg border border-gray-200 bg-gray-50 p-2.5"
+                        className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-gray-900">{queue?.queue}</p>
+                          <p className="text-xs font-semibold text-[#2E2D35]">{queue?.queue}</p>
                           <p className="text-xs font-semibold text-amber-600">
                             {queue?.total || 0}
                           </p>
                         </div>
-                        <div className="mt-2 flex justify-between gap-2 text-[11px] text-gray-600 w-full">
+                        <div className="mt-2 flex justify-between gap-2 text-[11px] text-[#9A948F] w-full">
                           <p className="flex flex-col justify-center items-center text-center ">
                             Avg Wait{' '}
                             <span className="font-medium text-primary">{queue?.avgWait}</span>
                           </p>
                           <p className="flex flex-col justify-center items-center text-center ">
                             Available{' '}
-                            <span className="font-medium text-green-600">{queue?.available}</span>
+                            <span className="font-medium text-[#4EAE6E]">{queue?.available}</span>
                           </p>
                           <p className=" flex flex-col justify-center items-center text-right ">
                             SLA{' '}
-                            <span className="font-medium text-green-600">{queue?.sla || 0}</span>
+                            <span className="font-medium text-[#4EAE6E]">{queue?.sla || 0}</span>
                           </p>
                         </div>
-                        <div className="mt-2 h-1.5 w-full rounded-full bg-gray-200">
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-[#F0DFC5]">
                           <div
                             className={`h-1.5 rounded-full ${getBarColor(slaValue)}`}
                             style={{ width: `${slaValue}%` }}
@@ -1192,15 +1197,15 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                     );
                   })
                 ) : (
-                  <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-center">
-                    <p className="text-xs font-medium text-gray-500">No record</p>
+                  <div className="rounded-lg border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/45 p-3 text-center">
+                    <p className="text-xs font-medium text-[#9A948F]">No record</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-xs w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
                 Active Campaigns
               </h4>
               <div className="mt-2 space-y-2 min-h-40 max-h-64 overflow-y-auto pr-1">
@@ -1208,10 +1213,10 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   activeCampaignsData.map((campaign) => (
                     <div
                       key={campaign.name}
-                      className="rounded-lg border border-gray-200 bg-gray-50 p-2.5"
+                      className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5"
                     >
                       <p className="text-xs font-semibold text-primary">{campaign.name}</p>
-                      <div className="mt-2 grid grid-cols-2 gap-y-1 text-[11px] text-gray-600">
+                      <div className="mt-2 grid grid-cols-2 gap-y-1 text-[11px] text-[#9A948F]">
                         <p>Dialed: {campaign.dialed}</p>
                         <p>Connected: {campaign.connected}</p>
                         <p>Answered %: {campaign.answerRate}</p>
@@ -1220,8 +1225,8 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-center">
-                    <p className="text-xs font-medium text-gray-500">No record</p>
+                  <div className="rounded-lg border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/45 p-3 text-center">
+                    <p className="text-xs font-medium text-[#9A948F]">No record</p>
                   </div>
                 )}
               </div>
@@ -1229,24 +1234,24 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           </div>
 
           <div className="flex w-full flex-col gap-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs w-full">
+            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-9">
                 {liveStripStats.map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-center"
+                    className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-2.5 py-1.5 text-center"
                   >
                     <p className={`text-lg font-semibold leading-none ${stat.tone}`}>
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 flex items-center justify-center gap-1">
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-[#9A948F] flex items-center justify-center gap-1">
                       <span>{stat.label}</span>
                       {stat.label === 'Occupancy' && (
                         <CustomTooltip
                           text="Calculated based on total agent and number of agents on the call"
                           side="top"
                         >
-                          <Info className="h-3.5 w-3.5 text-gray-400 cursor-pointer" />
+                          <Info className="h-3.5 w-3.5 text-[#9A948F] cursor-pointer" />
                         </CustomTooltip>
                       )}
                     </p>
@@ -1256,14 +1261,14 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
             </div>
 
             {canViewAgentRosterAndControls ? (
-              <div className="rounded-xl overflow-hidden  border border-gray-200 bg-white shadow-xs">
-                <div className="flex flex-wrap items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+              <div className="rounded-xl overflow-hidden  border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
+                <div className="flex flex-wrap items-center justify-between border-b border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2.5">
+                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
                     <Headset className="h-4 w-4 text-primary" />
                     Agent Real-time Roster and Controls
                   </h4>
-                  <div className="rounded-md border border-gray-200 bg-white px-3 py-1.5 max-sm:w-full">
-                    <p className="text-[11px] font-medium text-gray-500">
+                  <div className="rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-1.5 max-sm:w-full">
+                    <p className="text-[11px] font-medium text-[#9A948F]">
                       Top: {topCallsText} &nbsp; | &nbsp; Bottom: {bottomCallsText}
                     </p>
                   </div>
@@ -1273,16 +1278,16 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   {agents?.map((agent: any) => (
                     <div
                       key={`${agent?.extension}-mobile`}
-                      className="rounded-lg border border-gray-200 bg-gray-50 p-2.5"
+                      className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-[12px] font-semibold text-gray-700">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[12px] font-semibold text-[#2E2D35]">
                             {getInitials(agent.name)}
                           </div>
                           <div className="flex flex-col">
-                            <p className="text-[13px] font-semibold text-gray-900">{agent.name}</p>
-                            <p className="flex items-center gap-1 text-[11px] font-medium text-gray-500">
+                            <p className="text-[13px] font-semibold text-[#2E2D35]">{agent.name}</p>
+                            <p className="flex items-center gap-1 text-[11px] font-medium text-[#9A948F]">
                               <span className="h-2 w-2 rounded-full bg-green-500" />
                               Ext: {agent.ext}
                             </p>
@@ -1295,16 +1300,16 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                         </span>
                       </div>
 
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-[#9A948F]">
                         <p className="flex items-center gap-1.5">
-                          <Timer className="h-3.5 w-3.5 text-gray-400" />
+                          <Timer className="h-3.5 w-3.5 text-[#9A948F]" />
                           {agent.timeInState}
                         </p>
                         <p className="truncate">{agent.queue}</p>
                         <p className="truncate">{agent.callerId}</p>
                         <p>
-                          Calls: <span className="font-semibold text-gray-700">{agent.calls}</span> |
-                          AHT: <span className="font-semibold text-gray-700">{agent.aht}</span>
+                          Calls: <span className="font-semibold text-[#2E2D35]">{agent.calls}</span> |
+                          AHT: <span className="font-semibold text-[#2E2D35]">{agent.aht}</span>
                         </p>
                       </div>
 
@@ -1315,7 +1320,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                             style={{ width: `${agent.utilization}%` }}
                           />
                         </div>
-                        <p className="text-[11px] font-semibold text-gray-500">
+                        <p className="text-[11px] font-semibold text-[#9A948F]">
                           {agent.utilization}%
                         </p>
                       </div>
@@ -1333,30 +1338,30 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   className="block max-h-190 overflow-auto overflow-x-auto lg:block"
                 >
                   <Table className="min-w-245 xl:min-w-280">
-                    <TableHeader className="sticky top-0 z-10 bg-gray-50">
+                    <TableHeader className="sticky top-0 z-10 bg-[#FBE2C8]">
                       <TableRow>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Agent Info
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Live Status
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Time In State
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Queue / Campaign
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Caller ID
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Utilization
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Daily Stats
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -1365,7 +1370,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                       <TableBody>
                         <TableRow>
                           <TableCell colSpan={8} className="h-40">
-                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                            <div className="flex items-center justify-center gap-2 text-sm text-[#9A948F]">
                               <Loader2 className="h-5 w-5 animate-spin text-primary" />
                               <span>Loading agents...</span>
                             </div>
@@ -1375,17 +1380,17 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                     ) : agents?.length > 0 ? (
                       <TableBody>
                         {agents?.map((agent: any) => (
-                          <TableRow key={agent?.extension} className="hover:bg-gray-50/80">
+                          <TableRow key={agent?.extension} className="hover:bg-[#FBE2C8]/60">
                             <TableCell className="px-3 py-2.5">
                               <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-[12px] font-semibold text-gray-700">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[12px] font-semibold text-[#2E2D35]">
                                   {getInitials(`${agent?.first_name} ${agent?.last_name}`)}
                                 </div>
                                 <div className="flex flex-col">
-                                  <p className="text-[13px] font-semibold text-gray-900">
+                                  <p className="text-[13px] font-semibold text-[#2E2D35]">
                                     {agent?.first_name || ''} {agent?.last_name || ''}
                                   </p>
-                                  <p className="flex items-center gap-1 text-[11px] font-medium text-gray-500">
+                                  <p className="flex items-center gap-1 text-[11px] font-medium text-[#9A948F]">
                                     <span className="inline-flex items-center justify-center">
                                       {statusImageLookup[getAgentPresenceStatus(agent)] ||
                                         statusImageLookup.offline}
@@ -1408,8 +1413,8 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                               })()}
                             </TableCell>
                             <TableCell className="px-3 py-2.5">
-                              <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                                <Timer className="h-3.5 w-3.5 text-gray-400" />
+                              <p className="flex items-center gap-1.5 text-xs font-medium text-[#2E2D35]">
+                                <Timer className="h-3.5 w-3.5 text-[#9A948F]" />
                                 {(() => {
                                   const liveCall = getLiveCallForAgent(agent);
                                   const timestamp = getMonitoringCallTimestamp(liveCall, agent);
@@ -1417,7 +1422,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 })()}
                               </p>
                             </TableCell>
-                            <TableCell className="px-3 py-2.5 text-xs font-medium text-gray-700">
+                            <TableCell className="px-3 py-2.5 text-xs font-medium text-[#2E2D35]">
                               {(() => {
                                 const liveCall = getLiveCallForAgent(agent);
                                 if (!liveCall) return '--';
@@ -1432,7 +1437,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 );
                               })()}
                             </TableCell>
-                            <TableCell className="px-3 py-2.5 text-xs font-medium text-gray-500">
+                            <TableCell className="px-3 py-2.5 text-xs font-medium text-[#9A948F]">
                               {(() => {
                                 const liveCall = getLiveCallForAgent(agent);
                                 const direction = String(liveCall?.direction || '')
@@ -1453,8 +1458,9 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                       color={getBarColor(utilizationPercent)}
                                       outOfValue={100}
                                       taskDoneValue={utilizationPercent}
+                                      className="bg-[#F0DFC5]"
                                     />
-                                    <p className="text-[11px] font-semibold text-gray-500">
+                                    <p className="text-[11px] font-semibold text-[#9A948F]">
                                       {formatUtilizationPercent(utilizationPercent)}
                                     </p>
                                   </div>
@@ -1462,7 +1468,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                               })()}
                             </TableCell>
                             <TableCell className="px-3 py-2.5">
-                              <div className="flex flex-col text-[11px] leading-5 text-gray-500">
+                              <div className="flex flex-col text-[11px] leading-5 text-[#9A948F]">
                                 {(() => {
                                   const agentStats = getCampaignAgentStats(
                                     String(agent?.extension || ''),
@@ -1471,13 +1477,13 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                     <>
                                       <span>
                                         Calls:{' '}
-                                        <span className="font-semibold text-gray-700">
+                                        <span className="font-semibold text-[#2E2D35]">
                                           {agentStats?.total_calls ?? '--'}
                                         </span>
                                       </span>
                                       <span>
                                         AHT:{' '}
-                                        <span className="font-semibold text-gray-700">
+                                        <span className="font-semibold text-[#2E2D35]">
                                           {formatAht(agentStats?.avg_handle_time)}
                                         </span>
                                       </span>
@@ -1547,12 +1553,12 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
         }}
       >
         <DialogContent className="md:max-w-[1260px] xl:max-w-[1366px] gap-0 overflow-hidden p-0">
-          <DialogHeader className="border-b border-gray-200 px-5 py-4">
-            <DialogTitle className="text-base font-semibold text-gray-900">
+          <DialogHeader className="border-b border-[#EEE7DD] px-5 py-4">
+            <DialogTitle className="text-base font-semibold text-[#2E2D35]">
               {selectedCallListMetric?.label || 'Call'}{' '}
               {isSelectedCallbackTaskMetric ? 'tasks' : 'records'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
+            <DialogDescription className="text-xs text-[#9A948F]">
               {isSelectedCallbackTaskMetric
                 ? 'Showing callback tasks from the calendar task list.'
                 : 'Showing records from today using the phone call list report.'}

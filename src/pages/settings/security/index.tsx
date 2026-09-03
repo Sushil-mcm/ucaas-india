@@ -100,23 +100,23 @@ const Security = () => {
   };
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
+      <div className="flex items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
         <div>
-          <p className="text-gray-900 font-semibold text-lg">Security & Privacy</p>
-          <p className="text-gray-500 text-xs">
+          <p className="text-[#2E2D35] font-semibold text-lg">Security & Privacy</p>
+          <p className="text-[#9A948F] text-xs">
             Your password, and every device currently signed in as you.
           </p>
         </div>
       </div>
       <div className="gap-3 flex flex-col w-full h-full p-3">
-        <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
+        <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg border border-[rgba(225,200,165,0.9)]">
           <div className="flex flex-col gap-1 sm:w-1/2 w-full">
-            <p className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
+            <p className="flex items-center gap-2 text-[#2E2D35] font-semibold text-sm">
               <KeyRound className="h-4 w-4 text-primary" />
               Password
             </p>
-            <p className="text-gray-500 text-xs">
+            <p className="text-[#9A948F] text-xs">
               Change the password you sign in with. You will need your current one. Everything
               already signed in stays signed in — use the device list below to end those.
             </p>
@@ -125,10 +125,10 @@ const Security = () => {
             Change password
           </Button>
         </div>
-        <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-white p-4 rounded-lg border border-gray-200">
+        <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg border border-[rgba(225,200,165,0.9)]">
               <div className="flex flex-col gap-1 sm:w-1/2 w-full">
-                <p className="text-gray-900 font-semibold text-sm">Sign out everywhere</p>
-                <p className="text-gray-500 text-xs">
+                <p className="text-[#2E2D35] font-semibold text-sm">Sign out everywhere</p>
+                <p className="text-[#9A948F] text-xs">
                   Ends every session signed in as you &mdash; useful if you have lost a phone or
                   used a shared computer. To sign someone else out, an administrator does that
                   from Users.
@@ -156,7 +156,7 @@ const Security = () => {
               </div>
         </div>
         <div className="w-full flex sm:flex-row flex-col items-center justify-between gap-5">
-          <p className="text-gray-800 text-sm">
+          <p className="text-[#2E2D35] text-sm">
             These are sessions from devices and browsers that are successfully signed into your
             account. You can sign out of any session you don't recognize or that's from a public
             computer.
@@ -172,7 +172,7 @@ const Security = () => {
                 if (value.startsWith(' ')) return;
                 setSearch(e.target.value);
               }}
-              Icon={<SearchLine className="text-gray-700" />}
+              Icon={<SearchLine className="text-[#2E2D35]" />}
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ const Security = () => {
             ownDevices?.map((item: any) => {
               return (
                 <div
-                  className="border cursor-pointer p-3 flex sm:flex-row flex-col  gap-2 rounded-lg sm:justify-between bg-white  
+                  className="border cursor-pointer p-3 flex sm:flex-row flex-col  gap-2 rounded-lg sm:justify-between bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]
                   "
                 >
                   <div className="flex sm:items-center xs:justify-start xs:items-start gap-3 w-full">
@@ -211,16 +211,16 @@ const Security = () => {
                     </div>
                     <div className="flex flex-col w-full gap-1">
                       <div className="flex flex-col items-start">
-                        <p className="text-gray-900 font-medium text-sm">
+                        <p className="text-[#2E2D35] font-medium text-sm">
                           {capitalizeFirstLetter(
                             `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim(),
                           ) || 'Unknown User'}
                         </p>
-                        <p className="text-gray-500 text-xs">{item?.user_detail?.email || ''}</p>
+                        <p className="text-[#9A948F] text-xs">{item?.user_detail?.email || ''}</p>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <p className="text-gray-600 text-xs">User Agent: {item?.user_agent}</p>
-                        <p className="text-gray-600 text-xs">IP Address: {item?.ip_address}</p>
+                        <p className="text-[#9A948F] text-xs">User Agent: {item?.user_agent}</p>
+                        <p className="text-[#9A948F] text-xs">IP Address: {item?.ip_address}</p>
                       </div>
                     </div>
                   </div>

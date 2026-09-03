@@ -324,17 +324,17 @@ const VideoDashboard = () => {
       return (
         <div
           key={`${listType}-${meeting?.meetingId}`}
-          className="flex items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-white px-2.5 py-2"
+          className="flex items-center justify-between gap-2 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-2.5 py-2"
         >
           <div className="flex min-w-0 items-start gap-2">
-            <div className="flex min-w-[52px] flex-col items-center rounded-xl bg-slate-100 p-1.5">
-              <p className="text-sm font-semibold text-slate-800">{formattedDate?.day || ''}</p>
-              <p className="text-[11px] text-slate-500">{formattedDate?.month || ''}</p>
+            <div className="flex min-w-[52px] flex-col items-center rounded-xl bg-[#FBE2C8]/40 p-1.5">
+              <p className="text-sm font-semibold text-[#2E2D35]">{formattedDate?.day || ''}</p>
+              <p className="text-[11px] text-[#9A948F]">{formattedDate?.month || ''}</p>
             </div>
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex items-center gap-2">
                 <h4
-                  className="max-w-[180px] truncate text-sm font-semibold text-slate-900"
+                  className="max-w-[180px] truncate text-sm font-semibold text-[#2E2D35]"
                   title={meeting?.name || 'Meeting Name'}
                 >
                   {meeting?.name || 'Meeting Name'}
@@ -343,20 +343,20 @@ const VideoDashboard = () => {
                   <>
                     <span className={`rounded-full px-1.5 py-0.5 text-xs ${classes}`}>{label}</span>
                     <CustomTooltip text={`Invited by: ${meeting?.hostName || 'Person'}`} side="top">
-                      <UserPlus className="h-4 w-4 text-gray-500" />
+                      <UserPlus className="h-4 w-4 text-[#9A948F]" />
                     </CustomTooltip>
                   </>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <p className="text-semibold flex items-center gap-1 text-xs text-gray-500">
+                <p className="text-semibold flex items-center gap-1 text-xs text-[#9A948F]">
                   <Icon name="TimerIcon" />
                   <span>{getAbbreviationByTimeZone(meeting?.timezone)}</span>
                   {formatTime(meeting?.startTimeLocal)} - {formatTime(meeting?.endTimeLocal) || ''}
                 </p>
                 <CustomTooltip text="Invitees" side="top">
                   <div
-                    className="text-semibold flex cursor-pointer items-center gap-1 text-sm text-gray-500"
+                    className="text-semibold flex cursor-pointer items-center gap-1 text-sm text-[#9A948F]"
                     onClick={() => {
                       if (!meeting?.members?.length) return;
                       setModalState((prev) => ({ ...prev, meetingInvites: true }));
@@ -370,7 +370,7 @@ const VideoDashboard = () => {
                 {(isActive || !isFutureTime) && (
                   <CustomTooltip text="Attendees" side="top">
                     <div
-                      className="text-semibold flex cursor-pointer items-center gap-1 text-sm text-gray-500"
+                      className="text-semibold flex cursor-pointer items-center gap-1 text-sm text-[#9A948F]"
                       onClick={() => {
                         const joinedCount = Array.isArray(meeting?.members)
                           ? meeting.members.filter(
@@ -443,7 +443,7 @@ const VideoDashboard = () => {
             )}
             {(isActive || isFutureTime) && listType === 'invited' && (
               <span
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-500 hover:text-white"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] hover:bg-gray-500 hover:text-white"
                 onClick={() => {
                   setModalState((prev) => ({
                     ...prev,
@@ -457,7 +457,7 @@ const VideoDashboard = () => {
             )}
             {listType === 'upcoming_owned' && (
               <DropdownMenu>
-                <DropdownMenuTrigger className="focus:outline-0 flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white">
+                <DropdownMenuTrigger className="focus:outline-0 flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
                   <Icon name="MenuDots" className="h-5 w-5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -520,10 +520,10 @@ const VideoDashboard = () => {
     meetings: any[];
     isPendingList: boolean;
   }) => (
-    <div className="flex min-h-60 flex-1 flex-col rounded-3xl border border-gray-200 bg-white p-3 ">
+    <div className="flex min-h-60 flex-1 flex-col rounded-3xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 ">
       <div className="mb-2.5 px-1">
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        <p className="text-xs text-slate-500">{description}</p>
+        <h3 className="text-base font-semibold text-[#2E2D35]">{title}</h3>
+        <p className="text-xs text-[#9A948F]">{description}</p>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto pr-1">
         {isPendingList ? (
@@ -535,10 +535,10 @@ const VideoDashboard = () => {
         ) : (
           <div className="mx-auto flex h-full w-full flex-col items-center justify-center gap-1 py-5">
             <img src={NotFound} alt="BusyImage" className="min-w-28 w-28" />
-            <p className="text-center text-sm font-medium text-gray-900">
+            <p className="text-center text-sm font-medium text-[#2E2D35]">
               {listType === 'invited' ? 'No meeting invitations yet' : 'Nothing scheduled yet'}
             </p>
-            <p className="text-center text-xs text-gray-600">
+            <p className="text-center text-xs text-[#9A948F]">
               {listType === 'invited'
                 ? 'Invited meetings will appear here when available.'
                 : 'Create a meeting to get started.'}
@@ -550,7 +550,7 @@ const VideoDashboard = () => {
   );
 
   return (
-    <section className="flex xxl:h-full w-full overflow-auto bg-slate-50 pb-4 ">
+    <section className="flex xxl:h-full w-full overflow-auto pb-4 ">
       <div className="mx-auto flex h-full w-full  flex-col gap-4 px-3 pt-3 ">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {meetingActionTiles.map((tile) => (
@@ -559,19 +559,19 @@ const VideoDashboard = () => {
               type="button"
               onClick={tile.onClick}
               disabled={tile.disabled}
-              className="group flex min-h-[100px] flex-col justify-between rounded-[18px] border border-gray-200 bg-white p-2.5 text-left transition-all hover:border-primary/30 hover:shadow-[0_6px_20px_rgba(15,23,42,0.06)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[126px] sm:rounded-[24px] sm:p-4 gap-2"
+              className="group flex min-h-[100px] flex-col justify-between rounded-[18px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5 text-left transition-all hover:border-primary/30 hover:shadow-[0_6px_20px_rgba(15,23,42,0.06)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[126px] sm:rounded-[24px] sm:p-4 gap-2"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-ucass-active-bg text-primary sm:h-10 sm:w-10 sm:rounded-xl">
                 <Icon name={tile.icon} className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <h3 className="text-[11px] leading-4 font-semibold text-slate-900 sm:text-sm">
+                  <h3 className="text-[11px] leading-4 font-semibold text-[#2E2D35] sm:text-sm">
                     {tile.title}
                   </h3>
-                  <p className="hidden text-xs text-slate-500 sm:block">{tile.description}</p>
+                  <p className="hidden text-xs text-[#9A948F] sm:block">{tile.description}</p>
                 </div>
-                <div className="hidden h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors group-hover:border-primary group-hover:text-primary sm:flex">
+                <div className="hidden h-7 w-7 items-center justify-center rounded-full border border-[#EEE7DD] text-[#9A948F] transition-colors group-hover:border-primary group-hover:text-primary sm:flex">
                   <Icon name="ArrowRightUp" className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -580,11 +580,11 @@ const VideoDashboard = () => {
         </div>
 
         <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_30rem] ">
-          <div className="rounded-[24px] border border-gray-200 bg-white p-4 sm:p-5">
+          <div className="rounded-[24px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Meeting volume summary</h2>
-                <p className="text-sm text-slate-500">
+                <h2 className="text-lg font-semibold text-[#2E2D35]">Meeting volume summary</h2>
+                <p className="text-sm text-[#9A948F]">
                   Activity across the selected organization date
                 </p>
               </div>
@@ -592,7 +592,7 @@ const VideoDashboard = () => {
                 {moment(date).format('ddd, DD MMM')}
               </span>
             </div>
-            <div className="chart-container flex w-full min-h-[360px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/30">
+            <div className="chart-container flex w-full min-h-[360px] items-center justify-center rounded-2xl border border-[#EEE7DD] bg-[#FBE2C8]/25">
               <BarChart data={graphData} isPendingStatsData={isPendingStatsData} />
             </div>
           </div>

@@ -156,6 +156,7 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <CustomSelect
             label={'Country'}
+            required
             isDisabled={campaignStatus == 'PROCESSING'}
             placeholder="Select Country"
             options={countriesData.map((country: { name: string; isoCode: string }) => ({
@@ -170,6 +171,7 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
           />
           <CustomSelect
             label={'Timezone'}
+            required
             isDisabled={campaignStatus == 'PROCESSING'}
             placeholder="Select Timezone"
             options={timezonesList.map((timezone: { zoneName: string }) => ({
@@ -190,6 +192,7 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
             <Input
               disabled={campaignStatus === 'PROCESSING'}
               label="Start Date"
+              required
               placeholder="Enter start date"
               type="date"
               {...register('startDate', {
@@ -210,6 +213,7 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
           <div className="flex items-end gap-1.5 w-full">
             <Input
               label="End Date"
+              required
               disabled={campaignStatus === 'PROCESSING'}
               placeholder="Enter end date"
               type="date"

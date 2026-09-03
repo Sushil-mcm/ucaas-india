@@ -133,6 +133,83 @@ const TOPICS: [string, string, DemoInteraction['mood'], string, string[]][] = [
   ],
 ];
 
+/* One script per TOPICS entry, same index, so a call's demo transcript
+   matches the story its demo summary/recap/history already tell. */
+const TRANSCRIPT_SCRIPTS: [speaker: 'agent' | 'customer', text: string][][] = [
+  [
+    ['agent', "Thanks for calling — you're through to Billing. How can I help today?"],
+    ['customer', "Hi, I'm calling again about that duplicate direct debit. It's still not back in my account."],
+    ['agent', 'Sorry about that — let me pull up the case from your last call.'],
+    ['agent', 'I can see finance was meant to review it within 24 hours, and that review was never logged.'],
+    ['customer', "This is the second time I've had to chase this myself."],
+    ['agent', "Completely understood. I'm escalating this to finance directly and will personally follow up within 24 hours."],
+    ['customer', 'Okay. Thank you for actually looking into it this time.'],
+  ],
+  [
+    ['agent', 'Hi, thanks for holding — how can I help?'],
+    ['customer', "I've been charged twice for this month's plan."],
+    ['agent', "Let me check that... you're right, there are two identical charges three days apart."],
+    ['agent', "I'm logging a dispute now — reference will be sent by SMS."],
+    ['customer', 'How long will the refund take?'],
+    ['agent', 'Finance review takes up to 3 working days, then the refund is automatic.'],
+    ['customer', "Alright, I'll wait to hear back."],
+  ],
+  [
+    ['agent', 'Hi there, what can I do for you today?'],
+    ['customer', "I keep getting paper bills — can you switch me to paperless?"],
+    ['agent', "Of course, one moment... done. You'll get an email confirmation shortly."],
+    ['customer', "That was quick, thank you!"],
+    ['agent', 'Happy to help — is there anything else?'],
+    ['customer', 'No, that was everything.'],
+  ],
+  [
+    ['agent', "Hi, I'm calling for your annual account review — is now a good time?"],
+    ['customer', 'Sure, go ahead.'],
+    ['agent', "Looking at your usage, you're on a plan that still fits well. Any concerns on your end?"],
+    ['customer', 'None really, been happy with the service.'],
+    ['agent', "Great to hear. I'll send over a tariff comparison in case anything changes."],
+    ['customer', "Sounds good, I'll likely renew."],
+  ],
+  [
+    ['agent', 'Hi, I understand you\'ve been having speed issues?'],
+    ['customer', "Yeah, it's been dropping to a crawl most evenings."],
+    ['agent', "Running a line test now... I can see some noise on the line. Resetting your profile."],
+    ['customer', 'Okay, let me know when to test again.'],
+    ['agent', "That's done — can you run a speed test now?"],
+    ['customer', "Yep, back to normal. Thanks for sorting it."],
+    ['agent', "I'll keep an eye on the line for the next 48 hours just in case."],
+  ],
+];
+
+export type DemoTurn = {
+  id: string;
+  speaker: 'agent' | 'customer';
+  who: string;
+  time: string;
+  text: string;
+  isSummary: false;
+};
+
+/** A short, plausible transcript for a call with no real one stored — themed
+    to match demoInteractions/demoRecap for the same number. */
+export const demoTranscript = (number: string, customerName = 'Customer'): DemoTurn[] => {
+  const seed = hash(number);
+  const script = pick(TRANSCRIPT_SCRIPTS, seed);
+  const agentName = pick(AGENTS, seed, 2);
+  const start = new Date(Date.now() - script.length * 32_000);
+  return script.map(([speaker, text], i) => ({
+    id: `demo-turn-${i}`,
+    speaker,
+    who: speaker === 'agent' ? agentName : customerName,
+    time: new Date(start.getTime() + i * 32_000).toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    text,
+    isSummary: false,
+  }));
+};
+
 export const demoInteractions = (number: string, count = 4): DemoInteraction[] => {
   const seed = hash(number);
   const profile = demoProfile(number);

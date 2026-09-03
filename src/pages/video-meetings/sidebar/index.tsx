@@ -107,7 +107,7 @@ const Sidebar = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto">
-      <div className="h-full min-h-0 divide-y divide-gray-200">
+      <div className="h-full min-h-0 flex flex-col gap-0.5 p-2">
         {sidebarItems?.map(
           ({ type, icon = '', path, title, children, value, enabled }: any, index: number) => {
             const isActive = value === activeItem;
@@ -122,13 +122,18 @@ const Sidebar = () => {
                   onValueChange={(nextValue) => setManualActiveItem({ pathname, value: nextValue })}
                 >
                   <AccordionItem value={value} className="">
-                    <AccordionTrigger className="items-center p-0" isActive={isActive}>
-                      <div className="flex min-h-14 w-full items-center gap-2 px-3 py-3 text-sm font-medium">
-                        <Icon name={icon as IconType} className="h-6 w-6 p-0.5" />
+                    <AccordionTrigger
+                      className="items-center p-0"
+                      isActive={isActive}
+                      activeHeaderClassName="[&>button[data-state=open]]:rounded-xl [&>button[data-state=open]]:bg-[#E78B50]/10 [&>button[data-state=open]]:text-[#B5642F]"
+                      activeIconClassName="text-[#B5642F]"
+                    >
+                      <div className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-white/50 transition-colors">
+                        <Icon name={icon as IconType} className="h-5 w-5" />
                         {title}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="bg-ucass-primary-200/20">
+                    <AccordionContent className="bg-[#E78B50]/[0.04] backdrop-blur-md rounded-xl mt-0.5 px-2 py-1">
                       {children?.map(
                         (
                           {
@@ -198,11 +203,16 @@ const Tile = ({
 
   return (
     <div
-      className={`flex min-h-14 w-full items-center gap-2 px-3 py-3 cursor-pointer ${isActive ? (isChildrenExist ? 'text-primary' : 'border-r-2 border-r-primary bg-ucass-primary-200/50 text-primary') : 'text-gray-900/80'} ${child ? 'border-t border-gray-200 pl-10' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
+      className={`group flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? (isChildrenExist ? 'text-[#B5642F]' : 'bg-white/80 backdrop-blur-md text-[#B5642F] shadow-[0_2px_8px_rgba(154,52,18,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]') : 'text-gray-900/80 hover:bg-white/50'} ${child ? 'py-2 mt-0.5' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
       {...getRoutePrefetchHandlers(path)}
       onClick={handleClick}
     >
-      <Icon name={icon as IconType} className="h-6 w-6 p-0.5" />
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+        style={isActive && !isChildrenExist ? { background: 'rgba(231,139,80,0.14)' } : undefined}
+      >
+        <Icon name={icon as IconType} className="h-5 w-5" />
+      </span>
       <p className="truncate text-sm font-medium">{title}</p>
       {!isEnabled && <span className="text-xs">🔒</span>}
     </div>

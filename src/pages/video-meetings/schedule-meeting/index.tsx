@@ -338,6 +338,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
             placeholder={'Enter Topic'}
             type="text"
             label={'Meeting Topic'}
+            required
             error={errors?.name?.message}
             maxLength={50}
           />
@@ -345,6 +346,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           <div className="flex flex-col gap-4 md:flex-row">
             <CustomSelect
               label={'Country Code'}
+              required
               placeholder="Select Country"
               options={countries?.map((item: any) => ({
                 label: `${item?.label} (${item?.value})`,
@@ -360,6 +362,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
             />
             <CustomSelect
               label={'Timezone'}
+              required
               placeholder="Select Timezone"
               options={timezonesList?.map((item: any) => ({
                 label: item?.zoneName,

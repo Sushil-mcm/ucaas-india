@@ -191,7 +191,7 @@ const GlobalSearch = () => {
   return (
     <div
       ref={containerRef}
-      className="global-search-root xs:w-[200px] sm:w-full lg:w-full lg:max-w-[320px] lg:min-w-[260px]"
+      className="global-search-root w-[200px] sm:w-[260px] lg:w-[300px] min-[1440px]:w-[380px]"
     >
       <div className="global-search-input-wrapper ">
         <SearchIcon />
@@ -215,7 +215,7 @@ const GlobalSearch = () => {
         <kbd className="global-search-kbd" aria-hidden="true">
           {typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
             ? '⌘K'
-            : 'Ctrl K'}
+            : 'Ctrl + K'}
         </kbd>
 
         {isLoading && (

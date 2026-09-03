@@ -33,19 +33,19 @@ const DepartmentDetailsView = ({
   };
   const tabList = ['Logs', ...(notesTab ? ['Notes'] : [])];
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col justify-between  overflow-x-auto overflow-y-hidden gap-3 h-full">
+    <section className="w-full flex flex-col justify-between  overflow-x-auto overflow-y-hidden gap-3 h-full">
       <Tabs
         defaultValue={selectedTab}
         value={selectedTab}
         onValueChange={(v) => setSelectedTab(v)}
         className="flex w-full"
       >
-        <div className="border-b border-gray-200 w-full">
+        <div className="border-b border-[#EEE7DD] w-full">
           <TabsList className="flex text-sm font-semibold text-center  p-0 rounded-none min-h-10 ">
             {tabList?.map((tab: any) => {
               return (
                 <TabsTrigger
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-6  text-gray-700 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs "
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-6  text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs "
                   value={tab}
                 >
                   {tab}
@@ -115,49 +115,49 @@ const Logs = ({
         <div className="flex flex-col gap-3 pt-3 h-[calc(100vh_-_10.3rem)] overflow-auto">
           {hasDepartmentInfo ? (
             <>
-              <div className="bg-white p-3 border border-gray-200 rounded-xl">
-                <div className="font-semibold text-gray-900 truncate text-md mb-2">
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+                <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">
                   Department Info
                 </div>
-                <div className="grid grid-cols-4 gap-4 border border-gray-200 bg-gray-100 rounded-xl p-3">
+                <div className="grid grid-cols-4 gap-4 border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                   <div>
-                    <p className="font-medium text-gray-900">Name</p>
-                    <p className="text-sm text-gray-500">{name || '--'}</p>
+                    <p className="font-medium text-[#2E2D35]">Name</p>
+                    <p className="text-sm text-[#9A948F]">{name || '--'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Location</p>
-                    <p className="text-sm text-gray-500">{siteInfo?.label || '--'}</p>
+                    <p className="font-medium text-[#2E2D35]">Location</p>
+                    <p className="text-sm text-[#9A948F]">{siteInfo?.label || '--'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Extension</p>
-                    <p className="text-sm text-gray-500">{extension || '--'}</p>
+                    <p className="font-medium text-[#2E2D35]">Extension</p>
+                    <p className="text-sm text-[#9A948F]">{extension || '--'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Description</p>
-                    <p className="text-gray-800 text-sm">
+                    <p className="font-medium text-[#2E2D35]">Description</p>
+                    <p className="text-[#2E2D35] text-sm">
                       {description || 'No description provided'}
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">If no one answers</p>
+                    <p className="font-medium text-[#2E2D35]">If no one answers</p>
                     <div className="flex gap-4">
                       <div>
-                        <p className="text-sm text-gray-800">Type</p>
-                        <p className="text-sm text-gray-500">{failover?.type || '--'}</p>
+                        <p className="text-sm text-[#2E2D35]">Type</p>
+                        <p className="text-sm text-[#9A948F]">{failover?.type || '--'}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-800">Forward Number</p>
-                        <p className="text-sm text-gray-500">{failover?.value || '--'}</p>
+                        <p className="text-sm text-[#2E2D35]">Forward Number</p>
+                        <p className="text-sm text-[#9A948F]">{failover?.value || '--'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
-                <p className="font-semibold text-gray-900 truncate text-md">Department Manager</p>
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
+                <p className="font-semibold text-[#2E2D35] truncate text-md">Department Manager</p>
                 <div className="w-full mt-2">
-                  <div className="flex items-center justify-between border border-gray-200 bg-gray-100 rounded-xl p-3">
+                  <div className="flex items-center justify-between border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                     <CustomAvatar
                       name={managerInfo?.label}
                       showPresence
@@ -169,14 +169,14 @@ const Logs = ({
                       <div className="flex items-center justify-between gap-2">
                         <p className="capitalize text-md truncate">{managerInfo?.label}</p>
                         <div className="flex gap-1">
-                          <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-500 text-xs">
+                          <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                          <span className="text-[#9A948F] text-xs">
                             {managerInfo?.extension || managerInfo?.value || '--'}
                           </span>
                         </div>
                       </div>
                       <small className="text-primary text-[10px]">{managerInfo?.role}</small>
-                      <small className="text-gray-500 truncate text-sm">
+                      <small className="text-[#9A948F] truncate text-sm">
                         <CustomTooltip text={managerInfo?.email}>
                           <span>{managerInfo?.email}</span>
                         </CustomTooltip>
@@ -186,8 +186,8 @@ const Logs = ({
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
-                <p className="font-semibold text-gray-900 truncate text-md mb-2">Members</p>
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
+                <p className="font-semibold text-[#2E2D35] truncate text-md mb-2">Members</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {departmentMembers?.length ? (
                     departmentMembers?.map((member: any) => {
@@ -197,7 +197,7 @@ const Logs = ({
                       );
                       return (
                         <div
-                          className={`flex items-center justify-between border ${isMemberMatched ? 'border-green-500' : 'border-red-500'} bg-gray-100 rounded-xl p-3`}
+                          className={`flex items-center justify-between border ${isMemberMatched ? 'border-green-500' : 'border-red-500'} bg-[#FBE2C8]/40 rounded-xl p-3`}
                           key={member?.uuid}
                         >
                           <CustomAvatar
@@ -210,14 +210,14 @@ const Logs = ({
                             <div className="flex items-center justify-between gap-2">
                               <p className="capitalize text-sm truncate">{member?.label}</p>
                               <div className="flex gap-1">
-                                <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-500 text-xs">
+                                <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                                <span className="text-[#9A948F] text-xs">
                                   {member?.extension || member?.value || '--'}
                                 </span>
                               </div>
                             </div>
                             <small className="text-primary text-[10px]">{member?.role}</small>
-                            <small className="text-gray-500 truncate text-sm flex justify-between">
+                            <small className="text-[#9A948F] truncate text-sm flex justify-between">
                               <CustomTooltip text={member?.email}>
                                 <span>{member?.email}</span>
                               </CustomTooltip>
@@ -232,17 +232,17 @@ const Logs = ({
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500">No members found in this department.</p>
+                    <p className="text-sm text-[#9A948F]">No members found in this department.</p>
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <div className="bg-white p-3 border border-gray-200 rounded-xl">
-              <div className="font-semibold text-gray-900 truncate text-md mb-2">
+            <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+              <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">
                 Department Info
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#9A948F]">
                 Department details are unavailable for this call.
               </p>
             </div>

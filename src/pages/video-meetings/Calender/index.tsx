@@ -766,7 +766,7 @@ const CalendarPage = () => {
         header: 'Source',
         // accessorKey: 'source',
         cell: ({ row }: any) => (
-          <span className="text-xs text-slate-600 capitalize ">
+          <span className="mcm-task-source">
             {row.original?.source === 'CALENDAR' ? 'Meeting' : row?.original?.source?.toLowerCase()}
           </span>
         ),
@@ -813,7 +813,7 @@ const CalendarPage = () => {
                   Assign
                 </button>
               ) : (
-                <span>--</span>
+                <span className="mcm-task-empty">—</span>
               )}
             </div>
           );
@@ -1035,7 +1035,7 @@ const CalendarPage = () => {
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overflow-x-hidden p-3 lg:overflow-hidden">
       <div className="rounded-lg bg-white border border-slate-200 overflow-visible lg:overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-[calc(100vh-88px)] overflow-visible lg:overflow-hidden">
-          <aside className="border-r border-slate-200 bg-slate-50 p-4">
+          <aside className="mcm-calpanel p-4">
             <div className="relative mb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
@@ -1081,10 +1081,10 @@ const CalendarPage = () => {
               </div>
 
               {miniPickerOpen && (
-                <div className="absolute z-30 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
+                <div className="absolute z-30 mt-2 w-full rounded-xl border border-mcm-line bg-white shadow-lg">
                   {miniPickerMode === 'year' ? (
                     <div className="p-2">
-                      <p className="px-1 pb-2 text-sm font-semibold text-slate-500  tracking-wide">
+                      <p className="px-1 pb-2 text-sm font-semibold text-mcm-ink-3  tracking-wide">
                         Select Year
                       </p>
                       <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto pr-1">
@@ -1096,7 +1096,7 @@ const CalendarPage = () => {
                             className={`cursor-pointer rounded-md px-2 py-1.5 text-sm font-medium transition ${
                               miniPickerSelectedYear === year
                                 ? 'bg-[var(--primary)] text-white'
-                                : 'text-slate-700 hover:bg-slate-100'
+                                : 'text-mcm-ink-2 hover:bg-mcm-surface-2'
                             }`}
                           >
                             {year}
@@ -1110,11 +1110,11 @@ const CalendarPage = () => {
                         <button
                           type="button"
                           onClick={() => setMiniPickerMode('year')}
-                          className="cursor-pointer text-sm font-semibold text-slate-600 hover:text-slate-900"
+                          className="cursor-pointer text-sm font-semibold text-mcm-ink-2 hover:text-mcm-ink"
                         >
                           Change Year
                         </button>
-                        <span className="text-sm font-semibold text-slate-800">
+                        <span className="text-sm font-semibold text-mcm-ink">
                           {miniPickerSelectedYear}
                         </span>
                       </div>
@@ -1128,7 +1128,7 @@ const CalendarPage = () => {
                               miniCurrentDate.year() === miniPickerSelectedYear &&
                               miniCurrentDate.month() === monthIndex
                                 ? 'bg-[var(--primary)] text-white'
-                                : 'text-slate-700 hover:bg-slate-100'
+                                : 'text-mcm-ink-2 hover:bg-mcm-surface-2'
                             }`}
                           >
                             {monthName.slice(0, 3)}
@@ -1141,7 +1141,7 @@ const CalendarPage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 text-[11px] text-slate-500 mb-2">
+            <div className="mcm-cal-weekdays grid grid-cols-7 gap-1 text-[11px] mb-2">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <span key={day} className="text-center font-medium">
                   {day}
@@ -1189,9 +1189,9 @@ const CalendarPage = () => {
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            <div className="flex items-center justify-between mb-3 mt-4">
-              <p className="text-sm font-semibold text-slate-800">Today Events</p>
-              <span className="text-xs text-slate-500">{todayEventSchedules?.length || 0}</span>
+            <div className="mcm-cal-divider flex items-center justify-between mb-3 mt-4">
+              <p className="text-sm font-semibold text-mcm-ink">Today Events</p>
+              <span className="text-xs text-mcm-ink-3">{todayEventSchedules?.length || 0}</span>
             </div>
             <div className="space-y-2 max-h-[calc(100vh-474px)] overflow-y-auto pr-1">
               {todayEventSchedules?.map((schedule: Schedule) => {
@@ -1202,7 +1202,7 @@ const CalendarPage = () => {
                     key={schedule.id}
                     type="button"
                     onClick={() => handleTodayTaskClick(schedule)}
-                    className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white p-3.5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all duration-200 group"
+                    className="w-full cursor-pointer rounded-xl border border-mcm-line bg-white p-3.5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all duration-200 group"
                   >
                     <div className="flex items-start gap-2">
                       {isEvent ? (
@@ -1211,10 +1211,10 @@ const CalendarPage = () => {
                         <ListTodo className="w-4 h-4 mt-0.5 text-[var(--primary)] shrink-0" />
                       )}
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
+                        <p className="text-sm font-semibold text-mcm-ink truncate">
                           {schedule.title}
                         </p>
-                        <p className="text-[11px] text-[var(--primary)]">
+                        <p className="text-[11px] text-mcm-ink-3">
                           {moment(schedule.start).format('hh:mm A')} -{' '}
                           {moment(schedule.end).format('hh:mm A')}
                         </p>
@@ -1224,7 +1224,7 @@ const CalendarPage = () => {
                 );
               })}
               {!isTodayTaskListLoading && todayEventSchedules?.length === 0 && (
-                <div className="rounded-lg border border-dashed border-slate-300 p-3 text-xs text-slate-500 text-center bg-white">
+                <div className="mcm-cal-well rounded-xl border border-dashed p-3 text-xs text-mcm-ink-3 text-center">
                   No events for today.
                 </div>
               )}

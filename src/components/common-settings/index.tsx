@@ -317,7 +317,7 @@ const CommonSettingPermission: FC<any> = ({
             </div>
             <Button
               type="button"
-              className="w-16"
+              className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
               variant={'outline'}
               disabled={!canEditField('regional')}
               onClick={() => {
@@ -350,7 +350,7 @@ const CommonSettingPermission: FC<any> = ({
               </div>
               <Button
                 type="button"
-                className="w-16"
+                className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
                 variant={'outline'}
                 onClick={() => {
                   if (!canEditField('voicemail')) return;
@@ -400,7 +400,7 @@ const CommonSettingPermission: FC<any> = ({
               </div>
               <Button
                 type="button"
-                className="w-16"
+                className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
                 variant={'outline'}
                 onClick={() => {
                   if (!canEditField('business_hours')) return;
@@ -513,7 +513,7 @@ const CommonSettingPermission: FC<any> = ({
               </div>
               <Button
                 type="button"
-                className="w-16"
+                className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
                 variant={'outline'}
                 onClick={() => {
                   if (!canEditField('display_number')) return;

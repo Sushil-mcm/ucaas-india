@@ -260,7 +260,7 @@ const QueueMemberModal = ({
                 <button
                   type="button"
                   onClick={handleChat}
-                  className="flex items-center justify-center rounded-full w-8 h-8 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all cursor-pointer shadow-3xs"
+                  className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-50 text-orange-600 border border-orange-200 hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all cursor-pointer shadow-3xs"
                 >
                   <Icon name="MessageIcon" className="w-4.5 h-4.5" />
                 </button>

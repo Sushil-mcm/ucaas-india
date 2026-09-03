@@ -459,12 +459,14 @@ const SignUp = () => {
                       <Input
                         placeholder="Enter First Name"
                         label="First Name"
+                        required
                         {...register('first_name')}
                         error={errors?.first_name?.message}
                       />
                       <Input
                         placeholder="Enter Last Name"
                         label="Last Name"
+                        required
                         {...register('last_name')}
                         error={errors?.last_name?.message}
                       />
@@ -497,6 +499,7 @@ const SignUp = () => {
                       <Input
                         placeholder="Enter Email"
                         label="Email Address"
+                        required
                         {...register('email')}
                         error={errors?.email?.message}
                       />
@@ -515,12 +518,14 @@ const SignUp = () => {
                       <Input
                         placeholder="Enter Company Name"
                         label="Company Name"
+                        required
                         {...register('company_name')}
                         error={errors?.company_name?.message}
                       />
                       {/* <Input
                         placeholder="Enter Company Address"
                         label="Company Address"
+                        required
                         {...register('company_address')}
                         error={errors?.company_address?.message}
                       /> */}
@@ -546,6 +551,7 @@ const SignUp = () => {
                             <CustomSelect
                               {...field}
                               label="Country"
+                              required
                               placeholder="Select Country"
                               options={countryOptions || []}
                               handleChange={(value) => field.onChange(value)}
@@ -561,6 +567,7 @@ const SignUp = () => {
                               <CustomSelect
                                 {...field}
                                 label="State"
+                                required
                                 placeholder="Select State"
                                 options={stateOptions || []}
                                 handleChange={(value) => field.onChange(value)}
@@ -579,6 +586,7 @@ const SignUp = () => {
                               <CustomSelect
                                 {...field}
                                 label="City"
+                                required
                                 placeholder="Select City"
                                 options={cityOptions || []}
                                 handleChange={(value) => field.onChange(value)}
@@ -591,6 +599,7 @@ const SignUp = () => {
                         <Input
                           placeholder="Enter Postal Code"
                           label="Postal Code"
+                          required
                           {...register('company_postal_code')}
                           error={errors?.company_postal_code?.message}
                           maxLength={10}
@@ -605,6 +614,7 @@ const SignUp = () => {
                             <CustomSelect
                               {...field}
                               label="Timezone"
+                              required
                               placeholder="Select Timezone"
                               options={timezonesList?.map((item: any) => ({
                                 label: item?.zoneName,

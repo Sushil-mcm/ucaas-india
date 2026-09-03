@@ -54,7 +54,7 @@ const GAP = 120;
 const HalfPie = (props: PieProps & { percentage: number }) => {
   const chartData = [
     { value: props?.percentage, fill: '#000000' },
-    { value: 100 - props?.percentage, fill: '#D3D3D3' },
+    { value: 100 - props?.percentage, fill: '#F0DFC5' },
   ];
   return (
     <Pie
@@ -119,17 +119,17 @@ const CallAnalytics = () => {
     <ReportsPageLayout filters={Filters}>
       <div className="w-full  p-3 flex flex-col gap-3 overflow-y-auto">
         <div className="grid w-full grid-cols-1 gap-3 lg:grid-cols-6 xl:grid-cols-7">
-          <div className="flex h-full w-full flex-col justify-between gap-3 rounded-md border border-gray-200 bg-white p-3 lg:col-span-2 xl:col-span-2">
+          <div className="flex h-full w-full flex-col justify-between gap-3 rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 lg:col-span-2 xl:col-span-2">
             <div className="flex items-center gap-2">
-              <span className="text-gray-900 font-medium text-sm">Service</span>
-              <span className="text-gray-500">
+              <span className="text-[#2E2D35] font-medium text-sm">Service</span>
+              <span className="text-[#9A948F]">
                 <InfoIcon className="w-4" />
               </span>
             </div>
             <div className="w-full">
               <div className="relative  ">
                 {/* Center text */}
-                <div className="text-gray-900 absolute top-[55%] left-[52%] text-xl font-medium -translate-x-[50%] -translate-y-[50%]">
+                <div className="text-[#2E2D35] absolute top-[55%] left-[52%] text-xl font-medium -translate-x-[50%] -translate-y-[50%]">
                   {data?.summary?.serviceLevel || 0}%
                 </div>
                 <PieChart width={200} height={200} style={{ margin: '0 auto' }}>
@@ -139,70 +139,70 @@ const CallAnalytics = () => {
               </div>
             </div>
             <div className="flex gap-2 items-center justify-between ">
-              <span className="text-gray-900 font-medium text-sm ">Processed calls</span>
+              <span className="text-[#2E2D35] font-medium text-sm ">Processed calls</span>
               <Switch defaultChecked />
             </div>
           </div>
           <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-4 xl:col-span-5">
-            <div className="w-full bg-white border border-gray-200 p-3 rounded-md flex items-center justify-between gap-2">
+            <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] p-3 rounded-md flex items-center justify-between gap-2">
               <div className="flex gap-2">
                 <span className="rounded-sm w-12 h-12 bg-ucass-primary-200 flex items-center text-primary justify-center">
                   <MoveDownLeft className="w-5" />
                 </span>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-gray-900">Incoming ACD</p>
-                  <p className="text-sm text-gray-500">{data?.summary?.incomingACD || 0}</p>
+                  <p className="text-sm font-medium text-[#2E2D35]">Incoming ACD</p>
+                  <p className="text-sm text-[#9A948F]">{data?.summary?.incomingACD || 0}</p>
                 </div>
               </div>
-              <span className="rounded-full px-3 py-1.5 bg-gray-100 flex items-center gap-1 text-gray-700  text-xs">
-                <span className="text-gray-900 font-medium ">Max:</span>2 hr 12 min 55 s
+              <span className="rounded-full px-3 py-1.5 bg-[#FBE2C8]/40 flex items-center gap-1 text-[#2E2D35]  text-xs">
+                <span className="text-[#2E2D35] font-medium ">Max:</span>2 hr 12 min 55 s
               </span>
             </div>
-            <div className="w-full bg-white border border-gray-200 p-3 rounded-md flex items-center justify-between gap-2">
+            <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] p-3 rounded-md flex items-center justify-between gap-2">
               <div className="flex gap-2">
                 <span className="rounded-sm w-12 h-12 bg-ucass-primary-200 flex items-center text-primary justify-center">
                   <MoveUpRight className="w-5" />
                 </span>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-gray-900">Outgoing ACD</p>
-                  <p className="text-sm text-gray-500">{data?.summary?.outgoingACD || 0}</p>
+                  <p className="text-sm font-medium text-[#2E2D35]">Outgoing ACD</p>
+                  <p className="text-sm text-[#9A948F]">{data?.summary?.outgoingACD || 0}</p>
                 </div>
               </div>
-              <span className="rounded-full px-3 py-1.5 bg-gray-100 flex items-center gap-1 text-gray-700  text-xs">
-                <span className="text-gray-900 font-medium ">Max:</span>2 hr 12 min 55 s
+              <span className="rounded-full px-3 py-1.5 bg-[#FBE2C8]/40 flex items-center gap-1 text-[#2E2D35]  text-xs">
+                <span className="text-[#2E2D35] font-medium ">Max:</span>2 hr 12 min 55 s
               </span>
             </div>
-            <div className="w-full bg-white border border-gray-200 p-3 rounded-md flex items-center justify-between gap-2">
+            <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] p-3 rounded-md flex items-center justify-between gap-2">
               <div className="flex gap-2">
                 <span className="rounded-sm w-12 h-12 bg-ucass-primary-200 flex items-center text-primary justify-center">
                   <Hourglass className="w-5" />
                 </span>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-gray-900">Wait time</p>
-                  <p className="text-sm text-gray-500">34 s</p>
+                  <p className="text-sm font-medium text-[#2E2D35]">Wait time</p>
+                  <p className="text-sm text-[#9A948F]">34 s</p>
                 </div>
               </div>
-              <span className="rounded-full px-3 py-1.5 bg-gray-100 flex items-center gap-1 text-gray-700  text-xs">
-                <span className="text-gray-900 font-medium ">Max:</span>7 min 55 s
+              <span className="rounded-full px-3 py-1.5 bg-[#FBE2C8]/40 flex items-center gap-1 text-[#2E2D35]  text-xs">
+                <span className="text-[#2E2D35] font-medium ">Max:</span>7 min 55 s
               </span>
             </div>
-            <div className="w-full bg-white border border-gray-200 p-3 rounded-md flex items-center justify-between gap-2">
+            <div className="w-full bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] p-3 rounded-md flex items-center justify-between gap-2">
               <div className="flex gap-2">
                 <span className="rounded-sm w-12 h-12 bg-ucass-primary-200 flex items-center text-primary justify-center">
                   <NotificationLine className="w-5" />
                 </span>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-gray-900">Avg. Processing time</p>
-                  <p className="text-sm text-gray-500">{data?.summary?.avgProcessingTime || 0}</p>
+                  <p className="text-sm font-medium text-[#2E2D35]">Avg. Processing time</p>
+                  <p className="text-sm text-[#9A948F]">{data?.summary?.avgProcessingTime || 0}</p>
                 </div>
               </div>
-              <span className="rounded-full px-3 py-1.5 bg-gray-100 flex items-center gap-1 text-gray-700  text-xs">
-                <span className="text-gray-900 font-medium ">Max:</span>13h 40 min 55 s
+              <span className="rounded-full px-3 py-1.5 bg-[#FBE2C8]/40 flex items-center gap-1 text-[#2E2D35]  text-xs">
+                <span className="text-[#2E2D35] font-medium ">Max:</span>13h 40 min 55 s
               </span>
             </div>
           </div>
         </div>
-        <div className="w-full h-auto bg-white border border-gray-200 p-3 rounded-md  ">
+        <div className="w-full h-auto bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] p-3 rounded-md  ">
           {/* <div className="flex items-center justify-end gap-2 border-b border-gray-200 pb-2 mb-2">
             <CustomSelect
               value={selectedFilter}
@@ -215,11 +215,11 @@ const CallAnalytics = () => {
 
             />
             <div className="flex items-center bg-gray-100 px-2 py-1 rounded-md gap-2.5">
-              <span className="text-gray-900 cursor-pointer text-sm bg-white px-2 py-1 rounded-md">
+              <span className="text-[#2E2D35] cursor-pointer text-sm bg-white px-2 py-1 rounded-md">
                 Month
               </span>
-              <span className="text-gray-500 cursor-pointer text-sm  px-2 py-1">Week</span>
-              <span className="text-gray-500 cursor-pointer text-sm  px-2 py-1">Day</span>
+              <span className="text-[#9A948F] cursor-pointer text-sm  px-2 py-1">Week</span>
+              <span className="text-[#9A948F] cursor-pointer text-sm  px-2 py-1">Day</span>
             </div>
           </div> */}
           <div className="w-full ">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DialpadMaxiTabDispositions from '@/components/dialpad/components/dialpad-maxi-tab-dispositions';
 import DialpadEndedScreen from '@/components/dialpad/components/dialpad-ended-screen';
 import DialpadAddUserList from '@/components/dialpad/components/dialpad-add-user-list';
@@ -78,10 +78,17 @@ const CallerBlock = ({
   const contact = session?.contactInfo;
   const queue = session?.queueMetaData?.response;
 
+  const isInbound = session?.direction === 'incoming';
+  const initials = initialsOf(name);
+
   return (
     <div className="card">
       <div className="caller">
-        <div className="caller-av">{initialsOf(name)}</div>
+        <div className="caller-av-ring">
+          <div className="caller-av">
+            {initials ? initials : <Ic n="user" size={24} fill />}
+          </div>
+        </div>
         <div style={{ minWidth: 0 }}>
           <div className="caller-name">{name}</div>
           <div className="caller-num num">
@@ -103,23 +110,33 @@ const CallerBlock = ({
       </div>
       <div className="popstrip">
         <div className="popcell">
-          <div className="k">Contact</div>
+          <div className="k">
+            <Ic n="user" size={11} /> Contact
+          </div>
           <div className="v">{contact ? name : 'Not in contacts'}</div>
         </div>
         <div className="popcell">
-          <div className="k">Company</div>
+          <div className="k">
+            <Ic n="globe" size={11} /> Company
+          </div>
           <div className="v">{contact?.company || '—'}</div>
         </div>
         <div className="popcell">
-          <div className="k">Queue</div>
+          <div className="k">
+            <Ic n="route" size={11} /> Queue
+          </div>
           <div className="v">{queue?.name || '—'}</div>
         </div>
         <div className="popcell">
-          <div className="k">Direction</div>
-          <div className="v">{session?.direction === 'incoming' ? 'Inbound' : 'Outbound'}</div>
+          <div className="k">
+            <Ic n={isInbound ? 'arrow-in' : 'arrow-out'} size={11} /> Direction
+          </div>
+          <div className="v">{isInbound ? 'Inbound' : 'Outbound'}</div>
         </div>
         <div className="popcell">
-          <div className="k">Recording</div>
+          <div className="k">
+            <Ic n="rec" size={11} /> Recording
+          </div>
           <div className="v" style={{ color: session?.isRecording ? 'var(--crit)' : undefined }}>
             {session?.isRecording ? 'On' : 'Off'}
           </div>
@@ -356,6 +373,32 @@ const StageColumn = ({
   const { users } = useUsersDirectory();
   const { dial: dial2 } = useConsoleDialer();
 
+  /* Demo call — this console has no live SIP/WebRTC registration in this
+     environment (no telephony backend behind the demo account), so a real
+     `dialpad.makeCall` never connects. Rather than dead-end on an error
+     toast, an unregistered station simulates the call locally (ringing,
+     then connected, with a running timer) using the same caller-card UI a
+     real call renders, so the flow still feels complete end to end. */
+  const [demoCall, setDemoCall] = useState<null | {
+    number: string;
+    phase: 'dialing' | 'active';
+    secs: number;
+  }>(null);
+
+  useEffect(() => {
+    if (!demoCall) return;
+    if (demoCall.phase === 'dialing') {
+      const t = setTimeout(() => {
+        setDemoCall((c) => (c ? { ...c, phase: 'active' } : c));
+      }, 1600);
+      return () => clearTimeout(t);
+    }
+    const t = setInterval(() => {
+      setDemoCall((c) => (c ? { ...c, secs: c.secs + 1 } : c));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [demoCall?.phase]);
+
   // same resolution order the dialpad's maxi side panel uses
   const scriptId = String(
     session?.queueMetaData?.response?.script ||
@@ -392,6 +435,13 @@ const StageColumn = ({
   }, [users, dial]);
 
   const placeCall = (target: string) => {
+    const value = String(target || '').trim();
+    if (!value) return;
+    if (!dialpad.isRegistered) {
+      setDemoCall({ number: value, phase: 'dialing', secs: 0 });
+      setDial('');
+      return;
+    }
     if (dial2(target)) setDial('');
   };
 
@@ -402,6 +452,41 @@ const StageColumn = ({
     }
     setDial((d) => d + key);
   };
+
+  /* ---------------------------------------------------------- demo call ---- */
+  if (state === 'idle' && demoCall) {
+    const connected = demoCall.phase === 'active';
+    const demoSession = { remoteNumber: demoCall.number, direction: 'outgoing' } as unknown as DialpadSession;
+    return (
+      <div className="col stage">
+        <div className="stage-inner">
+          <CallerBlock
+            session={demoSession}
+            state={connected ? 'active' : 'dialing'}
+            secs={demoCall.secs}
+          />
+          <div className="card card-pad demo-note">
+            <Ic n="alert" size={15} />
+            <span>
+              <strong>Demo call.</strong> No telephony backend is connected in this environment, so
+              this is simulated rather than a real connection.
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              className="btn danger"
+              style={{ flex: 1, height: 46 }}
+              onClick={() => setDemoCall(null)}
+            >
+              <Ic n="hangup" size={18} fill />
+              {connected ? 'End call' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* --------------------------------------------------- idle · call record ---- */
   // A past call picked from the left column takes the stage while nothing is

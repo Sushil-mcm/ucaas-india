@@ -73,6 +73,7 @@ const CustomSelect = ({
   isDisabled = false,
   placeholder = 'Select',
   label = null,
+  required = false,
   FormatOptionLabel = null,
   error = '',
   inputClass = '',
@@ -81,7 +82,7 @@ const CustomSelect = ({
   menuPortalTarget,
   onMenuScrollToBottom,
   onInputChange,
-}: CustomSelectType & { label?: any }) => {
+}: CustomSelectType & { label?: any; required?: boolean }) => {
   const normalizedOptions = useMemo(
     () =>
       toOptionsArray(options)
@@ -303,7 +304,7 @@ const CustomSelect = ({
     <div className={cn('flex flex-col gap-1.5 w-full', className)}>
       {label || error ? (
         <div className="flex items-center justify-between">
-          {label && <Label>{label}</Label>}
+          {label && <Label required={required}>{label}</Label>}
           <div className="flex items-start">{error && <ErrorTooltip text={error} />}</div>
         </div>
       ) : null}

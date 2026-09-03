@@ -56,9 +56,9 @@ const MoreOptions = ({
   const meetingLink = `${window.location.origin}/video-meet?meetCode=${meetState?.meetUniqueKey || ''}`;
 
   const actionClass =
-    'w-full rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors px-3 py-2.5 flex items-center justify-between text-left cursor-pointer';
-  const labelClass = 'text-sm font-medium text-gray-900';
-  const descClass = 'text-xs text-gray-500';
+    'w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] hover:bg-[#FBE2C8]/45 transition-colors px-3 py-2.5 flex items-center justify-between text-left cursor-pointer';
+  const labelClass = 'text-sm font-medium text-[#2E2D35]';
+  const descClass = 'text-xs text-[#9A948F]';
   const isPresentationModeSelected =
     viewType === 'presentation' || viewType === 'whiteboard' || Boolean(currentActiveScreenShareId);
 
@@ -88,16 +88,16 @@ const MoreOptions = ({
     (isWhiteboardActive && !isWhiteboardOwner) || (!isWhiteboardActive && isAnyoneSharingScreen);
 
   return (
-    <div className="absolute bottom-20 right-0 w-[340px] rounded-2xl border border-gray-200 bg-white shadow-xl z-[1000] overflow-visible">
+    <div className="absolute bottom-20 right-0 w-[340px] rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-xl z-[1000] overflow-visible">
       <div className="px-4 py-3 border-b border-gray-100">
-        <h6 className="text-sm font-semibold text-gray-900">More Actions</h6>
-        <p className="text-xs text-gray-500 mt-0.5">Meeting tools and view controls</p>
+        <h6 className="text-sm font-semibold text-[#2E2D35]">More Actions</h6>
+        <p className="text-xs text-[#9A948F] mt-0.5">Meeting tools and view controls</p>
       </div>
 
       <div className="p-3 pt-2 max-h-[430px] overflow-y-auto">
         <div className="space-y-2">
           {canInviteParticipants ? (
-            <div className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5">
+            <div className="w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
@@ -110,11 +110,11 @@ const MoreOptions = ({
                 </div>
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-lg border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                  className="w-8 h-8 rounded-lg border border-[#EEE7DD] hover:bg-[#FBE2C8]/45 flex items-center justify-center cursor-pointer"
                   onClick={() => copyText(meetingLink, 'Meeting link copied')}
                   title="Copy meeting link"
                 >
-                  <Copy className="w-4 h-4 text-gray-700" />
+                  <Copy className="w-4 h-4 text-[#2E2D35]" />
                 </button>
               </div>
               <div className="mt-2 flex items-center gap-2">
@@ -147,7 +147,7 @@ const MoreOptions = ({
           ) : null}
 
           {canUseTranscription ? (
-            <div className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5">
+            <div className="w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
                   <Subtitles className="w-4 h-4 text-indigo-700" />
@@ -171,7 +171,7 @@ const MoreOptions = ({
                       className={`px-2.5 py-1.5 rounded-md border text-xs inline-flex items-center gap-1 ${
                         isActive
                           ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                          : 'border-gray-200 bg-white text-[#2E2D35] hover:bg-[#FBE2C8]/45'
                       } cursor-pointer`}
                       onClick={() => {
                         enableSubtitles(language.value);
@@ -292,7 +292,7 @@ const MoreOptions = ({
         </div>
       </div>
 
-      <div className="absolute polygon w-5 h-5 bg-white bottom-[-10px] right-4" />
+      <div className="absolute polygon w-5 h-5 bg-[rgba(251,249,246,0.88)] bottom-[-10px] right-4" />
     </div>
   );
 };

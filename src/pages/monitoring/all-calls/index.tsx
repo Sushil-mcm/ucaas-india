@@ -356,7 +356,7 @@ const AllCallMonitoring = () => {
         const timestamp = getCallDurationStartedAtMs(data);
 
         return (
-          <div className="tabular-nums">
+          <div className={`tabular-nums ${tone}`}>
             <ElapsedTimer startTime={timestamp} />
           </div>
         );

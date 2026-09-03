@@ -1674,6 +1674,7 @@ const InboxContent = ({
           </div>
         </div>
       )}
+      <DLCVerificationPopup open={showDLCPopup} setOpen={setShowDLCPopup} />
       {!isMMSMode && sendMsgAlert && (
         <AlertConfirm
           open={sendMsgAlert}

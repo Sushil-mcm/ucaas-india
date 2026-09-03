@@ -52,49 +52,49 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
         <div className="flex flex-col gap-3 pt-3 h-[calc(100vh_-_10.3rem)] overflow-auto">
           {hasQueueInfo ? (
             <>
-              <div className="bg-white p-3 border border-gray-200 rounded-xl">
-                <div className="font-semibold text-gray-900 truncate text-md mb-2">Queue Info</div>
-                <div className="grid grid-cols-4 gap-4 border border-gray-200 bg-gray-100 rounded-xl p-3">
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+                <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">Queue Info</div>
+                <div className="grid grid-cols-4 gap-4 border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                   <div>
-                    <p className="font-medium text-gray-900">Name</p>
-                    <p className="text-sm text-gray-500">{name || '--'}</p>
+                    <p className="font-medium text-[#2E2D35]">Name</p>
+                    <p className="text-sm text-[#9A948F]">{name || '--'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Location</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-[#2E2D35]">Location</p>
+                    <p className="text-sm text-[#9A948F]">
                       {siteInfo?.label || siteInfo?.name || ''}
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Extension</p>
-                    <p className="text-sm text-gray-500">{extension || '--'}</p>
+                    <p className="font-medium text-[#2E2D35]">Extension</p>
+                    <p className="text-sm text-[#9A948F]">{extension || '--'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Description</p>
-                    <p className="text-gray-800 text-sm">
+                    <p className="font-medium text-[#2E2D35]">Description</p>
+                    <p className="text-[#2E2D35] text-sm">
                       {description || 'No description provided'}
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">If no one answers</p>
+                    <p className="font-medium text-[#2E2D35]">If no one answers</p>
                     <div className="flex gap-4">
                       <div>
-                        <p className="text-sm text-gray-800">Type</p>
-                        <p className="text-sm text-gray-500">{failover?.type || '--'}</p>
+                        <p className="text-sm text-[#2E2D35]">Type</p>
+                        <p className="text-sm text-[#9A948F]">{failover?.type || '--'}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-800">Forward Number</p>
-                        <p className="text-sm text-gray-500">{failover?.value || '--'}</p>
+                        <p className="text-sm text-[#2E2D35]">Forward Number</p>
+                        <p className="text-sm text-[#9A948F]">{failover?.value || '--'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
-                <p className="font-semibold text-gray-900 truncate text-md">Department Manager</p>
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
+                <p className="font-semibold text-[#2E2D35] truncate text-md">Department Manager</p>
                 <div className="w-full mt-2">
-                  <div className="flex items-center justify-between border border-gray-200 bg-gray-100 rounded-xl p-3">
+                  <div className="flex items-center justify-between border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
                     <CustomAvatar
                       name={managerInfo?.label}
                       showPresence
@@ -106,14 +106,14 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
                       <div className="flex items-center justify-between gap-2">
                         <p className="capitalize text-md truncate">{managerInfo?.label}</p>
                         <div className="flex gap-1">
-                          <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-500 text-xs">
+                          <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                          <span className="text-[#9A948F] text-xs">
                             {managerInfo?.extension || managerInfo?.value || '--'}
                           </span>
                         </div>
                       </div>
                       <small className="text-primary text-[10px]">{managerInfo?.role}</small>
-                      <small className="text-gray-500 truncate text-sm">
+                      <small className="text-[#9A948F] truncate text-sm">
                         <CustomTooltip text={managerInfo?.email}>
                           <span>{managerInfo?.email}</span>
                         </CustomTooltip>
@@ -123,8 +123,8 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
-                <p className="font-semibold text-gray-900 truncate text-md mb-2">Members</p>
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
+                <p className="font-semibold text-[#2E2D35] truncate text-md mb-2">Members</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {departmentMembers?.length ? (
                     departmentMembers?.map((member: any) => {
@@ -134,7 +134,7 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
                       );
                       return (
                         <div
-                          className={`flex items-center justify-between border ${isMemberMatched ? 'border-green-500' : 'border-red-500'} bg-gray-100 rounded-xl p-3`}
+                          className={`flex items-center justify-between border ${isMemberMatched ? 'border-green-500' : 'border-red-500'} bg-[#FBE2C8]/40 rounded-xl p-3`}
                           key={member?.uuid}
                         >
                           <CustomAvatar
@@ -147,14 +147,14 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
                             <div className="flex items-center justify-between gap-2">
                               <p className="capitalize text-sm truncate">{member?.label}</p>
                               <div className="flex gap-1">
-                                <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-500 text-xs">
+                                <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                                <span className="text-[#9A948F] text-xs">
                                   {member?.extension || member?.value || '--'}
                                 </span>
                               </div>
                             </div>
                             <small className="text-primary text-[10px]">{member?.role}</small>
-                            <small className="text-gray-500 truncate text-sm flex justify-between">
+                            <small className="text-[#9A948F] truncate text-sm flex justify-between">
                               <CustomTooltip text={member?.email}>
                                 <span>{member?.email}</span>
                               </CustomTooltip>
@@ -169,18 +169,18 @@ const QueueDetailsView = ({ rowData }: { rowData: any }) => {
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500">No members found in this department.</p>
+                    <p className="text-sm text-[#9A948F]">No members found in this department.</p>
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <div className="bg-white p-3 border border-gray-200 rounded-xl">
-              <div className="font-semibold text-gray-900 truncate text-md mb-2">Queue Info</div>
+            <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+              <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">Queue Info</div>
               {transformedCalls?.length ? (
-                <p className="text-sm text-gray-500">Queue details for this call.</p>
+                <p className="text-sm text-[#9A948F]">Queue details for this call.</p>
               ) : (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#9A948F]">
                   Queue details are unavailable for this call.
                 </p>
               )}

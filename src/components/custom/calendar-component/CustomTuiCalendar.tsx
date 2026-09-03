@@ -142,6 +142,7 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
           scheduleView: ['time'],
           calendars,
           template: {
+            /* A dot, the title, and the time beneath it. */
             time: (schedule) => {
               const startDate = (schedule?.start as TZDate).toDate();
               const endDate = (schedule?.end as TZDate)?.toDate();
@@ -572,7 +573,7 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
         </div>
         <div
           ref={tuiRef}
-          className="min-h-[calc(100vh-240px)] overflow-visible md:min-h-[calc(100vh-220px)] lg:min-h-[calc(100vh-190px)] lg:max-h-[calc(100vh-244px)] lg:overflow-auto"
+          className="mcm-calshell min-h-[calc(100vh-240px)] overflow-visible md:min-h-[calc(100vh-220px)] lg:min-h-[calc(100vh-190px)] lg:max-h-[calc(100vh-244px)] lg:overflow-auto"
         />
         {useInternalDetailsPopup && selectedSchedule && popoverPosition && (
           <Popover

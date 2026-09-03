@@ -149,8 +149,9 @@ const InvitedMeetings = () => {
   }, [selectedMeeting?.members]);
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3  bg-gray-200/15 p-3 sm:p-4 overflow-auto">
+    <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3  p-3 sm:p-4 overflow-auto">
       <div className="mx-auto max-w-250 flex h-full min-h-0 w-full flex-col justify-start gap-6 sm:gap-8 ">
+        <MeetingHeader formInstance={formInstance} />
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex justify-between items-center">
             <h4 className="text-gray-900 font-semibold text-lg flex items-center gap-1">
@@ -158,7 +159,7 @@ const InvitedMeetings = () => {
             </h4>
             <Button
               variant="outline"
-              className="justify-center shadow-none sm:w-auto hover:bg-gray-50 hover:text-gray-600 border-gray-200 bg-white/80 h-9 min-h-9 text-xs text-gray-600"
+              className="justify-center shadow-none sm:w-auto hover:bg-gray-50 hover:text-[#9A948F] border-gray-200 bg-white/80 h-9 min-h-9 text-xs text-[#9A948F]"
               type="button"
             >
               <span className="text-ucass-active">{upcomingMeetingList?.length || 0}</span>
@@ -204,7 +205,7 @@ const InvitedMeetings = () => {
                 return (
                   <div
                     key={meeting?.meetingId}
-                    className="flex flex-col gap-3 rounded-xl border border-gray-100 bg-white p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => setSelectedMeeting(meeting)}
                   >
                     <div className="flex w-full min-w-0 items-start">
@@ -223,7 +224,7 @@ const InvitedMeetings = () => {
                               {meeting?.name || 'Meeting Name'}
                             </h4>
                           </div>
-                          <div className="flex flex-wrap gap-2 w-full items-center text-gray-600">
+                          <div className="flex flex-wrap gap-2 w-full items-center text-[#9A948F]">
                             <div className="flex items-center gap-1 text-[11px]">
                               <Clock4Icon className="w-3 h-3" />
                               <div className="flex">
@@ -251,12 +252,12 @@ const InvitedMeetings = () => {
                                   </div>
                                 ))
                               ) : (
-                                <div className="min-h-6 rounded-full border border-dashed border-gray-300 px-2 text-[10px] font-medium text-gray-500 flex items-center">
+                                <div className="min-h-6 rounded-full border border-dashed border-[#EEE7DD] px-2 text-[10px] font-medium text-[#9A948F] flex items-center">
                                   No participants
                                 </div>
                               )}
                               {remainingMembersCount > 0 && (
-                                <div className="min-w-6 min-h-6 max-w-6 max-h-6 flex justify-center items-center rounded-full text-gray-600 font-medium bg-gray-200 text-[10px] border-2 border-white -ml-2">
+                                <div className="min-w-6 min-h-6 max-w-6 max-h-6 flex justify-center items-center rounded-full text-[#9A948F] font-medium bg-[#F0DFC5] text-[10px] border-2 border-white -ml-2">
                                   +{remainingMembersCount}
                                 </div>
                               )}
@@ -272,7 +273,7 @@ const InvitedMeetings = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-1 text-[11px] ml-2">
-                              <div className="flex text-gray-500">Host :</div>
+                              <div className="flex text-[#9A948F]">Host :</div>
                               <div className="min-w-6 min-h-6 max-h-6 flex justify-center items-center rounded-sm text-primary font-medium bg-ucass-active-bg text-[10px] border border-ucass-active/20 px-2">
                                 {hostName}
                               </div>
@@ -297,7 +298,7 @@ const InvitedMeetings = () => {
                       ) : null}
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          className="focus:outline-0 border border-gray-200 cursor-pointer flex items-center justify-center rounded-xl w-9 h-9 min-h-9 bg-[#f7f9fc] text-gray-900/80 hover:bg-gray-100 hover:text-gray-600"
+                          className="focus:outline-0 border border-gray-200 cursor-pointer flex items-center justify-center rounded-xl w-9 h-9 min-h-9 bg-[#f7f9fc] text-[#2E2D35]/80 hover:bg-gray-100 hover:text-[#9A948F]"
                           onClick={(event) => event.stopPropagation()}
                         >
                           <Icon name="MenuDots" className="w-5 h-5 " />
@@ -344,12 +345,12 @@ const InvitedMeetings = () => {
                 );
               })
             ) : (
-              <div className="w-full max-w-96 min-h-52  p-4 rounded-lg   m-auto border border-gray-100 flex flex-col items-center justify-center gap-2">
+              <div className="w-full max-w-96 min-h-52  p-4 rounded-lg   m-auto border border-[#EEE7DD] flex flex-col items-center justify-center gap-2">
                 <img src={NotFound} alt="BusyImage" className="min-w-28 w-28" />
-                <p className="flex items-center justify-center text-gray-900 font-medium">
+                <p className="flex items-center justify-center text-[#2E2D35] font-medium">
                   No meeting invitations!
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-[#2E2D35]">
                   Meeting invites you receive will appear here.
                 </p>
               </div>

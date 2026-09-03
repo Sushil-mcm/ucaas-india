@@ -20,13 +20,13 @@ const UpgradeRequired: React.FC<UpgradeRequiredProps> = ({ embedded = false }) =
           : 'h-screen justify-center'
       }`}
     >
-      <div className="max-w-md w-full text-center bg-white p-10 rounded-lg border border-gray-200">
+      <div className="max-w-md w-full text-center bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-10 rounded-lg border border-[rgba(225,200,165,0.9)]">
         {/* <Lock size={64} className="text-gray-400 mx-auto" /> */}
-        <CircleFadingArrowUp size={50} className="text-gray-500 mx-auto" />
+        <CircleFadingArrowUp size={50} className="text-[#9A948F] mx-auto" />
 
-        <h2 className="text-lg font-semibold mt-4 text-gray-900">Upgrade to unlock this feature</h2>
+        <h2 className="text-lg font-semibold mt-4 text-[#2E2D35]">Upgrade to unlock this feature</h2>
 
-        <p className="text-gray-500 mt-1">
+        <p className="text-[#9A948F] mt-1">
           This feature is currently unavailable. Upgrade your plan to access it.
         </p>
 

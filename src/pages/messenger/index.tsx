@@ -771,22 +771,26 @@ const SidebarContent = ({
     }
     console.log(selectedUser, 'selectedUser');
 
-    if (socketEventsManager) {
-      const usersToSend = [
-        {
-          uuid: user?.uuid,
-          name: `${user?.first_name || user?.user_info?.first_name || ''} ${user?.last_name || user?.user_info?.last_name || ''}`.trim(),
-          email: user?.email || user?.user_info?.email,
-          extension: user?.extension || user?.user_info?.extension,
-        },
-        {
-          uuid: selectedUser?.uuid,
-          name: `${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}`.trim(),
-          email: selectedUser?.email,
-          extension: selectedUser?.extension || selectedUser?.value,
-        },
-      ];
+    const usersToSend = [
+      {
+        uuid: user?.uuid,
+        name: `${user?.first_name || user?.user_info?.first_name || ''} ${user?.last_name || user?.user_info?.last_name || ''}`.trim(),
+        email: user?.email || user?.user_info?.email,
+        extension: user?.extension || user?.user_info?.extension,
+      },
+      {
+        uuid: selectedUser?.uuid,
+        name: `${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}`.trim(),
+        email: selectedUser?.email,
+        extension: selectedUser?.extension || selectedUser?.value,
+      },
+    ];
 
+    /* The repo this came from inserts the new chat locally first, because its
+       demo harness has no server to answer CREATE_NEW_CHAT. That harness is
+       not part of this repo — there is a real socket here — so the branch is
+       dropped rather than carried across as dead code. */
+    if (socketEventsManager) {
       socketEventsManager.emit(
         chatEvents.CREATE_NEW_CHAT,
         {

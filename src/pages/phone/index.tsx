@@ -97,24 +97,24 @@ const InnerSidebarPhone = ({ logData, setLogData, setTabType, callAccess, filter
       onValueChange={handleTabChange}
     >
       <div className="px-0">
-        <div className="border-b border-gray-200 w-full">
+        <div className="border-b border-[#EEE7DD] w-full">
           <TabsList className="flex text-sm font-semibold text-center  p-0 rounded-none min-h-10 w-full">
             <TabsTrigger
-              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary  data-[state=active]:text-primary border-b-2 px-4 text-gray-700 cursor-pointer h-full rounded-none w-2/4   m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs "
+              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary  data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4   m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs "
               value="calls"
             >
               Calls
             </TabsTrigger>
             {callAccess?.RECORDING && (
               <TabsTrigger
-                className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-gray-700 cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
                 value="recordings"
               >
                 Recordings
               </TabsTrigger>
             )}
             <TabsTrigger
-              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-gray-700 cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
               value="voicemails"
             >
               Voicemails
@@ -324,7 +324,7 @@ export const LogContent = ({
   return (
     <>
       {!logData || !logData?.main ? (
-        <div className="flex h-full min-h-0 w-full items-center justify-center gap-3 overflow-hidden bg-gray-200/15 p-3">
+        <div className="flex h-full min-h-0 w-full items-center justify-center gap-3 overflow-hidden p-3">
           <div className="flex lg:h-full lg:min-h-0 w-full items-center justify-center ">
             <Dialpad />
           </div>
@@ -333,26 +333,26 @@ export const LogContent = ({
         // <div className="w-full bg-white  flex flex-col ">
         <div className="w-full bg-white flex flex-col " data-log-view={activeView}>
           {activeView === 'call-intelligence' ? (
-            <div className="flex items-center w-full px-3 h-16 gap-2 bg-white rounded-none border-b border-gray-200 min-h-[65px]">
+            <div className="flex items-center w-full px-3 h-16 gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px]">
               <CustomTooltip text="Back" side="top">
                 <button
                   type="button"
                   onClick={handleHeaderBack}
-                  className="flex items-center justify-center rounded-full w-9 h-9 text-gray-600 hover:bg-gray-100 hover:text-gray-900 shrink-0"
+                  className="flex items-center justify-center rounded-full w-9 h-9 text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] shrink-0"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               </CustomTooltip>
-              <p className="font-semibold text-gray-900 text-md">Call Intelligence</p>
+              <p className="font-semibold text-[#2E2D35] text-md">Call Intelligence</p>
             </div>
           ) : (
-            <div className="flex items-center w-full px-3 h-16 gap-2 bg-white rounded-none border-b border-gray-200 min-h-[65px] ">
+            <div className="flex items-center w-full px-3 h-16 gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px] ">
               <CustomTooltip text="Back" side="top">
                 <button
                   type="button"
                   onClick={handleHeaderBack}
-                  className="flex items-center justify-center rounded-full w-9 h-9 text-gray-600 hover:bg-gray-100 hover:text-gray-900 shrink-0"
+                  className="flex items-center justify-center rounded-full w-9 h-9 text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] shrink-0"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -369,7 +369,7 @@ export const LogContent = ({
               </div>
               <div className="flex items-center justify-between w-full">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-md max-w-[calc(100vw_-_38rem)] w-full">
+                  <p className="font-semibold text-[#2E2D35] truncate text-md max-w-[calc(100vw_-_38rem)] w-full">
                     {resolvedHeaderName}{' '}
                     {isMeaningfulValue(logData?.main?.contact_type) && (
                       <span className="inline-flex items-center rounded bg-[#EFF8FF] border border-[#B2DDFF] px-1.5 py-0.5 text-[10px] font-bold text-[#175CD3] uppercase tracking-wider">
@@ -377,7 +377,7 @@ export const LogContent = ({
                       </span>
                     )}
                   </p>
-                  <p className="text-gray-800 truncate text-sm">
+                  <p className="text-[#2E2D35] truncate text-sm">
                     {logData?.main?.display_caller_number}
                   </p>
                 </div>
@@ -400,7 +400,7 @@ export const LogContent = ({
                         navigate(`/inbox?formState=contact&number=${normalizedContactNumber}`);
                       }}
                       role="button"
-                      className={`${canCallOrMessage ? 'cursor-pointer bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white' : 'cursor-not-allowed bg-gray-200 text-gray-500'} flex items-center justify-center rounded-full w-8 h-8`}
+                      className={`${canCallOrMessage ? 'cursor-pointer bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white' : 'cursor-not-allowed bg-[#F0DFC5] text-[#9A948F]'} flex items-center justify-center rounded-full w-8 h-8`}
                     >
                       <Icon name="Letter" className="w-5 h-5" />
                     </span>
@@ -519,7 +519,7 @@ export const LogContent = ({
                                   <p className="text-sm">{viaDid}</p>
                                 </div>
                                 <div className="flex gap-0.5 justify-end items-center">
-                                  <p className="text-gray-500 flex items-center gap-0.5 text-xs">
+                                  <p className="text-[#9A948F] flex items-center gap-0.5 text-xs">
                                     {hasRecording && reportsActionAccess?.call_recording_listen && (
                                       <span>
                                         <Icon name="SoundWave" className="w-4" />
@@ -586,7 +586,7 @@ export const LogContent = ({
                                       className={`${
                                         hasRecording
                                           ? 'bg-ucass-active-bg text-ucass-active hover:bg-ucass-active hover:text-white cursor-pointer'
-                                          : 'cursor-not-allowed bg-gray-200 border-transparent'
+                                          : 'cursor-not-allowed bg-[#F0DFC5] border-transparent'
                                       } flex items-center justify-center rounded-full w-8 h-8`}
                                       onClick={() => {
                                         if (!hasRecording) return;
@@ -633,7 +633,7 @@ export const LogContent = ({
   ${
     hasRecording
       ? 'bg-indigo-100 text-indigo-600 hover:bg-indigo-500 hover:text-white cursor-pointer'
-      : 'cursor-not-allowed bg-gray-200 border-transparent'
+      : 'cursor-not-allowed bg-[#F0DFC5] border-transparent'
   }`}
                                     >
                                       {isDownloadPending ? (
@@ -665,7 +665,7 @@ export const LogContent = ({
                                         callID: String(log?.xml_cdr_uuid ?? ''),
                                       });
                                     }}
-                                    className={` flex items-center justify-center rounded-full w-8 h-8 ${hasTranscription ? ' bg-purple-100 text-purple-500 hover:bg-purple-400 hover:text-white cursor-pointer' : 'cursor-not-allowed bg-gray-200 border-transparent'}`}
+                                    className={` flex items-center justify-center rounded-full w-8 h-8 ${hasTranscription ? ' bg-purple-100 text-purple-500 hover:bg-purple-400 hover:text-white cursor-pointer' : 'cursor-not-allowed bg-[#F0DFC5] border-transparent'}`}
                                   >
                                     <Icon name="TranscriptLineIcon" className="w-5 h-5 " />
                                   </div>
@@ -709,10 +709,10 @@ export const LogContent = ({
                     );
                   })
                 ) : (
-                  <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-4">
+                  <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-[#EEE7DD] bg-white px-4">
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-700">No logs available</p>
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="text-sm font-semibold text-[#2E2D35]">No logs available</p>
+                      <p className="mt-1 text-xs text-[#9A948F]">
                         Call records will appear here once this contact has activity.
                       </p>
                     </div>
@@ -723,7 +723,7 @@ export const LogContent = ({
           </div>
         </div>
       ) : (
-        <div className="w-full bg-gray-200/15 p-3 flex items-center justify-center h-full gap-3 overflow-y-auto">
+        <div className="w-full p-3 flex items-center justify-center h-full gap-3 overflow-y-auto">
           <div className="w-full flex items-center justify-center">No recod found!</div>
         </div>
       )}
@@ -756,10 +756,10 @@ const Phone = () => {
   return (
     <div className="flex h-full w-full flex-col lg:flex-row overflow-hidden relative">
       {/* Mobile Toggle */}
-      <div className="lg:hidden flex border-b border-gray-200 bg-white shrink-0 shadow-sm z-10 w-full">
+      <div className="lg:hidden flex border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shrink-0 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] z-10 w-full">
         <button
           className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-            mobileView === 'dialpad' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'
+            mobileView === 'dialpad' ? 'border-b-2 border-primary text-primary' : 'text-[#9A948F]'
           }`}
           onClick={() => setMobileView('dialpad')}
         >
@@ -767,7 +767,7 @@ const Phone = () => {
         </button>
         <button
           className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-            mobileView === 'listing' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'
+            mobileView === 'listing' ? 'border-b-2 border-primary text-primary' : 'text-[#9A948F]'
           }`}
           onClick={() => setMobileView('listing')}
         >

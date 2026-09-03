@@ -158,6 +158,10 @@ export const calendars = [
     id: '3',
     name: 'TASK',
   },
+  {
+    id: '4',
+    name: 'MEETING',
+  },
 ];
 interface MeetingMember {
   email: string;
@@ -186,9 +190,12 @@ export interface Schedule {
   attendees: string[];
   raw: Record<string, any>;
 }
+/* Category → colour id, resolved against `colors` below.
+   2 = blue, 3 = green, 4 = violet. */
 export const findColors = {
   EVENT: '2',
   TASK: '3',
+  MEETING: '4',
 };
 
 export const reminderModeSelectOption = [

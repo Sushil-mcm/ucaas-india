@@ -267,7 +267,7 @@ export const useIdleTimeout = (options: UseIdleTimeoutOptions = {}): UseIdleTime
         'cursor:pointer',
         'border:0',
         'border-radius:10px',
-        'background:#2563eb',
+        'background:#f2994a',
         'color:#ffffff',
         'font-size:13px',
         'font-weight:600',

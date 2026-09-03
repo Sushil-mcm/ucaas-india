@@ -102,18 +102,18 @@ const DepartmentDetails = () => {
 
   return (
     <>
-      <section className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden gap-3 h-full">
+      <section className="w-full min-w-0 flex flex-col overflow-hidden gap-3 h-full">
         {isLoading ? (
           <div className="flex items-center justify-center h-full ">
             <Loader variant="blue" size="sm" />
           </div>
         ) : !tabData?.uuid ? (
-          <div className="m-auto flex flex-col items-center justify-center border border-gray-200 rounded-xl bg-white p-10 w-fit gap-7 max-w-80">
+          <div className="m-auto flex flex-col items-center justify-center border border-[rgba(225,200,165,0.9)] rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-10 w-fit gap-7 max-w-80">
             <div className="flex flex-col justify-center items-center gap-2">
               <Icon name="NotFound" />
             </div>
             <div className="flex flex-col items-center gap-2">
-              <p className="text-gray-800 text-sm whitespace-normal">
+              <p className="text-[#2E2D35] text-sm whitespace-normal">
                 There is nothing to show here yet. Start by adding some departments.
               </p>
               <Button
@@ -131,20 +131,20 @@ const DepartmentDetails = () => {
           </div>
         ) : (
           <>
-            <div className="w-full min-w-0 px-3 bg-white gap-2 flex items-center justify-between rounded-none border-b border-gray-200 min-h-[65px] ">
+            <div className="w-full min-w-0 px-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] gap-2 flex items-center justify-between rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px] ">
               <div className="relative shrink-0">
                 <CustomAvatar name={tabData?.name} />
               </div>
               <div className="flex min-w-0 items-center justify-between w-[calc(100%_-_3rem)]">
                 <div className="flex min-w-0 flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-md">
+                  <p className="font-semibold text-[#2E2D35] truncate text-md">
                     {tabData?.name || 'Unknown group'}
                   </p>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                    <p className="text-gray-800 truncate text-sm capitalize">
+                    <p className="text-[#2E2D35] truncate text-sm capitalize">
                       {capitalizeFirstLetter(managerInfo?.label || '') || ''}
                     </p>
-                    <div className="flex shrink-0 items-center gap-1 text-gray-500">
+                    <div className="flex shrink-0 items-center gap-1 text-[#9A948F]">
                       <Icon name="Grid" className="w-4 h-4" />
                       <small className="text-xs">{tabData?.extension || '--'}</small>
                     </div>
@@ -159,7 +159,7 @@ const DepartmentDetails = () => {
                         setDrawerDepartmentData(tabData || {});
                         setDrawerState(true);
                       }}
-                      className="cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white"
+                      className="cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white"
                     >
                       <Icon name="EditStrokIcon" className="w-5 h-5" />
                     </div>
@@ -169,7 +169,7 @@ const DepartmentDetails = () => {
                   <CustomTooltip text="Delete" side="top">
                     <div
                       onClick={() => setModalState(true)}
-                      className="cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-red-100   text-red-500 hover:bg-red-500 hover:text-white"
+                      className="cursor-pointer flex items-center justify-center rounded-full w-9 h-9 bg-red-100   text-[#DC5049] hover:bg-red-500 hover:text-white"
                     >
                       <Icon name="TrashBin" className="w-5 h-5" />
                     </div>
@@ -178,21 +178,21 @@ const DepartmentDetails = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 h-[calc(100vh_-_10.3rem)] overflow-auto p-3">
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
                 <div className="flex flex-col gap-1">
-                  <p className="font-semibold text-gray-900 text-md">Description</p>
-                  <p className={`text-gray-800 text-sm ${!tabData?.description && ''}`}>
+                  <p className="font-semibold text-[#2E2D35] text-md">Description</p>
+                  <p className={`text-[#2E2D35] text-sm ${!tabData?.description && ''}`}>
                     {tabData?.description || 'No description provided '}
                   </p>
                 </div>
               </div>
               {/* Department Manager */}
-              <div className="bg-white border border-gray-200 rounded-xl p-3 ">
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 ">
                 <div className="flex flex-col gap-1">
-                  <p className="font-semibold text-gray-900 truncate text-md">Department Manager</p>
+                  <p className="font-semibold text-[#2E2D35] truncate text-md">Department Manager</p>
                   {/* <div className="w-1/4 px-1.5"> */}
                   <div className="w-full flex min-w-0 flex-col gap-3">
-                    <div className="flex min-w-0 flex-col border border-gray-200 bg-gray-100 rounded-xl w-full p-3 gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
+                    <div className="flex min-w-0 flex-col border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl w-full p-3 gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-1">
                       <CustomAvatar
                         name={managerInfo?.label}
                         showPresence
@@ -204,15 +204,15 @@ const DepartmentDetails = () => {
                         <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
                           <p className="capitalize text-md truncate">{managerInfo?.label}</p>
                           <div className="flex shrink-0 gap-1">
-                            <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                            <div className="text-gray-500 truncate text-xs">
+                            <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                            <div className="text-[#9A948F] truncate text-xs">
                               {managerInfo?.value || ''}
                             </div>
                           </div>
                         </div>
                         <small className="text-primary text-[10px]">{managerInfo?.role}</small>
                         <div className="flex flex-col gap-1">
-                          <small className="text-gray-500 truncate text-sm">
+                          <small className="text-[#9A948F] truncate text-sm">
                             <CustomTooltip text={managerInfo?.email}>
                               <span>{managerInfo?.email}</span>
                             </CustomTooltip>
@@ -226,8 +226,8 @@ const DepartmentDetails = () => {
                               <div
                                 className={`flex items-center justify-center rounded-full w-8 h-8 ${
                                   isMeOnCall || isOnCallWithUser(managerInfo?.value) || iamOnCall
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-green-100 text-green-500 hover:bg-green-400 hover:text-white cursor-pointer'
+                                    ? 'bg-[#F0DFC5] text-[#9A948F] cursor-not-allowed'
+                                    : 'bg-green-100 text-[#4EAE6E] hover:bg-green-400 hover:text-white cursor-pointer'
                                 }`}
                                 onClick={() =>
                                   handleMakeCall(managerInfo?.label, managerInfo?.value)
@@ -239,7 +239,7 @@ const DepartmentDetails = () => {
                             {managerInfo?.user_uuid && (
                               <CustomTooltip text="Start Chat" side="top">
                                 <div
-                                  className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-gray-100 text-gray-900/80 hover:bg-primary bg-ucass-primary-200 hover:text-white"
+                                  className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary bg-ucass-primary-200 hover:text-white"
                                   onClick={() => handleStartChat(managerInfo)}
                                 >
                                   <Icon name="MessageStrokIcon" className="w-4 h-4" />
@@ -254,9 +254,9 @@ const DepartmentDetails = () => {
                 </div>
               </div>
               {/* Members */}
-              <div className="bg-white border border-gray-200 rounded-xl p-3">
+              <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3">
                 <div className="flex flex-col gap-1">
-                  <h6 className="font-semibold text-gray-900 truncate text-md">Members</h6>
+                  <h6 className="font-semibold text-[#2E2D35] truncate text-md">Members</h6>
                   <div className="flex flex-wrap gap-y-2.5">
                     {departmentMembers && departmentMembers?.length > 0 ? (
                       departmentMembers?.map((member: any) => {
@@ -264,7 +264,7 @@ const DepartmentDetails = () => {
                           // <div className="w-1/4 px-1.5" key={member?.uuid}>
                           <div className="w-full flex min-w-0 flex-col gap-3" key={member?.uuid}>
                             <div
-                              className="flex min-w-0 flex-col border border-gray-200 bg-gray-100 rounded-xl w-full p-3 gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-1"
+                              className="flex min-w-0 flex-col border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl w-full p-3 gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-1"
                               key={member?.uuid}
                             >
                               <CustomAvatar
@@ -277,15 +277,15 @@ const DepartmentDetails = () => {
                                 <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
                                   <p className="capitalize text-md truncate">{member?.label}</p>
                                   <div className="flex shrink-0 gap-1">
-                                    <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-                                    <div className="text-gray-500 truncate text-xs">
+                                    <Icon name="Grid" className="w-4 h-4 text-[#9A948F]" />
+                                    <div className="text-[#9A948F] truncate text-xs">
                                       {member?.value || member?.value || ''}
                                     </div>
                                   </div>
                                 </div>
                                 <small className="text-primary text-[10px]">{member?.role}</small>
                                 <div className="flex flex-col gap-1">
-                                  <small className="text-gray-500 truncate text-sm">
+                                  <small className="text-[#9A948F] truncate text-sm">
                                     <CustomTooltip text={member?.email}>
                                       <span>{member?.email}</span>
                                     </CustomTooltip>
@@ -299,8 +299,8 @@ const DepartmentDetails = () => {
                                       <div
                                         className={`flex items-center justify-center rounded-full w-8 h-8 ${
                                           isMeOnCall || isOnCallWithUser(member?.value)
-                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                            : 'bg-green-100 text-green-500 hover:bg-green-400 hover:text-white cursor-pointer'
+                                            ? 'bg-[#F0DFC5] text-[#9A948F] cursor-not-allowed'
+                                            : 'bg-green-100 text-[#4EAE6E] hover:bg-green-400 hover:text-white cursor-pointer'
                                         }`}
                                         onClick={() => handleMakeCall(member?.label, member?.value)}
                                       >
@@ -310,7 +310,7 @@ const DepartmentDetails = () => {
                                     {member?.user_uuid && (
                                       <CustomTooltip text="Start Chat" side="top">
                                         <div
-                                          className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white bg-ucass-primary-200"
+                                          className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white bg-ucass-primary-200"
                                           onClick={() => handleStartChat(member)}
                                         >
                                           <Icon name="MessageStrokIcon" className="w-4 h-4" />

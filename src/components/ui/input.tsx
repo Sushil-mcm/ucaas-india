@@ -6,6 +6,10 @@ import { EyeLine, EyeLineOff } from '@/assets/icons';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;
+  /* Marks the field mandatory. Handled here rather than at the call sites so
+     every form marks required fields the same way. Only for fields that are
+     always required - see the note on `Label`. */
+  required?: boolean;
   error?: any;
   Icon?: React.ReactNode;
   onIconClick?: () => void;
@@ -17,6 +21,7 @@ function Input({
   className,
   type = 'text',
   label = null,
+  required = false,
   error = '',
   Icon = null,
   IconPosition = 'right-0 inset-y-0 pr-2',
@@ -33,7 +38,7 @@ function Input({
     <div className="flex flex-col gap-1.5 w-full">
       {(label || error) && (
         <div className="flex items-center justify-between">
-          <Label>{label}</Label>
+          <Label required={required}>{label}</Label>
           <div className="flex items-start ">{error && <ErrorTooltip text={error} />}</div>
         </div>
       )}

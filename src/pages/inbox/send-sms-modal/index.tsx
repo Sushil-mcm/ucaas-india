@@ -556,6 +556,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
           </Button>
         </div>
       </div>
+      <DLCVerificationPopup open={showDLCPopup} setOpen={setShowDLCPopup} />
       {!isMMSMode && sendMsgAlert && (
         <AlertConfirm
           open={sendMsgAlert}

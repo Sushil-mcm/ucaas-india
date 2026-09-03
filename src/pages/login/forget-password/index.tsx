@@ -95,7 +95,8 @@ const ForgotPassword = () => {
                   <div className="flex flex-col gap-5">
                     <Input
                       placeholder="Enter email"
-                      label="Email*"
+                      label="Email"
+                      required
                       type="email"
                       {...register('email')}
                       error={errors?.email?.message}

@@ -112,16 +112,16 @@ const CRMConfigration: FC<CRMConfigurationProps> = ({ drawerData: crmData, setDr
           onSubmit={handleSubmit(onSubmit)}
           className="flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden"
         >
-          <div className="flex min-w-0 shrink-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 sm:flex-row sm:items-start sm:gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+          <div className="flex min-w-0 shrink-0 flex-col gap-3 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 sm:flex-row sm:items-start sm:gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#FBE2C8]/40">
               <img src={crmData?.image} alt={crmData?.alt} className="w-10 h-10 object-contain" />
             </div>
             <div className="flex min-w-0 flex-col gap-1">
               <h4 className="text-start font-semibold text-primary">{crmData?.name}</h4>
-              <p className="text-gray-800 text-xs whitespace-normal">
+              <p className="text-[#2E2D35] text-xs whitespace-normal">
                 {`Integrate ${crmData?.name} for efficient customer relationship management.`}
               </p>
-              <p className="text-gray-800 text-xs whitespace-normal">
+              <p className="text-[#2E2D35] text-xs whitespace-normal">
                 Connected Account :{' '}
                 <span className="font-semibold break-all">{getCRMSettingData?.email}</span>
               </p>
@@ -191,13 +191,13 @@ const CRMConfigration: FC<CRMConfigurationProps> = ({ drawerData: crmData, setDr
                     key={index}
                     className="flex min-w-0 flex-col gap-4 p-3 sm:flex-row sm:items-start"
                   >
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gray-100 p-3">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#FBE2C8]/40 p-3">
                       <Icon name={item?.icon as IconName} className="w-6 h-6" />
                     </div>
                     <div className="flex min-w-0 w-full flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <h5 className="text-start font-semibold">{item?.title}</h5>
-                        <p className="text-gray-800 text-sm whitespace-normal">
+                        <p className="text-[#2E2D35] text-sm whitespace-normal">
                           {item?.description?.replace('{crmName}', crmData?.name || 'CRM')}
                         </p>
                       </div>
@@ -224,7 +224,7 @@ const CRMConfigration: FC<CRMConfigurationProps> = ({ drawerData: crmData, setDr
                   </div>
                 );
               })}
-              <div className="mt-2 shrink-0 border-t border-gray-200 bg-white pt-4">
+              <div className="mt-2 shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pt-4">
                 <div className="flex min-w-max flex-nowrap justify-start gap-2 overflow-x-auto overflow-y-hidden sm:justify-end">
                   <Button
                     variant="transparent"

@@ -38,7 +38,7 @@ const CallQueueContent = () => {
             if (value.startsWith(' ')) return;
             setSearch(value);
           }}
-          Icon={<SearchLine className="text-gray-700" />}
+          Icon={<SearchLine className="text-[#2E2D35]" />}
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -49,7 +49,7 @@ const CallQueueContent = () => {
 
       <div className="w-full overflow-y-auto h-[calc(100vh-12.55rem)] pr-1">
         {isError ? (
-          <div className="w-full flex justify-center items-center py-10 text-gray-500">
+          <div className="w-full flex justify-center items-center py-10 text-[#9A948F]">
             Failed to load call queue data.
           </div>
         ) : isLoading ? null : callQueueData?.length ? (
@@ -59,10 +59,10 @@ const CallQueueContent = () => {
             ))}
           </div>
         ) : (
-          <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-gray-500">
+          <div className="w-full h-full flex justify-center flex-col gap-2 items-center py-10 text-[#9A948F]">
             <img src={NotFound} alt="BusyImage" className="min-w-36  max-w-36" />
-            <p className="flex items-center justify-center text-gray-900">No call queue found.</p>
-            <p className="text-sm text-gray-700">Call queues assigned to you will appear here.</p>
+            <p className="flex items-center justify-center text-[#2E2D35]">No call queue found.</p>
+            <p className="text-sm text-[#2E2D35]">Call queues assigned to you will appear here.</p>
           </div>
         )}
       </div>

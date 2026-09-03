@@ -39,8 +39,22 @@ function TooltipContent({
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
+        /* No enter/exit animation classes here, deliberately.
+           Radix keeps a tooltip mounted until its exit animation reports
+           finished, so the moment one of those animations stalls the
+           tooltip is stuck on screen — and the next one is stuck invisible
+           waiting on its own enter animation. That is observable: hovering
+           along a row of triggers left three closed tooltips sitting at
+           opacity 1 with their exit animation "running" but never
+           progressing, while the newly opened one held at opacity 0. On
+           screen that reads as the old name refusing to leave and the new
+           name arriving late.
+           These are 12px text labels; they do not need a fade. Showing and
+           hiding them outright removes the dependency on an animation ever
+           completing, so a tooltip can never outlive its trigger and the
+           name changes the instant the pointer does. */
         className={cn(
-          'bg-black text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[9999] w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
+          'bg-black text-primary-foreground z-[9999] w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
           className,
         )}
         {...props}

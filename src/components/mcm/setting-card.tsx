@@ -160,6 +160,12 @@ interface SettingRowProps {
   /* The older flag, still honoured. It meant "stored and nothing acts on it",
      which is what 'coming-soon' now says out loud. */
   notActive?: boolean;
+  /* Marks the field mandatory. Worth stating on the row rather than at each
+     call site: an admin filling a long form should be able to see what they
+     have to answer without submitting it to find out. Only set this where the
+     field is *always* required - a rule that only applies once some other
+     option is on is not something to mark unconditionally. */
+  required?: boolean;
 }
 
 export const SettingRow = ({
@@ -169,6 +175,7 @@ export const SettingRow = ({
   children,
   status,
   notActive,
+  required,
 }: SettingRowProps) => {
   const shown = resolveStatus(status, notActive === undefined ? undefined : !notActive);
 
@@ -177,6 +184,14 @@ export const SettingRow = ({
       <div className="mcm-setrow-t">
         <span className="mcm-setrow-label">
           {label}
+          {/* aria-hidden with visually hidden text beside it: a bare "*" is
+              read out as "star", or skipped, depending on the screen reader. */}
+          {required ? (
+            <span className="mcm-setrow-required">
+              <span aria-hidden="true">*</span>
+              <span className="sr-only"> (required)</span>
+            </span>
+          ) : null}
           {/* A row that simply works needs no flag - the absence of one already
             says so, and a badge on every line would drown the ones that matter. */}
           {shown && shown !== 'active' ? (

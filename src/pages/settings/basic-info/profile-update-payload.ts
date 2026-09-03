@@ -33,8 +33,13 @@ const hasKeys = (value: any) => Object.keys(value || {}).length > 0;
 export type ProfileUpdateInput = {
   /** The record behind the screen: the result of the user-details query. */
   userInfoData: any;
-  /** The three values this form actually edits. */
-  basic: { first_name?: string; last_name?: string; job_title?: string };
+  /** The values this form actually edits. */
+  basic: {
+    first_name?: string;
+    last_name?: string;
+    job_title?: string;
+    site_uuid?: string;
+  };
   /** Set only by a fresh upload in this session; empty on a plain name change. */
   uploadedProfile?: string;
   /** True when the person clicked the remove button on their picture. */
@@ -64,10 +69,11 @@ export const buildProfileUpdatePayload = ({
   const roleId = stored?.custom_role_uuid || stored?.role_uuid;
   const roleField = stored?.custom_role_uuid ? 'custom_role_uuid' : 'role_uuid';
 
-  /* The location select is read-only on this screen, so the record is the only
-     honest source for it. A control nobody is allowed to change should not be
-     writing, and an unresolved site is omitted rather than blanked. */
-  const siteUuid = stored?.site_uuid || '';
+  /* The location select is editable on this screen, so a chosen site wins;
+     falling back to the stored one means a form that never touched the
+     field (or hasn't finished loading it) still writes back what was
+     already there instead of blanking it. */
+  const siteUuid = basic?.site_uuid || stored?.site_uuid || '';
 
   return {
     first_name: basic?.first_name,
