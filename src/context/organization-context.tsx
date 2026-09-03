@@ -159,7 +159,6 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     const shareImageUrl = getAbsoluteAssetUrl(
       mainSiteInfo.large_logo || mainSiteInfo.small_logo || mainSiteInfo.fav_icon,
     );
-    const favIconPath = mainSiteInfo.fav_icon;
     const pageUrl = window.location.href;
 
     document.title = title;
@@ -181,25 +180,22 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       setMetaContent('name', 'twitter:image:alt', organizationName || title);
     }
 
-    if (typeof favIconPath === 'string' && favIconPath) {
-      const trimmedPath = favIconPath.trim();
-      const iconUrl = getAbsoluteAssetUrl(trimmedPath);
-      const iconType = /\.svg($|\?)/i.test(trimmedPath)
-        ? 'image/svg+xml'
-        : /\.png($|\?)/i.test(trimmedPath)
-          ? 'image/png'
-          : /\.jpe?g($|\?)/i.test(trimmedPath)
-            ? 'image/jpeg'
-            : 'image/x-icon';
-      let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = iconUrl;
-      link.type = iconType;
-    }
+    /* The tab icon is deliberately NOT taken from mainSiteInfo.fav_icon.
+
+       This used to rewrite <link rel="icon"> to the org record's stored icon
+       once the branding call returned. That record still holds the older
+       cloud-only mark, so whatever index.html shipped was replaced a moment
+       after load and the bundled icon could never be seen — and it also
+       overwrote the light/dark pair with a single icon. The icon is part of
+       this build now, the same way --primary is pinned in index.css for the
+       same reason: the org API is not the source of truth for this
+       deployment's branding.
+
+       `mainSiteInfo.fav_icon` is still read a few lines above as the last
+       fallback for the og:image / twitter:image tags, which should follow the
+       org record. To go back to API-driven favicons, restore this block from
+       git history and re-point the org's fav_icon; changing only one of the
+       two leaves them disagreeing. */
   }, [mainSiteInfo]);
 
   const value: OrganizationContextType = {
