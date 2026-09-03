@@ -42,6 +42,8 @@ import {
   Bell,
   CalendarClock,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clipboard,
   FileText,
   ListTodo,
@@ -114,6 +116,28 @@ const formatDateTimeInTimezone = (value: unknown, timezone: string): string => {
   } catch {
     return '';
   }
+};
+
+/**
+ * The month grid draws by start date.
+ *
+ * tui-calendar treats any schedule whose start and end fall on different
+ * dates as a multi-day booking: it spans the cells as a bar, repeats it on
+ * both sides of a week boundary, and renders it through the multi-day path
+ * rather than the single-day preview template. A 23:30 call running half an
+ * hour past midnight is not a two-day event to a reader scanning the month,
+ * and because the grid shows one preview per day, that bar also takes the
+ * only slot and pushes the day's real entry behind a "1 more".
+ *
+ * So the end is pulled back to the close of the day it started on, for the
+ * grid only. `raw` keeps the true times, and the detail popup reads them
+ * from there, so nothing downstream loses the real finish time.
+ */
+const clampScheduleToStartDay = (schedule: Schedule): Schedule => {
+  const start = moment(schedule.start as Date);
+  const end = moment(schedule.end as Date);
+  if (!start.isValid() || !end.isValid() || start.isSame(end, 'day')) return schedule;
+  return { ...schedule, end: start.clone().endOf('day').toDate() };
 };
 
 const transformEventTaskToSchedule = (item: MeetingRawData): Schedule => {
@@ -238,10 +262,12 @@ const CalendarPage = () => {
     select: (data) => data?.data?.data?.result?.rows || [],
   });
 
+  /* Everything on today, not only the EVENT category. This filtered to
+     EVENT alone, so a day's tasks and meetings never reached the panel and
+     it reported a fraction of what the grid showed for the same date. */
   const todayEventSchedules = useMemo(
     () =>
       todayTaskListData
-        ?.filter((item: MeetingRawData) => String(item.category || '')?.toUpperCase() === 'EVENT')
         ?.map((item: MeetingRawData) => transformEventTaskToSchedule(item))
         ?.sort(
           (a: Schedule, b: Schedule) => moment(a.start).valueOf() - moment(b.start).valueOf(),
@@ -274,6 +300,46 @@ const CalendarPage = () => {
   //       ) || [],
   //   [taskListData],
   // );
+
+  /**
+   * How many events and tasks fall on each day, so the mini calendar shows
+   * something the month grid beside it cannot: where the month is busy.
+   *
+   * Keyed off `schedules` — the same list the big calendar renders — so the
+   * two never disagree, and the category filter above applies to both. The
+   * dot colours match that calendar's legend: events blue, tasks green,
+   * meetings violet.
+   */
+  const miniDayMarkers = useMemo(() => {
+    const byDay = new Map<string, { event: number; task: number; meeting: number }>();
+
+    schedules.forEach((schedule) => {
+      const start = moment(schedule.start).startOf('day');
+      if (!start.isValid()) return;
+
+      const rawEnd = moment(schedule.end).startOf('day');
+      /* Anything spanning midnight is marked on every day it covers, not
+         just the day it started. The guard is for end dates that arrive
+         corrupted — without it a bad year would spin here. */
+      const end = rawEnd.isValid() && rawEnd.isAfter(start) ? rawEnd : start;
+      const category = String(schedule?.raw?.category || '').toUpperCase();
+      const kind =
+        category === 'TASK' ? 'task' : category === 'MEETING' ? 'meeting' : 'event';
+
+      const cursor = start.clone();
+      let guard = 0;
+      while (cursor.isSameOrBefore(end, 'day') && guard < 366) {
+        const key = cursor.format('YYYY-MM-DD');
+        const entry = byDay.get(key) || { event: 0, task: 0, meeting: 0 };
+        entry[kind] += 1;
+        byDay.set(key, entry);
+        cursor.add(1, 'day');
+        guard += 1;
+      }
+    });
+
+    return byDay;
+  }, [schedules]);
 
   const miniCalendarDays = useMemo(() => {
     const start = miniCurrentDate.clone().startOf('month').startOf('week');
@@ -371,7 +437,7 @@ const CalendarPage = () => {
     }
 
     const transformedSchedules = calendarMeetingListData?.map((item: MeetingRawData) =>
-      transformEventTaskToSchedule(item),
+      clampScheduleToStartDay(transformEventTaskToSchedule(item)),
     );
 
     setSchedules(transformedSchedules);
@@ -569,8 +635,16 @@ const CalendarPage = () => {
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
-  const detailsStartDate = getScheduleDate(detailsModal?.start);
-  const detailsEndDate = getScheduleDate(detailsModal?.end);
+  /* Off `raw` first. A schedule that crossed midnight has had its `end`
+     pulled back to 23:59 for the month grid, so reading the schedule here
+     would report the wrong finish time on the very events the clamp
+     touched. `raw` is the untouched record. */
+  const detailsStartDate =
+    getScheduleDate(getLocalScheduleMoment(detailsModal?.raw, 'start')?.toDate()) ??
+    getScheduleDate(detailsModal?.start);
+  const detailsEndDate =
+    getScheduleDate(getLocalScheduleMoment(detailsModal?.raw, 'end')?.toDate()) ??
+    getScheduleDate(detailsModal?.end);
   const detailsTimezone = getScheduleTimezone(detailsModal?.raw || detailsModal);
   const detailsCategory = String(detailsModal?.raw?.category || '')?.toUpperCase();
   const isEvent = detailsCategory === 'EVENT';
@@ -602,14 +676,14 @@ const CalendarPage = () => {
     setMiniCurrentDate(targetDate.clone());
     childRef.current?.setCurrentDate(targetDate.toDate());
   };
-  const handleMiniYearClick = () => {
+  /* One control for month and year, and it opens on the year.
+     Narrowing year first and then month follows how a date is actually
+     chosen — the year is the coarser decision, and picking it first means
+     the months you are then shown are the right twelve. `handleMiniYearSelect`
+     advances to the month grid, so it reads as one continuous step. */
+  const handleMiniPeriodClick = () => {
     setMiniPickerSelectedYear(miniCurrentDate.year());
     setMiniPickerMode('year');
-    setMiniPickerOpen((prev) => !prev);
-  };
-  const handleMiniMonthClick = () => {
-    setMiniPickerSelectedYear(miniCurrentDate.year());
-    setMiniPickerMode('month');
     setMiniPickerOpen((prev) => !prev);
   };
   const handleMiniYearSelect = (year: number) => {
@@ -665,16 +739,9 @@ const CalendarPage = () => {
         cell: ({ row }: any) => {
           const createdAt = row.original?.createdAt;
           return (
-            <div
-              className="flex flex-col cursor-pointer"
-              // onClick={() => handleTodayTaskClick(row.original)}
-            >
-              <span className="text-xs text-slate-600">
-                {moment(createdAt).format('MMM DD, YYYY')}
-              </span>
-              <span className="text-[10px] text-slate-500 uppercase">
-                {moment(createdAt).format('hh:mm A')}
-              </span>
+            <div className="mcm-task-when">
+              <span className="mcm-task-date">{moment(createdAt).format('MMM DD, YYYY')}</span>
+              <span className="mcm-task-time">{moment(createdAt).format('hh:mm A')}</span>
             </div>
           );
         },
@@ -682,27 +749,18 @@ const CalendarPage = () => {
       {
         header: 'Title',
         accessorKey: 'name',
+        /* Truncation is left to the column width rather than a fixed max-width.
+           The caps here were 100px/160px, so the title clipped even once the
+           column had room to show it. */
         cell: ({ row }: any) => (
-          <span
-            className="min-w-0 truncate inline-block sm:max-w-25 xl:max-w-40 xxl:max-w-50 text-xs font-medium text-slate-900 cursor-pointer"
-            // onClick={() => handleTodayTaskClick(row.original)}
-          >
+          <span className="mcm-task-title" title={row.original.name || ''}>
             {row.original.name}
           </span>
         ),
       },
-      {
-        header: 'Category',
-        accessorKey: 'category',
-        cell: ({ row }: any) => (
-          <span
-            className="text-xs text-slate-600 cursor-pointer"
-            // onClick={() => handleTodayTaskClick(row.original)}
-          >
-            {String(row.original?.category || '-')?.toUpperCase()}
-          </span>
-        ),
-      },
+      /* No Category column. On a task list the value is either absent or the
+         constant "TASK", so the column held a dash on every row while taking
+         width from Title, which was truncating. */
       // {
       //   header: "Scheduled At",
       //   accessorKey: "startTime",
@@ -731,37 +789,29 @@ const CalendarPage = () => {
           const timezone = getScheduleTimezone(row.original);
           const isToday = start?.isSame(moment(), 'day');
           return (
-            <div
-              className="flex flex-col cursor-pointer"
-              // onClick={() => handleTodayTaskClick(row.original)}
-            >
-              <span className="text-xs font-medium text-slate-700">
-                {start?.isValid() ? start.format('MMM DD, YYYY') : '-'}
+            <div className="mcm-task-when">
+              <span className="mcm-task-date">
+                {start?.isValid() ? start.format('MMM DD, YYYY') : '—'}
               </span>
-              <span className="text-[10px] text-slate-500">
-                {start?.isValid() ? start.format('hh:mm A') : '-'}
+              {/* Time and countdown share one line. As a third line the badge
+                  made this row 69px against 49px for every other row, so the
+                  list had no vertical rhythm. */}
+              <span className="mcm-task-time">
+                {start?.isValid() ? start.format('hh:mm A') : '—'}
                 {timezone ? ` (${timezone})` : ''}
+                {isToday &&
+                  row.original.status !== 'COMPLETED' &&
+                  row.original.category === 'TASK' &&
+                  start?.isAfter(moment()) && <CountdownTimer targetDate={start.toISOString()} />}
               </span>
-              {isToday &&
-                row.original.status !== 'COMPLETED' &&
-                row.original.category === 'TASK' &&
-                start?.isAfter(moment()) && <CountdownTimer targetDate={start.toISOString()} />}
             </div>
           );
         },
       },
-      {
-        header: 'Created By',
-        accessorKey: 'createdById.name',
-        cell: ({ row }: any) => (
-          <span
-            className="text-xs text-slate-600 cursor-pointer"
-            // onClick={() => handleTodayTaskClick(row.original)}
-          >
-            {row.original?.createdByDetails?.name || ''}
-          </span>
-        ),
-      },
+      /* No Created By column. `createdByDetails` is absent on every task the
+         list endpoint returns, so the column rendered an empty cell on all 12
+         rows while holding 94px -- width Title needed, since Title was
+         truncating at 134px. Same reasoning as Category and Call above. */
       {
         header: 'Source',
         // accessorKey: 'source',
@@ -869,44 +919,9 @@ const CalendarPage = () => {
       //     );
       //   },
       // },
-      {
-        id: 'makeCall',
-        header: 'Call',
-        cell: ({ row }: any) => {
-          const schedule = row.original;
-          const isCompleted = schedule.status === 'COMPLETED';
-          if (!schedule.details?.contactPhone)
-            return <span className="text-xs text-slate-400">--</span>;
-
-          const isDisabled = isCompleted || iamOnCall;
-
-          return (
-            <CustomTooltip
-              text={isCompleted ? 'Task Completed' : iamOnCall ? 'Already on call' : 'Make Call'}
-            >
-              <button
-                disabled={isDisabled}
-                onClick={() => {
-                  if (schedule.details?.contactPhone) {
-                    makeCall(schedule?.details?.contactPhone, {
-                      extraHeaders: [`X-ContactName: ${schedule?.details?.contactName || ' '}`],
-                    });
-                  } else {
-                    handleAlert({ text: 'Phone number not available', type: 'error' });
-                  }
-                }}
-                className={`cursor-pointer h-8 w-8 inline-flex items-center justify-center rounded-full transition-all shadow-sm ${
-                  isDisabled
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
-                    : 'bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 active:scale-90'
-                }`}
-              >
-                <Phone className="h-4 w-4" />
-              </button>
-            </CustomTooltip>
-          );
-        },
-      },
+      /* No Call column. It rendered a dash whenever the task had no
+         contactPhone, which was every row in practice, and the same call
+         action is available from the Actions menu beside it. */
       {
         id: 'action',
         header: 'Actions',
@@ -1037,47 +1052,51 @@ const CalendarPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-[calc(100vh-88px)] overflow-visible lg:overflow-hidden">
           <aside className="mcm-calpanel p-4">
             <div className="relative mb-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={handleMiniMonthClick}
-                    className="cursor-pointer inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 hover:bg-slate-100"
-                  >
-                    {miniCurrentDate.format('MMMM')}
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-600" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleMiniYearClick}
-                    className="cursor-pointer inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-900 hover:bg-slate-100"
-                  >
-                    {miniCurrentDate.format('YYYY')}
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-600" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    className="h-7 w-7 rounded-md border border-slate-200 bg-white grid place-items-center hover:bg-slate-100 cursor-pointer"
-                    onClick={() => {
-                      syncBigCalendarToDate(miniCurrentDate.clone().subtract(1, 'month'));
-                      setMiniPickerOpen(false);
-                    }}
-                  >
-                    <ArrowLeft className="w-4 h-4 text-slate-700" />
-                  </button>
-                  <button
-                    type="button"
-                    className="h-7 w-7 rounded-md border border-slate-200 bg-white grid place-items-center hover:bg-slate-100 cursor-pointer"
-                    onClick={() => {
-                      syncBigCalendarToDate(miniCurrentDate.clone().add(1, 'month'));
-                      setMiniPickerOpen(false);
-                    }}
-                  >
-                    <ArrowRight className="w-4 h-4 text-slate-700" />
-                  </button>
-                </div>
+              {/* No prev/next arrows here. The main calendar's header already
+                  steps through months, and two arrow pairs driving one date
+                  left it ambiguous which was authoritative. This picker jumps
+                  to a month or year; the main header walks through time.
+                  Dropping them also ends the overflow that pushed the next
+                  arrow past the panel edge — the two remaining buttons now
+                  split the full width instead of competing for it. */}
+              <div className="flex items-center gap-1">
+                {/* Month and year read as one thing — "September 2026" — so
+                    they are one control rather than two adjacent dropdowns
+                    splitting the row. It opens the month grid; the year is
+                    reachable from inside that, which is the rarer jump. */}
+                <button
+                  type="button"
+                  onClick={handleMiniPeriodClick}
+                  className="mcm-cal-ctrl cursor-pointer inline-flex min-w-0 flex-1 items-center justify-between gap-1 truncate rounded-md border px-2.5 py-1.5 text-sm font-semibold text-mcm-ink"
+                >
+                  <span className="truncate">{miniCurrentDate.format('MMMM YYYY')}</span>
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 text-mcm-ink-2" />
+                </button>
+
+                {/* Stepping a month at a time is the common move, so it gets
+                    its own controls rather than living inside the picker. */}
+                <button
+                  type="button"
+                  aria-label="Previous month"
+                  className="mcm-cal-ctrl h-7 w-7 shrink-0 rounded-md border grid place-items-center cursor-pointer"
+                  onClick={() => {
+                    syncBigCalendarToDate(miniCurrentDate.clone().subtract(1, 'month'));
+                    setMiniPickerOpen(false);
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4 text-mcm-ink-2" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next month"
+                  className="mcm-cal-ctrl h-7 w-7 shrink-0 rounded-md border grid place-items-center cursor-pointer"
+                  onClick={() => {
+                    syncBigCalendarToDate(miniCurrentDate.clone().add(1, 'month'));
+                    setMiniPickerOpen(false);
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4 text-mcm-ink-2" />
+                </button>
               </div>
 
               {miniPickerOpen && (
@@ -1151,26 +1170,62 @@ const CalendarPage = () => {
             <div className="grid grid-cols-7 gap-1 mb-5">
               {miniCalendarDays.map((item) => {
                 const isDisabled = isMiniDateDisabled(item.date);
+                const dayKey = item.date.format('YYYY-MM-DD');
+                const marks = miniDayMarkers.get(dayKey);
+                const eventCount = marks?.event || 0;
+                const taskCount = marks?.task || 0;
+                const meetingCount = marks?.meeting || 0;
+                /* Three dots is what fits inside a 28px cell (3x5px plus two
+                   3px gaps). One dot per kind present, so a mixed day shows
+                   which kinds rather than how many of the first one; the
+                   exact counts are in the tooltip. */
+                const dots = [
+                  ...Array(eventCount ? 1 : 0).fill('event'),
+                  ...Array(taskCount ? 1 : 0).fill('task'),
+                  ...Array(meetingCount ? 1 : 0).fill('meeting'),
+                ].slice(0, 3);
+                const summary = [
+                  eventCount ? `${eventCount} event${eventCount > 1 ? 's' : ''}` : '',
+                  taskCount ? `${taskCount} task${taskCount > 1 ? 's' : ''}` : '',
+                  meetingCount ? `${meetingCount} meeting${meetingCount > 1 ? 's' : ''}` : '',
+                ]
+                  .filter(Boolean)
+                  .join(', ');
+
                 return (
-                  <button
-                    key={item.date.format('YYYY-MM-DD')}
-                    type="button"
-                    disabled={isDisabled}
-                    onClick={() => handleMiniDateClick(item.date)}
-                    className={`h-7 w-7 rounded-full grid place-items-center text-xs transition ${
-                      item.isToday
-                        ? 'bg-[var(--primary)] text-white font-semibold'
-                        : item.isCurrentMonth
-                          ? 'text-slate-800'
-                          : 'text-slate-400'
-                    } ${
-                      isDisabled
-                        ? 'opacity-45 cursor-not-allowed'
-                        : 'cursor-pointer hover:bg-[var(--primary)]/10 hover:text-[var(--primary)]'
-                    }`}
-                  >
-                    {item.date.date()}
-                  </button>
+                  /* The button stays a fixed 28px square so the "today"
+                     highlight is a circle; the dot row sits under it in this
+                     wrapper. Putting the dots inside the button instead would
+                     stretch that circle into an oval. */
+                  <div key={dayKey} className="flex flex-col items-center gap-[3px]">
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => handleMiniDateClick(item.date)}
+                      title={summary ? `${item.date.format('D MMM')} — ${summary}` : undefined}
+                      className={`mcm-daycell h-7 w-7 rounded-full grid place-items-center text-xs transition ${
+                        item.isToday
+                          ? 'bg-[var(--primary)] text-white font-semibold'
+                          : item.isCurrentMonth
+                            ? 'text-mcm-ink'
+                            : 'text-mcm-ink-4'
+                      } ${
+                        isDisabled
+                          ? 'opacity-45 cursor-not-allowed'
+                          : 'cursor-pointer hover:bg-[var(--primary)]/10 hover:text-[var(--primary)]'
+                      }`}
+                    >
+                      {item.date.date()}
+                    </button>
+                    {/* Always rendered, so rows keep a constant height whether
+                        or not the day has anything on it. */}
+                    <span className="mcm-cal-dots" aria-hidden="true">
+                      {dots.map((kind, dotIndex) => (
+                        <i key={`${dayKey}-${kind}-${dotIndex}`} className={`mcm-cal-dot is-${kind}`} />
+                      ))}
+                    </span>
+                    {summary ? <span className="sr-only">{summary}</span> : null}
+                  </div>
                 );
               })}
             </div>
@@ -1193,10 +1248,24 @@ const CalendarPage = () => {
               <p className="text-sm font-semibold text-mcm-ink">Today Events</p>
               <span className="text-xs text-mcm-ink-3">{todayEventSchedules?.length || 0}</span>
             </div>
-            <div className="space-y-2 max-h-[calc(100vh-474px)] overflow-y-auto pr-1">
+            {/* `-mr-1` cancels the `pr-1`. The padding keeps the scrollbar
+                off the cards, but on its own it also pulled every card 4px
+                short of the "Tasks List View" button above, so the two
+                stacks had matching left edges and mismatched right ones. */}
+            <div className="space-y-2 max-h-[calc(100vh-474px)] overflow-y-auto pr-1 -mr-1">
               {todayEventSchedules?.map((schedule: Schedule) => {
                 const itemCategory = String(schedule?.raw?.category || '')?.toUpperCase();
-                const isEvent = itemCategory === 'EVENT';
+                /* The same three colours the grid, the mini calendar's dots
+                   and the legend use, so a colour means one thing across the
+                   whole page. Everything here used to be --primary orange
+                   regardless of what it was. */
+                const tone =
+                  itemCategory === 'TASK'
+                    ? { colour: '#34c38f', Icon: ListTodo }
+                    : itemCategory === 'MEETING'
+                      ? { colour: '#a78bfa', Icon: CalendarClock }
+                      : { colour: '#00a9ff', Icon: CalendarClock };
+                const { Icon: ToneIcon } = tone;
                 return (
                   <button
                     key={schedule.id}
@@ -1204,12 +1273,16 @@ const CalendarPage = () => {
                     onClick={() => handleTodayTaskClick(schedule)}
                     className="w-full cursor-pointer rounded-xl border border-mcm-line bg-white p-3.5 text-left hover:border-[var(--primary)] hover:shadow-md transition-all duration-200 group"
                   >
-                    <div className="flex items-start gap-2">
-                      {isEvent ? (
-                        <CalendarClock className="w-4 h-4 mt-0.5 text-[var(--primary)] shrink-0" />
-                      ) : (
-                        <ListTodo className="w-4 h-4 mt-0.5 text-[var(--primary)] shrink-0" />
-                      )}
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        aria-hidden="true"
+                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: tone.colour }}
+                      />
+                      <ToneIcon
+                        className="w-4 h-4 mt-0.5 shrink-0"
+                        style={{ color: tone.colour }}
+                      />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-mcm-ink truncate">
                           {schedule.title}
@@ -1231,7 +1304,12 @@ const CalendarPage = () => {
             </div>
           </aside>
 
-          <section className="min-h-0 p-2">
+          {/* min-w-0 matters as much as min-h-0 here. A grid item defaults to
+              min-width:auto, so this section could not shrink below its
+              content and sat 12px wider than the 1fr track -- which the grid
+              clips, since it is lg:overflow-hidden. That is what cut the
+              Actions column and the pager off at the right edge. */}
+          <section className="min-h-0 min-w-0 p-2">
             <div
               className={
                 mainView === 'calendar' ? 'block h-auto lg:h-full' : 'hidden h-auto lg:h-full'
@@ -1490,6 +1568,7 @@ const CalendarPage = () => {
                 <TableManager
                   {...{
                     columns,
+                    customClass: 'mcm-tasktable',
                     fetcherKey: 'calendarMeetingListTaskList',
                     fetcherFn: calendarMeetingList,
                     onSuccess: (data: any) => {
@@ -1935,7 +2014,10 @@ const CalendarPage = () => {
         )} */}
 
         <Dialog modal open={modal} onOpenChange={toggle}>
-          <DialogContent className="max-h-[90vh] max-w-3xl w-full flex flex-col overflow-hidden p-6 bg-white">
+          {/* `mcm-glassform` in place of `bg-white`: the dialog sits over the
+              page's warm gradient, so a frosted panel lets that carry through
+              rather than dropping a flat sheet on top of it. */}
+          <DialogContent className="mcm-glassform max-h-[90vh] max-w-3xl w-full flex flex-col overflow-hidden p-6">
             <DialogTitle className="shrink-0">Schedule</DialogTitle>
             <ScheduleModal
               {...{

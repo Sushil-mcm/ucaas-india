@@ -21,10 +21,10 @@
   /* --- accent ---
      Swap these four to var(--primary) etc. if the inbox should follow the
      white-label brand colour instead of the console blue. */
-  --mcm-accent: #2563eb;
-  --mcm-accent-ink: #1d4ed8;
-  --mcm-accent-wash: #e8efff;
-  --mcm-accent-edge: #c3d6ff;
+  --mcm-accent: #f2994a;
+  --mcm-accent-ink: #c96f1f;
+  --mcm-accent-wash: #fff1e0;
+  --mcm-accent-edge: #ffd9ad;
 
   --mcm-live: #0d9488;
   --mcm-live-wash: #dcf5f1;
@@ -63,10 +63,10 @@
   --mcm-line: #26314a;
   --mcm-line-2: #1c2537;
 
-  --mcm-accent: #5b8dff;
-  --mcm-accent-ink: #87aaff;
-  --mcm-accent-wash: #16223d;
-  --mcm-accent-edge: #2c3f68;
+  --mcm-accent: #ffa552;
+  --mcm-accent-ink: #ffc285;
+  --mcm-accent-wash: #3a2712;
+  --mcm-accent-edge: #6b4420;
 
   --mcm-live: #2dd4bf;
   --mcm-live-wash: #0f2f2c;

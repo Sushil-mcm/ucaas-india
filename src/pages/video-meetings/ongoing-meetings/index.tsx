@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import MeetingHeader from '../upcoming-meetings/header';
 import { useForm } from 'react-hook-form';
 import { Icon } from '@/assets/icons/icon';
 import Loader from '@/components/custom/loader';
+import MeetingHeader from '../upcoming-meetings/header';
 import {
   formatMeetingDate,
   formatTime,
@@ -66,18 +66,6 @@ const OngoingMeetings = () => {
   const videAccess = features?.plan_features?.video?.action || {};
   const { user } = useUser();
   const { handleTerminateCall, handleMeetLeave } = useSocketEvents();
-  /* The shared meeting header takes a form instance for its invite flow.
-     Restored alongside the import below — the usage was in this file without
-     either, so these pages threw on render. Kept to the reference's shape so
-     the file still diffs cleanly against it. */
-  const formInstance = useForm<any>({
-    defaultValues: {
-      inviteOthers: [],
-      members: [],
-      meeting_id: '',
-    },
-  });
-
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
   const [meetingToCancel, setMeetingToCancel] = useState<any>(null);
   const [meetingToEndForAll, setMeetingToEndForAll] = useState<any>(null);
@@ -88,6 +76,13 @@ const OngoingMeetings = () => {
   });
   const observerTarget = useRef(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const formInstance = useForm<any>({
+    defaultValues: {
+      inviteOthers: [],
+      members: [],
+      meeting_id: '',
+    },
+  });
 
   const {
     data,
@@ -176,8 +171,11 @@ const OngoingMeetings = () => {
         <MeetingHeader formInstance={formInstance} />
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex justify-between items-center">
-            <h4 className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-              Ongoing Meetings <InfoIcon className="w-3 h-3 text-gray-600" />
+            <h4
+              className="font-semibold text-lg flex items-center gap-1"
+              style={{ color: '#8A3F1C' }}
+            >
+              Ongoing Meetings <InfoIcon className="w-3 h-3 text-[#9A948F]" />
             </h4>
             <Button
               variant="outline"

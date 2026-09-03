@@ -28,10 +28,10 @@
   --line: #dfe5f0;
   --line-2: #eaeef6;
 
-  --accent: #2563eb;
-  --accent-ink: #1d4ed8;
-  --accent-wash: #e8efff;
-  --accent-edge: #c3d6ff;
+  --accent: #f2994a;
+  --accent-ink: #c96f1f;
+  --accent-wash: #fff1e0;
+  --accent-edge: #ffd9ad;
 
   /* AI keeps its own hue here too: machine output must never be mistaken
      for system truth. Violet = "generated, verify me". */
@@ -78,10 +78,10 @@
   --ink-4: #6b7a96;
   --line: #26314a;
   --line-2: #1c2537;
-  --accent: #5b8dff;
-  --accent-ink: #87aaff;
-  --accent-wash: #16223d;
-  --accent-edge: #2c3f68;
+  --accent: #ffa552;
+  --accent-ink: #ffc285;
+  --accent-wash: #3a2712;
+  --accent-edge: #6b4420;
   --ai: #a97fff;
   --ai-ink: #c0a3ff;
   --ai-wash: #231a3d;
@@ -1313,7 +1313,7 @@
 }
 .mcm-video .tile.pinned {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 2px rgba(242, 153, 74, 0.5);
 }
 .mcm-video .tile.self {
   border-color: var(--stage-line);
@@ -1432,7 +1432,7 @@
   justify-content: center;
   gap: 8px;
   background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.13), rgba(124, 58, 237, 0.13)),
+    linear-gradient(135deg, rgba(242, 153, 74, 0.13), rgba(124, 58, 237, 0.13)),
     repeating-linear-gradient(45deg, var(--stage-2) 0 12px, var(--stage-3) 12px 24px);
   color: var(--stage-ink-2);
   font-size: 12px;

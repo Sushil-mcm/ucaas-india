@@ -14,21 +14,21 @@
    ============================================================ */
 
 .mcm-console {
-  --ground: #eef1f8;
+  --ground: transparent;
   --surface: #ffffff;
-  --surface-2: #f6f8fc;
-  --surface-3: #eaeef7;
+  --surface-2: #fbf3e8;
+  --surface-3: #f5e6d3;
   --ink: #0d1526;
   --ink-2: #3d4a63;
   --ink-3: #6b7891;
   --ink-4: #93a0b8;
-  --line: #dfe5f0;
-  --line-2: #eaeef6;
+  --line: #eee7dd;
+  --line-2: #f0e4d3;
 
-  --accent: #2563eb;
-  --accent-ink: #1d4ed8;
-  --accent-wash: #e8efff;
-  --accent-edge: #c3d6ff;
+  --accent: #f2994a;
+  --accent-ink: #c96f1f;
+  --accent-wash: #fff1e0;
+  --accent-edge: #ffd9ad;
 
   /* AI gets its own hue on purpose: machine output must never be
      mistaken for system truth. Violet = "generated, verify me". */
@@ -72,10 +72,10 @@
   --ink-4: #6b7a96;
   --line: #26314a;
   --line-2: #1c2537;
-  --accent: #5b8dff;
-  --accent-ink: #87aaff;
-  --accent-wash: #16223d;
-  --accent-edge: #2c3f68;
+  --accent: #ffab5e;
+  --accent-ink: #ffc98a;
+  --accent-wash: #2b1f12;
+  --accent-edge: #4a341c;
   --ai: #a97fff;
   --ai-ink: #c0a3ff;
   --ai-wash: #231a3d;
@@ -985,6 +985,7 @@
 }
 .mcm-console .dial-display {
   width: 100%;
+  min-width: 0;
   border: 0;
   background: transparent;
   font-family: var(--mono);
@@ -993,6 +994,8 @@
   letter-spacing: -0.02em;
   text-align: center;
   padding: 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mcm-console .dial-display:focus-visible {
   outline: none;
@@ -1001,6 +1004,13 @@
 .mcm-console .dial-display::placeholder {
   color: var(--ink-4);
   font-weight: 400;
+  /* The placeholder sentence is much longer than any real dialed number, so
+     it needs its own (smaller, non-mono) sizing — otherwise it renders in
+     the same wide tabular-mono digits as a dialed number and gets clipped
+     by the card's edges instead of just fitting. */
+  font-family: var(--sans);
+  font-size: 15px;
+  letter-spacing: normal;
 }
 .mcm-console .dial-flag-slot {
   width: 22px;
@@ -2871,12 +2881,39 @@
   color: initial;
 }
 
-/* date filter sits in the call-list header */
+/* date filter sits in the call-list header — right-aligned and a touch
+   smaller than the search bar above it, rather than stretching full width. */
 .mcm-console .console-datefilter {
   display: flex;
+  justify-content: flex-end;
 }
 .mcm-console .console-datefilter > * {
-  width: 100%;
+  width: auto;
+  max-width: 150px;
+  min-width: 0;
+  flex: none;
+}
+.mcm-console .console-datefilter .custom-react-select__control {
+  min-height: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 12.5px;
+}
+.mcm-console .console-datefilter .custom-react-select__value-container {
+  padding: 0 8px;
+}
+.mcm-console .console-datefilter .custom-react-select__indicators {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.mcm-console .console-datefilter .custom-react-select__dropdown-indicator {
+  height: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 6px 0 0;
 }
 
 /* back chevron */
@@ -3694,4 +3731,438 @@
   margin-left: 0;
   color: var(--ink-3);
   font-weight: 600;
+}
+
+
+/* ============================================================
+   Calls list — visual polish only.
+
+   Every selector here is scoped under `.col.calls` (the left column of the
+   phone console) so nothing outside that list is touched — same markup,
+   same classes, same behavior, just a nicer look: rows read as soft cards
+   with a lift on hover, the tabs/segmented control/search feel a bit more
+   deliberate, and tags/avatars carry a touch more weight.
+   ============================================================ */
+/* The date filter sits inline with the Calls/Recordings/Voicemails
+   heading, at the right where the old refresh button used to be —
+   the heading's own base rule (.col-title) already lays the row out
+   with justify-content:space-between, so this only sizes the filter
+   itself down to fit that spot. */
+.mcm-console .col.calls .col-title .console-datefilter {
+  flex: none;
+  min-width: 0;
+}
+.mcm-console .col.calls .col-title .console-datefilter > * {
+  max-width: 140px;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__control {
+  min-height: 38px;
+  height: 38px;
+  font-size: 13px !important;
+  display: flex;
+  align-items: center;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__value-container {
+  padding: 0 0 0 10px;
+  font-size: 13px !important;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__input-container,
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__input-container input {
+  font-size: 13px !important;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__single-value {
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 13px !important;
+  font-weight: 600;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__indicators {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__dropdown-indicator {
+  height: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 2px;
+}
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__dropdown-indicator svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+/* The trigger is narrow, but the open menu doesn't have to be — let full
+   labels ("Last 30 Days") sit on one line instead of wrapping. */
+.mcm-console .col.calls .col-title .console-datefilter .custom-react-select__menu {
+  width: 150px;
+  right: 0;
+}
+
+.mcm-console .col.calls .panel-tabs {
+  gap: 24px;
+  /* This row no longer shares space with the date filter (that now sits
+     next to the heading above), so the base rule's overflow-x:auto was
+     rendering a thin scrollbar sliver even with just a few short tabs —
+     this never needs to scroll here, so drop it instead of just hiding
+     its thumb. */
+  overflow-x: visible;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.mcm-console .col.calls .ptab {
+  border-radius: var(--r-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+  padding: 12px 6px 10px;
+}
+.mcm-console .col.calls .ptab:hover {
+  background: var(--surface-2);
+}
+.mcm-console .col.calls .ptab.on {
+  border-bottom-width: 2.5px;
+}
+
+.mcm-console .col.calls .seg {
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+}
+.mcm-console .col.calls .seg button {
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  /* "Outbound" was clipping to "Outbou…" under the base rule's ellipsis —
+     tighten padding/tracking and drop the size half a step so all four
+     labels fit at once instead of truncating. */
+  padding: 5px 3px;
+  font-size: 10.8px;
+  letter-spacing: -0.01em;
+  overflow: visible;
+  text-overflow: clip;
+}
+.mcm-console .col.calls .seg button.on {
+  /* A gradient pill instead of plain white + ink, so the active filter
+     reads with some weight — kept light rather than a solid saturated
+     fill, so it doesn't read as heavy/dark next to the rest of the list. */
+  background: linear-gradient(135deg, #ffcf94, #fff1de);
+  color: var(--accent-ink);
+  box-shadow: 0 2px 6px rgba(234, 124, 30, 0.18);
+}
+
+.mcm-console .col.calls .search-mini input {
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.mcm-console .col.calls .search-mini input:focus {
+  outline: none;
+  border-color: var(--accent-edge);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+
+.mcm-console .col.calls .list {
+  padding: 6px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mcm-console .col.calls .call-row {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 12px 12px;
+  /* A soft card by default, not just plain text on the page background —
+     the list reads as a stack of items even before touching one. */
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.mcm-console .col.calls .call-row:hover {
+  background: var(--surface-2);
+  border-color: var(--accent-edge);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.mcm-console .col.calls .call-row.on {
+  background: var(--accent-wash);
+  border-color: var(--accent-edge);
+  box-shadow: 0 4px 14px rgba(234, 124, 30, 0.2);
+}
+.mcm-console .col.calls .call-row.on::before {
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 6px var(--accent);
+}
+.mcm-console .col.calls .cr-av {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+/* Every direction gets its own gradient instead of a flat wash, so the list
+   reads with some color even before anything is selected. */
+.mcm-console .col.calls .cr-av.in {
+  background: linear-gradient(150deg, #2dd4bf, #99f6e4);
+}
+.mcm-console .col.calls .cr-av.out {
+  background: linear-gradient(150deg, #f0973d, #ffd9ad);
+}
+.mcm-console .col.calls .cr-av.miss {
+  background: linear-gradient(150deg, #ef6a6a, #ffc9c9);
+}
+/* The clicked/selected row's icon box picks up the orange theme instead of
+   its direction color, so it reads as "this is the one you opened". */
+.mcm-console .col.calls .call-row.on .cr-av {
+  background: linear-gradient(150deg, #f0973d, #ffd48a);
+  box-shadow: 0 3px 8px rgba(234, 124, 30, 0.25);
+}
+.mcm-console .col.calls .cr-name {
+  font-weight: 800;
+}
+.mcm-console .col.calls .col-head {
+  position: relative;
+  background: linear-gradient(180deg, var(--surface-2), transparent);
+}
+.mcm-console .col.calls .col-title h2 {
+  background: linear-gradient(120deg, var(--ink), var(--accent-ink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mcm-console .col.calls .tag {
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-weight: 800;
+}
+.mcm-console .col.calls .tag.acc {
+  box-shadow: 0 1px 3px rgba(234, 124, 30, 0.18);
+}
+
+/* ============================================================
+   Idle dialer — visual polish only.
+
+   Scoped to `.col.stage .stage-inner` (the softphone's idle keypad view),
+   so `.card`/`.chip`/`.btn` keep their normal look everywhere else in the
+   console (Contact pane, panel cards, ...). Same theme tokens throughout —
+   only shadows, spacing, and hover/press feedback change.
+   ============================================================ */
+.mcm-console .col.stage .stage-inner > .card {
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+}
+.mcm-console .col.stage .stage-inner .chip {
+  box-shadow: var(--shadow-sm);
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.mcm-console .col.stage .stage-inner .dial-display {
+  font-size: 25px;
+  letter-spacing: 0.01em;
+  padding: 8px 0 12px;
+  border-bottom: 1.5px solid var(--accent-edge);
+  margin-bottom: 4px;
+}
+.mcm-console .col.stage .stage-inner .keypad {
+  gap: 11px 10px;
+  justify-items: center;
+  padding: 3px 4px 0;
+}
+.mcm-console .col.stage .stage-inner .key {
+  width: 100%;
+  max-width: 132px;
+  height: 58px;
+  border-radius: 14px;
+  background: linear-gradient(175deg, #fff 0%, var(--surface-2) 100%);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 5px rgba(120, 72, 20, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease,
+    background 0.15s ease;
+}
+.mcm-console .col.stage .stage-inner .key:hover {
+  background: linear-gradient(175deg, #fff 0%, var(--accent-wash) 100%);
+  border-color: var(--accent-edge);
+  box-shadow: 0 0 0 5px var(--accent-wash), 0 8px 16px rgba(234, 124, 30, 0.24);
+  transform: translateY(-2px) scale(1.05);
+}
+.mcm-console .col.stage .stage-inner .key:active {
+  transform: scale(0.91);
+  background: var(--accent-edge);
+  box-shadow: inset 0 2px 5px rgba(120, 72, 20, 0.2);
+}
+.mcm-console .col.stage .stage-inner .key b {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  transition: color 0.15s ease;
+}
+.mcm-console .col.stage .stage-inner .key:hover b {
+  color: var(--accent-ink);
+}
+.mcm-console .col.stage .stage-inner .key i {
+  font-size: 7.5px;
+  color: var(--ink-4);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  transition: color 0.12s ease;
+  margin-top: 2px;
+  height: 8px;
+}
+.mcm-console .col.stage .stage-inner .key:hover i {
+  color: var(--accent-ink);
+}
+.mcm-console .col.stage .stage-inner .btn.primary {
+  height: 44px;
+  border-radius: 22px;
+  font-size: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-ink));
+  box-shadow: 0 6px 16px rgba(234, 124, 30, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.mcm-console .col.stage .stage-inner .btn.primary:hover {
+  box-shadow: 0 8px 20px rgba(234, 124, 30, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+.mcm-console .col.stage .stage-inner .btn.primary:active {
+  transform: translateY(0);
+}
+.mcm-console .col.stage .stage-inner .btn.ghost {
+  height: 44px;
+  width: 44px;
+  padding: 0;
+  border-radius: 50%;
+  background: linear-gradient(175deg, #fff 0%, var(--surface-2) 100%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.mcm-console .col.stage .stage-inner .btn.ghost:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent-edge);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   Call screen — visual polish only.
+
+   Covers the caller card + info strip shared by every non-idle stage
+   state (dialing, incoming, active, wrap-up, and the simulated demo
+   call) — same `CallerBlock`/`popstrip` markup everywhere, just a more
+   deliberate look: a richer avatar, a bolder timer, and a proper info
+   banner instead of plain muted text for the demo-call notice.
+   ============================================================ */
+.mcm-console .col.stage .stage-inner .caller {
+  gap: 16px;
+  padding: 22px 20px 18px;
+  position: relative;
+  background: radial-gradient(120% 140% at 12% 0%, var(--accent-wash) 0%, transparent 60%);
+  border-radius: 20px 20px 0 0;
+}
+.mcm-console .col.stage .stage-inner .caller-av-ring {
+  flex: none;
+  padding: 3px;
+  border-radius: 22px;
+  background: linear-gradient(140deg, var(--accent), var(--accent-edge));
+  box-shadow: 0 8px 18px rgba(234, 124, 30, 0.3);
+}
+.mcm-console .col.stage .stage-inner .caller-av {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  font-size: 19px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.mcm-console .col.stage .stage-inner .caller-name {
+  font-size: 20px;
+}
+.mcm-console .col.stage .stage-inner .state-pill {
+  padding: 5px 12px;
+  box-shadow: var(--shadow-sm);
+}
+.mcm-console .col.stage .stage-inner .state-pill.live {
+  background: linear-gradient(135deg, var(--live-wash), rgba(13, 148, 136, 0.16));
+}
+/* The pill and timer must stack — the timer's own pill-shaped background
+   (below) turns it into another inline box next to the state pill, and
+   without an explicit column the two just sit side by side and overlap
+   under `text-align: right`. */
+.mcm-console .col.stage .stage-inner .caller-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.mcm-console .col.stage .stage-inner .timer {
+  display: inline-block;
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 0;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  box-shadow: inset 0 1px 2px rgba(13, 21, 38, 0.06);
+}
+.mcm-console .col.stage .stage-inner .popstrip {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-3));
+}
+.mcm-console .col.stage .stage-inner .popcell {
+  padding: 12px 14px;
+}
+.mcm-console .col.stage .stage-inner .popcell .k {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.08em;
+}
+.mcm-console .col.stage .stage-inner .popcell .k svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0.75;
+}
+.mcm-console .col.stage .stage-inner .popcell .v {
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--ink);
+}
+.mcm-console .col.stage .stage-inner .demo-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-edge);
+  color: var(--accent-ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mcm-console .col.stage .stage-inner .demo-note svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+.mcm-console .col.stage .stage-inner .demo-note strong {
+  color: var(--accent-ink);
+}
+@keyframes mcmc-hangup-glow {
+  0%,
+  100% {
+    box-shadow: 0 6px 16px rgba(211, 47, 47, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 0 0 0 rgba(211, 47, 47, 0.35);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(211, 47, 47, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 0 0 7px rgba(211, 47, 47, 0);
+  }
+}
+.mcm-console .col.stage .stage-inner .btn.danger {
+  background: linear-gradient(135deg, var(--crit), #b52424);
+  border-radius: 13px;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+  animation: mcmc-hangup-glow 2.2s ease-in-out infinite;
+}
+.mcm-console .col.stage .stage-inner .btn.danger:hover {
+  box-shadow: 0 8px 20px rgba(211, 47, 47, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  animation-play-state: paused;
+}
+.mcm-console .col.stage .stage-inner .btn.danger:active {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcm-console .col.stage .stage-inner .btn.danger {
+    animation: none;
+  }
 }

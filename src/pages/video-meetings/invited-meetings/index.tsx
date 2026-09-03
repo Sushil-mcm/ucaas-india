@@ -1,5 +1,4 @@
 import { Icon } from '@/assets/icons/icon';
-import MeetingHeader from '../upcoming-meetings/header';
 import Loader from '@/components/custom/loader';
 import {
   formatMeetingDate,
@@ -14,6 +13,7 @@ import { useMutation, useInfiniteQuery } from '@tanstack/react-query';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import AlertConfirm from '@/components/custom/alert-confirm';
+import MeetingHeader from '../upcoming-meetings/header';
 import MeetingInfo from '../meeting-info-modal';
 import ScheduleMeeting from '../schedule-meeting';
 import MeetingMembersModal from '../meeting-members-modal';
@@ -155,8 +155,11 @@ const InvitedMeetings = () => {
         <MeetingHeader formInstance={formInstance} />
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex justify-between items-center">
-            <h4 className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-              Invited Meetings <InfoIcon className="w-3 h-3 text-gray-600" />
+            <h4
+              className="font-semibold text-lg flex items-center gap-1"
+              style={{ color: '#8A3F1C' }}
+            >
+              Invited Meetings <InfoIcon className="w-3 h-3 text-[#9A948F]" />
             </h4>
             <Button
               variant="outline"
