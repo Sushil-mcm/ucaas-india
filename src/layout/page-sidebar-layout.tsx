@@ -4,6 +4,11 @@ import { cn } from '@/lib/utils';
 
 const PageSidebarLayout = ({
   title = '',
+  /* Suppresses the rail's own heading while leaving `title` in place, since
+     `title` also selects this layout's glass and responsive-topbar variants.
+     Campaign needs it: its page head already says "Campaign", so the rail
+     printed the same word again immediately below. */
+  hideHeading = false,
   content = null,
   action = null,
   icon = null,
@@ -13,6 +18,7 @@ const PageSidebarLayout = ({
   collapsible = true,
 }: {
   title?: string;
+  hideHeading?: boolean;
   headerCustomClass?: string;
   icon?: any;
   content: any;
@@ -120,7 +126,7 @@ const PageSidebarLayout = ({
       )}
 
       <div className={cn('flex flex-col', fullHeightOnMobile ? 'h-full' : 'h-auto sm:h-full')}>
-        {(title || action) && (
+        {((title && !hideHeading) || action) && (
           <div
             className={cn(
               // No `transition-opacity`: it faded the header on collapse
@@ -134,12 +140,14 @@ const PageSidebarLayout = ({
           >
             <div className={`flex gap-1 items-center ${headerCustomClass}`}>
               <span>{icon}</span>
-              <h4
-                className={cn('font-semibold text-lg', !isGlassSidebar && 'text-gray-900')}
-                style={isGlassSidebar ? { color: '#8A3F1C' } : undefined}
-              >
-                {title}
-              </h4>
+              {hideHeading ? null : (
+                <h4
+                  className={cn('font-semibold text-lg', !isGlassSidebar && 'text-gray-900')}
+                  style={isGlassSidebar ? { color: '#8A3F1C' } : undefined}
+                >
+                  {title}
+                </h4>
+              )}
             </div>
             {action && action}
           </div>

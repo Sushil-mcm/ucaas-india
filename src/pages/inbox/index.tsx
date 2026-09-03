@@ -762,7 +762,9 @@ const InnerSidebarInbox = (props: any) => {
     >
       <div className="mcm-col-head">
         <div className="mcm-col-title">
-          <h2>Inbox</h2>
+          {/* The page head above names this screen. This row kept saying
+              "Inbox" a second time directly underneath it, so it now carries
+              only its action. */}
           {headerAction}
         </div>
         <TabsList className="mcm-seg" style={{ width: '100%' }}>

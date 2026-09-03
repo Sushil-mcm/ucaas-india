@@ -1126,10 +1126,10 @@ const SidebarContent = ({
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-2 w-full">
-              <div className="text-xl font-semibold w-full min-w-0 truncate text-[#2E2D35]">
-                {pageTitle}
-              </div>
+            <div className="flex items-center justify-end gap-2 w-full">
+              {/* The page head above carries the title now. Repeating it here
+                  showed the screen name twice, once in the head and again
+                  immediately underneath, so this row keeps only its actions. */}
               {!isAgentChat ? (
                 <div className="flex gap-2 shrink-0">
                   {chatAccess?.access?.DIRECT_MESSAGE || chatAccess?.access?.TEAM_MESSAGE ? (
@@ -1489,7 +1489,10 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
 
   return (
     <div className="mcm-actpage">
-      <ActivityPageHead title="Chat" description="Team and customer conversations across every channel you have connected." />
+      <ActivityPageHead
+        title={pageTitle}
+        description="Team and customer conversations across every channel you have connected."
+      />
       <div className="mcm-page mcm-admin mcm-warm-glass">
       <div className="w-full h-full min-h-0 flex overflow-hidden bg-white">
         {chatType === 'chat' ? (

@@ -801,11 +801,6 @@ const SidebarContent = ({
 
   return (
     <div className="w-full h-full bg-white">
-      <div className="min-h-16 flex items-center px-3 sm:px-4 justify-between border-b border-[#EEE7DD]">
-        <div className="text-xl font-semibold w-full min-w-0 truncate text-[#2E2D35]">
-          Web Chat Manager
-        </div>
-      </div>
 
       <div className="px-4 pt-4 pb-5 border-b border-border bg-white">
         <div className="h-12 rounded-[14px] bg-muted p-[5px]">
