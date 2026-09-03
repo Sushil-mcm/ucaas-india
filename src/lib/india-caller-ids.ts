@@ -18,9 +18,14 @@ import type { CallerIdOption } from '@/components/dialpad/types';
  * and should be deleted from here, or they will appear twice.
  */
 export const INDIA_CALLER_ID_OPTIONS: CallerIdOption[] = [
-  { id: 'india-caller-id-1', label: 'India 1', country: 'IN', number: '+918037683171' },
-  { id: 'india-caller-id-2', label: 'India 2', country: 'IN', number: '+918037683174' },
-  { id: 'india-caller-id-3', label: 'India 3', country: 'IN', number: '+918037683175' },
-  { id: 'india-caller-id-4', label: 'India 4', country: 'IN', number: '+918037683176' },
-  { id: 'india-caller-id-5', label: 'India 5', country: 'IN', number: '+918037683177' },
+  { id: 'india-caller-id-1', label: 'India 1', country: 'IN', number: '+918037683127' },
+  { id: 'india-caller-id-2', label: 'India 2', country: 'IN', number: '+918037683128' },
+  { id: 'india-caller-id-3', label: 'India 3', country: 'IN', number: '+918037683129' },
+  { id: 'india-caller-id-4', label: 'India 4', country: 'IN', number: '+918037683130' },
+  { id: 'india-caller-id-5', label: 'India 5', country: 'IN', number: '+918037683131' },
+  { id: 'india-caller-id-6', label: 'India 6', country: 'IN', number: '+918037683171' },
+  { id: 'india-caller-id-7', label: 'India 7', country: 'IN', number: '+918037683174' },
+  { id: 'india-caller-id-8', label: 'India 8', country: 'IN', number: '+918037683175' },
+  { id: 'india-caller-id-9', label: 'India 9', country: 'IN', number: '+918037683176' },
+  { id: 'india-caller-id-10', label: 'India 10', country: 'IN', number: '+918037683177' },
 ];
