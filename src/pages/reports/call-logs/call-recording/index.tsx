@@ -417,7 +417,7 @@ const CallRecording = () => {
     },
   ];
   const Filters = (
-    <div className="flex gap-2 filters">
+    <div className="flex items-center gap-2 filters">
       <div className="w-full sm:w-52 lg:w-60">
         <Input
           placeholder="Search"

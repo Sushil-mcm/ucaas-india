@@ -13,6 +13,7 @@ import './list-page-glass.css';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import { useContactLabels } from './use-contact-labels';
 import '@/styles/warm-glass.css';
+import './external-glass.css';
 
 /**
  * Directory ▸ External — people outside the organisation.

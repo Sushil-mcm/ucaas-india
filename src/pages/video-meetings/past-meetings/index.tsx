@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import MeetingHeader from '../upcoming-meetings/header';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/assets/icons/icon';
 import Loader from '@/components/custom/loader';
@@ -68,6 +70,18 @@ const PastMeetings = () => {
     useSocketEvents();
   const { features } = useCompanyFeatures();
   const videAccess = features?.plan_features?.video?.action || {};
+  /* The shared meeting header takes a form instance for its invite flow.
+     Restored alongside the import below — the usage was in this file without
+     either, so these pages threw on render. Kept to the reference's shape so
+     the file still diffs cleanly against it. */
+  const formInstance = useForm<any>({
+    defaultValues: {
+      inviteOthers: [],
+      members: [],
+      meeting_id: '',
+    },
+  });
+
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
   const [modalState, setModalState] = useState<any>({
     meetingInfo: false,

@@ -60,6 +60,7 @@ const BarChart = ({
   data: CallGraphData;
   isPendingStatsData: boolean;
 }) => {
+  const hasData = Boolean(data?.datasets?.length) && Boolean(data?.labels?.length);
   return (
     <div style={{ width: '100%', height: '100%', position: 'absolute' }}>
       {isPendingStatsData ? (
@@ -69,6 +70,16 @@ const BarChart = ({
               <Loader variant="blue" />
             </div>
           </div>
+        </div>
+      ) : !hasData ? (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5">
+          <img src={NotFound} alt="No meeting activity" className="w-24 min-w-24" />
+          <p className="text-center text-sm font-medium text-[#2E2D35]">
+            No meeting activity yet
+          </p>
+          <p className="text-center text-xs text-[#9A948F]">
+            Volume will appear here once meetings are hosted on this date.
+          </p>
         </div>
       ) : (
         <Bar
@@ -559,7 +570,7 @@ const VideoDashboard = () => {
               type="button"
               onClick={tile.onClick}
               disabled={tile.disabled}
-              className="group flex min-h-[100px] flex-col justify-between rounded-[18px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5 text-left transition-all hover:border-primary/30 hover:shadow-[0_6px_20px_rgba(15,23,42,0.06)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[126px] sm:rounded-[24px] sm:p-4 gap-2"
+              className="group flex min-h-[100px] flex-col justify-between rounded-[18px] border border-[rgba(214,163,90,0.55)] bg-white shadow-[0_8px_20px_-6px_rgba(154,78,30,0.18)] p-2.5 text-left transition-all hover:border-primary/40 hover:shadow-[0_10px_24px_-6px_rgba(154,78,30,0.28)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[126px] sm:rounded-[24px] sm:p-4 gap-2"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-ucass-active-bg text-primary sm:h-10 sm:w-10 sm:rounded-xl">
                 <Icon name={tile.icon} className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -580,7 +591,7 @@ const VideoDashboard = () => {
         </div>
 
         <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_30rem] ">
-          <div className="rounded-[24px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:p-5">
+          <div className="rounded-[24px] border border-[rgba(214,163,90,0.55)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h2 className="text-lg font-semibold text-[#2E2D35]">Meeting volume summary</h2>

@@ -87,7 +87,7 @@ const DateDropdown = ({
               showCustomPickerBelow ? 'min-w-0 flex-1' : 'min-w-0 flex-1 sm:w-56 sm:flex-none'
             }
           >
-            <div className="relative flex min-w-0 items-center">
+            <div className="mcm-date-field">
               <ReactDatePicker
                 placeholderText="Select date"
                 selectsRange={true}
@@ -122,7 +122,7 @@ const DateDropdown = ({
             <Button
               variant={'outline'}
               disabled={!dateRange?.to}
-              className="h-9 min-h-9 max-h-9 shrink-0 rounded-lg px-3 py-0"
+              className="mcm-date-apply-btn h-9 min-h-9 max-h-9 shrink-0 rounded-lg px-2.5 py-0"
               onClick={() =>
                 setDropdownVal((prev: any) => ({
                   ...prev,

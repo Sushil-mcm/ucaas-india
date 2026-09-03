@@ -21,6 +21,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ear, MicIcon, UsersIcon } from 'lucide-react';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
 
+/* How long a caller may wait before the row escalates. Waiting is the only
+   state where elapsed time is itself a problem, so these apply to it alone —
+   a connected call runs as long as it needs to. */
+const WAIT_WARNING_MS = 60 * 1000;
+const WAIT_CRITICAL_MS = 3 * 60 * 1000;
+
 const STATE_TYPE_NAME = {
   answered: 'Connected',
   bridged: 'Connected',
@@ -354,6 +360,21 @@ const AllCallMonitoring = () => {
       cell: ({ row }) => {
         const data = row?.original;
         const timestamp = getCallDurationStartedAtMs(data);
+
+        /* A waiting caller's timer is the number on this screen that
+           actually demands action, and it read exactly like a healthy call's
+           duration. Past the thresholds it escalates; a connected call's
+           timer stays quiet however long it runs, because length alone is
+           not a problem there. */
+        const isWaiting = String(data?.status || '').toLowerCase() === 'waiting';
+        const waitedMs = isWaiting && timestamp ? Date.now() - timestamp : 0;
+        const tone = !isWaiting
+          ? 'text-mcm-ink-2'
+          : waitedMs >= WAIT_CRITICAL_MS
+            ? 'text-mcm-crit font-bold'
+            : waitedMs >= WAIT_WARNING_MS
+              ? 'text-mcm-warn font-semibold'
+              : 'text-mcm-ink-2';
 
         return (
           <div className={`tabular-nums ${tone}`}>

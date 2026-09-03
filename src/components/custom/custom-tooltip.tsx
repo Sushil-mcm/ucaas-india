@@ -5,11 +5,13 @@ const CustomTooltip = ({
   children,
   side = 'right',
   className = '',
+  arrowClassName,
 }: {
   text: string | React.ReactNode;
   children: React.ReactNode;
   side?: 'top' | 'right' | 'bottom' | 'left';
   className?: string;
+  arrowClassName?: string;
 }) => {
   return (
     /* `disableHoverableContent` turns off Radix's grace area — the invisible
@@ -25,7 +27,7 @@ const CustomTooltip = ({
        one opens on its own, so moving along a row switches names cleanly. */
     <Tooltip disableHoverableContent>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side} className={className}>
+      <TooltipContent side={side} className={className} arrowClassName={arrowClassName}>
         {text}
       </TooltipContent>
     </Tooltip>

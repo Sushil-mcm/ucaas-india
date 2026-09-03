@@ -364,6 +364,24 @@ function TableManager({
                 {headerGroup.headers.map((header: any, headerIndex: number) => {
                   const textAlign =
                     header.id === 'action' ? 'center' : header.column.columnDef?.meta?.textAlign;
+                  /* Tailwind's compiler only picks up complete class-name
+                     strings it can find in source — `text-${textAlign}`
+                     never matched anything, so every "center"/"right"
+                     alignment on every table in the app silently rendered
+                     as left the whole time (the class was in the DOM, the
+                     CSS rule just never got generated). A literal ternary
+                     gives it the whole class names to find.
+                     Even fixed, a plain class still loses: `.mcm-page th`
+                     (mcm-page.css) sets text-align:left on every <th> in
+                     the app at higher specificity than a single utility
+                     class. The `!` modifier forces !important so a
+                     column's own alignment choice actually wins. */
+                  const alignClass =
+                    textAlign === 'center'
+                      ? '!text-center'
+                      : textAlign === 'right'
+                        ? '!text-right'
+                        : 'text-left';
 
                   return (
                     <TableHead

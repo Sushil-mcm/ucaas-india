@@ -24,6 +24,12 @@ interface CustomSelectType {
   menuPortalTarget?: HTMLElement | null | boolean;
   onMenuScrollToBottom?: () => void;
   onInputChange?: (value: string) => void;
+  /** false turns this into a plain click-to-pick dropdown with no typing
+   *  cursor in it - for a short fixed list (like a date-range preset) where
+   *  search only adds a text-entry affordance nobody needs. Defaults to
+   *  true so every other existing usage keeps its current searchable
+   *  behaviour. */
+  isSearchable?: boolean;
 }
 
 const SELECT_PAGE_SIZE = 25;
@@ -82,6 +88,7 @@ const CustomSelect = ({
   menuPortalTarget,
   onMenuScrollToBottom,
   onInputChange,
+  isSearchable = true,
 }: CustomSelectType & { label?: any; required?: boolean }) => {
   const normalizedOptions = useMemo(
     () =>
@@ -312,6 +319,7 @@ const CustomSelect = ({
         <Select
           isDisabled={isDisabled}
           isLoading={isLoading}
+          isSearchable={isSearchable}
           isMulti={isMulti}
           closeMenuOnSelect={!isMulti}
           classNamePrefix={classNamePrefix}

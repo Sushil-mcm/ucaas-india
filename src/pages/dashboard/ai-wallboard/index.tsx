@@ -1199,41 +1199,41 @@ const AiWallboard = () => {
         </div>
 
         <div className="grid gap-3 grid-cols-1 md:grid-cols-12">
-          <div className="space-y-3 col-span-12 md:col-span-4">
-            <div className="rounded-xl border border-ucass-active-bg bg-white shadow-xs">
-              <div className="border-b border-ucass-active-bg bg-ucass-active-bg px-4 py-3 rounded-t-xl">
-                <h4 className="flex items-center gap-2 text-lg font-semibold text-primary">
-                  <Bot className="h-4 w-4" />
+          <div className="flex flex-col col-span-12 md:col-span-4">
+            <div className="flex h-full flex-col rounded-xl border border-[rgba(214,163,90,0.55)] shadow-xs">
+              <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3 rounded-t-xl">
+                <h4 className="flex items-center gap-2 text-lg font-semibold text-[#2E2D35]">
+                  <Bot className="h-4 w-4 text-primary" />
                   AI Receptionist Performance
                 </h4>
               </div>
-              <div className="space-y-3 p-4">
+              <div className="flex flex-1 flex-col justify-between space-y-3 p-4">
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5">
+                  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                       Handled by AI only
                     </p>
                     <p className="text-lg font-semibold text-[#2E2D35]">{handledTodayValue}</p>
                   </div>
-                  <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5">
+                  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                       Transferred to Agent
                     </p>
                     <p className="text-lg font-semibold text-[#2E2D35]">{transferredCallsValue}</p>
                   </div>
-                  <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5">
+                  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                       Transfer Percentage
                     </p>
                     <p className="text-lg font-semibold text-[#2E2D35]">{transferToAgentValue}</p>
                   </div>
-                  <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5">
+                  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                       Avg Duration
                     </p>
                     <p className="text-lg font-semibold text-[#2E2D35]">{avgDurationValue}</p>
                   </div>
-                  <div className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5">
+                  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
                       Leads Captured
                     </p>
@@ -1314,7 +1314,7 @@ const AiWallboard = () => {
           </div>
 
           <div className="space-y-3 col-span-12 md:col-span-8">
-            <div className="rounded-xl border border-[#EEE7DD]  shadow-xs">
+            <div className="rounded-xl border border-[rgba(214,163,90,0.55)]  shadow-xs">
               <div className="flex flex-wrap items-center justify-between border-b border-[rgba(225,200,165,0.9)] px-4 py-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-t-xl">
                 <h4 className="flex items-center gap-2 text-lg font-semibold text-[#2E2D35]">
                   <Headphones className="h-4 w-4 text-primary" />

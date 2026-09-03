@@ -223,6 +223,7 @@ const QueuesActivityTab = ({
 
     return (
       <div className="flex flex-col gap-3 px-[22px] py-4">
+        <style>{QUEUE_TAB_STYLES}</style>
         <div
           className="flex items-center gap-1.5"
           style={{ fontSize: 11.5, color: 'var(--ink-3)' }}
@@ -241,7 +242,7 @@ const QueuesActivityTab = ({
           {selectedRow.name}
         </h2>
 
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="summary-grid">
           {detailKpis.map((kpi) => (
             <PerfStatCard key={kpi.label} label={kpi.label} value={kpi.value} />
           ))}
@@ -315,6 +316,13 @@ const QueuesActivityTab = ({
           this range — older calls in the range aren't included in these columns.
         </p>
       )}
+
+      <style>{QUEUE_TAB_STYLES}</style>
+
+      <div className="flex items-center justify-between">
+        <h3 className="sect-title">Queues</h3>
+      </div>
+
       <TableManager
         columns={columns}
         staticData={rows}

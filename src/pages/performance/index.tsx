@@ -1,13 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import moment from 'moment';
 import { useSearchParamManager } from '@/hooks/use-search-params';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { DateFilterTypes, handleDate } from '@/components/custom/date-dropdown/constant';
 import Timer from '@/components/timer';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
-import {
-  getMonitoringCallTimestamp,
-  isMonitoringCallForForwardValue,
-} from '@/pages/monitoring/live-call-helpers';
 import QueuesActivityTab from './queues-activity-tab';
 import CampaignActivityTab from './campaign-activity-tab';
 import AgentsTab from './agents-tab';
@@ -17,7 +14,6 @@ import LiveInteractionsTab from './live-interactions-tab';
 import CallbacksTab from './callbacks-tab';
 import SpeechTextTab from './speech-text-tab';
 import ReportsTab from './reports-tab';
-import Wallboard, { type WallboardQueueRow, type WallboardTile } from './wallboard';
 import { formatSecsToClock } from './format';
 import { useAnimatedNumber } from './use-animated-number';
 import '@/components/mcm/mcm-page.css';
@@ -84,13 +80,24 @@ const Performance = () => {
     viewParam && allTabKeys.includes(viewParam as string) ? (viewParam as string) : TABS[0].key;
   const setActiveTab = (key: string) => setParam({ view: key });
   const [selectedQueueUuid, setSelectedQueueUuid] = useState<string | null>(null);
-  const [isWallboardOpen, setIsWallboardOpen] = useState(false);
   const [dropdownVal, setDropdownVal] = useState(() => ({
     value: handleDate('Today'),
     date_type: 'Today',
     dateOptions: DateFilterTypes,
   }));
   const selectedRange = dropdownVal.value;
+
+  /* "Today" or "Last 7 Days" says which preset is picked, not which dates
+     that resolves to — this spells the actual range out next to it, the
+     same way a calendar app shows both the label and the date underneath. */
+  const resolvedRangeLabel = useMemo(() => {
+    const from = selectedRange?.from ? moment(selectedRange.from) : null;
+    const to = selectedRange?.to ? moment(selectedRange.to) : null;
+    if (!from?.isValid() || !to?.isValid()) return '';
+    return from.isSame(to, 'day')
+      ? from.format('MMM D')
+      : `${from.format('MMM D')} – ${to.format('MMM D')}`;
+  }, [selectedRange?.from, selectedRange?.to]);
 
   // Queues, agents and the headline figures come from the shared live hook so
   // Home and Performance can never disagree about them. Everything below is
@@ -182,68 +189,6 @@ const Performance = () => {
     },
   ];
 
-  // The wallboard mirrors the KPI band and the live queue table on a dark,
-  // room-facing full-screen layout, so it reads from the same live sources.
-  const wallboardTiles: WallboardTile[] = [
-    {
-      key: 'waiting',
-      label: 'Waiting',
-      value: String(waitingCalls.length),
-      warn: waitingCalls.length > 5,
-    },
-    {
-      key: 'longest',
-      label: 'Longest wait',
-      value: '00:00',
-      timerStart: longestWaitTimestamp,
-      warn: longestWaitSecs > 120,
-    },
-    {
-      key: 'sl',
-      label: 'Service level',
-      value: avgSla === null ? '—' : `${Math.round(avgSla)}%`,
-      warn: avgSla !== null && avgSla < 80,
-      good: avgSla !== null && avgSla >= 80,
-    },
-    { key: 'answered', label: 'Answered today', value: String(totals.answered) },
-    {
-      key: 'abandon',
-      label: 'Abandon rate',
-      value: abandonRate === null ? '—' : `${Math.round(abandonRate)}%`,
-      warn: abandonRate !== null && abandonRate > 5,
-      good: abandonRate !== null && abandonRate <= 5,
-    },
-    {
-      key: 'onqueue',
-      label: 'On queue agents',
-      value: String(onlineAgentsCount),
-    },
-  ];
-
-  const wallboardQueues: WallboardQueueRow[] = queues.map((queue: any) => {
-    const queueCalls = activeQueueCalls.filter((call: any) =>
-      isMonitoringCallForForwardValue(call, queue.uuid),
-    );
-    const queueWaiting = queueCalls.filter((call: any) => call?.status === 'waiting');
-    const queueLongest = queueWaiting.reduce((longest: any, call: any) => {
-      if (!longest) return call;
-      const callTimestamp = getMonitoringCallTimestamp(call) ?? Infinity;
-      const longestTimestamp = getMonitoringCallTimestamp(longest) ?? Infinity;
-      return callTimestamp < longestTimestamp ? call : longest;
-    }, null);
-    const nameKey = String(queue.name || '').toLowerCase();
-    const liveStats = liveQueueStatsByName[nameKey];
-    const sla = liveSlaByName[nameKey];
-    return {
-      uuid: queue.uuid,
-      name: queue.name,
-      waiting: queueWaiting.length,
-      longestWaitTimestamp: queueLongest ? getMonitoringCallTimestamp(queueLongest) : null,
-      sla: typeof sla === 'number' ? sla : null,
-      handledToday: liveStats ? liveStats.totalCalls : null,
-    };
-  });
-
   return (
     // `mcm-page` scopes the shared console design system (stat tiles, panels,
     // buttons). PerfStatCard renders `.stat`, which is defined only inside
@@ -293,6 +238,33 @@ const Performance = () => {
         .mcm-page .perf-tbar input,
         .mcm-page .perf-tbar select,
         .mcm-page .perf-tbar [role="combobox"] { border-color:var(--line); }
+
+        /* Date range, division and media used to be three separately
+           bordered controls sitting side by side, reading as three
+           unrelated filters rather than one "what am I looking at" bar.
+           One pill, divided into segments, reads as a single filter. */
+        .mcm-page .perf-filter-pill {
+          display:flex; align-items:center; height:36px;
+          border:1px solid var(--line); border-radius:999px;
+          background:var(--surface); overflow:hidden; padding:0 2px;
+        }
+        .mcm-page .perf-filter-pill .pf-seg {
+          display:flex; align-items:center; height:100%;
+          padding:0 14px; white-space:nowrap;
+          font-size:12px; font-weight:600; color:var(--ink-2);
+          border-left:1px solid var(--line);
+        }
+        .mcm-page .perf-filter-pill .pf-seg:first-child { border-left:none; padding-left:4px; }
+        .mcm-page .perf-filter-pill .pf-range { font-weight:500; color:var(--ink-3, #8b8478); }
+        /* The date dropdown is a react-select instance with its own control
+           chrome (border, background, padding) — strip that so it sits flush
+           as the pill's first segment instead of a select-box-in-a-pill. */
+        .mcm-page .perf-filter-pill .custom-react-select__control {
+          border:none !important; background:transparent !important;
+          box-shadow:none !important; min-height:34px !important;
+        }
+        .mcm-page .perf-filter-pill .custom-react-select__value-container { padding-left:14px; }
+        .mcm-page .perf-filter-pill .custom-react-select__indicator-separator { display:none; }
       `}</style>
 
       <div className="page-bar">
@@ -320,11 +292,6 @@ const Performance = () => {
               <span className="dot green pulsing" />
               Live — updates every 2s
             </span>
-            {/* The page header that used to carry these was removed; keeping
-                the actions here so the wallboard stays reachable. */}
-            <button type="button" className="btn ghost sm" onClick={() => setIsWallboardOpen(true)}>
-              Wallboard
-            </button>
             <button
               type="button"
               className="btn primary sm"
@@ -431,14 +398,6 @@ const Performance = () => {
           </div>
         )}
       </div>
-
-      {isWallboardOpen && (
-        <Wallboard
-          tiles={wallboardTiles}
-          queues={wallboardQueues}
-          onClose={() => setIsWallboardOpen(false)}
-        />
-      )}
     </section>
   );
 };

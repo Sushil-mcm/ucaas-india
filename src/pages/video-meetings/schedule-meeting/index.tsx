@@ -435,12 +435,12 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           </div>
           <div className="flex flex-col gap-3">
             <Label>Estimated Duration</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-y-2.5 gap-x-2">
               {durationOptions?.map((item: any) => (
                 <div
                   key={item.value}
                   onClick={() => setDuration(item.value)}
-                  className={`cursor-pointer rounded-xl border border-gray-200 px-3 py-2 text-sm hover:bg-primary hover:text-white ${duration === item.value ? 'bg-primary text-white' : 'bg-white text-gray-900'}`}
+                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm hover:bg-primary hover:text-white ${duration === item.value ? 'border-transparent bg-primary text-white' : 'border-gray-200 bg-transparent text-gray-900'}`}
                 >
                   {item.label}
                 </div>
@@ -449,7 +449,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           </div>
 
           <div className="flex flex-col">
-            <div className="flex min-h-10 flex-col gap-2 py-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-h-9 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Label>Allow join meeting before host</Label>
               <Switch
                 className="cursor-pointer"
@@ -460,7 +460,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
               />
             </div>
 
-            <div className="mb-4 flex min-h-10 flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-3 flex min-h-9 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Label>Need Password to join meeting</Label>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                 {watch('need_password') === 'Yes' && (

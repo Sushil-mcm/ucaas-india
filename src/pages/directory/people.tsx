@@ -271,7 +271,9 @@ const People = () => {
         {/* A new admin adding their first people is exactly who needs to see
             how far through setup they are. The guide hides itself once
             everything is done, so an established account never sees it. */}
-        <SetupGuide companyInfo={user?.company_info} />
+        <div className="gp-people-setup">
+          <SetupGuide companyInfo={user?.company_info} />
+        </div>
 
         <table>
           <thead>
@@ -291,7 +293,7 @@ const People = () => {
               <EmptyRow span={8} message="Loading the roster…" />
             ) : visible.length ? (
               visible.map((row: PersonRow) => (
-                <tr key={row.uuid} className="gp-person-row" onClick={() => openPerson(row)}>
+                <tr key={row.uuid} className="gp-person-row" onClick={() => setOpen(row)}>
                   <td>
                     <span className="flex items-center gap-2.5">
                       <CustomAvatar name={row.name} image={row.image} size="30" />

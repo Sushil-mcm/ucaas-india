@@ -1,0 +1,287 @@
+/* Glassmorphism treatment for Directory ▸ External Contacts — same system
+   as People/Groups/Roles/Locations' own `*-glass.css`, scoped under
+   `.gp-external` so no other `.mcm-page` screen is affected. */
+
+.gp-external {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
+}
+
+.gp-external .page-head,
+.gp-external .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+}
+.gp-external .page-head {
+  background: #fff;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.gp-external .page-head h1 {
+  color: #1a1a1a;
+}
+.gp-external .page-head p {
+  color: #6b5c4d;
+}
+.gp-external .tbar .fchip {
+  background: #fff6e9;
+}
+
+.gp-external .tbar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+.gp-external .tbar .fchip {
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+}
+.gp-external .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+.gp-external .fchip.live {
+  background: rgba(220, 245, 241, 0.75) !important;
+  border-color: transparent !important;
+}
+
+.gp-external .panel-card {
+  background: #fffdfb;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 260px);
+}
+.gp-external .tbl-wrap {
+  overflow-y: auto;
+  min-height: 0;
+}
+.gp-external table {
+  background: transparent;
+}
+.gp-external th {
+  background: #fffdfb;
+  color: #8a6f57;
+  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.gp-external td {
+  border-bottom-color: rgba(150, 100, 50, 0.1);
+}
+.gp-external tbody tr:hover {
+  background: rgba(255, 205, 155, 0.14);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.gp-external .btn.primary {
+  background: var(--accent);
+}
+.gp-external .btn.primary:hover {
+  background: var(--accent-ink);
+}
+
+/* ---- Contact detail popup ----
+   `DialogContent` portals to `document.body`, so it is never a DOM
+   descendant of `.gp-external` regardless of where it sits in the JSX —
+   scoped off its own class instead of an ancestor it will never actually be
+   inside. Reuses the `.gp-create-group-dialog` shell already styled in
+   groups-glass.css for the cream/orange body, adding only what this
+   contact's own content needs.
+
+   `.mcm-field`, `.mini` and `.ic` normally read `--line`/`--surface`/
+   `--ink-2`/`--ai` etc, tokens defined only within `.mcm-page` — this
+   dialog sits outside that ancestor, so every one of those variables is
+   undefined here rather than falling back to anything, and a `border: 1px
+   solid <undefined>` is dropped entirely rather than rendering with some
+   default color. Confirmed via computed style: `--line` and `--surface`
+   both came back as empty strings on these elements. Literal values below
+   sidestep it, the same fix already used for this dialog's Call button. */
+.gp-external-dialog .mcm-field {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid rgba(242, 153, 74, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  color: #2a2733;
+  font-size: 13px;
+}
+.gp-external-dialog .mcm-field:hover,
+.gp-external-dialog .mcm-field:focus-visible {
+  border-color: #f2994a;
+  outline: none;
+}
+/* `.ac-acts`'s own `display: flex` lives under `.mcm-page .ac-acts` in
+   mcm-page.css — same undefined-ancestor problem as everything else in
+   this portaled dialog. Without `display: flex` actually applying, `gap`
+   is a no-op and the buttons just sit flush against each other with
+   nothing but their own borders touching. */
+.gp-external-dialog .ac-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.gp-external-dialog form {
+  gap: 8px;
+}
+.gp-external-dialog form .mcm-field {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.gp-external-dialog .mini {
+  /* Tailwind's preflight sets native `appearance: button` on every
+     <button> — harmless normally, but Chrome's native disabled-button
+     chrome overrides *any* author background/border once a button is
+     `:disabled`, no matter the selector or !important. Confirmed via
+     computed style: disabled showed a plain oklch grey no rule here
+     declares. Resetting appearance restores full author control. */
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.3);
+  color: #6b5c4d;
+}
+.gp-external-dialog .mini:hover {
+  border-color: #f2994a;
+  color: #c96f1f;
+}
+/* A site-wide `button:disabled { background-color: ...!important; ... }`
+   reset (written for react-select's disabled state, but broad enough to
+   catch every disabled <button> in the app) wins over any normal-
+   specificity rule regardless of how many classes it has — `!important`
+   ignores specificity entirely except against other `!important`
+   declarations. Matching it in kind is the only way to still show this
+   button's own orange while disabled instead of that reset's grey. */
+.gp-external-dialog .mini:disabled {
+  background: #fff !important;
+  border-color: rgba(242, 153, 74, 0.3) !important;
+  color: #6b5c4d !important;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.gp-external-dialog .mini.solid:disabled {
+  background: #f2994a !important;
+  border-color: #f2994a !important;
+  color: #fff !important;
+}
+.gp-external-dialog .ic {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  flex: none;
+}
+.gp-external-dialog .kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.15);
+}
+.gp-external-dialog .kv .k {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b5c4d;
+  flex: none;
+}
+.gp-external-dialog .kv .v {
+  font-size: 13px;
+  color: #2a2733;
+  text-align: right;
+  min-width: 0;
+}
+.gp-external-dialog .tag.neu {
+  background: rgba(150, 100, 50, 0.1);
+  color: #8a6f57;
+}
+/* Every `.mini.solid` here — the Call action and the label form's Add
+   button — used the app's generic "AI feature" blue (`.mini.solid` reads
+   `--ai`/`--ai-ink`, undefined outside `.mcm-page` and so falling back to
+   whatever :root's own pale blue default is) rather than this dialog's
+   orange, the only accent color anywhere else on this popup. */
+.gp-external-dialog .mini.solid {
+  background: #f2994a;
+  border-color: #f2994a;
+  color: #fff;
+}
+.gp-external-dialog .mini.solid:hover {
+  background: #c96f1f;
+  border-color: #c96f1f;
+}
+.gp-external-dialog .mini {
+  height: auto;
+  padding: 10px 18px;
+  border-radius: 9px;
+  gap: 8px;
+  white-space: nowrap;
+  flex: none;
+}
+.gp-external-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-ext-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid rgba(242, 153, 74, 0.3);
+  color: #6b5c4d;
+  cursor: pointer;
+}
+.gp-ext-dialog-close:hover {
+  border-color: #f2994a;
+  color: #c96f1f;
+}
+.gp-ext-dialog-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f2994a;
+  border: 1px solid #f2994a;
+  color: #fff;
+  cursor: pointer;
+}
+.gp-ext-dialog-edit:hover {
+  background: #c96f1f;
+}

@@ -1,4 +1,5 @@
 import { Icon } from '@/assets/icons/icon';
+import MeetingHeader from '../upcoming-meetings/header';
 import Loader from '@/components/custom/loader';
 import {
   formatMeetingDate,
