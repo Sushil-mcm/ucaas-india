@@ -22,26 +22,41 @@ export const AdminPage = ({
   description,
   actions,
   filters,
+  hideHead,
   children,
 }: {
   /** The area this screen belongs to, e.g. "Numbers". */
   section?: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   actions?: ReactNode;
   filters?: ReactNode;
+  /**
+   * Drops the eyebrow / title / description block, giving the table back the
+   * vertical space it costs.
+   *
+   * Worth saying what is lost: the shared strip above already prints the screen
+   * title from the nav registry, so on these screens the block was repeating a
+   * heading the page had a second time over — but the description goes with it,
+   * and nothing else says what the screen is for. A page that turns this on
+   * should hand its actions to `AdminHeadActions` instead, or they vanish with
+   * the head that used to hold them.
+   */
+  hideHead?: boolean;
   children: ReactNode;
 }) => (
   <section className="mcm-adminpage">
     <McmIconSprite />
-    <div className="mcm-adminpage-head">
-      <div className="mcm-adminpage-title">
-        {section ? <div className="mcm-adminpage-eyebrow">{section}</div> : null}
-        <h1>{title}</h1>
-        <p>{description}</p>
+    {hideHead ? null : (
+      <div className="mcm-adminpage-head">
+        <div className="mcm-adminpage-title">
+          {section ? <div className="mcm-adminpage-eyebrow">{section}</div> : null}
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </div>
+        {actions ? <div className="mcm-adminpage-actions">{actions}</div> : null}
       </div>
-      {actions ? <div className="mcm-adminpage-actions">{actions}</div> : null}
-    </div>
+    )}
     {filters ? <div className="mcm-adminpage-bar">{filters}</div> : null}
     <div className="mcm-adminpage-body">
       {/* Same card the Directory tables sit in, so the two areas read as one

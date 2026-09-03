@@ -2,6 +2,7 @@ import NumberWithFlag from '@/components/custom/number-with-flag';
 import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { AdminHeadActions } from '@/pages/admin-settings/admin-page-head';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/hooks/use-user';
 import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
@@ -641,18 +642,19 @@ const NumberList = () => {
 
   return (
     <>
+      {/* Up into the shared strip beside the screen title, where the head used
+          to sit. All five views are one table with a tab bar, so the head was
+          spending three lines to repeat a title the strip already prints. */}
+      {!isTrial && view.showAddNumber && virtualNumberAccess?.action?.buy ? (
+        <AdminHeadActions>
+          <button type="button" className="btn primary" onClick={handleAddNumber}>
+            <Plus className="w-3 h-3" />
+            Add number
+          </button>
+        </AdminHeadActions>
+      ) : null}
       <AdminPage
-        section="Numbers"
-        title={view.title}
-        description={view.description}
-        actions={
-          !isTrial && view.showAddNumber && virtualNumberAccess?.action?.buy ? (
-            <button type="button" className="btn primary" onClick={handleAddNumber}>
-              <Plus className="w-3 h-3" />
-              Add number
-            </button>
-          ) : null
-        }
+        hideHead
         filters={
           <Input
             placeholder="Search numbers"

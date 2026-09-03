@@ -387,7 +387,26 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
   );
 
   const locationOptions = useMemo(() => {
-    const locations = [...(locationData || [])];
+    /* The account sells its own Indian inventory, so the rest of the carrier
+       catalogue is not on offer however many countries it returns.
+
+       India is kept from the API response when it appears there, and stood up
+       as a static option when it does not. The numbers being sold were bought
+       directly and are held in did_numbers, so the catalogue's opinion about
+       whether India is purchasable is not the thing that decides it — without
+       the fallback the dropdown would simply be empty and nothing could be
+       added at all. Fax is left alone: a fax package needs a real uuid from the
+       API, and inventing one would fail at checkout instead of here. */
+    const isIndia = (location: any) =>
+      (location?.country_code_iso2 || location?.country_iso || location?.code || '')
+        .toString()
+        .toUpperCase() === 'IN';
+
+    const locations = (locationData || []).filter(isIndia);
+
+    if (!locations.length && !isFaxNumber) {
+      return [{ label: 'India', value: 'IN', region_available: false }];
+    }
 
     return locations
       .sort((a: any, b: any) => a?.country_name.localeCompare(b?.country_name))
@@ -425,7 +444,12 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
     });
 
     seededForFaxModeRef.current = isFaxNumber;
-    if (seed) setValue('location', seed, { shouldValidate: true });
+    /* The company default is still a US site on most of these accounts, and it
+       no longer matches anything in the list, so the seed comes back empty and
+       the box opens blank on its only possible answer. With one country on
+       offer there is nothing to choose. */
+    const resolvedSeed = seed || (locationOptions.length === 1 ? locationOptions[0] : null);
+    if (resolvedSeed) setValue('location', resolvedSeed, { shouldValidate: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyDefaults, isFaxNumber, locationOptions, siteListData]);
 
