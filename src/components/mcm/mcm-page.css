@@ -1005,6 +1005,11 @@
 .mcm-page .kpis.kpis-onerow {
   grid-template-columns: repeat(8, 1fr);
 }
+/* Campaign list KPI strip has a fixed 6 tiles — same reasoning as
+   .kpis-onerow above, just for a 6-tile strip instead of 8. */
+.mcm-page .kpis.kpis-cols-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
 
 .mcm-page .kpi {
   background: var(--surface);

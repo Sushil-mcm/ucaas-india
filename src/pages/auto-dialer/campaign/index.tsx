@@ -553,7 +553,7 @@ const Campaign = ({ embedded = false }: { embedded?: boolean }) => {
         )}
 
         {!embedded && (
-          <div className="kpis">
+          <div className="kpis kpis-cols-6">
             {KPI_CARDS.map((kpi) => (
               <div className="kpi" key={kpi.key}>
                 <div className="k">{kpi.label}</div>

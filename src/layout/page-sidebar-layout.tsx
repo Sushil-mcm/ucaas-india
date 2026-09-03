@@ -105,7 +105,7 @@ const PageSidebarLayout = ({
           className={cn(
             'absolute z-30 top-10 -right-3 transition-all ease-in-out duration-200 border border-gray-200 rounded-full p-0.5 cursor-pointer hidden',
             isCampaignResponsiveTopbar ? 'lg:flex' : isAdminResponsiveTopbar ? 'lg:flex' : 'md:flex',
-            collapsed || hovered
+            collapsed || hovered || isCampaignResponsiveTopbar
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none',
             hovered

@@ -8,7 +8,6 @@ import { capitalizeFirstLetter, convertDateFormateApis } from '@/lib/utils';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import {
   BreakdownRow,
-  Crumb,
   DIAL_METHOD_LABEL,
   OutcomeDonut,
   OutcomeLegend,
@@ -154,7 +153,17 @@ const CampaignRecord = () => {
       <div className="page">
         <div className="page-head">
           <div>
-            <Crumb onBack={() => navigate(-1)} label="Campaigns" trail={resolvedCampaignId} />
+            <div className="cmp-title-row">
+              <button
+                type="button"
+                className="cmp-back-btn"
+                onClick={() => navigate(-1)}
+                aria-label="Back to campaigns"
+              >
+                <Ic n="chev" size={14} />
+              </button>
+              <div className="eyebrow">Campaign</div>
+            </div>
             <h1>{capitalizeFirstLetter(campaign?.name) || 'Campaign'}</h1>
             <p>
               {mode ? <span className="tag neu">{mode}</span> : null}{' '}

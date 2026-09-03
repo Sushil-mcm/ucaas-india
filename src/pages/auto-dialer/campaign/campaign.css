@@ -250,6 +250,32 @@
   transform: rotate(180deg);
 }
 
+/* ── circular back button set beside the campaign name itself,
+   instead of a breadcrumb row above the title ─────────────── */
+.cmp .cmp-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cmp .cmp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--accent-edge);
+  background: var(--surface);
+  color: var(--accent-ink);
+}
+.cmp .cmp-back-btn:hover {
+  background: var(--accent-wash);
+}
+.cmp .cmp-back-btn .ic {
+  transform: rotate(180deg);
+}
+
 /* ── narrow screens: the table scrolls, the page does not ──── */
 .cmp .tbl-wrap {
   overflow-x: auto;
