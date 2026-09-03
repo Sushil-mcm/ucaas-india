@@ -107,21 +107,19 @@ const AllRecording = () => {
           <div className="flex flex-wrap items-end gap-3.5 rounded-2xl border border-white/70 bg-white/45 p-4 backdrop-blur-xl shadow-[0_4px_20px_rgba(154,52,18,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] sm:justify-between">
             <div className="flex min-w-0 flex-col gap-[3px]" style={{ flex: '1 1 320px' }}>
               <div className="flex items-center gap-1.5">
-                <h4 className="text-[23px] font-extrabold leading-[1.1] tracking-[-0.035em] text-gray-900">
+                <h4 className="text-[23px] font-extrabold leading-[1.1] tracking-[-0.035em] text-[#0d1526]">
                   My Recordings
                 </h4>
-                <CustomTooltip
-                  text="Manage recordings, archives, and meeting transcripts."
-                  side="bottom"
-                  className="border border-gray-200 bg-white text-gray-700 shadow-md"
-                  arrowClassName="fill-white"
-                >
-                  <Info className="h-4 w-4 cursor-help text-muted-foreground" />
+                <CustomTooltip text="Manage recordings, archives, and meeting transcripts." side="bottom" className="max-w-xs">
+                  <button
+                    type="button"
+                    className="mcm-acthead-info"
+                    aria-label="About My Recordings"
+                  >
+                    <Info size={15} aria-hidden="true" />
+                  </button>
                 </CustomTooltip>
               </div>
-              <p className="max-w-[64ch] text-[13px] leading-[1.4] text-muted-foreground">
-                Manage recordings, archives, and meeting transcripts.
-              </p>
             </div>
             <div className="ml-auto inline-flex h-10 w-fit items-center rounded-full border border-white/70 bg-white/45 backdrop-blur-md px-4 text-[13px] text-muted-foreground shadow-[0_2px_10px_rgba(154,52,18,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-5">
               <span className="mr-1.5 text-[13px] font-bold" style={{ color: '#B5642F' }}>
