@@ -126,8 +126,6 @@ const DepartmentDetails = lazy(
 );
 const UserDetails = lazy(() => import('@/pages/departments/users-list/user-details'));
 const UserSettings = lazy(() => import('@/pages/admin-settings/templates/user-settings'));
-const OutboundRates = lazy(() => import('@/pages/admin-settings/calling-rates/outbound-rates'));
-const Destinations = lazy(() => import('@/pages/admin-settings/calling-rates/destinations'));
 const CallHandling = lazy(() => import('@/pages/admin-settings/templates/call-handling'));
 const Pricing = lazy(() => import('@/pages/pricing'));
 const SignUp = lazy(() => import('@/pages/signup'));
@@ -1414,39 +1412,6 @@ export const router = createBrowserRouter([
                     guard={{
                       feature: 'phone_system_action.access.DEPARTMENT',
                       permission: 'phone_system_action.action.view',
-                    }}
-                  />
-                ),
-              },
-            ],
-          },
-          {
-            path: 'calling-rates',
-            id: 'calling-rates',
-            children: [
-              {
-                index: true,
-                path: 'outbound-rates',
-                id: 'outbound-rates',
-                element: (
-                  <ProtectedRoute
-                    element={<OutboundRates />}
-                    guard={{
-                      feature: 'calling_rates.IS_SHOW',
-                      permission: 'calling_rates.action.view',
-                    }}
-                  />
-                ),
-              },
-              {
-                path: 'destinations',
-                id: 'destinations',
-                element: (
-                  <ProtectedRoute
-                    element={<Destinations />}
-                    guard={{
-                      feature: 'calling_rates.IS_SHOW',
-                      permission: 'calling_rates.action.view',
                     }}
                   />
                 ),

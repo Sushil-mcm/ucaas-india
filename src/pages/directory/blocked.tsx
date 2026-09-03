@@ -23,6 +23,7 @@ import {
   tagRequest,
 } from '@/lib/contact-blocking';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import './list-page-glass.css';
 
 /**
  * Directory ▸ Blocked — the numbers you have stopped hearing from.
@@ -109,223 +110,225 @@ const Blocked = () => {
     });
 
   return (
-    <DirectoryPage
-      title="Blocked Numbers"
-      description="Everyone you have stopped hearing from, and one place to block someone new."
-      filters={
-        <>
-          <SearchChip value={search} onChange={setSearch} placeholder="Search blocked numbers" />
-          <span className="fchip live" style={{ marginLeft: 'auto' }}>
-            <span className="num">{blocked.length}</span> blocked
-          </span>
-        </>
-      }
-    >
-      <div style={{ padding: 14 }}>
-        <SettingCard
-          title="Block a number"
-          description="Blocking covers calls, faxes and messages from that number."
-          icon={<Ic n="shield" size={16} />}
-          status="coming-soon"
-          note={
-            <>
-              Coming soon. A block is recorded against the contact and that is as far as it
-              goes today: nothing in the call path reads it yet, so a blocked number can
-              still ring through. Only the fact of the block is kept — not which channels it
-              covers, not what the caller hears instead, and not whether it applies to a
-              shared line. Those choices are shown here because they are the decision people
-              actually make, and they are what we need to be able to keep.
-            </>
-          }
-        >
-          <SettingRow
-            label="Number"
-            description="The number you want to stop hearing from. It has to be saved as a contact first."
-            control={
-              <input
-                className="mcm-field"
-                value={number}
-                onChange={(event) => setNumber(event.target.value)}
-                placeholder="+44 20 7946 0000"
-                inputMode="tel"
-                aria-label="Number to block"
-              />
+    <div className="gp-dirlist">
+      <DirectoryPage
+        title="Blocked Numbers"
+        description="Everyone you have stopped hearing from, and one place to block someone new."
+        filters={
+          <>
+            <SearchChip value={search} onChange={setSearch} placeholder="Search blocked numbers" />
+            <span className="fchip live" style={{ marginLeft: 'auto' }}>
+              <span className="num">{blocked.length}</span> blocked
+            </span>
+          </>
+        }
+      >
+        <div style={{ padding: 14 }}>
+          <SettingCard
+            title="Block a number"
+            description="Blocking covers calls, faxes and messages from that number."
+            icon={<Ic n="shield" size={16} />}
+            status="coming-soon"
+            note={
+              <>
+                Coming soon. A block is recorded against the contact and that is as far as it
+                goes today: nothing in the call path reads it yet, so a blocked number can
+                still ring through. Only the fact of the block is kept — not which channels it
+                covers, not what the caller hears instead, and not whether it applies to a
+                shared line. Those choices are shown here because they are the decision people
+                actually make, and they are what we need to be able to keep.
+              </>
             }
-          />
-
-          <SettingRow
-            label="What to stop"
-            description="Blocking calls blocks faxes too — they arrive over the same line."
-            control={
-              <select
-                className="mcm-field"
-                value={scope}
-                onChange={(event) => setScope(event.target.value as BlockScope)}
-                aria-label="What to stop"
-              >
-                {(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => (
-                  <option key={key} value={key}>
-                    {SCOPE_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-            }
-            status={scope === DEFAULT_BLOCK_CHOICE.scope ? undefined : 'coming-soon'}
-          />
-
-          <SettingRow
-            label="What the caller gets"
-            description={TREATMENT_DESCRIPTIONS[treatment]}
-            control={
-              <select
-                className="mcm-field"
-                value={treatment}
-                onChange={(event) => setTreatment(event.target.value as BlockTreatment)}
-                aria-label="What the caller gets"
-              >
-                {(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => (
-                  <option key={key} value={key}>
-                    {TREATMENT_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-            }
-            status={treatment === DEFAULT_BLOCK_CHOICE.treatment ? undefined : 'coming-soon'}
-          />
-
-          <SettingRow
-            label="Whose line"
-            description="A block on your own line stops that caller reaching you. A shared line has to be blocked for everyone who answers it."
-            control={
-              <select
-                className="mcm-field"
-                value={line}
-                onChange={(event) => setLine(event.target.value as BlockLine)}
-                aria-label="Whose line"
-              >
-                <option value="personal">My line</option>
-                <option value="shared">A shared line</option>
-              </select>
-            }
-            status={line === DEFAULT_BLOCK_CHOICE.line ? undefined : 'coming-soon'}
-          />
-
-          {typed ? (
-            <div className="mcm-setrow mcm-setrow-stack">
-              <div className="mcm-setrow-full">
-                <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 8px' }}>
-                  {describeChoice(choice)}
-                </p>
-
-                {plan.problems.map((problem) => (
-                  <p
-                    key={problem.message}
-                    style={{
-                      fontSize: 12,
-                      margin: '0 0 6px',
-                      color: problem.blocking ? 'var(--crit)' : 'var(--ink-3)',
-                    }}
-                  >
-                    {problem.message}
-                  </p>
-                ))}
-
-                {plan.notStored.length ? (
-                  <p style={{ fontSize: 12, color: 'var(--ink-4)', margin: '0 0 8px' }}>
-                    Recorded on this screen but not saved with the contact:{' '}
-                    {plan.notStored.join(', ')}.
-                  </p>
-                ) : null}
-
-                <span className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="btn primary"
-                    disabled={!canBlock(plan) || isSaving}
-                    onClick={block}
-                  >
-                    <Ic n="shield" />
-                    Block this number
-                  </button>
-                  {plan.needsContact ? (
-                    <button
-                      type="button"
-                      className="btn ghost"
-                      onClick={() =>
-                        navigate(
-                          `/contact-activity?contactId=add&number=${encodeURIComponent(number.trim())}`,
-                        )
-                      }
-                    >
-                      <Ic n="plus" />
-                      Save as a contact
-                    </button>
-                  ) : null}
-                </span>
-              </div>
-            </div>
-          ) : null}
-        </SettingCard>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Contact</th>
-            <th>Number</th>
-            <th>Email</th>
-            <th>Blocked</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isPending ? (
-            <EmptyRow span={5} message="Loading blocked numbers…" />
-          ) : visible.length ? (
-            visible.map((row) => {
-              const name = contactName(row) || 'Unknown';
-              return (
-                <tr key={row?._id || row?.contact?.phone}>
-                  <td>
-                    <span className="flex items-center gap-2.5">
-                      <CustomAvatar name={name} type="contact" size="30" />
-                      <span style={{ fontWeight: 700 }}>{name}</span>
-                    </span>
-                  </td>
-                  <td className="num">{row?.contact?.phone || '—'}</td>
-                  <td>{row?.contact?.email || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
-                  <td>
-                    <span className="tag neg">Blocked</span>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="mini"
-                      disabled={isSaving}
-                      title={`Unblock ${name}`}
-                      aria-label={`Unblock ${name}`}
-                      onClick={() => unblock(row)}
-                    >
-                      <Ic n="check" size={12} />
-                      Unblock
-                    </button>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <EmptyRow
-              span={5}
-              message={
-                blocked.length
-                  ? 'No blocked numbers match that search.'
-                  : 'Nobody is blocked. Numbers you block will be listed here.'
+          >
+            <SettingRow
+              label="Number"
+              description="The number you want to stop hearing from. It has to be saved as a contact first."
+              control={
+                <input
+                  className="mcm-field"
+                  value={number}
+                  onChange={(event) => setNumber(event.target.value)}
+                  placeholder="+44 20 7946 0000"
+                  inputMode="tel"
+                  aria-label="Number to block"
+                />
               }
             />
-          )}
-        </tbody>
-      </table>
-    </DirectoryPage>
+
+            <SettingRow
+              label="What to stop"
+              description="Blocking calls blocks faxes too — they arrive over the same line."
+              control={
+                <select
+                  className="mcm-field"
+                  value={scope}
+                  onChange={(event) => setScope(event.target.value as BlockScope)}
+                  aria-label="What to stop"
+                >
+                  {(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => (
+                    <option key={key} value={key}>
+                      {SCOPE_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              }
+              status={scope === DEFAULT_BLOCK_CHOICE.scope ? undefined : 'coming-soon'}
+            />
+
+            <SettingRow
+              label="What the caller gets"
+              description={TREATMENT_DESCRIPTIONS[treatment]}
+              control={
+                <select
+                  className="mcm-field"
+                  value={treatment}
+                  onChange={(event) => setTreatment(event.target.value as BlockTreatment)}
+                  aria-label="What the caller gets"
+                >
+                  {(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => (
+                    <option key={key} value={key}>
+                      {TREATMENT_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              }
+              status={treatment === DEFAULT_BLOCK_CHOICE.treatment ? undefined : 'coming-soon'}
+            />
+
+            <SettingRow
+              label="Whose line"
+              description="A block on your own line stops that caller reaching you. A shared line has to be blocked for everyone who answers it."
+              control={
+                <select
+                  className="mcm-field"
+                  value={line}
+                  onChange={(event) => setLine(event.target.value as BlockLine)}
+                  aria-label="Whose line"
+                >
+                  <option value="personal">My line</option>
+                  <option value="shared">A shared line</option>
+                </select>
+              }
+              status={line === DEFAULT_BLOCK_CHOICE.line ? undefined : 'coming-soon'}
+            />
+
+            {typed ? (
+              <div className="mcm-setrow mcm-setrow-stack">
+                <div className="mcm-setrow-full">
+                  <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 8px' }}>
+                    {describeChoice(choice)}
+                  </p>
+
+                  {plan.problems.map((problem) => (
+                    <p
+                      key={problem.message}
+                      style={{
+                        fontSize: 12,
+                        margin: '0 0 6px',
+                        color: problem.blocking ? 'var(--crit)' : 'var(--ink-3)',
+                      }}
+                    >
+                      {problem.message}
+                    </p>
+                  ))}
+
+                  {plan.notStored.length ? (
+                    <p style={{ fontSize: 12, color: 'var(--ink-4)', margin: '0 0 8px' }}>
+                      Recorded on this screen but not saved with the contact:{' '}
+                      {plan.notStored.join(', ')}.
+                    </p>
+                  ) : null}
+
+                  <span className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn primary"
+                      disabled={!canBlock(plan) || isSaving}
+                      onClick={block}
+                    >
+                      <Ic n="shield" />
+                      Block this number
+                    </button>
+                    {plan.needsContact ? (
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        onClick={() =>
+                          navigate(
+                            `/contact-activity?contactId=add&number=${encodeURIComponent(number.trim())}`,
+                          )
+                        }
+                      >
+                        <Ic n="plus" />
+                        Save as a contact
+                      </button>
+                    ) : null}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </SettingCard>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Contact</th>
+              <th>Number</th>
+              <th>Email</th>
+              <th>Blocked</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isPending ? (
+              <EmptyRow span={5} message="Loading blocked numbers…" />
+            ) : visible.length ? (
+              visible.map((row) => {
+                const name = contactName(row) || 'Unknown';
+                return (
+                  <tr key={row?._id || row?.contact?.phone}>
+                    <td>
+                      <span className="flex items-center gap-2.5">
+                        <CustomAvatar name={name} type="contact" size="30" />
+                        <span style={{ fontWeight: 700 }}>{name}</span>
+                      </span>
+                    </td>
+                    <td className="num">{row?.contact?.phone || '—'}</td>
+                    <td>{row?.contact?.email || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
+                    <td>
+                      <span className="tag neg">Blocked</span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="mini"
+                        disabled={isSaving}
+                        title={`Unblock ${name}`}
+                        aria-label={`Unblock ${name}`}
+                        onClick={() => unblock(row)}
+                      >
+                        <Ic n="check" size={12} />
+                        Unblock
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <EmptyRow
+                span={5}
+                message={
+                  blocked.length
+                    ? 'No blocked numbers match that search.'
+                    : 'Nobody is blocked. Numbers you block will be listed here.'
+                }
+              />
+            )}
+          </tbody>
+        </table>
+      </DirectoryPage>
+    </div>
   );
 };
 

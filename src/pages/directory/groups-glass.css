@@ -1,0 +1,216 @@
+/* Directory ▸ Groups — the platform's own "Users / Groups" split-pane
+   layout, recoloured to the console's orange theme rather than the
+   platform's plain white/gray. Scoped under `.gp-groups` so no other
+   `.mcm-page` screen is affected. */
+
+.gp-groups {
+  height: 100%;
+  min-height: 0;
+  /* `.mcm-page`'s own background is transparent (the site-wide orange
+     gradient pass made it so, to show through by default) — this page
+     paints its own copy of that same gradient rather than inheriting it,
+     so it stays consistent even if an ancestor's background changes. */
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.35), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.28), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.3), transparent 60%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+}
+
+.gp-groups .gp-groups-refresh {
+  border-radius: 999px;
+  border-color: #f2994a;
+  color: #f2994a;
+}
+.gp-groups .gp-groups-refresh:hover {
+  background: #fff1e0;
+  border-color: #f2994a;
+  color: #c96f1f;
+}
+
+/* ---- left: list panel ---- */
+.gp-groups .gp-ug-left {
+  background: #fff !important;
+  border-right-color: rgba(242, 153, 74, 0.25) !important;
+}
+.gp-groups .list-row {
+  cursor: pointer;
+}
+.gp-groups .list-row:hover {
+  background: rgba(255, 205, 155, 0.25);
+}
+.gp-groups .list-row.on {
+  /* Lighter than --accent (#f2994a) — the full-strength shade read as too
+     dark/heavy for a list row selection compared to the rest of the page's
+     softer palette. */
+  background: #f6ad70;
+}
+.gp-groups .list-row.on::before {
+  background: var(--accent-ink);
+}
+/* The row's own text colors are tuned for a light background — on solid
+   orange they need to flip to white to stay readable. Named individually
+   rather than "everything except X": a blanket `:not(...)` still reached
+   the avatar's initials <span>, which isn't itself `.rounded-full` (only
+   its parent is) — forcing white text there made the initials disappear
+   against the avatar's own near-white fill, the same way it did for the
+   member-count tag before that was excluded. */
+.gp-groups .list-row.on {
+  color: #fff !important;
+}
+.gp-groups .list-row.on .list-row-name,
+.gp-groups .list-row.on .list-row-meta,
+.gp-groups .list-row.on p {
+  color: #fff !important;
+}
+
+.gp-groups .gp-ug-detail-head {
+  background: #fff !important;
+  border-bottom-color: rgba(242, 153, 74, 0.25) !important;
+}
+
+/* ---- right: detail panel background, warm instead of flat gray ---- */
+.gp-groups .gp-ug-right-body {
+  background: rgba(255, 246, 233, 0.6) !important;
+}
+.gp-groups .bg-white.border.border-gray-200 {
+  border-color: rgba(242, 153, 74, 0.2) !important;
+  box-shadow: 0 4px 16px rgba(160, 95, 30, 0.06);
+}
+.gp-groups .bg-gray-100 {
+  background: var(--accent-wash, #fff1e0) !important;
+}
+.gp-groups .text-primary {
+  color: var(--accent-ink) !important;
+}
+
+/* ---- "Create group" popup ----
+   `DialogContent` renders through a portal to `document.body`, so it is
+   never a DOM descendant of `.gp-groups` regardless of where it sits in the
+   JSX — these rules target the dialog's own class instead of an ancestor
+   scope it will never actually be inside. */
+.gp-create-group-dialog {
+  background: #fffaf3;
+  border-color: rgba(242, 153, 74, 0.3);
+  padding: 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gp-create-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+  flex: none;
+}
+.gp-create-group-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #2a2733;
+}
+.gp-create-group-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.25);
+  color: #6b5c4d;
+  cursor: pointer;
+}
+.gp-create-group-close:hover {
+  border-color: #f2994a;
+  color: #c96f1f;
+}
+.gp-create-group-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+/* The step tab strip's base styling (`components/ui/tabs.tsx`) paints a
+   plain white box behind whichever tab is active, meant for a white page —
+   it reads as a stray white patch against this dialog's cream background.
+   Only the background is overridden; the orange active-tab underline and
+   text colour (set by NewDepartment's own className) are left alone. */
+.gp-create-group-body [data-slot='tabs-trigger'][data-state='active'] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Shared with the "New role" popup (Directory ▸ Roles), which reuses this
+   same dialog shell — its own form (`add-new-role/select-role`) is built
+   from plain Tailwind gray/white boxes that read as a stray flat-white
+   patch against this dialog's cream background, the same issue the tab
+   strip had above. */
+.gp-create-group-body .bg-gray-50 {
+  /* Not `var(--accent-wash, …)` — shadcn already defines a generic
+     `--accent-wash`-shaped token (actually `--accent`) at `:root` for its
+     own pale neutral color, and since this dialog is portaled outside
+     `.mcm-page` (where *our* orange `--accent` lives), the variable
+     resolves to shadcn's value, not ours, even with a fallback given —
+     the fallback only applies when a variable is undefined, not when it
+     resolves to something unwanted. Literal hex sidesteps the collision. */
+  background: #fff1e0 !important;
+}
+.gp-create-group-body .border-gray-200 {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+}
+/* `:not([data-slot='button'])` keeps this off the shared `Button` component's
+   `outline` variant (`bg-white ... hover:bg-primary/90 hover:text-white`) —
+   without it, this `!important` beat the hover utility's lower-specificity
+   background, leaving white hover text on an unchanged white background. */
+.gp-create-group-body .bg-white:not([data-slot='button']) {
+  background: #fffdfb !important;
+}
+/* `.mcm-userform` paints its own opaque white background — built for sitting
+   inside the old side-drawer's white panel, where that was needed so the
+   page's grey ground didn't show through. Here it just covers this dialog's
+   cream background with a flat white patch. */
+.gp-create-group-body .mcm-userform {
+  background: transparent !important;
+}
+
+/* Footer Cancel/Save — `AddEditUserRole`'s own footer div, targeted by the
+   `gp-role-form-footer` marker class it carries rather than its Tailwind
+   `border-t.border-gray-200` combo, which this same dialog shell's *other*
+   tenant — `NewDepartment`'s Cancel/Prev/Next/Submit wizard footer — also
+   happens to use, and got its own working `Button` variant styling
+   overridden into a flat grey/transparent look by this block as a result. */
+.gp-create-group-body .gp-role-form-footer button[type='button'] {
+  background: transparent !important;
+  color: #6b5c4d !important;
+  border: 1px solid rgba(242, 153, 74, 0.3) !important;
+  border-radius: 9px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+}
+.gp-create-group-body .gp-role-form-footer button[type='button']:hover {
+  border-color: #f2994a !important;
+  color: #c96f1f !important;
+}
+.gp-create-group-body .gp-role-form-footer button[type='submit'] {
+  /* Literal hex, not `var(--accent, …)` — see the note on `.bg-gray-50`
+     above; the variable resolves to shadcn's own pale `--accent`, not
+     ours, since this dialog sits outside `.mcm-page`. */
+  background: #f2994a !important;
+  color: #fff !important;
+  border: 1px solid #f2994a !important;
+  border-radius: 9px !important;
+  height: 36px !important;
+  padding: 0 18px !important;
+  font-weight: 700 !important;
+}
+.gp-create-group-body .gp-role-form-footer button[type='submit']:hover {
+  background: #c96f1f !important;
+}
+.gp-create-group-body .gp-role-form-footer button[type='submit']:disabled {
+  opacity: 0.6 !important;
+}

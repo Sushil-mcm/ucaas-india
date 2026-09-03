@@ -65,7 +65,7 @@ import {
   usageBand,
   type UsageRow,
 } from '@/lib/billing-usage';
-import { CALL_HISTORY_PATH, DESTINATIONS_PATH } from '../billing-sections';
+import { CALL_HISTORY_PATH } from '../billing-sections';
 
 /* Enough rows to cover a month of ordinary calling without making somebody wait
    on twenty-five round trips for a page they are only glancing at. */
@@ -485,13 +485,6 @@ const Usage = () => {
           title="What your plan includes"
           description="Allowances for the current billing cycle, against what has been used so far."
           note="These counters run for the whole billing cycle and are not affected by the period chosen above. Several services are not metered back to this screen yet — those say so rather than showing a zero."
-          aside={
-            <Link to={DESTINATIONS_PATH}>
-              <Button type="button" variant="outline">
-                Full rate list
-              </Button>
-            </Link>
-          }
         >
           {planError ? (
             <SettingRow

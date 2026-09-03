@@ -1,0 +1,409 @@
+/* Glassmorphism treatment for Directory ▸ People only — scoped under
+   `.gp-people` so no other `.mcm-page` screen is affected. */
+
+.gp-people {
+  position: relative;
+  isolation: isolate;
+  /* fills the whole scroll area, not just the height of its own content —
+     otherwise the tint stops dead where the table ends and the page's plain
+     grey shows through underneath. */
+  min-height: 100%;
+  /* The same warm gradient backdrop `body` already uses site-wide for the
+     glassmorphism pass (src/index.css) — pulled in here rather than
+     reinvented, so this page's orange matches the rest of the app exactly. */
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  /* cancel `.mcm-page .page`'s own padding so the background reaches the
+     page's real edges instead of stopping in a boxed-off inset. */
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
+}
+
+.gp-people .page-head,
+.gp-people .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+}
+.gp-people .page-head {
+  background: #fff;
+}
+.gp-people .tbar .fchip {
+  background: #fff6e9;
+}
+
+/* The roster itself stays a solid, light whitish surface rather than glass —
+   it is the page's main reading surface, and a busy orange backdrop showing
+   through row after row would fight the text. */
+.gp-people .panel-card {
+  background: #fffdfb;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  /* Scrolls its own rows instead of stretching the whole page — the roster
+     can run to hundreds of people, and the header/filter bar above should
+     stay put rather than scrolling away with row 40. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 260px);
+}
+.gp-people .tbl-wrap {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.gp-people .page-head {
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.gp-people .page-head h1 {
+  color: #1a1a1a;
+}
+.gp-people .page-head p {
+  color: #6b5c4d;
+}
+
+/* The filter bar reads as one frosted strip, not loose chips floating on the
+   background — same glass treatment as the header and table panel. */
+.gp-people .tbar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+
+.gp-people .tbar .fchip {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.gp-people .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+.gp-people .tbar .fchip > span:first-child {
+  color: #8a6f57;
+  font-weight: 600;
+  margin-right: 2px;
+}
+.gp-people .tbar .fchip.live {
+  background: rgba(220, 245, 241, 0.75);
+  border-color: transparent;
+}
+
+.gp-people table {
+  background: transparent;
+}
+.gp-people th {
+  /* Solid, not transparent — this is what a sticky header needs to actually
+     cover the rows scrolling underneath it rather than showing them through. */
+  background: #fffdfb;
+  color: #8a6f57;
+  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.gp-people td {
+  border-bottom-color: rgba(150, 100, 50, 0.1);
+}
+
+/* Contact column — heading centered over the icon row, and the icons
+   themselves a size up from the platform's default `.mini` so they read as
+   the row's primary actions rather than an afterthought. */
+.gp-people th:last-child {
+  text-align: center;
+}
+.gp-people td:last-child {
+  min-width: 280px;
+}
+.gp-people td:last-child .flex {
+  justify-content: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  gap: 6px;
+}
+/* Matches the top navbar's own round icon buttons exactly — 36px box,
+   18px glyph (50% ratio) — rather than a size invented for this column. */
+.gp-people td:last-child .mini {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  flex: none;
+  /* `.mini`'s base rule only sets `align-items: center` (vertical) — with a
+     fixed width now wider than the icon, the icon hugs the button's left
+     edge instead of sitting in the middle. `justify-content` fixes the
+     horizontal centering the base rule never needed before. */
+  justify-content: center;
+}
+.gp-people td:last-child .mini .ic {
+  width: 32px;
+  height: 32px;
+}
+/* An inset box-shadow draws the accent bar without `position`, which is what
+   broke the row's layout: a positioned `<tr>` with an absolutely-placed
+   child is undefined by the table layout algorithm and Chromium responds by
+   blowing the row up to its own stacking context on hover. */
+.gp-people tbody tr:hover {
+  background: rgba(255, 205, 155, 0.14);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.gp-people .mini {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+.gp-people .mini:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
+}
+
+/* "Groups" / "Export" — `.btn.ghost` is normally a neutral grey action
+   button (used all over the app outside this page), so left alone it reads
+   as off-theme here. Orange border + text by default, filled orange on
+   hover, matching every other action on this page. */
+.gp-people .btn.ghost {
+  /* Full shorthand, not just `border-color` — a global reset
+     (`.mcm-page button:not([data-slot="tabs-trigger"]) { border: 0 }`) beats
+     a color-only override on width/style, since that reset's specificity is
+     higher than `.mcm-page .btn`'s own `border: 1px solid transparent` for
+     those two channels and a bare `border-color` never touches them. */
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.gp-people .btn.ghost:hover {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
+.gp-people .btn.ghost:disabled {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(150, 100, 50, 0.15);
+  color: var(--ink-2);
+}
+
+.gp-people .fchip.live .num {
+  color: #0d9488;
+}
+
+/* A pulsing dot on the "available" chip — reads as live, not a static count. */
+.gp-people .fchip.live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.25);
+  animation: gp-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gp-people .fchip.live::before {
+    animation: none;
+  }
+}
+
+/* ---- role hierarchy badges — darkest/most solid at the top ---- */
+.gp-people .role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.gp-people .role-admin {
+  background: var(--accent);
+  color: #fff;
+}
+.gp-people .role-subadmin {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-edge);
+}
+.gp-people .role-manager {
+  background: rgba(150, 100, 50, 0.1);
+  color: #8a6f57;
+}
+.gp-people .role-agent {
+  background: transparent;
+  color: #8a6f57;
+  border: 1px solid rgba(150, 100, 50, 0.18);
+}
+
+/* ---- person row (opens the detail popup) ---- */
+.gp-people tbody tr.gp-person-row {
+  cursor: pointer;
+}
+
+/* ---- person detail popup — field grid, matching the reference form ----
+   `DialogContent` renders through a portal to `document.body`, so it is
+   never a DOM descendant of `.gp-people` no matter where it's written in
+   the JSX — these rules scope off the dialog's own class instead of an
+   ancestor that will never actually contain it. */
+.gp-person-dialog {
+  --mcm-accent-wash: #fff1e0;
+  --mcm-accent-edge: #ffd9ad;
+  --mcm-ink: #0d1526;
+  --mcm-ink-2: #3d4a63;
+  background: #fffaf3;
+  border-color: rgba(242, 153, 74, 0.3);
+}
+.gp-person-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin-bottom: 14px;
+}
+.gp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.gp-field-l {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mcm-ink-2, #3d4a63);
+}
+.gp-field-v {
+  width: 100%;
+  border-radius: 10px;
+  background: var(--mcm-accent-wash, #fff1e0);
+  border: 1px solid var(--mcm-accent-edge, #ffd9ad);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--mcm-ink, #0d1526);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  outline: none;
+}
+input.gp-field-v:focus {
+  border-color: #f2994a;
+}
+input.gp-field-v:disabled {
+  color: var(--mcm-ink-2, #3d4a63);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.gp-person-callerid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.gp-person-callerid .gp-field-l {
+  flex: none;
+  white-space: nowrap;
+}
+.gp-person-callerid .gp-field-v {
+  flex: 1;
+  /* A flex item's default `min-width: auto` lets its content force the item
+     (and its container) wider than the space actually allotted — this is
+     what let the box push past the dialog's edge. */
+  min-width: 0;
+  width: auto;
+}
+.gp-person-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* `.btn`/`.ic` are normally styled under `.mcm-page` — this dialog is
+   portaled to `document.body` by Radix, outside that ancestor, so it needs
+   its own minimal copy rather than relying on a scope it never sits inside. */
+.gp-person-dialog .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.gp-person-dialog .btn.ghost {
+  background: #fff;
+  border-color: rgba(242, 153, 74, 0.3);
+  color: var(--mcm-ink-2, #3d4a63);
+}
+.gp-person-dialog .btn.ghost:hover {
+  border-color: #f2994a;
+}
+.gp-person-dialog .btn.primary {
+  background: #f2994a;
+  color: #fff;
+}
+.gp-person-dialog .btn.primary:hover {
+  background: #c96f1f;
+}
+.gp-person-dialog .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.gp-person-dialog .ic {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  flex: none;
+}
+
+/* Row "more actions" menu — same portal caveat as the dialog above: `.ic`
+   with no `.mcm-page` ancestor to inherit fill/stroke from renders as a
+   solid black blob instead of an outline glyph. */
+.gp-person-menu .ic {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  flex: none;
+}
+.gp-person-menu [data-slot='dropdown-menu-item'] {
+  /* The base `rounded-xl` (12px) reads as a full pill/stadium shape at this
+     row's height — a smaller radius keeps the hover a rectangle with just
+     softened corners instead. */
+  border-radius: 6px;
+}
+.gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive']):hover,
+.gp-person-menu
+  [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
+  background: #fff1e0;
+  color: #c96f1f;
+}

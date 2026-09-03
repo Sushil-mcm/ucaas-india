@@ -261,10 +261,6 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/templates/call-handling')),
   },
   {
-    prefix: '/admin-settings/calling-rates/outbound-rates',
-    importers: withAdmin(() => import('@/pages/admin-settings/calling-rates/outbound-rates')),
-  },
-  {
     /* Its own entry so hovering the link loads the table rather than the card
        list. The longest matching prefix wins, so this beats the plain company
        one below whatever order they are written in. */

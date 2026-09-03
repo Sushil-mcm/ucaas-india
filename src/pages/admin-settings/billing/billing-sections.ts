@@ -131,9 +131,5 @@ export const BILLING_REDIRECTS: { from: string; to: string }[] = [
   { from: 'spending', to: 'usage' },
 ];
 
-/* The full price list, which lives under Calling rates rather than Billing.
-   Usage links to it instead of growing its own copy of every country's rate. */
-export const DESTINATIONS_PATH = '/admin-settings/calling-rates/destinations';
-
 /* The calls themselves. Usage summarises; this is the itemised list. */
 export const CALL_HISTORY_PATH = '/reports/call-history';

@@ -383,33 +383,6 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       ],
     },
     {
-      key: 'admin-settings.calling_rates',
-      id: 'calling_rates',
-      title: 'SMS/Calling Rates',
-      icon: 'DollarSignCircle',
-      type: 'accordion',
-      value: 'call-rates',
-      enabled: Boolean(features?.plan_features?.calling_rates?.IS_SHOW),
-      visible: Boolean(features?.plan_features?.calling_rates?.action?.view),
-      children: [
-        {
-          key: 'admin-settings.calling_rates.outbound_rates',
-          id: 'outbound_rates',
-          title: 'Rate Details',
-          path: '/admin-settings/calling-rates/outbound-rates',
-          icon: 'CallOutgoing',
-        },
-        {
-          /* The whole price list, rather than one country at a time. */
-          key: 'admin-settings.calling_rates.destinations',
-          id: 'destinations',
-          title: 'Destinations',
-          path: '/admin-settings/calling-rates/destinations',
-          icon: 'CallOutgoing',
-        },
-      ].filter(Boolean),
-    },
-    {
       /* Billing's pages come from one shared list, so this menu and the router
          cannot drift apart. Admin-only, because who may look at the company's
          money is a question about the person, not about which calling features

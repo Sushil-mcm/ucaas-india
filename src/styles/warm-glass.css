@@ -1,0 +1,239 @@
+/* ============================================================
+   Warm glassmorphism theme shared by Chat and Agent Chat.
+
+   Both pages are built from Tailwind utility classes (bg-white,
+   border-gray-200, bg-muted, text-foreground, ...) rather than the CSS
+   custom properties the phone console (src/pages/phone/console/console.css)
+   uses, so there's no shared token layer to redirect. Instead this
+   overrides those exact utility classes, scoped under `.mcm-warm-glass`
+   (applied to each page's root wrapper), so nothing outside those pages
+   is touched. `!important` matches the existing scoped-override
+   convention already used for similar cases in src/index.css.
+
+   Classes only Agent Chat uses (bg-muted, text-foreground, bg-destructive,
+   ucass-orange, emerald-*, ...) are harmless no-ops on the Chat page and
+   vice versa — both pages share this one file instead of forking it.
+   ============================================================ */
+
+.mcm-warm-glass {
+  --cg-ink: #241c14;
+  --cg-ink-2: #5c4d3d;
+  --cg-ink-3: #8a7a67;
+  --cg-ink-4: #b3a591;
+  --cg-line: rgba(120, 90, 50, 0.14);
+  --cg-surface: rgba(255, 255, 255, 0.86);
+  --cg-surface-2: rgba(255, 250, 242, 0.75);
+  --cg-surface-3: rgba(250, 238, 220, 0.7);
+  --cg-accent: #ea7c1e;
+  --cg-accent-ink: #c2620f;
+  --cg-accent-wash: rgba(253, 236, 211, 0.8);
+  --cg-accent-edge: #f6c78c;
+  --cg-blur: blur(14px) saturate(140%);
+
+  background: radial-gradient(
+    140% 160% at 50% -20%,
+    #fff6ea 0%,
+    #fbe9cd 30%,
+    #f6d9ab 55%,
+    #eec38a 75%,
+    #e0a967 100%
+  ) !important;
+}
+.dark .mcm-warm-glass {
+  --cg-ink: #f7ecdd;
+  --cg-ink-2: #dcc7ad;
+  --cg-ink-3: #b39a7d;
+  --cg-ink-4: #8a7258;
+  --cg-line: rgba(255, 255, 255, 0.08);
+  --cg-surface: rgba(46, 34, 21, 0.8);
+  --cg-surface-2: rgba(38, 28, 17, 0.72);
+  --cg-surface-3: rgba(58, 42, 24, 0.75);
+  --cg-accent: #f0913a;
+  --cg-accent-ink: #ffb066;
+  --cg-accent-wash: rgba(58, 39, 18, 0.75);
+  --cg-accent-edge: #6b4a20;
+
+  background: radial-gradient(
+    140% 160% at 50% -20%,
+    #3a2712 0%,
+    #2c1e10 32%,
+    #221a0f 58%,
+    #1a130b 78%,
+    #120d07 100%
+  ) !important;
+}
+
+/* Panels: every opaque white surface becomes a translucent, blurred pane
+   so the gradient behind it shows through. */
+.mcm-warm-glass .bg-white,
+.mcm-warm-glass .hover\:bg-white:hover {
+  background-color: var(--cg-surface) !important;
+  backdrop-filter: var(--cg-blur);
+  -webkit-backdrop-filter: var(--cg-blur);
+}
+.mcm-warm-glass .bg-gray-50,
+.mcm-warm-glass .hover\:bg-gray-50:hover,
+.mcm-warm-glass .bg-muted,
+.mcm-warm-glass .hover\:bg-muted:hover {
+  background-color: var(--cg-surface-2) !important;
+}
+.mcm-warm-glass .bg-gray-100,
+.mcm-warm-glass .hover\:bg-gray-100:hover,
+.mcm-warm-glass .bg-gray-200,
+.mcm-warm-glass .hover\:bg-gray-200:hover {
+  background-color: var(--cg-surface-3) !important;
+}
+.mcm-warm-glass .bg-gray-300,
+.mcm-warm-glass .hover\:bg-gray-300:hover {
+  background-color: rgba(120, 90, 50, 0.22) !important;
+}
+.mcm-warm-glass .bg-gray-600,
+.mcm-warm-glass .bg-gray-800,
+.mcm-warm-glass .hover\:bg-gray-800:hover,
+.mcm-warm-glass .bg-gray-900 {
+  background-color: var(--cg-ink) !important;
+}
+
+/* Borders/dividers: warm, translucent instead of flat cool gray. */
+.mcm-warm-glass .border-gray-50,
+.mcm-warm-glass .border-gray-100,
+.mcm-warm-glass .border-gray-200,
+.mcm-warm-glass .border-gray-300,
+.mcm-warm-glass .hover\:border-gray-300:hover,
+.mcm-warm-glass .border-gray-700,
+.mcm-warm-glass .border-border {
+  border-color: var(--cg-line) !important;
+}
+
+/* Text: cool grays become warm inks along the same light-to-dark scale. */
+.mcm-warm-glass .text-gray-300,
+.mcm-warm-glass .text-gray-400 {
+  color: var(--cg-ink-4) !important;
+}
+.mcm-warm-glass .text-gray-500,
+.mcm-warm-glass .text-gray-600,
+.mcm-warm-glass .text-muted-foreground {
+  color: var(--cg-ink-3) !important;
+}
+.mcm-warm-glass .text-gray-700,
+.mcm-warm-glass .hover\:text-gray-700:hover,
+.mcm-warm-glass .text-gray-800 {
+  color: var(--cg-ink-2) !important;
+}
+.mcm-warm-glass .text-gray-900,
+.mcm-warm-glass .hover\:text-gray-900:hover,
+.mcm-warm-glass .text-foreground,
+.mcm-warm-glass .hover\:text-foreground:hover {
+  color: var(--cg-ink) !important;
+}
+
+/* Brand accent: primary + the site's "ucass-active"/"ucass-orange" tokens
+   (blue by default) both become the same warm orange used on the phone
+   console. */
+.mcm-warm-glass .bg-primary,
+.mcm-warm-glass .hover\:bg-primary:hover,
+.mcm-warm-glass .bg-ucass-active,
+.mcm-warm-glass .hover\:bg-ucass-active:hover,
+.mcm-warm-glass .bg-ucass-primary-200,
+.mcm-warm-glass .bg-ucass-orange {
+  background-color: var(--cg-accent) !important;
+}
+.mcm-warm-glass .text-primary,
+.mcm-warm-glass .hover\:text-primary:hover,
+.mcm-warm-glass .text-ucass-active,
+.mcm-warm-glass .hover\:text-ucass-active:hover,
+.mcm-warm-glass .text-ucass-orange {
+  color: var(--cg-accent-ink) !important;
+}
+.mcm-warm-glass .border-primary,
+.mcm-warm-glass .hover\:border-primary:hover,
+.mcm-warm-glass .border-ucass-active,
+.mcm-warm-glass .hover\:border-ucass-active:hover,
+.mcm-warm-glass .border-ucass-orange {
+  border-color: var(--cg-accent) !important;
+}
+.mcm-warm-glass .bg-ucass-active-bg,
+.mcm-warm-glass .hover\:bg-ucass-active-bg:hover,
+.mcm-warm-glass .bg-ucass-primary-100,
+.mcm-warm-glass .bg-ucass-orange\/10 {
+  background-color: var(--cg-accent-wash) !important;
+}
+.mcm-warm-glass .border-ucass-active-bg,
+.mcm-warm-glass .hover\:border-ucass-active-bg:hover {
+  border-color: var(--cg-accent-edge) !important;
+}
+.mcm-warm-glass .bg-ucass-gray {
+  background-color: var(--cg-surface-3) !important;
+}
+
+/* Agent Chat's status colors (destructive = missed/overdue, emerald =
+   resolved) stay semantically distinct from the orange accent but move to
+   the same warm-glass surfaces/borders instead of flat white/gray. */
+.mcm-warm-glass .bg-destructive\/10 {
+  background-color: rgba(211, 47, 47, 0.12) !important;
+}
+.mcm-warm-glass .border-destructive\/30 {
+  border-color: rgba(211, 47, 47, 0.35) !important;
+}
+
+/* Directory ▸ Contact view's sticky table header ships with a tan/orange
+   `bg-[#FBE2C8]` (`TableManager`'s own default), which reads inconsistently
+   next to every other Directory page — People, External Contacts, Favourites,
+   Blocked — whose tables (built on the page shell, not `TableManager`) all
+   use a plain white header. Matched here to that same white
+   (`--surface: #ffffff` in `mcm-page.css`) for Contact view's table only.
+
+   This also sits inside a container with `backdrop-blur-[12px]`
+   (`TableManager`'s own scroll wrapper). Chromium has a known compositing
+   quirk where a `position: sticky` element inside a `backdrop-filter`
+   ancestor doesn't always get its own paint layer, so the row scrolling
+   underneath can bleed through the header's otherwise fully opaque
+   background — promoting the header to its own GPU layer (a no-op transform
+   + explicit stacking context) forces Chromium to composite it correctly.
+   `will-change: transform` keeps that layer alive for the whole scroll
+   gesture instead of it being created/dropped per frame (which is what
+   produces that ghosting), and `contain: paint` stops the browser from ever
+   painting the header's box using content from outside it.
+
+   Scoped to Contact view's table only via `.contact-table-glass` (see
+   `tableWrapperClassName` in `all-contacts-list/index.tsx`), so no other
+   table using this shared component is touched. */
+.mcm-warm-glass .contact-table-glass thead {
+  background-color: #ffffff !important;
+  transform: translateZ(0);
+  isolation: isolate;
+  will-change: transform;
+  contain: paint;
+}
+
+/* Contact view's "N contacts selected" bulk-action bar used flat
+   bg-red-50/border-red-200, which read as a jarring, unthemed block against
+   this page's warm glass surfaces. Softened to the same translucent,
+   blurred surface as the rest of the page while keeping the delete action
+   itself solid red — it's still a destructive action and should read as
+   one. Scoped the same way as `.contact-table-glass` above: only applies
+   when `tableWrapperClassName` is passed (Contact view only), so the
+   original red banner is untouched everywhere else `AllNewContactsList` is
+   used (e.g. the lead/group contact-logs drill-down). */
+.mcm-warm-glass .contact-bulk-bar-warm {
+  background: var(--cg-surface-2) !important;
+  border: 1px solid rgba(211, 47, 47, 0.28) !important;
+  backdrop-filter: var(--cg-blur);
+  -webkit-backdrop-filter: var(--cg-blur);
+}
+.mcm-warm-glass .contact-bulk-bar-warm-text {
+  color: #b3261e !important;
+}
+.mcm-warm-glass .contact-bulk-delete-btn {
+  background-color: #d32f2f !important;
+  color: #fff !important;
+}
+.mcm-warm-glass .contact-bulk-delete-btn:hover {
+  background-color: #b3261e !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Rules this console has that the reference does not (the .cs-* settings
+   layer and friends). Kept verbatim and appended so the reference's design
+   governs every shared selector while nothing local is dropped.
+   --------------------------------------------------------------------------- */

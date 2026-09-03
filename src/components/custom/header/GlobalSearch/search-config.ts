@@ -40,7 +40,6 @@ export const SEARCHABLE_PAGES: SearchablePage[] = [
   { label: 'Invoices', path: '/admin-settings/billing/invoices' },
   { label: 'Social Media Channels', path: '/admin-settings/social-media-channels' },
   { label: 'Templates', path: '/admin-settings/templates/user-settings' },
-  { label: 'Outbound Rates', path: '/admin-settings/calling-rates/outbound-rates' },
   { label: 'Knowledge Base', path: '/admin-settings/knowledge/all-knowledge' },
   { label: 'AI Agent', path: '/admin-settings/knowledge/ai-agent' },
   { label: 'AI Settings', path: '/admin-settings/knowledge/ai-settings' },

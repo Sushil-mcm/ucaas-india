@@ -1,34 +1,26 @@
-import {
-  ActivityIcon,
-  Bell,
-  CalendarIcon,
-  // CloseIcon,
-  Headphones,
-  Monitor,
-  // PauseCircle,
-} from '@/assets/icons';
+import { Bell } from '@/assets/icons';
 import ucaasLogo from '@/assets/images/ucaas-logo.png';
 import { useUser } from '@/hooks/use-user';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomAvatar from '../custom-avatar';
-import CompanyLogoMark from '../company-logo-mark';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import SideDrawer from '../side-drawer';
 import ChangePassword from '@/pages/change-password';
 import CustomTooltip from '../custom-tooltip';
 import { useCompanyFeatures } from '@/hooks/rbac';
+import { useMyPresence } from '@/hooks/use-my-presence';
 import AvatarContent from './AvatarContent';
 import NotificationContent from './NotificationContent';
 import GlobalSearch from './GlobalSearch';
 import AreaNav from '@/components/custom/area-nav';
 import ThemeToggle from '@/components/custom/theme-toggle';
 import PendingChatRequestsDrawer from './PendingChatRequestsDrawer';
-import { List, Menu, Plus, Wallet, X } from 'lucide-react';
+import { ChevronDown, Menu, Wallet, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { SESSION_NAME } from '@/lib/utils';
+import { cn, SESSION_NAME } from '@/lib/utils';
 import { DASHBOARDCONST } from '@/pages/dashboard/constant';
 import AlertConfirm from '../alert-confirm';
 import { toast } from 'react-toastify';
@@ -37,13 +29,7 @@ import { getRoutePrefetchHandlers, prefetchRoute } from '@/router/route-prefetch
 const Header = () => {
   const { user, handleRemoveUser } = useUser();
   const queryClient = useQueryClient();
-  const ACTIVE_PATH = {
-    CALENDAR: 'calendar',
-    RUNNING_CAMPAIGN: 'running-campaign',
-    ACTIVITY: user?.user_info?.uuid,
-    ALL_CALLS: 'all-calls',
-    BASIC_INFO: 'basic-info',
-  };
+  const { status: myPresenceStatus } = useMyPresence();
   const {
     activeCampaign,
     setActiveCampaign,
@@ -53,7 +39,6 @@ const Header = () => {
   } = useDialpad();
   const {
     unreadCount = 0,
-    unreadTaskCount = 0,
     userLogoutData,
     disconnectSocket,
     socketEventsManager,
@@ -66,13 +51,9 @@ const Header = () => {
     'profile' | 'changePassword' | 'notification' | null
   >(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const [walletUpdatedAmount, setWalletUpdatedAmount] = useState<number | null>(null);
   const navigate = useNavigate();
   const { pathname = '' } = useLocation();
-  const [searchParams] = useSearchParams();
-  const activePath = pathname?.split('/')?.pop();
-  const currentView = searchParams.get('view') || 'calendar';
   const companyAmount = user?.company_info?.amount;
   const totalFunds =
     companyAmount !== null && companyAmount !== undefined ? `$${companyAmount}` : '00.00';
@@ -100,16 +81,6 @@ const Header = () => {
   const hasAnyActiveDialpadSessionRef = useRef(hasAnyActiveDialpadSession);
 
   const { features } = useCompanyFeatures();
-  const monitoringAccess = features?.plan_features?.monitoring?.action || {};
-  const campaignAccess = features?.plan_features?.campaign?.IS_SHOW;
-  const taskRoute = '/calendar?view=task-list';
-  const calendarRoute = '/calendar?view=calendar';
-  const myCampaignsRoute = '/my-campaigns';
-  const activityRoute = user?.user_info?.uuid ? `/activity/${user.user_info.uuid}` : undefined;
-  const monitoringRoute =
-    role !== 'ADMIN' || !monitoringAccess?.view
-      ? '/monitoring/department'
-      : '/monitoring/all-calls';
   const addFundsRoute = '/admin-settings/billing/purchase';
 
   const navigateToLazyRoute = useCallback(
@@ -131,76 +102,6 @@ const Header = () => {
     [navigateToLazyRoute],
   );
 
-  // One source of truth for the quick links: the header renders them twice —
-  // as icon chips in the mobile menu's flow, and as labelled rows in the
-  // desktop dropdown — and they must not drift apart.
-  const quickLinks = useMemo(
-    () =>
-      [
-        {
-          key: 'tasks',
-          label: 'Tasks',
-          Icon: List,
-          route: taskRoute,
-          active: activePath === ACTIVE_PATH.CALENDAR && currentView === 'task-list',
-          badge: unreadTaskCount,
-          show: true,
-        },
-        {
-          key: 'calendar',
-          label: 'Calendar',
-          Icon: CalendarIcon,
-          route: calendarRoute,
-          active: activePath === ACTIVE_PATH.CALENDAR && currentView === 'calendar',
-          badge: 0,
-          show: true,
-        },
-        {
-          key: 'campaigns',
-          label: 'My Campaigns',
-          Icon: Headphones,
-          route: myCampaignsRoute,
-          active: activePath === ACTIVE_PATH.RUNNING_CAMPAIGN,
-          badge: 0,
-          show: Boolean(campaignAccess),
-        },
-        {
-          key: 'activity',
-          label: 'Activity',
-          Icon: ActivityIcon,
-          route: activityRoute,
-          active: activePath === ACTIVE_PATH.ACTIVITY,
-          badge: 0,
-          show: true,
-        },
-        {
-          key: 'monitoring',
-          label: 'Monitoring',
-          Icon: Monitor,
-          route: monitoringRoute,
-          active: activePath === ACTIVE_PATH.ALL_CALLS,
-          badge: 0,
-          show: Boolean(monitoringAccess?.view),
-        },
-      ].filter((link) => link.show),
-    [
-      activePath,
-      currentView,
-      unreadTaskCount,
-      campaignAccess,
-      monitoringAccess?.view,
-      taskRoute,
-      calendarRoute,
-      myCampaignsRoute,
-      activityRoute,
-      monitoringRoute,
-      ACTIVE_PATH.CALENDAR,
-      ACTIVE_PATH.RUNNING_CAMPAIGN,
-      ACTIVE_PATH.ACTIVITY,
-      ACTIVE_PATH.ALL_CALLS,
-    ],
-  );
-
   const clearCampaignSystemEventsInterval = useCallback(() => {
     if (campaignSystemEventsIntervalRef.current) {
       clearInterval(campaignSystemEventsIntervalRef.current);
@@ -214,30 +115,7 @@ const Header = () => {
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
-    setIsQuickMenuOpen(false);
   }, [pathname]);
-
-  // A fan-out that stays open once the pointer leaves it feels stuck, and it
-  // overlays the page, so dismiss on outside click and on Escape.
-  useEffect(() => {
-    if (!isQuickMenuOpen) return;
-
-    const onPointerDown = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target && target.closest('.hdr-quick-wrap')) return;
-      setIsQuickMenuOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsQuickMenuOpen(false);
-    };
-
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [isQuickMenuOpen]);
 
   useEffect(() => {
     const logoutUuid = userLogoutData?.uuid;
@@ -387,7 +265,6 @@ const Header = () => {
   useEffect(() => {
     if (socketEventsManager) {
       const handleWalletUpdated = (data: any) => {
-        console.log('Header wallet-updated data:', data);
         queryClient.invalidateQueries({ queryKey: ['callListingLog'] });
         const nextAmount = Number(data?.amount);
         if (!Number.isFinite(nextAmount)) return;
@@ -405,7 +282,26 @@ const Header = () => {
   return (
     <>
       <div className="fixed left-0 top-0 z-30 h-16 w-full">
-        <header className="bg-white min-h-16 text-gray-900/80 border-b border-gray-200 px-3 py-3 ">
+        {/* `border-gray-200`, not `border-white/50`: the old rule was white
+            on a white bar sitting above white page content, so the header had
+            no visible bottom edge and merged into whatever was beneath it.
+
+            `h-16` rather than `min-h-16` because the wrapper above is a fixed
+            64px and page content is offset by `pt-16` (64px) — `min-h-16`
+            plus this 1px border made the bar 65px, so it painted over the
+            first row of the content below. Border-box keeps the border
+            inside the 64px. */}
+        <header
+          /* Upstream's px-4/py-2.5 padding, but keeping `h-16` over
+             `min-h-16` and a visible `border-gray-200` over
+             `border-white/50` — see the note above the tag. */
+          className="h-16 text-gray-900/80 border-b border-gray-200 px-4 py-2.5"
+          style={{
+            background: 'rgba(255, 255, 255, 0.78)',
+            backdropFilter: 'blur(12px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+          }}
+        >
           <nav
             className="flex w-full flex-col gap-3 md:flex-row md:items-center md:gap-2"
             aria-label="Global"
@@ -420,20 +316,16 @@ const Header = () => {
                 className="mcm-brand"
                 aria-label="Go to Home"
               >
-                {/* The bundled ucaas.in wordmark rather than the organisation's
-                    own logo and name from the branding API. Same reason the
-                    colour tokens are pinned with !important in src/index.css:
-                    the connected database is a copy carrying another brand's
-                    row, so what that API returns here is not this console's
-                    identity. Restore the API-driven mark the day the
-                    organisation row holds real ucaas.in branding. */}
+                {/* The customer's own mark. When they have not uploaded one we
+                    show their initial rather than falling back to the vendor's
+                    logo — this bar belongs to whoever is running the console. */}
                 <span className="mcm-brand-mark">
-                  <img src={ucaasLogo} alt="ucaas.in" />
+                  <img src={ucaasLogo} alt="" />
                 </span>
               </a>
               <AreaNav />
             </div>
-            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:w-auto relative">
+            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:ml-auto md:w-auto relative">
               {hasActiveCampaign && (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                   <span className="relative flex h-2.5 w-2.5">
@@ -478,222 +370,15 @@ const Header = () => {
               id="mobile-header-actions"
               className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap gap-2 items-center border-t border-gray-200 pt-3 md:order-3 md:flex md:w-auto md:flex-nowrap md:border-t-0 md:pt-0`}
             >
-              {/* On desktop these destinations collapse behind the "more"
-                  toggle and open as a labelled dropdown panel. On narrow
-                  screens the header menu already reveals them, so they stay
-                  in flow as icon chips and the labels are hidden. */}
-              <style>{`
-                /* Narrow screens keep the original row: the wrappers dissolve
-                   so the chips stay direct children of the header flex line. */
-                .hdr-quick-wrap, .hdr-quick { display: contents; }
-                .hdr-quick-toggle, .hdr-quick-label { display: none; }
-
-                .hdr-quick-item {
-                  position: relative;
-                  display: inline-flex; align-items: center; justify-content: center;
-                  width: 36px; height: 36px; flex: none;
-                  border-radius: 10px; cursor: pointer;
-                  background: var(--muted); color: var(--foreground);
-                  transition: background .15s ease, color .15s ease;
-                }
-                .hdr-quick-item:hover,
-                .hdr-quick-item.is-active {
-                  background: var(--color-ucass-primary-100);
-                  color: var(--color-ucass-active);
-                }
-                .hdr-quick-icon { display: inline-flex; }
-                .hdr-quick-badge {
-                  position: absolute; top: -4px; right: -4px;
-                  min-width: 20px; height: 20px; padding: 0 5px;
-                  display: inline-flex; align-items: center; justify-content: center;
-                  border-radius: 999px; border: 2px solid var(--popover);
-                  background: var(--primary); color: var(--primary-foreground);
-                  font-size: 10px; font-weight: 500; line-height: 1;
-                }
-
-                @media (min-width: 768px) {
-                  .hdr-quick-wrap {
-                    display: inline-flex; align-items: center;
-                    position: relative; width: 36px; height: 36px; flex: none;
-                  }
-
-                  .hdr-quick-toggle {
-                    display: inline-flex; align-items: center; justify-content: center;
-                    width: 36px; height: 36px; border-radius: 10px;
-                    background: var(--muted); color: var(--foreground); cursor: pointer;
-                    transition: background .15s ease, color .15s ease;
-                  }
-                  .hdr-quick-toggle:hover {
-                    background: var(--color-ucass-primary-100);
-                    color: var(--color-ucass-active);
-                  }
-                  .hdr-quick-toggle.on {
-                    background: var(--primary); color: var(--primary-foreground);
-                  }
-                  /* Only the glyph turns, so the button stays a square and the
-                     plus reads as a close. Rotating the button itself is what
-                     used to leave an orange diamond in the header. */
-                  .hdr-quick-toggle-icon {
-                    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
-                  }
-                  .hdr-quick-toggle.on .hdr-quick-toggle-icon { transform: rotate(45deg); }
-
-                  .hdr-quick {
-                    display: block; position: absolute; top: calc(100% + 10px); right: 0;
-                    min-width: 232px; padding: 6px; z-index: 60;
-                    background: var(--popover); color: var(--popover-foreground);
-                    border: 1px solid var(--border); border-radius: 14px;
-                    box-shadow: 0 16px 36px -12px rgb(17 24 39 / .22),
-                                0 2px 8px rgb(17 24 39 / .06);
-                    opacity: 0; pointer-events: none; visibility: hidden;
-                    transform: translateY(-6px) scale(.97); transform-origin: top right;
-                    transition: opacity .16s ease,
-                                transform .2s cubic-bezier(.34,1.4,.64,1),
-                                visibility .16s ease;
-                  }
-                  .hdr-quick.open {
-                    opacity: 1; pointer-events: auto; visibility: visible; transform: none;
-                  }
-
-                  /* Caret tying the panel back to the toggle it opened from. */
-                  .hdr-quick::before {
-                    content: ''; position: absolute; top: -6px; right: 11px;
-                    width: 10px; height: 10px; background: var(--popover);
-                    border-left: 1px solid var(--border);
-                    border-top: 1px solid var(--border);
-                    transform: rotate(45deg); border-radius: 3px 0 0 0;
-                  }
-
-                  .hdr-quick .hdr-quick-item {
-                    display: flex; justify-content: flex-start; gap: 10px;
-                    width: 100%; height: auto; padding: 7px 9px;
-                    border-radius: 10px; background: transparent; color: inherit;
-                    font-size: 13px; font-weight: 500; white-space: nowrap;
-                  }
-                  .hdr-quick .hdr-quick-item + .hdr-quick-item { margin-top: 2px; }
-                  .hdr-quick .hdr-quick-item:hover,
-                  .hdr-quick .hdr-quick-item.is-active {
-                    background: var(--color-ucass-primary-100);
-                    color: var(--color-ucass-active);
-                  }
-
-                  /* The chip keeps the icons anchored on a common left edge so
-                     the labels line up however wide the glyphs run. */
-                  .hdr-quick .hdr-quick-icon {
-                    align-items: center; justify-content: center;
-                    width: 28px; height: 28px; flex: none;
-                    border-radius: 8px; background: var(--muted);
-                    transition: background .15s ease;
-                  }
-                  .hdr-quick .hdr-quick-item:hover .hdr-quick-icon,
-                  .hdr-quick .hdr-quick-item.is-active .hdr-quick-icon {
-                    background: var(--color-ucass-active-bg);
-                  }
-
-                  .hdr-quick .hdr-quick-label { display: block; flex: 1 1 auto; }
-
-                  .hdr-quick .hdr-quick-badge {
-                    position: static; border: 0; flex: none;
-                    min-width: 18px; height: 18px;
-                  }
-                }
-
-                @media (prefers-reduced-motion: reduce) {
-                  .hdr-quick, .hdr-quick-toggle-icon { transition-duration: .01ms; }
-                }
-              `}</style>
-
-              <div className="hdr-quick-wrap">
-                <button
-                  type="button"
-                  className={`hdr-quick-toggle ${isQuickMenuOpen ? 'on' : ''}`}
-                  onClick={() => setIsQuickMenuOpen((prev) => !prev)}
-                  aria-expanded={isQuickMenuOpen}
-                  aria-label={isQuickMenuOpen ? 'Hide quick links' : 'Show quick links'}
-                >
-                  <Plus className="hdr-quick-toggle-icon w-4.5 h-4.5" />
-                </button>
-
-                <div className={`hdr-quick ${isQuickMenuOpen ? 'open' : ''}`}>
-                  {quickLinks.map(({ key, label, Icon, route, active, badge }) => {
-                    const routeHandlers = getHeaderRouteHandlers(route);
-                    // The panel sits inside .hdr-quick-wrap, which the
-                    // outside-click handler deliberately ignores, and Tasks and
-                    // Calendar share the /calendar pathname — so neither the
-                    // outside click nor the route effect closes the panel on a
-                    // pick. It has to close itself.
-                    const openThenClose = () => {
-                      routeHandlers.onClick();
-                      setIsQuickMenuOpen(false);
-                    };
-
-                    return (
-                      <CustomTooltip key={key} text={label} side="bottom" className="md:hidden">
-                        <span
-                          className={`hdr-quick-item ${active ? 'is-active' : ''}`}
-                          role="link"
-                          tabIndex={0}
-                          aria-label={label}
-                          aria-current={active ? 'page' : undefined}
-                          {...routeHandlers}
-                          onClick={openThenClose}
-                          onKeyDown={(event) => {
-                            if (event.key !== 'Enter' && event.key !== ' ') return;
-                            event.preventDefault();
-                            openThenClose();
-                          }}
-                        >
-                          <span className="hdr-quick-icon">
-                            <Icon className="w-4.5 h-4.5" />
-                          </span>
-                          <span className="hdr-quick-label">{label}</span>
-                          {badge > 0 ? (
-                            <span className="hdr-quick-badge">{badge > 9 ? '9+' : badge}</span>
-                          ) : null}
-                        </span>
-                      </CustomTooltip>
-                    );
-                  })}
-                </div>
-              </div>
-
+              {/* Tasks, Calendar, My Campaigns, Activity and Monitoring moved
+                  into the Performance area rail — the bar keeps only
+                  notifications and account controls now. */}
               {/* The WebRTC and presence chips lived here. Registration state is
                   already on the dialer button beside this, and presence is on the
                   avatar menu — two more always-on chips just crowded the bar. */}
               {/* The dialer button lived here. Calls are placed from
                   Activity ▸ Phone; the header keeps only notifications and
                   account controls. */}
-              {/* AI Chat Requests */}
-              {/* <div className="inline-flex items-center justify-center font-medium">
-                <CustomTooltip text={'AI Chat Requests'} side="bottom">
-                  <span
-                    className="cursor-pointer relative bg-gray-100 flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary"
-                    onClick={() => {
-                      setPendingChatState(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    {aiChatRequests && aiChatRequests.length > 0 && (
-                      <span className="bg-primary absolute text-white font-normal me-2  rounded-full -top-[4px] left-[20px] border-white border-2 text-xs px-1 min-w-5 min-h-5 flex items-center justify-center">
-                        {aiChatRequests.length > 9 ? '9+' : aiChatRequests.length}
-                      </span>
-                    )}
-                    <svg
-                      className="w-4.5 h-4.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15l-1.539.924A13.484 13.484 0 0112 17.25a13.484 13.484 0 01-6.261-1.326L4.2 15m15.6 0-1.74 2.61a2.25 2.25 0 01-1.874 1.005H7.814a2.25 2.25 0 01-1.874-1.005L4.2 15"
-                      />
-                    </svg>
-                  </span>
-                </CustomTooltip>
-              </div> */}
               <div className="inline-flex items-center justify-center font-medium">
                 <CustomTooltip text={'Notification'} side="bottom">
                   <span
@@ -721,7 +406,7 @@ const Header = () => {
             </div>
             <div
               id="mobile-header-wallet-profile"
-              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-5 md:ml-auto md:flex md:w-auto md:flex-nowrap md:justify-end md:border-t-0 md:pt-0`}
+              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-5 md:flex md:w-auto md:flex-nowrap md:justify-end md:border-t-0 md:pt-0`}
             >
               {/* Wallet / Add Funds */}
               {features?.plan_features?.billing?.action?.view ? (
@@ -746,8 +431,13 @@ const Header = () => {
                   open={profileState === 'profile'}
                   onOpenChange={(val) => setProfileState(val ? 'profile' : null)}
                 >
-                  <PopoverTrigger className="cursor-pointer flex items-center gap-4 h-9 p-1 pr-2 rounded-xl border border-transparent hover:bg-ucass-primary-200">
-                    <CompanyLogoMark />
+                  <PopoverTrigger
+                    className={cn(
+                      'cursor-pointer flex items-center gap-2 h-10 pl-1 pr-2 rounded-xl border transition-colors',
+                      'bg-white/70 border-white/70 shadow-sm hover:bg-ucass-primary-200 hover:border-ucass-primary-100',
+                      profileState === 'profile' && 'bg-ucass-primary-200 border-ucass-primary-100',
+                    )}
+                  >
                     <CustomAvatar
                       name={`${user?.user_info?.first_name} ${user?.user_info?.last_name || ''}`}
                       showPresence
@@ -755,6 +445,7 @@ const Header = () => {
                       image={user?.user_info?.profile}
                       isActivityInfo={false}
                       size="32"
+                      presenceOverride={myPresenceStatus}
                     />
                     <div className="hidden lg:flex flex-col items-start text-left min-w-0 max-w-[110px]">
                       <h4 className="w-full truncate text-[12px] font-bold text-gray-900 leading-tight">
@@ -764,6 +455,12 @@ const Header = () => {
                         {role}
                       </div>
                     </div>
+                    <ChevronDown
+                      className={cn(
+                        'w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200',
+                        profileState === 'profile' && 'rotate-180',
+                      )}
+                    />
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-3 mt-2 mr-2 shadow-xl ring-1 ring-black/5">
                     <AvatarContent setProfileState={setProfileState} />
@@ -774,15 +471,32 @@ const Header = () => {
           </nav>
         </header>
 
-        {notificationState && (
-          <SideDrawer
-            isOpen={notificationState}
-            handleClose={() => setNotificationState(false)}
-            content={<NotificationContent setNotificationState={setNotificationState} />}
-            isHeader={true}
-            width="30%"
-          />
-        )}
+        {/* Always mounted, unlike the other SideDrawers here — the slide
+            transition needs the panel already sitting off-screen
+            (translate-x-full) before isOpen flips true, so there is
+            something to animate FROM. Conditionally mounting it (the old
+            `notificationState && <SideDrawer/>` pattern) meant it only
+            ever existed already fully open, so open and close both just
+            snapped instead of sliding. NotificationContent renders its own
+            close button (see isCloseIcon below), so it also gets `isOpen`
+            directly — being permanently mounted now, it can't rely on
+            mount-time effects to know when it has actually become visible. */}
+        <SideDrawer
+          isOpen={notificationState}
+          handleClose={() => setNotificationState(false)}
+          content={
+            <NotificationContent
+              isOpen={notificationState}
+              setNotificationState={setNotificationState}
+            />
+          }
+          isHeader={true}
+          width="30%"
+          isCloseIcon={false}
+          enableResponsive
+          responsiveWidth="96vw"
+          responsiveBreakpoint={1024}
+        />
         {pendingChatState && (
           <SideDrawer
             isOpen={pendingChatState}

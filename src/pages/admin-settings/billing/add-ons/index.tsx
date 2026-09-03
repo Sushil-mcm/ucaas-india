@@ -21,10 +21,8 @@
  */
 
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
-import { Button } from '@/components/ui/button';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
 import { moneyOrUnavailable } from '@/lib/billing-money';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -146,17 +144,6 @@ const AddOns = () => {
           <SettingRow
             label="An add-on is a licence, not a switch"
             description="Each one is bought per seat, the same way your plan is, and changes what that person's line can do. Adding one is a change to your bill, not a setting you turn on."
-          />
-          <SettingRow
-            label="Looking for what a call abroad costs?"
-            description="The full price list, country by country, is on the destinations page — that is live today and does not depend on any add-on."
-            control={
-              <Link to="/admin-settings/calling-rates/destinations">
-                <Button type="button" variant="outline">
-                  Destinations and rates
-                </Button>
-              </Link>
-            }
           />
         </SettingCard>
 

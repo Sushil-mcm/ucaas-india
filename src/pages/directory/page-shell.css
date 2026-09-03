@@ -1,0 +1,30 @@
+/* `FilterChip`'s trigger button and dropdown list.
+   Shared by every Directory page (People, Groups, Roles, Locations,
+   External, Favourites) via `page-shell.tsx`, so it lives here rather than
+   in one page's own `*-glass.css` — those aren't loaded on every page that
+   renders this component. */
+
+/* `.fchip` is normally a <label>; this is a <button> standing in for one,
+   so it needs the same look plus the parts a label never had to have. */
+.fchip {
+  cursor: pointer;
+}
+.fchip strong {
+  font-weight: 700;
+}
+
+/* `DropdownMenuContent` portals to `document.body`, so it is never a DOM
+   descendant of any page's own wrapper regardless of where it's written in
+   JSX — this is scoped off its own class rather than an ancestor it will
+   never actually sit inside. */
+.gp-filter-menu {
+  min-width: 10rem;
+}
+.gp-filter-menu [data-slot='dropdown-menu-item'] {
+  border-radius: 6px;
+}
+.gp-filter-menu [data-slot='dropdown-menu-item']:hover,
+.gp-filter-menu [data-slot='dropdown-menu-item'][data-highlighted] {
+  background: #fff1e0;
+  color: #c96f1f;
+}

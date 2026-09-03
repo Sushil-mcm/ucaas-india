@@ -1,0 +1,199 @@
+/* Glassmorphism treatment for Directory ▸ Roles — same system as People's
+   `people-glass.css`, scoped under `.gp-roles` so no other `.mcm-page`
+   screen is affected. */
+
+.gp-roles {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
+}
+
+.gp-roles .page-head,
+.gp-roles .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+}
+.gp-roles .page-head {
+  background: #fff;
+}
+.gp-roles .tbar .fchip {
+  background: #fff6e9;
+}
+.gp-roles .page-head {
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.gp-roles .page-head h1 {
+  /* Solid ink, matching People and the pages that set no colour at all and so
+     inherit it. The orange gradient this replaced was the only heading in
+     Directory that did not read as plain text. */
+  color: #1a1a1a;
+}
+.gp-roles .page-head p {
+  color: #6b5c4d;
+}
+.gp-roles .page-caveat {
+  background: rgba(255, 255, 255, 0.55);
+  border-left-color: #f2994a;
+  border-radius: 0 14px 14px 0;
+  color: #6b5c4d;
+}
+
+.gp-roles .tbar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+.gp-roles .tbar .fchip {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+}
+.gp-roles .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+.gp-roles .fchip.live {
+  background: rgba(220, 245, 241, 0.75) !important;
+  border-color: transparent !important;
+}
+
+.gp-roles .panel-card {
+  background: #fffdfb;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 320px);
+}
+.gp-roles .tbl-wrap {
+  overflow-y: auto;
+  min-height: 0;
+}
+.gp-roles table {
+  background: transparent;
+}
+.gp-roles th {
+  background: #fffdfb;
+  color: #8a6f57;
+  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.gp-roles td {
+  border-bottom-color: rgba(150, 100, 50, 0.1);
+}
+.gp-roles tbody tr:hover {
+  background: rgba(255, 205, 155, 0.14);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Role type — System stays neutral, Custom picks up the accent so a
+   tenant's own roles read as the "live" ones in the list. */
+.gp-roles .tag.acc {
+  background: var(--accent);
+  color: #fff;
+}
+.gp-roles .tag.neu {
+  background: rgba(150, 100, 50, 0.1);
+  color: #8a6f57;
+}
+
+.gp-roles .btn.primary {
+  background: var(--accent);
+}
+.gp-roles .btn.primary:hover {
+  background: var(--accent-ink);
+}
+/* Actions column — bigger, rounder icon buttons than the platform default
+   `.mini` (26px), matching the size the Contact column uses on People. */
+.gp-roles .gp-role-actions-head {
+  text-align: center;
+}
+.gp-roles .gp-role-actions-cell {
+  min-width: 160px;
+}
+.gp-roles .gp-role-actions {
+  justify-content: center;
+}
+.gp-roles .gp-role-actions .mini {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 11px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+.gp-roles .gp-role-actions .mini:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
+}
+.gp-roles .gp-role-actions .mini:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.4);
+}
+.gp-roles .gp-role-actions .mini:disabled:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.85);
+  color: inherit;
+}
+
+/* ---- Assign Users to Role — themed only when opened from Directory ▸
+   Roles (via the `className` prop `assign-users-modal.tsx` now accepts).
+   Admin ▸ Roles renders the same component without that prop and is
+   untouched. Portaled to `document.body`, so scoped off its own class
+   rather than an ancestor it never sits inside. ---- */
+.gp-assign-users-dialog {
+  background: #fffaf3;
+  border-color: rgba(242, 153, 74, 0.3);
+}
+.gp-assign-users-dialog .border-gray-200 {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+}
+/* Literal hex throughout, not `var(--accent...)` — shadcn already defines
+   its own `--accent`/`--accent-*`-shaped tokens at `:root` for a pale
+   neutral color, and since this dialog is portaled outside `.mcm-page`
+   (where *our* orange `--accent` actually lives), the variable resolves to
+   shadcn's value instead — confirmed by inspecting the computed style,
+   which came back as that pale neutral rather than our orange. A fallback
+   in `var(--x, fallback)` only kicks in when the variable is undefined,
+   not when it resolves to something unwanted, so it can't rescue this. */
+.gp-assign-users-dialog .bg-gray-50 {
+  background: #fff1e0 !important;
+}
+.gp-assign-users-dialog .text-primary {
+  color: #c96f1f !important;
+}
+.gp-assign-users-dialog [class*='hover:bg-gray-50']:hover {
+  background: rgba(255, 205, 155, 0.25) !important;
+}
+.gp-assign-users-dialog button[data-slot='button'][class*='bg-primary'] {
+  background: #f2994a !important;
+  border-color: #f2994a !important;
+}
+.gp-assign-users-dialog button[data-slot='button'][class*='bg-primary']:hover {
+  background: #c96f1f !important;
+}

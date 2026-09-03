@@ -1,0 +1,156 @@
+/* Shared header/toolbar treatment for the Directory views that do not have a
+   stylesheet of their own: External contacts, Favourites and Blocked.
+ *
+ * People, Groups, Roles and Locations each carry a near-identical copy of these
+ * rules inside their own `*-glass.css`. Rather than paste a fifth, sixth and
+ * seventh copy, the three remaining views share this one file and opt in with
+ * `gp-dirlist` on a wrapper around `<DirectoryPage>` — the same shape the other
+ * four use, so `.page-head` is a descendant here exactly as it is there.
+ *
+ * The heading follows People (solid `#1a1a1a`) rather than the orange gradient
+ * Roles and Locations still use: People is the most recent decision of the two
+ * and the one the rest of the console was matched to.
+ */
+
+.gp-dirlist {
+  position: relative;
+  isolation: isolate;
+  /* Fills the whole scroll area, not just the height of its own content —
+     otherwise the tint stops dead where the table ends and the page's plain
+     grey shows through underneath. */
+  min-height: 100%;
+  /* The same warm backdrop `body` uses site-wide (src/index.css), pulled in
+     rather than reinvented so this page's orange matches the rest exactly. */
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  /* Cancels `.mcm-page .page`'s own padding so the backdrop reaches the real
+     page edges instead of stopping in a boxed-off inset. */
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
+}
+
+/* Favourites and Blocked additionally carry `favourites-compact` /
+   `blocked-compact` on `.page`. Those classes do two separate jobs: they cap
+   the table's height and make its header sticky (worth keeping), and they
+   tighten the page's own spacing to `14px 18px` with 8px/6px gaps (not worth
+   keeping — it is exactly why these two sat higher and tighter than the other
+   five). Only the spacing half is undone here.
+
+   `.mcm-page` is included in the selector purely for weight: the compact rules
+   are `.mcm-page .page.favourites-compact` (0,3,0), so matching that from
+   `.gp-dirlist` alone would tie and leave the result down to file order. */
+.mcm-page .gp-dirlist .page.favourites-compact,
+.mcm-page .gp-dirlist .page.blocked-compact {
+  padding: 22px 26px 40px;
+}
+
+.mcm-page .gp-dirlist .favourites-compact .page-head,
+.mcm-page .gp-dirlist .blocked-compact .page-head,
+.mcm-page .gp-dirlist .favourites-compact .tbar,
+.mcm-page .gp-dirlist .blocked-compact .tbar {
+  margin-bottom: 16px;
+}
+
+/* ---- the header card ---- */
+
+.gp-dirlist .page-head,
+.gp-dirlist .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+}
+
+.gp-dirlist .page-head {
+  background: #fff;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+
+.gp-dirlist .page-head h1 {
+  color: #1a1a1a;
+}
+
+.gp-dirlist .page-head p {
+  color: #6b5c4d;
+}
+
+/* The caveat block sits between the header and the filter bar on the views
+   that carry one, so it needs the same gap the header leaves below itself. */
+.gp-dirlist .page-caveat {
+  margin-bottom: 16px;
+}
+
+/* ---- the filter bar ---- */
+
+/* Reads as one frosted strip rather than loose chips floating on the
+   background — same treatment as the header and the table panel. */
+.gp-dirlist .tbar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+
+.gp-dirlist .tbar .fchip {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.gp-dirlist .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+
+/* The chip's leading label ("Labels:", "Reach:") sits quieter than its value. */
+.gp-dirlist .tbar .fchip > span:first-child {
+  color: #8a6f57;
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.gp-dirlist .tbar .fchip.live {
+  background: rgba(220, 245, 241, 0.75);
+  border-color: transparent;
+}
+
+/* ---- the list itself ---- */
+
+/* Stays a solid, light surface rather than glass: it is the page's main
+   reading surface, and a busy orange backdrop showing through row after row
+   would fight the text. */
+.gp-dirlist .panel-card {
+  background: #fffdfb;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  /* Scrolls its own rows instead of stretching the page, so the header and
+     filter bar stay put rather than scrolling away with row 40. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 260px);
+}
+
+.gp-dirlist .tbl-wrap {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.gp-dirlist table {
+  background: transparent;
+}

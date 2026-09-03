@@ -27,6 +27,21 @@ export const useAreaNav = () => {
   const topItems = useMemo(() => navList(features, IS_ADMIN), [features, IS_ADMIN]);
   const bottomItems = useMemo(() => navListBottom(features, IS_ADMIN), [features, IS_ADMIN]);
 
+  // Resolved the same way the top bar used to resolve them for its own
+  // shortcuts, before those shortcuts moved into this rail.
+  const monitoringAccess = (features as any)?.plan_features?.monitoring?.action || {};
+  const campaignAccess = (features as any)?.plan_features?.campaign?.IS_SHOW;
+  const activityHref = (user as any)?.user_info?.uuid
+    ? `/activity/${(user as any).user_info.uuid}`
+    : undefined;
+  const monitoringHref =
+    !IS_ADMIN || !monitoringAccess?.view ? '/monitoring/department' : '/monitoring/all-calls';
+  const dynamicHrefByKey: Record<string, string | undefined> = {
+    'ext-activity': activityHref,
+    'ext-monitoring': monitoringAccess?.view ? monitoringHref : undefined,
+    'ext-campaigns': campaignAccess ? '/my-campaigns' : undefined,
+  };
+
   const currentArea: AreaId = useMemo(
     () => areaOfPath(pathname, [...topItems, ...bottomItems]),
     [pathname, topItems, bottomItems],
@@ -59,17 +74,28 @@ export const useAreaNav = () => {
       if (view.feature === 'ai') return Boolean(planFeatures?.ai?.IS_SHOW);
       if (view.feature === 'queue')
         return Boolean(planFeatures?.phone_system_action?.access?.QUEUE);
+      // The three former top-bar shortcuts that depend on the signed-in user
+      // — drop the rail item entirely rather than link somewhere broken.
+      if (view.key in dynamicHrefByKey) return Boolean(dynamicHrefByKey[view.key]);
       return true;
     });
-    return allowed.map((view, index) => ({
-      id: 1000 + index,
-      name: view.label,
-      link: `${base}?view=${view.key}`,
-      icon: view.icon,
-      sep: view.sep,
-      viewKey: view.key,
-    }));
-  }, [areaViews, areaConfig, currentArea, planFeatures]);
+    return allowed.map((view, index) => {
+      const resolvedHref = dynamicHrefByKey[view.key] ?? view.href;
+      return {
+        id: 1000 + index,
+        name: view.label,
+        link: resolvedHref || `${base}?view=${view.key}`,
+        icon: view.icon,
+        sep: view.sep,
+        // A view that opens off its own href (one of the moved shortcuts)
+        // is lit by its own path, same as any other route item — only the
+        // in-page `?view=` tabs need the viewKey comparison.
+        viewKey: resolvedHref ? undefined : view.key,
+        altPaths: view.altPaths,
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaViews, areaConfig, currentArea, planFeatures, activityHref, monitoringAccess?.view, campaignAccess]);
 
   const rail = viewItems.length ? viewItems : railTop;
   const hasRail = rail.length + railBottom.length > 1;
