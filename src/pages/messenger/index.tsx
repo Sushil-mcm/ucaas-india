@@ -1105,7 +1105,9 @@ const SidebarContent = ({
       {!isAgentChat ? (
         <div className="border-b border-[#EEE7DD] px-2">
           <div className="flex min-h-10 items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+            {/* `no-scrollbar` keeps the tabs scrollable on a narrow panel
+                without drawing the bar itself, which sat right under them. */}
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
