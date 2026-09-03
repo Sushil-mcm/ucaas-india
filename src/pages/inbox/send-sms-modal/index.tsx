@@ -20,6 +20,9 @@ import PhoneInput from 'react-phone-input-2';
 import { count } from 'sms-length';
 import * as yup from 'yup';
 import { checkPhoneNumberCountry, getSmsAlert, handleAlert } from '@/lib/utils';
+import { getDLCStatus } from '@/services/api';
+import DLCVerificationPopup from '@/components/custom/dlc-verification-popup';
+import countryList from '@/lib/countries.json';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { FileAudio2, FileText, FileVideo2, Paperclip, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -105,6 +108,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // const { setParam } = useSearchParamManager();
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [showDLCPopup, setShowDLCPopup] = useState(false);
   const [countryCode, seCountryCode] = useState('');
   const [sendMsgAlert, setSendMsgAlert] = useState<boolean>(false);
   const [mmsFile, setMmsFile] = useState<File | null>(null);
@@ -112,7 +116,9 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
   const [isSending, setIsSending] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const allDIDNumbers = useMemo(() => user?.assigned_did || [], [user?.assigned_did]);
+  const [country, setCountry] = useState<string>('');
   // const totalFunds = user?.company_info?.amount ? `$${user?.company_info?.amount}` : '00.00';
+  const [dlsStatus, setDlsStatus] = useState(null);
   const { canSendTo } = useMessagingPermissions();
   const {
     handleSubmit,
@@ -152,12 +158,24 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
     };
   }, [mmsFile]);
   useEffect(() => {
-    if (to && to?.length > 0) {
+    if (to && to?.length > 0 && countryList && countryList?.length > 0) {
       const { countryCode = '' } = checkPhoneNumberCountry(to);
       seCountryCode(countryCode);
+
+      const temp = countryList?.find((item: any) => item?.isoCode === countryCode)?.name || '';
+      if (temp) {
+        setCountry(temp);
+      }
     }
   }, [to]);
 
+  const { mutate: dlcStatus } = useMutation({
+    mutationKey: ['getDLCStatus'],
+    mutationFn: getDLCStatus,
+    onSuccess: (data) => {
+      setDlsStatus(data?.data?.data?.result?.verified);
+    },
+  });
   const { data: smsInfoData = [], refetch } = useQuery({
     queryKey: ['userSMSInfo', debouncedTo],
     queryFn: () =>
@@ -176,6 +194,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
     allow_country?.some(({ country_code_iso2 }: any) => country_code_iso2 === countryCode) &&
     freeSms > sms_used;
   const freeSmsLeft = isSmsFree ? freeSms - sms_used : 0;
+  const totalSmsCharges = Number(sms_rates?.rate || 0) * smsCountData.messages;
   const balanceAmount = Number(user?.company_info?.amount || 0);
   const chargeableSmsCount = Math.max(smsCountData.messages - freeSmsLeft, 0);
   const smsRate = Number(sms_rates?.rate || 0);
@@ -185,13 +204,6 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
     phone: debouncedTo,
     alpha2code: countryCode,
   });
-  /* The confirm dialog has to price the send the same way the screen does.
-     `sms_rates` is destructured with a default of `[]`, so `.rate` is undefined
-     on any response that omits it — the rate-card figure was then 0, which the
-     alert read as "cannot afford a single message". The applied cost from
-     `useSmsRateCredits` is the number already rendered as "SMS Charges"; the
-     rate card is only the fallback. */
-  const totalSmsCharges = smsCredits > 0 ? smsCredits : smsRate * smsCountData.messages;
   const [searchParams, setSearchParams] = useSearchParams();
   console.log(searchParams, 'searchParamssearchParams');
 
@@ -259,11 +271,17 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
     const normalizedText = String(values?.sms || '').trim();
     // Check if the receiver number is USA or international
     const toNumberFormatted = toNumber.startsWith('+') ? toNumber : `+${toNumber}`;
+    const { isUSA } = checkPhoneNumberCountry(toNumberFormatted);
 
-    /* Company messaging rules. The US 10DLC registration gate that used to run
-       first is gone — it is a US A2P regime and this platform sends from Indian
-       numbers only. */
-    const messagingCheck = canSendTo();
+    // Check if DLC verification is required for US numbers
+    if (isUSA && dlsStatus === false) {
+      setShowDLCPopup(true);
+      return;
+    }
+
+    /* Company messaging rules, after the registration check so a blocked number
+       is refused once rather than twice. */
+    const messagingCheck = canSendTo(toNumberFormatted, { dlcVerified: dlsStatus });
     if (!messagingCheck.allowed) {
       handleAlert({ type: 'error', text: messagingCheck.message || 'Texting is switched off.' });
       return;
@@ -303,6 +321,15 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
       setIsSending(false);
     }
   }
+
+  useEffect(() => {
+    const isPlusOne = String(to || '')
+      .replace(/^\+/, '')
+      .startsWith('1');
+    if (country && (isPlusOne || countryCode === 'US' || countryCode === 'CA')) {
+      dlcStatus({ country });
+    }
+  }, [country]);
 
   useEffect(() => {
     if (selectedDID) {

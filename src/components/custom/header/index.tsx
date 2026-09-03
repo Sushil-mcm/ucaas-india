@@ -325,7 +325,7 @@ const Header = () => {
               </a>
               <AreaNav />
             </div>
-            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:ml-auto md:w-auto relative">
+            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:mx-auto md:w-auto relative">
               {hasActiveCampaign && (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                   <span className="relative flex h-2.5 w-2.5">

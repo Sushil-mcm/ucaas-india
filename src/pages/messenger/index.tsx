@@ -35,6 +35,7 @@ import { useQuery } from '@tanstack/react-query';
 import { allOmniChannelsList } from '@/services/api';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { chatEvents } from '@/context/socket-events';
+import { isDemoMode } from '@/lib/demo-mode';
 import { toast } from 'react-toastify';
 import Sidebar from './sidebar';
 import { CHANNELS_ICON, ChatChannels } from './constants';
@@ -621,6 +622,7 @@ const SidebarContent = ({
     createPrivateChatId,
     socketEventsManager,
     chatExist,
+    updateChatLists,
   } = useSocketEvents();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useUser();
@@ -786,10 +788,34 @@ const SidebarContent = ({
       },
     ];
 
-    /* The repo this came from inserts the new chat locally first, because its
-       demo harness has no server to answer CREATE_NEW_CHAT. That harness is
-       not part of this repo — there is a real socket here — so the branch is
-       dropped rather than carried across as dead code. */
+    /* Demo mode has no server to answer CREATE_NEW_CHAT, so the socket
+       branch below would leave the URL pointing at a chatId nothing in
+       allChats ever matches — the workspace has no chat to resolve and
+       renders blank rather than a ready-to-type new conversation. Adding
+       the same chat record locally is what a real create would have
+       produced once its ack came back. */
+    if (isDemoMode()) {
+      updateChatLists(
+        (chats: any[]) => [
+          {
+            chatId: requiredChatId,
+            isGroupChat: false,
+            groupType: isAgentChat ? 'AI' : 'DM',
+            users: usersToSend,
+            lastMessage: null,
+            createdAt: new Date().toISOString(),
+            favoriteChats: [],
+            isHidden: [],
+            isDeleted: false,
+          },
+          ...chats,
+        ],
+        { targetChatId: requiredChatId, upsertInAgentList: isAgentChat },
+      );
+      handleOpenChatInWindow(requiredChatId, false, false);
+      return;
+    }
+
     if (socketEventsManager) {
       socketEventsManager.emit(
         chatEvents.CREATE_NEW_CHAT,

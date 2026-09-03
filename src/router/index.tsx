@@ -522,13 +522,23 @@ export const router = createBrowserRouter([
                 }}
               />
             ),
-            children: [
-              {
-                index: true,
-                path: ':id',
-                element: <UserDetails />,
-              },
-            ],
+          },
+          {
+            /* A sibling route rather than a child of `extension`. It used to be
+               `{ index: true, path: ':id' }` nested underneath, which React
+               Router rejects -- an index route cannot carry a path -- so the
+               child never matched and every link to a person's extension fell
+               through to the 404 page. Directory > People, Favourites and the
+               Departments user list all navigate to `extension/<uuid>`. */
+            path: 'extension/:id',
+            element: (
+              <ProtectedRoute
+                element={<UserDetails />}
+                guard={{
+                  permission: 'account_setting.access.USER.action.view',
+                }}
+              />
+            ),
           },
           {
             path: 'organization',

@@ -43,6 +43,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const isPreviewHost = (hostname?: string) => {
+  const host = hostname ?? (typeof window === 'undefined' ? '' : window.location.hostname);
+
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '0.0.0.0' ||
+    host === '::1' ||
+    host === '[::1]' ||
+    host.endsWith('.local') ||
+    host.endsWith('.vercel.app')
+  );
+};
+
 export const getAiBaseUrl = () =>
   String(import.meta.env.VITE_AI_URL || '')
     .trim()

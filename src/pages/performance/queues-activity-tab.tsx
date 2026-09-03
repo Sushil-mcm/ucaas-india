@@ -23,6 +23,88 @@ const getMemberStatus = (member: any, usersOnlineStatus: any[], activeQueueCalls
   return presence?.online ? 'Available' : 'Offline';
 };
 
+const QUEUE_TAB_STYLES = `
+  .mcm-page .live-pulse-dot-wrap { display:inline-flex; align-items:center; gap:5px; }
+  .mcm-page .live-pulse-dot {
+    width:7px; height:7px; border-radius:99px; background:var(--live); flex:none;
+    animation: queueLivePulse 1.6s ease-out infinite;
+  }
+  @keyframes queueLivePulse {
+    0% { box-shadow: 0 0 0 0 var(--live-wash); }
+    70% { box-shadow: 0 0 0 6px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* Fixed Tailwind breakpoints (3 cols, then 6) meant the jump from 3 to 6
+     columns landed at a viewport width where 6 was too narrow for this
+     card's content — auto-fit adds columns only once there's genuinely
+     enough room per card, and removes them just as smoothly on a narrower
+     window instead of snapping at one width. */
+  .mcm-page .summary-grid {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap:8px; align-items:start; margin-bottom: 4px;
+  }
+
+  /* A one-number, one-line card stacked top-to-bottom left most of its own
+     width empty. Laying it out left-to-right instead — value, then
+     label/sub, then an icon pinned to the far edge — uses that width
+     instead of wasting it. */
+  .mcm-page .stat-inline { display:flex; align-items:center; gap:10px; }
+  .mcm-page .stat-inline-value { margin-top:0; flex:none; white-space:nowrap; }
+  .mcm-page .stat-inline-text { min-width:0; flex:1; }
+  /* Pinning the summary row to 6 fixed columns leaves some labels narrower
+     than their text - without this a 2-word label like "Busiest queue"
+     wraps to a second line while its neighbours don't, so the cards no
+     longer line up at the same height. Truncating instead keeps every
+     card exactly as tall as its content, evenly. */
+  .mcm-page .stat-inline-text .k {
+    display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .mcm-page .stat-inline-text .d { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mcm-page .stat-inline-icon {
+    display:grid; place-items:center; width:30px; height:30px; flex:none;
+    border-radius:99px; background:var(--accent-wash); color:var(--accent-ink);
+  }
+
+  /* One flat strip, cells divided by hairlines - the queue summary reads as
+     one glanceable line instead of six separate boxed cards. */
+  .mcm-page .kpi-strip {
+    display:flex; align-items:stretch;
+    background:var(--surface); border-radius:16px; overflow:hidden;
+    border:1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(46,45,53,0.05);
+    margin-bottom: 4px;
+  }
+  .mcm-page .kpi-strip-cell {
+    flex:1; min-width:0; padding:14px 16px;
+    display:flex; flex-direction:column; gap:4px;
+    border-left:1px solid var(--line);
+  }
+  .mcm-page .kpi-strip-cell:first-child { border-left:none; }
+  .mcm-page .kpi-strip-cell-breach { background:var(--crit-wash); }
+  .mcm-page .kpi-strip-label {
+    font-size:10.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink-3, #9A948F); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .mcm-page .kpi-strip-value {
+    font-size:26px; font-weight:800; letter-spacing:-0.02em; line-height:1.15;
+    color:var(--ink, #2E2D35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .mcm-page .kpi-strip-value-success { color:var(--live); }
+  .mcm-page .kpi-strip-value-danger { color:var(--crit); }
+  .mcm-page .kpi-strip-sub {
+    font-size:11.5px; color:var(--ink-3, #9A948F);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  @media (max-width: 1180px) {
+    .mcm-page .kpi-strip { flex-wrap:wrap; }
+    .mcm-page .kpi-strip-cell { flex:1 1 33.33%; min-width:150px; border-bottom:1px solid var(--line); }
+  }
+  @media (max-width: 620px) {
+    .mcm-page .kpi-strip-cell { flex:1 1 50%; }
+  }
+`;
+
 const QueuesActivityTab = ({
   queues,
   activeQueueCalls,
