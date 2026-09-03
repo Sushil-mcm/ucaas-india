@@ -19,6 +19,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { isExtensionDialTarget } from '@/lib/extension-utility';
 import { getDialpadSessionDisplayInfo, getHeaderFirstValue } from './session-display';
+import { placeTwilioCall, TWILIO_CALLER_ID } from '@/lib/twilio-voice-device';
 
 type DialpadScreenState = 'idle' | 'ringing' | 'connected' | 'ended';
 type DialpadRenderMode = 'route' | 'overlay';
@@ -354,6 +355,15 @@ const Dialpad = ({
     if (!typedNumber) return;
     if (!isRegistered) return;
     if (selectedCallerId?.id === 'no-caller-id') return;
+
+    if (selectedCallerId?.number === TWILIO_CALLER_ID) {
+      placeTwilioCall(typedNumber).catch((error) => {
+        console.error('Twilio call failed to start', error);
+      });
+      setDialpadScreen('connected');
+      return;
+    }
+
     /* Manual dials were the one path that sent no X-CallerId. Every other
        route — call-log redial, campaigns, callbacks, notifications — sets it,
        and the switch falls back to its own default number when it is absent.
@@ -379,6 +389,7 @@ const Dialpad = ({
     isRegistered,
     makeCall,
     selectedCallerId?.id,
+    selectedCallerId?.number,
     typedNumber,
   ]);
 
