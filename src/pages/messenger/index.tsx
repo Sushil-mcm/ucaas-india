@@ -611,7 +611,6 @@ const SidebarContent = ({
   isCompactLayout?: boolean;
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<MessageStatus>('all');
   const {
@@ -1103,144 +1102,115 @@ const SidebarContent = ({
 
   return (
     <div className="w-full h-full min-h-0 bg-white flex flex-col">
-      <div className="min-h-16 flex items-center px-3 sm:px-4 justify-between border-b border-[#EEE7DD]">
-        <div className="flex gap-3 w-full">
-          {searchOpen ? (
-            <div className="w-full h-full flex items-center justify-between gap-2">
-              <Input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search member"
-                className="border-none min-h-14 h-full w-full focus-visible:ring-0 px-0"
-              />
-              <button
-                className="flex cursor-pointer text-[#2E2D35]"
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSearchQuery('');
-                }}
-                aria-label="Close search"
-              >
-                <XIcon width={16} height={16} />
-              </button>
+      {!isAgentChat ? (
+        <div className="border-b border-[#EEE7DD] px-2">
+          <div className="flex min-h-10 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+              {tabOptions.map((tab) => (
+                <button
+                  key={tab.value}
+                  className={`px-2 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                    activeTab === tab.value
+                      ? 'text-primary border-primary'
+                      : 'text-[#2E2D35] border-transparent hover:text-primary'
+                  }`}
+                  onClick={() => {
+                    setActiveTab(tab.value);
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      next.set('type', tab.value);
+                      next.delete('chatId');
+                      return next;
+                    });
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="flex items-center justify-end gap-2 w-full">
-              {/* The page head above carries the title now. Repeating it here
-                  showed the screen name twice, once in the head and again
-                  immediately underneath, so this row keeps only its actions. */}
-              {!isAgentChat ? (
-                <div className="flex gap-2 shrink-0">
-                  {chatAccess?.access?.DIRECT_MESSAGE || chatAccess?.access?.TEAM_MESSAGE ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
-                          aria-label="Add"
-                        >
-                          <Plus width={18} height={18} />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        {chatAccess?.access?.DIRECT_MESSAGE && (
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setShowCreateChatModal('direct');
-                            }}
-                          >
-                            <UserLine className="text-[#2E2D35] w-8 h-8" /> Direct Message
-                          </DropdownMenuItem>
-                        )}
-                        {chatAccess?.access?.TEAM_MESSAGE && (
-                          <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {
-                              setShowCreateChatModal('team');
-                            }}
-                          >
-                            <UsersGroupLine className="text-[#2E2D35] w-8 h-8" />
-                            Create New Team
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
+            {/* New chat and channel filter live here rather than in a row of
+                their own: the row above them held nothing else once the
+                duplicated title went, so it was a strip of empty space. */}
+            <div className="flex gap-2 shrink-0">
+              {chatAccess?.access?.DIRECT_MESSAGE || chatAccess?.access?.TEAM_MESSAGE ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <button
                       className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
                       aria-label="Add"
                     >
                       <Plus width={18} height={18} />
                     </button>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <div className="cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
-                        <FilterIcon className="w-6 h-6" />
-                      </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {ChatChannels?.map((item: any, index: number) => {
-                        return (
-                          <DropdownMenuItem
-                            key={index}
-                            onClick={() => {
-                              setChatType(item.value);
-                              setselectedChannelType(item);
-                            }}
-                          >
-                            {item.icon()} {item.label}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                      {allowedOmniChannels && allowedOmniChannels?.length
-                        ? allowedOmniChannels.map((item: any, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={() => {
-                                setChatType(item.type);
-                                setselectedChannelType(item);
-                              }}
-                            >
-                              {CHANNELS_ICON[item?.type as ChannelType]}{' '}
-                              {capitalizeFirstLetter(item.type)}
-                            </DropdownMenuItem>
-                          ))
-                        : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : null}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {chatAccess?.access?.DIRECT_MESSAGE && (
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setShowCreateChatModal('direct');
+                        }}
+                      >
+                        <UserLine className="text-[#2E2D35] w-8 h-8" /> Direct Message
+                      </DropdownMenuItem>
+                    )}
+                    {chatAccess?.access?.TEAM_MESSAGE && (
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setShowCreateChatModal('team');
+                        }}
+                      >
+                        <UsersGroupLine className="text-[#2E2D35] w-8 h-8" />
+                        Create New Team
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
+                  aria-label="Add"
+                >
+                  <Plus width={18} height={18} />
+                </button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <div className="cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
+                    <FilterIcon className="w-6 h-6" />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {ChatChannels?.map((item: any, index: number) => {
+                    return (
+                      <DropdownMenuItem
+                        key={index}
+                        onClick={() => {
+                          setChatType(item.value);
+                          setselectedChannelType(item);
+                        }}
+                      >
+                        {item.icon()} {item.label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  {allowedOmniChannels && allowedOmniChannels?.length
+                    ? allowedOmniChannels.map((item: any, index: number) => (
+                        <DropdownMenuItem
+                          key={index}
+                          onClick={() => {
+                            setChatType(item.type);
+                            setselectedChannelType(item);
+                          }}
+                        >
+                          {CHANNELS_ICON[item?.type as ChannelType]}{' '}
+                          {capitalizeFirstLetter(item.type)}
+                        </DropdownMenuItem>
+                      ))
+                    : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          )}
-        </div>
-      </div>
-
-      {!isAgentChat ? (
-        <div className="border-b border-[#EEE7DD] px-2">
-          <div className="flex min-h-10 items-center gap-2 overflow-x-auto">
-            {tabOptions.map((tab) => (
-              <button
-                key={tab.value}
-                className={`px-2 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-                  activeTab === tab.value
-                    ? 'text-primary border-primary'
-                    : 'text-[#2E2D35] border-transparent hover:text-primary'
-                }`}
-                onClick={() => {
-                  setActiveTab(tab.value);
-                  setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.set('type', tab.value);
-                    next.delete('chatId');
-                    return next;
-                  });
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
           </div>
         </div>
       ) : null}
