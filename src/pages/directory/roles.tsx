@@ -4,12 +4,12 @@ import { deleteCustomRole, userRolesList } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { Ic } from '@/components/mcm/icons';
-import SideDrawer from '@/components/custom/side-drawer';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Icon } from '@/assets/icons/icon';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import AddNewRole from '@/pages/admin-settings/roles/add-new-role';
 import AssignUsersModal from '@/pages/admin-settings/roles/assign-users-modal';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
-import { roleDisplayName, roleDisplayDescription } from '@/lib/role-display-names';
 import './roles-glass.css';
 
 /**
@@ -89,7 +89,7 @@ const Roles = () => {
   };
 
   return (
-    <>
+    <div className="gp-roles">
       <DirectoryPage
         title="Roles"
         description="What each person sees in this app — and how many people hold each role."
@@ -116,7 +116,7 @@ const Roles = () => {
               <th>Role</th>
               <th>Type</th>
               <th>People</th>
-              <th>Actions</th>
+              <th className="gp-role-actions-head">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -128,13 +128,8 @@ const Roles = () => {
                 return (
                   <tr key={role?.uuid || role?.role_uuid || role?.name}>
                     <td>
-                      {/* The stored name is an authorisation gate - the platform
-                          compares role strings directly - so only the label
-                          changes here, never the value. */}
-                      <div className="list-row-name">{roleDisplayName(role?.name)}</div>
-                      <div className="list-row-sub">
-                        {roleDisplayDescription(role?.name, role?.description) || 'No description'}
-                      </div>
+                      <div className="list-row-name">{role?.name || '—'}</div>
+                      <div className="list-row-sub">{role?.description || 'No description'}</div>
                     </td>
                     <td>
                       <span className={system ? 'tag neu' : 'tag acc'}>
@@ -142,108 +137,45 @@ const Roles = () => {
                       </span>
                     </td>
                     <td className="num">{usersOn(role)}</td>
-                    <td>
-                      <span className="flex items-center gap-1">
+                    <td className="gp-role-actions-cell">
+                      <span className="flex items-center gap-2 gp-role-actions">
                         {isAdmin ? (
                           <button
                             type="button"
                             className="mini"
-                            title={`Assign people to ${roleDisplayName(role?.name)}`}
-                            aria-label={`Assign people to ${roleDisplayName(role?.name)}`}
+                            title={`Assign people to ${role?.name}`}
+                            aria-label={`Assign people to ${role?.name}`}
                             onClick={() => setAssigning(role)}
                           >
-                            <Ic n="users" size={12} />
+                            <Ic n="users" size={16} />
                           </button>
                         ) : null}
-                        {/* Looking at a built-in role.
-
-                            Manager, Agent and Sub-admin showed one button —
-                            assign people — and nothing else, so there was no way
-                            to see what they actually permit. The drawer already
-                            copes: it hides its Save button for a platform role,
-                            so opening one is read-only without any extra work.
-                            It simply had nothing to open it. */}
-                        {isAdmin && system ? (
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`See what ${roleDisplayName(role?.name)} can do`}
-                            aria-label={`See what ${roleDisplayName(role?.name)} can do`}
-                            onClick={() => setEditing(role)}
-                          >
-                            <Ic n="eye" size={12} />
-                          </button>
-                        ) : null}
-
-                        {/* Copying any role into one you own.
-
-                            A built-in role cannot be edited, and that is right:
-                            its owner is the literal string PREDEFINED rather
-                            than any company, so it is shared by every company on
-                            the platform and changing it would change it for all
-                            of them. What was missing was the way forward —
-                            "Manager, but without billing" meant rebuilding it
-                            from nothing.
-
-                            Passing the role WITHOUT its uuid is what makes this
-                            a copy rather than an edit: the form sends a uuid
-                            only when it has one. Leaving the company off is what
-                            brings the Save button back. */}
+                        {/* Predefined roles belong to the platform — the
+                            platform's own screen refuses these too. Shown
+                            disabled rather than hidden, so the column reads
+                            the same width and shape on every row. */}
                         {isAdmin ? (
                           <button
                             type="button"
                             className="mini"
-                            title={
-                              system
-                                ? `Make my own copy of ${roleDisplayName(role?.name)}`
-                                : `Duplicate ${roleDisplayName(role?.name)}`
-                            }
-                            aria-label={`Duplicate ${roleDisplayName(role?.name)}`}
-                            onClick={() =>
-                              setEditing({
-                                /* The name people see, not the one stored. A copy
-                                   of Manager opened as "MANAGER (copy)" carrying
-                                   "Default features for MANAGER (Ultimate)" --
-                                   the platform's own wording for a role this
-                                   company never named that. The list has said
-                                   Account admin for a while; the copy has to
-                                   agree with it or the rename only went half
-                                   way. */
-                                name: `${roleDisplayName(role?.name)} (copy)`,
-                                description: roleDisplayDescription(
-                                  role?.name,
-                                  role?.description,
-                                ),
-                                permission: (role as any)?.permission,
-                              } as Role)
-                            }
-                          >
-                            <Ic n="copy" size={12} />
-                          </button>
-                        ) : null}
-
-                        {/* Predefined roles belong to the platform — the
-                            platform's own screen refuses these too. */}
-                        {isAdmin && !system ? (
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`Edit ${role?.name}`}
+                            disabled={system}
+                            title={system ? `${role?.name} is a system role and can't be edited` : `Edit ${role?.name}`}
                             aria-label={`Edit ${role?.name}`}
                             onClick={() => setEditing(role)}
                           >
-                            <Ic n="sliders" size={12} />
+                            <Ic n="sliders" size={16} />
                           </button>
                         ) : null}
-                        {isAdmin && !system ? (
+                        {isAdmin ? (
                           <button
                             type="button"
                             className="mini"
-                            title={`Delete ${role?.name}`}
+                            disabled={system}
+                            title={system ? `${role?.name} is a system role and can't be deleted` : `Delete ${role?.name}`}
                             aria-label={`Delete ${role?.name}`}
                             onClick={() => setDeleting(role)}
                           >
-                            <Ic n="trash" size={12} />
+                            <Ic n="trash" size={16} />
                           </button>
                         ) : null}
                       </span>
@@ -261,38 +193,35 @@ const Roles = () => {
         </table>
       </DirectoryPage>
 
-      {(creating || editing) && (
-        <SideDrawer
-          isOpen={creating || Boolean(editing)}
-          /* A copy has a name but no uuid, so it is a new role being created and
-             must not say "Update" — the heading is the main thing telling an
-             admin whether they are about to change a role people already hold. */
-          title={
-            editing?.uuid
-              ? `Update role (${editing?.name || ''})`
-              : editing
-                ? `New role (from ${editing?.name || ''})`
-                : 'New role'
-          }
-          width="min(980px, 80vw)"
-          isTab={false}
-          enableResponsive
-          handleClose={closeForm}
-          content={
+      <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
+        <DialogContent className="gp-create-group-dialog sm:max-w-[860px]" showCloseButton={false}>
+          <div className="gp-create-group-head">
+            <h2>{editing ? `Update role (${editing?.name || ''})` : 'New role'}</h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={closeForm}
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
             <AddNewRole
               drawerState={creating || Boolean(editing)}
               roleData={editing || null}
               setDrawerState={closeForm}
             />
-          }
-        />
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {assigning ? (
         <AssignUsersModal
           open={Boolean(assigning)}
           setOpen={(value: boolean) => !value && setAssigning(null)}
           roleData={assigning}
+          className="gp-assign-users-dialog"
         />
       ) : null}
 
@@ -321,7 +250,7 @@ const Roles = () => {
           ),
         }}
       />
-    </>
+    </div>
   );
 };
 

@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ic } from '@/components/mcm/icons';
-import SideDrawer from '@/components/custom/side-drawer';
+import { Icon } from '@/assets/icons/icon';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import NewSiteSteps from '@/pages/admin-settings/company/new-site-steps';
 import { siteDelete, siteList } from '@/services/api';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
-import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
+import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import { usePeopleRows } from './people-rows';
 import './groups-glass.css';
 import './locations-glass.css';
@@ -34,6 +35,13 @@ type Site = {
   postal_code?: string;
   timezone?: string;
   is_default?: string;
+};
+
+/* Different seed sources spell "this is the default site" differently
+   ('1'/'0' vs 'Y'/'N') — normalized here rather than trusting one literal. */
+const isDefaultSite = (site: Site) => {
+  const value = String(site?.is_default ?? '').toLowerCase();
+  return value === '1' || value === 'y' || value === 'yes' || value === 'true';
 };
 
 const Locations = () => {
@@ -109,18 +117,21 @@ const Locations = () => {
 
   if (!canView) {
     return (
-      <DirectoryPage title="Locations" description="The sites your organisation operates from.">
-        <table>
-          <tbody>
-            <EmptyRow span={1} message="You do not have permission to view locations." />
-          </tbody>
-        </table>
-      </DirectoryPage>
+      <div className="gp-locations">
+        <DirectoryPage title="Locations" description="The sites your organisation operates from.">
+          <table>
+            <tbody>
+              <EmptyRow span={1} message="You do not have permission to view locations." />
+            </tbody>
+          </table>
+        </DirectoryPage>
+      </div>
     );
   }
 
   return (
     <>
+      <div className="gp-locations">
       <DirectoryPage
         title="Locations"
         description="The sites your organisation operates from — address, timezone and who works there."
@@ -151,7 +162,7 @@ const Locations = () => {
               <th>Country</th>
               <th>Timezone</th>
               <th>People</th>
-              <th>Actions</th>
+              <th className="gp-loc-actions-head">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -163,7 +174,7 @@ const Locations = () => {
                   <td>
                     <div className="list-row-name">
                       {site?.name || '—'}
-                      {site?.is_default === '1' ? (
+                      {isDefaultSite(site) ? (
                         <span className="tag acc" style={{ marginLeft: 8 }}>
                           Default
                         </span>
@@ -178,8 +189,8 @@ const Locations = () => {
                     <span className="mono">{site?.timezone || '—'}</span>
                   </td>
                   <td>{headcount[site?.name || ''] || 0}</td>
-                  <td onClick={(event) => event.stopPropagation()}>
-                    <span className="flex items-center gap-1">
+                  <td className="gp-loc-actions-cell" onClick={(event) => event.stopPropagation()}>
+                    <span className="flex items-center gap-2 gp-loc-actions">
                       {canEdit ? (
                         <button
                           type="button"
@@ -188,12 +199,12 @@ const Locations = () => {
                           aria-label={`Edit ${site?.name || 'location'}`}
                           onClick={() => setEditing(site)}
                         >
-                          <Ic n="sliders" size={12} />
+                          <Ic n="sliders" size={16} />
                         </button>
                       ) : null}
                       {/* The default site anchors numbers and users, so the
                           platform does not allow removing it. */}
-                      {canDelete && site?.is_default !== '1' ? (
+                      {canDelete && !isDefaultSite(site) ? (
                         <button
                           type="button"
                           className="mini"
@@ -201,7 +212,7 @@ const Locations = () => {
                           aria-label={`Delete ${site?.name || 'location'}`}
                           onClick={() => setDeleting(site)}
                         >
-                          <Ic n="trash" size={12} />
+                          <Ic n="trash" size={16} />
                         </button>
                       ) : null}
                     </span>
@@ -217,75 +228,92 @@ const Locations = () => {
           </tbody>
         </table>
 
-        {open ? (
-          <DirectoryDrawer
-            title={open?.name || 'Location'}
-            onClose={() => setOpen(null)}
-            footer={
-              <>
-                <button type="button" className="btn ghost" onClick={() => setOpen(null)}>
-                  Close
-                </button>
-                {canEdit ? (
-                  <button
-                    type="button"
-                    className="btn primary"
-                    onClick={() => {
-                      setEditing(open);
-                      setOpen(null);
-                    }}
-                  >
-                    <Ic n="sliders" />
-                    Edit
-                  </button>
-                ) : null}
-              </>
-            }
-          >
-            <div className="kv">
-              <span className="k">Address</span>
-              <span className="v">{open?.address || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">City</span>
-              <span className="v">{open?.city || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">State</span>
-              <span className="v">{open?.state || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Country</span>
-              <span className="v">{open?.country || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Postal code</span>
-              <span className="v">{open?.postal_code || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Timezone</span>
-              <span className="v">{open?.timezone || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">People</span>
-              <span className="v">{headcount[open?.name || ''] || 0}</span>
-            </div>
-          </DirectoryDrawer>
-        ) : null}
       </DirectoryPage>
+      </div>
+
+      <Dialog open={Boolean(open)} onOpenChange={(next) => !next && setOpen(null)}>
+        <DialogContent className="gp-loc-dialog sm:max-w-[560px]" showCloseButton={false}>
+          <div className="gp-create-group-head">
+            <h2>{open?.name || 'Location'}</h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={() => setOpen(null)}
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-loc-fields">
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">Address</span>
+              <span className="gp-loc-field-v">{open?.address || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">City</span>
+              <span className="gp-loc-field-v">{open?.city || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">State</span>
+              <span className="gp-loc-field-v">{open?.state || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">Country</span>
+              <span className="gp-loc-field-v">{open?.country || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">Postal code</span>
+              <span className="gp-loc-field-v">{open?.postal_code || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">Timezone</span>
+              <span className="gp-loc-field-v">{open?.timezone || '—'}</span>
+            </div>
+            <div className="gp-loc-field">
+              <span className="gp-loc-field-l">People</span>
+              <span className="gp-loc-field-v">{headcount[open?.name || ''] || 0}</span>
+            </div>
+          </div>
+          <div className="gp-loc-dialog-actions">
+            <button type="button" className="gp-loc-dialog-close" onClick={() => setOpen(null)}>
+              Close
+            </button>
+            {canEdit ? (
+              <button
+                type="button"
+                className="gp-loc-dialog-edit"
+                onClick={() => {
+                  setEditing(open);
+                  setOpen(null);
+                }}
+              >
+                <Ic n="sliders" />
+                Edit
+              </button>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* The platform's own site form — `data` empty means create. */}
-      {(creating || editing) && (
-        <SideDrawer
-          isOpen={creating || Boolean(editing)}
-          title={editing ? `Update location (${editing?.name || ''})` : 'New location'}
-          width="min(880px, 76vw)"
-          isTab={false}
-          enableResponsive
-          handleClose={closeForm}
-          content={<NewSiteSteps data={editing || {}} handleClose={closeForm} />}
-        />
-      )}
+      <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
+        <DialogContent className="gp-create-group-dialog sm:max-w-[860px]" showCloseButton={false}>
+          <div className="gp-create-group-head">
+            <h2>{editing ? `Update location (${editing?.name || ''})` : 'New location'}</h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={closeForm}
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
+            <NewSiteSteps data={editing || {}} handleClose={closeForm} />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertConfirm
         {...{

@@ -1,0 +1,384 @@
+/* ============================================================
+   Performance › Queues Activity — warm sunset orange glassmorphism,
+   brought to Directory-benchmark parity (20px frosted cards, sticky
+   frosted table header, left accent-bar row hover, tag badges).
+
+   Scope, deliberately narrow, the same three-scope convention every other
+   Performance theme in this folder uses (see live-theme.css for the fully
+   annotated version):
+
+     .perf-queues              this tab's own root element (both the queue
+                                list and the per-queue drill-in share it).
+                                Owns the KPI strip, the queue table and the
+                                drill-in's own summary cards/table.
+     body.perf-warm-backdrop   the full-page ambient gradient AND the shared
+                                KPI hero band (Waiting / Longest wait /
+                                Service / Volume / Coverage) rendered one
+                                level up, by the Performance page shell
+                                (index.tsx) — outside this component's own
+                                DOM, so it can only be reached through the
+                                body flag. Toggled on mount/unmount by
+                                queues-activity-tab.tsx. Shared with Live and
+                                Campaigns; Queues is the third adopter, so
+                                the ambient gradient itself (defined once in
+                                live-theme.css) is reused rather than
+                                redeclared here — only the hero/grouped band,
+                                which nothing has themed yet, is added below.
+     body.perf-warm-toolbar    the Performance toolbar — already toggled
+                                unconditionally by index.tsx for every tab,
+                                so nothing to wire here.
+
+   Every selector below is chained through `.mcm-page .perf-queues` (three
+   classes) specifically so it outranks the plain `.mcm-page .kpi-strip` /
+   `.mcm-page .stat` rules defined inline in queues-activity-tab.tsx and
+   mcm-page.css — regardless of which stylesheet the bundler happens to
+   place later in the document.
+   ============================================================ */
+
+.perf-queues,
+body.perf-warm-backdrop {
+  --qa-accent: #f97316;
+  --qa-accent-deep: #ea580c;
+  --qa-accent-ink: #c2410c;
+  --qa-wash: #fff1eb;
+  --qa-ink: #1a1a1a;
+  --qa-muted: #666666;
+  --qa-hairline: rgba(249, 115, 22, 0.08);
+  --qa-row-hover: rgba(255, 241, 235, 0.55);
+
+  --qa-glass: rgba(255, 255, 255, 0.85);
+  --qa-glass-border: rgba(255, 255, 255, 0.95);
+  --qa-glass-blur: blur(20px) saturate(190%);
+  --qa-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --qa-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+
+  --qa-crit-glow: rgba(211, 47, 47, 0.28);
+  --qa-crit-glow-soft: rgba(211, 47, 47, 0.14);
+}
+.dark .perf-queues,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --qa-accent: #fb923c;
+  --qa-accent-deep: #f97316;
+  --qa-accent-ink: #fdba74;
+  --qa-wash: #2a1710;
+  --qa-ink: #f4f6fb;
+  --qa-muted: #93a1ba;
+  --qa-hairline: rgba(251, 146, 60, 0.14);
+  --qa-row-hover: rgba(251, 146, 60, 0.1);
+
+  --qa-glass: rgba(17, 24, 39, 0.72);
+  --qa-glass-border: rgba(251, 146, 60, 0.18);
+  --qa-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --qa-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. Shared KPI hero band (Waiting / Longest wait / Service / Volume /
+   Coverage) — rendered by index.tsx, one level above this component, so it
+   is reached through body.perf-warm-backdrop rather than .perf-queues.
+   ------------------------------------------------------------ */
+body.perf-warm-backdrop .mcm-page .hero-row .stat,
+body.perf-warm-backdrop .mcm-page .grouped-row .stat {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--qa-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+body.perf-warm-backdrop .mcm-page .hero-row .stat:hover,
+body.perf-warm-backdrop .mcm-page .grouped-row .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--qa-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .k,
+body.perf-warm-backdrop .mcm-page .grouped-row .k {
+  color: var(--qa-muted);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-value {
+  color: var(--qa-ink);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .d,
+body.perf-warm-backdrop .mcm-page .grouped-row .d {
+  color: var(--qa-muted) !important;
+}
+
+/* "Longest wait", past target, used a flat solid crit-red ring — striking,
+   but reads as an error state rather than a metric worth a second look.
+   A soft rose glass glow underneath keeps the urgency without the alarm. */
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
+  border-color: var(--qa-crit-glow);
+  box-shadow:
+    0 0 0 1px var(--qa-crit-glow),
+    0 10px 30px -10px var(--qa-crit-glow-soft);
+  animation: qa-breach-glow 2.2s ease-in-out infinite;
+}
+@keyframes qa-breach-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px var(--qa-crit-glow),
+      0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px var(--qa-crit-glow),
+      0 0 18px 3px var(--qa-crit-glow-soft);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
+    animation: none;
+  }
+}
+body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
+  background: var(--qa-hairline);
+}
+
+/* ------------------------------------------------------------
+   2. Live-sync notice — a warm-tinted glass pill instead of floating text.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .qa-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--qa-wash);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  color: var(--qa-accent-ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.dark .mcm-page .perf-queues .qa-notice {
+  color: var(--qa-accent-ink);
+}
+.mcm-page .perf-queues .qa-notice .page-note {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* ------------------------------------------------------------
+   3. Six-metric snapshot strip (Busiest queue / Longest waiting / Lowest
+   SLA / Total members / Available now / Total interacting) — one frosted
+   glass bar, each metric its own pill segment rather than hairline-divided
+   flat cells.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .kpi-strip {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--qa-glass-shadow);
+  padding: 6px;
+  gap: 4px;
+}
+.mcm-page .perf-queues .kpi-strip-cell {
+  border-left: none;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.55);
+  margin: 0 2px;
+  transition: background-color 0.16s ease;
+}
+.dark .mcm-page .perf-queues .kpi-strip-cell {
+  background: rgba(255, 255, 255, 0.04);
+}
+.mcm-page .perf-queues .kpi-strip-cell:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+.dark .mcm-page .perf-queues .kpi-strip-cell:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.mcm-page .perf-queues .kpi-strip-cell-breach {
+  background: var(--qa-crit-glow-soft);
+}
+.mcm-page .perf-queues .kpi-strip-label {
+  color: var(--qa-muted);
+}
+.mcm-page .perf-queues .kpi-strip-value {
+  color: var(--qa-ink);
+}
+.mcm-page .perf-queues .kpi-strip-sub {
+  color: var(--qa-muted);
+}
+@media (max-width: 1180px) {
+  .mcm-page .perf-queues .kpi-strip-cell {
+    border-bottom: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   4. Drill-in summary cards (per-queue detail — Waiting, Longest wait,
+   Interacting, Members, Handled, Service level, ASA, Abandon) reuse the
+   same PerfStatCard "inline" layout as everywhere else in Performance, so
+   they get the identical frosted treatment as the hero/grouped band above.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .summary-grid .stat {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 16px;
+  box-shadow: var(--qa-glass-shadow);
+}
+.mcm-page .perf-queues .summary-grid .k {
+  color: var(--qa-muted);
+}
+.mcm-page .perf-queues .summary-grid .stat-inline-value {
+  color: var(--qa-ink);
+}
+.mcm-page .perf-queues .summary-grid .stat-inline-icon {
+  background: var(--qa-wash);
+  color: var(--qa-accent-ink);
+}
+
+/* ------------------------------------------------------------
+   5. Main queues table — 20px frosted glass card, sticky frosted header,
+   Directory's signature left accent-bar row hover.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--qa-glass-border);
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  box-shadow: var(--qa-glass-shadow);
+}
+
+/* Sticky header — near-opaque frosted fill so scrolling rows never bleed
+   through the header text, plus a hairline shadow to seat it above them. */
+.mcm-page .perf-queues .table-scroll thead {
+  background: rgba(255, 250, 244, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 0 var(--qa-hairline);
+}
+.dark .mcm-page .perf-queues .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.mcm-page .perf-queues .table-scroll thead th {
+  color: var(--qa-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom-color: var(--qa-hairline);
+  background: transparent;
+}
+
+/* Rows — transparent at rest, warm tint plus the 3px left accent bar on
+   hover; the Directory benchmark's signature row-hover treatment. */
+.mcm-page .perf-queues .table-scroll tbody tr {
+  background: transparent;
+  border-color: var(--qa-hairline);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .perf-queues .table-scroll tbody tr:hover {
+  background: var(--qa-row-hover);
+  box-shadow: inset 3px 0 0 var(--qa-accent);
+}
+.mcm-page .perf-queues .table-scroll tbody td {
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-bottom-color: var(--qa-hairline);
+  color: #334155;
+}
+.dark .mcm-page .perf-queues .table-scroll tbody td {
+  color: var(--qa-muted);
+}
+
+/* Queue name — crisp dark charcoal, not a bright orange link; the row's
+   own hover accent bar already says "clickable", so the text itself reads
+   like the rest of the console (Directory does the same on People). */
+.mcm-page .perf-queues .table-scroll tbody td .qa-queue-name {
+  color: var(--qa-ink);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.14s ease;
+}
+.dark .mcm-page .perf-queues .table-scroll tbody td .qa-queue-name {
+  color: #f1f5f9;
+}
+.mcm-page .perf-queues .table-scroll tbody tr:hover td .qa-queue-name,
+.mcm-page .perf-queues .table-scroll tbody td .qa-queue-name:hover {
+  color: var(--qa-accent-ink);
+}
+
+/* Waiting / Longest / ASA / AHT — right-aligned tabular figures, so the
+   numbers line up column to column instead of jittering left-aligned. */
+.mcm-page .perf-queues .table-scroll th:nth-child(3),
+.mcm-page .perf-queues .table-scroll th:nth-child(4),
+.mcm-page .perf-queues .table-scroll th:nth-child(10),
+.mcm-page .perf-queues .table-scroll th:nth-child(11),
+.mcm-page .perf-queues .table-scroll td:nth-child(3),
+.mcm-page .perf-queues .table-scroll td:nth-child(4),
+.mcm-page .perf-queues .table-scroll td:nth-child(10),
+.mcm-page .perf-queues .table-scroll td:nth-child(11) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Interacting — the live pulse dot needs its row of text to stay
+   left-aligned and inline, not squeezed by the numeric columns' styling. */
+.mcm-page .perf-queues .table-scroll td:nth-child(6) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* SL today / Abandon already render as `.tag pos/warn/neg` (StatusPill) —
+   the same Directory-standard badge tokens People/Roles use, so nothing to
+   reskin here beyond letting them breathe against the glass row. */
+.mcm-page .perf-queues .table-scroll td:nth-child(9),
+.mcm-page .perf-queues .table-scroll td:nth-child(12) {
+  text-align: right;
+}
+
+/* ------------------------------------------------------------
+   6. Drill-in member table — same frosted card as the main table above,
+   TableManager renders it through the identical `.table-scroll` markup so
+   section 5's rules already apply; only the status pill needs a touch-up
+   to sit on Directory's tag palette instead of ad-hoc bg-* utility colours.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .table-scroll tbody td .state {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.q {
+  background: var(--live-wash);
+  color: var(--live);
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.busy {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.away {
+  background: var(--surface-3);
+  color: var(--ink-3);
+}
+
+/* Breadcrumb + title above the drill-in table. */
+.mcm-page .perf-queues .qa-crumb button {
+  color: var(--qa-accent-ink);
+}

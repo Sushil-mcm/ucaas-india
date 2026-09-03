@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import TableManager from '@/components/custom/table-manager';
 import Timer from '@/components/timer';
 import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers';
@@ -6,6 +7,7 @@ import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
 import type { QueueRow, QueueStats, LiveQueueStats } from './queue-rows';
+import './queues-theme.css';
 
 export type { QueueRow } from './queue-rows';
 
@@ -130,6 +132,16 @@ const QueuesActivityTab = ({
   selectedQueueUuid: string | null;
   setSelectedQueueUuid: (uuid: string | null) => void;
 }) => {
+  /* The warm ambient backdrop and the KPI hero band (Waiting / Longest wait
+     / Service / Volume / Coverage) both render one level up, in the
+     Performance page shell (index.tsx) — flagging the document while this
+     tab is open is what lets queues-theme.css reach them, the same way
+     Live and Campaigns already opt into this shared class. */
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
+
   const rows = buildQueueRows({
     queues,
     activeQueueCalls,
@@ -188,7 +200,7 @@ const QueuesActivityTab = ({
       accessorKey: 'name',
       cell: ({ row }: any) => (
         <span
-          className="cursor-pointer font-semibold text-primary hover:underline"
+          className="qa-queue-name"
           onClick={() => setSelectedQueueUuid(row.original.uuid)}
         >
           {row.original.name}
@@ -304,16 +316,16 @@ const QueuesActivityTab = ({
     ];
 
     return (
-      <div className="flex flex-col gap-3 px-[22px] py-4">
+      <div className="perf-queues flex flex-col gap-3 px-[22px] py-4">
         <style>{QUEUE_TAB_STYLES}</style>
         <div
-          className="flex items-center gap-1.5"
+          className="qa-crumb flex items-center gap-1.5"
           style={{ fontSize: 11.5, color: 'var(--ink-3)' }}
         >
           <button
             type="button"
             onClick={() => setSelectedQueueUuid(null)}
-            className="cursor-pointer text-primary hover:underline"
+            className="cursor-pointer hover:underline"
           >
             Queues Activity
           </button>
@@ -346,7 +358,7 @@ const QueuesActivityTab = ({
   }
 
   return (
-    <div className="flex flex-col gap-3 px-[22px] py-4">
+    <div className="perf-queues flex flex-col gap-3 px-[22px] py-4">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
         <PerfStatCard
           label="Busiest queue"
@@ -393,10 +405,12 @@ const QueuesActivityTab = ({
         />
       </div>
       {isCdrSampled && (
-        <p className="page-note">
-          Offered, Handled, ASA, AHT and Abandon are counted from the most recent 1,000 calls in
-          this range — older calls in the range aren't included in these columns.
-        </p>
+        <div className="qa-notice">
+          <p className="page-note">
+            Offered, Handled, ASA, AHT and Abandon are counted from the most recent 1,000 calls in
+            this range — older calls in the range aren't included in these columns.
+          </p>
+        </div>
       )}
 
       <style>{QUEUE_TAB_STYLES}</style>

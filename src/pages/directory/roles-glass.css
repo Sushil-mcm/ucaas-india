@@ -35,9 +35,6 @@
   margin-bottom: 16px;
 }
 .gp-roles .page-head h1 {
-  /* Solid ink, matching People and the pages that set no colour at all and so
-     inherit it. The orange gradient this replaced was the only heading in
-     Directory that did not read as plain text. */
   color: #1a1a1a;
 }
 .gp-roles .page-head p {

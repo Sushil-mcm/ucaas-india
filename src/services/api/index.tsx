@@ -960,6 +960,14 @@ export const getCampaignDetail = (data: { campaignId: string }) => {
   });
 };
 
+export const getTwilioVoiceToken = () => {
+  return apiClient({
+    method: routes.TWILIO_VOICE_TOKEN.METHOD,
+    url: routes.TWILIO_VOICE_TOKEN.URL,
+    data: {},
+  });
+};
+
 export const campaignAnalytics = (data: { campaignId: string }) => {
   return apiClient({
     method: routes.CAMPAIGN_ANALYTICS.METHOD,

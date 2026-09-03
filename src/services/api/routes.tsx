@@ -1504,4 +1504,8 @@ export const routes = {
     METHOD: 'GET',
     URL: '/api/omni/auth/facebook/callback',
   },
+  TWILIO_VOICE_TOKEN: {
+    METHOD: 'POST',
+    URL: '/api/twilio-voice/token',
+  },
 };

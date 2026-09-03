@@ -178,6 +178,28 @@
   background: transparent !important;
 }
 
+/* Edit-person's own person-head card + step tabs read as congested at this
+   dialog's narrower width — more room around each, scoped here rather than
+   in the shared .mcm-personhead/.mcm-step rules other, non-popup forms in
+   the app still use unchanged. */
+.gp-create-group-body .mcm-personhead {
+  padding: 18px 20px;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.gp-create-group-body .mcm-personhead-meta {
+  gap: 10px;
+  margin-top: 6px;
+}
+.gp-create-group-body .mcm-steps {
+  gap: 4px;
+  margin-top: 4px;
+}
+.gp-create-group-body .mcm-step {
+  padding: 12px 18px 14px;
+  gap: 11px;
+}
+
 /* Footer Cancel/Save — `AddEditUserRole`'s own footer div, targeted by the
    `gp-role-form-footer` marker class it carries rather than its Tailwind
    `border-t.border-gray-200` combo, which this same dialog shell's *other*
