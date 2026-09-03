@@ -125,8 +125,6 @@ const DepartmentDetails = lazy(
   () => import('@/pages/departments/department-list/department-details'),
 );
 const UserDetails = lazy(() => import('@/pages/departments/users-list/user-details'));
-const UserSettings = lazy(() => import('@/pages/admin-settings/templates/user-settings'));
-const CallHandling = lazy(() => import('@/pages/admin-settings/templates/call-handling'));
 const Pricing = lazy(() => import('@/pages/pricing'));
 const SignUp = lazy(() => import('@/pages/signup'));
 const SignUpPayment = lazy(() => import('@/pages/signup/payment'));
@@ -1401,28 +1399,6 @@ export const router = createBrowserRouter([
                     element={<Reseller />}
                     guard={{ adminOnly: true }}
                     trialRestricted
-                  />
-                ),
-              },
-            ],
-          },
-          {
-            path: 'templates',
-            children: [
-              {
-                index: true,
-                path: 'user-settings',
-                element: <ProtectedRoute element={<UserSettings />} guard={{ adminOnly: true }} />,
-              },
-              {
-                path: 'call-handling',
-                element: (
-                  <ProtectedRoute
-                    element={<CallHandling />}
-                    guard={{
-                      feature: 'phone_system_action.access.DEPARTMENT',
-                      permission: 'phone_system_action.action.view',
-                    }}
                   />
                 ),
               },

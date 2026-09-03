@@ -6,6 +6,7 @@ import { Mail, ScrollText, Voicemail } from 'lucide-react';
 import Loader from '@/components/custom/loader';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
@@ -122,8 +123,6 @@ type NotifyTarget = 'person' | 'address';
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface VoicemailForm {
-  /* Blank means "no company PIN recorded", which is the shipped state. */
-  pin: string;
   voicemail_to_text: boolean;
   override: boolean;
   /* Email a copy of each new message. */
@@ -234,10 +233,6 @@ const CompanyVoicemail = () => {
     setErrors({});
   }, [savedForm]);
 
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedForm),
-    [form, savedForm],
-  );
 
   const { mutate: saveVoicemail, isPending: isSaving } = useMutation({
     mutationFn: saveCompanyDefaults,
@@ -300,6 +295,7 @@ const CompanyVoicemail = () => {
       uuid: companyDefaultTemplate?.uuid,
       settings: nextSettings,
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+      only: [VOICEMAIL_KEY, NOTIFY_KEY],
     });
   };
 
@@ -312,19 +308,19 @@ const CompanyVoicemail = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
-        <p className="text-lg font-semibold text-[#2E2D35]">Voicemail</p>
-        <p className="text-xs text-[#9A948F]">
-          The voicemail settings the company starts people on, and whether a person may change them
-          on their own phone.
-        </p>
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
+        <SectionHeading
+          icon={<Voicemail className="h-[18px] w-[18px]" />}
+          title="Voicemail"
+          description="The voicemail settings the company starts people on, and whether a person may change them on their own phone."
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved settings
               </p>
@@ -336,7 +332,7 @@ const CompanyVoicemail = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-[#2E2D35]">No company voicemail saved yet</p>
               <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
@@ -409,7 +405,7 @@ const CompanyVoicemail = () => {
                     error={errors.notify_address}
                     onChange={(event) => updateForm({ notify_address: event.target.value })}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[#9A948F]">
                     One address. Every message from every mailbox goes here, whoever it was left
                     for — so use a shared inbox rather than one person&apos;s, or messages stop
                     arriving the day they leave.
@@ -463,7 +459,7 @@ const CompanyVoicemail = () => {
           </SettingCard>
 
           <div className="cs-savebar">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
             <SectionActions>

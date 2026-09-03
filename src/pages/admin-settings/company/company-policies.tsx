@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Flag, Globe, Headphones, Mic, PhoneOutgoing, Voicemail, Archive } from 'lucide-react';
+import { Archive, Flag, Globe, Headphones, Mic, PhoneOutgoing, ScrollText, Voicemail } from 'lucide-react';
 
 import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -329,10 +330,6 @@ const CompanyPolicies = () => {
     setErrors({});
   }, [savedForm]);
 
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedForm),
-    [form, savedForm],
-  );
 
   const { mutate: savePolicies, isPending: isSaving } = useMutation({
     mutationFn: saveCompanyDefaults,
@@ -371,6 +368,7 @@ const CompanyPolicies = () => {
       uuid: companyDefaultTemplate?.uuid,
       settings: nextSettings,
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+      only: [POLICIES_KEY],
     });
   };
 
@@ -435,19 +433,19 @@ const CompanyPolicies = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
-        <p className="text-lg font-semibold text-[#2E2D35]">Policies</p>
-        <p className="text-xs text-[#9A948F]">
-          One set of rules for the whole company — prompt language, voicemail, call recording, how
-          long we keep files and who may dial abroad.
-        </p>
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
+        <SectionHeading
+          icon={<ScrollText className="h-[18px] w-[18px]" />}
+          title="Policies"
+          description="One set of rules for the whole company — prompt language, voicemail, call recording, how long we keep files and who may dial abroad."
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved policies
               </p>
@@ -459,7 +457,7 @@ const CompanyPolicies = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-[#2E2D35]">No policies saved yet</p>
               <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
@@ -650,7 +648,7 @@ const CompanyPolicies = () => {
                     updateForm({ recording_announcement_text: event.target.value })
                   }
                   placeholder="This call may be recorded or transcribed by us, or by a third party acting on our behalf."
-                  className="w-full rounded-lg border border-[#EEE7DD] p-2 text-sm text-[#2E2D35] focus:border-primary focus:outline-none"
+                  className="w-full rounded-lg border border-[rgba(225,200,165,0.9)] p-2 text-sm text-[#2E2D35] focus:border-primary focus:outline-none"
                 />
 
                 {form.recording_announcement_text.trim() && (
@@ -673,7 +671,7 @@ const CompanyPolicies = () => {
                       key={example.id}
                       type="button"
                       onClick={() => updateForm({ recording_announcement_text: example.text })}
-                      className="cursor-pointer rounded-md border border-[#EEE7DD] p-2 text-left text-xs text-[#2E2D35] hover:border-primary hover:bg-ucass-primary-200/30"
+                      className="cursor-pointer rounded-md border border-[rgba(225,200,165,0.9)] p-2 text-left text-xs text-gray-700 hover:border-primary hover:bg-ucass-primary-200/30"
                     >
                       {example.text}
                     </button>
@@ -730,7 +728,7 @@ const CompanyPolicies = () => {
             </div>
           </SettingCard>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>

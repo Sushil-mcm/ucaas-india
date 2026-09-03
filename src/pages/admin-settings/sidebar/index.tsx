@@ -357,49 +357,6 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
     },
 
     {
-      key: 'admin-settings.template',
-      id: 'templates',
-      title: 'Templates',
-      icon: 'Templates',
-      type: 'accordion',
-      value: 'template',
-      children: [
-        {
-          key: 'admin-settings.template.user_settings',
-          id: 'user_settings',
-          title: 'User Settings',
-          path: '/admin-settings/templates/user-settings',
-          icon: 'SettingsUserIcon2',
-        },
-        {
-          key: 'admin-settings.template.call_handling',
-          id: 'call_handling',
-          title: 'Call Handling',
-          path: '/admin-settings/templates/call-handling',
-          icon: 'PersonSupport',
-          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
-          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
-        },
-      ],
-    },
-    {
-      /* Billing's pages come from one shared list, so this menu and the router
-         cannot drift apart. Admin-only, because who may look at the company's
-         money is a question about the person, not about which calling features
-         the company has bought. */
-      title: 'Billing',
-      type: 'accordion',
-      value: 'billing',
-      icon: 'Billing',
-      enabled: Boolean(IS_ADMIN),
-      visible: Boolean(IS_ADMIN),
-      children: BILLING_SECTIONS.map((section) => ({
-        title: section.label,
-        path: ABSOLUTE(section),
-        icon: section.icon,
-      })),
-    },
-    {
       key: 'admin-settings.compliance',
       id: 'compliance',
       title: '10DLC Compliance',

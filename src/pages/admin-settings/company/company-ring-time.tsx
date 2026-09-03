@@ -7,6 +7,7 @@ import { ArrowRight, PhoneCall, Timer, Users } from 'lucide-react';
 import CustomSelect from '@/components/custom/custom-select';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
@@ -103,10 +104,15 @@ const RING_TIME_OPTIONS = [
   buildOption(MAX_SECONDS, 'other established systems maximum'),
 ];
 
-/* Where the "what happens next" half of this question is answered. A real route
-   from src/router/index.tsx — a number's call handling, including its Business
-   Hours step, is edited from the numbers list. */
-const NUMBERS_IN_USE_PATH = '/admin-settings/numbers/in-use';
+/* Where the "what happens next" half of this question is answered.
+   `/admin-settings/numbers/in-use` used to be the target and was wrong: it
+   lists what each number is set to, never whether a caller would be dropped,
+   and the no-answer action is not on it at all — that lives inside the per-number
+   Set Forwarding dialog, which has no URL of its own. Call coverage is the one
+   screen that asks the question this panel asks, so it is the honest target:
+   it names the numbers that would drop a call and offers to fix them. Route
+   confirmed in src/router/index.tsx (`numbers` > `coverage`). */
+const CALL_COVERAGE_PATH = '/admin-settings/numbers/coverage';
 
 interface RingTimeForm {
   seconds: string;
@@ -198,10 +204,6 @@ const CompanyRingTime = () => {
     setForm(savedForm);
   }, [savedForm]);
 
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedForm),
-    [form, savedForm],
-  );
 
   const currentSeconds = Number(form.seconds);
 
@@ -246,6 +248,7 @@ const CompanyRingTime = () => {
       uuid: companyDefaultTemplate?.uuid,
       settings: nextSettings,
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+      only: [RING_TIME_KEY],
     });
   };
 
@@ -258,19 +261,19 @@ const CompanyRingTime = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
-        <p className="text-lg font-semibold text-[#2E2D35]">Ring time</p>
-        <p className="text-xs text-[#9A948F]">
-          How long a phone rings before the call stops ringing and moves on. One number for the
-          whole company, so a new person is not set up by hand.
-        </p>
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
+        <SectionHeading
+          icon={<Timer className="h-[18px] w-[18px]" />}
+          title="Ring time"
+          description="How long a phone rings before the call stops ringing and moves on. One number for the whole company, so a new person is not set up by hand."
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex min-h-0 w-full max-w-[1040px] flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved ring time
               </p>
@@ -282,7 +285,7 @@ const CompanyRingTime = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-[#2E2D35]">No ring time saved yet</p>
               <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
@@ -317,7 +320,7 @@ const CompanyRingTime = () => {
             {/* An unlabelled number is worse than a wrong one: an admin cannot
                 judge 30 without knowing what anyone else does. Both vendors'
                 figures are on screen, including why the list stops at 60. */}
-            <div className="flex flex-col gap-2 rounded-lg border border-[#EEE7DD] p-3">
+            <div className="flex flex-col gap-2 rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
               <p className="text-sm font-semibold text-[#2E2D35]">Where these numbers come from</p>
               <ul className="flex flex-col gap-1 text-xs text-[#9A948F]">
                 <li>
@@ -366,8 +369,8 @@ const CompanyRingTime = () => {
               ringing stops; what happens next is a different setting, in a
               different place, and an admin who changes one and not the other
               gets silence at the end of the call. */}
-          <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
-            <div className="flex flex-wrap items-start gap-3 border-b border-[#EEE7DD] p-4">
+          <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-white shadow-sm">
+            <div className="flex flex-wrap items-start gap-3 border-b border-[rgba(225,200,165,0.9)] p-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
                 <PhoneCall className="h-5 w-5" />
               </div>
@@ -381,32 +384,33 @@ const CompanyRingTime = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
-              <p className="text-sm text-[#2E2D35]">
+              <p className="text-sm text-gray-700">
                 When the ring time runs out, the call follows the &ldquo;what happens when nobody
                 answers&rdquo; action set on that particular line — voicemail, another person, a
-                menu, a queue, or simply hanging up. That action is not set here. It is part of each
-                number&rsquo;s call handling, on the Business Hours step, and it can be different
-                for every number you own.
+                menu, a queue, or simply hanging up. That action is not set here. It is set one
+                number at a time, in that number&rsquo;s Set Forwarding, on the Business Hours
+                step, and it can be different for every number you own.
               </p>
-              <p className="text-sm text-[#2E2D35]">
-                So a caller giving up is rarely just the ring time. If people say calls end in
-                silence, check that action first: a line with no action set will stop ringing and
-                then do nothing at all, no matter what number you choose above.
+              <p className="text-sm text-gray-700">
+                So a caller giving up is rarely just the ring time. A line with no action set
+                will stop ringing and then do nothing at all, no matter what number you choose
+                above. You do not have to open each number to find those: Call coverage lists
+                every number that would drop a call today, and fixes the ones it safely can.
               </p>
               <div>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate(NUMBERS_IN_USE_PATH)}
+                  onClick={() => navigate(CALL_COVERAGE_PATH)}
                 >
-                  Open your numbers to check
+                  Show me which numbers would drop a call
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>

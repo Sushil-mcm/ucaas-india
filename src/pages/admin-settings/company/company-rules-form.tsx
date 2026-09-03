@@ -13,7 +13,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { yupResolver } from '@hookform/resolvers/yup';
 
+import { AudioLines, SlidersHorizontal } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { useUser } from '@/hooks/use-user';
 import { handleAlert } from '@/lib/utils';
@@ -101,6 +104,27 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
     },
   });
 
+  const isRules = tab === TAB_CONSTANT.SETTING_PERMISSIONS;
+
+  /* These two screens are the only ones in the area that never named
+     themselves: the tab strip said Phone rules or Greetings and the panel below
+     it started straight in on the settings, so on arrival the page had no title
+     at all while its seven neighbours did. One component renders both tabs, so
+     the heading comes from which one is open. */
+  const heading = isRules
+    ? {
+        icon: <SlidersHorizontal className="h-[18px] w-[18px]" />,
+        title: 'Phone rules',
+        description:
+          'What everybody at your company starts with — where the company works, when it is open, and what a caller hears.',
+      }
+    : {
+        icon: <AudioLines className="h-[18px] w-[18px]" />,
+        title: 'Greetings',
+        description:
+          'The recordings a caller hears: the welcome message, hold music, the voicemail greeting and the ringback tone.',
+      };
+
   const onSubmit = () => {
     const { settings = {}, greetings = {} } = watch();
     const payload = buildTemplatePayload({
@@ -113,10 +137,14 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
       uuid: companyDefaults?.uuid,
       settings: payload.settings,
       greetings: payload.greetings,
+      /* Each tab replaces only the keys it edits. The other tab's keys, and every
+         other company screen's, are re-read at save time rather than written
+         back from this form's possibly stale copy. */
+      only: isRules
+        ? ['operational_hours', 'recording', 'display_number', 'transcription', 'ai_call_monitoring']
+        : ['greetings'],
     });
   };
-
-  const isRules = tab === TAB_CONSTANT.SETTING_PERMISSIONS;
 
   /* Handed to the screen below rather than rendered here, so it sits inside that
      screen's own scrolling box. Rendered here it would be a sibling of that box
@@ -129,15 +157,15 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
   const footer = (
     <div className="flex flex-col gap-3">
       {isRules && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700 mb-3">
-          <p className="font-semibold text-gray-900 mb-1">How these settings are used</p>
+        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 text-xs text-gray-700">
+          <p className="font-semibold text-[#2E2D35] mb-1">How these settings are used</p>
           <p className="mb-1">
             These are what everybody at your company starts with. Each one has a{' '}
             <strong>Let people change this themselves</strong> switch: leave it off and the company
             setting stands for everyone, turn it on and a person may change that one thing on their
             own phone.
           </p>
-          <p className="text-gray-600">
+          <p className="text-[#9A948F]">
             Saving here does not rewrite phones that are already set up.
           </p>
         </div>
@@ -177,7 +205,7 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
 
       {!isLoading && !hasCompanyDefaults && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-gray-700 mb-3">
-          <p className="font-semibold text-gray-900 mb-1">Not set up yet</p>
+          <p className="font-semibold text-[#2E2D35] mb-1">Not set up yet</p>
           <p>Nothing has been set for your company yet. Choose what you want below and save.</p>
         </div>
       )}
@@ -186,18 +214,20 @@ const CompanyRulesForm = ({ tab }: { tab: string }) => {
         <form
           id="company-phone-rules-form"
           onSubmit={handleSubmit(onSubmit)}
-          className="mcm-page mcm-userform user-settings-template-form flex-1 min-h-0"
+          className="mcm-page mcm-userform user-settings-template-form cs-section-form flex w-full flex-col"
         >
           {isRules ? (
             <SettingPermission
               data={companyDefaults}
               company_info={user?.company_info}
+              intro={<SectionHeading {...heading} />}
               footer={footer}
               containerClass={SECTION_COLUMN}
             />
           ) : (
             <GreetingNotification
               company_info={user?.company_info}
+              intro={<SectionHeading {...heading} />}
               footer={footer}
               containerClass={`user-settings-template-greetings ${SECTION_COLUMN}`}
             />

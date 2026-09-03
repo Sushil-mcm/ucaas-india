@@ -253,14 +253,6 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: withAdmin(() => import('@/pages/admin-settings/compliance/10DLC-brands')),
   },
   {
-    prefix: '/admin-settings/templates/user-settings',
-    importers: withAdmin(() => import('@/pages/admin-settings/templates/user-settings')),
-  },
-  {
-    prefix: '/admin-settings/templates/call-handling',
-    importers: withAdmin(() => import('@/pages/admin-settings/templates/call-handling')),
-  },
-  {
     /* Its own entry so hovering the link loads the table rather than the card
        list. The longest matching prefix wins, so this beats the plain company
        one below whatever order they are written in. */

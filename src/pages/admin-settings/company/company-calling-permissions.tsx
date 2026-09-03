@@ -5,6 +5,7 @@ import { ArrowRightLeft, Globe2, PhoneForwarded, PhoneOutgoing, ShieldAlert } fr
 
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -231,7 +232,7 @@ const buildPermissionsPayload = (form: PermissionsForm) => ({
    nothing changes for a company that never opens this. A restriction only
    exists once somebody sets one. */
 const INTERNATIONAL_ACTIVE_NOTE =
-  'Calls to countries not on your list are refused by the phone switch itself, not just hidden in this app — so a desk phone or softphone cannot get around it. With no list chosen, every country is allowed.';
+  'Refused by the switch itself, so a desk phone cannot get around it. With no list chosen, every country is allowed.';
 
 /**
  * A per-setting honesty badge. `enforced` is only ever passed `true` once
@@ -364,7 +365,7 @@ const CountryChooser = ({
         </p>
       ) : null}
 
-      <div className="max-h-[280px] overflow-y-auto rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+      <div className="max-h-[280px] overflow-y-auto rounded-lg border border-[rgba(225,200,165,0.9)] bg-white">
         {visible.length === 0 ? (
           <p className="px-3 py-4 text-xs text-[#9A948F]">No country matches that search.</p>
         ) : (
@@ -456,10 +457,6 @@ const CompanyCallingPermissions = () => {
     setForm(savedForm);
   }, [savedForm]);
 
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedForm),
-    [form, savedForm],
-  );
 
   const { mutate: savePermissions, isPending: isSaving } = useMutation({
     mutationFn: saveCompanyDefaults,
@@ -544,6 +541,7 @@ const CompanyCallingPermissions = () => {
       uuid: companyDefaultTemplate?.uuid,
       settings: nextSettings,
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+      only: [PERMISSIONS_KEY],
     });
   };
 
@@ -556,39 +554,39 @@ const CompanyCallingPermissions = () => {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
-        <p className="text-lg font-semibold text-[#2E2D35]">Calling permissions</p>
-        <p className="text-xs text-[#9A948F]">
-          Which countries your team can phone, which number they show when they call out, and where
-          they may send a call once it is connected.
-        </p>
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
+        <SectionHeading
+          icon={<Globe2 className="h-[18px] w-[18px]" />}
+          title="Calling permissions"
+          description="Which countries your team can phone, which number they show when they call out, and where they may send a call once it is connected."
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
-          <div className="flex flex-wrap items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700">
-              <ShieldAlert className="h-5 w-5" />
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
+          {/* Amber, not red. Nothing here is broken or urgent — it is a
+              standing caution about settings that are safe as they ship, and red
+              is the colour this console uses for things that are actually
+              wrong. */}
+          <div className="flex flex-wrap items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <ShieldAlert className="h-4 w-4" />
             </div>
-            <div className="flex min-w-[220px] flex-1 flex-col gap-1">
-              <p className="text-sm font-semibold text-red-900">
+            <div className="flex min-w-[220px] flex-1 flex-col gap-0.5">
+              <p className="text-xs font-semibold text-amber-900">
                 These are fraud controls, not conveniences
               </p>
-              <p className="text-xs text-red-800">
-                The transfer switches below start off, which is the safe default. Calling other
-                countries does not: until you choose a list, every country is allowed. That is the
-                one worth setting today. Each control here is a way of turning a call you already
-                pay for into a second leg you also pay for. Toll fraud works by getting someone — or
-                something — to transfer a call out to a premium-rate number abroad and leaving it
-                up; the bill arrives days later. Turn a box on only when a real job needs it, and
-                turn it off again when that job ends.
+              <p className="text-xs text-amber-800">
+                Each one turns a call you already pay for into a second leg you also pay for.
+                Transfers start off; calls abroad do not — until you pick a list, every country is
+                allowed. That is the one worth setting today.
               </p>
             </div>
           </div>
 
           {isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved permissions
               </p>
@@ -600,7 +598,7 @@ const CompanyCallingPermissions = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-[#2E2D35]">No permissions saved yet</p>
               <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
@@ -615,13 +613,13 @@ const CompanyCallingPermissions = () => {
           <SettingCard
             icon={<Globe2 className="h-5 w-5" />}
             title="Calling other countries"
-            description="Which countries your team can phone. Calls abroad are where a stolen password turns into a real bill, because premium-rate numbers in other countries pay whoever set the call up, by the minute."
+            description="Which countries your team can phone. Calls abroad are where a stolen password turns into a real bill."
             enforced
             enforcementNote={INTERNATIONAL_ACTIVE_NOTE}
           >
             <SettingRow
               label="Only allow calls to the countries chosen below"
-              description="Leave this off and calls can be made to any country, which is how your account works today. Turn it on and your team can only phone the countries you tick — the shorter that list, the smaller the bill somebody else can run up on your account."
+              description="Off, any country can be called — how your account works today. On, only the countries you tick."
               control={
                 <Checkbox
                   checked={form.international_restricted}
@@ -639,7 +637,7 @@ const CompanyCallingPermissions = () => {
             {form.international_restricted ? (
               <SettingRow
                 label="Countries your team can call"
-                description="Tick every country your business genuinely phones. Anywhere you do not tick is refused by the phone switch."
+                description="Tick the countries you phone. Anything unticked is refused by the switch."
               >
                 <CountryChooser
                   options={countryOptions}
@@ -654,7 +652,7 @@ const CompanyCallingPermissions = () => {
               </SettingRow>
             ) : null}
 
-            <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
+            <p className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-xs text-[#9A948F]">
               This is the company's answer, and it is the ceiling: a single person can be refused a
               country you allow here, on their own record under People, but nobody can be given a
               country this list leaves out. Calls to your own country, internal extensions and
@@ -669,7 +667,7 @@ const CompanyCallingPermissions = () => {
           >
             <PermissionRow
               label="Allow team members to use the office number or group numbers for which they are a member as caller ID"
-              description="A team member could pick the main office number, or the number of any group they belong to, instead of their own line — so a call from the support team looks like it came from support."
+              description="Someone can show the main office number, or a group's number, instead of their own line."
               checked={form.allow_office_or_group_caller_id}
               onCheckedChange={(checked) =>
                 updateForm({ allow_office_or_group_caller_id: checked })
@@ -679,13 +677,13 @@ const CompanyCallingPermissions = () => {
             />
             <PermissionRow
               label="Allow team members to hide their caller ID. Calls from them will appear as 'unknown'."
-              description="The person being called sees no number at all. Note that caller ID cannot be hidden on a cold external transfer from a shared line — the shared line's number goes out regardless. Per call, a team member can dial *67 before the number to hide it once, or *82 to unhide it once, whichever way this box is set."
+              description="The person called sees no number. Anyone can dial *67 to hide one call, or *82 to show it, whichever way this is set."
               checked={form.allow_hidden_caller_id}
               onCheckedChange={(checked) => updateForm({ allow_hidden_caller_id: checked })}
               enforced={false}
-              enforcementNote="Not active yet. Your number is still shown on outgoing calls. Dialling *67 before a number withholds it for that call, where your carrier supports it."
+              enforcementNote="Not active yet — your number still shows. *67 withholds it for one call, where the carrier allows."
             />
-            <p className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2 text-xs text-[#9A948F]">
+            <p className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-xs text-[#9A948F]">
               How the pair works: if neither of these two is on, a team member with more than one
               line can only ever call out from their own primary number.
             </p>
@@ -694,25 +692,25 @@ const CompanyCallingPermissions = () => {
           <SettingCard
             icon={<ArrowRightLeft className="h-5 w-5" />}
             title="Transferring a call outside the company"
-            description="Whether a connected call may be handed to a number that is not one of yours — and, if so, whether it may leave the country."
+            description="Whether a live call may be sent to a number that is not yours, and whether it may leave the country."
           >
             <PermissionRow
               label="Allow team members to transfer calls outside of the company"
-              description="Hand a live call to any outside number, rather than only to a colleague, group, queue or IVR. Off means transfers stay inside the company."
+              description="Hand a live call to any outside number, not just a colleague or queue."
               checked={form.allow_external_transfer}
               onCheckedChange={setExternalTransfer}
               enforced
-              enforcementNote="Active. When this is off, people are stopped from transferring a call to an outside number."
+              enforcementNote="Active. Off stops transfers to outside numbers."
             />
             <PermissionRow
               label="Allow transfers to international numbers"
-              description="Extends the permission above to numbers outside your own country. International destinations are where toll fraud usually lands, because premium-rate numbers abroad pay the fraudster per minute."
+              description="Extends the above to numbers abroad, where toll fraud usually lands."
               checked={form.allow_international_transfer}
               onCheckedChange={(checked) => updateForm({ allow_international_transfer: checked })}
               enforced
-              enforcementNote="Active. When this is off, transfers to numbers in other countries are stopped."
+              enforcementNote="Active. Off stops transfers to other countries."
               disabled={!form.allow_external_transfer}
-              disabledNote="Switched off and locked because external transfers are not allowed at all. Allow those first if you need this."
+              disabledNote="Locked off: external transfers are not allowed at all. Allow those first."
               isChild
             />
           </SettingCard>
@@ -720,17 +718,17 @@ const CompanyCallingPermissions = () => {
           <SettingCard
             icon={<PhoneForwarded className="h-5 w-5" />}
             title="Transferring a call your team made"
-            description="Whether a call a team member dialled out themselves may then be transferred to another outside number."
+            description="Whether a call your team dialled out may then be sent on to another outside number."
           >
             <PermissionRow
               label="Allow transferring an outbound call to an external number"
-              description="A team member calls out, then hands that call to a third outside number. the safe default ships this off on purpose, as fraud prevention: it is the shape toll fraud takes. Your system pays for the leg out and the leg on, both legs stay up, and neither party is anyone you employ — so nobody notices until the invoice. Leave it off unless a specific team genuinely needs it."
+              description="Your team calls out, then hands that call to a third outside number. You pay for both legs, and neither party works for you. Leave it off unless a team needs it."
               checked={form.allow_outbound_call_external_transfer}
               onCheckedChange={(checked) =>
                 updateForm({ allow_outbound_call_external_transfer: checked })
               }
               enforced
-              enforcementNote="Active. When this is off, people cannot transfer a call they placed themselves to an outside number."
+              enforcementNote="Active. Off stops people passing on a call they placed themselves."
             />
           </SettingCard>
 
@@ -741,16 +739,16 @@ const CompanyCallingPermissions = () => {
           >
             <PermissionRow
               label="Let a menu key forward to an outside number"
-              description="A caller presses a key and is passed to a number outside your company. Both halves of that call are billed to you, and the caller chooses when it happens, so this is a common route for call fraud."
+              description="A caller presses a key and reaches a number outside your company. You are billed for both halves."
               checked={form.allow_ivr_external_forwarding}
               onCheckedChange={(checked) => setIvrExternalForwarding(checked)}
               enforced
-              enforcementNote="Active. When this is off, an outside number can no longer be chosen for a menu key. Menus you have already set up keep working exactly as they are."
+              enforcementNote="Active. Off stops an outside number being set on a menu key. Existing menus keep working."
             />
             <PermissionRow
               isChild
               label="Only to numbers in your own country"
-              description="Calls abroad are the expensive ones. Leaving this on keeps a menu from dialling out of the country."
+              description="Calls abroad are the expensive ones. On keeps a menu from dialling out of the country."
               checked={form.ivr_external_forwarding_domestic_only}
               disabled={!form.allow_ivr_external_forwarding}
               disabledNote="Turn the setting above on first."
@@ -762,7 +760,7 @@ const CompanyCallingPermissions = () => {
             />
           </SettingCard>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>

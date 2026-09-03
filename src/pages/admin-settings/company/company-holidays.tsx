@@ -39,6 +39,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import CustomSelect from '@/components/custom/custom-select';
@@ -257,6 +258,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
         uuid: data?.uuid,
         settings: { ...(data?.settings || {}), [SETTINGS_KEY]: calendar },
         greetings: data?.greetings || {},
+        only: [SETTINGS_KEY],
       });
     },
     onSuccess: (response: any) => {
@@ -383,22 +385,13 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
   };
 
   return (
-    <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ucass-primary-200 text-primary">
-            <CalendarDays className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-base font-semibold text-[#2E2D35]">Your holiday list</p>
-            <p className="mt-1 text-xs text-gray-600">
-              The days your company is shut, written down once instead of typed again into every
-              menu, queue and person. Callers get your out-of-hours option on these dates.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
+    <div className="cs-block">
+      <SectionHeading
+        icon={<CalendarDays className="h-[18px] w-[18px]" />}
+        title="Holidays"
+        description="The days your company is shut, written down once instead of typed again into every menu, queue and person. Callers get your out-of-hours option on these dates."
+        actions={
+          <>
           {/* Never disabled. While the panel is open this button is the way
               back to it, and a greyed-out control is exactly what made this look
               broken in the first place. */}
@@ -424,8 +417,9 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
               {isPending ? 'Saving…' : 'Save'}
             </Button>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Presets. The point of the panel: a year of holidays in one click rather
           than twelve rows typed by hand. */}
@@ -501,7 +495,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
         {isLoading ? (
           <p className="mt-3 text-sm text-[#9A948F]">Loading…</p>
         ) : sorted.length === 0 && !isAdding ? (
-          <div className="mt-2 rounded-lg border border-dashed border-[#EEE7DD] p-4 text-center">
+          <div className="mt-2 rounded-lg border border-dashed border-gray-300 p-4 text-center">
             <p className="text-xs font-semibold text-[#2E2D35]">No company holidays yet</p>
             <p className="mt-0.5 text-xs text-[#9A948F]">
               Add a country&apos;s public holidays above, or add one by hand.
@@ -512,7 +506,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
             {sorted.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[#EEE7DD] p-3"
+                className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[rgba(225,200,165,0.9)] p-3"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-[#2E2D35]">{item.title}</p>
@@ -570,7 +564,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
               type="button"
               onClick={closeDraft}
               aria-label="Cancel"
-              className="cursor-pointer rounded-md p-1 text-[#9A948F] hover:bg-[#FBE2C8]/45"
+              className="cursor-pointer rounded-md p-1 text-[#9A948F] hover:bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
             >
               <X className="h-3.5 w-3.5" />
             </button>

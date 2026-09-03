@@ -210,6 +210,7 @@ const CompanyInfo = () => {
             {/* Company-wide rules belong on the company screen, which is where
                 established systems put them and where an admin looks. The editor
                 itself stays under Phone System — one editor, one record. */}
+            <CompanyLogo />
             <CompanySettingsCard />
 
             {/* A location is not a label — it decides how calls behave for

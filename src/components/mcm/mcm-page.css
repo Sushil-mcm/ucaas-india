@@ -5443,6 +5443,69 @@
    divider below, which has to be able to put a border back on the same
    elements. Written plainly they outrank it and every rule between sections
    disappears, leaving the panel one undivided run of text. */
+/* ---- section heading ----
+
+   One shape for the line that opens every settings tab: an icon at a fixed size
+   in a fixed tile, the title at one size and weight, the description under it,
+   and anything the section can do at the far end. See section-heading.tsx for
+   what it replaced. */
+.mcm-page .cs-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.mcm-page .cs-heading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  /* Nudged down so the icon's centre lines up with the title's x-height rather
+     than with the top of its ascenders. */
+  margin-top: 1px;
+}
+.mcm-page .cs-heading-text {
+  min-width: 0;
+  flex: 1;
+}
+.mcm-page .cs-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  color: var(--ink);
+}
+.mcm-page .cs-heading p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  /* Stops the sentence running the full width of a wide screen, where a line
+     that long is hard to come back from at the end. */
+  max-width: 84ch;
+}
+.mcm-page .cs-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin-left: auto;
+}
+@media (max-width: 640px) {
+  .mcm-page .cs-heading-actions {
+    margin-left: 46px;
+    width: 100%;
+  }
+  .mcm-page .cs-heading {
+    flex-wrap: wrap;
+  }
+}
+
 .mcm-page .cs-section :where(.mcm-setcard, .cs-block) {
   background: transparent;
   border: 0;

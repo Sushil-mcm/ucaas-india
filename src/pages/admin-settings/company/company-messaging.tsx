@@ -3,10 +3,11 @@ import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { count } from 'sms-length';
-import { LifeBuoy, MessageSquare, ShieldAlert } from 'lucide-react';
+import { LifeBuoy, MessageSquare, MessageSquareText, ShieldAlert } from 'lucide-react';
 
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
+import { SectionHeading } from './section-heading';
 import { SectionActions } from './section-actions';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
@@ -210,10 +211,6 @@ const CompanyMessaging = () => {
     setErrors({});
   }, [savedForm]);
 
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedForm),
-    [form, savedForm],
-  );
 
   const helpCount = useMemo(() => count(form.help_message), [form.help_message]);
 
@@ -254,6 +251,7 @@ const CompanyMessaging = () => {
       uuid: companyDefaultTemplate?.uuid,
       settings: nextSettings,
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
+      only: [MESSAGING_KEY],
     });
   };
 
@@ -269,19 +267,19 @@ const CompanyMessaging = () => {
   const isBrandUnverified = dlcStatus?.verified === false;
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-[65px] flex-col justify-center border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
-        <p className="text-lg font-semibold text-[#2E2D35]">Messaging</p>
-        <p className="text-xs text-[#9A948F]">
-          SMS and MMS rules for the whole company — whether texting is on, what happens on
-          unregistered US numbers, and the reply someone gets when they text HELP.
-        </p>
+    <section className="cs-section flex w-full flex-col gap-4">
+      <div className="cs-block">
+        <SectionHeading
+          icon={<MessageSquareText className="h-[18px] w-[18px]" />}
+          title="Messaging"
+          description="SMS and MMS rules for the whole company — whether texting is on, what happens on unregistered US numbers, and the reply someone gets when they text HELP."
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-3 sm:px-4">
-        <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-col gap-4">
+      <div className="w-full">
+        <div className="flex w-full flex-col gap-4">
           {isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-6 text-center">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 We could not load the saved messaging settings
               </p>
@@ -293,7 +291,7 @@ const CompanyMessaging = () => {
           )}
 
           {!companyDefaultTemplate && !isError && (
-            <div className="rounded-xl border border-dashed border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-4">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-4">
               <p className="text-sm font-semibold text-[#2E2D35]">No messaging settings saved yet</p>
               <p className="text-xs text-[#9A948F]">
                 Nothing has been set for your company yet. Choose what you want below and save.
@@ -314,7 +312,7 @@ const CompanyMessaging = () => {
               checked={form.sms_mms_enabled}
               onCheckedChange={(checked) => updateForm({ sms_mms_enabled: checked })}
             />
-            <div className="rounded-lg border border-[#EEE7DD] p-3">
+            <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
               <p className="text-sm font-semibold text-[#2E2D35]">
                 What switching this off is meant to do
               </p>
@@ -323,7 +321,7 @@ const CompanyMessaging = () => {
                 scope in full.
               </p>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg bg-[#FBE2C8]/45 p-3">
+                <div className="rounded-lg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
                   <p className="text-xs font-semibold text-[#2E2D35]">Stops</p>
                   <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-xs text-[#9A948F]">
                     <li>Texts to and from people outside the company, in and out.</li>
@@ -331,7 +329,7 @@ const CompanyMessaging = () => {
                     <li>SMS satisfaction (CSAT) surveys sent after a call or chat.</li>
                   </ul>
                 </div>
-                <div className="rounded-lg bg-[#FBE2C8]/45 p-3">
+                <div className="rounded-lg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
                   <p className="text-xs font-semibold text-[#2E2D35]">Keeps working</p>
                   <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-xs text-[#9A948F]">
                     <li>Messaging between people who both have accounts here.</li>
@@ -360,13 +358,13 @@ const CompanyMessaging = () => {
                 updateForm({ unregistered_us_outbound_allowed: checked })
               }
             />
-            <div className="rounded-lg border border-[#EEE7DD] p-3">
+            <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-semibold text-[#2E2D35]">
                   Your 10DLC registration right now
                 </p>
                 {isDlcLoading && (
-                  <span className="rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                  <span className="rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-[#9A948F]">
                     Checking...
                   </span>
                 )}
@@ -381,7 +379,7 @@ const CompanyMessaging = () => {
                   </span>
                 )}
                 {!isDlcLoading && !isBrandVerified && !isBrandUnverified && (
-                  <span className="rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-600">
+                  <span className="rounded-sm bg-gray-100 px-2 py-1 text-[11px] font-semibold text-[#9A948F]">
                     {isDlcError ? 'Could not check' : 'Not known'}
                   </span>
                 )}
@@ -396,13 +394,13 @@ const CompanyMessaging = () => {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to={TEN_DLC_BRANDS_PATH}
-                  className="rounded-lg border border-[#EEE7DD] px-3 py-2 text-xs font-semibold text-primary hover:bg-[#FBE2C8]/45"
+                  className="rounded-lg border border-[rgba(225,200,165,0.9)] px-3 py-2 text-xs font-semibold text-primary hover:bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
                 >
                   Register or check your brand
                 </Link>
                 <Link
                   to={TEN_DLC_CAMPAIGNS_PATH}
-                  className="rounded-lg border border-[#EEE7DD] px-3 py-2 text-xs font-semibold text-primary hover:bg-[#FBE2C8]/45"
+                  className="rounded-lg border border-[rgba(225,200,165,0.9)] px-3 py-2 text-xs font-semibold text-primary hover:bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
                 >
                   Register an SMS campaign
                 </Link>
@@ -434,7 +432,7 @@ const CompanyMessaging = () => {
                 </Button>
               </div>
               <textarea
-                className="w-full resize-none rounded-xl border border-[#EEE7DD] p-3 text-sm leading-6 text-[#2E2D35] shadow-none placeholder:text-[#9A948F] focus:ring-0 focus-visible:shadow-none focus-visible:outline-0"
+                className="w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] p-3 text-sm leading-6 text-[#2E2D35] shadow-none placeholder:text-gray-400 focus:ring-0 focus-visible:shadow-none focus-visible:outline-0"
                 rows={4}
                 value={form.help_message}
                 placeholder={HELP_MESSAGE_TEMPLATE}
@@ -456,7 +454,7 @@ const CompanyMessaging = () => {
               {errors.help_message && (
                 <p className="text-xs font-semibold text-red-600">{errors.help_message}</p>
               )}
-              <div className="rounded-lg bg-[#FBE2C8]/45 p-3">
+              <div className="rounded-lg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
                 <p className="text-xs font-semibold text-[#2E2D35]">
                   A HELP reply is expected to contain
                 </p>
@@ -479,7 +477,7 @@ const CompanyMessaging = () => {
             </div>
           </SettingCard>
 
-          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="cs-savebar">
             <p className="text-xs text-[#9A948F]">
               Saved for your whole company. Your other settings are not affected.
             </p>
