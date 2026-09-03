@@ -15,6 +15,7 @@ import {
   toConsoleTurns,
 } from './copilot-adapter';
 import './console.css';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 /**
  * MCM Unified Console — phone console.
@@ -64,7 +65,9 @@ const PhoneConsole = () => {
   const checklist = useMemo(() => checklistState(spoken), [spoken]);
 
   return (
-    <div className="mcm-console">
+    <div className="mcm-actpage">
+      <ActivityPageHead title="Phone" description="Your softphone: place and take calls, with today's history, recordings and voicemails beside it." />
+      <div className="mcm-console">
       <ConsoleIconSprite />
       {/* Headless. It relays transcript socket messages onto the session and
           auto-starts transcription per the user's settings. Normally mounted by
@@ -113,6 +116,7 @@ const PhoneConsole = () => {
           selectedCall={selectedCall}
           panelRequest={panelRequest}
         />
+      </div>
       </div>
     </div>
   );
