@@ -761,26 +761,26 @@ const InnerSidebarInbox = (props: any) => {
       className="mcm-col h-full w-full min-h-0 gap-0"
     >
       <div className="mcm-col-head">
-        <div className="mcm-col-title">
-          {/* The page head above names this screen. This row kept saying
-              "Inbox" a second time directly underneath it, so it now carries
-              only its action. */}
+        {/* New sits beside the SMS/MMS and Fax tabs rather than on a row
+            of its own -- with the duplicated title gone that row held
+            nothing but this one button. */}
+        <div className="mcm-col-tabrow">
+          <TabsList className="mcm-seg" style={{ width: '100%' }}>
+            {messagesAccess?.send_message || messagesAccess?.send_mms ? (
+              <TabsTrigger value="messages">
+                <MessageSquareText className="size-3.5" />
+                SMS / MMS
+              </TabsTrigger>
+            ) : null}
+            {messagesAccess?.send_fax && (
+              <TabsTrigger value="fax">
+                <Printer className="size-3.5" />
+                Fax
+              </TabsTrigger>
+            )}
+          </TabsList>
           {headerAction}
         </div>
-        <TabsList className="mcm-seg" style={{ width: '100%' }}>
-          {messagesAccess?.send_message || messagesAccess?.send_mms ? (
-            <TabsTrigger value="messages">
-              <MessageSquareText className="size-3.5" />
-              SMS / MMS
-            </TabsTrigger>
-          ) : null}
-          {messagesAccess?.send_fax && (
-            <TabsTrigger value="fax">
-              <Printer className="size-3.5" />
-              Fax
-            </TabsTrigger>
-          )}
-        </TabsList>
 
         <div className="flex flex-col gap-1">
           <span className="mcm-eyebrow">{type === 'fax' ? 'Fax number' : 'Your number'}</span>

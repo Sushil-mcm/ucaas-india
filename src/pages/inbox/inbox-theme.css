@@ -147,6 +147,21 @@
   gap: 10px;
   flex: none;
 }
+/* The tabs and the New button share one row: the tab strip takes the space
+   that is left, and the button keeps its own width. */
+.mcm-inbox .mcm-col-tabrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mcm-inbox .mcm-col-tabrow .mcm-seg {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mcm-inbox .mcm-col-tabrow > :not(.mcm-seg) {
+  flex: none;
+}
+
 .mcm-inbox .mcm-col-title {
   display: flex;
   align-items: center;

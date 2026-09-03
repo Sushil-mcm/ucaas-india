@@ -189,7 +189,7 @@ const BasicInformation: FC<any> = ({
               <Label>Phone</Label>
               <span className="mcm-lock">Read only</span>
             </div>
-            <PhoneInput country={'us'} value={watch(`basic.phone`)} disabled />
+            <PhoneInput country={'in'} value={watch(`basic.phone`)} disabled />
           </div>
           <div className="mcm-field">
             <div className="mcm-field-h">

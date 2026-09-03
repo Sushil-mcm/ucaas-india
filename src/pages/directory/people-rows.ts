@@ -145,7 +145,7 @@ export const usePeopleRows = () => {
                 (entry: any) =>
                   entry?.uuid === person?.site_uuid || entry?.name === person?.site?.name,
               );
-              return [site?.city, site?.country].filter(Boolean).join(', ');
+              return [site?.city, site?.state].filter(Boolean).join(', ');
             })() || '',
           jobTitle: person?.job_title || '',
           phone: person?.phone || person?.mobile || '',

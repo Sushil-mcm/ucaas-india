@@ -15,7 +15,7 @@ export const userInitialState = {
   last_name: '',
   extension: '',
   // extension: generateRandomExtension(),
-  phone: '',
+  phone: '91',
   password: '',
   confirm_password: '',
   role: { label: 'Select', value: '' },

@@ -194,7 +194,10 @@ const Roles = () => {
       </DirectoryPage>
 
       <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
-        <DialogContent className="gp-create-group-dialog sm:max-w-[860px]" showCloseButton={false}>
+        <DialogContent
+          className="gp-create-group-dialog gp-role-form-dialog sm:max-w-[860px]"
+          showCloseButton={false}
+        >
           <div className="gp-create-group-head">
             <h2>{editing ? `Update role (${editing?.name || ''})` : 'New role'}</h2>
             <button

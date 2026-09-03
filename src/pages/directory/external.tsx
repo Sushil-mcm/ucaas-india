@@ -160,12 +160,17 @@ const External = () => {
                 options={['All', 'VIP', 'DNC', 'Blocked', 'Standard']}
                 onChange={setTag}
               />
-              <FilterChip
-                label="Label"
-                value={label}
-                options={['All', ...labels.index.map((entry) => entry.label)]}
-                onChange={setLabel}
-              />
+              {/* Labels are created per-contact from the detail drawer below — with
+                  none added yet there is nothing to filter by, so the chip stays
+                  hidden rather than open on an empty list. */}
+              {labels.index.length > 0 ? (
+                <FilterChip
+                  label="Label"
+                  value={label}
+                  options={['All', ...labels.index.map((entry) => entry.label)]}
+                  onChange={setLabel}
+                />
+              ) : null}
               <SearchChip
                 value={search}
                 onChange={setSearch}

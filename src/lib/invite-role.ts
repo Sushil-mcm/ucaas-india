@@ -220,7 +220,7 @@ export interface DecideInviteRoleInput {
 const NO_ROLES: InviteRoleDecision = {
   role: null,
   source: 'none',
-  reason: 'Roles are still loading.',
+  reason: '',
   warning: '',
 };
 

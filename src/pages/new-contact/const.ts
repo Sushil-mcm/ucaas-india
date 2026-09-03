@@ -12,7 +12,7 @@ export const contactsInitialValues = {
   avatar: null,
   first_name: '',
   last_name: '',
-  phone: '',
+  phone: '91',
   gender: null,
   email: '',
   dob: '',

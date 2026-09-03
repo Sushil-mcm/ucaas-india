@@ -194,7 +194,7 @@ const sidebarTabStyles: Record<
     activeText: 'text-ucass-orange',
     activeBg: 'bg-white',
     activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-muted',
+    inactiveBadgeBg: 'bg-white/70',
     inactiveBadgeText: 'text-muted-foreground',
     activeBadgeBg: 'bg-ucass-orange/10',
     activeBadgeText: 'text-ucass-orange',
@@ -204,7 +204,7 @@ const sidebarTabStyles: Record<
     activeText: 'text-white',
     activeBg: 'bg-ucass-active',
     activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-muted',
+    inactiveBadgeBg: 'bg-white/70',
     inactiveBadgeText: 'text-muted-foreground',
     activeBadgeBg: 'bg-white/20',
     activeBadgeText: 'text-white',
@@ -214,7 +214,7 @@ const sidebarTabStyles: Record<
     activeText: 'text-destructive',
     activeBg: 'bg-white',
     activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-muted',
+    inactiveBadgeBg: 'bg-white/70',
     inactiveBadgeText: 'text-muted-foreground',
     activeBadgeBg: 'bg-destructive/10',
     activeBadgeText: 'text-destructive',
@@ -224,7 +224,7 @@ const sidebarTabStyles: Record<
     activeText: 'text-emerald-700',
     activeBg: 'bg-white',
     activeDecoration: 'shadow-sm ring-1 ring-emerald-200',
-    inactiveBadgeBg: 'bg-muted',
+    inactiveBadgeBg: 'bg-white/70',
     inactiveBadgeText: 'text-muted-foreground',
     activeBadgeBg: 'bg-emerald-100',
     activeBadgeText: 'text-emerald-700',
@@ -803,7 +803,7 @@ const SidebarContent = ({
     <div className="w-full h-full bg-white">
 
       <div className="px-4 pt-4 pb-5 border-b border-border bg-white">
-        <div className="h-12 rounded-[14px] bg-muted p-[5px]">
+        <div className="h-12 rounded-[14px] bg-ucass-primary-100 border border-ucass-primary-200 p-[5px]">
           <div className="grid h-full grid-cols-[1.5fr_1fr_1fr_1.15fr] gap-1.5">
             {tabOptions.map((tab) => {
               const count = tabCounts[tab.value as AgentChatTab] || 0;
@@ -861,7 +861,7 @@ const SidebarContent = ({
             <Input
               Icon={<SearchLine className="text-muted-foreground" />}
               IconPosition="left-0 pl-4 inset-y-0"
-              className="  rounded-[12px] border-0 bg-muted pl-11 text-[14px] shadow-none placeholder:text-muted-foreground hover:border-transparent focus:border-transparent focus:shadow-none focus:ring-0"
+              className="rounded-[12px] border-ucass-primary-200 pl-11 text-[14px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chats, users..."

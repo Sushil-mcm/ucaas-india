@@ -67,7 +67,7 @@ const OrderSummary = ({
             {isLoading ? (
               <Skeleton className="h-3 w-[60px] bg-gray-200" />
             ) : (
-              <>${getTaxes?.plan_cost}</>
+              <>₹{getTaxes?.plan_cost}</>
             )}
           </li>
           <li className="flex items-center justify-between gap-2">
@@ -82,7 +82,7 @@ const OrderSummary = ({
               <Skeleton className="h-3 w-[150px] bg-gray-200" />
             ) : (
               <>
-                ${getTaxes?.per_license_cost || 0} x {totalPayableUnit} = $
+                ₹{getTaxes?.per_license_cost || 0} x {totalPayableUnit} = ₹
                 {getTaxes?.sub_total || 0}
               </>
             )}
@@ -93,7 +93,7 @@ const OrderSummary = ({
               <Skeleton className="h-3 w-[90px] bg-gray-200" />
             ) : (
               <div className="flex items-center gap-1">
-                ${getTaxes?.tax_amount || 0}
+                ₹{getTaxes?.tax_amount || 0}
                 <span className="font-normal">({Number(getTaxes?.tax_percentage ?? 0) || 0}%)</span>
               </div>
             )}
@@ -104,7 +104,7 @@ const OrderSummary = ({
             {isLoading ? (
               <Skeleton className="h-3 w-[60px] bg-gray-200" />
             ) : (
-              <>${getTaxes?.total_amount || 0}</>
+              <>₹{getTaxes?.total_amount || 0}</>
             )}
           </li>
         </ul>

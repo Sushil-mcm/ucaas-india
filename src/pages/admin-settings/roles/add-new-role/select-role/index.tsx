@@ -81,7 +81,9 @@ const SelectRole: FC<any> = ({
       setValue('permission', {});
       return;
     }
-    const findRoleObj = rolesListData?.find((item: any) => item?.role_uuid === role_uuid);
+    const findRoleObj = rolesListData?.find(
+      (item: any) => (item?.role_uuid || item?.uuid) === role_uuid,
+    );
     if (getObjectLength(findRoleObj)) {
       setSelectedRole(findRoleObj);
       setValue('permission', extractPlanFeatures(findRoleObj?.permission));
@@ -193,7 +195,7 @@ const SelectRole: FC<any> = ({
                 sits below a divider, out of the way of the decision. */}
             <RadioGroup
               className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
-              value={selectedRole?.role_uuid}
+              value={selectedRole?.role_uuid || selectedRole?.uuid}
               onValueChange={(value) => handleRoleChange(value)}
               disabled={selectedRole?.type === 'custom' && roleData}
             >
@@ -251,7 +253,7 @@ const SelectRole: FC<any> = ({
           </div>
         </div>
       )}
-      <div className="flex w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+      <div className="flex w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-white">
         <div className="flex w-full flex-col gap-4 p-3 sm:p-4">
           {/* Nothing was shown here until a starting point had been chosen — no
               list, no message, just an empty white box. A new role therefore

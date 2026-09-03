@@ -1,0 +1,75 @@
+/* Glassmorphism treatment for Directory ▸ Blocked — same system as
+   People/Locations/Roles' own `*-glass.css`, scoped under `.gp-blocked`
+   so no other `.mcm-page` screen is affected. */
+
+.gp-blocked {
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  background:
+    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
+    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
+    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
+    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
+    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
+}
+
+.gp-blocked .page-head,
+.gp-blocked .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+}
+.gp-blocked .page-head {
+  background: #fff;
+}
+.gp-blocked .tbar .fchip {
+  background: #fff6e9;
+}
+.gp-blocked .page-head {
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.gp-blocked .page-head h1 {
+  color: #1a1a1a;
+}
+.gp-blocked .page-head p {
+  color: #6b5c4d;
+}
+
+.gp-blocked .tbar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+.gp-blocked .tbar .fchip {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+}
+.gp-blocked .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+.gp-blocked .fchip.live {
+  background: rgba(220, 245, 241, 0.75) !important;
+  border-color: transparent !important;
+}
+
+.gp-blocked .panel-card {
+  background: #fffdfb;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+}

@@ -1,0 +1,70 @@
+/* Warm redesign of the "Select Role" picker — same cream/orange language as
+   the Directory "Invite people" and "Edit person" dialogs
+   (`src/pages/directory/invite-glass.css`, `edit-person-glass.css`), applied
+   here directly since this dialog is standalone rather than built on that
+   shared shell. Scoped to `.gp-role-dialog` only. */
+
+.gp-role-dialog {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+}
+
+.gp-role-dialog .gp-role-head {
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-role-dialog .gp-role-head p span {
+  color: #f2994a !important;
+}
+
+.gp-role-dialog .gp-role-search {
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-role-dialog .gp-role-search [data-slot='input'] {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-role-dialog .gp-role-search [data-slot='input']:hover,
+.gp-role-dialog .gp-role-search [data-slot='input']:focus {
+  border-color: #f2994a !important;
+}
+
+/* ---- role rows — real cards at rest, not just on hover/selected, so the
+   list reads as a set of distinct choices rather than a flat plain list ---- */
+.gp-role-dialog .gp-role-row {
+  border-color: rgba(242, 153, 74, 0.18) !important;
+  background: #fffdfb !important;
+  box-shadow: 0 1px 4px rgba(160, 95, 30, 0.05);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.gp-role-dialog .gp-role-row:hover {
+  background: #fff6e9 !important;
+  border-color: rgba(242, 153, 74, 0.35) !important;
+}
+.gp-role-dialog .gp-role-row.is-selected {
+  background: #fff1e0 !important;
+  border-color: #f2994a !important;
+  box-shadow: 0 2px 8px rgba(242, 153, 74, 0.18);
+}
+
+/* ---- footer ---- */
+.gp-role-dialog .gp-role-foot {
+  background: #fff6e9 !important;
+  border-top: 1px solid rgba(242, 153, 74, 0.2) !important;
+}
+.gp-role-dialog .gp-role-cancel {
+  color: #6b5c4d !important;
+}
+.gp-role-dialog .gp-role-cancel:hover {
+  color: #c96f1f !important;
+}
+.gp-role-dialog .gp-role-submit {
+  background: #f2994a !important;
+  border-color: #f2994a !important;
+  color: #ffffff !important;
+}
+.gp-role-dialog .gp-role-submit:hover:not(:disabled) {
+  background: #c96f1f !important;
+  border-color: #c96f1f !important;
+}

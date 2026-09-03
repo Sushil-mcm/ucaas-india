@@ -16,7 +16,6 @@ import OrderSummary from '../order-summary';
 import { Label } from '@/components/ui/label';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { generateRandomExtension, handleAlert } from '@/lib/utils';
-import { Icon } from '@/assets/icons/icon';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { InfoIcon } from 'lucide-react';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
@@ -34,6 +33,7 @@ import {
   findInviteClashes,
   summariseClashes,
 } from '@/lib/invite-duplicates';
+import './invite-glass.css';
 
 type User = typeof userInitialState;
 type ValidationErrorMap = {
@@ -475,7 +475,7 @@ const AddUserInfo = ({
 
   return (
     <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
-      <div className="flex flex-col gap-1 mt-3">
+      <div className="mcm-invite-summary flex flex-col gap-1 mt-3">
         <p className="text-gray-900 text-center mb-2">
           Licenses available to purchase:{' '}
           {plan_info?.dataValues?.licenses !== 0
@@ -483,7 +483,7 @@ const AddUserInfo = ({
             : 'Unlimited'}
         </p>
 
-        <div className="flex flex-col items-stretch justify-center gap-3 md:flex-row md:items-start lg:justify-center">
+        <div className="mcm-bulk-add flex flex-col items-stretch justify-center gap-3 md:flex-row md:items-start lg:justify-center">
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="w-34">
               <Input
@@ -531,6 +531,8 @@ const AddUserInfo = ({
           <CustomTooltip text="License purchased" side="top">
             <InfoIcon className="w-4 h-4 text-gray-500 cursor-pointer" />
           </CustomTooltip>
+          <span className="mx-1">·</span>
+          New licenses purchased: {licenseInfo?.extraUnits || 0}
         </p>
         {licenseInfo?.hasLicenseMismatch ? (
           <p className="text-amber-600 text-center text-xs">
@@ -539,9 +541,6 @@ const AddUserInfo = ({
             {licenseInfo?.enforcedFree}. We use the lower number so you are not blocked at checkout.
           </p>
         ) : null}
-        <p className="text-gray-700 text-center text-sm">
-          New licenses purchased: {licenseInfo?.extraUnits || 0}
-        </p>
 
         {/* Which role everybody on this form starts on, and why that one. Said
             once at the top rather than repeated on every row: it is the same
@@ -569,7 +568,7 @@ const AddUserInfo = ({
           </p>
         ) : null}
       </div>
-      <div className="flex flex-col my-2 gap-3 pr-0 md:pr-3 lg:gap-2">
+      <div className="mcm-invite-list flex flex-col my-2 gap-3 pr-0 md:pr-3 lg:gap-2">
         {fields?.map((_, index) => (
           <div
             key={index}
@@ -624,16 +623,22 @@ const AddUserInfo = ({
               </div>
               <div className="flex w-full gap-1">
                 <PhoneInput
-                  country={'us'}
+                  country={'in'}
+                  onlyCountries={['in']}
+                  disableDropdown
                   value={watch(`users.${index}.phone`)}
                   onChange={(value) => {
-                    setValue(`users.[${index}].phone`, value, {
+                    /* countryCodeEditable={false} freezes this library's input entirely
+                       (can't type or delete at all), so +91 is protected here instead:
+                       if editing eats into the dial code, snap back to a bare 91 rather
+                       than let it disappear. */
+                    const next = value.startsWith('91') ? value : '91';
+                    setValue(`users.[${index}].phone`, next, {
                       shouldValidate: true,
                     });
-                    handleValidateUser({ value, type: 'phone' }, index);
+                    handleValidateUser({ value: next, type: 'phone' }, index);
                   }}
                   containerClass={`w-full ${errors?.users?.[index]?.phone?.message ? 'phone-error' : ''}`}
-                  enableSearch={true}
                 />
               </div>
             </div>
@@ -718,30 +723,23 @@ const AddUserInfo = ({
               />
             </div>
 
-            <Button
-              type="button"
-              variant={'outline'}
-              className="w-10 h-10 self-end rounded-xl bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white border-0 lg:self-auto"
-              onClick={() => generateNewExtension(index)}
-            >
-              <Icon name="Refresh" className="w-5 h-5" />
-            </Button>
-
-            {fields.length > 1 && (
-              <div
-                className="border-0 cursor-pointer self-end min-w-10 w-10 h-10 rounded-xl bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center lg:self-auto"
-                onClick={() => remove(index)}
-              >
-                <TrashBin className="w-5 h-5" />
-              </div>
-            )}
+            <div className="mcm-invitee-actions flex items-center justify-end gap-2">
+              {fields.length > 1 && (
+                <div
+                  className="border-0 cursor-pointer min-w-10 w-10 h-10 rounded-xl bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center"
+                  onClick={() => remove(index)}
+                >
+                  <TrashBin className="w-5 h-5" />
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
       {licenseInfo.extraCharge ? (
         <OrderSummary
-          customClass="w-full lg:w-4/6 xl:w-3/5 xxl:w-3/6"
+          customClass="w-full"
           orderSummary={{
             watchUserLength: users?.length,
             availableLicenses: licenseInfo?.available,

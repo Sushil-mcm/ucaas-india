@@ -24,6 +24,7 @@ import {
 } from '@/lib/contact-blocking';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
 import './list-page-glass.css';
+import './blocked-glass.css';
 
 /**
  * Directory ▸ Blocked — the numbers you have stopped hearing from.
@@ -110,6 +111,7 @@ const Blocked = () => {
     });
 
   return (
+    <div className="gp-blocked">
     <div className="gp-dirlist">
       <DirectoryPage
         title="Blocked Numbers"
@@ -328,6 +330,7 @@ const Blocked = () => {
           </tbody>
         </table>
       </DirectoryPage>
+    </div>
     </div>
   );
 };

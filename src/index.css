@@ -679,8 +679,8 @@
 
   .custom-react-select__option:hover,
   .custom-react-select__option--is-focused {
-    background-color: var(--color-gray-100) !important;
-    color: var(--color-black) !important;
+    background-color: #fff1e0 !important;
+    color: #c96f1f !important;
   }
 
   .custom-react-select__option--is-selected {

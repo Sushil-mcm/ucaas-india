@@ -1,0 +1,111 @@
+/* Warm redesign of the "Edit person" form for Directory ▸ People — same
+   treatment as the "Invite people" form's own `invite-glass.css`: the
+   platform's neutral grey surfaces (`--surface-2`, `--line`) swapped for the
+   warm cream/orange tones every other Directory dialog already uses.
+
+   Scoped to `.gp-edit-person-dialog` only, so the same `UpdateForwarding`
+   form used standalone elsewhere (Admin ▸ People, Departments, Numbers,
+   Call coverage, Templates) is unaffected.
+
+   `DialogContent` renders through a portal to `document.body` — these rules
+   target the dialog's own class rather than an ancestor that will never
+   actually contain it, same caveat as every other Directory dialog
+   override. */
+
+.gp-edit-person-dialog {
+  background: #ffffff !important;
+}
+.gp-edit-person-dialog .gp-create-group-head {
+  background: #ffffff;
+}
+/* Same fix as the Invite people dialog's own `.gp-create-group-body` —
+   the shared shell's default top padding left a dead gap between the
+   header's border and the identity card below it. */
+.gp-edit-person-dialog .gp-create-group-body {
+  padding-top: 0 !important;
+}
+
+/* ---- who you're editing ---- */
+.gp-edit-person-dialog .mcm-personhead {
+  background: #fff6e9 !important;
+  border-color: rgba(242, 153, 74, 0.25) !important;
+}
+
+/* ---- step tabs ---- */
+.gp-edit-person-dialog .mcm-steps {
+  border-bottom-color: rgba(242, 153, 74, 0.2) !important;
+}
+/* shadcn's Tabs paints its own background behind the active trigger (see the
+   identical fix in `groups-glass.css` for the "New group" dialog's tab
+   strip) — here it showed as an unwanted cream pill behind the active step.
+   Only the orange underline (`.mcm-step.on`'s own border-bottom, from
+   mcm-page.css) should mark it. */
+.gp-edit-person-dialog [data-slot='tabs-trigger'][data-state='active'] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.gp-edit-person-dialog .mcm-step:not(.on):not(.err) {
+  color: #000000 !important;
+}
+.gp-edit-person-dialog .mcm-step:not(.on):not(.err):hover:not(:disabled) {
+  color: #c96f1f !important;
+  /* The platform's own hover fill here (`var(--surface-2)`, from
+     mcm-page.css) is a barely-there off-white that read as washed out
+     against this dialog's white background — a visibly warmer peach instead. */
+  background: #ffe4bf !important;
+}
+/* `:not(.on)` matters here: without it this beat the active step's own
+   `.mcm-step.on .mcm-step-n { background: var(--accent); color: #fff }` (in
+   mcm-page.css) via !important, leaving the active step's number white text
+   on a near-white peach circle — unreadable. */
+.gp-edit-person-dialog .mcm-step:not(.on) .mcm-step-n {
+  background: #fff1e0 !important;
+}
+
+/* ---- fields ---- */
+.gp-edit-person-dialog [data-slot='input'] {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-edit-person-dialog [data-slot='input']:hover,
+.gp-edit-person-dialog [data-slot='input']:focus {
+  border-color: #f2994a !important;
+}
+.gp-edit-person-dialog .custom-react-select__control {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background-color: #fffdfb !important;
+}
+.gp-edit-person-dialog .custom-react-select__control:hover,
+.gp-edit-person-dialog .custom-react-select__control--is-focused {
+  border-color: #f2994a !important;
+}
+
+/* ---- footer ---- */
+.gp-edit-person-dialog .mcm-formfoot {
+  border-top-color: rgba(242, 153, 74, 0.2) !important;
+}
+/* Back/Next carry the bare `.btn` class with no variant — the platform's
+   own reset strips every plain button's border, leaving them borderless and
+   nearly invisible next to Cancel/Save changes. */
+.gp-edit-person-dialog .btn:not(.primary):not(.ghost) {
+  background: transparent !important;
+  border: 1px solid #f2994a !important;
+  color: #f2994a !important;
+}
+.gp-edit-person-dialog .btn:not(.primary):not(.ghost):hover:not(:disabled) {
+  background: #f2994a !important;
+  color: #ffffff !important;
+}
+.gp-edit-person-dialog .btn:not(.primary):not(.ghost):disabled {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  color: rgba(242, 153, 74, 0.4) !important;
+}
+.gp-edit-person-dialog .btn.ghost {
+  background: transparent !important;
+  border: 1px solid #f2994a !important;
+  color: #f2994a !important;
+}
+.gp-edit-person-dialog .btn.ghost:hover {
+  background: #f2994a !important;
+  color: #ffffff !important;
+}

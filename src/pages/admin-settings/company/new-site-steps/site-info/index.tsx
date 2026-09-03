@@ -208,20 +208,7 @@ const SiteInfo = ({ formInstance }: any) => {
               <div
                 className={`relative flex w-full gap-1 ${shouldShowState ? 'md:w-1/2' : 'md:w-full'}`}
               >
-                <CustomSelect
-                  label={'Country'}
-                  required
-                  options={countryList?.map((country) => ({
-                    label: country?.name || '',
-                    value: country?.name || '',
-                  }))}
-                  handleChange={(value) => {
-                    setValue('country', value, { shouldValidate: true, shouldDirty: true });
-                  }}
-                  value={watchedCountry}
-                  placeholder={'Select Country'}
-                  error={errors?.country?.message}
-                />
+                <Input label="Country" value="India" disabled />
               </div>
               {shouldShowState && (
                 <div className="relative flex w-full gap-1 md:w-1/2">

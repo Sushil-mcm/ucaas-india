@@ -207,16 +207,18 @@
    happens to use, and got its own working `Button` variant styling
    overridden into a flat grey/transparent look by this block as a result. */
 .gp-create-group-body .gp-role-form-footer button[type='button'] {
+  /* Same solid orange-outline treatment as Cancel on Invite people / Edit
+     person, not the fainter grey-text-until-hover look this had before. */
   background: transparent !important;
-  color: #6b5c4d !important;
-  border: 1px solid rgba(242, 153, 74, 0.3) !important;
+  color: #f2994a !important;
+  border: 1px solid #f2994a !important;
   border-radius: 9px !important;
   height: 36px !important;
   padding: 0 16px !important;
 }
 .gp-create-group-body .gp-role-form-footer button[type='button']:hover {
-  border-color: #f2994a !important;
-  color: #c96f1f !important;
+  background: #f2994a !important;
+  color: #ffffff !important;
 }
 .gp-create-group-body .gp-role-form-footer button[type='submit'] {
   /* Literal hex, not `var(--accent, …)` — see the note on `.bg-gray-50`

@@ -8,7 +8,7 @@ import NewSiteSteps from '@/pages/admin-settings/company/new-site-steps';
 import { siteDelete, siteList } from '@/services/api';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
-import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
+import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
 import { usePeopleRows } from './people-rows';
 import './groups-glass.css';
 import './locations-glass.css';
@@ -47,7 +47,6 @@ const isDefaultSite = (site: Site) => {
 const Locations = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [country, setCountry] = useState('All');
   const [open, setOpen] = useState<Site | null>(null);
   const [editing, setEditing] = useState<Site | null>(null);
   const [creating, setCreating] = useState(false);
@@ -91,22 +90,15 @@ const Locations = () => {
     },
   });
 
-  const countries = useMemo(() => {
-    const found = new Set<string>();
-    sites.forEach((site: Site) => site?.country && found.add(site.country));
-    return ['All', ...Array.from(found).sort()];
-  }, [sites]);
-
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return sites.filter((site: Site) => {
-      if (country !== 'All' && site?.country !== country) return false;
       if (!needle) return true;
-      return [site?.name, site?.city, site?.state, site?.country, site?.address]
+      return [site?.name, site?.city, site?.state, site?.address]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [sites, search, country]);
+  }, [sites, search]);
 
   const closeForm = () => {
     setCreating(false);
@@ -145,7 +137,6 @@ const Locations = () => {
         }
         filters={
           <>
-            <FilterChip label="Country" value={country} options={countries} onChange={setCountry} />
             <SearchChip value={search} onChange={setSearch} placeholder="Search locations" />
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               {visible.length} of {sites.length}
@@ -159,7 +150,6 @@ const Locations = () => {
               <th>Location</th>
               <th>Address</th>
               <th>City / State</th>
-              <th>Country</th>
               <th>Timezone</th>
               <th>People</th>
               <th className="gp-loc-actions-head">Actions</th>
@@ -167,7 +157,7 @@ const Locations = () => {
           </thead>
           <tbody>
             {isLoading ? (
-              <EmptyRow span={7} message="Loading locations…" />
+              <EmptyRow span={6} message="Loading locations…" />
             ) : visible.length ? (
               visible.map((site: Site) => (
                 <tr key={site?.uuid || site?.site_id} onClick={() => setOpen(site)}>
@@ -184,7 +174,6 @@ const Locations = () => {
                   </td>
                   <td>{site?.address || '—'}</td>
                   <td>{[site?.city, site?.state].filter(Boolean).join(', ') || '—'}</td>
-                  <td>{site?.country || '—'}</td>
                   <td>
                     <span className="mono">{site?.timezone || '—'}</span>
                   </td>
@@ -221,7 +210,7 @@ const Locations = () => {
               ))
             ) : (
               <EmptyRow
-                span={7}
+                span={6}
                 message={sites.length ? 'No locations match those filters.' : 'No locations yet.'}
               />
             )}
@@ -256,10 +245,6 @@ const Locations = () => {
             <div className="gp-loc-field">
               <span className="gp-loc-field-l">State</span>
               <span className="gp-loc-field-v">{open?.state || '—'}</span>
-            </div>
-            <div className="gp-loc-field">
-              <span className="gp-loc-field-l">Country</span>
-              <span className="gp-loc-field-v">{open?.country || '—'}</span>
             </div>
             <div className="gp-loc-field">
               <span className="gp-loc-field-l">Postal code</span>

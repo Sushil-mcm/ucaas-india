@@ -285,7 +285,7 @@ const People = () => {
               <th>Numbers</th>
               <th>ACD skills</th>
               <th>Presence</th>
-              <th>Contact</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>

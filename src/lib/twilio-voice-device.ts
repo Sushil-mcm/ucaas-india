@@ -1,8 +1,22 @@
 import { Device } from '@twilio/voice-sdk';
 import { getTwilioVoiceToken } from '@/services/api';
+import type { CallerIdOption } from '@/components/dialpad/types';
 
 export const TWILIO_CALLER_ID = '+17755384044';
 const TWILIO_DIAL_PREFIX = '+91';
+
+/**
+ * Not one of the company's assigned DIDs, so it can't come from
+ * useGetAssignedDIDNumbers(). Added as a static option so it's selectable in
+ * the dialpad without requiring this number to be registered as an owned
+ * number in the numbers admin / database.
+ */
+export const TWILIO_CALLER_ID_OPTION: CallerIdOption = {
+  id: 'twilio-caller-id',
+  label: 'Twilio',
+  country: 'US',
+  number: TWILIO_CALLER_ID,
+};
 
 let device: Device | null = null;
 let deviceReadyPromise: Promise<Device> | null = null;

@@ -12,6 +12,7 @@ import './list-page-glass.css';
 import { usePeopleRows, type PersonRow } from './people-rows';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import '@/styles/warm-glass.css';
+import './favourites-glass.css';
 
 /**
  * Directory ▸ Favourites — the people you keep coming back to.
@@ -141,6 +142,7 @@ const Favourites = () => {
 
   return (
     <>
+      <div className="gp-favourites">
       <div className="gp-dirlist">
         <DirectoryPage
           title="Favourites"
@@ -300,6 +302,7 @@ const Favourites = () => {
             </div>
           ) : null}
         </DirectoryPage>
+      </div>
       </div>
 
       {whatsappTo ? (

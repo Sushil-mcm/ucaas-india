@@ -11,12 +11,17 @@ import { Button } from '@/components/ui/button';
 import SiteInfo from './site-info';
 import Summary from './summary';
 
+/* This deployment is India-only — every location is in India, so the field
+   is fixed rather than offered as a choice. See `SiteInfo`, where the
+   Country select was replaced with a disabled display of this same value. */
+const INDIA_COUNTRY = { label: 'India', value: 'India' };
+
 const createSiteFormInitialState = {
   name: '',
   address: '',
   state: '',
   city: '',
-  country: null,
+  country: INDIA_COUNTRY,
   postal_code: '',
   timezone: null,
   /* MAIN, not the column default of CUSTOM: showing the company main number is
@@ -116,7 +121,6 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       address,
       state,
       city,
-      country,
       postal_code,
       caller_id_name,
       caller_id_type,
@@ -128,7 +132,7 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       address,
       state,
       city,
-      country: { value: country, label: country },
+      country: INDIA_COUNTRY,
       postal_code,
       timezone: timezone ? { value: timezone, label: timezone } : null,
       caller_id_name: caller_id_name || '',
@@ -148,8 +152,8 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
           </h3>
           <p className="text-center text-sm leading-6 text-[#9A948F]">
             Use this feature to add different office locations or branch sites for your company.
-            This allows you to group users by their specific location (e.g., London, Dubai, or
-            Singapore) while keeping everything under one central billing account.
+            This allows you to group users by their specific location (e.g., Mumbai, Pune, or
+            Bengaluru) while keeping everything under one central billing account.
           </p>
           <Stepper
             steps={StepContent}

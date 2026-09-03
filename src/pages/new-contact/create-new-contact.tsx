@@ -668,10 +668,16 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               </div>
               <div className="flex gap-1">
                 <PhoneInput
-                  country={'us'}
+                  country={'in'}
+                  onlyCountries={['in']}
+                  disableDropdown
                   value={watch('phone')}
                   onChange={(value) => {
-                    setValue('phone', value, {
+                    /* countryCodeEditable={false} freezes this library's input entirely
+                       (can't type or delete at all), so +91 is protected here instead:
+                       if editing eats into the dial code, snap back to a bare 91 rather
+                       than let it disappear. */
+                    setValue('phone', value.startsWith('91') ? value : '91', {
                       shouldValidate: true,
                     });
                   }}

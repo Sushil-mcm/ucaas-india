@@ -1,14 +1,17 @@
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import countriesData from '@/assets/json/countries.json';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import CustomSelect from '@/components/custom/custom-select';
+import { Input } from '@/components/ui/input';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import parsePhoneNumberFromString from 'libphonenumber-js';
-import { useUser } from '@/hooks/use-user';
 import { CloseIcon } from '@/assets/icons';
+
+/* This deployment is India-only — every regional setting is India's, so the
+   field is fixed rather than offered as a choice. */
+const INDIA_ISO_CODE = 'IN';
 
 interface RegionalProps {
   modalState: boolean;
@@ -24,10 +27,7 @@ const RegionalModal: FC<RegionalProps> = ({
   initialRegionalSettings,
   onSuccess,
 }) => {
-  const { user_info: userInfoData = {} } = data || {};
   const [timezonesList, setTimezonesList] = useState<any>([]);
-  const { user } = useUser();
-  const { user_info } = user || {};
 
   const {
     getValues,
@@ -48,49 +48,10 @@ const RegionalModal: FC<RegionalProps> = ({
     return countriesData.find((item) => item?.isoCode?.toUpperCase() === normalizedCode) || null;
   };
 
-  const getCountryByNameOrCode = (country?: string) => {
-    if (!country) return null;
-    const trimmedCountry = country.trim();
-    return (
-      countriesData.find(
-        (item) =>
-          item?.name?.toLowerCase() === trimmedCountry.toLowerCase() ||
-          item?.isoCode?.toLowerCase() === trimmedCountry.toLowerCase(),
-      ) || null
-    );
-  };
-
-  const getCountryByTimezone = (timezone?: string) => {
-    if (!timezone) return null;
-    return (
-      countriesData.find((country) =>
-        country?.timezones?.some((item: { zoneName: string }) => item?.zoneName === timezone),
-      ) || null
-    );
-  };
-
-  const parsedNumber = useMemo(() => {
-    const phone = userInfoData?.phone || user_info?.phone;
-
-    if (phone) {
-      const formatted = phone.startsWith('+') ? phone : `+${phone}`;
-      return parsePhoneNumberFromString(formatted);
-    }
-
-    return null;
-  }, [userInfoData?.phone, user_info?.phone]);
-
   const buildDraftRegional = (regionalSettings: any) => {
-    const sourceCountryCode = regionalSettings?.country_code?.value;
-    const sourceCountryValue = regionalSettings?.country?.value;
     const sourceTimezoneValue = regionalSettings?.timezone?.value;
 
-    const resolvedCountry =
-      getCountryByIsoCode(sourceCountryCode) ||
-      getCountryByNameOrCode(sourceCountryValue) ||
-      getCountryByTimezone(sourceTimezoneValue) ||
-      getCountryByIsoCode(parsedNumber?.country) ||
-      getCountryByIsoCode('US');
+    const resolvedCountry = getCountryByIsoCode(INDIA_ISO_CODE);
 
     if (!resolvedCountry) {
       return {
@@ -136,36 +97,7 @@ const RegionalModal: FC<RegionalProps> = ({
     setDraftRegional(draft);
     setTimezonesList(draft?.timezones || []);
     setLocalErrors({});
-  }, [modalState, initialRegionalSettings, parsedNumber]);
-
-  const onCountryChange = (value: ISELECTVALUE | null) => {
-    const countryIsoCode = typeof value?.value === 'string' ? value.value : '';
-    if (!countryIsoCode) return;
-    const countryData = getCountryByIsoCode(countryIsoCode);
-
-    if (!countryData) return;
-
-    const defaultTimezone = countryData?.timezones?.[0]?.zoneName || '';
-
-    setDraftRegional({
-      country: {
-        label: countryData?.name,
-        value: countryData?.name,
-        name: countryData?.name || '',
-      },
-      country_code: {
-        label: getCountryCodeLabel(countryData),
-        value: countryData?.isoCode,
-        name: countryData?.name || '',
-      },
-      timezone: {
-        label: defaultTimezone || 'Select',
-        value: defaultTimezone || '',
-      },
-    });
-    setTimezonesList(countryData?.timezones || []);
-    setLocalErrors((prev) => ({ ...prev, country: undefined, timezone: undefined }));
-  };
+  }, [modalState, initialRegionalSettings]);
 
   const handleSubmit = async () => {
     const nextErrors: { country?: string; timezone?: string } = {};
@@ -233,22 +165,7 @@ const RegionalModal: FC<RegionalProps> = ({
         </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-1.5 w-full">
-            <CustomSelect
-              label={'Country'}
-              placeholder="Select Country"
-              options={countriesData.map((country: { name: string; isoCode: string }) => ({
-                label: country?.name,
-                value: country?.isoCode,
-              }))}
-              handleChange={(e: ISELECTVALUE | null) => {
-                onCountryChange(e);
-              }}
-              value={draftRegional?.country}
-              error={
-                localErrors?.country ||
-                (errors.settings as any)?.operational_hours?.regional?.country?.value?.message
-              }
-            />
+            <Input label="Country" value="India" disabled />
           </div>
           <div className="flex flex-col gap-1.5 w-full">
             <Label>Country Code</Label>

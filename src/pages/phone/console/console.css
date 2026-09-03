@@ -519,9 +519,12 @@
 .mcm-console .seg {
   display: flex;
   gap: 2px;
-  background: var(--surface-3);
+  /* Warm wash rather than the neutral surface, so the direction filter reads
+     as part of the same control set as the tabs above it. */
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-edge);
   padding: 2px;
-  border-radius: 9px;
+  border-radius: 10px;
 }
 .mcm-console .seg button {
   flex: 1;
@@ -534,7 +537,7 @@
 }
 .mcm-console .seg button.on {
   background: var(--surface);
-  color: var(--ink);
+  color: var(--accent-ink);
   box-shadow: var(--shadow-sm);
 }
 .mcm-console .search-mini {
@@ -542,17 +545,27 @@
 }
 .mcm-console .search-mini input {
   width: 100%;
-  height: 32px;
-  border-radius: 8px;
+  /* Sized to the shared Input the rest of Activity uses -- 36px tall on a
+     12px radius -- so the search box is not visibly smaller here. */
+  height: 36px;
+  border-radius: 12px;
   border: 1px solid var(--line);
-  background: var(--surface-2);
-  padding: 0 10px 0 30px;
-  font-size: 12.5px;
+  background: var(--surface);
+  padding: 0 12px 0 32px;
+  font-size: 13px;
+  transition: border-color 0.15s ease;
+}
+
+.mcm-console .search-mini input:hover,
+.mcm-console .search-mini input:focus {
+  border-color: var(--accent);
+  outline: none;
 }
 .mcm-console .search-mini svg {
   position: absolute;
-  left: 9px;
-  top: 8px;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--ink-4);
 }
 .mcm-console .list {

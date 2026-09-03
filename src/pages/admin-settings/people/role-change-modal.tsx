@@ -10,6 +10,7 @@ import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-di
 import { assignRoleBulkUsers, getRoleList } from '@/services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FC, useEffect, useMemo, useState } from 'react';
+import './role-change-modal.css';
 
 interface RoleChangeModalProps {
   open: boolean;
@@ -42,11 +43,32 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
 
   const roleOptions = useMemo<RoleOption[]>(
     () =>
-      roleList?.map((role: { name: string; type: string; uuid: string; role_uuid: string }) => ({
-        label: role?.name,
-        value: String(role?.type || '').toLowerCase() === 'custom' ? role?.uuid : role?.role_uuid,
-        type: role?.type || '',
-      })),
+      roleList?.map(
+        (role: {
+          name: string;
+          type?: string;
+          uuid: string;
+          role_uuid?: string;
+          is_custom?: boolean;
+        }) => {
+          /* Two API shapes carry the same idea under different names — the
+             live role-list endpoint marks a role with `type: 'custom'` and
+             splits its id across `uuid`/`role_uuid`; this app's demo data
+             instead marks it with `is_custom` and only ever sets `uuid`.
+             Reading both means a row always gets a real, distinct id instead
+             of every row silently falling back to `role_uuid` (undefined
+             here) and comparing equal to each other. */
+          const isCustom =
+            typeof role?.is_custom === 'boolean'
+              ? role.is_custom
+              : String(role?.type || '').toLowerCase() === 'custom';
+          return {
+            label: role?.name,
+            value: (isCustom ? role?.uuid : role?.role_uuid) || role?.uuid || '',
+            type: isCustom ? 'custom' : role?.type || 'system',
+          };
+        },
+      ),
     [roleList],
   );
 
@@ -136,10 +158,10 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
   return (
     <Dialog open={open} onOpenChange={(val) => (val ? setOpen(true) : handleClose())}>
       <DialogContent
-        className="w-[760px] max-w-[calc(100%-2rem)] p-0 gap-0"
+        className="gp-role-dialog w-[760px] max-w-[calc(100%-2rem)] p-0 gap-0"
         showCloseButton={false}
       >
-        <div className="flex items-start justify-between p-5 border-b border-gray-200">
+        <div className="gp-role-head flex items-start justify-between p-5">
           <div className="flex flex-col gap-1">
             <h4 className="text-gray-900 text-lg font-semibold">Select Role</h4>
             <p className="text-sm text-gray-500">
@@ -155,7 +177,7 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-200">
+        <div className="gp-role-search p-4">
           <Input
             placeholder="Search roles..."
             className="pl-10"
@@ -191,10 +213,8 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
                 return (
                   <div
                     key={`${roleValue}-${index}`}
-                    className={`w-full text-sm  rounded-xl px-3 py-3 flex items-center justify-between border ${
-                      isSelected
-                        ? 'bg-gray-50 border-primary/30'
-                        : 'border-transparent hover:bg-gray-50'
+                    className={`gp-role-row w-full text-sm rounded-xl px-3 py-3 flex items-center justify-between border${
+                      isSelected ? ' is-selected' : ''
                     }`}
                     onClick={() => setSelectedRole(role)}
                   >
@@ -222,7 +242,7 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
           )}
         </div>
 
-        <div className="border-t border-gray-200 text-sm  bg-gray-50 px-6 py-4 flex items-center justify-between">
+        <div className="gp-role-foot text-sm px-6 py-4 flex items-center justify-between">
           <p className="text-gray-600 font-medium">
             Selected:{' '}
             <span className="text-gray-900">
@@ -230,10 +250,21 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
             </span>
           </p>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant={'transparent'} onClick={handleClose}>
+            <Button
+              type="button"
+              variant={'transparent'}
+              className="gp-role-cancel"
+              onClick={handleClose}
+            >
               Cancel
             </Button>
-            <Button type="button" variant={'outline'} onClick={handleSubmit} disabled={isPending}>
+            <Button
+              type="button"
+              variant={'outline'}
+              className="gp-role-submit"
+              onClick={handleSubmit}
+              disabled={isPending}
+            >
               {isPending ? <Loader variant="blue" size="sm" /> : 'Submit'}
             </Button>
           </div>
