@@ -79,6 +79,7 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import useDebounce from '@/hooks/use-debounce';
 import { useMediaBlob } from '@/pages/messenger/chat/message-item/use-media-blob';
 import { useAuthenticatedMediaUrl } from '@/hooks/use-authenticated-media';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 const messageStatus = function (key: string = '') {
   const status = {
@@ -1859,7 +1860,9 @@ const Inbox = () => {
   };
 
   return (
-    <div className="mcm-inbox w-full h-full min-h-0 flex overflow-hidden bg-white">
+    <div className="mcm-actpage">
+      <ActivityPageHead title="Inbox" description="Faxes, SMS and everything sent to your numbers, in one thread list." />
+      <div className="mcm-inbox w-full h-full min-h-0 flex overflow-hidden bg-white">
       <section
         className={cn(
           'h-full min-h-0 bg-white',
@@ -2015,6 +2018,7 @@ const Inbox = () => {
           }
         />
       ) : null}
+      </div>
     </div>
   );
 };

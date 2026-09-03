@@ -25,6 +25,7 @@ import { useUsersDirectory } from '@/hooks/use-users-directory';
 import { getUserNameByExtension } from '@/lib/extension-utility';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 export const initialDrawerState = {
   url: '',
@@ -754,7 +755,12 @@ const Phone = () => {
   }, [logData]);
 
   return (
-    <div className="flex h-full w-full flex-col lg:flex-row overflow-hidden relative">
+    <div className="mcm-actpage">
+      <ActivityPageHead
+        title="Phone"
+        description="Your softphone: place and take calls, see today's history, recordings and voicemails."
+      />
+      <div className="flex h-full w-full flex-col lg:flex-row overflow-hidden relative">
       {/* Mobile Toggle */}
       <div className="lg:hidden flex border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shrink-0 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] z-10 w-full">
         <button
@@ -816,6 +822,7 @@ const Phone = () => {
             setLogData({});
           }}
         />
+      </div>
       </div>
     </div>
   );

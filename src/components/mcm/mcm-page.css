@@ -6045,3 +6045,40 @@
 .mcm-admin .mcm-sidepanel > div > div:first-child {
   border-color: var(--line);
 }
+
+/* ---------------------------------------------------------------------------
+   The Activity/Directory rail.
+
+   The tiles already take their lit colours from the brand tokens
+   (bg-ucass-active-bg / text-ucass-active), so this adds only what those
+   utilities cannot express: a marker for which view you are on, and movement
+   between states rather than a hard swap.
+   --------------------------------------------------------------------------- */
+.mcm-rail-item {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* The lit tile gets a short accent bar on its inner edge. A tile that is only
+   tinted reads as hovered rather than current, which matters on a rail where
+   hover uses the same tint. */
+.mcm-rail-item.is-lit::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-ucass-active, #c96f1f);
+}
+
+.mcm-rail-item .mcm-rail-label {
+  transition: color 0.15s ease;
+}
+
+.mcm-rail-item.is-lit .mcm-rail-label {
+  font-weight: 600;
+}

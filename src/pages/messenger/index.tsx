@@ -46,6 +46,7 @@ import useDebounce from '@/hooks/use-debounce';
 import { useLoadMoreUsersObserver, useMessengerUsers } from './hooks/use-messenger-users';
 import '@/components/mcm/mcm-page.css';
 import '@/styles/warm-glass.css';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 type ChannelType = keyof typeof CHANNELS_ICON;
 
@@ -1487,7 +1488,9 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
   };
 
   return (
-    <div className="mcm-page mcm-admin mcm-warm-glass">
+    <div className="mcm-actpage">
+      <ActivityPageHead title="Chat" description="Team and customer conversations across every channel you have connected." />
+      <div className="mcm-page mcm-admin mcm-warm-glass">
       <div className="w-full h-full min-h-0 flex overflow-hidden bg-white">
         {chatType === 'chat' ? (
           <>
@@ -1552,6 +1555,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
             </section>
           </>
         )}
+      </div>
       </div>
     </div>
   );

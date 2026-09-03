@@ -18,6 +18,7 @@ import AgentChat from './components/agent-chat';
 import VisitorProfile from './components/visitor-profile';
 import CustomSelect from '@/components/custom/custom-select';
 import '@/styles/warm-glass.css';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 type AgentChatTab = 'unassigned' | 'active' | 'missed' | 'resolved';
 type AgentChatDateRange = 'today' | '7_days' | '30_days';
@@ -1063,7 +1064,9 @@ const AgentChatMessenger = () => {
   );
 
   return (
-    <div className="w-full h-full min-h-0 flex overflow-hidden bg-white mcm-warm-glass">
+    <div className="mcm-actpage">
+      <ActivityPageHead title="Agent Chat" description="Conversations handled by your agents, with the visitor profile beside each one." />
+      <div className="w-full h-full min-h-0 flex overflow-hidden bg-white mcm-warm-glass">
       <section
         className={`${activeChatId ? 'hidden md:block' : 'w-full'} h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[23rem] lg:min-w-[23rem] lg:max-w-[23rem]`}
       >
@@ -1132,6 +1135,7 @@ const AgentChatMessenger = () => {
           </DrawerContent>
         </Drawer>
       ) : null}
+      </div>
     </div>
   );
 };

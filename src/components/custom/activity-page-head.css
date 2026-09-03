@@ -1,0 +1,93 @@
+/* ---------------------------------------------------------------------------
+   Activity — the shared page head.
+
+   Mirrors Directory's head so the two areas read as one product: the same
+   white card, the same 20px radius and warm border, and the same 23px/800
+   title as `.mcm-page .page-head h1`. The description sits behind the info
+   button rather than under the title, which keeps the head a single line.
+
+   `flex: none` matters: every Activity screen is a full-height application
+   layout, so the head must not stretch and must not let the columns below it
+   lose their own height.
+   --------------------------------------------------------------------------- */
+
+.mcm-acthead {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 22px;
+  background: #fff;
+  border-bottom: 1px solid var(--line, #eee7dd);
+}
+
+.mcm-acthead-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Matches `.mcm-page .page-head h1` exactly -- size, weight and tracking --
+   so a title reads identically whichever area you are in. */
+.mcm-acthead-title h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Same control as Directory's `.page-head-info` and Admin's
+   `.mcm-adminhead-info`: one shape for "there is more to say about this
+   screen", wherever you meet it. */
+.mcm-acthead-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #eee7dd);
+  background: var(--surface-2, #fbf3e8);
+  color: var(--ink-3, #6b7891);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mcm-acthead-info:hover {
+  color: var(--accent-ink, #c96f1f);
+  border-color: var(--accent-edge, #ffd9ad);
+  background: var(--accent-wash, #fff1e0);
+}
+
+.mcm-acthead-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+/* The wrapper each Activity screen gets so the head sits above its own
+   layout without that layout losing its height. */
+.mcm-actpage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+}
+
+.mcm-actpage > :not(.mcm-acthead) {
+  flex: 1 1 auto;
+  min-height: 0;
+}

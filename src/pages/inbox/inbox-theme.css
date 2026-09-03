@@ -6,17 +6,22 @@
    ============================================================ */
 
 .mcm-inbox {
-  /* --- surfaces / ink / lines --- */
-  --mcm-ground: #eef1f8;
+  /* --- surfaces / ink / lines ---
+     Warm, matching `.mcm-page` in mcm-page.css. These were the console's
+     original cool blue-greys (#eef1f8 / #f6f8fc / #eaeef7 / #dfe5f0), and
+     because this block redefines the tokens for the whole Inbox scope it was
+     repainting the page cool underneath an orange accent -- the one screen in
+     the app that did not follow the warm theme. */
+  --mcm-ground: transparent;
   --mcm-surface: #ffffff;
-  --mcm-surface-2: #f6f8fc;
-  --mcm-surface-3: #eaeef7;
+  --mcm-surface-2: #fbf3e8;
+  --mcm-surface-3: #f5e6d3;
   --mcm-ink: #0d1526;
   --mcm-ink-2: #3d4a63;
   --mcm-ink-3: #6b7891;
   --mcm-ink-4: #93a0b8;
-  --mcm-line: #dfe5f0;
-  --mcm-line-2: #eaeef6;
+  --mcm-line: #eee7dd;
+  --mcm-line-2: #f0e4d3;
 
   /* --- accent ---
      Swap these four to var(--primary) etc. if the inbox should follow the

@@ -285,7 +285,11 @@ const Sidebar = () => {
                            separate two items that share one — fall back to it
                            only where the link has no view to compare. */
                         const lit = viewKey || linkView ? activeLink : activeLink || isActive;
-                        return `min-h-13 w-16 flex items-center justify-center rounded-lg relative py-1.5 ${
+                        /* `mcm-rail-item` carries the shared look -- the lit
+                           tile's accent bar and the colour transition -- so the
+                           rail is styled in one stylesheet rather than through
+                           a growing utility string. */
+                        return `mcm-rail-item ${lit ? 'is-lit' : ''} min-h-13 w-16 flex items-center justify-center rounded-lg relative py-1.5 ${
                           lit ? 'bg-ucass-active-bg text-ucass-active' : 'bg-transparent'
                         } hover:bg-ucass-active-bg hover:text-ucass-active ${
                           !isEnabled ? 'text-gray-400' : 'text-gray-700'
