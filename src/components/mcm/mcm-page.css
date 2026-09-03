@@ -6032,3 +6032,16 @@
   min-width: 240px;
   padding: 7px 14px;
 }
+
+/* The sidebar's title bar and the page head sit side by side and their bottom
+   borders are meant to read as one continuous rule across the screen. The
+   sidebar is a shared component (Meetings, Campaign and Reports use it too) and
+   draws that border with Tailwind's `border-gray-200` -- a cool grey, against
+   this area's warm `--line`. Same height, but two different colours meeting at
+   the column edge, which is what read as the line not lining up.
+
+   Scoped to `.mcm-admin` so only this area is retinted and the other three
+   keep the border they already had. */
+.mcm-admin .mcm-sidepanel > div > div:first-child {
+  border-color: var(--line);
+}
