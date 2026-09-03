@@ -1,0 +1,349 @@
+/* ============================================================
+   Performance › Calls / Interactions — warm sunset orange glassmorphism,
+   brought to Directory-benchmark parity (20px frosted cards, sticky
+   frosted table header, left accent-bar row hover). Same three-scope
+   convention as queues-theme.css / agents-theme.css:
+
+     .perf-interactions        this tab's own root element in
+                                interactions-tab.tsx. Owns the three hero
+                                cards; everything below them (the five
+                                call-count tiles, the search/filter bar, the
+                                table) belongs to `CallHistory`
+                                (`src/pages/reports/call-logs/call-history`)
+                                rendered `embedded` inside it.
+     body.perf-warm-backdrop   the full-page ambient gradient, defined once
+                                in live-theme.css and reused here — toggled
+                                on mount/unmount by interactions-tab.tsx.
+
+   `CallHistory` is a SHARED component — it also renders standalone at
+   /reports/call-history and embedded again inside the Home Live Wallboard.
+   Every rule below is chained through `.perf-interactions` specifically so
+   none of it reaches those other two call sites; only the copy Performance
+   renders picks up this theme. Its own markup mostly carries Tailwind
+   utility soup rather than stable class names, so several selectors below
+   key off distinctive Tailwind classes via `[class*=]` rather than a class
+   this file could add — the same technique live-theme.css and
+   callbacks-theme.css already use for other shared components.
+   ============================================================ */
+
+.perf-interactions,
+body.perf-warm-backdrop {
+  --ic-accent: #f97316;
+  --ic-accent-deep: #ea580c;
+  --ic-accent-ink: #c2410c;
+  --ic-wash: #fff1eb;
+  --ic-ink: #1a1a1a;
+  --ic-muted: #666666;
+  --ic-hairline: rgba(249, 115, 22, 0.08);
+  --ic-row-hover: rgba(255, 241, 235, 0.55);
+
+  --ic-glass: rgba(255, 255, 255, 0.85);
+  --ic-glass-border: rgba(255, 255, 255, 0.95);
+  --ic-glass-blur: blur(20px) saturate(190%);
+  --ic-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --ic-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+}
+.dark .perf-interactions,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --ic-accent: #fb923c;
+  --ic-accent-deep: #f97316;
+  --ic-accent-ink: #fdba74;
+  --ic-wash: #2a1710;
+  --ic-ink: #f4f6fb;
+  --ic-muted: #93a1ba;
+  --ic-hairline: rgba(251, 146, 60, 0.14);
+  --ic-row-hover: rgba(251, 146, 60, 0.1);
+
+  --ic-glass: rgba(17, 24, 39, 0.72);
+  --ic-glass-border: rgba(251, 146, 60, 0.18);
+  --ic-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --ic-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. Hero KPI cards — Avg wait time / Avg call duration / Total call
+   charge. Rendered directly by interactions-tab.tsx as PerfStatCard, so a
+   plain `.stat` hook is enough here.
+   ------------------------------------------------------------ */
+.mcm-page .perf-interactions > .grid .stat {
+  background: var(--ic-glass);
+  backdrop-filter: var(--ic-glass-blur);
+  -webkit-backdrop-filter: var(--ic-glass-blur);
+  border: 1px solid var(--ic-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--ic-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.mcm-page .perf-interactions > .grid .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--ic-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+.mcm-page .perf-interactions > .grid .stat .k {
+  color: var(--ic-muted);
+}
+.mcm-page .perf-interactions > .grid .stat .v {
+  color: var(--ic-ink);
+}
+.mcm-page .perf-interactions > .grid .stat .d {
+  color: var(--ic-muted) !important;
+}
+
+/* ------------------------------------------------------------
+   2. Sub-metric counters — Total Calls / Answered / Outgoing / Missed /
+   Voicemails. `CallHistory` renders these as one `sm:grid-cols-3
+   md:grid-cols-5` row of plain bordered divs (call-history/index.tsx),
+   which is the only combination of classes unique to this row.
+   ------------------------------------------------------------ */
+.perf-interactions [class*='sm:grid-cols-3'][class*='md:grid-cols-5'] > div {
+  background: var(--ic-glass) !important;
+  backdrop-filter: var(--ic-glass-blur);
+  -webkit-backdrop-filter: var(--ic-glass-blur);
+  border: 1px solid var(--ic-glass-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--ic-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.16s ease;
+}
+.perf-interactions [class*='sm:grid-cols-3'][class*='md:grid-cols-5'] > div:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ic-glass-shadow-hover);
+}
+/* All five counters — Total / Answered / Outgoing / Missed / Voicemails —
+   stay visually identical regardless of which one is the active filter.
+   Neel Sir asked for one clean, uniform row rather than a highlighted
+   "selected" tile, so the active tab's own peach border/wash is
+   deliberately neutralized here instead of restyled. */
+.perf-interactions [class*='sm:grid-cols-3'][class*='md:grid-cols-5'] > div[class*='border-ucass-primary-200'] {
+  background: var(--ic-glass) !important;
+  border-color: var(--ic-glass-border) !important;
+  box-shadow: var(--ic-glass-shadow) !important;
+}
+.perf-interactions [class*='sm:grid-cols-3'][class*='md:grid-cols-5'] > div > div:first-child {
+  color: var(--ic-ink);
+}
+.perf-interactions [class*='sm:grid-cols-3'][class*='md:grid-cols-5'] > div span {
+  color: var(--ic-muted) !important;
+}
+
+/* ------------------------------------------------------------
+   3. Search & filter toolbar — the `.filters` row (search box, date
+   dropdown, refresh/export/filter buttons) wrapped in one frosted bar.
+   ------------------------------------------------------------ */
+.perf-interactions .filters {
+  background: var(--ic-glass);
+  backdrop-filter: var(--ic-glass-blur);
+  -webkit-backdrop-filter: var(--ic-glass-blur);
+  border: 1px solid var(--ic-glass-border);
+  border-radius: 16px;
+  padding: 6px 8px;
+  box-shadow: var(--ic-glass-shadow);
+}
+/* Search — a full pill instead of the app's default rounded-rect input,
+   sized to match the 36px circular action buttons beside it so the whole
+   bar sits on one clean baseline, and widened past the app's default
+   `sm:w-52 lg:w-60` cap so it reads as the toolbar's main field rather
+   than a cramped afterthought next to the action buttons. */
+.perf-interactions .filters > div:first-child {
+  width: 320px !important;
+  max-width: 100% !important;
+}
+.perf-interactions .filters input {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding-left: 36px !important;
+  padding-right: 16px !important;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(249, 115, 22, 0.2) !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.perf-interactions .filters input:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+.perf-interactions .filters input:focus {
+  border-color: var(--ic-accent) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+}
+.dark .perf-interactions .filters input {
+  background: rgba(255, 255, 255, 0.06);
+}
+/* The search icon sits in its own absolutely-positioned span
+   (`Input`'s `IconPosition` prop, `left-0 pl-2`) — nudged in and
+   recoloured to sit centred and crisp inside the taller pill. Scoped to
+   the toolbar's first child (the search field's own wrapper) so it can't
+   reach the action buttons' icons in the second child group. */
+.perf-interactions .filters > div:first-child span {
+  padding-left: 12px !important;
+  color: var(--ic-accent);
+}
+
+/* The refresh/export/filter icon buttons — sized and rounded to a 36px
+   pill circle to match the search field beside them. Only sizing lives
+   here: their background/border/colour (rest and hover) is set in
+   `index.css`'s `@layer base` instead, right next to the global
+   `.mcm-page .filters button` rule it overrides — a plain, unlayered rule
+   here can never win that fight. For `!important` declarations the
+   cascade reverses layer order and treats unlayered styles as the lowest
+   priority, so no amount of specificity in this file beats an `!important`
+   declaration inside `@layer base`, only a more specific `!important`
+   declaration inside that same layer can. */
+.perf-interactions .filters button[class*='border-primary'] {
+  height: 36px !important;
+  width: 36px !important;
+  min-height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 9999px !important;
+}
+
+/* ------------------------------------------------------------
+   4. Calls table — 20px frosted glass card, sticky frosted header,
+   Directory's signature left accent-bar row hover.
+   ------------------------------------------------------------ */
+.perf-interactions .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--ic-glass-border);
+  background: var(--ic-glass);
+  backdrop-filter: var(--ic-glass-blur);
+  -webkit-backdrop-filter: var(--ic-glass-blur);
+  box-shadow: var(--ic-glass-shadow);
+}
+.perf-interactions .table-scroll thead {
+  background: rgba(255, 250, 244, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 0 var(--ic-hairline);
+}
+.dark .perf-interactions .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-interactions .table-scroll thead th {
+  color: var(--ic-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom-color: var(--ic-hairline);
+  background: transparent;
+}
+
+.perf-interactions .table-scroll tbody tr {
+  background: transparent;
+  border-color: var(--ic-hairline);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.perf-interactions .table-scroll tbody tr:hover {
+  background: var(--ic-row-hover);
+  box-shadow: inset 3px 0 0 var(--ic-accent);
+}
+.perf-interactions .table-scroll tbody td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom-color: var(--ic-hairline);
+  color: #334155;
+}
+.dark .perf-interactions .table-scroll tbody td {
+  color: var(--ic-muted);
+}
+
+/* Date, Duration, Wait Time, Charge — tabular figures, right-aligned so
+   they line up column to column instead of jittering left-aligned. */
+.perf-interactions .table-scroll th:nth-child(1),
+.perf-interactions .table-scroll th:nth-child(6),
+.perf-interactions .table-scroll th:nth-child(7),
+.perf-interactions .table-scroll th:nth-child(8),
+.perf-interactions .table-scroll td:nth-child(1),
+.perf-interactions .table-scroll td:nth-child(6),
+.perf-interactions .table-scroll td:nth-child(7),
+.perf-interactions .table-scroll td:nth-child(8) {
+  font-variant-numeric: tabular-nums;
+}
+.perf-interactions .table-scroll th:nth-child(6),
+.perf-interactions .table-scroll th:nth-child(7),
+.perf-interactions .table-scroll th:nth-child(8),
+.perf-interactions .table-scroll td:nth-child(6),
+.perf-interactions .table-scroll td:nth-child(7),
+.perf-interactions .table-scroll td:nth-child(8) {
+  text-align: right;
+}
+.perf-interactions .table-scroll td:nth-child(8) {
+  color: var(--ic-ink);
+  font-weight: 600;
+}
+.dark .perf-interactions .table-scroll td:nth-child(8) {
+  color: #f1f5f9;
+}
+
+/* ------------------------------------------------------------
+   5. Status badge — Directory's `.tag` wash tokens (pos/warn/crit)
+   instead of the raw green-50/red-50/primary-100 Tailwind utilities the
+   shared component paints it with.
+   ------------------------------------------------------------ */
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='capitalize'] {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.perf-interactions .table-scroll tbody td [class*='bg-green-50'] {
+  background: var(--live-wash) !important;
+  color: var(--live) !important;
+}
+.perf-interactions .table-scroll tbody td [class*='bg-red-50'] {
+  background: var(--crit-wash) !important;
+  color: var(--crit) !important;
+}
+.perf-interactions .table-scroll tbody td [class*='bg-primary-100'] {
+  background: var(--warn-wash) !important;
+  color: var(--warn) !important;
+}
+
+/* ------------------------------------------------------------
+   6. Action buttons — Play / AI conversation / Transcript / Call / SMS —
+   clean glass circles at rest, filled sunset on hover.
+   ------------------------------------------------------------ */
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'] {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  box-shadow: 0 1px 2px rgba(160, 95, 30, 0.08);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='bg-ucass-active-bg']:hover,
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='bg-green-100']:hover {
+  background: linear-gradient(135deg, var(--ic-accent) 0%, var(--ic-accent-deep) 100%) !important;
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.26);
+}
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='bg-purple-100']:hover {
+  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%) !important;
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(126, 34, 206, 0.26);
+}
+/* Disabled actions (no recording / no transcript) stay flat, no hover
+   lift — a glass ring here would read as clickable when it is not.
+   Chained through the same `[rounded-full][w-8]` pair as the base glass
+   rule above so this wins on specificity, not just source order. */
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='cursor-not-allowed'] {
+  background: rgba(148, 163, 184, 0.16) !important;
+  border-color: transparent;
+  box-shadow: none;
+}

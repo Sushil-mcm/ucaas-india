@@ -48,6 +48,13 @@ type CallHistoryProps = {
   fetcherKey?: string;
   tableMaxHeight?: string;
   tableCustomClass?: string;
+  /* Hides the toolbar's own date dropdown for a host that already has its
+     own global date filter above this component (Performance's Interactions
+     tab) — `initialDateFilter` still drives the query, it's just no longer
+     independently adjustable from in here. Defaults to shown, so every
+     other caller (the standalone Reports page, the Home Live Wallboard)
+     keeps its own date picker exactly as before. */
+  showDateFilter?: boolean;
 };
 
 const EMPTY_CALL_HISTORY_FILTERS: { key: string; value: string }[] = [];
@@ -133,6 +140,7 @@ const CallHistory = ({
   fetcherKey = 'callListingLog',
   tableMaxHeight,
   tableCustomClass = '',
+  showDateFilter = true,
 }: CallHistoryProps = {}) => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
@@ -672,7 +680,8 @@ const CallHistory = ({
         accessorKey: 'chargeTotal',
         cell: ({ row }: any) => {
           const data = row?.original;
-          return data?.chargeTotal ? data?.chargeTotal : data?.charge ? data?.charge : 0.0;
+          const value = Number(data?.chargeTotal ?? data?.charge ?? 0);
+          return `₹${value.toFixed(2)}`;
         },
       },
       {
@@ -819,29 +828,35 @@ const CallHistory = ({
     setActiveTab(tab);
   };
 
-  const Filters = (
-    <div className="flex items-center gap-2 filters ">
-      <div className="w-full sm:w-52 lg:w-60">
-        <Input
-          placeholder="Search"
-          className="pl-10 h-9 min-h-9 rounded-lg"
-          value={search}
-          onChange={(e) => {
-            const value = e.target.value;
-            if (value.startsWith(' ')) return;
-            setSearch(e.target.value);
-          }}
-          IconPosition="left-0 pl-2 inset-y-0"
-          // maxLength={50}
-          Icon={<SearchLine className=" text-gray-700" />}
-        />
-      </div>
-      <DateDropdown
-        {...{
-          dropdownVal,
-          setDropdownVal,
+  const searchInput = (
+    <div className="w-full sm:w-52 lg:w-60">
+      <Input
+        placeholder="Search"
+        className="pl-10 h-9 min-h-9 rounded-lg"
+        value={search}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value.startsWith(' ')) return;
+          setSearch(e.target.value);
         }}
+        IconPosition="left-0 pl-2 inset-y-0"
+        // maxLength={50}
+        Icon={<SearchLine className=" text-gray-700" />}
       />
+    </div>
+  );
+
+  const dateFilter = showDateFilter && (
+    <DateDropdown
+      {...{
+        dropdownVal,
+        setDropdownVal,
+      }}
+    />
+  );
+
+  const actionButtons = (
+    <>
       <Button
         type="button"
         variant="outline"
@@ -870,6 +885,29 @@ const CallHistory = ({
       >
         <FilterIcon className="w-5 h-5" />
       </Button>
+    </>
+  );
+
+  /* Embedded hosts (Performance, the Home Live Wallboard) get search
+     pinned left and the date filter + action buttons grouped right via
+     `justify-between` on two flex children. The standalone Reports page
+     keeps the original single-row layout untouched — it's wrapped by
+     `ReportsPageLayout`, which applies its own `justify-end` to `.filters`
+     at the `lg` breakpoint, and restructuring this into two groups there
+     would fight that rule instead of composing with it. */
+  const Filters = embedded ? (
+    <div className="flex w-full flex-wrap items-center justify-between gap-2 filters">
+      {searchInput}
+      <div className="flex items-center gap-2">
+        {dateFilter}
+        {actionButtons}
+      </div>
+    </div>
+  ) : (
+    <div className="flex items-center gap-2 filters ">
+      {searchInput}
+      {dateFilter}
+      {actionButtons}
     </div>
   );
 
@@ -1001,9 +1039,7 @@ const CallHistory = ({
   if (embedded) {
     return (
       <div className="flex min-h-0 w-full flex-col gap-3">
-        {!tableOnly && (
-          <div className="flex flex-wrap items-center justify-end gap-2">{Filters}</div>
-        )}
+        {!tableOnly && <div className="flex flex-wrap items-center gap-2">{Filters}</div>}
         {callHistoryContent}
       </div>
     );

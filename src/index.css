@@ -431,6 +431,48 @@
     overflow: hidden !important;
   }
 
+  /* Toolbar icon buttons (refresh/export/filter) declare their own
+     `bg-white` utility, but the app-wide `.mcm-page button:not(...)` reset
+     strips background/border/color off every plain button and wins on
+     specificity — leaving them see-through next to the white-card preset
+     dropdown. Restore the white card look here. */
+  .mcm-page .filters button:not([data-slot='tabs-trigger']):not(.mcm-date-apply-btn):not(.mcm-date-clear-btn) {
+    background: #ffffff !important;
+    border: 1px solid var(--primary) !important;
+    color: var(--primary) !important;
+  }
+  .mcm-page
+    .filters
+    button:not([data-slot='tabs-trigger']):not(.mcm-date-apply-btn):not(.mcm-date-clear-btn):hover {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+  }
+
+  /* Performance's Calls toolbar (interactions-theme.css) wants these same
+     buttons on its own warm-glass palette instead of the plain white-card
+     look above — for `!important` declarations the cascade reverses layer
+     order and treats unlayered styles as lowest priority, so a
+     `.perf-interactions`-scoped override in that page's own stylesheet can
+     never beat this rule no matter how specific it is. It has to live in
+     this layer, right beside the rule it overrides, for specificity to
+     decide normally. */
+  .mcm-page
+    .perf-interactions
+    .filters
+    button:not([data-slot='tabs-trigger']):not(.mcm-date-apply-btn):not(.mcm-date-clear-btn) {
+    background: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(249, 115, 22, 0.3) !important;
+    color: #f97316 !important;
+  }
+  .mcm-page
+    .perf-interactions
+    .filters
+    button:not([data-slot='tabs-trigger']):not(.mcm-date-apply-btn):not(.mcm-date-clear-btn):hover {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+  }
+
   .custom-react-select__control:hover {
     border-color: var(--primary) !important;
   }
