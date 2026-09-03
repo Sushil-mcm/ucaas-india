@@ -1490,7 +1490,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
   return (
     <div className="mcm-actpage">
       <ActivityPageHead
-        title={pageTitle}
+        title={isAgentChat ? 'Agent Chat' : 'Chat'}
         description="Team and customer conversations across every channel you have connected."
       />
       <div className="mcm-page mcm-admin mcm-warm-glass">
