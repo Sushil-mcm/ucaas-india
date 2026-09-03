@@ -6,6 +6,8 @@ import { useGetAssignedDIDNumbers } from './common';
 import { useUser } from './use-user';
 import type { CallerIdOption } from '@/components/dialpad/types';
 import { updateUserDID } from '@/services/api';
+import { TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
+import { INDIA_CALLER_ID_OPTIONS } from '@/lib/india-caller-ids';
 
 type AssignedDid = {
   uuid?: string;
@@ -87,9 +89,14 @@ export const useDialpadCallerIdOptions = () => {
       ...EMPTY_CALLER_ID_OPTION,
       country: user?.countryInfo?.alpha2code || 'US',
     };
+    /* The Indian numbers are selectable the same way an assigned DID is, so a
+       stored caller_id has to be matched against them too. Without this the
+       account could hold one of them and the dialpad would still fall through
+       to the first assigned DID, showing a number nobody picked. */
+    const selectableOptions = [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS];
     const userCallerId = user?.user_info?.caller_id;
     const matchedCallerIdOption = userCallerId
-      ? assignedOptions.find((option) => sameNumber(option.number, userCallerId)) || null
+      ? selectableOptions.find((option) => sameNumber(option.number, userCallerId)) || null
       : null;
 
     /* Falling through to the first assigned number is a real behaviour change
@@ -108,7 +115,7 @@ export const useDialpadCallerIdOptions = () => {
 
     if (matchedCallerIdOption) {
       return {
-        callerIdOptions: assignedOptions,
+        callerIdOptions: [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS, TWILIO_CALLER_ID_OPTION],
         defaultCallerIdOption: matchedCallerIdOption,
         isCallerIdFallback: false,
       };
@@ -116,14 +123,14 @@ export const useDialpadCallerIdOptions = () => {
 
     if (assignedOptions.length === 0) {
       return {
-        callerIdOptions: [noCallerIdOption],
+        callerIdOptions: [noCallerIdOption, ...INDIA_CALLER_ID_OPTIONS, TWILIO_CALLER_ID_OPTION],
         defaultCallerIdOption: noCallerIdOption,
         isCallerIdFallback: false,
       };
     }
 
     return {
-      callerIdOptions: assignedOptions,
+      callerIdOptions: [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS, TWILIO_CALLER_ID_OPTION],
       defaultCallerIdOption: assignedOptions[0],
       /* Nothing on this account chose this number — it is simply first in the
          list. Surfaces in the UI so a wrong outbound number is visible before
@@ -144,6 +151,8 @@ export const useDialpadCallerIdOptions = () => {
          The dialer already skips this call for those, but the guard lives here
          too so a future caller cannot persist one by accident. */
       if (isGroupCallerIdOption(option)) return;
+      /* Not an assigned DID — nothing to persist as the account's default. */
+      if (option.id === TWILIO_CALLER_ID_OPTION.id) return;
       await mutateCallerId({ caller_id: normalizeDidNumber(option.number) });
     },
   };
