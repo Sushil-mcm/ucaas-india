@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { Info } from 'lucide-react';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 import './page-shell.css';
 
 /**
@@ -34,9 +36,19 @@ export const DirectoryPage = ({
   <div className="page">
     <McmIconSprite />
     <div className="page-head">
-      <div>
+      {/* The description sits behind an info button rather than under the
+          title, the same way the Admin head carries its own. It keeps every
+          Directory head one line tall, so the title lines up with the rail
+          beside it on all seven screens. */}
+      <div className="page-head-title">
         <h1>{title}</h1>
-        <p>{description}</p>
+        {description ? (
+          <CustomTooltip text={description} side="bottom" className="max-w-xs">
+            <button type="button" className="page-head-info" aria-label={`About ${title}`}>
+              <Info size={15} aria-hidden="true" />
+            </button>
+          </CustomTooltip>
+        ) : null}
       </div>
       {actions}
     </div>

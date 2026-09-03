@@ -353,7 +353,7 @@ const Header = () => {
               </div>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-ucass-primary-200 hover:text-primary md:hidden"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-ucass-primary-100 hover:text-ucass-active md:hidden"
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 aria-label={isMobileMenuOpen ? 'Close header menu' : 'Open header menu'}
                 aria-expanded={isMobileMenuOpen}
@@ -382,7 +382,7 @@ const Header = () => {
               <div className="inline-flex items-center justify-center font-medium">
                 <CustomTooltip text={'Notification'} side="bottom">
                   <span
-                    className="cursor-pointer relative bg-white/70 border border-white/70 shadow-sm flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:border-ucass-primary-100 hover:text-primary"
+                    className="cursor-pointer relative bg-white/70 border border-white/70 shadow-sm flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg hover:bg-ucass-primary-100 hover:border-ucass-primary-200 hover:text-ucass-active"
                     onClick={() => {
                       setNotificationState(true);
                       setIsMobileMenuOpen(false);
@@ -413,7 +413,7 @@ const Header = () => {
                 <div className="flex items-center">
                   <CustomTooltip text={'Add Funds'} side="bottom">
                     <div
-                      className="flex items-center gap-2 px-3 h-9 bg-gray-100 hover:bg-ucass-primary-200  rounded-lg cursor-pointer"
+                      className="flex items-center gap-2 px-3 h-9 bg-gray-100 hover:bg-ucass-primary-100  rounded-lg cursor-pointer"
                       {...getHeaderRouteHandlers(addFundsRoute)}
                     >
                       <Wallet className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-300" />
@@ -434,7 +434,7 @@ const Header = () => {
                   <PopoverTrigger
                     className={cn(
                       'cursor-pointer flex items-center gap-2 h-10 pl-1 pr-2 rounded-xl border transition-colors',
-                      'bg-white/70 border-white/70 shadow-sm hover:bg-ucass-primary-200 hover:border-ucass-primary-100',
+                      'bg-white/70 border-white/70 shadow-sm hover:bg-ucass-primary-100 hover:border-ucass-primary-200',
                       profileState === 'profile' && 'bg-ucass-primary-200 border-ucass-primary-100',
                     )}
                   >

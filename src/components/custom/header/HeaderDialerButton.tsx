@@ -60,7 +60,7 @@ const HeaderDialerButton = ({ isRegistered, onClick }: HeaderDialerButtonProps) 
     <div className="inline-flex items-center justify-center font-medium">
       <CustomTooltip text={'Dialer'} side="bottom">
         <span
-          className="cursor-pointer flex items-center justify-center gap-1 relative bg-gray-100 flex items-center justify-center min-h-9 min-w-9 w-full max-h-9 rounded-lg hover:bg-ucass-primary-200 hover:text-primary p-1"
+          className="cursor-pointer flex items-center justify-center gap-1 relative bg-gray-100 flex items-center justify-center min-h-9 min-w-9 w-full max-h-9 rounded-lg hover:bg-ucass-primary-100 hover:text-ucass-active p-1"
           onClick={onClick}
         >
           <div className="w-full flex absolute top-0 left-1">

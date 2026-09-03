@@ -28,3 +28,39 @@
   background: #fff1e0;
   color: #c96f1f;
 }
+
+/* The head's title row. The description used to sit under the title as a
+   second line; it now lives behind the info button beside it, matching the
+   Admin head, so every Directory head is the same single-line height. */
+.page-head-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Same shape and hover as the Admin head's info button, so the two areas
+   read as one product rather than two takes on the same control. */
+.page-head-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.page-head-info:hover {
+  color: var(--accent-ink);
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+}

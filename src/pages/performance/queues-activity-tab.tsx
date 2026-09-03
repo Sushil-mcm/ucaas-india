@@ -3,6 +3,7 @@ import TableManager from '@/components/custom/table-manager';
 import Timer from '@/components/timer';
 import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers';
 import PerfStatCard from './stat-card';
+import KpiStrip from './kpi-strip';
 import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
@@ -359,51 +360,74 @@ const QueuesActivityTab = ({
 
   return (
     <div className="perf-queues flex flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
-        <PerfStatCard
-          label="Busiest queue"
-          value={busiestQueue ? busiestQueue.name : '—'}
-          sub={
-            busiestQueue
+      <KpiStrip
+        items={[
+          {
+            key: 'busiest',
+            label: 'Busiest queue',
+            value: busiestQueue ? busiestQueue.name : '—',
+            sub: busiestQueue
               ? busiestQueue.interacting > 0
                 ? `${busiestQueue.interacting} interacting now`
                 : `${busiestQueue.handledToday} handled today`
-              : undefined
-          }
-        />
-        <PerfStatCard
-          label="Longest waiting"
-          value={
-            longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null ? (
-              <Timer startTime={longestWaitingQueue.longestWaitTimestamp} />
-            ) : (
-              '00:00'
-            )
-          }
-          sub={
-            longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null
-              ? longestWaitingQueue.name
-              : undefined
-          }
-        />
-        <PerfStatCard
-          label="Lowest SLA today"
-          value={lowestSlaQueue ? `${Math.round(lowestSlaQueue.sla as number)}%` : '—'}
-          sub={lowestSlaQueue ? lowestSlaQueue.name : undefined}
-          tone={lowestSlaQueue && (lowestSlaQueue.sla as number) < 60 ? 'danger' : 'default'}
-        />
-        <PerfStatCard label="Total members" value={String(totalMembers)} sub="across all queues" />
-        <PerfStatCard
-          label="Available now"
-          value={String(totalAvailable)}
-          sub="free to take a call"
-        />
-        <PerfStatCard
-          label="Total interacting"
-          value={String(totalInteracting)}
-          sub="on a call right now"
-        />
-      </div>
+              : undefined,
+          },
+          {
+            key: 'longest-waiting',
+            label: 'Longest waiting',
+            value:
+              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null ? (
+                <Timer startTime={longestWaitingQueue.longestWaitTimestamp} />
+              ) : (
+                '00:00'
+              ),
+            sub:
+              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null
+                ? longestWaitingQueue.name
+                : undefined,
+            tone:
+              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null
+                ? 'danger'
+                : 'default',
+            breaching: Boolean(
+              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null,
+            ),
+          },
+          {
+            key: 'lowest-sla',
+            label: 'Lowest SLA today',
+            value: lowestSlaQueue ? `${Math.round(lowestSlaQueue.sla as number)}%` : '—',
+            sub: lowestSlaQueue ? lowestSlaQueue.name : undefined,
+            tone: lowestSlaQueue && (lowestSlaQueue.sla as number) < 60 ? 'danger' : 'default',
+          },
+          {
+            key: 'total-members',
+            label: 'Total members',
+            value: totalMembers,
+            sub: 'across all queues',
+          },
+          {
+            key: 'available-now',
+            label: 'Available now',
+            value: totalAvailable,
+            sub: 'free to take a call',
+          },
+          {
+            key: 'total-interacting',
+            label: 'Total interacting',
+            value:
+              totalInteracting > 0 ? (
+                <span className="live-pulse-dot-wrap">
+                  <span className="live-pulse-dot" />
+                  {totalInteracting}
+                </span>
+              ) : (
+                totalInteracting
+              ),
+            sub: 'on a call right now',
+          },
+        ]}
+      />
       {isCdrSampled && (
         <div className="qa-notice">
           <p className="page-note">
