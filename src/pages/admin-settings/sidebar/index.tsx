@@ -584,7 +584,14 @@ const Sidebar = () => {
         )}
       </div>
 
-      <div className="hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col [scrollbar-gutter:stable]">
+      {/* No `scrollbar-gutter: stable` here. It reserves a gutter the width of
+          the browser's own scrollbar, but `.mcm-page ::-webkit-scrollbar` sets
+          this one to 9px -- narrower than the reserved strip -- so the bar sat
+          short of the panel edge with the leftover gutter showing as blank
+          space beside it. Without it the scrollbar lays out on the edge, which
+          is where a sidebar's scrollbar belongs. The list is always longer than
+          the panel, so nothing shifts as it appears and disappears. */}
+      <div className="hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col">
         <div className="mcm-adminnav-search">
           <Icon name={'SearchLine' as IconType} className="h-4 w-4" />
           <input
