@@ -1,4 +1,5 @@
 /* eslint-disable no-useless-escape */
+import type { ReactNode } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import * as yup from 'yup';
 import { Slide, toast, type TypeOptions } from 'react-toastify';
@@ -118,7 +119,26 @@ export const getDomainNameFromLocation = () => {
 
   return getDomain(host, { allowPrivateDomains: true }) || host;
 };
-export function handleAlert({ text = '', type = 'success' }: { text: any; type: TypeOptions }) {
+/**
+ * `icon` and `className` are optional passthroughs to react-toastify.
+ *
+ * The notification drawer's "marked as read" toast carries its own tick icon
+ * and a class that styles the Undo button inside it. Without these two the
+ * toast still appeared, but as plain text — the icon and the styling were
+ * being dropped silently at this boundary rather than erroring anywhere
+ * obvious. Optional, so every existing caller is unaffected.
+ */
+export function handleAlert({
+  text = '',
+  type = 'success',
+  icon,
+  className,
+}: {
+  text: any;
+  type?: TypeOptions;
+  icon?: ReactNode;
+  className?: string;
+}) {
   if (typeof window !== 'undefined' && (window as any).isSessionTerminated) {
     toast.dismiss();
     return null;
@@ -128,6 +148,8 @@ export function handleAlert({ text = '', type = 'success' }: { text: any; type: 
     type: type,
     position: 'top-center',
     transition: Slide,
+    ...(icon ? { icon: () => icon } : {}),
+    ...(className ? { className } : {}),
   });
 }
 
