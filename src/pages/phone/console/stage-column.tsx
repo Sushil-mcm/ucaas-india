@@ -618,7 +618,24 @@ const StageColumn = ({
                   title="Choose which of your numbers people see"
                   onClick={() => setCallerIdOpen((open) => !open)}
                 >
-                  <Ic n="globe" size={12} />
+                  {/* The flag of whichever number is actually selected, not a
+                      fixed one: this chip also shows Twilio's +1 number and any
+                      DID the API assigns, so hardcoding India would have
+                      mislabelled every non-Indian caller ID. The globe stays for
+                      the "No caller ID" case, where there is no country to show.
+
+                      `svg` for the same reason as the list below — Windows has
+                      no glyph for the flag emoji. */}
+                  {effectiveCallerId?.country && effectiveCallerId?.number?.startsWith('+') ? (
+                    <ReactCountryFlag
+                      countryCode={effectiveCallerId.country}
+                      svg
+                      aria-hidden
+                      style={{ width: '1.2em', height: '1.2em' }}
+                    />
+                  ) : (
+                    <Ic n="globe" size={12} />
+                  )}
                   {isCallerIdUpdating
                     ? 'Saving…'
                     : effectiveCallerId?.number || 'No caller ID'}
