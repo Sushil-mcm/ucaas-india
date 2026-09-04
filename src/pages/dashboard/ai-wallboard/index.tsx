@@ -9,6 +9,7 @@
 // } from '@/components/ui/table';
 import { SocketEvents } from '@/context/socket-events-context';
 import { useUser } from '@/hooks/use-user';
+import { isDemoMode } from '@/lib/demo-mode';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
@@ -615,12 +616,17 @@ const AiWallboard = () => {
   const hasAiWallboardDataRef = useRef(false);
   const refreshLoaderTimeoutRef = useRef<number | null>(null);
   console.log('🚀 ~ AiWallboard ~ aiLiveWallboardData:', aiLiveWallboardData);
-  const canRefreshAiWallboard = Boolean(
-    user?.sip_credentials?.domain &&
-    user?.company_info?.uuid &&
-    user?.user_info?.uuid &&
-    isSocketConnected,
-  );
+  // Demo mode has no real socket, so `isSocketConnected` never flips true —
+  // that left this button permanently disabled instead of just clickable
+  // and inert. getAiLiveWallboardData now re-seeds demo data on its own.
+  const canRefreshAiWallboard =
+    isDemoMode() ||
+    Boolean(
+      user?.sip_credentials?.domain &&
+        user?.company_info?.uuid &&
+        user?.user_info?.uuid &&
+        isSocketConnected,
+    );
   const campaignAiLiveCallResult: CampaignAiLiveCallResult | null =
     campaignAiLiveCallData?.data?.result && typeof campaignAiLiveCallData?.data?.result === 'object'
       ? campaignAiLiveCallData.data.result

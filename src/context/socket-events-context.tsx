@@ -3825,6 +3825,17 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
 
   const getCampaignLiveCalls = useCallback(
     (payload: any, callback?: (response: any) => void) => {
+      /* Demo mode has no socket connection, so `socketEventsManager` is null
+         and the Refresh button on the Live Wallboard would silently do
+         nothing forever. Re-seed from the same generator used at initial
+         mount — `demoCallStats()` inside it reads the live clock, so a
+         refresh visibly moves the numbers instead of being a no-op. */
+      if (isDemoMode()) {
+        const res = demoCampaignLiveCallsData();
+        setCampaignLiveCallsData(res);
+        if (callback) callback(res);
+        return;
+      }
       if (!socketEventsManager) return;
       socketEventsManager.emit('campaign-live-calls', payload, (res: any) => {
         if (callback) callback(res);
@@ -3835,6 +3846,15 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
 
   const getAiLiveWallboardData = useCallback(
     (payload: any, callback?: (response: any) => void) => {
+      /* Same reasoning as getCampaignLiveCalls above — the AI Wallboard's
+         Refresh button otherwise has no socket to round-trip through in
+         demo mode. */
+      if (isDemoMode()) {
+        const res = demoAiLiveWallboardData();
+        setAiLiveWallboardData(res);
+        if (callback) callback(res);
+        return;
+      }
       if (!socketEventsManager || isDisconnecting) return;
       socketEventsManager.emit(chatEvents.MAIN_AI_LIVE_WALLBOARD, payload, (res: any) => {
         if (callback) callback(res);

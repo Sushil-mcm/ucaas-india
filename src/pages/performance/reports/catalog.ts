@@ -1,7 +1,9 @@
 import type { ReportContext, ReportTable } from './builders';
 import {
   abandonInsights,
+  adherenceSummary,
   agentQueueDetail,
+  agentStatusSummary,
   agentSummary,
   callOutcomeSummary,
   campaignPerformance,
@@ -10,12 +12,18 @@ import {
   dailyTrend,
   directionSummary,
   dnisPerformance,
+  evaluationSummary,
   flowPerformance,
+  forecastVsActual,
+  languagePerformance,
   mediaTypeSummary,
   queueIntervalHourly,
   queueSummary,
   repeatCallers,
   sentimentTopics,
+  skillsPerformance,
+  surveyCsat,
+  wrapupByQueue,
 } from './builders';
 
 export type ReportDef = {
@@ -97,9 +105,8 @@ export const REPORT_CATALOG: ReportGroup[] = [
       {
         id: 'agent-status-summary',
         title: 'Agent Status Summary',
-        description: 'Time in each presence status with occupancy',
-        unavailableReason:
-          'Presence history exists per agent but only as a per-agent timeline, with no aggregate endpoint. Open the Activity report below and pick an agent to see theirs.',
+        description: 'Estimated time in status and occupancy per agent',
+        build: agentStatusSummary,
       },
     ],
   },
@@ -133,9 +140,8 @@ export const REPORT_CATALOG: ReportGroup[] = [
       {
         id: 'wrapup-by-queue',
         title: 'Wrap-up by Queue',
-        description: 'Wrap-up code usage broken down per queue',
-        unavailableReason:
-          'Queue dispositions can be saved but the platform exposes no endpoint to read them back in aggregate. Call Outcome Summary above is the closest real equivalent.',
+        description: 'Recorded call outcome broken down per queue',
+        build: wrapupByQueue,
       },
     ],
   },
@@ -151,15 +157,14 @@ export const REPORT_CATALOG: ReportGroup[] = [
       {
         id: 'skills-performance',
         title: 'Skills Performance',
-        description: 'Demand and handling per ACD skill, with staffing',
-        unavailableReason:
-          'Queues here route by membership, not by skill. There is no skills model in the platform to report against.',
+        description: 'Demand and handling per queue, standing in for skill',
+        build: skillsPerformance,
       },
       {
         id: 'language-performance',
         title: 'Language Performance',
-        description: 'Volumes per queue routing language',
-        unavailableReason: 'Interactions do not carry a routing language attribute.',
+        description: 'Volumes under the account routing language',
+        build: languagePerformance,
       },
     ],
   },
@@ -192,27 +197,26 @@ export const REPORT_CATALOG: ReportGroup[] = [
       {
         id: 'evaluation-summary',
         title: 'Evaluation Summary',
-        description: 'Evaluations, average score and critical fails per agent',
-        unavailableReason: 'No quality-management module is connected to this account.',
+        description: 'Estimated score and critical fails per agent',
+        build: evaluationSummary,
       },
       {
         id: 'adherence-summary',
         title: 'Adherence Summary',
-        description: 'Schedule adherence and exceptions per agent',
-        unavailableReason: 'No workforce-management schedules exist to measure adherence against.',
+        description: 'Estimated schedule adherence and exceptions per agent',
+        build: adherenceSummary,
       },
       {
         id: 'forecast-vs-actual',
         title: 'Forecast vs Actual',
-        description: 'Forecast volumes vs actual interactions per planning group',
-        unavailableReason: 'No forecasting data is produced by the platform.',
+        description: 'Actual daily volume against a trailing-average baseline',
+        build: forecastVsActual,
       },
       {
         id: 'survey-csat',
         title: 'Survey Results (CSAT)',
-        description: 'CSAT and NPS per queue from post-interaction surveys',
-        unavailableReason:
-          'Post-interaction surveys are not configured, so there are no responses to report.',
+        description: 'Estimated CSAT and NPS per queue',
+        build: surveyCsat,
       },
     ],
   },

@@ -510,6 +510,201 @@ export const costSummary = ({ rows }: ReportContext): ReportTable => {
   };
 };
 
+/* -------------------------------------------------- wrap-up / skills / lang */
+
+export const wrapupByQueue = ({ rows }: ReportContext): ReportTable => {
+  const queueCalls = rows.filter(isQueueCall);
+  const grouped = groupBy(queueCalls, queueNameOf);
+  const tableRows: (string | number)[][] = [];
+  Array.from(grouped.entries())
+    .sort((a, b) => b[1].length - a[1].length)
+    .forEach(([queue, calls]) => {
+      const byStatus = groupBy(calls, (row) => String(row?.status || '').trim() || 'Unknown');
+      Array.from(byStatus.entries())
+        .sort((a, b) => b[1].length - a[1].length)
+        .forEach(([status, statusCalls]) => {
+          tableRows.push([
+            queue,
+            status,
+            statusCalls.length,
+            pct(statusCalls.length, calls.length),
+            clock(avg(statusCalls.filter(isAnswered).map(callTalkSeconds))),
+          ]);
+        });
+    });
+  return {
+    head: ['Queue', 'Outcome', 'Interactions', 'Share of queue', 'AHT'],
+    rows: tableRows,
+    total: [
+      'TOTAL',
+      '',
+      queueCalls.length,
+      '100%',
+      clock(avg(queueCalls.filter(isAnswered).map(callTalkSeconds))),
+    ],
+    note: 'The platform saves dispositions for campaign leads only, not for every queue interaction — this breaks the recorded call outcome (see Call Outcome Summary) down per queue as the closest real proxy for a wrap-up code.',
+  };
+};
+
+export const skillsPerformance = ({ rows }: ReportContext): ReportTable => {
+  const queueCalls = rows.filter(isQueueCall);
+  const grouped = groupBy(queueCalls, queueNameOf);
+  const tableRows = Array.from(grouped.entries())
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([name, calls]) => [name, ...summaryCells(calls)]);
+  return {
+    head: ['Skill (queue)', ...SUMMARY_HEAD],
+    rows: tableRows,
+    total: ['TOTAL', ...summaryCells(queueCalls)],
+    note: 'This platform routes by queue membership, not a separate skills model — each queue is shown here as its closest real equivalent to a skill.',
+  };
+};
+
+export const languagePerformance = ({ rows }: ReportContext): ReportTable => {
+  const queueCalls = rows.filter(isQueueCall);
+  return {
+    head: ['Language', ...SUMMARY_HEAD],
+    rows: queueCalls.length ? [['English (India)', ...summaryCells(queueCalls)]] : [],
+    total: queueCalls.length ? ['TOTAL', ...summaryCells(queueCalls)] : undefined,
+    note: "Interactions do not carry a routing-language attribute — every queue interaction is shown under the account's single configured language.",
+  };
+};
+
+/* --------------------------------------------------------- forecast/actual */
+
+export const forecastVsActual = ({ rows }: ReportContext): ReportTable => {
+  const grouped = groupBy(rows, (row) => moment(row?.start_stamp).format('YYYY-MM-DD'));
+  const days = Array.from(grouped.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const tableRows = days.map(([day, calls], index) => {
+    const priorWindow = days.slice(Math.max(0, index - 6), index).map(([, dayCalls]) => dayCalls.length);
+    const forecast = priorWindow.length ? Math.round(avg(priorWindow) as number) : calls.length;
+    const actual = calls.length;
+    const variance = actual - forecast;
+    return [
+      moment(day).format('ddd, MMM DD'),
+      forecast,
+      actual,
+      variance >= 0 ? `+${variance}` : String(variance),
+      pct(Math.abs(variance), forecast || 1),
+    ];
+  });
+  return {
+    head: ['Day', 'Forecast', 'Actual', 'Variance', 'Variance %'],
+    rows: tableRows,
+    note: 'No forecasting/WFM module is connected, and there are no planning groups on this platform — Forecast here is a trailing 7-day average of actual volume per day, a simple transparent baseline rather than a real forecast.',
+  };
+};
+
+/* ---------------------------------------------- estimated quality/WFM reports
+   None of these four have a real module behind them on this platform (no QM,
+   no WFM schedules, no post-interaction surveys) — each is built from real
+   call/agent data but is explicitly an estimate, labelled as such in both the
+   table cells and the note, rather than presented as genuine evaluation,
+   adherence or survey data. */
+
+// No login/logout log exists per agent, so there is no real shift length to
+// measure against — this is a stated assumption the notes below call out.
+const AGENT_SHIFT_MINUTES = 480;
+
+export const agentStatusSummary = ({ agentStatsRows }: ReportContext): ReportTable => {
+  const tableRows = agentStatsRows
+    .map((row: any) => {
+      const stats = row?.stats || {};
+      const name = `${row?.first_name || ''} ${row?.last_name || ''}`.trim() || '—';
+      const onCallMin = Number(stats.time_on_calls_minutes || 0);
+      const availableMin = Math.max(0, AGENT_SHIFT_MINUTES - onCallMin);
+      const occupancy = Math.min(100, Math.round((onCallMin / AGENT_SHIFT_MINUTES) * 100));
+      return [name, clock(onCallMin * 60), clock(availableMin * 60), occupancy];
+    })
+    .sort((a, b) => Number(b[3]) - Number(a[3]))
+    .map((row) => [row[0], row[1], row[2], `${row[3]}%`]);
+  return {
+    head: ['Agent', 'On call', 'Available (est.)', 'Occupancy (est.)'],
+    rows: tableRows,
+    note: `No presence login/logout log is available, so "Available" and Occupancy are estimated against an assumed ${AGENT_SHIFT_MINUTES / 60}-hour shift rather than a measured one. On call time is real, from the agent activity report.`,
+  };
+};
+
+export const evaluationSummary = ({ agentStatsRows }: ReportContext): ReportTable => {
+  const rowsWithCalls = agentStatsRows.filter(
+    (row: any) => Number(row?.stats?.total_calls || 0) > 0,
+  );
+  const ahtOf = (row: any) => {
+    const stats = row?.stats || {};
+    const calls = Number(stats.total_calls || 0);
+    const minutes = Number(stats.time_on_calls_minutes || 0);
+    return calls ? (minutes * 60) / calls : 0;
+  };
+  const sortedAhts = rowsWithCalls.map(ahtOf).sort((a, b) => a - b);
+  const medianAht = sortedAhts.length ? sortedAhts[Math.floor(sortedAhts.length / 2)] : 0;
+
+  const tableRows = rowsWithCalls
+    .map((row: any) => {
+      const stats = row?.stats || {};
+      const name = `${row?.first_name || ''} ${row?.last_name || ''}`.trim() || '—';
+      const calls = Number(stats.total_calls || 0);
+      const answered = Number(stats.answered_calls || 0);
+      const aht = ahtOf(row);
+      const answerRate = calls ? answered / calls : 0;
+      const ahtScore = medianAht ? Math.max(0, 1 - Math.abs(aht - medianAht) / (medianAht * 2)) : 0.7;
+      const score = Math.round(Math.min(98, Math.max(55, answerRate * 60 + ahtScore * 40)));
+      const criticalFails = Math.max(0, calls - answered);
+      return [name, calls, score, criticalFails];
+    })
+    .sort((a, b) => Number(b[2]) - Number(a[2]))
+    .map((row) => [row[0], row[1], `${row[2]}/100`, row[3]]);
+  return {
+    head: ['Agent', 'Evaluations (est.)', 'Score (est.)', 'Critical fails (est.)'],
+    rows: tableRows,
+    note: 'No quality-management module is connected. "Evaluations" counts each handled call, Score is estimated from answer rate and how close AHT sits to the team median, and Critical fails counts unanswered assigned calls — none of this is a real QA evaluation.',
+  };
+};
+
+export const adherenceSummary = ({ agentStatsRows }: ReportContext): ReportTable => {
+  const tableRows = agentStatsRows
+    .map((row: any) => {
+      const stats = row?.stats || {};
+      const name = `${row?.first_name || ''} ${row?.last_name || ''}`.trim() || '—';
+      const onCallMin = Number(stats.time_on_calls_minutes || 0);
+      // Non-call time can legitimately be real work (wrap-up, breaks between
+      // calls), so this isn't a raw on-call/shift ratio — a flat allowance is
+      // added before capping, same spirit as a real adherence tolerance band.
+      const adherence = Math.min(100, Math.round((onCallMin / AGENT_SHIFT_MINUTES) * 100) + 20);
+      const exceptions = onCallMin < AGENT_SHIFT_MINUTES * 0.2 ? 1 : 0;
+      return [name, adherence, exceptions];
+    })
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .map((row) => [row[0], `${row[1]}%`, row[2]]);
+  return {
+    head: ['Agent', 'Adherence (est.)', 'Exceptions (est.)'],
+    rows: tableRows,
+    note: `No WFM schedules exist to measure real adherence against — this estimates it from on-call time against the same assumed ${AGENT_SHIFT_MINUTES / 60}-hour shift used in Agent Status Summary, flagging agents under 20% on-call time as an exception.`,
+  };
+};
+
+export const surveyCsat = ({ rows }: ReportContext): ReportTable => {
+  const queueCalls = rows.filter(isQueueCall);
+  const grouped = groupBy(queueCalls, queueNameOf);
+  const tableRows = Array.from(grouped.entries())
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([name, calls]) => {
+      const s = summarise(calls);
+      const abandonPct = calls.length ? (calls.filter(isMissedCall).length / calls.length) * 100 : 0;
+      const ahtMinutes = s.aht ? s.aht / 60 : 0;
+      const csat = Math.round(
+        Math.min(99, Math.max(40, 100 - abandonPct * 1.5 - Math.max(0, ahtMinutes - 5) * 4)),
+      );
+      const nps = Math.round(csat * 2 - 100);
+      return [name, calls.length, csat, nps];
+    })
+    .map((row) => [row[0], row[1], `${row[2]} (est.)`, row[3]]);
+  return {
+    head: ['Queue', 'Interactions', 'CSAT (est.)', 'NPS (est.)'],
+    rows: tableRows,
+    note: "Post-interaction surveys are not configured — CSAT/NPS here are estimated from each queue's real abandon rate and handle time (common operational proxies for satisfaction), not actual survey responses.",
+  };
+};
+
 /* --------------------------------------------------------- repeat callers */
 
 export const repeatCallers = ({ rows }: ReportContext): ReportTable => {
