@@ -6,7 +6,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal } from 'lucide-react';
+import {
+  History,
+  MoreHorizontal,
+  Pencil,
+  PhoneOff,
+  PhoneOutgoing,
+  ShieldCheck,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
@@ -415,7 +424,10 @@ const People = () => {
                             className="cursor-pointer"
                             onClick={() => toggleFavourite('person', row.uuid)}
                           >
-                            <Ic n="star" size={14} fill={isFavourite('person', row.uuid)} />
+                            <Star
+                              className="h-4 w-4"
+                              fill={isFavourite('person', row.uuid) ? 'currentColor' : 'none'}
+                            />
                             {isFavourite('person', row.uuid)
                               ? 'Remove from favourites'
                               : 'Add to favourites'}
@@ -425,7 +437,7 @@ const People = () => {
                               className="cursor-pointer"
                               onClick={() => setEditing(row)}
                             >
-                              <Ic n="sliders" size={14} /> Edit person
+                              <Pencil className="h-4 w-4" /> Edit person
                             </DropdownMenuItem>
                           ) : null}
                           {isAdmin ? (
@@ -433,7 +445,7 @@ const People = () => {
                               className="cursor-pointer"
                               onClick={() => navigate(`/activity/${row.uuid}`)}
                             >
-                              <Ic n="clock" size={14} /> View activity
+                              <History className="h-4 w-4" /> View activity
                             </DropdownMenuItem>
                           ) : null}
                           {canChangeRoleOf(row) ? (
@@ -441,7 +453,7 @@ const People = () => {
                               className="cursor-pointer"
                               onClick={() => setChangingRole(row)}
                             >
-                              <Ic n="shield" size={14} /> Change role
+                              <ShieldCheck className="h-4 w-4" /> Change role
                             </DropdownMenuItem>
                           ) : null}
                           {canAssignCallerId ? (
@@ -449,7 +461,7 @@ const People = () => {
                               className="cursor-pointer"
                               onClick={() => setAssigningCallerId(row)}
                             >
-                              <Ic n="vm" size={14} /> Assign caller ID
+                              <PhoneOutgoing className="h-4 w-4" /> Assign caller ID
                             </DropdownMenuItem>
                           ) : null}
                           {canAssignCallerId && row.callerId ? (
@@ -457,7 +469,7 @@ const People = () => {
                               className="cursor-pointer"
                               onClick={() => setUnassigning(row)}
                             >
-                              <Ic n="x" size={14} /> Remove caller ID
+                              <PhoneOff className="h-4 w-4" /> Remove caller ID
                             </DropdownMenuItem>
                           ) : null}
                           {/* Admins can remove a person; never yourself, and
@@ -467,7 +479,7 @@ const People = () => {
                               className="cursor-pointer text-red-600 focus:text-red-600"
                               onClick={() => setDeleting(row)}
                             >
-                              <Ic n="trash" size={14} /> Remove person
+                              <Trash2 className="h-4 w-4" /> Remove person
                             </DropdownMenuItem>
                           ) : null}
                         </DropdownMenuContent>
