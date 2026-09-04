@@ -19,6 +19,11 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
 import notificationSound from '@/assets/audio/new-notification.mp3';
 import { chatEvents } from '@/context/socket-events';
+import { isDemoMode } from '@/lib/demo-mode';
+import {
+  demoAiLiveWallboardData,
+  demoCampaignLiveCallsData,
+} from '@/lib/demo-contact-centre';
 import { v4 as uuidV4 } from 'uuid';
 import { toast } from 'react-toastify';
 import AIChatRequestModal from '@/components/custom/ai-chat-request-modal';
