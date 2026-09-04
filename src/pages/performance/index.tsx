@@ -15,6 +15,7 @@ import LiveInteractionsTab from './live-interactions-tab';
 import CallbacksTab from './callbacks-tab';
 import SpeechTextTab from './speech-text-tab';
 import ReportsTab from './reports-tab';
+import FlowsTab from './flows-tab';
 import { formatSecsToClock } from './format';
 import { useAnimatedNumber } from './use-animated-number';
 import { useTrend } from './use-trend';
@@ -45,6 +46,7 @@ const TABS = [
   { key: 'campaign-activity', label: 'Campaign Activity' },
   { key: 'agents', label: 'Agents' },
   { key: 'interactions', label: 'Interactions' },
+  { key: 'flows', label: 'Flows' },
   { key: 'dashboards', label: 'Dashboards' },
   { key: 'live-interactions', label: 'Live Interactions' },
   { key: 'callbacks', label: 'Callbacks' },
@@ -415,6 +417,7 @@ const Performance = () => {
           />
         )}
         {activeTab === 'interactions' && <InteractionsTab selectedRange={selectedRange} />}
+        {activeTab === 'flows' && <FlowsTab />}
         {activeTab === 'dashboards' && <DashboardsTab />}
         {activeTab === 'live-interactions' && <LiveInteractionsTab />}
         {activeTab === 'callbacks' && <CallbacksTab />}
