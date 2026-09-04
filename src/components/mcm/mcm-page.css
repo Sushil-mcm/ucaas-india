@@ -3248,6 +3248,15 @@
   padding: 16px 22px 24px;
 }
 
+/* ...but not in the sidebar. Its title bar ("Admin Hub") is 65px too, so the
+   rule above matched the rail's scrolling container and padded it 22px on each
+   side. That is what held the scrollbar 22px in from the panel edge with a
+   blank strip beside it, and it cost the section labels that width as well.
+   The rule was written for page bodies, which is what this leaves it doing. */
+.mcm-admin .mcm-sidepanel .min-h-\[65px\] + div {
+  padding: 0;
+}
+
 /* Intro paragraphs directly under a header read as a quiet note, not body copy. */
 .mcm-admin .min-h-\[65px\] + div > p.text-sm:first-child {
   margin: 0 0 12px;
