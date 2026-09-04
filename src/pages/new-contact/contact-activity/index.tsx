@@ -186,15 +186,21 @@ const ContactActivity = ({
           <p className="px-1 text-xs font-semibold tracking-wide text-[#9A948F] uppercase">
             Contact Details
           </p>
-          <section className="bg-white overflow-hidden flex-1 min-h-0">
+          {/* No white card around the form any more — just the fields on the
+              page. The card added a second frame inside a column that is
+              already bounded by its border and its "Contact Details" label,
+              and its own padding sat inside the column's, pushing every input
+              in twice. The layout roles it was carrying (fill the column,
+              allow it to shrink) stay here. */}
+          <div className="flex-1 min-h-0 overflow-hidden">
             {showDialer ? (
-              <div className="flex items-center justify-center w-full h-full min-h-0 bg-white">
+              <div className="flex items-center justify-center w-full h-full min-h-0">
                 <div className="flex items-center justify-center p-5">
                   {/* <CommonDialerWidget isShowCrossIcon={false} isSidebar={true} /> */}
                 </div>
               </div>
             ) : (
-              <div className="p-3 h-full min-h-0 overflow-hidden">
+              <div className="h-full min-h-0 overflow-hidden">
                 <CreateContactNew
                   contactData={contactData}
                   isDisable={false}
@@ -205,7 +211,7 @@ const ContactActivity = ({
                 />
               </div>
             )}
-          </section>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 min-h-0">
