@@ -86,12 +86,10 @@ const SettingsNotification = () => {
         className="gap-3 p-3 flex flex-col justify-between h-full"
       >
         <div className="flex flex-col gap-2  overflow-y-auto pr-1">
-          <h4 className="text-[#2E2D35] font-semibold text-md">Notification Settings</h4>
-
-          <p className="text-[#2E2D35] text-sm mb-1">
-            Manage how you receive notifications across different channels
-          </p>
-
+          {/* "Notification Settings" and "Manage how you receive notifications
+              across different channels" both restated the page title above,
+              which pushed the one notice that carries real news -- that two of
+              these alert types are not being sent -- below the fold. */}
           {/* Voicemail, missed calls and SMS all save, and nothing reads them.
               The only key any service takes out of `notification_settings` is
               `security_alert`. The missed-call script on the switch is worse

@@ -457,7 +457,7 @@ const IncomingCalls = () => {
   }, [watch]);
 
   return (
-    <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
+    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}

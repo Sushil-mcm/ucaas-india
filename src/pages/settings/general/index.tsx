@@ -222,7 +222,7 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
 
   return (
     <>
-      <section className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-200/15">
+      <section className="w-full h-full min-h-0 flex flex-col overflow-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         <div className="flex min-h-0 flex-1 flex-col p-3">
           <FormProvider {...methods}>

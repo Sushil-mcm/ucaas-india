@@ -177,15 +177,18 @@ const BasicInfoSettings = () => {
 
   return (
     <>
-      <section className="flex h-full w-full flex-col overflow-hidden bg-gray-200/15">
+      <section className="flex h-full w-full flex-col overflow-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         {PendingUserData ? (
           <div className="flex items-center justify-center p-5">
             <Loader variant="blue" size="sm" />
           </div>
         ) : (
-          <div className="w-full flex-1 overflow-y-auto p-4">
-            <div className="mx-auto mb-4 w-full md:max-w-[80%]">
+          <div className="min-h-0 w-full flex-1 overflow-y-auto px-3 pb-3 pt-3 sm:px-4">
+            {/* Same measurements as Company & Locations: a 1040px column on the
+                page's own ground, rather than 80% of whatever the window is --
+                which left a wide gap down both sides on a large screen. */}
+            <div className="mx-auto mb-4 flex w-full max-w-[1040px] flex-col gap-4">
               {/* Only the name/extension/location fields live under
                   `user_info`; the call rules, settings and greetings are its
                   siblings at the response root, so they are passed from there. */}
@@ -196,7 +199,7 @@ const BasicInfoSettings = () => {
                 greetings={userInfoData?.greetings}
               />
             </div>
-            <div className="mx-auto flex w-full flex-col gap-4 rounded-xl bg-white p-6 shadow-xs md:max-w-[80%]">
+            <div className="mx-auto flex w-full flex-col gap-4 rounded-xl bg-white p-6 shadow-xs">
               <label htmlFor="file-upload" className="w-16 h-16 cursor-pointer mb-6">
                 {imagePreview || watch('profile') ? (
                   <div className="relative w-20 h-20 rounded-full group">

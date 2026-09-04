@@ -146,7 +146,7 @@ const Greetings = () => {
 
   return (
     <>
-      <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
+      <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         <div className=" p-4 gap-4 flex flex-col h-full">
           <FormProvider {...methods}>
