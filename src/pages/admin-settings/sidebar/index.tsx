@@ -591,7 +591,7 @@ const Sidebar = () => {
           space beside it. Without it the scrollbar lays out on the edge, which
           is where a sidebar's scrollbar belongs. The list is always longer than
           the panel, so nothing shifts as it appears and disappears. */}
-      <div className="hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col">
+      <div className="mcm-adminnav-scroll hidden h-full min-h-0 overflow-y-auto overflow-x-hidden lg:flex lg:flex-col">
         <div className="mcm-adminnav-search">
           <Icon name={'SearchLine' as IconType} className="h-4 w-4" />
           <input

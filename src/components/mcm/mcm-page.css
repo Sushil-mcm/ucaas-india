@@ -3271,6 +3271,35 @@
    opts out keeps 56px divided rows, which match the sidebar heading's
    own band and make the heading read as another row.
    ================================================================== */
+/* The rail's scrollbar, pinned to the panel edge.
+
+   It inherits `.mcm-page ::-webkit-scrollbar-thumb`, which draws the thumb
+   inside a 2px transparent border with `background-clip: content-box` -- a
+   deliberate inset that looks right on a wide table but, on a 9px bar against
+   the sidebar's edge, reads as the bar floating short of it. Here the thumb
+   fills its track and the track is the last thing before the border. */
+.mcm-admin .mcm-adminnav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.mcm-admin .mcm-adminnav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.mcm-admin .mcm-adminnav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 0;
+}
+.mcm-admin .mcm-adminnav-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  background-clip: border-box;
+  border: 0;
+  border-radius: 99px;
+}
+.mcm-admin .mcm-adminnav-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-4);
+  background-clip: border-box;
+}
+
 .mcm-admin .mcm-adminnav {
   padding: 4px 8px 14px;
 }
