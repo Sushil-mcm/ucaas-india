@@ -176,26 +176,6 @@ const CompanyLayout = () => {
     rail.scrollBy({ left: direction * rail.clientWidth * 0.7, behavior: 'smooth' });
   };
 
-  const companyName =
-    user?.company_info?.company_name || user?.user_info?.company_name || 'your company';
-
-  /* The trail below Company, read off the address rather than kept in a second
-     list. The first segment is the open section; anything after it is a screen
-     inside that section, and it appears in the trail on its own the day such a
-     route is added — nobody has to remember to come back here for it. */
-  const trail = useMemo(() => {
-    const rest = pathname.startsWith(`${COMPANY_ROOT}/`)
-      ? pathname.slice(COMPANY_ROOT.length + 1)
-      : '';
-    let href = COMPANY_ROOT;
-    return rest
-      .split('/')
-      .filter((segment) => segment && !IS_ID.test(segment))
-      .map((segment) => {
-        href += `/${segment}`;
-        return { href, label: SECTION_LABELS.get(segment) ?? humanise(segment) };
-      });
-  }, [pathname]);
 
   return (
     <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[var(--ground)]">
@@ -206,41 +186,12 @@ const CompanyLayout = () => {
           header's surface means the row needs no box of its own, and the
           header's hairline becomes the line the tabs sit on. */}
       <header className="cs-head">
-        {/* The full path down to the open section, and past it if that section
-            ever holds screens of its own. Every step but the last is a link, so
-            the trail is a way back up and not only a label. */}
-        <nav className="cs-crumbs" aria-label="Breadcrumb">
-          <ol>
-            <li>
-              <Link to="/admin-settings">Admin settings</Link>
-            </li>
-            {/* Named and addressed exactly as the sidebar entry that leads here,
-                from the one constant both read, so the two cannot come to say
-                different things or point at different screens. It lands on the
-                first section rather than the company overview, which is a
-                different screen and not what this step means. */}
-            <li>
-              {trail.length ? (
-                <Link to={COMPANY_RULES_PATH}>Company Rules</Link>
-              ) : (
-                <span aria-current="page">Company Rules</span>
-              )}
-            </li>
-            {trail.map((crumb, index) => (
-              <li key={crumb.href}>
-                {index === trail.length - 1 ? (
-                  <span aria-current="page">{crumb.label}</span>
-                ) : (
-                  <Link to={crumb.href}>{crumb.label}</Link>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        <h1 className="cs-title">Company Phone Preferences</h1>
-        <p className="cs-sub">The phone rules for {companyName}, kept in one place.</p>
-
+        {/* No breadcrumb, title or description here. The strip beside "Admin
+            Hub" already names this screen, and every one of the nine sections
+            below repeated the same three lines above its own content -- the
+            trail ending in the section the open tab already shows, and a title
+            naming the area the sidebar already highlights. The tab row is the
+            part that navigates, so that is what is kept. */}
         <div className={markerReady ? 'tabnav is-ready' : 'tabnav'}>
           {/* Links rather than buttons, so each section can be opened in a new
               tab, bookmarked, and sent to someone in a support reply. They also

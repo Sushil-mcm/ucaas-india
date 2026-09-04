@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
-import { COMPANY_RULES_PATH } from '@/pages/admin-settings/company/company-sections';
+import { COMPANY_RULES_PATH, COMPANY_SECTION_PATHS } from '@/pages/admin-settings/company/company-sections';
 import { ABSOLUTE, BILLING_SECTIONS } from '@/pages/admin-settings/billing/billing-sections';
 
 export const canShowItem = (item: any, isAdmin: boolean) => {
@@ -65,6 +65,9 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         {
           title: 'Company Rules',
           path: COMPANY_RULES_PATH,
+          /* Stays lit across all nine sections, not just the one the entry
+             points at. */
+          extraActiveTab: COMPANY_SECTION_PATHS,
           icon: 'SettingsIcon',
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),

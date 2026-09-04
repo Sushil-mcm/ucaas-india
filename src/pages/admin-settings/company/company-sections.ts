@@ -41,3 +41,11 @@ export const COMPANY_DEFAULT_SECTION = 'phone-rules';
 export const COMPANY_ROOT = '/admin-settings/company';
 
 export const COMPANY_RULES_PATH = `${COMPANY_ROOT}/${COMPANY_DEFAULT_SECTION}`;
+
+/* Every address Company Rules answers on. The sidebar entry points at the
+   first section, so without this it only lit on Phone rules and went dark the
+   moment you opened any of the other eight. Built from the list above so a new
+   section cannot be added without the sidebar following it. */
+export const COMPANY_SECTION_PATHS = COMPANY_SECTIONS.map(
+  (section) => `${COMPANY_ROOT}/${section.path}`,
+);
