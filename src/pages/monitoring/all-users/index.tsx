@@ -472,11 +472,10 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         {!embedded && (
           <div className="relative z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+            {/* "Monitoring ›" dropped — the section head above the rail says
+                it. The filters to the right of this bar are why the bar itself
+                stays. */}
             <div className="text-gray-900 font-semibold text-lg flex items-center gap-1 min-w-0">
-              <span className="truncate">Monitoring</span>
-              <div className="-rotate-90 text-gray-800 shrink-0">
-                <Icon name="ChevronIcon" className="w-5 h-5" />
-              </div>
               <span className="text-primary text-md truncate">All Extensions</span>
             </div>
             <div className="relative z-30 flex gap-2 filters pointer-events-auto shrink-0">

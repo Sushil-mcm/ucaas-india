@@ -499,11 +499,10 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
     <>
       <section className="w-full  ">
         <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+          {/* "Monitoring ›" dropped — the section head above the rail says it.
+              The chevron into the selected queue's name stays, since that one
+              is a real step down rather than a repeat. */}
           <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            Monitoring
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
             <span className="text-primary text-md">
               {queueType === QUEUE_TYPE.campaign ? 'Campaign' : 'Call Queue'}{' '}
             </span>
