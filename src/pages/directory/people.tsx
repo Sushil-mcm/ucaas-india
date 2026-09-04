@@ -1,4 +1,10 @@
 import { useMemo, useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
@@ -350,25 +356,11 @@ const People = () => {
                     ) : null}
                   </td>
                   <td onClick={(event) => event.stopPropagation()}>
+                    {/* Three actions on the row, the rest behind the menu. Ten
+                        buttons wrapped onto a second line and made every row
+                        taller, and the three people actually reach for -- call,
+                        message, video -- were lost among the admin ones. */}
                     <span className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className={`mini${isFavourite('person', row.uuid) ? ' mcm-fav-on' : ''}`}
-                        title={
-                          isFavourite('person', row.uuid)
-                            ? `Remove ${row.name} from favourites`
-                            : `Add ${row.name} to favourites`
-                        }
-                        aria-label={
-                          isFavourite('person', row.uuid)
-                            ? `Remove ${row.name} from favourites`
-                            : `Add ${row.name} to favourites`
-                        }
-                        aria-pressed={isFavourite('person', row.uuid)}
-                        onClick={() => toggleFavourite('person', row.uuid)}
-                      >
-                        <Ic n="star" size={16} fill={isFavourite('person', row.uuid)} />
-                      </button>
                       <button
                         type="button"
                         className="mini"
@@ -405,74 +397,80 @@ const People = () => {
                       >
                         <Ic n="video" size={16} />
                       </button>
-                      {canEdit ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`Edit ${row.name}`}
-                          aria-label={`Edit ${row.name}`}
-                          onClick={() => setEditing(row)}
-                        >
-                          <Ic n="sliders" size={12} />
-                        </button>
-                      ) : null}
-                      {isAdmin ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`${row.name}'s activity`}
-                          aria-label={`${row.name}'s activity`}
-                          onClick={() => navigate(`/activity/${row.uuid}`)}
-                        >
-                          <Ic n="clock" size={12} />
-                        </button>
-                      ) : null}
-                      {canChangeRoleOf(row) ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`Change ${row.name}'s role`}
-                          aria-label={`Change ${row.name}'s role`}
-                          onClick={() => setChangingRole(row)}
-                        >
-                          <Ic n="shield" size={12} />
-                        </button>
-                      ) : null}
-                      {canAssignCallerId && row.callerId ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`Remove ${row.name}'s caller ID`}
-                          aria-label={`Remove ${row.name}'s caller ID`}
-                          onClick={() => setUnassigning(row)}
-                        >
-                          <Ic n="x" size={12} />
-                        </button>
-                      ) : null}
-                      {/* Admins can remove a person; never yourself, and never
-                          another admin unless you are one. */}
-                      {canDelete && row.uuid !== myUuid ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`Remove ${row.name}`}
-                          aria-label={`Remove ${row.name}`}
-                          onClick={() => setDeleting(row)}
-                        >
-                          <Ic n="trash" size={12} />
-                        </button>
-                      ) : null}
-                      {canAssignCallerId ? (
-                        <button
-                          type="button"
-                          className="mini"
-                          title={`Assign a caller ID to ${row.name}`}
-                          aria-label={`Assign a caller ID to ${row.name}`}
-                          onClick={() => setAssigningCallerId(row)}
-                        >
-                          <Ic n="vm" size={12} />
-                        </button>
-                      ) : null}
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="mini"
+                            title={`More for ${row.name}`}
+                            aria-label={`More actions for ${row.name}`}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-52">
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => toggleFavourite('person', row.uuid)}
+                          >
+                            <Ic n="star" size={14} fill={isFavourite('person', row.uuid)} />
+                            {isFavourite('person', row.uuid)
+                              ? 'Remove from favourites'
+                              : 'Add to favourites'}
+                          </DropdownMenuItem>
+                          {canEdit ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setEditing(row)}
+                            >
+                              <Ic n="sliders" size={14} /> Edit person
+                            </DropdownMenuItem>
+                          ) : null}
+                          {isAdmin ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => navigate(`/activity/${row.uuid}`)}
+                            >
+                              <Ic n="clock" size={14} /> View activity
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canChangeRoleOf(row) ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setChangingRole(row)}
+                            >
+                              <Ic n="shield" size={14} /> Change role
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canAssignCallerId ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setAssigningCallerId(row)}
+                            >
+                              <Ic n="vm" size={14} /> Assign caller ID
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canAssignCallerId && row.callerId ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setUnassigning(row)}
+                            >
+                              <Ic n="x" size={14} /> Remove caller ID
+                            </DropdownMenuItem>
+                          ) : null}
+                          {/* Admins can remove a person; never yourself, and
+                              never another admin unless you are one. */}
+                          {canDelete && row.uuid !== myUuid ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer text-red-600 focus:text-red-600"
+                              onClick={() => setDeleting(row)}
+                            >
+                              <Ic n="trash" size={14} /> Remove person
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </span>
                   </td>
                 </tr>
