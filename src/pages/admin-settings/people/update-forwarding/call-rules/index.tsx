@@ -226,9 +226,10 @@ const CallRules: FC<CallRulesProps> = ({
       <div className="flex flex-col gap-3">
         <div className="mcm-fsec-h">
           <div className="mcm-fsec-t">Call Rules</div>
-          {/* The order used to be spelled out here in a sentence. The rank
-              badges on the rules below already say it, so this names the screen
-              and stops. */}
+          <div className="mcm-fsec-d">
+            These rules are read in order: Do Not Disturb first, then Forward All Calls, and only if
+            both are off do your devices ring. Whatever is still unanswered falls to the last rule.
+          </div>
         </div>
 
         {/* One notice, not two. The summary said the rules are saved but not in

@@ -473,6 +473,22 @@ const IncomingCalls = () => {
               </span>
             </div>
           ) : null}
+          {/* What the call path actually reads today, said before the rules
+              rather than left for someone to find out by being rung. The
+              "when someone calls you now" strip inside the rules says what is
+              set; this says which of those settings are in force. */}
+          <div className="mcm-callsummary" role="status">
+            <span className="mcm-callsummary-l">What works today</span>
+            <p>
+              Forward All Calls, Do Not Disturb, your ring time and Default Caller ID are live for
+              calls straight to you. What happens after ringing is live when it sends callers to
+              voicemail, to an extension or hangs up; an outside number, a queue or a menu is saved
+              but not followed after the ring. Which devices ring, and in what order, is saved, not
+              applied yet. Do Not Disturb here means the one in your call rules: the DND status in
+              your avatar menu does not stop calls. Calls through a queue or a menu follow that
+              queue&rsquo;s or menu&rsquo;s own rules.
+            </p>
+          </div>
           <CallRules customClass="md:min-h-[calc(100vh_-_13rem)]" />
           <div className="flex justify-end gap-2">
             <Button variant={'primary'} type="submit" disabled={isPendingUpdateMember}>
