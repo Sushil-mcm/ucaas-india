@@ -66,16 +66,6 @@ const GreetingContent: FC = () => {
 
   const type = isTypeSegment ? TYPE_SLUGS[lastSegment] : 'all';
 
-  /* The page head above prints the title; this puts the sentence that used to
-     sit under it behind that head's info button instead.
-
-     It has to be called here rather than at the top of the component: `type` is
-     a const declared just above, so reading it any earlier throws "Cannot
-     access 'type' before initialization" and takes the whole page down to the
-     error boundary. Still called unconditionally on every render, which is all
-     the rules of hooks require. */
-  useSetAdminPageMeta({ description: typeBlurb[type] || typeBlurb.all });
-
   /* The type routes exist under every place this page is mounted, but only the
      standalone greetings area has a sidebar linking to them — under
      My Account > Media Files they were reachable by typing a URL and no other
@@ -98,6 +88,17 @@ const GreetingContent: FC = () => {
       'Recordings played when a call goes to voicemail, before the caller leaves a message.',
     all: 'Audio this account can use for greetings, IVR prompts and voicemail.',
   };
+
+  /* The page head above prints the title; this puts the sentence that used to
+     sit under it behind that head's info button instead.
+
+     It sits here, below BOTH `type` and `typeBlurb`, because each is a const:
+     reading either from higher up the component throws "Cannot access before
+     initialization" and takes the page down to the error boundary, which reads
+     on screen as a 404. Moving it below `type` alone was not enough. Still
+     called unconditionally on every render, which is what the rules of hooks
+     require. */
+  useSetAdminPageMeta({ description: typeBlurb[type] || typeBlurb.all });
 
   function handleOpenAudio(src: string) {
     serRecordingUrl(src);
