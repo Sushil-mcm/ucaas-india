@@ -17,7 +17,14 @@ const AdminSettings = () => {
        screen inherits the design system instead of restating it. */
     <div className="mcm-page mcm-admin">
       <div className="flex h-full min-h-0 w-full flex-col gap-1 lg:flex-row lg:gap-0">
-        <PageSidebarLayout isTab={false} title="Admin Hub" content={<Sidebar />} />
+        {/* Not collapsible: Admin is a rail of nested sections people move
+            around inside constantly, and the chevron only ever hid it. */}
+        <PageSidebarLayout
+          isTab={false}
+          collapsible={false}
+          title="Admin Hub"
+          content={<Sidebar />}
+        />
         <AdminPageMetaProvider>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {/* Above every admin screen, because what it says applies to the whole

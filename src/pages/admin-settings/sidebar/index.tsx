@@ -86,11 +86,11 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       enabled: true,
       children: [
         { title: 'Profile', icon: 'ExtensionIcon', path: '/admin-settings/account/profile' },
-        { title: 'Preferences', icon: 'SettingIcon', path: '/admin-settings/account/preferences' },
+        { title: 'Preferences', icon: 'SettingsIcon', path: '/admin-settings/account/preferences' },
         { title: 'My Phone', icon: 'PhoneIcon', path: '/admin-settings/account/phone' },
         {
           title: 'Notifications',
-          icon: 'NotificationIcon',
+          icon: 'NotificationLine',
           path: '/admin-settings/account/notifications',
         },
         {
@@ -98,10 +98,10 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'GreetingIcon',
           path: '/admin-settings/account/greetings',
         },
-        { title: 'Media Files', icon: 'MediaIcon', path: '/admin-settings/account/media' },
+        { title: 'Media Files', icon: 'MediaFilesIcon', path: '/admin-settings/account/media' },
         {
           title: 'Security & Privacy',
-          icon: 'ShieldIcon',
+          icon: 'SecurityCheckLine',
           path: '/admin-settings/account/security',
         },
       ].filter(Boolean),
@@ -334,7 +334,7 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         { title: 'CRM', icon: 'IntegrationIcon', path: '/admin-settings/integration/crm' },
         {
           title: 'General Settings',
-          icon: 'SettingIcon',
+          icon: 'SettingsIcon',
           path: '/admin-settings/integration/data-reporting/general-settings',
         },
         {
@@ -604,7 +604,12 @@ const Sidebar = () => {
           <Icon name={'Grid' as IconType} className="h-4 w-4" />
           All admin screens
         </NavLink>
-        <div className="mcm-adminnav h-full min-h-0 divide-y divide-[#EEE7DD]">
+        {/* No `h-full`: the search box and "All admin screens" sit above this
+            in the same scrolling column, so stretching the list to the full
+            column height added that height on top of them -- which is the
+            empty run below the last section, and the scrollbar that came with
+            it. Sized to its content instead. */}
+        <div className="mcm-adminnav min-h-0 divide-y divide-[#EEE7DD]">
           {!searchedItems?.length ? (
             <p className="mcm-adminnav-empty">No section matches that.</p>
           ) : null}
