@@ -10,7 +10,6 @@ const AutoDialer = () => {
         <PageSidebarLayout
           isTab={false}
           title="Campaign"
-          hideHeading
           content={<CampaignSidebar />}
           collapsible={false}
         />
