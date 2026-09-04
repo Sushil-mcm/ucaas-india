@@ -252,6 +252,20 @@ const AdminScopePage = () => {
     setDirty(true);
   };
 
+  /* Writes a scope straight into the list, for the shortcuts that do not need
+     the editor. Same normalise-and-replace the editor does, so a scope set this
+     way is identical to one built by hand. */
+  const applyScope = (raw: AdminScope) => {
+    const clean = normaliseScope(raw);
+    if (!mayEdit(clean).allowed) return;
+    setScopes((list) =>
+      [...list.filter((scope) => scope.personUuid !== clean.personUuid), clean].sort((a, b) =>
+        personName(a.personUuid).localeCompare(personName(b.personUuid)),
+      ),
+    );
+    setDirty(true);
+  };
+
   const removeScope = (personUuid: string) => {
     setScopes((list) => list.filter((scope) => scope.personUuid !== personUuid));
     setDirty(true);
@@ -313,16 +327,33 @@ const AdminScopePage = () => {
                   ? `${scopes.length} of ${administrators.length} scoped. The rest cover the whole company.`
                   : `${administrators.length} ${administrators.length === 1 ? 'administrator' : 'administrators'}, all covering the whole company.`}
               </p>
-              {dirty ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  disabled={isPending}
-                  onClick={() => persist(scopes)}
-                >
-                  {isPending ? 'Saving…' : 'Save changes'}
-                </Button>
-              ) : null}
+              <div className="flex items-center gap-2">
+                {/* Undoes the narrowing in one go. Only offered when there is
+                    something to undo, and it goes through the same save as
+                    every other change rather than writing straight through. */}
+                {scopes.length ? (
+                  <Button
+                    type="button"
+                    variant="transparent"
+                    onClick={() => {
+                      setScopes([]);
+                      setDirty(true);
+                    }}
+                  >
+                    Reset everyone
+                  </Button>
+                ) : null}
+                {dirty ? (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={isPending}
+                    onClick={() => persist(scopes)}
+                  >
+                    {isPending ? 'Saving…' : 'Save changes'}
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
             <div className="panel-card">
@@ -334,7 +365,7 @@ const AdminScopePage = () => {
                       <th>Role</th>
                       <th>Covers</th>
                       <th>Reaches</th>
-                      <th className="text-right">Actions</th>
+                      <th className="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -391,7 +422,7 @@ const AdminScopePage = () => {
                               )}
                             </td>
                             <td>
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-center gap-2">
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -419,6 +450,26 @@ const AdminScopePage = () => {
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="min-w-56">
+                                    {/* The commonest scope of all -- a manager
+                                        over the site they work at -- in one
+                                        click, using the location already on
+                                        their record. */}
+                                    {person.locationUuid ? (
+                                      <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          applyScope({
+                                            ...(scope || blankScope(person.uuid)),
+                                            tier: 'location',
+                                            locationUuids: [String(person.locationUuid)],
+                                            departmentUuids: [],
+                                          })
+                                        }
+                                      >
+                                        <Building2 className="h-3.5 w-3.5" /> Narrow to their own
+                                        location
+                                      </DropdownMenuItem>
+                                    ) : null}
                                     <DropdownMenuItem
                                       className="cursor-pointer"
                                       onClick={() =>
@@ -428,7 +479,7 @@ const AdminScopePage = () => {
                                         })
                                       }
                                     >
-                                      <MapPin className="h-3.5 w-3.5" /> Narrow to locations…
+                                      <MapPin className="h-3.5 w-3.5" /> Choose locations…
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       className="cursor-pointer"
@@ -439,7 +490,7 @@ const AdminScopePage = () => {
                                         })
                                       }
                                     >
-                                      <Users className="h-3.5 w-3.5" /> Narrow to departments…
+                                      <Users className="h-3.5 w-3.5" /> Choose departments…
                                     </DropdownMenuItem>
                                     {scope ? (
                                       <DropdownMenuItem
