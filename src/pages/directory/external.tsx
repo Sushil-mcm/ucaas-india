@@ -6,6 +6,7 @@ import { getContactList } from '@/services/api';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import SideDrawer from '@/components/custom/side-drawer';
 import SendWhatsappMessage from '@/pages/messenger/drawers/send-whatsapp-message';
+import ContactActivity from '@/pages/new-contact/contact-activity';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { Ic } from '@/components/mcm/icons';
 import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
@@ -71,6 +72,7 @@ const External = () => {
   const [label, setLabel] = useState('All');
   const [open, setOpen] = useState<Contact | null>(null);
   const [whatsappTo, setWhatsappTo] = useState<string>('');
+  const [activityFor, setActivityFor] = useState<Contact | null>(null);
   const [newLabel, setNewLabel] = useState('');
   const labels = useContactLabels();
 
@@ -339,11 +341,7 @@ const External = () => {
                             className="mini"
                             title={`${name}'s activity`}
                             aria-label={`${name}'s activity`}
-                            onClick={() =>
-                              navigate(`/contact-activity?contactId=${row?._id}`, {
-                                state: { key: 'phone', value: phone },
-                              })
-                            }
+                            onClick={() => setActivityFor(row)}
                           >
                             <Ic n="clock" size={12} />
                           </button>
@@ -581,11 +579,7 @@ const External = () => {
                 <button
                   type="button"
                   className="mini"
-                  onClick={() =>
-                    navigate(`/contact-activity?contactId=${open?._id}`, {
-                      state: { key: 'phone', value: open?.contact?.phone || '' },
-                    })
-                  }
+                  onClick={() => setActivityFor(open)}
                 >
                   <Ic n="clock" size={12} />
                   Activity
@@ -607,6 +601,30 @@ const External = () => {
           responsiveBreakpoint={1024}
           content={
             <SendWhatsappMessage handleClose={() => setWhatsappTo('')} initialNumber={whatsappTo} />
+          }
+        />
+      ) : null}
+
+      {/* Activity opens over this list rather than routing to
+          /contact-activity. Navigating there replaced the whole screen with a
+          standalone page — the contacts you were reading and the filters you
+          had set both gone, and getting back meant the browser's Back. Wider
+          than the WhatsApp composer because it holds a call log, not a form. */}
+      {activityFor ? (
+        <SideDrawer
+          isOpen={Boolean(activityFor)}
+          handleClose={() => setActivityFor(null)}
+          width="min(880px, 82vw)"
+          enableResponsive
+          responsiveWidth="96vw"
+          responsiveBreakpoint={1024}
+          isCloseIcon={false}
+          content={
+            <ContactActivity
+              contactId={String(activityFor?._id || '')}
+              activityState={{ key: 'phone', value: activityFor?.contact?.phone || '' }}
+              onClose={() => setActivityFor(null)}
+            />
           }
         />
       ) : null}

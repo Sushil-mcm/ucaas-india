@@ -10,12 +10,35 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import ContactCallLogContent from '@/components/custom/contact-call-log-content';
 import '@/styles/warm-glass.css';
 
-const ContactActivity = () => {
-  const { state } = useLocation();
+/**
+ * Also renders inside a drawer, not only as the /contact-activity route.
+ *
+ * Opening a contact's activity from a Directory row used to navigate here,
+ * which swapped the whole screen for a standalone page — the list you came
+ * from, and the place you were in, both gone. Passing `contactId` and
+ * `onClose` renders the same thing over the list instead, the way the
+ * WhatsApp composer does. The props are optional and fall back to the URL, so
+ * the route keeps working exactly as before for the links that still use it.
+ */
+const ContactActivity = ({
+  contactId: contactIdProp,
+  activityState,
+  onClose,
+}: {
+  contactId?: string;
+  /** Stands in for the router state the route form reads. */
+  activityState?: { key: string; value: string };
+  /** Replaces the back arrow's navigate(-1) when embedded. */
+  onClose?: () => void;
+} = {}) => {
+  const { state: routerState } = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const contactId = searchParams.get('contactId');
+  const isEmbedded = Boolean(contactIdProp);
+  const state = activityState ?? routerState;
+  const contactId = contactIdProp ?? searchParams.get('contactId');
   const isLeadList = searchParams.get('isLeadList') === 'true';
+  const goBack = onClose ?? (() => navigate(-1));
   const [showDialer, setShowDialer] = useState(false);
   const [numberToAdd, setNumberToAdd] = useState('');
 
@@ -49,6 +72,12 @@ const ContactActivity = () => {
   }, [contactData]);
 
   useEffect(() => {
+    /* Embedded, the id comes from the caller, so an empty ?contactId= is not a
+       broken link to redirect away from — it is simply not how this instance
+       was addressed. Redirecting there would have thrown the drawer's host page
+       away the moment it opened. */
+    if (isEmbedded) return;
+
     if (searchParams.get('contactId')) {
       const contactId = searchParams.get('contactId');
 
@@ -58,7 +87,7 @@ const ContactActivity = () => {
     } else {
       navigate(isLeadList ? '/campaign/leads' : '/contact');
     }
-  }, [isLeadList, navigate, searchParams]);
+  }, [isEmbedded, isLeadList, navigate, searchParams]);
 
   useEffect(() => {
     window.addEventListener('OPEN_ACTIVITY_DIALER', openDialer);
@@ -96,9 +125,9 @@ const ContactActivity = () => {
     <div className="flex items-center w-full px-3 h-16 gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px]">
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={goBack}
         className="flex items-center justify-center rounded-full w-9 h-9 text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] shrink-0"
-        aria-label="Back"
+        aria-label={isEmbedded ? 'Close' : 'Back'}
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
