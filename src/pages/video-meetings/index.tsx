@@ -8,6 +8,7 @@ import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar, { meetingSidebarArr } from './sidebar';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 
 const VideoMeetings = () => {
   const { features } = useCompanyFeatures();
@@ -82,12 +83,20 @@ const VideoMeetings = () => {
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] md:hidden">
-          <div className="px-4 pt-4">
-            <h2 className="text-lg font-semibold text-[#2E2D35]">Meetings</h2>
-            <p className="text-xs text-[#9A948F]">Browse meeting sections</p>
-          </div>
+        {/* The head every other Activity screen carries -- Phone, Chat, Agent
+            Chat, Inbox -- so this section names itself the same way they do.
+            It sits above the outlet, not inside it, which keeps it full-bleed
+            against the rail and stops each of the five screens rebuilding it.
+            The hero card below is untouched; this only puts a name on the
+            section, which the rail no longer does since it hides its heading. */}
+        <ActivityPageHead
+          title="Meetings"
+          description="Video meetings you host or attend: start one now, schedule ahead or join with a code, with what is upcoming, ongoing, past and invited beside it."
+        />
 
+        <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] md:hidden">
+          {/* Title dropped, chips kept: the head above prints "Meetings" on
+              every width now, so this bar was saying it a second time. */}
           <div className="flex gap-2 overflow-x-auto px-3 py-3">
             {mobileNavItems.map((item: any) => {
               const isActive = pathname === item.path;
