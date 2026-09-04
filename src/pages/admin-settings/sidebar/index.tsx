@@ -120,49 +120,27 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'ExtensionIcon',
           path: '/admin-settings/people',
         },
-        /* Access is one decision made in four steps, so the four screens are
-           listed in the order they should be used rather than alphabetically or
-           in the order they happened to be built. The reference table sits last:
-           it explains the model but decides nothing. */
         {
-          /* Step 1 — the front door, and the only screen that says what order
-             the rest go in. */
-          title: 'How access works',
-          icon: 'LockFilled',
-          path: '/admin-settings/access-control',
-          enabled: IS_ADMIN,
-          visible: IS_ADMIN,
-        },
-        {
-          /* Step 2 — what a role can do. */
+          /* What a role can do. */
           title: 'Roles',
           icon: 'RoleIcon',
           path: '/admin-settings/roles',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
-        /* Admin scope is not listed. It is a working screen -- a real form with a
-           real save -- but nothing reads what it saves: `canActOn` in
-           src/lib/admin-scope.ts is not called anywhere in the product, so an
-           administrator scoped to one location can still edit every other. The
-           screen says so itself, and being honest about it is right, but a
-           navigation entry is a claim that a thing is available. The route and
-           the code stay; put this back the day canActOn is wired into the
-           permission checks. */
         {
-          /* Step 4 — what a role should hold, as opposed to what one happens
-             to hold, and what a brand-new person starts on. */
-          title: 'Default permissions',
+          /* Who a role reaches: the whole company, chosen locations or chosen
+             groups.
+
+             Listed on request, to match the reference console. Worth knowing
+             what it does here: the form saves, and `canActOn` in
+             src/lib/admin-scope.ts -- the function that would enforce it -- is
+             called nowhere in this product, so a scope narrows nothing yet. The
+             screen says that on itself, which is what makes listing it honest
+             rather than a claim the feature is live. */
+          title: 'Admin scope',
           icon: 'RoleIcon',
-          path: '/admin-settings/default-permissions',
-          enabled: IS_ADMIN,
-          visible: IS_ADMIN,
-        },
-        {
-          /* The reference table. Every capability against every kind of person. */
-          title: 'What each role can do',
-          icon: 'RoleIcon',
-          path: '/admin-settings/capability-matrix',
+          path: '/admin-settings/admin-scope',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
