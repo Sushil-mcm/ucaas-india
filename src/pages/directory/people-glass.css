@@ -4,6 +4,14 @@
 .gp-people {
   position: relative;
   isolation: isolate;
+  /* Fills the width of whatever column it is dropped into. Admin renders
+     these two Directory screens inside a flex row, where a plain block
+     child sizes to its own content -- so Roles, with four columns, drew
+     its panel and its tint only two-thirds of the way across and left
+     bare page beside it. People escaped it only because its table is
+     wide enough to reach the edge on its own. */
+  width: 100%;
+  min-width: 0;
   /* fills the whole scroll area, not just the height of its own content —
      otherwise the tint stops dead where the table ends and the page's plain
      grey shows through underneath. */

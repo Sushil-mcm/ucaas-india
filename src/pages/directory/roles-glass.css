@@ -5,6 +5,14 @@
 .gp-roles {
   position: relative;
   isolation: isolate;
+  /* Fills the width of whatever column it is dropped into. Admin renders
+     these two Directory screens inside a flex row, where a plain block
+     child sizes to its own content -- so Roles, with four columns, drew
+     its panel and its tint only two-thirds of the way across and left
+     bare page beside it. People escaped it only because its table is
+     wide enough to reach the edge on its own. */
+  width: 100%;
+  min-width: 0;
   min-height: 100%;
   background:
     radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),

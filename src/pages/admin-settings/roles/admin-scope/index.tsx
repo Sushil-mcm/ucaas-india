@@ -29,7 +29,6 @@ import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
-import { AreaNav } from '@/pages/admin-settings/roles/area-nav';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
@@ -236,130 +235,145 @@ const AdminScopePage = () => {
   return (
     <AdminPage
       hideHead
-      section="People"
       title="Admin scope"
-      description="Step 3 of four. A role says what somebody may do. This says who they may do it to — the whole company, chosen locations, or chosen departments."
-      actions={<AreaNav current="/admin-settings/admin-scope" />}
+      description="A role says what somebody may do. This says who they may do it to — the whole company, chosen locations, or chosen departments."
+      actions={
+        <select
+          aria-label="Choose a person to give a scope to"
+          className="h-9 min-w-56 rounded-md border border-gray-300 bg-white px-3 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-500"
+          value=""
+          disabled={unassigned.length === 0}
+          onChange={(event) => {
+            if (!event.target.value) return;
+            setEditing(blankScope(event.target.value));
+          }}
+        >
+          <option value="">
+            {unassigned.length ? 'Give someone a scope…' : 'Everybody has one'}
+          </option>
+          {unassigned.map((person) => (
+            <option key={person.uuid} value={person.uuid}>
+              {person.name}
+            </option>
+          ))}
+        </select>
+      }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
         {isLoading || peopleLoading ? (
           <Loader />
         ) : (
           <>
-            <SettingCard
-              title="Who administers what"
-              icon={<ShieldCheck className="h-4 w-4" />}
-              description={
-                scopes.length
-                  ? `${scopes.length} ${scopes.length === 1 ? 'person has' : 'people have'} a scope written down. Anybody not listed is treated as covering the whole company, which is what happens today.`
-                  : 'Nobody has a scope yet, so every administrator covers the whole company — including people at other locations.'
-              }
-              status="coming-soon"
-              note={
-                <>
-                  Coming soon. This is saved on your company record and nothing acts on it yet: an
-                  administrator&rsquo;s scope is never checked, so it is a written record of who{' '}
-                  <em>should</em> manage what rather than a restriction. Decide it now and it is
-                  ready the day it arrives.
-                </>
-              }
-              aside={
-                dirty ? (
-                  <Button
-                    type="button"
-                    variant="primary"
-                    disabled={isPending}
-                    onClick={() => persist(scopes)}
-                  >
-                    {isPending ? 'Saving…' : 'Save changes'}
-                  </Button>
-                ) : null
-              }
-            >
-              {scopes.length === 0 ? (
-                <SettingRow
-                  label="Nothing written down"
-                  description="Most companies start with the person who runs each location."
-                />
-              ) : (
-                scopes.map((scope) => {
-                  const cover = coverageOf(scope, roster, directory);
-                  const decision = mayEdit(scope);
-                  return (
-                    <SettingRow
-                      key={scope.personUuid}
-                      label={personName(scope.personUuid)}
-                      description={
-                        <>
-                          {describeScope(scope, directory)} — reaches {cover.people} of{' '}
-                          {cover.totalPeople} people
-                          {cover.unplaced > 0 ? (
-                            <>
-                              {' '}
-                              ({cover.unplaced}{' '}
-                              {scope.tier === 'location'
-                                ? 'have no location set, so they are left out'
-                                : 'are in no department, so they are left out'}
-                              )
-                            </>
-                          ) : null}
-                          .{decision.allowed ? null : <> {decision.reason}</>}
-                        </>
-                      }
-                      control={
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={!decision.allowed}
-                            onClick={() => setEditing({ ...scope })}
-                          >
-                            Change
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="transparent"
-                            disabled={!decision.allowed}
-                            onClick={() => removeScope(scope.personUuid)}
-                            aria-label={`Remove the scope for ${personName(scope.personUuid)}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      }
-                    />
-                  );
-                })
-              )}
+            {/* Led by who covers what, the way People and Roles beside it are:
+                one row per administrator, scannable, with the limitation stated
+                once above rather than wrapped around every row. */}
+            <div className="mcm-notsaved" role="status">
+              <strong>Saved here, not enforced yet.</strong>
+              <span>
+                Nothing checks a scope when an administrator acts, so everyone still covers the
+                whole company. Writing it down now means it applies the day that check is switched
+                on.
+              </span>
+            </div>
 
-              <SettingRow
-                label="Give somebody a scope"
-                description={
-                  unassigned.length
-                    ? 'Pick the person, then choose how far they reach.'
-                    : 'Everybody already has one.'
-                }
-                control={
-                  <select
-                    aria-label="Choose a person to give a scope to"
-                    className="h-10 w-full min-w-56 rounded-md border border-gray-300 bg-white px-3 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-500"
-                    value=""
-                    disabled={unassigned.length === 0}
-                    onChange={(event) => {
-                      if (!event.target.value) return;
-                      setEditing(blankScope(event.target.value));
-                    }}
-                  >
-                    <option value="">Choose a person…</option>
-                    {unassigned.map((person) => (
-                      <option key={person.uuid} value={person.uuid}>
-                        {person.name}
-                      </option>
-                    ))}
-                  </select>
-                }
-              />
-            </SettingCard>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-[#2E2D35]">
+                {scopes.length
+                  ? `${scopes.length} ${scopes.length === 1 ? 'person has' : 'people have'} a scope. Everyone else covers the whole company.`
+                  : 'Nobody has a scope yet, so every administrator covers the whole company.'}
+              </p>
+              {dirty ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={isPending}
+                  onClick={() => persist(scopes)}
+                >
+                  {isPending ? 'Saving…' : 'Save changes'}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="panel-card">
+              <div className="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Administrator</th>
+                      <th>Covers</th>
+                      <th>Reaches</th>
+                      <th className="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scopes.length === 0 ? (
+                      <tr>
+                        <td colSpan={4}>
+                          <div className="empty">
+                            <p>
+                              Nothing written down yet. Most companies start with the person who
+                              runs each location.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      scopes.map((scope) => {
+                        const cover = coverageOf(scope, roster, directory);
+                        const decision = mayEdit(scope);
+                        return (
+                          <tr key={scope.personUuid}>
+                            <td>
+                              <span className="font-semibold text-[#2E2D35]">
+                                {personName(scope.personUuid)}
+                              </span>
+                            </td>
+                            <td>{describeScope(scope, directory)}</td>
+                            <td>
+                              {cover.people} of {cover.totalPeople} people
+                              {cover.unplaced > 0 ? (
+                                <span className="block text-xs text-[#9A948F]">
+                                  {cover.unplaced}{' '}
+                                  {scope.tier === 'location'
+                                    ? 'have no location set, so they are left out'
+                                    : 'are in no department, so they are left out'}
+                                </span>
+                              ) : null}
+                              {decision.allowed ? null : (
+                                <span className="block text-xs text-[#9A948F]">
+                                  {decision.reason}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={!decision.allowed}
+                                  onClick={() => setEditing({ ...scope })}
+                                >
+                                  Change
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="transparent"
+                                  disabled={!decision.allowed}
+                                  onClick={() => removeScope(scope.personUuid)}
+                                  aria-label={`Remove the scope for ${personName(scope.personUuid)}`}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             {editing ? (
               <SettingCard

@@ -16,7 +16,6 @@ import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import RemovalWarning, { useRemovalImpact } from '@/components/mcm/removal-warning';
-import SetupGuide from '@/components/mcm/setup-guide';
 import {
   PRESENCE_OPTIONS,
   presenceValueOf,
@@ -268,13 +267,6 @@ const People = () => {
           </>
         }
       >
-        {/* A new admin adding their first people is exactly who needs to see
-            how far through setup they are. The guide hides itself once
-            everything is done, so an established account never sees it. */}
-        <div className="gp-people-setup">
-          <SetupGuide companyInfo={user?.company_info} />
-        </div>
-
         <table>
           <thead>
             <tr>
