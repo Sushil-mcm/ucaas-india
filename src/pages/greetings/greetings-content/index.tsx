@@ -27,10 +27,6 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import { useCompanyFeatures } from '@/hooks/rbac';
 
 const GreetingContent: FC = () => {
-  /* The page head above prints the title; this puts the sentence that used
-     to sit under it behind that head's info button instead. */
-  useSetAdminPageMeta({ description: typeBlurb[type] || typeBlurb.all });
-
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -69,6 +65,16 @@ const GreetingContent: FC = () => {
   const isTypeSegment = Boolean(TYPE_SLUGS[lastSegment]) && candidateBase !== '';
 
   const type = isTypeSegment ? TYPE_SLUGS[lastSegment] : 'all';
+
+  /* The page head above prints the title; this puts the sentence that used to
+     sit under it behind that head's info button instead.
+
+     It has to be called here rather than at the top of the component: `type` is
+     a const declared just above, so reading it any earlier throws "Cannot
+     access 'type' before initialization" and takes the whole page down to the
+     error boundary. Still called unconditionally on every render, which is all
+     the rules of hooks require. */
+  useSetAdminPageMeta({ description: typeBlurb[type] || typeBlurb.all });
 
   /* The type routes exist under every place this page is mounted, but only the
      standalone greetings area has a sidebar linking to them — under
