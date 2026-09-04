@@ -64,7 +64,21 @@ const VideoMeetings = () => {
       />
 
       <div className="relative hidden h-full md:block">
-        <PageSidebarLayout isTab={false} title="Meetings" content={<Sidebar />} />
+        {/* Not collapsible, same as the Inbox. This panel is how you move
+            between Upcoming, Ongoing, Invited, Past and Recordings -- fold it
+            away and the only route back to another view is reopening the
+            panel you just closed.
+
+            `title` stays even though the heading is hidden: the layout reads it
+            to decide the glass sidebar treatment, so dropping it would restyle
+            the panel rather than just unlabel it. */}
+        <PageSidebarLayout
+          isTab={false}
+          collapsible={false}
+          hideHeading
+          title="Meetings"
+          content={<Sidebar />}
+        />
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
