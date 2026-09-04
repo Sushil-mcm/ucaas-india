@@ -146,28 +146,47 @@ body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
 }
 
 /* ------------------------------------------------------------
-   2. Live-sync notice — a warm-tinted glass pill instead of floating text.
+   2. Live-sync notice — a frosted glass pill instead of floating text.
+   Muted slate on translucent white, matching the notice pill standard set
+   on Dashboards (db-notice) rather than the orange-wash treatment used
+   here originally.
    ------------------------------------------------------------ */
 .mcm-page .perf-queues .qa-notice {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
-  background: var(--qa-wash);
-  border: 1px solid rgba(249, 115, 22, 0.18);
-  color: var(--qa-accent-ink);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
+  /* A single-line sentence at the very edge of the pill's width can spill
+     past the rounded corner on a narrower real browser window than any
+     one dev viewport tests — overflow:hidden clips it to the pill's own
+     shape instead of the text poking out past its background. */
+  overflow: hidden;
 }
 .dark .mcm-page .perf-queues .qa-notice {
-  color: var(--qa-accent-ink);
+  color: #475569;
 }
+/* `.page-note` (mcm-page.css) caps itself at `max-width: 100ch`, tuned for
+   a page description rather than a pill with the band's full width to
+   work with — that cap is what forced this long caveat to wrap a few
+   words from the end. */
 .mcm-page .perf-queues .qa-notice .page-note {
   margin: 0;
   color: inherit;
   font-size: inherit;
+  max-width: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: inherit;
 }
 
@@ -258,6 +277,18 @@ body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
   -webkit-backdrop-filter: var(--qa-glass-blur);
   box-shadow: var(--qa-glass-shadow);
 }
+/* TableManager wraps `.table-scroll` in its own outer div (table-
+   manager.tsx: `rounded-xl border ... overflow-hidden`) — that outer div,
+   not `.table-scroll` itself, is what actually clips a native scrollbar,
+   since a scrollbar's track/thumb isn't clipped by the scrolling
+   element's OWN border-radius, only by an ancestor's overflow:hidden.
+   The outer div's default 12px Tailwind radius didn't match this 20px,
+   so the scrollbar rendered as a flat rectangle poking through the
+   rounded corner. Matching it here fixes that at the source. */
+.mcm-page .perf-queues div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
 
 /* Sticky header — near-opaque frosted fill so scrolling rows never bleed
    through the header text, plus a hairline shadow to seat it above them. */
@@ -321,32 +352,23 @@ body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
   color: var(--qa-accent-ink);
 }
 
-/* Waiting / Longest / ASA / AHT — right-aligned tabular figures, so the
-   numbers line up column to column instead of jittering left-aligned. */
-.mcm-page .perf-queues .table-scroll th:nth-child(3),
-.mcm-page .perf-queues .table-scroll th:nth-child(4),
-.mcm-page .perf-queues .table-scroll th:nth-child(10),
-.mcm-page .perf-queues .table-scroll th:nth-child(11),
-.mcm-page .perf-queues .table-scroll td:nth-child(3),
-.mcm-page .perf-queues .table-scroll td:nth-child(4),
-.mcm-page .perf-queues .table-scroll td:nth-child(10),
-.mcm-page .perf-queues .table-scroll td:nth-child(11) {
-  text-align: right;
+/* Every column but Queue (1, the row's own name) — Media, Waiting,
+   Longest, Members, Interacting, Offered, Handled, SL today, ASA, AHT,
+   Abandon — centered under its header, both th and td. Offered/Handled
+   had no alignment rule at all before (left by browser default) and
+   SL today/Abandon centered their `<th>` (a `<th>`'s own browser default)
+   while right-aligning only the `<td>` tag beneath it — both mismatches
+   between a column's header and its own values, on top of the numbers
+   themselves reading off-balance. One consistent rule for the whole row
+   fixes both at once, matching the policy every other Performance table
+   now follows (Agents, Flows, Campaigns, Reports, ...). */
+.mcm-page .perf-queues .table-scroll th:nth-child(n + 2),
+.mcm-page .perf-queues .table-scroll td:nth-child(n + 2) {
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
-
-/* Interacting — the live pulse dot needs its row of text to stay
-   left-aligned and inline, not squeezed by the numeric columns' styling. */
-.mcm-page .perf-queues .table-scroll td:nth-child(6) {
-  font-variant-numeric: tabular-nums;
-}
-
-/* SL today / Abandon already render as `.tag pos/warn/neg` (StatusPill) —
-   the same Directory-standard badge tokens People/Roles use, so nothing to
-   reskin here beyond letting them breathe against the glass row. */
-.mcm-page .perf-queues .table-scroll td:nth-child(9),
-.mcm-page .perf-queues .table-scroll td:nth-child(12) {
-  text-align: right;
+.mcm-page .perf-queues .table-scroll td:nth-child(6) .live-pulse-dot-wrap {
+  justify-content: center;
 }
 
 /* ------------------------------------------------------------

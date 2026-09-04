@@ -55,31 +55,48 @@ body.perf-warm-backdrop.dark {
 }
 
 /* ------------------------------------------------------------
-   1. Notice pill — the IVR description, wrapped in a warm glass pill
-   instead of floating page-note text.
+   1. Notice pill — the IVR description, wrapped in a frosted glass pill
+   instead of floating page-note text. Muted slate on translucent white,
+   matching the notice pill standard set on Dashboards (db-notice) rather
+   than the orange-wash treatment used here originally.
    ------------------------------------------------------------ */
 .perf-flows .fl-notice {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--fl-wash);
-  border: 1px solid rgba(249, 115, 22, 0.18);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  /* A single-line sentence at the very edge of the pill's width can spill
+     past the rounded corner on a narrower real browser window than any
+     one dev viewport tests — overflow:hidden clips it to the pill's own
+     shape instead of the text poking out past its background. */
+  overflow: hidden;
 }
 .perf-flows .fl-notice-icon {
   width: 15px;
   height: 15px;
   flex: none;
-  margin-top: 2px;
-  color: var(--fl-accent-ink);
+  color: #475569;
 }
+/* `.page-note` (mcm-page.css) caps itself at `max-width: 100ch`, tuned for
+   a page description rather than a pill with the band's full width to
+   work with — that cap is what forced this long description to wrap a
+   few words from the end. */
 .perf-flows .fl-notice .page-note {
   margin: 0;
-  color: var(--fl-accent-ink);
-  font-size: 12px;
+  color: #475569;
+  font-size: 11px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.4;
+  max-width: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ------------------------------------------------------------
@@ -126,6 +143,16 @@ body.perf-warm-backdrop.dark {
   backdrop-filter: var(--fl-glass-blur);
   -webkit-backdrop-filter: var(--fl-glass-blur);
   box-shadow: var(--fl-glass-shadow);
+}
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner. */
+.perf-flows div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
 }
 .perf-flows .table-scroll thead {
   background: rgba(255, 250, 244, 0.97);
@@ -216,10 +243,16 @@ body.perf-warm-backdrop.dark {
   color: #fdba74;
 }
 
-/* Entries Today — right-aligned tabular figures. */
-.perf-flows .table-scroll th:nth-child(4),
+/* Every column but Flow (1, the row's own name) — Extension, Site,
+   Entries Today — centered under its header, both th and td. Site had no
+   alignment rule at all, which does not mean "left": a bare `<th>`'s own
+   browser default is centered while a bare `<td>` defaults left, so it
+   silently disagreed with its own header. */
+.perf-flows .table-scroll th:nth-child(n + 2),
+.perf-flows .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+}
 .perf-flows .table-scroll td:nth-child(4) {
-  text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--fl-ink);

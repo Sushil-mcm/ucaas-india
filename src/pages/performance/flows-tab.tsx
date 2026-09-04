@@ -116,9 +116,8 @@ const FlowsTab = () => {
       <div className="fl-notice">
         <Info className="fl-notice-icon" />
         <p className="page-note">
-          IVR call flows configured for this account. "Entries Today" counts calls routed through
-          each flow's extension today — deeper per-path (which key was pressed, where callers
-          dropped off) analytics aren't wired up yet.
+          IVR flows for this account. "Entries Today" counts calls routed through each flow's
+          extension today — per-path analytics aren't available yet.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">

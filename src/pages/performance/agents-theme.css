@@ -100,6 +100,16 @@ body.perf-warm-backdrop.dark {
   -webkit-backdrop-filter: var(--aa-glass-blur);
   box-shadow: var(--aa-glass-shadow);
 }
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner. */
+.mcm-page .perf-agents div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
 .mcm-page .perf-agents .table-scroll thead {
   background: rgba(255, 250, 244, 0.97);
   backdrop-filter: blur(16px);
@@ -188,6 +198,14 @@ body.perf-warm-backdrop.dark {
 /* ------------------------------------------------------------
    6. Utilization — warm glass capsule track, sunset gradient fill.
    ------------------------------------------------------------ */
+/* The cell's own content (agents-tab.tsx) is a fixed-width block `<div>`,
+   which `text-align:center` on the cell can't center — that only aligns
+   inline content. `margin:auto` centers the block itself within the now-
+   centered column. */
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(6) > div {
+  margin-left: auto;
+  margin-right: auto;
+}
 .mcm-page .perf-agents .table-scroll tbody td .hbar-t {
   height: 7px;
   background: rgba(249, 115, 22, 0.12);
@@ -209,9 +227,28 @@ body.perf-warm-backdrop.dark {
 .mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
   font-variant-numeric: tabular-nums;
 }
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
-  text-align: right;
+/* Same "block content, not inline" case as Utilization above — the two
+   stacked lines (Calls: n / AHT: n) are a flex column div, so it needs
+   both centering itself in the cell and its own lines centered against
+   each other (they're different lengths). */
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(7) > div {
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
 }
-.mcm-page .perf-agents .table-scroll thead th:nth-child(8) {
-  text-align: right;
+
+/* ------------------------------------------------------------
+   8. Every column but Agent Info (1) — Live Status, Time in State,
+   Queue/Campaign, Caller ID, Utilization, Daily Stats, Queues —
+   centered under its header, both th and td. Most of these had no
+   alignment rule at all, which does not mean "left" — a bare `<th>`'s
+   own browser default is centered while a bare `<td>` defaults left, so
+   every one of them silently disagreed with its own header. One
+   consistent rule fixes the whole row at once, matching the policy
+   every other Performance table now follows (Queues, Flows, Campaigns,
+   Reports, ...). */
+.mcm-page .perf-agents .table-scroll thead th:nth-child(n + 2),
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(n + 2) {
+  text-align: center;
 }

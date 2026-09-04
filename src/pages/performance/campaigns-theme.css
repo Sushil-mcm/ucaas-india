@@ -219,6 +219,24 @@ body.perf-warm-backdrop .perf-campaigns {
   color: var(--ca-muted);
 }
 
+/* Window / Leads / Answered / Agents — centered under their headers.
+   Window and Answered had no alignment rule at all, which does not mean
+   "left": a bare `<th>`'s own browser default is centered while a bare
+   `<td>` defaults left, so both silently disagreed with their own
+   header. Status/Campaign (the row's own identity, read left to right)
+   and Contact outcomes (a wide progress bar) are left as they are. */
+.perf-campaigns .table-scroll th:nth-child(3),
+.perf-campaigns .table-scroll td:nth-child(3),
+.perf-campaigns .table-scroll th:nth-child(4),
+.perf-campaigns .table-scroll td:nth-child(4),
+.perf-campaigns .table-scroll th:nth-child(6),
+.perf-campaigns .table-scroll td:nth-child(6),
+.perf-campaigns .table-scroll th:nth-child(7),
+.perf-campaigns .table-scroll td:nth-child(7) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Empty state — dark charcoal title over the frosted panel. */
 .perf-campaigns .panel-card .text-gray-900 {
   color: var(--ca-ink);

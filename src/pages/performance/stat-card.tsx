@@ -39,7 +39,7 @@ const PerfStatCard = ({
   icon?: any;
   tone?: StatCardTone;
   layout?: 'stacked' | 'inline';
-  highlight?: 'none' | 'gold' | 'warning';
+  highlight?: 'none' | 'gold' | 'warning' | 'ai';
 }) => {
   const highlightClass = highlight !== 'none' ? ` stat-hl-${highlight}` : '';
   if (layout === 'inline') {

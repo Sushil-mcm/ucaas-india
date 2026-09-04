@@ -1,0 +1,153 @@
+/* ============================================================
+   Performance › Dashboards / Boards — warm sunset orange glassmorphism,
+   elevated into an executive bento-grid dashboard. Same three-scope
+   convention as queues-theme.css / agents-theme.css / flows-theme.css:
+
+     .perf-dashboards           this tab's own root element. Owns the
+                                 caption and the 6-card bento deck.
+     body.perf-warm-backdrop    the full-page ambient gradient AND the
+                                 shared KPI hero band (Waiting / Longest
+                                 wait / Service / Volume / Coverage,
+                                 rendered one level up by index.tsx) —
+                                 both already themed by queues-theme.css
+                                 the moment this class is toggled, since
+                                 that file's hero-row/grouped-row rules key
+                                 off the body class rather than a page
+                                 class. Nothing to redeclare here.
+   The shared "Waiting, Longest wait..." notice pill above the hero band
+   (index.tsx's `.hero-notice`) is themed in live-theme.css instead of
+   here — it needs to be loaded on every tab that shows the band, not just
+   once Dashboards has actually mounted.
+   ============================================================ */
+
+.perf-dashboards,
+body.perf-warm-backdrop {
+  --db-accent: #f97316;
+  --db-accent-deep: #ea580c;
+  --db-accent-ink: #c2410c;
+  --db-wash: #fff1eb;
+  --db-ink: #1a1a1a;
+  --db-muted: #666666;
+  --db-hairline: rgba(249, 115, 22, 0.08);
+
+  --db-glass: rgba(255, 255, 255, 0.85);
+  --db-glass-border: rgba(255, 255, 255, 0.95);
+  --db-glass-blur: blur(20px) saturate(190%);
+  --db-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --db-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+}
+.dark .perf-dashboards,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --db-accent: #fb923c;
+  --db-accent-deep: #f97316;
+  --db-accent-ink: #fdba74;
+  --db-wash: #2a1710;
+  --db-ink: #f4f6fb;
+  --db-muted: #93a1ba;
+  --db-hairline: rgba(251, 146, 60, 0.14);
+
+  --db-glass: rgba(17, 24, 39, 0.72);
+  --db-glass-border: rgba(251, 146, 60, 0.18);
+  --db-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --db-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. Section caption — "A quick-glance overview across queues,
+   campaigns and agents." A quiet slate label, not a second notice pill —
+   the page already has one of those at the top of the hero band, and a
+   duplicate directly below it read as redundant chrome. */
+.perf-dashboards .db-caption {
+  color: var(--db-muted);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+/* ------------------------------------------------------------
+   2. Executive bento deck — 6 distinct frosted glass cards, forced into
+   one compact row from `lg` up (dashboards-tab.tsx: `lg:grid-cols-6`).
+   Slightly tighter padding/type than the base `.stat` (14px/25px) so six
+   across a laptop-width row never wrap a label or crowd the icon badge.
+   ------------------------------------------------------------ */
+.mcm-page .perf-dashboards .db-bento .stat {
+  height: auto;
+  padding: 14px !important;
+  background: var(--db-glass);
+  backdrop-filter: var(--db-glass-blur);
+  -webkit-backdrop-filter: var(--db-glass-blur);
+  border: 1px solid var(--db-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--db-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.mcm-page .perf-dashboards .db-bento .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--db-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+.mcm-page .perf-dashboards .db-bento .stat .k {
+  color: var(--db-muted);
+  font-size: 9.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-dashboards .db-bento .stat .v {
+  color: var(--db-ink);
+  font-size: 21px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-dashboards .db-bento .stat .d {
+  color: var(--db-muted) !important;
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-dashboards .db-bento .stat .stat-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Agents Online — a small pulsing live dot ahead of "online now" so the
+   count reads as live telemetry, not a static figure. */
+.perf-dashboards .db-live-dot-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.perf-dashboards .db-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--live);
+  flex: none;
+  animation: db-live-pulse 1.8s ease-out infinite;
+}
+@keyframes db-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--live-wash);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .perf-dashboards .db-live-dot {
+    animation: none;
+  }
+}

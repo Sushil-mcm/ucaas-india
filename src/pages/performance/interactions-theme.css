@@ -221,6 +221,16 @@ body.perf-warm-backdrop.dark {
   -webkit-backdrop-filter: var(--ic-glass-blur);
   box-shadow: var(--ic-glass-shadow);
 }
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner. */
+.perf-interactions div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
 .perf-interactions .table-scroll thead {
   background: rgba(255, 250, 244, 0.97);
   backdrop-filter: blur(16px);
@@ -260,6 +270,24 @@ body.perf-warm-backdrop.dark {
 }
 .dark .perf-interactions .table-scroll tbody td {
   color: var(--ic-muted);
+}
+
+/* Date, From, DID, To, Status read left to right like an identity, not a
+   count — explicitly left-aligned on both th and td rather than left
+   only by accident. A bare `<th>`'s own browser default is centered
+   while a bare `<td>` defaults left, so without this each of these five
+   silently disagreed with its own header. */
+.perf-interactions .table-scroll th:nth-child(1),
+.perf-interactions .table-scroll th:nth-child(2),
+.perf-interactions .table-scroll th:nth-child(3),
+.perf-interactions .table-scroll th:nth-child(4),
+.perf-interactions .table-scroll th:nth-child(5),
+.perf-interactions .table-scroll td:nth-child(1),
+.perf-interactions .table-scroll td:nth-child(2),
+.perf-interactions .table-scroll td:nth-child(3),
+.perf-interactions .table-scroll td:nth-child(4),
+.perf-interactions .table-scroll td:nth-child(5) {
+  text-align: left;
 }
 
 /* Date, Duration, Wait Time, Charge — tabular figures, right-aligned so

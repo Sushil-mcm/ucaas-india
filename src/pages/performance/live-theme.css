@@ -237,13 +237,55 @@ body.perf-warm-backdrop .mcm-page .page-band {
   background: transparent;
   border-bottom: none;
 }
-/* `.page-note` ("Waiting, Longest wait, ... are live right now") is
-   `var(--ink-4)`, a light cool gray meant to sit quietly on a plain white
-   band — low enough contrast against the warm gradient here that it read
-   as barely-there. Darkened to the same muted tone the KPI tiles' own
-   labels use. */
-body.perf-warm-backdrop .mcm-page .page-band .page-note {
-  color: var(--pl-muted);
+/* "Waiting, Longest wait, ... are live right now" — wrapped in
+   `.hero-notice` (index.tsx) on every tab that shows this band (Queues,
+   Campaigns, Dashboards). A frosted glass pill rather than the plain
+   `var(--ink-4)` text it used to be: that light cool gray was tuned for a
+   plain white band and read as barely-there against this warm gradient.
+   Lives here rather than in any one tab's own theme file because it is
+   rendered by the shared page shell (index.tsx), one level above every
+   tab's own root — reachable only through this body class, and only
+   guaranteed loaded (unlike a page-specific theme file, which is only
+   imported once that tab has actually mounted) because live-theme.css is
+   imported unconditionally at the top of index.tsx. */
+body.perf-warm-backdrop .mcm-page .page-band .hero-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--pl-glass-border);
+  margin-bottom: 10px;
+  /* A single-line sentence at the very edge of the pill's width can spill
+     past the rounded corner on a narrower real browser window than any
+     one dev viewport tests — overflow:hidden clips it to the pill's own
+     shape instead of the text poking out past its background. */
+  overflow: hidden;
+}
+body.perf-warm-backdrop .mcm-page .page-band .hero-notice-icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: #475569;
+}
+/* `.page-note` (mcm-page.css) caps itself at `max-width: 100ch` — tuned
+   for a page description, not a pill that has the full width of the band
+   to work with. At this sentence's length (~180 characters) that cap is
+   what forced a wrap a few words from the end, leaving a mostly-empty
+   second line. `max-width: none` + `white-space: nowrap` let it use the
+   pill's real width and sit on exactly one line instead. */
+body.perf-warm-backdrop .mcm-page .page-band .hero-notice .page-note {
+  margin: 0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 body.perf-warm-backdrop .mcm-page .page-band .kpis {
   background: transparent;
@@ -323,6 +365,16 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
   backdrop-filter: var(--pl-glass-blur);
   -webkit-backdrop-filter: var(--pl-glass-blur);
   box-shadow: var(--pl-glass-shadow);
+}
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this one, so
+   the scrollbar rendered as a flat rectangle poking through the corner. */
+.mcm-page .perf-live div:has(> .table-scroll) {
+  border-radius: var(--pl-r-lg);
+  overflow: hidden;
 }
 
 /* Header — translucent light tint, uppercase muted slate. */

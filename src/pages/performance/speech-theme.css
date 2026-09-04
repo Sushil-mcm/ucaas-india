@@ -145,6 +145,17 @@ body.perf-warm-backdrop .perf-speech {
   -webkit-backdrop-filter: var(--sp-glass-blur);
   box-shadow: var(--sp-glass-shadow);
 }
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner.
+   Applies to both tables on this page (Topics, Agent sentiment). */
+.perf-speech div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
 .perf-speech .table-scroll thead {
   background: rgba(255, 246, 238, 0.97);
   backdrop-filter: var(--sp-glass-blur);
@@ -178,4 +189,32 @@ body.perf-warm-backdrop .perf-speech {
 .perf-speech .table-scroll tbody td:first-child {
   color: var(--sp-ink);
   font-weight: 600;
+}
+
+/* Interactions — a short integer count, off-balance pinned to either edge
+   of its column. Two separate tables share this scope (Topics, Agent
+   sentiment ranking), each with "Interactions" at a different column
+   index, so each is targeted through its own wrapper class rather than a
+   single shared nth-child rule. */
+/* Every column but the row's own name (Topic / Agent, both column 1) —
+   centered under its header, both th and td. Share / Avg sentiment / %
+   negative had no alignment rule at all, which does not mean "left": a
+   bare `<th>`'s own browser default is centered while a bare `<td>`
+   defaults left, so all three silently disagreed with their own header. */
+.perf-speech .sp-topics-table .table-scroll th:nth-child(n + 2),
+.perf-speech .sp-topics-table .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Volume's own content is a fixed-width block `<div>` bar (speech-text-
+   tab.tsx), which `text-align:center` on the cell can't center — that
+   only aligns inline content. `margin:auto` centers the block itself. */
+.perf-speech .sp-topics-table .table-scroll td:nth-child(2) .hbar-t {
+  margin-left: auto;
+  margin-right: auto;
+}
+.perf-speech .sp-agents-table .table-scroll th:nth-child(n + 2),
+.perf-speech .sp-agents-table .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }

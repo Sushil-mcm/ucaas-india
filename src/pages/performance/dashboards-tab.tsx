@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bot, Headset, Megaphone, PhoneCall, Timer as TimerIcon, Users } from 'lucide-react';
+import { Layers, Megaphone, Users, PhoneIncoming, Clock, Bot } from 'lucide-react';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { SocketEvents } from '@/context/socket-events-context';
 import { useUser } from '@/hooks/use-user';
@@ -9,46 +9,27 @@ import { callQueueList, campaignList } from '@/services/api';
 import { useAnimatedNumber } from './use-animated-number';
 import { useCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
+import PerfStatCard from './stat-card';
+import './dashboards-theme.css';
 
 const TODAY_RANGE = handleDate('Today');
-
-const StatCard = ({
-  index,
-  label,
-  value,
-  sub,
-  Icon,
-}: {
-  index: number;
-  label: string;
-  value: string;
-  sub?: string;
-  Icon: any;
-}) => (
-  <div className="animate-dashboard-card-in stat" style={{ animationDelay: `${index * 70}ms` }}>
-    <div className="flex items-start justify-between gap-2">
-      <span className="k">{label}</span>
-      <span
-        className="flex h-6 w-6 items-center justify-center rounded-full"
-        style={{ background: 'var(--accent-wash)', color: 'var(--accent-ink)' }}
-      >
-        <Icon className="h-3.5 w-3.5" />
-      </span>
-    </div>
-    <div className="v num">{value}</div>
-    {sub && (
-      <div className="d" style={{ color: 'var(--ink-3)', fontWeight: 500 }}>
-        {sub}
-      </div>
-    )}
-  </div>
-);
 
 const DashboardsTab = () => {
   const { usersOnlineStatus } = useSocketEvents();
   const { campaignAiLiveCallData, getAiLiveWallboardData, isSocketConnected } =
     useContext(SocketEvents);
   const { user } = useUser();
+
+  /* The warm ambient backdrop AND the shared KPI hero band (Waiting /
+     Longest wait / Service / Volume / Coverage, rendered by index.tsx one
+     level up) both key off this body class — the same convention Queues/
+     Agents/Calls/Flows already use. Dashboards is already in
+     SHOW_KPI_HEADER_TABS, so toggling this is what actually themes that
+     band instead of leaving it on the old plain-card look. */
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
 
   const canRefreshAi = Boolean(
     user?.sip_credentials?.domain &&
@@ -96,58 +77,46 @@ const DashboardsTab = () => {
   const answeredAnimated = useAnimatedNumber(callStats.answeredCalls);
   const ahtAnimated = useAnimatedNumber(avgHandleTime);
 
+  const hasAiContainment = typeof aiContainment === 'number';
+
   return (
-    <div className="w-full px-[22px] py-4">
-      <style>{`
-        @keyframes dashboard-card-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-dashboard-card-in {
-          animation: dashboard-card-in 0.4s ease-out both;
-        }
-      `}</style>
-      <p className="page-note" style={{ marginBottom: 12 }}>
-        A quick-glance overview across queues, campaigns and agents.
-      </p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <StatCard
-          index={0}
-          label="Active Queues"
-          value={String(Math.round(queuesAnimated))}
-          Icon={Headset}
-        />
-        <StatCard
-          index={1}
+    <div className="perf-dashboards w-full px-[22px] py-4">
+      <div className="db-caption">A quick-glance overview across queues, campaigns and agents.</div>
+
+      <div className="db-bento grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <PerfStatCard label="Active Queues" value={String(Math.round(queuesAnimated))} icon={Layers} />
+        <PerfStatCard
           label="Active Campaigns"
           value={String(Math.round(campaignsAnimated))}
           sub={`of ${campaigns.length} total`}
-          Icon={Megaphone}
+          icon={Megaphone}
         />
-        <StatCard
-          index={2}
+        <PerfStatCard
           label="Agents Online"
           value={String(Math.round(agentsAnimated))}
-          Icon={Users}
+          sub={
+            <span className="db-live-dot-wrap">
+              <span className="db-live-dot" />
+              online now
+            </span>
+          }
+          icon={Users}
         />
-        <StatCard
-          index={3}
+        <PerfStatCard
           label="Answered Today"
           value={String(Math.round(answeredAnimated))}
-          Icon={PhoneCall}
+          icon={PhoneIncoming}
         />
-        <StatCard
-          index={4}
+        <PerfStatCard
           label="Avg Handle Time"
           value={callStats.avgHandleSec === null ? '—' : formatSecsToClock(ahtAnimated)}
-          Icon={TimerIcon}
+          icon={Clock}
         />
-        <StatCard
-          index={5}
+        <PerfStatCard
           label="AI Containment"
-          value={typeof aiContainment === 'number' ? `${Math.round(aiContainment)}%` : '—'}
+          value={hasAiContainment ? `${Math.round(aiContainment)}%` : '—'}
           sub="resolved without a human"
-          Icon={Bot}
+          icon={Bot}
         />
       </div>
     </div>
