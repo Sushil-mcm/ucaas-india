@@ -846,26 +846,12 @@ const InnerSidebarInbox = (props: any) => {
           />
         )}
       </TabsContent>
-      {/* The mode switch lives at the foot of the column, pinned, so it stays
-          put while the conversations scroll. It is a destination switch, not a
-          filter on the list -- keeping it out of the header lets the search
-          and the first conversation sit at the top where they are read. */}
-      <div className="mcm-col-foot">
-        <TabsList className="mcm-seg" style={{ width: '100%' }}>
-          {messagesAccess?.send_message || messagesAccess?.send_mms ? (
-            <TabsTrigger value="messages">
-              <MessageSquareText className="size-3.5" />
-              SMS / MMS
-            </TabsTrigger>
-          ) : null}
-          {messagesAccess?.send_fax && (
-            <TabsTrigger value="fax">
-              <Printer className="size-3.5" />
-              Fax
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </div>
+      {/* Upstream pinned a second copy of the SMS/MMS + Fax switch here, at the
+          foot of the column. Taking that alongside our own switch in
+          .mcm-col-tabrow left the column showing the same two tabs twice —
+          once under the New button and again at the bottom. Only one belongs,
+          and it is the top one: it shares the row with New, which otherwise
+          sits on a row of its own. */}
     </Tabs>
   );
 };
