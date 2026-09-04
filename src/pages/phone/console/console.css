@@ -478,9 +478,14 @@
 }
 .mcm-console .phone-grid {
   /* list is fixed, the stage takes the slack (it holds the softphone and the
-     call record), the panel is bounded so the transcript stays readable */
+     call record), the panel is bounded so the transcript stays readable.
+
+     352px is 22rem — the same width Chat, Agent Chat, Inbox, Video and
+     Campaign give their list column, so the five Activity screens line up
+     rather than each picking its own. The 32px comes off the stage, which is
+     the one column here that takes slack. */
   display: grid;
-  grid-template-columns: 320px minmax(420px, 1fr) minmax(400px, 460px);
+  grid-template-columns: 352px minmax(420px, 1fr) minmax(400px, 460px);
   height: 100%;
   overflow: hidden;
 }

@@ -16,9 +16,18 @@ const PageSidebarLayout = ({
   headerCustomClass = '',
   fullHeightOnMobile = false,
   collapsible = true,
+  widthClass = '',
 }: {
   title?: string;
   hideHeading?: boolean;
+  /** Overrides the width this layout would pick for itself.
+   *
+   *  Eleven sections share this component, so widening the branch a section
+   *  happens to fall into would drag the other ten with it. Video and Campaign
+   *  pass their own width to sit at the same 22rem as Chat's list; everything
+   *  else keeps the width it had. Ignored while collapsed, which is 0 either
+   *  way. */
+  widthClass?: string;
   headerCustomClass?: string;
   icon?: any;
   content: any;
@@ -83,7 +92,9 @@ const PageSidebarLayout = ({
                   : 'border-r border-gray-200 ',
         collapsed
           ? 'w-[0rem] min-w-[0rem]'
-          : isTab
+          : widthClass
+            ? widthClass
+            : isTab
             ? 'w-full min-w-0 lg:min-w-[19rem] lg:max-w-[19rem] xl:min-w-[22rem] xl:max-w-[22rem]'
             : title === 'Reports'
               ? 'w-full min-w-0 max-w-full md:min-w-[14rem] md:max-w-[14rem]'
