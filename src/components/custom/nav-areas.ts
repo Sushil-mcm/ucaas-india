@@ -166,7 +166,14 @@ export const DIRECTORY_VIEWS: AreaView[] = [
   { key: 'groups', label: 'Groups', icon: 'DepartmentIcon' },
   { key: 'roles', label: 'Roles', icon: 'AdminIcon' },
   { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
-  { key: 'external', label: 'External Contacts', icon: 'InboxIcon', altPaths: ['/contact'] },
+  {
+    key: 'external',
+    label: 'External Contacts',
+    icon: 'InboxIcon',
+    /* Both open from a row on this list — "New contact" and the clock icon's
+       contact Activity — so both stay inside Directory with the rail up. */
+    altPaths: ['/contact', '/contact-activity'],
+  },
   { key: 'favourites', label: 'Favourites', icon: 'Star' },
   { key: 'blocked', label: 'Blocked', icon: 'AdminIcon' },
 ];
@@ -223,6 +230,13 @@ const externalViewPrefixes = (): { prefix: string; area: AreaId }[] =>
   (Object.keys(AREA_VIEWS) as AreaId[]).flatMap((area) =>
     (AREA_VIEWS[area]?.views ?? []).flatMap((view) => {
       const prefix = view.match || (view.href ? view.href.split('?')[0] : '');
-      return prefix ? [{ prefix, area }] : [];
+      /* `altPaths` claims the area too, not just the rail highlight.
+         Without this a view's alternate path matched no nav item and no area
+         base, fell through to the segment guess, and landed on Home — so
+         opening a contact's Activity from External Contacts dropped the whole
+         Directory rail and the screen read as somewhere else entirely. The
+         rail already lit the right item for these paths (see sidebar.tsx's
+         altPathViewKey); this makes the area agree with it. */
+      return [...(prefix ? [{ prefix, area }] : []), ...(view.altPaths ?? []).map((alt) => ({ prefix: alt, area }))];
     }),
   );
