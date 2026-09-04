@@ -3366,15 +3366,20 @@
   /* Sits on the same baseline as the main head's title opposite it.
 
      Both rows are 65px with the same padding and `align-items: center`, so
-     their line boxes centre together -- but centred boxes align centres, not
-     baselines. For a centred line the baseline lands at `lineHeight/2 +
-     0.25 * fontSize`, so this 13px title and the 18px `.mcm-adminhead-title
-     h1` beside it come out ~1.25px apart whatever line-height either uses.
-     Being uppercase, this one also has no descenders to fill the gap below
-     it, which reads as higher still. The nudge closes both. */
+     their line boxes centre together -- but centring aligns box centres, not
+     baselines. Centred in a row, a line's baseline lands at
+     `rowCentre + fontSize * (ascender - descender) / 2`, independent of
+     line-height. Plus Jakarta Sans runs ascender 1.0em, descender 0.26em, so
+     that factor is 0.37 and this 13px title sits 0.37 * (18 - 13) = 1.85px
+     above the 18px `.mcm-adminhead-title h1` beside it. Being uppercase, it
+     has no descenders to fill the space below it either, which reads higher
+     still. 2px closes both to within a fraction of a pixel.
+
+     Do not "simplify" this to a round 1px: that was the first attempt, and
+     it left most of the gap visible. */
   line-height: 1.3;
   position: relative;
-  top: 1px;
+  top: 2px;
 }
 
 /* ---- Side drawer carrying a console form ----
