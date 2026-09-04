@@ -17,6 +17,19 @@ import type { CallerIdOption } from '@/components/dialpad/types';
  * Once these are assigned as DIDs they will arrive from the API on their own
  * and should be deleted from here, or they will appear twice.
  */
+/**
+ * True for the numbers above.
+ *
+ * The dialpad's caller-ID list draws a flag in place of these labels rather
+ * than printing "India 1" … "India 10": ten rows all saying India told you
+ * nothing the number beside it did not, and the count was only ever there to
+ * keep the ids apart. Matching on the id prefix rather than `country`, because
+ * an assigned DID from the API can be Indian too and those keep their real
+ * labels ("Main DID", "DID 2").
+ */
+export const isIndiaCallerIdOption = (option?: { id?: string } | null) =>
+  Boolean(option?.id?.startsWith('india-caller-id-'));
+
 export const INDIA_CALLER_ID_OPTIONS: CallerIdOption[] = [
   { id: 'india-caller-id-1', label: 'India 1', country: 'IN', number: '+918037683127' },
   { id: 'india-caller-id-2', label: 'India 2', country: 'IN', number: '+918037683128' },

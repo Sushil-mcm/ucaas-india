@@ -15,6 +15,8 @@ import { useConsoleDialer } from './dial-number';
 import CallRecord from './call-record';
 import { isTerminalSession, mmss, type ConsoleCallState } from './use-console-call';
 import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
+import ReactCountryFlag from 'react-country-flag';
+import { isIndiaCallerIdOption } from '@/lib/india-caller-ids';
 import type { Call as TwilioCall } from '@twilio/voice-sdk';
 import type { CallerIdOption } from '@/components/dialpad/types';
 import {
@@ -675,7 +677,21 @@ const StageColumn = ({
                             }}
                           >
                             <span className="k" style={{ minWidth: 62 }}>
-                              {option.label}
+                              {/* `svg` matters: without it react-country-flag
+                                  emits the flag emoji, and Windows ships no
+                                  glyph for regional-indicator pairs — every row
+                                  would read "IN" instead of a flag. */}
+                              {isIndiaCallerIdOption(option) ? (
+                                <ReactCountryFlag
+                                  countryCode="IN"
+                                  svg
+                                  title="India"
+                                  aria-label="India"
+                                  style={{ width: '1.35em', height: '1.35em' }}
+                                />
+                              ) : (
+                                option.label
+                              )}
                             </span>
                             <span className="v" style={{ flex: 1 }}>
                               {option.number}
