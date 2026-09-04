@@ -3373,13 +3373,18 @@
      that factor is 0.37 and this 13px title sits 0.37 * (18 - 13) = 1.85px
      above the 18px `.mcm-adminhead-title h1` beside it. Being uppercase, it
      has no descenders to fill the space below it either, which reads higher
-     still. 2px closes both to within a fraction of a pixel.
+     still.
 
-     Do not "simplify" this to a round 1px: that was the first attempt, and
-     it left most of the gap visible. */
+     2px is the geometric figure. All-caps needs about a pixel more on top of
+     it, because the eye centres a line of capitals on its cap height while
+     the mixed-case title opposite is centred on a body that includes
+     descenders -- so matching baselines alone still reads high.
+
+     Do not "simplify" this back towards 1px: 1px and 2px were both tried and
+     both left the gap visible on screen. */
   line-height: 1.3;
   position: relative;
-  top: 2px;
+  top: 3px;
 }
 
 /* ---- Side drawer carrying a console form ----
