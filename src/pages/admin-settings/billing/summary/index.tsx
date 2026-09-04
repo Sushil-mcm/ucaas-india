@@ -177,6 +177,7 @@ const BillingSummary = () => {
 
   return (
     <AdminPage
+      hideHead
       section="Billing"
       title="Billing summary"
       description="What you are paying for, what is due next, and what you have paid before."

@@ -59,6 +59,7 @@ const CapabilityMatrixPage = () => {
 
   return (
     <AdminPage
+      hideHead
       section="People"
       title="What each role can do"
       description="Every capability in the product, and which kind of person gets it. Read the five principles above the table and the rest follows from them."

@@ -178,6 +178,7 @@ const StatementOfAccount = () => {
   if (isPlanError || isTxnError) {
     return (
       <AdminPage
+      hideHead
         section="Billing"
         title="Statement of account"
         description="Everything charged and consumed on this account so far."

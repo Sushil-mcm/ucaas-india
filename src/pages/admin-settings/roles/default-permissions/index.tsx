@@ -212,6 +212,7 @@ const DefaultPermissionsPage = () => {
 
   return (
     <AdminPage
+      hideHead
       section="People"
       title="Default permissions"
       description="Step 4 of four. What each kind of person should be able to do on their first day, and why. Write a recommendation down as a role, then pick it when adding people."

@@ -313,6 +313,7 @@ const CallQueues: FC = () => {
   return (
     <>
       <AdminPage
+      hideHead
         section="Phone System"
         title="Call queues"
         description="Where incoming calls wait, and which people answer them. Queues can be company-wide or tied to one location."

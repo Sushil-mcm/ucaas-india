@@ -73,6 +73,7 @@ const SipTrunks = () => {
   return (
     <>
       <AdminPage
+      hideHead
         section="Numbers"
         title="SIP trunks"
         description="The connection to your carrier. Your +91 numbers arrive over this, and outbound calls leave through it."

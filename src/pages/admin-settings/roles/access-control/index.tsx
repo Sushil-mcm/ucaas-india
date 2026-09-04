@@ -63,6 +63,7 @@ const AccessControlPage = () => {
 
   return (
     <AdminPage
+      hideHead
       section="People"
       title="How access works"
       description="Who can do what, in four steps. Start here, then work down: the later steps assume the earlier ones have been answered."

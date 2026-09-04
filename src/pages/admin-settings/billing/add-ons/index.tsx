@@ -127,6 +127,7 @@ const AddOns = () => {
 
   return (
     <AdminPage
+      hideHead
       title="Add-ons"
       description="Extras you can have on top of your plan, and which ones you already have."
     >

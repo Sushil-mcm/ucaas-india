@@ -51,6 +51,7 @@ const BillingResources = () => {
   if (isError) {
     return (
       <AdminPage
+      hideHead
         section="Billing"
         title="Licences & resources"
         description="What this account holds — seats, numbers, storage and AI usage — and who is using them."

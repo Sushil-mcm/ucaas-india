@@ -235,6 +235,7 @@ const AdminScopePage = () => {
 
   return (
     <AdminPage
+      hideHead
       section="People"
       title="Admin scope"
       description="Step 3 of four. A role says what somebody may do. This says who they may do it to — the whole company, chosen locations, or chosen departments."

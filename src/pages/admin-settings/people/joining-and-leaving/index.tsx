@@ -88,6 +88,7 @@ const JoiningAndLeaving = () => {
 
   return (
     <AdminPage
+      hideHead
       section="People"
       title="Joining and leaving"
       description="What somebody receives when you add them, what they start out able to do, and what happens to their number, their data and their account when they go."

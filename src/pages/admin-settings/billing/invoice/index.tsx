@@ -263,6 +263,7 @@ const Invoice = () => {
 
   return (
     <AdminPage
+      hideHead
       section="Billing"
       title="Invoices"
       description="Every charge raised on the account, with its tax broken out. Open a row to see what it covered."

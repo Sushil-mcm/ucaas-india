@@ -400,6 +400,7 @@ const Usage = () => {
 
   return (
     <AdminPage
+      hideHead
       section="Billing"
       title="Usage"
       description="What your plan includes against what has been used, and where the charges went."

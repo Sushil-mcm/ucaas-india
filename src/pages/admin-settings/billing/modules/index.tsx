@@ -120,6 +120,7 @@ const BillingModules = () => {
 
   return (
     <AdminPage
+      hideHead
       section="Billing"
       title="Modules & access"
       description="Which parts of the product this account can use, and why anything missing is missing."

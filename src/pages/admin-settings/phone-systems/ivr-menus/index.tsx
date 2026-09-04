@@ -134,6 +134,7 @@ const IvrMenus: FC = () => {
   return (
     <>
       <AdminPage
+      hideHead
         section="Phone System"
         title="IVR menus"
         description="Automated menus that greet callers and route them. Assign one to any number to control greetings, routing and voicemail."

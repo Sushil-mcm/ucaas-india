@@ -46,6 +46,7 @@ const IdentitiesAndAddressesPageLayout = () => {
   return (
     <>
       <AdminPage
+      hideHead
         section="Numbers"
         title="Identities & addresses"
         description="The registered identities and service addresses your numbers are issued against. Records are created while buying a number that requires one — this page is where you review and edit them."

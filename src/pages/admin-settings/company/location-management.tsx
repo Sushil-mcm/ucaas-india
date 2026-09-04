@@ -349,6 +349,7 @@ const LocationManagement = () => {
   if (!canView) {
     return (
       <AdminPage
+      hideHead
         section="Company"
         title="Location management"
         description="Every location your company works from, side by side."

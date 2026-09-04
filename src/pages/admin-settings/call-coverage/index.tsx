@@ -231,6 +231,7 @@ const CallCoverage = () => {
   return (
     <>
       <AdminPage
+      hideHead
         section="Numbers"
         title="Call coverage"
         description="Which numbers and extensions would drop a call right now, and what it takes to close each gap."

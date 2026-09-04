@@ -89,6 +89,7 @@ const CostCentres = () => {
 
   return (
     <AdminPage
+      hideHead
       title="Cost centres"
       description="Labels your finance team can report spending against — a department, a project, a client."
     >
