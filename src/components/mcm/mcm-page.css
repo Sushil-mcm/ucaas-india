@@ -5284,7 +5284,9 @@
 .mcm-page .cs-head {
   --cs-inset: 12px;
   flex: none;
-  padding: 18px var(--cs-inset) 0;
+  /* No padding above: the breadcrumb and title this used to space are gone, so
+     the tab row is the first thing in here and carries its own 56px height. */
+  padding: 0 var(--cs-inset);
   background: var(--surface);
   /* The closing hairline is drawn by the tab row below, not by a border here.
      See .tabnav::before for why. */
@@ -5374,7 +5376,9 @@
 /* The gap between the description and the tabs. Held here rather than on the
    tab bar so the bar stays a component that can open any header. */
 .mcm-page .cs-head .tabnav {
-  margin-top: 16px;
+  /* Was 16px, separating the tabs from the title above them. Nothing is above
+     them now. */
+  margin-top: 0;
 }
 
 /* Both of these carry three classes on purpose. `.mcm-userform` styles this same
@@ -5943,14 +5947,15 @@
    leaves the 48px targets alone. */
 @media (max-width: 640px) {
   .mcm-page .cs-head {
-    padding-top: 14px;
+    padding-top: 0;
   }
   .mcm-page .cs-title {
     font-size: 18px;
     line-height: 26px;
   }
   .mcm-page .cs-head .tabnav {
-    margin-top: 12px;
+    /* Was 12px on narrow screens, for the same title that is gone. */
+    margin-top: 0;
   }
   /* Two 48px chevrons would mask 96px of a 320px row — most of a third of it.
      Narrower still shows where the row continues without taking the space the
