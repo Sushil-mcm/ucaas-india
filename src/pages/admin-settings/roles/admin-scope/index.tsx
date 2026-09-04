@@ -29,6 +29,7 @@ import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { handleAlert } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
@@ -237,41 +238,11 @@ const AdminScopePage = () => {
   const toggleIn = (list: string[], uuid: string) =>
     list.includes(uuid) ? list.filter((item) => item !== uuid) : [...list, uuid];
 
-  /* Who is not on the list yet. Somebody can only hold one scope, so the picker
-     offers everybody who does not already have one — and never the signed-in
-     person, who is not allowed to decide their own reach. */
-  const unassigned = roster.filter(
-    (person) =>
-      !scopes.some((scope) => scope.personUuid === person.uuid) &&
-      mayEdit(blankScope(person.uuid)).allowed,
-  );
-
   return (
     <AdminPage
       hideHead
       title="Admin scope"
       description="A role says what somebody may do. This says who they may do it to — the whole company, chosen locations, or chosen departments."
-      actions={
-        <select
-          aria-label="Choose a person to give a scope to"
-          className="h-9 min-w-56 rounded-md border border-gray-300 bg-white px-3 text-sm outline-none focus:border-primary disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-500"
-          value=""
-          disabled={unassigned.length === 0}
-          onChange={(event) => {
-            if (!event.target.value) return;
-            setEditing(blankScope(event.target.value));
-          }}
-        >
-          <option value="">
-            {unassigned.length ? 'Give someone a scope…' : 'Everybody has one'}
-          </option>
-          {unassigned.map((person) => (
-            <option key={person.uuid} value={person.uuid}>
-              {person.name}
-            </option>
-          ))}
-        </select>
-      }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
         {isLoading || peopleLoading ? (
@@ -410,12 +381,21 @@ const AdminScopePage = () => {
               </div>
             </div>
 
-            {editing ? (
-              <SettingCard
-                title={`How far ${personName(editing.personUuid)} reaches`}
-                icon={<Users className="h-4 w-4" />}
-                description="Everything inside the scope is theirs to administer. Everything outside it is not."
-              >
+            {/* A dialog, not a panel under the table. Opened from a row that
+                can be most of a screen down, the editor used to appear below
+                everything and needed scrolling to find -- the click looked as
+                though it had done nothing. */}
+            <Dialog
+              open={Boolean(editing)}
+              onOpenChange={(next) => (next ? undefined : setEditing(null))}
+            >
+              <DialogContent className="max-w-xl p-0" showCloseButton={false}>
+                {editing ? (
+                  <SettingCard
+                    title={`How far ${personName(editing.personUuid)} reaches`}
+                    icon={<Users className="h-4 w-4" />}
+                    description="Everything inside the scope is theirs to administer. Everything outside it is not."
+                  >
                 {TIERS.map((tier) => (
                   <SettingRow
                     key={tier.tier}
@@ -541,21 +521,23 @@ const AdminScopePage = () => {
                   />
                 ))}
 
-                <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-                  <Button type="button" variant="transparent" onClick={() => setEditing(null)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    disabled={!canSaveEditor}
-                    onClick={commitEditor}
-                  >
-                    Use this scope
-                  </Button>
-                </div>
-              </SettingCard>
-            ) : null}
+                    <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+                      <Button type="button" variant="transparent" onClick={() => setEditing(null)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        disabled={!canSaveEditor}
+                        onClick={commitEditor}
+                      >
+                        Use this scope
+                      </Button>
+                    </div>
+                  </SettingCard>
+                ) : null}
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </div>
