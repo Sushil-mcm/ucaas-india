@@ -1,8 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { Icon } from '@/assets/icons/icon';
 import Loader from '@/components/custom/loader';
-import MeetingHeader from '../upcoming-meetings/header';
 import {
   formatMeetingDate,
   formatTime,
@@ -76,14 +74,6 @@ const OngoingMeetings = () => {
   });
   const observerTarget = useRef(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const formInstance = useForm<any>({
-    defaultValues: {
-      inviteOthers: [],
-      members: [],
-      meeting_id: '',
-    },
-  });
-
   const {
     data,
     fetchNextPage,
@@ -168,13 +158,12 @@ const OngoingMeetings = () => {
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3 overflow-auto p-3 sm:p-4">
       <div className="mx-auto max-w-250 flex h-full min-h-0 w-full flex-col justify-start gap-6 sm:gap-8">
-        <MeetingHeader formInstance={formInstance} />
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex justify-between items-center">
-            <h4
-              className="font-semibold text-lg flex items-center gap-1"
-              style={{ color: '#8A3F1C' }}
-            >
+            {/* Neutral ink, not the glass theme's brown: the section head
+                above these lists is the shared Activity head now, and a
+                brown subhead under a black title read as two designs. */}
+            <h4 className="font-semibold text-lg flex items-center gap-1 text-gray-900">
               Ongoing Meetings <InfoIcon className="w-3 h-3 text-[#9A948F]" />
             </h4>
             <Button

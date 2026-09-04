@@ -141,12 +141,12 @@ const PageSidebarLayout = ({
             <div className={`flex gap-1 items-center ${headerCustomClass}`}>
               <span>{icon}</span>
               {hideHeading ? null : (
-                <h4
-                  className={cn('font-semibold text-lg', !isGlassSidebar && 'text-gray-900')}
-                  style={isGlassSidebar ? { color: '#8A3F1C' } : undefined}
-                >
-                  {title}
-                </h4>
+                /* One rail heading for the whole product. Meetings and
+                   Campaign printed theirs in the glass theme's brown
+                   (#8A3F1C), so the same control read as two different
+                   things depending on which section you were in. Phone's
+                   neutral dark heading is the one they all take now. */
+                <h4 className="font-semibold text-lg text-gray-900">{title}</h4>
               )}
             </div>
             {action && action}

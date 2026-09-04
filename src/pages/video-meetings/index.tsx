@@ -8,6 +8,7 @@ import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar, { meetingSidebarArr } from './sidebar';
+import MeetingHeader from './upcoming-meetings/header';
 
 const VideoMeetings = () => {
   const { features } = useCompanyFeatures();
@@ -64,16 +65,20 @@ const VideoMeetings = () => {
       />
 
       <div className="relative hidden h-full md:block">
-        <PageSidebarLayout isTab={false} title="Meetings" content={<Sidebar />} />
+        {/* `hideHeading`, not a dropped `title`: the title still selects
+            this layout's glass variant. The page head prints "Meetings"
+            now, so the rail printed the same word again beside it. */}
+        <PageSidebarLayout isTab={false} title="Meetings" hideHeading content={<Sidebar />} />
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] md:hidden">
-          <div className="px-4 pt-4">
-            <h2 className="text-lg font-semibold text-[#2E2D35]">Meetings</h2>
-            <p className="text-xs text-[#9A948F]">Browse meeting sections</p>
-          </div>
+        {/* One head for the section, above the outlet: full-bleed against
+            the rail, and its Join/Schedule dialogs survive moving between
+            Upcoming, Ongoing, Past and Invited. The mobile bar below keeps
+            only its nav chips -- the head prints the title now. */}
+        <MeetingHeader />
 
+        <div className="border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] md:hidden">
           <div className="flex gap-2 overflow-x-auto px-3 py-3">
             {mobileNavItems.map((item: any) => {
               const isActive = pathname === item.path;

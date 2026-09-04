@@ -27,6 +27,7 @@ import {
   pct,
   readOutcomes,
 } from './campaign-ui';
+import ActivityPageHead from '@/components/custom/activity-page-head';
 import '@/components/mcm/mcm-page.css';
 import './campaign.css';
 
@@ -524,33 +525,38 @@ const Campaign = ({ embedded = false }: { embedded?: boolean }) => {
   return (
     <div className={`mcm-page cmp${embedded ? ' embedded' : ''}`}>
       <McmIconSprite />
-      <div className="page">
-        {!embedded && (
-          <div className="page-head">
-            <div>
-              <div className="eyebrow">Campaign · Outbound</div>
-              <h1>Campaigns</h1>
-              <p>
-                Every outbound calling campaign, with its contact outcomes and agent load on one
-                line. Open a campaign to watch it dial.
-              </p>
-            </div>
-            <button className="btn ghost" type="button" onClick={() => navigate('/campaign/leads')}>
-              <Ic n="users" />
-              Lead groups
-            </button>
-            {campaignAccess?.add && (
+      {/* The head Activity's screens carry (Phone, Chat, Agent Chat, Inbox):
+          a white bar with a black title and the description behind the info
+          button, rather than the brown eyebrow/title stack this page had. */}
+      {!embedded && (
+        <ActivityPageHead
+          title="Campaigns"
+          description="Every outbound calling campaign, with its contact outcomes and agent load on one line. Open a campaign to watch it dial."
+          actions={
+            <>
               <button
-                className="btn primary"
+                className="mcm-acthead-btn"
                 type="button"
-                onClick={() => setDrawerState({ selectedCampaign: null, isModalOpen: true })}
+                onClick={() => navigate('/campaign/leads')}
               >
-                <Ic n="plus" />
-                New campaign
+                <Ic n="users" />
+                Lead groups
               </button>
-            )}
-          </div>
-        )}
+              {campaignAccess?.add && (
+                <button
+                  className="mcm-acthead-btn primary"
+                  type="button"
+                  onClick={() => setDrawerState({ selectedCampaign: null, isModalOpen: true })}
+                >
+                  <Ic n="plus" />
+                  New campaign
+                </button>
+              )}
+            </>
+          }
+        />
+      )}
+      <div className="page">
 
         {!embedded && (
           <div className="kpis kpis-cols-6">

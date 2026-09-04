@@ -43,10 +43,14 @@
   text-overflow: ellipsis;
 }
 
-/* Same control as Directory's `.page-head-info` and Admin's
+/* Selected through the title row, not on its own class: Campaign puts this
+   head inside `.mcm-page`, whose unlayered `button` reset (0,2,1) strips the
+   border and background off anything less specific.
+
+   Same control as Directory's `.page-head-info` and Admin's
    `.mcm-adminhead-info`: one shape for "there is more to say about this
    screen", wherever you meet it. */
-.mcm-acthead-info {
+.mcm-acthead .mcm-acthead-title .mcm-acthead-info {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +68,7 @@
     background 0.15s;
 }
 
-.mcm-acthead-info:hover {
+.mcm-acthead .mcm-acthead-title .mcm-acthead-info:hover {
   color: var(--accent-ink, #c96f1f);
   border-color: var(--accent-edge, #ffd9ad);
   background: var(--accent-wash, #fff1e0);
@@ -90,4 +94,67 @@
 .mcm-actpage > :not(.mcm-acthead) {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Head actions.
+
+   The head was written for screens whose controls all live in the columns
+   below it, so `actions` had no styling of its own -- Campaign and Meetings
+   are the first to put buttons up here. They are deliberately quiet and
+   short (32px, 12.5px label): the head is one line tall, and a button built
+   at page scale makes it two.
+
+   Selected through `.mcm-acthead-actions` for the reason above the info
+   button: three classes clear `.mcm-page`'s unlayered button reset.
+   --------------------------------------------------------------------------- */
+
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line, #eee7dd);
+  background: #fff;
+  color: var(--ink-2, #3d4a63);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn:hover:not(:disabled) {
+  color: var(--accent-ink, #c96f1f);
+  border-color: var(--accent-edge, #ffd9ad);
+  background: var(--accent-wash, #fff1e0);
+}
+
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #e78b50, #d9652e);
+  color: #fff;
+}
+
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn.primary:hover:not(:disabled) {
+  color: #fff;
+  border-color: transparent;
+  filter: brightness(1.05);
+}
+
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* The icon inside an action button, at label scale rather than its own. */
+.mcm-acthead .mcm-acthead-actions .mcm-acthead-btn svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
 }
