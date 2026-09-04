@@ -191,7 +191,10 @@ export const PERFORMANCE_VIEWS: AreaView[] = [
   // The top-bar shortcuts, moved down here so the bar itself stays lean.
   { key: 'ext-tasks', label: 'Tasks', icon: 'ReportsLineIcon', href: '/calendar?view=task-list', sep: true },
   { key: 'ext-calendar', label: 'Calendar', icon: 'CalendarLine', href: '/calendar?view=calendar' },
-  { key: 'ext-campaigns', label: 'Dialer', icon: 'DialerIcon', href: '/my-campaigns' },
+  /* "Dialer" named the tool; this tile opens /my-campaigns, which is the
+     agent's own campaign list. The rail label wraps to two lines, so the
+     longer name costs nothing. */
+  { key: 'ext-campaigns', label: 'My Campaign', icon: 'DialerIcon', href: '/my-campaigns' },
   // Activity and Monitoring depend on the signed-in user (their uuid, their
   // role/plan access) so their real href is resolved in useAreaNav — this
   // placeholder just claims the slot and the icon.
