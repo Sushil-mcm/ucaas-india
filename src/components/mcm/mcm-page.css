@@ -3220,7 +3220,12 @@
    every Admin screen reads the same whether or not it has been moved onto
    `AdminPage`. Pages on the new shell hide this block entirely. */
 .mcm-admin .min-h-\[65px\] {
-  min-height: 62px;
+  /* 65px, not 62. The comment above says these take the console page head's
+     proportions, and that head -- `.mcm-adminhead` -- is 65px. Three pixels
+     short left the sidebar's own title bar shorter than the page head beside
+     it, so the two titles were centred in rows of different heights and could
+     not sit level however the text was nudged. */
+  min-height: 65px;
   align-items: center;
   padding-top: 12px;
   padding-bottom: 12px;
