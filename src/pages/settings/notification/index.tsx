@@ -1,4 +1,5 @@
 import { getUserDetails, updateUserSettings } from '@/services/api';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,6 +14,10 @@ import PhoneInput from 'react-phone-input-2';
 // import Breadcrumb from '@/components/custom/breadcrumb';
 
 const SettingsNotification = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'What you get alerted about, and whether it arrives in the browser, by email or both.' });
+
   // const breadcrumbData = [{ label: 'Settings' }, { label: 'Notification' }];
   const { data: userInfoData } = useQuery({
     queryKey: ['getUserDetailsForNotification'],
@@ -76,14 +81,6 @@ const SettingsNotification = () => {
   return (
     <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
       {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-      <div className="flex items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
-        <div>
-          <p className="text-[#2E2D35] font-semibold text-lg">Notifications</p>
-          <p className="text-[#9A948F] text-xs">
-            What you get alerted about, and whether it arrives in the browser, by email or both.
-          </p>
-        </div>
-      </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="gap-3 p-3 flex flex-col justify-between h-full"

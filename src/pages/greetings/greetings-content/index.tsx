@@ -1,4 +1,5 @@
 import { FC, useState } from 'react';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteGreeting, deleteMedia, getGreetings } from '@/services/api';
 import { Icon, IconName } from '@/assets/icons/icon';
@@ -26,6 +27,10 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import { useCompanyFeatures } from '@/hooks/rbac';
 
 const GreetingContent: FC = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: typeBlurb[type] || typeBlurb.all });
+
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -238,14 +243,6 @@ const GreetingContent: FC = () => {
     <section className="w-full overflow-auto  ">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
         <div>
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            Media Files{' '}
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">{capitalizeFirstLetter(type)}</span>
-          </p>
-          <p className="text-gray-500 text-xs">{typeBlurb[type] || typeBlurb.all}</p>
           <div className="mt-2 flex flex-wrap gap-1">
             {TYPE_TABS.map((tab) => (
               <button

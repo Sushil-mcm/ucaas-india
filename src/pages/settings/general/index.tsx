@@ -1,5 +1,6 @@
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import CommonSettingPermission from '@/components/common-settings';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
 import { POLICY_FIELDS, useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
 import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
@@ -21,6 +22,10 @@ interface GeneralProps {
 }
 
 export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'Your own regional settings, business hours and call handling. Company-wide rules live under Phone System → Preferences.' });
+
   // const breadcrumbData = [{ label: 'Settings' }, { label: 'General' }];
   const queryClient: any = useQueryClient();
   const [schemaContext, setSchemaContext] = useState<any>(null);
@@ -219,15 +224,6 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
     <>
       <section className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-gray-200/15">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div>
-            <p className="text-gray-900 font-semibold text-lg">{heading}</p>
-            <p className="text-gray-500 text-xs">
-              Your own regional settings, business hours and call handling. Company-wide rules live
-              under Phone System → Preferences.
-            </p>
-          </div>
-        </div>
         <div className="flex min-h-0 flex-1 flex-col p-3">
           <FormProvider {...methods}>
             <form

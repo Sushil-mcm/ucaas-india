@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useUser } from '@/hooks/use-user';
 import { handleAlert, capitalizeFirstLetter } from '@/lib/utils';
 import { deviceSecurityList, logout } from '@/services/api';
@@ -14,6 +15,10 @@ import ChangePassword from '@/pages/change-password';
 import { KeyRound } from 'lucide-react';
 
 const Security = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'Your password, and every device currently signed in as you.' });
+
   const { user } = useUser();
   const [search, setSearch] = useState('');
   const [selectedUserExtension, setSelectedUserExtension] = useState<string>('');
@@ -101,14 +106,6 @@ const Security = () => {
 
   return (
     <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
-        <div>
-          <p className="text-[#2E2D35] font-semibold text-lg">Security & Privacy</p>
-          <p className="text-[#9A948F] text-xs">
-            Your password, and every device currently signed in as you.
-          </p>
-        </div>
-      </div>
       <div className="gap-3 flex flex-col w-full h-full p-3">
         <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg border border-[rgba(225,200,165,0.9)]">
           <div className="flex flex-col gap-1 sm:w-1/2 w-full">

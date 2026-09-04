@@ -1,4 +1,5 @@
 import FileCropper from '@/components/custom/file-cropper';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -28,6 +29,10 @@ export const BasicInfoSettingSchema = yup.object().shape({
 });
 
 const BasicInfoSettings = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'Your name, job title and location as colleagues see them in the directory — and below, how calls actually reach you.' });
+
   const [image, setImage] = useState<any>(null);
   const [fileName, setFileName] = useState<any>(null);
   const [modalState, setModalState] = useState(false);
@@ -174,15 +179,6 @@ const BasicInfoSettings = () => {
     <>
       <section className="flex h-full w-full flex-col overflow-hidden bg-gray-200/15">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div>
-            <p className="text-gray-900 font-semibold text-lg">Basic Info</p>
-            <p className="text-gray-500 text-xs">
-              Your name, job title and location as colleagues see them in the directory — and below,
-              how calls actually reach you.
-            </p>
-          </div>
-        </div>
         {PendingUserData ? (
           <div className="flex items-center justify-center p-5">
             <Loader variant="blue" size="sm" />

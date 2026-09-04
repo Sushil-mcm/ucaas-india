@@ -1,4 +1,5 @@
 import CallRules from '@/pages/admin-settings/people/update-forwarding/call-rules';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { getUserDetails, updateUserSettings, userUpdateStatus } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,6 +15,10 @@ import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-di
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 const IncomingCalls = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'How calls reach you: your devices, forwarding rules and what happens when you do not answer.' });
+
   const [schemaContext, setSchemaContext] = useState(null);
   const queryClient: any = useQueryClient();
   const { socketEventsManager } = useSocketEvents();
@@ -453,15 +458,6 @@ const IncomingCalls = () => {
 
   return (
     <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div>
-          <p className="text-gray-900 font-semibold text-lg">My Phone</p>
-          <p className="text-gray-500 text-xs">
-            How calls reach you: your devices, forwarding rules and what happens when you do not
-            answer.
-          </p>
-        </div>
-      </div>
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}

@@ -1,5 +1,6 @@
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import {
@@ -40,6 +41,10 @@ interface GreetingField {
 type GreetingsForm = Record<GreetingKey, GreetingField>;
 
 const Greetings = () => {
+  /* The page head above prints the title; this puts the sentence that used
+     to sit under it behind that head's info button instead. */
+  useSetAdminPageMeta({ description: 'The recordings callers hear on your extension — welcome message, hold music and voicemail.' });
+
   // const breadcrumbData = [{ label: 'Settings' }, { label: 'Greetings' }];
   const [schemaContext, setSchemaContext] = useState<any>(null);
   const hasHydratedGreetingsRef = useRef(false);
@@ -143,15 +148,6 @@ const Greetings = () => {
     <>
       <section className="w-full bg-gray-200/15 flex flex-col overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div>
-            <p className="text-gray-900 font-semibold text-lg">Greetings</p>
-            <p className="text-gray-500 text-xs">
-              The recordings callers hear on your extension — welcome message, hold music and
-              voicemail.
-            </p>
-          </div>
-        </div>
         <div className=" p-4 gap-4 flex flex-col h-full">
           <FormProvider {...methods}>
             <form
