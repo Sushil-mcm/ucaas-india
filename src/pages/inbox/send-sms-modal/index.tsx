@@ -17,6 +17,7 @@ polyfillCountryFlagEmojis();
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import PhoneInput from 'react-phone-input-2';
+import { formatDialSpaced } from '../format-number';
 import { count } from 'sms-length';
 import * as yup from 'yup';
 import { checkPhoneNumberCountry, getSmsAlert, handleAlert } from '@/lib/utils';
@@ -333,8 +334,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
 
   useEffect(() => {
     if (selectedDID) {
+      /* Formatted here too. The selected number arrives from the page, where
+         its label was built as the raw digits, so leaving it alone showed a
+         spaced list over an unspaced selection. */
       setValue('from', {
-        label: selectedDID?.label,
+        label: formatDialSpaced(selectedDID?.label || selectedDID?.value),
         value: selectedDID?.value,
       });
     }
@@ -356,7 +360,9 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
             options={
               allDIDNumbers && allDIDNumbers?.length > 0
                 ? allDIDNumbers.map((number: any) => ({
-                    label: number?.did_number,
+                    /* Spaced for reading; `value` keeps the raw number, which
+                       is what everything downstream compares against. */
+                    label: formatDialSpaced(number?.did_number),
                     value: number?.did_number,
                   }))
                 : []
@@ -374,8 +380,14 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
               {errors?.to?.message && <ErrorTooltip text={errors?.to?.message || ''} />}
             </div>
             <div className="flex w-full gap-1">
+              {/* India only. The account's numbers are Indian and messages go
+                  to Indian numbers, so the full country list was 200-odd
+                  entries deep to reach the one that is always right -- and it
+                  defaulted to +1, which is never the answer here. */}
               <PhoneInput
-                country="us"
+                country="in"
+                onlyCountries={['in']}
+                disableDropdown
                 value={String(to) || ''}
                 onChange={(value: string) => {
                   setValue('to', value, {

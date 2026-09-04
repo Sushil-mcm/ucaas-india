@@ -2,7 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageSidebarLayout from '@/layout/page-sidebar-layout';
 import './inbox-theme.css';
 import ListItem from './list-item';
-import CustomSelect from '@/components/custom/custom-select';
+import DidPicker from './did-picker';
+import { formatDialSpaced } from './format-number';
 import {
   getDLCStatus,
   getFaxAssignedDidNumbers,
@@ -14,13 +15,12 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParamManager } from '@/hooks/use-search-params';
-import { AddCircle, EmojiICon, PlainLine, Refresh, SearchLine, Send } from '@/assets/icons';
+import { AddCircle, EmojiICon, PlainLine, SearchLine, Send } from '@/assets/icons';
 
 import {
   CHAT_MAX_LENGTH,
   cn,
   formatChatDate,
-  formatPhoneNumber,
   checkPhoneNumberCountry,
   getEnv,
   handleAlert,
@@ -70,8 +70,7 @@ import {
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useFetchContact } from '@/hooks/common';
-import SideDrawer from '@/components/custom/side-drawer';
-import Flag from '@/components/flag';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import DLCVerificationPopup from '@/components/custom/dlc-verification-popup';
 import countryList from '@/lib/countries.json';
@@ -107,8 +106,16 @@ const messageStatus = function (key: string = '') {
 
   if (!key) return null;
 
+  /* Matched case-insensitively. The keys here are capitalised while the feed
+     sends "delivered", so every successfully delivered message missed the
+     lookup and fell through to the branch below -- red text and a warning
+     triangle on the happy path. */
+  const matched = Object.entries(status).find(
+    ([name]) => name.toLowerCase() === String(key).trim().toLowerCase(),
+  );
+
   return (
-    status[key as keyof typeof status] || (
+    matched?.[1] || (
       <div className="mcm-bub-meta neg">
         <TriangleAlert width={12} height={12} />
         {key}
@@ -688,9 +695,7 @@ const InnerSidebarInbox = (props: any) => {
     type,
     setSmsNumber,
     setShowSendSMSModal,
-    faxDIDOptions = [],
     selectedFaxDID,
-    setSelectedFaxDID,
     isFaxDIDLoading = false,
     isCompactLayout = false,
     headerAction = null,
@@ -698,7 +703,7 @@ const InnerSidebarInbox = (props: any) => {
     onFocusHandled,
   } = props;
   const [isDIDLoaded, setIsDIDLoaded] = useState(false);
-  const { getParam, clearAllParams } = useSearchParamManager();
+  const { getParam } = useSearchParamManager();
   const [search, setSearch] = useState<string>('');
   const debouncedSearch = useDebounce<string>(search, 300);
   const { user } = useUser();
@@ -723,13 +728,8 @@ const InnerSidebarInbox = (props: any) => {
 
       if (data) {
         setSelectedDID({
-          label: data?.did_number,
+          label: formatDialSpaced(data?.did_number),
           value: data?.did_number,
-          icon: (
-            <div className="w-5">
-              <Flag phoneNumber={formatPhoneNumber(data?.did_number)} />
-            </div>
-          ),
         });
       }
     }
@@ -740,13 +740,8 @@ const InnerSidebarInbox = (props: any) => {
     if (did_number === undefined || (did_number === null && allDIDNumbers?.length)) {
       const defaultDID = allDIDNumbers?.[0];
       setSelectedDID({
-        label: defaultDID?.did_number,
+        label: formatDialSpaced(defaultDID?.did_number),
         value: defaultDID?.did_number,
-        icon: (
-          <div className="w-5">
-            <Flag phoneNumber={formatPhoneNumber(defaultDID?.did_number)} />
-          </div>
-        ),
       });
     }
   }, [allDIDNumbers]);
@@ -781,41 +776,6 @@ const InnerSidebarInbox = (props: any) => {
           </TabsList>
           {headerAction}
         </div>
-
-        <div className="flex flex-col gap-1">
-          <span className="mcm-eyebrow">{type === 'fax' ? 'Fax number' : 'Your number'}</span>
-          <div className="mcm-did">
-            <CustomSelect
-              options={
-                type === 'fax'
-                  ? faxDIDOptions
-                  : allDIDNumbers && allDIDNumbers?.length > 0
-                    ? allDIDNumbers.map((number: any) => ({
-                        label: number?.did_number,
-                        value: number?.did_number,
-                        icon: (
-                          <div className="w-5">
-                            <Flag phoneNumber={formatPhoneNumber(number?.did_number)} />
-                          </div>
-                        ),
-                      }))
-                    : []
-              }
-              handleChange={(val) => {
-                if (type === 'fax') {
-                  setSelectedFaxDID(val);
-                  setSelectedChat({});
-                  clearAllParams();
-                  return;
-                }
-                setSelectedDID(val);
-                clearAllParams();
-              }}
-              value={type === 'fax' ? selectedFaxDID : selectedDID}
-            />
-          </div>
-        </div>
-
         <div className="mcm-search">
           <span className="mcm-search-ic">
             <SearchLine className="h-3.5 w-3.5" />
@@ -841,6 +801,12 @@ const InnerSidebarInbox = (props: any) => {
             </button>
           ) : null}
         </div>
+
+
+        {/* The sending-number picker is gone from this header entirely: both
+            panes carry their own now, so the list keeps title, search and the
+            SMS/Fax switch, and conversations start higher up the column. */}
+
       </div>
       <TabsContent value="messages" className="mt-0 flex flex-1 min-h-0 flex-col overflow-hidden">
         {isDIDLoaded ? (
@@ -880,6 +846,26 @@ const InnerSidebarInbox = (props: any) => {
           />
         )}
       </TabsContent>
+      {/* The mode switch lives at the foot of the column, pinned, so it stays
+          put while the conversations scroll. It is a destination switch, not a
+          filter on the list -- keeping it out of the header lets the search
+          and the first conversation sit at the top where they are read. */}
+      <div className="mcm-col-foot">
+        <TabsList className="mcm-seg" style={{ width: '100%' }}>
+          {messagesAccess?.send_message || messagesAccess?.send_mms ? (
+            <TabsTrigger value="messages">
+              <MessageSquareText className="size-3.5" />
+              SMS / MMS
+            </TabsTrigger>
+          ) : null}
+          {messagesAccess?.send_fax && (
+            <TabsTrigger value="fax">
+              <Printer className="size-3.5" />
+              Fax
+            </TabsTrigger>
+          )}
+        </TabsList>
+      </div>
     </Tabs>
   );
 };
@@ -891,6 +877,8 @@ const InboxContent = ({
   type,
   onBackToList,
   isCompactLayout = false,
+  didOptions = [],
+  onDidChange,
 }: {
   selectedDID: any;
   selectedChat: any;
@@ -898,6 +886,8 @@ const InboxContent = ({
   type?: string;
   onBackToList?: () => void;
   isCompactLayout?: boolean;
+  didOptions?: any[];
+  onDidChange?: (value: any) => void;
 }) => {
   const { getAllParams } = useSearchParamManager();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -927,9 +917,6 @@ const InboxContent = ({
 
   const {
     data: smsList,
-    refetch,
-    isRefetching,
-    isFetching,
   } = useQuery({
     queryKey: ['getSMSList', { chat_id: params?.chatId }],
     queryFn: () => getSMSList({ chat_id: params?.chatId, limit: 100 }),
@@ -951,6 +938,21 @@ const InboxContent = ({
       ? selectedChat?.to
       : selectedChat?.from;
   const isConversationReady = Boolean(selectedChat?._id);
+
+  /* Which outgoing message is the newest, across every day bucket. Delivery
+     status only renders there: once a later message has gone through, the
+     state of an older one has stopped being news, and repeating it turned a
+     long thread into a column of the same green word. */
+  const lastOutboundKey = useMemo(() => {
+    const days: any[] = smsListData || [];
+    for (let d = days.length - 1; d >= 0; d -= 1) {
+      const day: any[] = days[d] || [];
+      for (let i = day.length - 1; i >= 0; i -= 1) {
+        if (user?.uuid === day[i]?.senderId) return `${d}-${i}`;
+      }
+    }
+    return null;
+  }, [smsListData, user?.uuid]);
 
   const smsCountData = count(message);
   const isMMSMode = !!mmsFile;
@@ -1170,13 +1172,6 @@ const InboxContent = ({
       setIsSending(false);
     }
   }
-  const handleRefresh = () => {
-    refetch();
-    queryClient.invalidateQueries({
-      queryKey: ['getSmsNumbersList'],
-      exact: false,
-    });
-  };
 
   const name = selectedChat?.name
     ? selectedChat?.name
@@ -1243,7 +1238,16 @@ const InboxContent = ({
   };
   return (
     <>
-      {params?.chatId ? (
+      {/* Gated on the selected conversation, not on `chatId` in the URL.
+          Those were two different sources of truth for one pane: this decided
+          whether to show a thread, while the header inside it decided what to
+          draw from `selectedChat`. When they disagreed -- `chatId` still in
+          the URL after a tab switch cleared `selectedChat` -- the pane
+          rendered a header skeleton that could never resolve, because nothing
+          in this file ever turns a `chatId` back into a `selectedChat`; only
+          clicking a row does. That is the switch-to-fax-and-back hang, and it
+          also hit a reload on any ?chatId= link. */}
+      {isConversationReady ? (
         <div className="mcm-col mcm-col-stage h-full w-full">
           {/* ── thread header ─────────────────────────────────────── */}
           <div className="mcm-thread-head">
@@ -1258,69 +1262,44 @@ const InboxContent = ({
               </button>
             ) : null}
 
-            {isConversationReady ? (
-              <>
-                <span className="shrink-0">
-                  <CustomAvatar
-                    name={name}
-                    image={selectedChat?.contactPic}
-                    type="contact"
-                    size="38"
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="mcm-thread-name">{name}</div>
-                  <div className="mcm-thread-num">
-                    <span className="mcm-num truncate">{otherNumber}</span>
-                    <span className="mcm-tag neu hidden sm:inline-flex">
-                      {type === 'fax' ? 'FAX' : 'SMS / MMS'}
-                    </span>
-                  </div>
-                </div>
-                <span className="mcm-chip hidden lg:inline-flex">
-                  <span className="mcm-eyebrow">From</span>
-                  <span className="mcm-num max-w-40 truncate">{selectedDID?.value || 'NA'}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  title="Refresh conversation"
-                  aria-label="Refresh conversation"
-                  className="mcm-iconbtn"
-                >
-                  {isRefetching || isFetching ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Refresh className="h-[18px] w-[18px]" />
-                  )}
-                </button>
-              </>
-            ) : (
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="mcm-skel h-[38px] w-[38px] rounded-full" />
-                <div className="flex flex-col gap-1.5">
-                  <div className="mcm-skel h-3 w-32" />
-                  <div className="mcm-skel h-2.5 w-24" />
-                </div>
+            {/* No skeleton branch here any more: this whole block only renders
+                when `isConversationReady` is true, so the placeholder was
+                unreachable in the good case and permanent in the bad one. */}
+            <span className="shrink-0">
+              <CustomAvatar
+                name={name}
+                image={selectedChat?.contactPic}
+                type="contact"
+                size="38"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="mcm-thread-name">{name}</div>
+              {/* No channel tag beside the number. The SMS/MMS vs Fax switch
+                  at the top of the list is already set to one of them, and it
+                  is the thing that decided which threads are on screen at all
+                  -- so the tag could only ever repeat the tab you just used. */}
+              <div className="mcm-thread-num">
+                <span className="mcm-num truncate">{otherNumber}</span>
               </div>
-            )}
+            </div>
+            {/* The sending number, as a control rather than the read-only
+                "From" chip that used to sit here. Same corner, same width
+                budget, but it now does something -- and it left the list
+                header, which was four stacked rows deep before the first
+                conversation. */}
+            <DidPicker
+                options={didOptions}
+                value={selectedDID}
+                onChange={onDidChange}
+                className="ml-auto"
+              />
           </div>
 
-          {!isConversationReady ? (
-            <div className="mcm-thread justify-end gap-3">
-              {[0, 1, 2, 3].map((row) => (
-                <div
-                  key={row}
-                  className={cn('flex w-full', row % 2 ? 'justify-end' : 'justify-start')}
-                >
-                  <div
-                    className="mcm-skel h-12"
-                    style={{ width: `${34 + row * 9}%`, borderRadius: '13px' }}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
+          {/* Same again: unreachable under the new gate. The thread's own
+              loading state is the spinner on the refresh button, which is
+              driven by the query rather than by whether a chat is selected. */}
+          {(
             <>
               {/* ── message thread ──────────────────────────────────── */}
               <div className="relative min-h-0 flex-1">
@@ -1362,6 +1341,7 @@ const InboxContent = ({
                             // short window read as one group: only the last one
                             // gets the pointed tail corner.
                             const nextSms = item?.[index + 1];
+                            const isLastOutbound = `${idx}-${index}` === lastOutboundKey;
                             const isGroupEnd = !(
                               nextSms &&
                               (user?.uuid === nextSms?.senderId) === isOutbound &&
@@ -1369,6 +1349,7 @@ const InboxContent = ({
                                 moment(sms?.createdAt).diff(moment(nextSms?.createdAt), 'minutes'),
                               ) < MESSAGE_GROUP_WINDOW_MINUTES
                             );
+                            const showsStatus = Boolean(isOutbound && status && isLastOutbound);
 
                             return (
                               <div
@@ -1415,20 +1396,27 @@ const InboxContent = ({
                                     </button>
                                   ) : null}
                                 </div>
-                                <div
-                                  className={cn(
-                                    'mt-1 flex items-center gap-2 px-1',
-                                    isOutbound ? 'flex-row-reverse' : 'flex-row',
-                                  )}
-                                >
-                                  <span
-                                    className="mcm-num text-[10px]"
-                                    style={{ color: 'var(--mcm-ink-4)' }}
+                                {/* One timestamp per group, not per message: a
+                                    run of messages a minute apart does not
+                                    need the same clock time under each. */}
+                                {isGroupEnd || showsStatus ? (
+                                  <div
+                                    className={cn(
+                                      'mt-1 flex items-center gap-2 px-1',
+                                      isOutbound ? 'flex-row-reverse' : 'flex-row',
+                                    )}
                                   >
-                                    {messageDate}
-                                  </span>
-                                  {isOutbound && status ? messageStatus(status) : null}
-                                </div>
+                                    {isGroupEnd ? (
+                                      <span
+                                        className="mcm-num text-[10px]"
+                                        style={{ color: 'var(--mcm-ink-4)' }}
+                                      >
+                                        {messageDate}
+                                      </span>
+                                    ) : null}
+                                    {showsStatus ? messageStatus(status) : null}
+                                  </div>
+                                ) : null}
                               </div>
                             );
                           })}
@@ -1600,19 +1588,26 @@ const InboxContent = ({
                     </div>
 
                     <div className="ml-auto flex items-center gap-2.5">
-                      {!isMMSMode ? (
+                      {/* Only once there is something to count, and spelled
+                          out. "0 - 0/5" sat there on every empty composer
+                          being two numbers and a slash that explain nothing
+                          until you already know the rule. */}
+                      {!isMMSMode && String(message || '').trim() ? (
                         <span
-                          className="mcm-num hidden text-[10.5px] sm:inline"
+                          className={cn(
+                            'mcm-num hidden text-[11px] sm:inline',
+                            smsCountData.messages >= SMS_COUNT_LIMIT && 'is-over',
+                          )}
                           style={{
                             color:
                               smsCountData.messages >= SMS_COUNT_LIMIT
                                 ? 'var(--mcm-warn)'
-                                : 'var(--mcm-ink-4)',
-                            fontWeight: smsCountData.messages >= SMS_COUNT_LIMIT ? 700 : 400,
+                                : 'var(--mcm-ink-3)',
+                            fontWeight: smsCountData.messages >= SMS_COUNT_LIMIT ? 700 : 500,
                           }}
                           title={`${smsCountData.length} characters · ${smsCountData.characterPerMessage} characters per SMS`}
                         >
-                          {smsCountData.length} · {smsCountData.messages}/{SMS_COUNT_LIMIT}
+                          {smsCountData.messages}/{SMS_COUNT_LIMIT} SMS
                         </span>
                       ) : null}
                       <button
@@ -1642,7 +1637,13 @@ const InboxContent = ({
                   </div>
                 </div>
 
-                {!isMMSMode ? (
+                {/* The foot only exists once there is something to send. It was
+                    a permanent third row under the composer carrying a
+                    keyboard hint you learn once and an estimate that reads
+                    "$0.00" until you type -- so it cost a row of every screen
+                    to say nothing. Both facts matter while composing, which is
+                    exactly when this now appears. */}
+                {!isMMSMode && message.trim().length > 0 ? (
                   <div className="mcm-composer-foot">
                     <span className="mcm-num sm:hidden">
                       {smsCountData.length} chars · {smsCountData.messages}/{SMS_COUNT_LIMIT} SMS
@@ -1674,6 +1675,13 @@ const InboxContent = ({
         </div>
       ) : (
         <div className="mcm-col mcm-col-stage h-full w-full">
+          {/* The picker lives in the thread header now, and this pane has no
+              thread header until something is selected -- so without this it
+              would be unreachable exactly when a user wants to switch numbers
+              and start a new conversation. */}
+          <div className="mcm-empty-bar">
+            <DidPicker options={didOptions} value={selectedDID} onChange={onDidChange} />
+          </div>
           <div className="mcm-empty">
             <MessageSquareOff className="mcm-empty-ic" />
             <div className="mcm-empty-title">
@@ -1710,6 +1718,24 @@ const InboxContent = ({
 
 const Inbox = () => {
   const { clearAllParams, getAllParams, removeParam, setParam } = useSearchParamManager();
+  /* The sending-number picker moved out of the list header and into the
+     conversation pane, so the options are built here -- the one place that
+     already owns `selectedDID` -- rather than inside the sidebar that used to
+     render it. */
+  const { user: currentUser } = useUser();
+  const messageDidOptions = useMemo(
+    () =>
+      (currentUser?.assigned_did || []).map((number: any, index: number) => ({
+        label: formatDialSpaced(number?.did_number),
+        value: number?.did_number,
+        /* 1-based position in the user's own list of numbers. The closed
+           picker shows this instead of thirteen digits; the open menu still
+           shows the number in full, because the index only means anything
+           next to the thing it stands for. */
+        line: index + 1,
+      })),
+    [currentUser?.assigned_did],
+  );
   const [showSendSMSModal, setShowSendSMSModal] = useState(false);
   const [showSendFaxModal, setShowSendFaxModal] = useState(false);
   const [selectedDID, setSelectedDID] = useState({});
@@ -1761,13 +1787,11 @@ const Inbox = () => {
       seenNumbers.add(normalizedNumber);
 
       options.push({
-        label: number,
+        label: formatDialSpaced(number),
         value: number,
-        icon: (
-          <div className="w-5">
-            <Flag phoneNumber={formatPhoneNumber(number)} />
-          </div>
-        ),
+        /* Same 1-based index the messages picker uses, so a fax line reads
+           the same way as an SMS line. */
+        line: options.length + 1,
       });
       return options;
     }, []);
@@ -1875,7 +1899,12 @@ const Inbox = () => {
             : 'w-full min-w-0 lg:min-w-[19rem] lg:max-w-[19rem] xl:min-w-[22rem] xl:max-w-[22rem]',
         )}
       >
+        {/* Not collapsible. The conversation list is half of what this screen
+            is -- you pick a thread from it, read on the right, and pick the
+            next one -- so folding it away leaves a pane with no way back into
+            the list except reopening the panel you just closed. */}
         <PageSidebarLayout
+          collapsible={false}
           fullHeightOnMobile
           content={
             <InnerSidebarInbox
@@ -1954,6 +1983,12 @@ const Inbox = () => {
         {type === 'fax' ? (
           <FaxContent
             selectedDID={selectedFaxDID}
+            didOptions={faxDIDOptions}
+            onDidChange={(val: any) => {
+              setSelectedFaxDID(val);
+              setSelectedChat({});
+              clearAllParams();
+            }}
             selectedChat={selectedChat}
             getNameFromNumber={getNameFromNumber}
             onBackToList={isCompactLayout ? handleBackToList : undefined}
@@ -1972,44 +2007,42 @@ const Inbox = () => {
             type={type}
             onBackToList={isCompactLayout ? handleBackToList : undefined}
             isCompactLayout={isCompactLayout}
+            didOptions={messageDidOptions}
+            onDidChange={(val: any) => {
+              setSelectedDID(val);
+              clearAllParams();
+            }}
           />
         )}
       </section>
-      {showSendSMSModal && (
-        <>
-          <SideDrawer
-            isOpen={showSendSMSModal}
-            handleClose={() => setShowSendSMSModal(false)}
-            isHeader={true}
-            width="500px"
-            enableResponsive
-            responsiveWidth="96vw"
-            responsiveBreakpoint={1024}
-            content={
-              <SendSMSModal
-                handleClose={() => {
-                  if (formState === 'contact' && number) {
-                    clearAllParams();
-                  }
-                  setShowSendSMSModal(false);
-                }}
-                defaultNumber={smsNumber}
-                selectedDID={selectedDID}
-              />
-            }
-          />
-        </>
-      )}
-      {showSendFaxModal ? (
-        <SideDrawer
-          isOpen={showSendFaxModal}
-          handleClose={() => setShowSendFaxModal(false)}
-          isHeader={true}
-          width="500px"
-          enableResponsive
-          responsiveWidth="96vw"
-          responsiveBreakpoint={1024}
-          content={
+      {/* Centred, not a right-hand drawer. Composing a message is a task you
+          start and finish before going back to the list -- a sheet sliding in
+          from the edge implies the list behind it is still in play, and left
+          the form hugging one side of a wide screen. */}
+      <Dialog open={showSendSMSModal} onOpenChange={(open) => {
+        if (open) return;
+        if (formState === 'contact' && number) clearAllParams();
+        setShowSendSMSModal(false);
+      }}>
+        <DialogContent className="mcm-inbox mcm-formdialog max-w-[560px] w-[calc(100vw-32px)] p-0">
+          <DialogTitle className="sr-only">New message</DialogTitle>
+          <div className="mcm-formdialog-body">
+            <SendSMSModal
+              handleClose={() => {
+                if (formState === 'contact' && number) clearAllParams();
+                setShowSendSMSModal(false);
+              }}
+              defaultNumber={smsNumber}
+              selectedDID={selectedDID}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSendFaxModal} onOpenChange={(open) => !open && setShowSendFaxModal(false)}>
+        <DialogContent className="mcm-inbox mcm-formdialog max-w-[560px] w-[calc(100vw-32px)] p-0">
+          <DialogTitle className="sr-only">New fax</DialogTitle>
+          <div className="mcm-formdialog-body">
             <SendFaxModal
               defaultNumber={faxNumber}
               faxDIDOptions={faxDIDOptions}
@@ -2017,9 +2050,9 @@ const Inbox = () => {
               isFromDisabled={isFaxFromDisabled}
               handleClose={() => setShowSendFaxModal(false)}
             />
-          }
-        />
-      ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

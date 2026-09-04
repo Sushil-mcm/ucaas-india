@@ -217,7 +217,9 @@ const SendFaxModal = ({
               {errors?.to?.message ? <ErrorTooltip text={errors.to.message} /> : null}
             </div>
             <PhoneInput
-              country="us"
+              country="in"
+              onlyCountries={['in']}
+              disableDropdown
               value={String(to || '')}
               onChange={(value: string) => setValue('to', value, { shouldValidate: true })}
               containerClass={`w-full ${errors?.to?.message ? 'phone-error' : ''}`}

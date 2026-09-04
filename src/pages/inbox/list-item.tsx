@@ -267,7 +267,6 @@ const ListItem = ({
           const isMediaPreview =
             !isFaxTab &&
             String(conversation?.metaData?.messageMimeType || '').toLowerCase() === 'mms';
-          const displayNumber = String(otherNumber || conversation?.phone || '').trim();
 
           return (
             <button
@@ -331,10 +330,13 @@ const ListItem = ({
                   </span>
                 </span>
 
-                {!isUnknownContact && displayNumber ? (
-                  <span className="mcm-row-sub mcm-num">{displayNumber}</span>
-                ) : null}
-
+                {/* No separate number line when the contact has a name. It
+                    made every row three lines tall to show something the
+                    thread header states in full the moment the row is opened,
+                    and it pushed the message preview -- the one thing that
+                    distinguishes two conversations at a glance -- down out of
+                    the scanning path. Unknown contacts still show the number,
+                    because there it IS the name. */}
                 <span className="mcm-row-sub">
                   {isMediaPreview ? <ImageIcon className="h-3.5 w-3.5 shrink-0" /> : null}
                   <span

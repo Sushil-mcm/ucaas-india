@@ -1,4 +1,5 @@
 import CustomAvatar from '@/components/custom/custom-avatar';
+import DidPicker from './did-picker';
 import { useSearchParamManager } from '@/hooks/use-search-params';
 import { cn, formatChatDate } from '@/lib/utils';
 import { getFaxList } from '@/services/api';
@@ -8,9 +9,7 @@ import {
   ExternalLink,
   FilePlus2,
   FileText,
-  Loader2,
   MessageSquareOff,
-  RefreshCw,
 } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useMemo, useRef } from 'react';
@@ -42,6 +41,8 @@ const getFaxMediaUrl = (fax: any) =>
 
 interface FaxContentProps {
   selectedDID: any;
+  didOptions?: any[];
+  onDidChange?: (value: any) => void;
   selectedChat: any;
   getNameFromNumber?: (number?: string) => string;
   onBackToList?: () => void;
@@ -51,6 +52,8 @@ interface FaxContentProps {
 
 const FaxContent = ({
   selectedDID,
+  didOptions = [],
+  onDidChange,
   selectedChat,
   getNameFromNumber = () => '',
   onBackToList,
@@ -74,8 +77,6 @@ const FaxContent = ({
   const {
     data: faxMessages = [],
     isLoading,
-    isFetching,
-    refetch,
   } = useQuery({
     queryKey: ['faxList', faxPayload],
     queryFn: () => getFaxList(faxPayload),
@@ -103,6 +104,11 @@ const FaxContent = ({
   if (!faxMessageId) {
     return (
       <div className="mcm-col mcm-col-stage h-full w-full">
+        {/* Same reason as the messages pane: the picker lives in the thread
+            header, and there is no thread header until a fax is selected. */}
+        <div className="mcm-empty-bar">
+          <DidPicker options={didOptions} value={selectedDID} onChange={onDidChange} />
+        </div>
         <div className="mcm-empty">
           <MessageSquareOff className="mcm-empty-ic" />
           <div className="mcm-empty-title">No fax selected</div>
@@ -139,28 +145,20 @@ const FaxContent = ({
         </span>
         <div className="min-w-0 flex-1">
           <div className="mcm-thread-name">{name}</div>
+          {/* No "FAX" tag: the SMS/Fax switch in the list is already set to
+              Fax, and it is what decided these threads are on screen at all. */}
           <div className="mcm-thread-num">
             <span className="mcm-num truncate">{otherNumber}</span>
-            <span className="mcm-tag neu hidden sm:inline-flex">FAX</span>
           </div>
         </div>
-        <span className="mcm-chip hidden lg:inline-flex">
-          <span className="mcm-eyebrow">From</span>
-          <span className="mcm-num max-w-40 truncate">{selectedDID?.value || 'NA'}</span>
-        </span>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="mcm-iconbtn"
-          aria-label="Refresh fax history"
-          title="Refresh fax history"
-        >
-          {isFetching ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-[17px] w-[17px]" />
-          )}
-        </button>
+        {/* The sending number as a control, replacing the read-only "From"
+            chip that repeated the picker in the list header. */}
+        <DidPicker
+          options={didOptions}
+          value={selectedDID}
+          onChange={onDidChange}
+          className="ml-auto"
+        />
       </div>
 
       {isLoading ? (
