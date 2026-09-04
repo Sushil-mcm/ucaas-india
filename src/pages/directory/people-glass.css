@@ -141,12 +141,18 @@
   text-align: center;
 }
 .gp-people td:last-child {
-  min-width: 280px;
+  /* Was 280px, reserved back when this column held up to ten buttons on two
+     wrapped lines. It is three buttons and a menu now -- four 36px boxes and
+     three 6px gaps -- so the old width pushed the table wider than its column
+     and put a horizontal scrollbar under the whole list. */
+  min-width: 168px;
+  white-space: nowrap;
 }
 .gp-people td:last-child .flex {
   justify-content: center;
-  flex-wrap: wrap;
-  row-gap: 6px;
+  /* No wrapping: there is nothing left to wrap, and allowing it is what let
+     the row grow a second line. */
+  flex-wrap: nowrap;
   gap: 6px;
 }
 /* Matches the top navbar's own round icon buttons exactly — 36px box,
