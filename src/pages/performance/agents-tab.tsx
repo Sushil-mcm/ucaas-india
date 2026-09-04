@@ -1,3 +1,14 @@
+import { useEffect } from 'react';
+import {
+  Users,
+  Trophy,
+  PhoneCall,
+  AlertTriangle,
+  Gauge,
+  ArrowLeftRight,
+  AlertCircle,
+  Clock,
+} from 'lucide-react';
 import TableManager from '@/components/custom/table-manager';
 import buildAgentRows from './agent-rows';
 import Timer from '@/components/timer';
@@ -5,6 +16,7 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 
 import PerfStatCard from './stat-card';
 import { formatSecsToClock } from './format';
+import './agents-theme.css';
 
 const STATUS_STYLES: Record<string, string> = {
   'On Call': 'state busy',
@@ -35,6 +47,15 @@ const AgentsTab = ({
   queues: QueueMembership[];
   isLoading: boolean;
 }) => {
+  /* The warm ambient backdrop renders one level up, in the Performance page
+     shell (index.tsx) — flagging the document while this tab is open is
+     what lets agents-theme.css reach it, the same convention Queues/Live/
+     Campaigns already use. */
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
+
   const rows = buildAgentRows({ agentRows, queues, usersOnlineStatus, activeQueueCalls });
 
   const onlineCount = rows.filter((row) => row.isOnline).length;
@@ -142,44 +163,52 @@ const AgentsTab = ({
     { header: 'Queues', accessorKey: 'queuesCount' },
   ];
 
+  const hasTopPerformer = Boolean(topPerformer && topPerformer.handledToday > 0);
+
   return (
-    <div className="flex flex-col gap-3 px-[22px] py-4">
+    <div className="perf-agents flex flex-col gap-3 px-[22px] py-4">
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
-        <PerfStatCard label="Online" value={String(onlineCount)} sub={`of ${rows.length} agents`} />
+        <PerfStatCard
+          label="Online"
+          value={String(onlineCount)}
+          sub={`of ${rows.length} agents`}
+          icon={Users}
+        />
         <PerfStatCard
           label="Top performer"
-          value={topPerformer && topPerformer.handledToday > 0 ? topPerformer.name : '—'}
-          sub={
-            topPerformer && topPerformer.handledToday > 0
-              ? `${topPerformer.handledToday} handled today`
-              : undefined
-          }
+          value={hasTopPerformer ? topPerformer!.name : '—'}
+          sub={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : undefined}
+          icon={Trophy}
         />
         <PerfStatCard
           label="On a call"
           value={String(onCallCount)}
           sub={`of ${onlineCount} online`}
+          icon={PhoneCall}
         />
         <PerfStatCard
           label="Zero activity"
           value={String(zeroActivityCount)}
           sub="online, nothing handled"
+          icon={AlertTriangle}
         />
-        <PerfStatCard label="Avg AHT" value={avgAht === null ? '—' : formatSecsToClock(avgAht)} />
+        <PerfStatCard
+          label="Avg AHT"
+          value={avgAht === null ? '—' : formatSecsToClock(avgAht)}
+          icon={Gauge}
+        />
         <PerfStatCard
           label="In / out calls"
           value={`${totalIncoming} / ${totalOutgoing}`}
           sub="incoming / outgoing"
+          icon={ArrowLeftRight}
         />
-        <PerfStatCard
-          label="No queue assigned"
-          value={String(noQueueCount)}
-          tone={noQueueCount > 0 ? 'warning' : 'default'}
-        />
+        <PerfStatCard label="No queue assigned" value={String(noQueueCount)} icon={AlertCircle} />
         <PerfStatCard
           label="Talk time today"
           value={formatSecsToClock(totalTalkMinutes * 60)}
           sub="combined, all agents"
+          icon={Clock}
         />
       </div>
       <TableManager

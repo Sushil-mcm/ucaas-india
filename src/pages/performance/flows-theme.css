@@ -1,0 +1,229 @@
+/* ============================================================
+   Performance › Flows — warm sunset orange glassmorphism, brought to
+   Directory-benchmark parity (20px frosted cards, sticky frosted table
+   header, left accent-bar row hover). Same three-scope convention as
+   queues-theme.css / agents-theme.css / interactions-theme.css:
+
+     .perf-flows                this tab's own root element. Owns the
+                                 notice pill, the 4 KPI cards and the
+                                 flows table.
+     body.perf-warm-backdrop    the full-page ambient gradient, defined
+                                 once in live-theme.css and reused here —
+                                 toggled on mount/unmount by flows-tab.tsx.
+     body.perf-warm-toolbar     the Performance toolbar — already toggled
+                                 unconditionally by index.tsx, nothing to
+                                 wire here.
+   ============================================================ */
+
+.perf-flows,
+body.perf-warm-backdrop {
+  --fl-accent: #f97316;
+  --fl-accent-deep: #ea580c;
+  --fl-accent-ink: #c2410c;
+  --fl-wash: #fff1eb;
+  --fl-ink: #1a1a1a;
+  --fl-muted: #666666;
+  --fl-hairline: rgba(249, 115, 22, 0.08);
+  --fl-row-hover: rgba(255, 241, 235, 0.55);
+
+  --fl-glass: rgba(255, 255, 255, 0.85);
+  --fl-glass-border: rgba(255, 255, 255, 0.95);
+  --fl-glass-blur: blur(20px) saturate(190%);
+  --fl-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --fl-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+}
+.dark .perf-flows,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --fl-accent: #fb923c;
+  --fl-accent-deep: #f97316;
+  --fl-accent-ink: #fdba74;
+  --fl-wash: #2a1710;
+  --fl-ink: #f4f6fb;
+  --fl-muted: #93a1ba;
+  --fl-hairline: rgba(251, 146, 60, 0.14);
+  --fl-row-hover: rgba(251, 146, 60, 0.1);
+
+  --fl-glass: rgba(17, 24, 39, 0.72);
+  --fl-glass-border: rgba(251, 146, 60, 0.18);
+  --fl-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --fl-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. Notice pill — the IVR description, wrapped in a warm glass pill
+   instead of floating page-note text.
+   ------------------------------------------------------------ */
+.perf-flows .fl-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--fl-wash);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+}
+.perf-flows .fl-notice-icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--fl-accent-ink);
+}
+.perf-flows .fl-notice .page-note {
+  margin: 0;
+  color: var(--fl-accent-ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------
+   2. KPI cards — 4 frosted glass tiles.
+   ------------------------------------------------------------ */
+.mcm-page .perf-flows .stat {
+  background: var(--fl-glass);
+  backdrop-filter: var(--fl-glass-blur);
+  -webkit-backdrop-filter: var(--fl-glass-blur);
+  border: 1px solid var(--fl-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--fl-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.mcm-page .perf-flows .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--fl-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+.mcm-page .perf-flows .stat .k {
+  color: var(--fl-muted);
+}
+.mcm-page .perf-flows .stat .v {
+  color: var(--fl-ink);
+}
+.mcm-page .perf-flows .stat .d {
+  color: var(--fl-muted) !important;
+}
+
+/* ------------------------------------------------------------
+   3. Flows table — 20px frosted glass card, sticky frosted header,
+   Directory's signature left accent-bar row hover. `isHeightSet={false}`
+   on TableManager (flows-tab.tsx) already stops it from forcing a fixed
+   350px height regardless of row count — the fix for the "massive blank
+   gap beneath 4 rows" belongs at that data-table-height level, not CSS.
+   ------------------------------------------------------------ */
+.perf-flows .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--fl-glass-border);
+  background: var(--fl-glass);
+  backdrop-filter: var(--fl-glass-blur);
+  -webkit-backdrop-filter: var(--fl-glass-blur);
+  box-shadow: var(--fl-glass-shadow);
+}
+.perf-flows .table-scroll thead {
+  background: rgba(255, 250, 244, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 0 var(--fl-hairline);
+}
+.dark .perf-flows .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-flows .table-scroll thead th {
+  color: var(--fl-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom-color: var(--fl-hairline);
+  background: transparent;
+}
+
+.perf-flows .table-scroll tbody tr {
+  background: transparent;
+  border-color: var(--fl-hairline);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.perf-flows .table-scroll tbody tr:hover {
+  background: var(--fl-row-hover);
+  box-shadow: inset 3px 0 0 var(--fl-accent);
+}
+.perf-flows .table-scroll tbody td {
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-bottom-color: var(--fl-hairline);
+  color: #334155;
+}
+.dark .perf-flows .table-scroll tbody td {
+  color: var(--fl-muted);
+}
+
+/* Flow name — dark charcoal, warms to accent orange on row hover. */
+.perf-flows .table-scroll tbody td .fl-flow-name {
+  color: var(--fl-ink);
+  font-weight: 600;
+  transition: color 0.14s ease;
+}
+.dark .perf-flows .table-scroll tbody td .fl-flow-name {
+  color: #f1f5f9;
+}
+.perf-flows .table-scroll tbody tr:hover td .fl-flow-name {
+  color: var(--fl-accent-ink);
+}
+
+/* Extension — a small monospace badge instead of bare digits. */
+.perf-flows .table-scroll tbody td .fl-extension {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 7px;
+  background: var(--surface-3);
+  color: var(--fl-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.dark .perf-flows .table-scroll tbody td .fl-extension {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+/* Site — a small location pill (Mumbai HQ, Bengaluru, ...). */
+.perf-flows .table-scroll tbody td .fl-site {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--fl-wash);
+  color: var(--fl-accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.dark .perf-flows .table-scroll tbody td .fl-site {
+  background: rgba(251, 146, 60, 0.16);
+  color: #fdba74;
+}
+
+/* Entries Today — right-aligned tabular figures. */
+.perf-flows .table-scroll th:nth-child(4),
+.perf-flows .table-scroll td:nth-child(4) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--fl-ink);
+}
+.dark .perf-flows .table-scroll td:nth-child(4) {
+  color: #e2e8f0;
+}

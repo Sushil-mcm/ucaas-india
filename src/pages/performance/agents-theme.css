@@ -1,0 +1,217 @@
+/* ============================================================
+   Performance › Agents — warm sunset orange glassmorphism, brought to
+   Directory-benchmark parity (20px frosted cards, sticky frosted table
+   header, left accent-bar row hover). Same three-scope convention as
+   queues-theme.css (see that file for the fully annotated version):
+
+     .perf-agents               this tab's own root element. Owns the 8 KPI
+                                 cards and the agent table.
+     body.perf-warm-backdrop    the full-page ambient gradient, defined once
+                                 in live-theme.css and reused here — toggled
+                                 on mount/unmount by agents-tab.tsx, the same
+                                 as Queues/Live/Campaigns.
+     body.perf-warm-toolbar     the Performance toolbar — already toggled
+                                 unconditionally by index.tsx, nothing to
+                                 wire here.
+
+   Every selector is chained through `.mcm-page .perf-agents` (three
+   classes) so it outranks the plain `.mcm-page .stat` / `.mcm-page .hbar-t`
+   rules in mcm-page.css regardless of stylesheet order.
+   ============================================================ */
+
+.perf-agents,
+body.perf-warm-backdrop {
+  --aa-accent: #f97316;
+  --aa-accent-deep: #ea580c;
+  --aa-accent-ink: #c2410c;
+  --aa-wash: #fff1eb;
+  --aa-ink: #1a1a1a;
+  --aa-muted: #666666;
+  --aa-hairline: rgba(249, 115, 22, 0.08);
+  --aa-row-hover: rgba(255, 241, 235, 0.55);
+
+  --aa-glass: rgba(255, 255, 255, 0.85);
+  --aa-glass-border: rgba(255, 255, 255, 0.95);
+  --aa-glass-blur: blur(20px) saturate(190%);
+  --aa-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --aa-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+}
+.dark .perf-agents,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --aa-accent: #fb923c;
+  --aa-accent-deep: #f97316;
+  --aa-accent-ink: #fdba74;
+  --aa-wash: #2a1710;
+  --aa-ink: #f4f6fb;
+  --aa-muted: #93a1ba;
+  --aa-hairline: rgba(251, 146, 60, 0.14);
+  --aa-row-hover: rgba(251, 146, 60, 0.1);
+
+  --aa-glass: rgba(17, 24, 39, 0.72);
+  --aa-glass-border: rgba(251, 146, 60, 0.18);
+  --aa-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --aa-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. KPI cards — 8 frosted glass tiles.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .stat {
+  background: var(--aa-glass);
+  backdrop-filter: var(--aa-glass-blur);
+  -webkit-backdrop-filter: var(--aa-glass-blur);
+  border: 1px solid var(--aa-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--aa-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.mcm-page .perf-agents .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--aa-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+.mcm-page .perf-agents .stat .k {
+  color: var(--aa-muted);
+}
+.mcm-page .perf-agents .stat .v {
+  color: var(--aa-ink);
+}
+.mcm-page .perf-agents .stat .d {
+  color: var(--aa-muted) !important;
+}
+
+/* ------------------------------------------------------------
+   2. Agent table — 20px frosted glass card, sticky frosted header,
+   Directory's signature left accent-bar row hover.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll {
+  border-radius: 20px;
+  border: 1px solid var(--aa-glass-border);
+  background: var(--aa-glass);
+  backdrop-filter: var(--aa-glass-blur);
+  -webkit-backdrop-filter: var(--aa-glass-blur);
+  box-shadow: var(--aa-glass-shadow);
+}
+.mcm-page .perf-agents .table-scroll thead {
+  background: rgba(255, 250, 244, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 0 var(--aa-hairline);
+}
+.dark .mcm-page .perf-agents .table-scroll thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.mcm-page .perf-agents .table-scroll thead th {
+  color: var(--aa-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom-color: var(--aa-hairline);
+  background: transparent;
+}
+
+.mcm-page .perf-agents .table-scroll tbody tr {
+  background: transparent;
+  border-color: var(--aa-hairline);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .perf-agents .table-scroll tbody tr:hover {
+  background: var(--aa-row-hover);
+  box-shadow: inset 3px 0 0 var(--aa-accent);
+}
+.mcm-page .perf-agents .table-scroll tbody td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom-color: var(--aa-hairline);
+  color: #334155;
+}
+.dark .mcm-page .perf-agents .table-scroll tbody td {
+  color: var(--aa-muted);
+}
+
+/* ------------------------------------------------------------
+   3. Agent Info — avatar ring + name typography.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll tbody td [class*='rounded-full'][class*='border-white'] {
+  border-color: #fff;
+  box-shadow:
+    0 0 0 2px var(--aa-wash),
+    0 2px 6px rgba(15, 23, 42, 0.1);
+}
+.mcm-page .perf-agents .table-scroll tbody td:first-child span:first-of-type {
+  color: var(--aa-ink);
+}
+.dark .mcm-page .perf-agents .table-scroll tbody td:first-child span:first-of-type {
+  color: #f1f5f9;
+}
+
+/* ------------------------------------------------------------
+   4. Live Status pill — same `.state` tokens the rest of Performance
+   already uses (q/busy/acw/away/nr/hold map onto Available/On call/
+   Ringing/Offline/DND/On hold respectively, already the live-wash,
+   accent-wash, warn-wash, surface-3 and crit-wash tokens Directory's own
+   `.tag` badges are built from) — just a touch of glass polish here rather
+   than a class rename, since re-mapping 7 live states onto the 4-tone
+   `.tag` system would throw away the "On call" vs "Ringing" vs "On hold"
+   distinction the app currently gives a supervisor.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll tbody td .state {
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* ------------------------------------------------------------
+   5. Time in State — dark charcoal tabular figures, not the plain link
+   colour a bare text node in a table cell otherwise inherits.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(3) {
+  color: var(--aa-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dark .mcm-page .perf-agents .table-scroll tbody td:nth-child(3) {
+  color: #e2e8f0;
+}
+
+/* ------------------------------------------------------------
+   6. Utilization — warm glass capsule track, sunset gradient fill.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll tbody td .hbar-t {
+  height: 7px;
+  background: rgba(249, 115, 22, 0.12);
+  box-shadow: inset 0 1px 2px rgba(160, 95, 30, 0.12);
+}
+.dark .mcm-page .perf-agents .table-scroll tbody td .hbar-t {
+  background: rgba(251, 146, 60, 0.14);
+}
+.mcm-page .perf-agents .table-scroll tbody td .hbar-t i {
+  background: linear-gradient(90deg, var(--aa-accent) 0%, var(--aa-accent-deep) 100%) !important;
+  box-shadow: 0 0 6px rgba(234, 88, 12, 0.35);
+  transition: width 0.2s ease;
+}
+
+/* ------------------------------------------------------------
+   7. Daily stats / Queues — tabular figures so counts line up.
+   ------------------------------------------------------------ */
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(7),
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
+  text-align: right;
+}
+.mcm-page .perf-agents .table-scroll thead th:nth-child(8) {
+  text-align: right;
+}
