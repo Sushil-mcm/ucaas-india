@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Outlet, Navigate, useSearchParams } from 'react-router-dom';
 import {
   ABSOLUTE,
   BILLING_REDIRECTS,
@@ -74,6 +74,17 @@ const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/c
 const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
+/* Directory and Performance used to carry the page in a query --
+   `/directory?view=groups`, `/performance?view=agents`. Those addresses are in
+   bookmarks and in links already sent out, so the index of each area honours
+   the old value and forwards to the matching segment rather than dropping the
+   reader on the default page. An unrecognised value lands on the page itself,
+   which falls back to its own default. */
+const ViewIndexRedirect = ({ fallback }: { fallback: string }) => {
+  const [params] = useSearchParams();
+  return <Navigate to={params.get('view') || fallback} replace />;
+};
+
 const Performance = lazy(() => import('@/pages/performance'));
 const Login = lazy(() => import('@/pages/login'));
 const Messenger = lazy(() => import('@/pages/messenger'));
@@ -352,9 +363,13 @@ export const router = createBrowserRouter([
         id: 'Dashboard',
       },
       {
+        /* Same as Directory: a segment per page instead of one address with a
+           `?view=` value, so every Performance page is its own URL. */
         path: 'performance',
-        element: <Performance />,
-        id: 'Performance',
+        children: [
+          { index: true, element: <ViewIndexRedirect fallback="queues-activity" /> },
+          { path: ':view', element: <Performance />, id: 'Performance' },
+        ],
       },
       {
         path: 'phone',
@@ -476,9 +491,16 @@ export const router = createBrowserRouter([
         // Directory is the console's grouping of People, Groups, Locations,
         // External and Favourites. The individual platform routes below stay
         // reachable so existing links keep working.
+        /* Each Directory page owns a path segment rather than a `?view=`
+           value on one shared address, so People, Groups, Roles, Locations,
+           External Contacts, Favourites and Blocked can each be linked,
+           bookmarked and reloaded, and the rail lights the current one from
+           the pathname instead of comparing query strings. */
         path: 'directory',
-        element: <Directory />,
-        id: 'directory',
+        children: [
+          { index: true, element: <ViewIndexRedirect fallback="people" /> },
+          { path: ':view', element: <Directory />, id: 'directory' },
+        ],
       },
       {
         path: 'contact',

@@ -254,7 +254,13 @@ const Sidebar = () => {
                 const onAltPath = Boolean(
                   altPaths?.some((path: string) => pathname === path || pathname?.startsWith(`${path}/`)),
                 );
-                const onLinkPath = Boolean(pathname?.startsWith(linkPath)) || onAltPath;
+                /* Exact segment or a child of it. A bare `startsWith` would
+                   light `/performance/queue` while sitting on
+                   `/performance/queues-activity`, since one string prefixes
+                   the other. */
+                const onLinkPath =
+                  Boolean(pathname === linkPath || pathname?.startsWith(`${linkPath}/`)) ||
+                  onAltPath;
                 const activeLink = viewKey
                   ? onLinkPath && currentView === viewKey
                   : onLinkPath && (!linkView || new URLSearchParams(search).get('view') === linkView);

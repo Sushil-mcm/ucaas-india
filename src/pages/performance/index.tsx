@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import moment from 'moment';
 import { AlarmClock, Info, PhoneIncoming } from 'lucide-react';
-import { useSearchParamManager } from '@/hooks/use-search-params';
+import { useNavigate, useParams } from 'react-router-dom';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { DateFilterTypes, handleDate } from '@/components/custom/date-dropdown/constant';
 import Timer from '@/components/timer';
@@ -67,15 +67,19 @@ const Performance = () => {
   // The open view lives in the URL, the same `?view=` convention the calendar
   // uses. That makes a Performance view shareable and survive a refresh, and it
   // is what lets the area rail highlight the view you are actually on.
-  const { setParam, getParam } = useSearchParamManager();
   const allTabKeys = useMemo(
     () => [...TABS.map((tab) => tab.key), ...WALLBOARD_TABS.map((tab) => tab.key)],
     [],
   );
-  const viewParam = getParam('view');
+  /* Every Performance page is its own address -- `/performance/agents`,
+     `/performance/flows` -- rather than one address carrying a `?view=`
+     value, so each can be linked and reloaded. An unknown segment falls back
+     to the first tab instead of rendering nothing. */
+  const { view: viewParam } = useParams();
   const activeTab =
-    viewParam && allTabKeys.includes(viewParam as string) ? (viewParam as string) : TABS[0].key;
-  const setActiveTab = (key: string) => setParam({ view: key });
+    viewParam && allTabKeys.includes(viewParam) ? viewParam : TABS[0].key;
+  const navigateTab = useNavigate();
+  const setActiveTab = (key: string) => navigateTab(`/performance/${key}`);
   const [selectedQueueUuid, setSelectedQueueUuid] = useState<string | null>(null);
   const [dropdownVal, setDropdownVal] = useState(() => ({
     value: handleDate('Today'),

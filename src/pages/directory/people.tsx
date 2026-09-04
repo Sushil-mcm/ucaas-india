@@ -211,7 +211,7 @@ const People = () => {
             <button
               type="button"
               className="btn ghost"
-              onClick={() => navigate('/directory?view=groups')}
+              onClick={() => navigate('/directory/groups')}
             >
               <Ic n="users" />
               Groups

@@ -1,5 +1,5 @@
+import { useParams } from 'react-router-dom';
 import { Suspense } from 'react';
-import { useSearchParamManager } from '@/hooks/use-search-params';
 import Loader from '@/components/custom/loader';
 import People from './people';
 import Groups from './groups';
@@ -9,6 +9,18 @@ import Roles from './roles';
 import Favourites from './favourites';
 import Blocked from './blocked';
 import '@/components/mcm/mcm-page.css';
+
+/* The seven pages this area carries. Kept beside the switch below so a new
+   page cannot be added to one without the other. */
+const DIRECTORY_KEYS = [
+  'people',
+  'groups',
+  'roles',
+  'external',
+  'locations',
+  'favourites',
+  'blocked',
+];
 
 /**
  * Directory.
@@ -28,8 +40,11 @@ import '@/components/mcm/mcm-page.css';
  */
 
 const Directory = () => {
-  const { getParam } = useSearchParamManager();
-  const view = String(getParam('view') || 'people');
+  /* The page is now `/directory/<view>`, so the segment says which page this
+     is. Anything unrecognised falls back to People rather than rendering an
+     empty shell. */
+  const { view: viewParam } = useParams();
+  const view = DIRECTORY_KEYS.includes(String(viewParam)) ? String(viewParam) : 'people';
 
   return (
     <div className="mcm-page">

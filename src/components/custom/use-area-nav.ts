@@ -60,7 +60,7 @@ export const useAreaNav = () => {
    * An area that carries its own views shows those in the rail instead of its
    * route items — that is how the console navigates Performance. They are
    * shaped as nav items so the rail renders them without knowing the
-   * difference, and they link through `?view=`, which the page already reads.
+   * difference, and they link through their own path segment, which the page reads.
    */
   const areaConfig = AREA_VIEWS[currentArea];
   const areaViews = areaConfig?.views;
@@ -84,13 +84,13 @@ export const useAreaNav = () => {
       return {
         id: 1000 + index,
         name: view.label,
-        link: resolvedHref || `${base}?view=${view.key}`,
+        link: resolvedHref || `${base}/${view.key}`,
         icon: view.icon,
         sep: view.sep,
-        // A view that opens off its own href (one of the moved shortcuts)
-        // is lit by its own path, same as any other route item — only the
-        // in-page `?view=` tabs need the viewKey comparison.
-        viewKey: resolvedHref ? undefined : view.key,
+        /* Every view now owns a path, so the rail lights the current item
+           from the pathname like any other route item. `viewKey` stays unset:
+           there is no longer a query value to compare. */
+        viewKey: undefined,
         altPaths: view.altPaths,
       };
     });
