@@ -29,8 +29,13 @@
     linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
   /* Cancels `.mcm-page .page`'s own padding so the backdrop reaches the real
      page edges instead of stopping in a boxed-off inset. */
-  margin: -22px -26px -40px;
-  padding: 22px 26px 40px;
+  /* No negative margin here. This pair -- `margin: -22px -26px -40px` with a
+     matching padding -- was written for a version where this element sat
+     INSIDE `.page` and had to cancel that padding. It wraps `.page` now, so the
+     margin pulled the whole panel outside its container: 22px above it, which
+     in Admin is straight over the page head, covering the title and buttons.
+     Wrapping `.page` already reaches the edges, and `.page` still supplies the
+     inset. */
 }
 
 /* Favourites and Blocked additionally carry `favourites-compact` /
