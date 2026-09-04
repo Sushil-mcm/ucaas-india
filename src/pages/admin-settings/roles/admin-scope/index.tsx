@@ -159,8 +159,22 @@ const AdminScopePage = () => {
       name: nameOf(person),
       locationUuid: person?.site_uuid || null,
       departmentUuids: byUser.get(String(person?.uuid || '')) || [],
+      /* Carried so the table can list the people this screen is actually
+         about. The same field People reads for its Role column. */
+      role: String(
+        person?.custom_role_data?.name || person?.role_data?.name || person?.role || '',
+      ),
     }));
   }, [people, departments]);
+
+  /* Who this screen is for. A scope only means anything for somebody who can
+     administer, so the table lists them rather than sitting empty until
+     somebody is added -- everyone starts on "Whole company", which is the
+     truth today, and each row is a way to narrow it. */
+  const administrators = useMemo(
+    () => roster.filter((person) => /admin|manager/i.test(String((person as any).role || ''))),
+    [roster],
+  );
 
   const personName = (uuid: string) =>
     roster.find((person) => person.uuid === uuid)?.name || 'Somebody who has since left';
@@ -267,20 +281,24 @@ const AdminScopePage = () => {
             {/* Led by who covers what, the way People and Roles beside it are:
                 one row per administrator, scannable, with the limitation stated
                 once above rather than wrapped around every row. */}
-            <div className="mcm-notsaved" role="status">
-              <strong>Saved here, not enforced yet.</strong>
-              <span>
-                Nothing checks a scope when an administrator acts, so everyone still covers the
-                whole company. Writing it down now means it applies the day that check is switched
-                on.
-              </span>
+            {/* Amber, written inline rather than through `.mcm-notsaved`: that
+                class carries a `prefers-color-scheme: dark` variant, so on a
+                machine set to dark it painted a near-black box into this
+                otherwise light page. */}
+            <div className="rounded-md border border-amber-200 border-l-[3px] border-l-amber-500 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-900">
+              <span className="font-semibold">Saved here, not enforced yet.</span> Nothing checks a
+              scope when an administrator acts, so everyone still covers the whole company. Writing
+              it down now means it applies the day that check is switched on.
             </div>
 
+            {/* The save lives with the list it saves, and only appears once
+                something has changed -- a button that is always there says
+                nothing about whether there is anything to keep. */}
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-[#2E2D35]">
                 {scopes.length
-                  ? `${scopes.length} ${scopes.length === 1 ? 'person has' : 'people have'} a scope. Everyone else covers the whole company.`
-                  : 'Nobody has a scope yet, so every administrator covers the whole company.'}
+                  ? `${scopes.length} of ${administrators.length} scoped. The rest cover the whole company.`
+                  : `${administrators.length} ${administrators.length === 1 ? 'administrator' : 'administrators'}, all covering the whole company.`}
               </p>
               {dirty ? (
                 <Button
@@ -300,49 +318,62 @@ const AdminScopePage = () => {
                   <thead>
                     <tr>
                       <th>Administrator</th>
+                      <th>Role</th>
                       <th>Covers</th>
                       <th>Reaches</th>
                       <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {scopes.length === 0 ? (
+                    {administrators.length === 0 ? (
                       <tr>
-                        <td colSpan={4}>
+                        <td colSpan={5}>
                           <div className="empty">
                             <p>
-                              Nothing written down yet. Most companies start with the person who
-                              runs each location.
+                              Nobody holds an administrator role yet. Give someone one under Roles
+                              and they will appear here to be scoped.
                             </p>
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      scopes.map((scope) => {
-                        const cover = coverageOf(scope, roster, directory);
-                        const decision = mayEdit(scope);
+                      administrators.map((person) => {
+                        const scope = scopeFor(scopes, person.uuid);
+                        const cover = scope ? coverageOf(scope, roster, directory) : null;
+                        const decision = scope ? mayEdit(scope) : { allowed: true, reason: '' };
                         return (
-                          <tr key={scope.personUuid}>
+                          <tr key={person.uuid}>
                             <td>
-                              <span className="font-semibold text-[#2E2D35]">
-                                {personName(scope.personUuid)}
-                              </span>
+                              <span className="font-semibold text-[#2E2D35]">{person.name}</span>
                             </td>
-                            <td>{describeScope(scope, directory)}</td>
+                            <td className="text-[#9A948F]">{String((person as any).role || '—')}</td>
                             <td>
-                              {cover.people} of {cover.totalPeople} people
-                              {cover.unplaced > 0 ? (
-                                <span className="block text-xs text-[#9A948F]">
-                                  {cover.unplaced}{' '}
-                                  {scope.tier === 'location'
-                                    ? 'have no location set, so they are left out'
-                                    : 'are in no department, so they are left out'}
+                              {scope ? (
+                                describeScope(scope, directory)
+                              ) : (
+                                <span className="text-[#9A948F]">
+                                  The whole company &middot; nothing narrower set
                                 </span>
-                              ) : null}
+                              )}
+                            </td>
+                            <td>
+                              {cover ? (
+                                <>
+                                  {cover.people} of {cover.totalPeople} people
+                                  {cover.unplaced > 0 ? (
+                                    <span className="block text-xs text-[#9A948F]">
+                                      {cover.unplaced}{' '}
+                                      {scope?.tier === 'location'
+                                        ? 'have no location set, so they are left out'
+                                        : 'are in no department, so they are left out'}
+                                    </span>
+                                  ) : null}
+                                </>
+                              ) : (
+                                <span className="text-[#9A948F]">Everyone</span>
+                              )}
                               {decision.allowed ? null : (
-                                <span className="block text-xs text-[#9A948F]">
-                                  {decision.reason}
-                                </span>
+                                <span className="block text-xs text-[#9A948F]">{decision.reason}</span>
                               )}
                             </td>
                             <td>
@@ -351,19 +382,23 @@ const AdminScopePage = () => {
                                   type="button"
                                   variant="outline"
                                   disabled={!decision.allowed}
-                                  onClick={() => setEditing({ ...scope })}
+                                  onClick={() =>
+                                    setEditing(scope ? { ...scope } : blankScope(person.uuid))
+                                  }
                                 >
-                                  Change
+                                  {scope ? 'Change' : 'Narrow this'}
                                 </Button>
-                                <Button
-                                  type="button"
-                                  variant="transparent"
-                                  disabled={!decision.allowed}
-                                  onClick={() => removeScope(scope.personUuid)}
-                                  aria-label={`Remove the scope for ${personName(scope.personUuid)}`}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                                {scope ? (
+                                  <Button
+                                    type="button"
+                                    variant="transparent"
+                                    disabled={!decision.allowed}
+                                    onClick={() => removeScope(person.uuid)}
+                                    aria-label={`Remove the scope for ${person.name}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                ) : null}
                               </div>
                             </td>
                           </tr>

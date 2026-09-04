@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Info } from 'lucide-react';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import './page-shell.css';
@@ -32,10 +34,24 @@ export const DirectoryPage = ({
   actions?: ReactNode;
   filters?: ReactNode;
   children: ReactNode;
-}) => (
-  <div className="page">
-    <McmIconSprite />
-    <div className="page-head">
+}) => {
+  /* People and Roles are shown in two places: their own Directory rail, and
+     the Admin rail. Admin prints the screen title in its own head, so drawing
+     this one there stacked two headers carrying the same word. Inside Admin
+     the title is dropped and the description and actions go to that head
+     instead, which is where they belong. */
+  const inAdmin = useLocation().pathname.startsWith('/admin-settings');
+  useSetAdminPageMeta({ description });
+
+  return (
+    <div className="page">
+      <McmIconSprite />
+      {inAdmin ? (
+        actions ? (
+          <AdminHeadActions>{actions}</AdminHeadActions>
+        ) : null
+      ) : (
+        <div className="page-head">
       {/* The description sits behind an info button rather than under the
           title, the same way the Admin head carries its own. It keeps every
           Directory head one line tall, so the title lines up with the rail
@@ -50,15 +66,17 @@ export const DirectoryPage = ({
           </CustomTooltip>
         ) : null}
       </div>
-      {actions}
+          {actions}
+        </div>
+      )}
+      {note ? <div className="page-caveat">{note}</div> : null}
+      {filters ? <div className="tbar">{filters}</div> : null}
+      <div className="panel-card">
+        <div className="tbl-wrap">{children}</div>
+      </div>
     </div>
-    {note ? <div className="page-caveat">{note}</div> : null}
-    {filters ? <div className="tbar">{filters}</div> : null}
-    <div className="panel-card">
-      <div className="tbl-wrap">{children}</div>
-    </div>
-  </div>
-);
+  );
+};
 
 /** A filter chip that wraps a native control, so the chip is the whole hit area. */
 export const FilterChip = ({
