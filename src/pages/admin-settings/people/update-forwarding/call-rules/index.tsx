@@ -280,7 +280,14 @@ const CallRules: FC<CallRulesProps> = ({
                       { shouldValidate: true },
                     );
                   }}
-                  checked={watch('callRules.forwardCall.enabled')}
+                  /* Coerced, not passed through. Radix reads `checked ===
+                     undefined` as "this switch is uncontrolled" and then keeps
+                     its own state, ignoring the form. `enabled` is undefined
+                     on any account whose rules have never been saved, and
+                     again after Discard restores such a record — so the
+                     switch would sit there showing ON while the form said
+                     OFF, and the panel below it stayed closed. */
+                  checked={!!watch('callRules.forwardCall.enabled')}
                 />
               </div>
             </div>
@@ -453,9 +460,14 @@ const CallRules: FC<CallRulesProps> = ({
                                         }
                                       }
                                     }}
-                                    checked={watch(
-                                      `callRules.incomingCall.deviceOptions.${objKey}.status`,
-                                    )}
+                                    /* Coerced for the same reason as the rule
+                                       switch above: an undefined status would
+                                       hand this switch to Radix's own state. */
+                                    checked={
+                                      !!watch(
+                                        `callRules.incomingCall.deviceOptions.${objKey}.status`,
+                                      )
+                                    }
                                   />
                                 </p>
                                 <p className="w-full text-sm">

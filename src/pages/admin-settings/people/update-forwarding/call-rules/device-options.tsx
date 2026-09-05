@@ -58,7 +58,10 @@ const SortableItem: FC<any> = ({
               }
             }
           }}
-          checked={watch(`callRules.incomingCall.deviceOptions.${objKey}.status`)}
+          /* Coerced: `checked={undefined}` makes Radix treat the switch as
+             uncontrolled, after which it keeps its own state and stops
+             agreeing with the form. */
+          checked={!!watch(`callRules.incomingCall.deviceOptions.${objKey}.status`)}
         />
       </p>
       <p className="w-full font-medium text-sm">

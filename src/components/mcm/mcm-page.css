@@ -84,6 +84,10 @@
   --hold-wash: #dcf1f7;
 
   --shadow-sm: 0 1px 2px rgba(13, 21, 38, 0.06), 0 1px 1px rgba(13, 21, 38, 0.04);
+  /* The shadow a card takes under the pointer. One token so every card
+     on the account pages lifts by the same amount — they were each
+     carrying their own hand-written rgba, which drifted. */
+  --lift: 0 6px 18px -8px rgba(13, 21, 38, 0.2);
   --shadow: 0 4px 14px rgba(13, 21, 38, 0.07), 0 1px 3px rgba(13, 21, 38, 0.05);
   --shadow-lg: 0 18px 44px rgba(13, 21, 38, 0.14), 0 3px 10px rgba(13, 21, 38, 0.07);
   --r: 12px;
@@ -127,6 +131,7 @@
   --hold: #38bdf8;
   --hold-wash: #0d2a3a;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --lift: 0 6px 18px -8px rgba(0, 0, 0, 0.55);
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6);
 
@@ -4046,33 +4051,6 @@
   }
 }
 
-/* Sticky action bar for a form whose Submit sits inside the scrolling area.
-   Several pages put the save button at the natural end of a long form, which
-   means it is below the fold until the person scrolls to the bottom — easy to
-   miss entirely, and the most common reason a change is filled in and never
-   saved. Sticking it to the bottom of its own scroll container keeps it on
-   screen without moving it out of the form it belongs to. */
-.mcm-stickyfoot {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 12px 0;
-  background: var(--surface-1, #fff);
-  border-top: 1px solid var(--line, #e5e7eb);
-}
-
-/* Pushes any hint text to the left of the buttons. */
-.mcm-stickyfoot .mcm-stickyfoot-hint {
-  margin-right: auto;
-  color: var(--ink-3, #6b7280);
-  font-size: 12px;
-}
-
 /* Briefly outlines the section a setup-guide step jumped to. Without it the
    page scrolls and nothing tells you which row you landed on. */
 .mcm-flash {
@@ -6289,4 +6267,1493 @@
 
 .mcm-rail-item.is-lit .mcm-rail-label {
   font-weight: 600;
+}
+
+/* ==================================================================
+   My Account — shared page shell
+   ------------------------------------------------------------------
+   The page used to be one white card with three more bordered cards
+   (`.mcm-fsec`) nested inside it, everything stacked full-width at
+   `max-width: 80%`. Two problems with that: cards inside cards give the
+   eye no hierarchy, and a percentage width means the form fields keep
+   stretching on a wide monitor — at 1920px the inputs were over 1500px
+   across for content that is a first name.
+
+   So: a real container, and a split. What you can edit sits in the main
+   column; what the system already knows about you — which number rings,
+   what happens when you miss it — sits in a narrower column beside it,
+   sticky, so it stays readable while you work through the form. The
+   `.mcm-fsec` sections are now the page's own cards rather than being
+   boxed inside another one.
+   ================================================================== */
+.mcm-acct {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.mcm-acct-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px 28px;
+}
+
+/* 1400px rather than a percentage: wide enough for the two columns to
+   breathe, narrow enough that a text input never becomes a 1500px slab. */
+.mcm-profile-grid {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 1180px) {
+  .mcm-profile-grid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+}
+
+.mcm-profile-main {
+  min-width: 0;
+}
+
+/* Sticky so the call-coverage answer stays on screen while you edit; it
+   is the thing people came to check. Falls back to a normal stacked
+   block on narrow screens, where sticky would just eat the viewport. */
+.mcm-profile-aside {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 1180px) {
+  .mcm-profile-aside {
+    position: sticky;
+    top: 0;
+  }
+}
+
+/* ---- identity header ----
+   Avatar, name and the two facts that identify a person on a phone
+   system (extension, location) in one band, so the top of the page
+   answers "is this me" before any form field does. */
+.mcm-profile-id {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+}
+
+.mcm-profile-photo {
+  position: relative;
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface-2);
+}
+.mcm-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The scrim is the only affordance saying the photo is clickable, so it
+   carries the label rather than a badge sitting permanently over the
+   picture. Opacity only — nothing here moves. */
+.mcm-profile-photo-scrim {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 21, 38, 0.45);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.mcm-profile-photo:hover .mcm-profile-photo-scrim,
+.mcm-profile-photo:focus-within .mcm-profile-photo-scrim {
+  opacity: 1;
+}
+
+.mcm-profile-id-main {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.mcm-profile-id-name {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.mcm-profile-id-role {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* Extension and location as quiet facts, not form fields — they are read
+   from the record and set elsewhere. Tabular figures so the extension
+   does not jitter against the label beside it. */
+.mcm-profile-id-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 10px;
+}
+.mcm-profile-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mcm-profile-fact-k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-profile-fact-v {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.mcm-profile-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.mcm-profile-photo-actions button,
+.mcm-profile-photo-actions label {
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+.mcm-profile-photo-actions .is-upload {
+  color: var(--accent-ink);
+}
+.mcm-profile-photo-actions .is-remove {
+  color: var(--crit);
+}
+.mcm-profile-photo-actions button:hover,
+.mcm-profile-photo-actions label:hover {
+  text-decoration: underline;
+}
+.mcm-profile-photo-hint {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+
+/* ---- unsaved-changes bar ----
+   The first version of this was a permanently-present bordered card that
+   floated over the form, which is the worst of both: a standing strip of
+   chrome that still could not tell you whether anything was pending. This
+   only exists while there is something to save, and reads as a bar docked
+   to the bottom of the column — squared off at the bottom, lifted with a
+   shadow rather than outlined on all four sides, so it looks attached to
+   the viewport edge instead of dropped on top of the content. */
+.mcm-page .mcm-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-bottom-color: transparent;
+  border-radius: var(--r) var(--r) 0 0;
+  background: var(--surface);
+  box-shadow: 0 -6px 18px -10px rgba(13, 21, 38, 0.28);
+}
+
+/* An accent dot rather than a warning icon: there is nothing wrong here,
+   the page is just holding edits. */
+.mcm-page .mcm-savebar-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.mcm-page .mcm-savebar-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mcm-page .mcm-savebar-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.mcm-page .mcm-savebar-discard {
+  flex: none;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-page .mcm-savebar-discard:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--ink-4);
+  color: var(--ink);
+}
+.mcm-page .mcm-savebar-discard:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Values the record does not have yet read as absent, not as content. */
+.mcm-page .mcm-profile-id-role.is-empty,
+.mcm-page .mcm-profile-fact-v.is-empty {
+  color: var(--ink-4);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .mcm-page .mcm-savebar {
+    flex-wrap: wrap;
+  }
+  .mcm-page .mcm-savebar-text {
+    flex-basis: 100%;
+  }
+}
+
+/* ---- "How calls reach you" (Profile aside) ----
+   Written originally as a full-width band of three tiles with hex
+   literals for colour. It now sits in a 360px column, so the facts are
+   rows and the verdict — the thing somebody opened this page to check —
+   leads instead of trailing the reference data. */
+.mcm-page .mcm-coverage {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  padding: 14px;
+}
+.mcm-page .mcm-coverage-h {
+  margin-bottom: 10px;
+}
+.mcm-page .mcm-coverage-t {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.mcm-page .mcm-coverage-d {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.mcm-page .mcm-coverage-verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 11px;
+  border: 1px solid;
+  border-radius: var(--r-sm);
+}
+.mcm-page .mcm-coverage-verdict.is-ok {
+  border-color: color-mix(in srgb, var(--live) 35%, var(--line));
+  background: var(--live-wash);
+}
+.mcm-page .mcm-coverage-verdict.is-warn {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+}
+.mcm-page .mcm-coverage-verdict-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 1px;
+}
+.mcm-page .mcm-coverage-verdict.is-ok .mcm-coverage-verdict-icon {
+  color: var(--live);
+}
+.mcm-page .mcm-coverage-verdict.is-warn .mcm-coverage-verdict-icon {
+  color: var(--warn);
+}
+.mcm-page .mcm-coverage-verdict-t {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.mcm-page .mcm-coverage-verdict-d {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.mcm-page .mcm-coverage-verdict-note {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 5px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-coverage-verdict-note strong {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.mcm-page .mcm-coverage-facts {
+  margin-top: 10px;
+  border-top: 1px solid var(--line-2);
+}
+.mcm-page .mcm-coverage-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 0;
+}
+.mcm-page .mcm-coverage-fact + .mcm-coverage-fact {
+  border-top: 1px solid var(--line-2);
+}
+.mcm-page .mcm-coverage-fact-icon {
+  display: flex;
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-coverage-fact-k {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-page .mcm-coverage-fact-v {
+  margin: 1px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.mcm-page .mcm-coverage-fact-hint {
+  margin: 1px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* A single-column account page — Preferences, Notifications, Security and
+   the rest, which are one stack of settings with no companion panel. The
+   narrower cap is deliberate: a settings form is a column of labels and
+   controls, and past roughly 1000px the label and its control drift so far
+   apart that they stop reading as a pair. Profile is wider because it has
+   a second column to fill. */
+.mcm-acct-narrow {
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+/* A short factual note in a page head — currently "N settings are set by
+   your company and cannot be changed here", which is the sort of thing
+   people otherwise work out one greyed-out control at a time. */
+.mcm-page .mcm-acct-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-end;
+  max-width: 42ch;
+  padding: 7px 11px;
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.mcm-page .mcm-acct-note svg {
+  color: var(--accent-ink);
+}
+
+/* ==================================================================
+   My Account — interaction and motion
+   ------------------------------------------------------------------
+   Deliberately quiet. These are settings screens somebody opens to change
+   one thing, so motion is here to answer two questions — "is this row the
+   one I am pointing at" and "where did that bar come from" — and nothing
+   else. Everything animates `transform`, `opacity`, `box-shadow` or
+   `border-color` only, and all of it is off under prefers-reduced-motion.
+   ================================================================== */
+
+/* Setting rows. These are rendered by `CommonSettingPermission`, which is
+   shared with ten-odd admin screens, so the hover is scoped to the account
+   pages rather than added to that component. Border and shadow only: these
+   rows sit in a tight vertical stack and lifting one would shove the
+   others visually. */
+.mcm-acct .mcm-acct-narrow .grid > div {
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-acct .mcm-acct-narrow .grid > div:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+/* A row containing the control you are actually using stays lit, so the
+   highlight does not vanish the moment the pointer moves to its select. */
+.mcm-acct .mcm-acct-narrow .grid > div:focus-within {
+  border-color: var(--accent-edge);
+}
+
+/* The save bar arrives because you changed something; sliding it up from
+   the edge says where it came from. 160ms and 8px — enough to read as
+   movement, short enough not to delay reaching the button. */
+.mcm-page .mcm-savebar {
+  animation: mcm-savebar-in 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mcm-savebar-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Press feedback on the bar's own controls. */
+.mcm-page .mcm-savebar-discard:active:not(:disabled),
+.mcm-page .mcm-savebar button[type='submit']:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.mcm-page .mcm-savebar button[type='submit'] {
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+/* Profile identity card: the photo is the only interactive thing on it, and
+   it already has its own scrim, so the card itself only firms up its edge. */
+.mcm-page .mcm-profile-id {
+  transition: border-color 0.16s ease;
+}
+.mcm-page .mcm-profile-id:hover {
+  border-color: var(--accent-edge);
+}
+
+/* Coverage rows in the Profile aside. */
+.mcm-page .mcm-coverage-fact {
+  transition: background-color 0.16s ease;
+}
+.mcm-page .mcm-coverage-fact:hover {
+  background: var(--surface-2);
+}
+
+/* Focus rings, which none of the above had. Keyboard users get the same
+   "this is the one" answer the pointer already gets. */
+.mcm-page .mcm-profile-photo:focus-visible,
+.mcm-page .mcm-savebar-discard:focus-visible,
+.mcm-page .mcm-profile-photo-actions button:focus-visible,
+.mcm-page .mcm-profile-photo-actions label:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-acct .mcm-acct-narrow .grid > div,
+  .mcm-page .mcm-savebar,
+  .mcm-page .mcm-savebar button[type='submit'],
+  .mcm-page .mcm-profile-id,
+  .mcm-page .mcm-coverage-fact,
+  .mcm-page .mcm-avatar-chip,
+  .mcm-page .mcm-profile-photo-scrim {
+    transition: none;
+    animation: none;
+  }
+  .mcm-page .mcm-savebar-discard:active:not(:disabled),
+  .mcm-page .mcm-savebar button[type='submit']:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ==================================================================
+   My Phone — the line band
+   ------------------------------------------------------------------
+   Extension, direct number and outbound caller ID, above the rules.
+   They are the answer to "which number am I", which the rules below
+   never state, and which otherwise takes three other screens to
+   assemble. Read-only by design: two of the three are an admin's to
+   set, and the third is edited in the form underneath.
+   ================================================================== */
+.mcm-page .mcm-lineband {
+  display: grid;
+  gap: 10px;
+  /* auto-fit rather than a fixed count: My Phone puts three facts here and
+     Greetings four, and a 200px floor is the width at which the value and its
+     hint still read on one or two lines. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-bottom: 14px;
+}
+.mcm-page .mcm-lineband-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .mcm-lineband-item:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+.mcm-page .mcm-lineband-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-lineband-k {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-page .mcm-lineband-v {
+  margin: 2px 0 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+/* A fact nobody has set says so in the quieter weight, so "None" does
+   not read as a value somebody chose. */
+.mcm-page .mcm-lineband-v.is-empty {
+  font-weight: 600;
+  color: var(--ink-4);
+}
+.mcm-page .mcm-lineband-hint {
+  margin: 2px 0 0;
+  /* Two lines held open whether or not this hint needs them. The tiles
+     are grid cells of equal height, so a hint that drops from two lines
+     to one when a value changes resizes every tile beside it — the whole
+     band twitches over a word. */
+  min-height: 2.7em;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+/* Rule panels get the same "this is the one you are pointing at" answer
+   the setting rows on Preferences get. Scoped to the account pages: the
+   same component is the admin People forwarding drawer, which is a
+   modal and does not want a hover that reads as clickable. Border and
+   shadow only — these cards sit in a tight stack and lifting one would
+   shove the rest visually. */
+.mcm-acct .mcm-rule {
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-acct .mcm-rule:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+/* An open panel whose control you are using stays lit, so the highlight
+   does not drop the moment the pointer moves onto a select. */
+.mcm-acct .mcm-rule:focus-within {
+  border-color: var(--accent-edge);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-page .mcm-lineband-item,
+  .mcm-acct .mcm-rule {
+    transition: none;
+  }
+}
+
+/* ==================================================================
+   Account pages — a standing notice
+   ------------------------------------------------------------------
+   For something true of the whole screen that is not about what you
+   just did: a feature that is switched off upstream, a rule the
+   company owns. Distinct from `.mcm-savebar`, which is about the edit
+   in front of you.
+   ================================================================== */
+.mcm-page .mcm-acct-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink-4);
+  border-radius: var(--r);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.mcm-page .mcm-acct-alert strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+.mcm-page .mcm-acct-alert.is-warn {
+  border-color: color-mix(in srgb, var(--warn) 34%, var(--surface));
+  border-left-color: var(--warn);
+  background: var(--warn-wash);
+}
+.mcm-page .mcm-acct-alert.is-warn strong {
+  color: var(--warn);
+}
+
+/* ==================================================================
+   Notifications — the channel grid
+   ------------------------------------------------------------------
+   Events down the side, channels across the top. This replaces three
+   stacked cards each holding four switch boxes: twelve boxes that
+   answered "is voicemail on for email" one at a time, when the
+   question is really a comparison across a row.
+
+   Below 900px the same markup stacks — the column header row is
+   dropped and each switch shows its own label — because four columns
+   of switches do not survive a phone.
+   ================================================================== */
+.mcm-page .mcm-notif {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.mcm-page .mcm-notif-head {
+  display: none;
+}
+.mcm-page .mcm-notif-corner,
+.mcm-page .mcm-notif-ch {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-notif-ch em {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.35;
+  color: var(--ink-4);
+}
+
+.mcm-page .mcm-notif-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  transition: background-color 0.16s ease;
+}
+.mcm-page .mcm-notif-row + .mcm-notif-row {
+  border-top: 1px solid var(--line-2);
+}
+.mcm-page .mcm-notif-row:hover {
+  background: var(--surface-2);
+}
+.mcm-page .mcm-notif-row:focus-within {
+  background: var(--surface-2);
+}
+
+/* The event itself: icon tile, name, one line of plain English. */
+.mcm-page .mcm-notif-ev {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+}
+.mcm-page .mcm-notif-ev-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-notif-ev-n {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Held open to one line box whether or not the marker beside the name
+     is showing, so switching a channel on cannot resize the row. */
+  min-height: 20px;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mcm-page .mcm-notif-ev-d {
+  margin: 1px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+/* Said on the row it applies to. Every channel off is a real state, and
+   it is silent by definition, so nothing else on the row reports it. */
+/* Sized to fit inside the name's 20px line box: any taller and hiding it
+   would resize the row, which is the whole point of moving it here. */
+.mcm-page .mcm-notif-silent {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  color: var(--warn);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* One channel. A label, because on a narrow screen the column header is
+   gone and a bare switch says nothing. */
+.mcm-page .mcm-notif-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+.mcm-page .mcm-notif-cell:hover {
+  border-color: var(--accent-edge);
+}
+.mcm-page .mcm-notif-cell.is-on {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+}
+/* The one cell of the grid that is not a setting. It holds a dash, not
+   a control, so it takes no pointer cursor and no hover edge — and it
+   is not dimmed as a whole, because the channel name beside it on a
+   narrow screen still has to be readable. */
+.mcm-page .mcm-notif-cell.is-na {
+  cursor: default;
+}
+.mcm-page .mcm-notif-cell.is-na:hover {
+  border-color: var(--line);
+  background: var(--surface);
+}
+.mcm-page .mcm-notif-na {
+  flex: none;
+  color: var(--ink-4);
+  font-size: 15px;
+  line-height: 1;
+  user-select: none;
+}
+.mcm-page .mcm-notif-cell-k {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* The number texts go to, revealed by its own switch. Full width in the
+   grid so it sits under the row it belongs to rather than inside one
+   cramped column. */
+.mcm-page .mcm-notif-phone {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 12px;
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+}
+.mcm-page .mcm-notif-phone-k {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-notif-phone-d {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+@media (min-width: 900px) {
+  .mcm-page .mcm-notif-head,
+  .mcm-page .mcm-notif-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(4, 118px);
+    align-items: center;
+    gap: 10px;
+  }
+  .mcm-page .mcm-notif-head {
+    align-items: end;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+  }
+  /* The switch is the whole control up here; the column header already
+     names it, so repeating the label in every cell is twelve redundant
+     words across the grid. */
+  .mcm-page .mcm-notif-cell {
+    justify-content: center;
+    background: transparent;
+    border-color: transparent;
+  }
+  /* No box around the switch on hover. Up here the cell is invisible
+     padding that widens the hit target, so lighting it up drew a
+     bordered container out of nowhere every time the pointer crossed
+     a switch — which reads as a control appearing rather than as
+     feedback. The row underneath already lights up, and that is the
+     feedback. Written out rather than deleted because the narrow
+     layout's hover rule above would otherwise still apply, and there
+     the cell is a real bordered row where a hover edge belongs. */
+  .mcm-page .mcm-notif-cell:hover {
+    border-color: transparent;
+    background: transparent;
+  }
+  /* Declared after the hover rule and at equal specificity, so a
+     channel that is on keeps its edge while the pointer is over it
+     instead of flickering off. */
+  .mcm-page .mcm-notif-cell.is-on {
+    border-color: var(--accent-edge);
+    background: var(--accent-wash);
+  }
+  .mcm-page .mcm-notif-cell.is-na,
+  .mcm-page .mcm-notif-cell.is-na:hover {
+    border-color: transparent;
+    background: transparent;
+  }
+  .mcm-page .mcm-notif-cell-k {
+    display: none;
+  }
+  .mcm-page .mcm-notif-phone {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-page .mcm-notif-row,
+  .mcm-page .mcm-notif-cell {
+    transition: none;
+  }
+}
+
+/* ==================================================================
+   Greetings — the editor, dressed for the account pages
+   ------------------------------------------------------------------
+   `CommonGreetingNotification` is shared by five screens (number
+   forwarding, call queues, IVR menus, campaigns and the admin People
+   drawer), so it is NOT edited to suit this one. Its card is written
+   with hex literals and a fixed half-width control column; both are
+   corrected here, scoped to `.mcm-acct`, which leaves the other four
+   screens exactly as they were.
+   ================================================================== */
+.mcm-acct .mcm-fsec > div > div:first-child {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+/* Each media slot becomes a row of its own rather than four stacked
+   blocks separated by nothing, so the switch, the label and the file
+   picker read as one unit. */
+.mcm-acct .mcm-fsec > div > div:first-child > div > div {
+  padding: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+.mcm-acct .mcm-fsec > div > div:first-child > div > div + div {
+  margin-top: 10px;
+}
+.mcm-acct .mcm-fsec > div > div:first-child > div > div:hover {
+  border-color: var(--accent-edge);
+  background: var(--surface-2);
+}
+.mcm-acct .mcm-fsec > div > div:first-child > div > div:focus-within {
+  border-color: var(--accent-edge);
+}
+/* The control column is `w-1/2` with a `w-80` child inside it, which on a
+   narrow column leaves the picker cropped and on a wide one leaves it
+   stranded against the left edge. Full width up to a readable maximum. */
+.mcm-acct .template-greeting-control-wrap {
+  width: 100%;
+}
+.mcm-acct .template-greeting-control {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ==================================================================
+   Security & Privacy
+   ------------------------------------------------------------------
+   Two things you can do at the top, then the list of everywhere you
+   are signed in. The two actions were previously two full-width bars
+   of the same weight, which gave "change your password" and "end
+   every session you have" identical visual authority.
+   ================================================================== */
+.mcm-page .mcm-seccards {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 18px;
+}
+@media (min-width: 900px) {
+  .mcm-page .mcm-seccards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+}
+
+.mcm-page .mcm-seccard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .mcm-seccard:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+/* The destructive one keeps a red edge whatever the pointer is doing,
+   because which of these two cards you are about to press matters. */
+.mcm-page .mcm-seccard.is-risk {
+  border-left: 3px solid var(--crit);
+}
+.mcm-page .mcm-seccard.is-risk:hover {
+  border-color: var(--line);
+  border-left-color: var(--crit);
+}
+.mcm-page .mcm-seccard-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--accent-edge);
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-seccard.is-risk .mcm-seccard-ico {
+  border-color: color-mix(in srgb, var(--crit) 30%, var(--surface));
+  background: var(--crit-wash);
+  color: var(--crit);
+}
+.mcm-page .mcm-seccard-t {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mcm-page .mcm-seccard-d {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+/* Buttons on the second grid column, under the text, so both cards'
+   actions sit on the same line whatever the copy above them runs to. */
+.mcm-page .mcm-seccard-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  grid-column: 2;
+  margin-top: 10px;
+}
+
+/* ── The device list ─────────────────────────────────────────────── */
+.mcm-page .mcm-devices-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.mcm-page .mcm-devices-t {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.mcm-page .mcm-devices-d {
+  margin: 2px 0 0;
+  max-width: 60ch;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.mcm-page .mcm-devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcm-page .mcm-device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .mcm-device:hover {
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+/* The session you are reading this in. Marked on the row, not only by a
+   badge at the far end, so it is obvious before you reach the button
+   that would end it. */
+.mcm-page .mcm-device.is-current {
+  border-left: 3px solid var(--live);
+}
+.mcm-page .mcm-device-id {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.mcm-page .mcm-device-kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-device-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.mcm-page .mcm-device-n {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.mcm-page .mcm-device-m {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-device-ip {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .mcm-device-act {
+  flex: none;
+}
+.mcm-page .mcm-device-here {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid color-mix(in srgb, var(--live) 30%, var(--surface));
+  border-radius: var(--r-sm);
+  background: var(--live-wash);
+  color: var(--live);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Nothing to list, and the two reasons for it read differently. */
+.mcm-page .mcm-devices-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 34px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink-4);
+  text-align: center;
+}
+.mcm-page .mcm-devices-empty-t {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.mcm-page .mcm-devices-empty-d {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+/* Loading: the shape of the answer, not a spinner where the answer goes. */
+.mcm-page .mcm-device.is-skeleton {
+  align-items: flex-start;
+  pointer-events: none;
+}
+.mcm-page .mcm-device.is-skeleton:hover {
+  border-color: var(--line);
+  box-shadow: none;
+}
+.mcm-page .mcm-skel {
+  display: block;
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--line-2), var(--line), var(--line-2));
+  background-size: 200% 100%;
+  animation: mcm-skel-sweep 1.2s ease-in-out infinite;
+}
+.mcm-page .mcm-skel-av {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 999px;
+}
+.mcm-page .mcm-skel-l {
+  height: 10px;
+}
+@keyframes mcm-skel-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-page .mcm-seccard,
+  .mcm-page .mcm-device {
+    transition: none;
+  }
+  .mcm-page .mcm-skel {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   Media Files — the add panel
+   ------------------------------------------------------------------
+   Recording, text-to-speech and upload replace the table while they
+   are open, so the panel needs to read as the thing you are now doing
+   rather than as a card floating on a grey wash.
+   ================================================================== */
+.mcm-page .mcm-media-add {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: mcm-media-add-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mcm-media-add-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mcm-page .mcm-media-add-h {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+.mcm-page .mcm-media-add-t {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.mcm-page .mcm-media-add-d {
+  margin: 3px 0 0;
+  max-width: 56ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-page .mcm-media-add {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   My Account — arrival, reveal and lift
+   ------------------------------------------------------------------
+   One motion vocabulary for all seven screens, kept deliberately
+   small. These are settings pages somebody opens to change one thing,
+   so motion is here to answer three questions and nothing else:
+   "has the page arrived", "where did that block come from", and "is
+   this the card I am pointing at".
+
+   Everything animates `transform`, `opacity`, `border-color` or
+   `box-shadow` — never a layout property — so none of it can cost a
+   reflow, and all of it is off under prefers-reduced-motion at the
+   bottom of this block. No `will-change` anywhere: standing GPU
+   layers on a dozen cards cost more than the animation saves.
+   ================================================================== */
+
+@keyframes mcm-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Blocks settle in when the page arrives. 6px and 200ms — enough to
+   read as the page assembling itself, short enough that nobody is
+   waiting on it. `backwards` holds the start frame during the delay,
+   so a staggered card does not flash at full opacity first. */
+.mcm-acct .mcm-acct-alert,
+.mcm-acct .mcm-lineband-item,
+.mcm-acct .mcm-notif,
+.mcm-acct .mcm-seccard,
+.mcm-acct .mcm-devices,
+.mcm-acct .mcm-profile-main,
+.mcm-acct .mcm-profile-aside,
+.mcm-acct .mcm-fsec,
+.mcm-acct .mcm-rule {
+  animation: mcm-rise-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* The stagger. Only the first few, and only 35ms apart: a long cascade
+   turns into a thing you wait for. Anything past the fourth card
+   arrives with the fourth. */
+.mcm-acct .mcm-lineband-item:nth-child(2),
+.mcm-acct .mcm-seccard:nth-child(2) {
+  animation-delay: 0.035s;
+}
+.mcm-acct .mcm-lineband-item:nth-child(3) {
+  animation-delay: 0.07s;
+}
+.mcm-acct .mcm-lineband-item:nth-child(n + 4) {
+  animation-delay: 0.105s;
+}
+/* The rule panels are counted from the end, not the start: they share a
+   parent with the section heading, the summary and the coming-soon note,
+   so counting forwards would give the first rule the fourth card's
+   delay. From the end they are always the last three. */
+.mcm-acct .mcm-rule:nth-last-child(3) {
+  animation-delay: 0.035s;
+}
+.mcm-acct .mcm-rule:nth-last-child(2) {
+  animation-delay: 0.07s;
+}
+.mcm-acct .mcm-rule:nth-last-child(1) {
+  animation-delay: 0.105s;
+}
+
+/* Blocks that appear because you switched something on: the number
+   texts go to, an opened rule, the greeting picker. Same movement as
+   arrival, so revealing and arriving read as one language. */
+.mcm-acct .mcm-notif-phone,
+.mcm-acct .mcm-rule-b,
+.mcm-acct .template-greeting-control > * {
+  animation: mcm-rise-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* ---- lift ----
+   Cards that stand alone in a gap take a 1px rise under the pointer.
+   Rows in a tight stack — setting rows, rule panels, notification rows
+   — deliberately do not: lifting one of those shoves its neighbours
+   visually even though nothing has moved. */
+.mcm-acct .mcm-lineband-item,
+.mcm-acct .mcm-seccard,
+.mcm-acct .mcm-device:not(.is-skeleton) {
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mcm-acct .mcm-lineband-item:hover,
+.mcm-acct .mcm-seccard:hover,
+.mcm-acct .mcm-device:not(.is-skeleton):hover {
+  transform: translateY(-1px);
+}
+
+/* The icon tile inside a card warms up with it, so the card reads as
+   one object under the pointer rather than a box with a sticker on it. */
+.mcm-acct .mcm-lineband-ico,
+.mcm-acct .mcm-notif-ev-ico,
+.mcm-acct .mcm-seccard-ico,
+.mcm-acct .mcm-device-kind {
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+.mcm-acct .mcm-lineband-item:hover .mcm-lineband-ico,
+.mcm-acct .mcm-notif-row:hover .mcm-notif-ev-ico,
+.mcm-acct .mcm-device:hover .mcm-device-kind {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Keyboard parity. Everything above answers "am I pointing at this";
+   this answers the same question for somebody who never touches a
+   mouse, and it is the one state the pass had missing. */
+.mcm-acct .mcm-notif-cell:focus-within,
+.mcm-acct .mcm-lineband-item:focus-within,
+.mcm-acct .mcm-seccard:focus-within,
+.mcm-acct .mcm-device:focus-within {
+  border-color: var(--accent-edge);
+}
+.mcm-acct button:focus-visible,
+.mcm-acct [role='switch']:focus-visible,
+.mcm-acct .ptabstrip button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-acct .mcm-acct-alert,
+  .mcm-acct .mcm-lineband-item,
+  .mcm-acct .mcm-notif,
+  .mcm-acct .mcm-seccard,
+  .mcm-acct .mcm-devices,
+  .mcm-acct .mcm-profile-main,
+  .mcm-acct .mcm-profile-aside,
+  .mcm-acct .mcm-fsec,
+  .mcm-acct .mcm-rule,
+  .mcm-acct .mcm-notif-phone,
+  .mcm-acct .mcm-rule-b,
+  .mcm-acct .template-greeting-control > * {
+    animation: none;
+  }
+  .mcm-acct .mcm-lineband-item,
+  .mcm-acct .mcm-seccard,
+  .mcm-acct .mcm-device,
+  .mcm-acct .mcm-lineband-ico,
+  .mcm-acct .mcm-notif-ev-ico,
+  .mcm-acct .mcm-seccard-ico,
+  .mcm-acct .mcm-device-kind {
+    transition: none;
+  }
+  .mcm-acct .mcm-lineband-item:hover,
+  .mcm-acct .mcm-seccard:hover,
+  .mcm-acct .mcm-device:not(.is-skeleton):hover {
+    transform: none;
+  }
 }

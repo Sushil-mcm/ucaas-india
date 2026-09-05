@@ -1,10 +1,12 @@
-// import Breadcrumb from '@/components/custom/breadcrumb';
 import CommonSettingPermission from '@/components/common-settings';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
+import { Lock } from 'lucide-react';
+import '@/components/mcm/mcm-page.css';
 import { POLICY_FIELDS, useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
 import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { isUnchanged } from '@/lib/form-baseline';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
 import {
   FORWARDING_TAB_CONSTANT,
@@ -21,14 +23,17 @@ interface GeneralProps {
   heading?: string;
 }
 
-export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
-  /* The page head above prints the title; this puts the sentence that used
-     to sit under it behind that head's info button instead. */
+/* "Preferences" is what the navigation calls this screen. The heading said
+   "General", which matched nothing the user had clicked to get here. */
+export const General: FC<GeneralProps> = ({ heading = 'Preferences' }) => {
   useSetAdminPageMeta({ description: 'Your own regional settings, business hours and call handling. Company-wide rules live under Phone System → Preferences.' });
 
-  // const breadcrumbData = [{ label: 'Settings' }, { label: 'General' }];
   const queryClient: any = useQueryClient();
   const [schemaContext, setSchemaContext] = useState<any>(null);
+  /* Serialised copy of the settings as they arrived, so "has anything
+     changed" is a comparison rather than a flag something else has to
+     remember to set. Also what Discard restores. */
+  const [baselineSettings, setBaselineSettings] = useState<string | null>(null);
 
   /* The same company rule the editor below reads, read once more here so the
      validation agrees with what is on screen. A setting the company has locked is
@@ -217,56 +222,104 @@ export const General: FC<GeneralProps> = ({ heading = 'General' }) => {
       });
       setValue('settings.transcription', settingInfo?.transcription || false);
       setValue('settings.ai_call_monitoring', settingInfo?.ai_call_monitoring || false);
+
+      /* Snapshot what was just written in, so everything from here is
+         measured against the saved record. Taken after the writes above, and
+         re-taken whenever the record changes — including the refetch that
+         follows a save, which is what puts the bar away again. */
+      setBaselineSettings(JSON.stringify(methods.getValues('settings')));
     }
   }, [userInfoData]);
 
+  /* Company-locked settings are greyed out, so there is a real distinction
+     worth stating: some of what is on this page may not be yours to change.
+     Saying how many is more use than leaving somebody to discover it one
+     disabled control at a time. */
+  const lockedCount = lockedFields.length;
+
+  /* Not `formState.isDirty`. The controls on this page belong to
+     `CommonSettingPermission`, which writes through `setValue` without
+     `shouldDirty`, so react-hook-form never marks the form dirty and the
+     flag stays false however much you change. Comparing the live values
+     against the snapshot taken when the record loaded is independent of how
+     the child chooses to write them. */
+  const currentSettings = watch('settings');
+  /* Compared through `isUnchanged` rather than by raw string, because
+     `JSON.stringify` is sensitive to key order: the editor writes whole
+     objects back through `setValue`, and one that comes back with its keys in
+     a different order is not a change anybody made. Getting this wrong leaves
+     the bar up over an untouched form, which teaches people to ignore it. */
+  const hasUnsavedChanges = Boolean(
+    baselineSettings && !isUnchanged(JSON.parse(baselineSettings), currentSettings),
+  );
+
   return (
-    <>
-      <section className="w-full h-full min-h-0 flex flex-col overflow-hidden">
-        {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex min-h-0 flex-1 flex-col p-3">
+    <section className="mcm-page mcm-admin mcm-acct">
+      <div className="mcm-acct-body">
+        <div className="mcm-acct-narrow">
           <FormProvider {...methods}>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="flex h-full min-h-0 w-full flex-col gap-3"
-            >
-              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-                <CommonSettingPermission
-                  type={'GENERAL_SETTING'}
-                  data={{ user_info: userInfoData?.user_info, settings: userInfoData?.settings }}
-                  IS_ADMIN={false}
-                  origin={'general_settings'}
-                  company_info={userInfoData?.company_info}
-                  isChooseTemplate={false}
-                  /* These are the person's own settings — their timezone, their
-                     hours, their recording preference — so they may edit them.
-                     This used to be `isEditable={IS_ADMIN}`, which greyed out the
-                     whole page for everyone who was not an admin, including every
-                     tenant that has no company rule at all. Holding people back
-                     from settings the company controls is the company rule's job,
-                     and it does it per setting rather than per job title. */
-                  isEditable={true}
-                  // isShowVoicemail={true}
-                  customClass="md:min-h-[calc(100vh_-_13rem)]"
-                  selectedUserExt={userInfoData?.user_info?.extension}
-                />
-              </div>
-              <div className="flex justify-end mcm-stickyfoot">
-                {/* Saving before the company rule has arrived could write a value the
-                    company does not allow, so the button waits for it. The query has
-                    no retry, so this is one request long either way. */}
-                <Button
-                  variant={'primary'}
-                  type="submit"
-                  disabled={PendingGeneralSettings || companyPolicy.isLoading}
-                >
-                  {PendingGeneralSettings ? 'Submiting...' : 'Submit'}
-                </Button>
-              </div>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <CommonSettingPermission
+                type={'GENERAL_SETTING'}
+                data={{ user_info: userInfoData?.user_info, settings: userInfoData?.settings }}
+                IS_ADMIN={false}
+                origin={'general_settings'}
+                company_info={userInfoData?.company_info}
+                isChooseTemplate={false}
+                /* These are the person's own settings — their timezone, their
+                   hours, their recording preference — so they may edit them.
+                   This used to be `isEditable={IS_ADMIN}`, which greyed out the
+                   whole page for everyone who was not an admin, including every
+                   tenant that has no company rule at all. Holding people back
+                   from settings the company controls is the company rule's job,
+                   and it does it per setting rather than per job title. */
+                isEditable={true}
+                /* The page scrolls as one column now, so this no longer needs
+                   to be its own inner scroller with a hand-computed height. */
+                customClass=""
+                selectedUserExt={userInfoData?.user_info?.extension}
+              />
+
+              {hasUnsavedChanges && (
+                <div className="mcm-savebar" role="status">
+                  <span className="mcm-savebar-dot" aria-hidden="true" />
+                  <span className="mcm-savebar-text">
+                    Unsaved changes
+                    <span className="mcm-savebar-sub">
+                      {companyPolicy.isLoading
+                        ? 'Checking which settings your company allows…'
+                        : 'These apply to your calls only, not the whole company.'}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="mcm-savebar-discard"
+                    onClick={() => {
+                      if (baselineSettings) setValue('settings', JSON.parse(baselineSettings));
+                    }}
+                    disabled={PendingGeneralSettings}
+                  >
+                    Discard
+                  </button>
+                  {/* Saving before the company rule has arrived could write a value the
+                      company does not allow, so the button waits for it. The query has
+                      no retry, so this is one request long either way. */}
+                  <Button
+                    variant={'primary'}
+                    type="submit"
+                    disabled={PendingGeneralSettings || companyPolicy.isLoading}
+                    /* Same `.mcm-page button` reset as elsewhere strips this
+                       button's background/text-color — `!` forces them back. */
+                    className="!bg-primary !text-white !border-primary hover:!bg-primary/90 min-w-[128px] justify-center"
+                  >
+                    {PendingGeneralSettings ? 'Saving…' : 'Save changes'}
+                  </Button>
+                </div>
+              )}
             </form>
           </FormProvider>
         </div>
-      </section>{' '}
-    </>
+      </div>
+    </section>
   );
 };

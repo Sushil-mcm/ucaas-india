@@ -4,15 +4,64 @@ import { useUser } from '@/hooks/use-user';
 import { handleAlert, capitalizeFirstLetter } from '@/lib/utils';
 import { deviceSecurityList, logout } from '@/services/api';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { LucideMonitor, LucideShieldCheck, LucideTablet, LogOut } from 'lucide-react';
+import {
+  LucideMonitor,
+  LucideShieldCheck,
+  LucideTablet,
+  LogOut,
+  KeyRound,
+  MonitorSmartphone,
+} from 'lucide-react';
 import CustomAvatar from '@/components/custom/custom-avatar';
-import Loader from '@/components/custom/loader';
 import { Input } from '@/components/ui/input';
 import { SearchLine } from '@/assets/icons';
 import { useState, useMemo } from 'react';
 import useDebounce from '@/hooks/use-debounce';
 import ChangePassword from '@/pages/change-password';
-import { KeyRound } from 'lucide-react';
+import '@/components/mcm/mcm-page.css';
+
+/* The list printed the raw `navigator.userAgent` string against every row —
+   ninety characters of version numbers and compatibility tokens that answer
+   nothing. The question somebody is here to answer is "do I recognise this",
+   and the answer is a browser and an operating system. The full string is kept
+   on the row's `title`, because when it does matter, it matters exactly. */
+const describeAgent = (ua?: string): string => {
+  const agent = String(ua || '').trim();
+  if (!agent) return 'Unknown device';
+
+  const browser = /Edg\//.test(agent)
+    ? 'Edge'
+    : /OPR\/|Opera/.test(agent)
+      ? 'Opera'
+      : /Firefox\//.test(agent)
+        ? 'Firefox'
+        : /Chrome\//.test(agent)
+          ? 'Chrome'
+          : /Safari\//.test(agent)
+            ? 'Safari'
+            : '';
+
+  const os = /Windows NT 10/.test(agent)
+    ? 'Windows'
+    : /Windows/.test(agent)
+      ? 'Windows'
+      : /iPhone|iPad|iPod/.test(agent)
+        ? 'iOS'
+        : /Android/.test(agent)
+          ? 'Android'
+          : /Mac OS X/.test(agent)
+            ? 'macOS'
+            : /Linux/.test(agent)
+              ? 'Linux'
+              : '';
+
+  if (browser && os) return `${browser} on ${os}`;
+  if (browser) return browser;
+  if (os) return os;
+  /* Something this does not recognise — a native client, a bot, a proxy. Show
+     the head of the string rather than claiming to know what it is. */
+  return agent.length > 42 ? `${agent.slice(0, 42)}…` : agent;
+};
 
 const Security = () => {
   /* The page head above prints the title; this puts the sentence that used
@@ -74,8 +123,7 @@ const Security = () => {
     [loggedInUsers, currentUserUuid],
   );
 
-
-  const { mutate: logoutMutate } = useMutation({
+  const { mutate: logoutMutate, isPending: isSigningOut } = useMutation({
     mutationFn: logout,
     onSuccess: (data) => {
       handleAlert({ text: data?.data?.data?.message, type: 'success' });
@@ -104,39 +152,52 @@ const Security = () => {
     logoutDevice('except_himself', { user_uuid: currentUserUuid });
   };
 
+  const deviceCount = ownDevices?.length || 0;
+  /* Only meaningful once something has loaded: an empty list during the first
+     fetch is not "no other devices", it is "not known yet". */
+  const otherCount = ownDevices.filter((item: any) => user?.device_token !== item?.uuid).length;
+  const isSearching = Boolean(debouncedSearch.trim());
+
   return (
-    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
-      <div className="gap-3 flex flex-col w-full h-full p-3">
-        <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg border border-[rgba(225,200,165,0.9)]">
-          <div className="flex flex-col gap-1 sm:w-1/2 w-full">
-            <p className="flex items-center gap-2 text-[#2E2D35] font-semibold text-sm">
-              <KeyRound className="h-4 w-4 text-primary" />
-              Password
-            </p>
-            <p className="text-[#9A948F] text-xs">
-              Change the password you sign in with. You will need your current one. Everything
-              already signed in stays signed in — use the device list below to end those.
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)}>
-            Change password
-          </Button>
-        </div>
-        <div className="flex sm:flex-row flex-col items-center justify-between gap-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg border border-[rgba(225,200,165,0.9)]">
-              <div className="flex flex-col gap-1 sm:w-1/2 w-full">
-                <p className="text-[#2E2D35] font-semibold text-sm">Sign out everywhere</p>
-                <p className="text-[#9A948F] text-xs">
-                  Ends every session signed in as you &mdash; useful if you have lost a phone or
-                  used a shared computer. To sign someone else out, an administrator does that
-                  from Users.
+    <section className="mcm-page mcm-admin mcm-acct">
+      <div className="mcm-acct-body">
+        <div className="mcm-acct-narrow">
+          <div className="mcm-seccards">
+            <article className="mcm-seccard">
+              <span className="mcm-seccard-ico" aria-hidden="true">
+                <KeyRound className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="mcm-seccard-t">Password</h2>
+                <p className="mcm-seccard-d">
+                  Change the password you sign in with. You will need your current one. Everything
+                  already signed in stays signed in — use the device list below to end those.
                 </p>
               </div>
-              <div className="flex items-center gap-3 sm:flex-row flex-col sm:w-auto w-full">
+              <div className="mcm-seccard-act">
+                <Button variant="outline" onClick={() => setIsChangePasswordOpen(true)}>
+                  Change password
+                </Button>
+              </div>
+            </article>
+
+            <article className="mcm-seccard is-risk">
+              <span className="mcm-seccard-ico" aria-hidden="true">
+                <LogOut className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="mcm-seccard-t">Sign out everywhere</h2>
+                <p className="mcm-seccard-d">
+                  Ends every session signed in as you — useful if you have lost a phone or used a
+                  shared computer. To sign someone else out, an administrator does that from Users.
+                </p>
+              </div>
+              <div className="mcm-seccard-act">
                 <Button
                   variant="destructiveOutline"
                   onClick={handleLogoutExcept}
-                  disabled={!currentUserUuid}
-                  className="whitespace-nowrap transition-all duration-200"
+                  disabled={!currentUserUuid || isSigningOut || otherCount === 0}
+                  className="whitespace-nowrap"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out my other devices
@@ -144,103 +205,139 @@ const Security = () => {
                 <Button
                   variant="destructiveOutline"
                   onClick={handleLogoutAll}
-                  disabled={!currentUserUuid}
-                  className="whitespace-nowrap transition-all duration-200"
+                  disabled={!currentUserUuid || isSigningOut}
+                  className="whitespace-nowrap"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out everywhere
                 </Button>
               </div>
-        </div>
-        <div className="w-full flex sm:flex-row flex-col items-center justify-between gap-5">
-          <p className="text-[#2E2D35] text-sm">
-            These are sessions from devices and browsers that are successfully signed into your
-            account. You can sign out of any session you don't recognize or that's from a public
-            computer.
-          </p>
-          <div className="flex items-end sm:w-auto w-full">
-            <Input
-              placeholder="Search"
-              className="max-w-64  pl-10"
-              IconPosition="left-0 pl-2 inset-y-0"
-              value={search}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value.startsWith(' ')) return;
-                setSearch(e.target.value);
-              }}
-              Icon={<SearchLine className="text-[#2E2D35]" />}
-            />
+            </article>
           </div>
-        </div>
-        <div className="gap-3 flex flex-col w-full md:h-[calc(100vh-18.5rem)]  overflow-y-auto pr-1">
-          {isLoading ? (
-            <div className="flex justify-center h-full items-center">
-              <Loader variant="blue" />
-            </div>
-          ) : (
-            ownDevices &&
-            ownDevices?.map((item: any) => {
-              return (
-                <div
-                  className="border cursor-pointer p-3 flex sm:flex-row flex-col  gap-2 rounded-lg sm:justify-between bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]
-                  "
-                >
-                  <div className="flex sm:items-center xs:justify-start xs:items-start gap-3 w-full">
-                    <div className="flex flex-col items-center  gap-2">
-                      <CustomAvatar
-                        name={
-                          `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim() ||
-                          'Unknown User'
-                        }
-                        showPresence={true}
-                        size="40"
-                        image={item?.user_detail?.profile}
-                        extension={item?.user_detail?.extension}
-                      />
-                      <span className="w-8 min-w-8 h-8 rounded-sm bg-ucass-primary-200 text-primary p-1.5 flex items-center justify-center">
-                        {item?.device_type === 'W' ? (
-                          <LucideMonitor className="w-4 h-4" />
-                        ) : (
-                          <LucideTablet className="w-4 h-4" />
-                        )}
-                      </span>
+
+          <section className="mcm-devices">
+            <header className="mcm-devices-h">
+              <div className="min-w-0">
+                <h2 className="mcm-devices-t">Where you are signed in</h2>
+                <p className="mcm-devices-d">
+                  Sign out of anything you do not recognise, or anything on a computer you no longer
+                  have.
+                </p>
+              </div>
+              <Input
+                placeholder="Search devices"
+                className="max-w-64 pl-10"
+                IconPosition="left-0 pl-2 inset-y-0"
+                value={search}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearch(e.target.value);
+                }}
+                Icon={<SearchLine className="text-[#2E2D35]" />}
+              />
+            </header>
+
+            {/* Three skeleton rows in the shape of the list, rather than a
+                spinner in the middle of an empty box: the page keeps its
+                layout instead of collapsing and snapping back. */}
+            {isLoading ? (
+              <div className="mcm-devices-list" aria-busy="true">
+                {[0, 1, 2].map((n) => (
+                  <div className="mcm-device is-skeleton" key={n}>
+                    <span className="mcm-skel mcm-skel-av" />
+                    <div className="mcm-device-main">
+                      <span className="mcm-skel mcm-skel-l" style={{ width: '38%' }} />
+                      <span className="mcm-skel mcm-skel-l" style={{ width: '56%' }} />
+                      <span className="mcm-skel mcm-skel-l" style={{ width: '30%' }} />
                     </div>
-                    <div className="flex flex-col w-full gap-1">
-                      <div className="flex flex-col items-start">
-                        <p className="text-[#2E2D35] font-medium text-sm">
-                          {capitalizeFirstLetter(
-                            `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim(),
-                          ) || 'Unknown User'}
+                  </div>
+                ))}
+              </div>
+            ) : deviceCount === 0 ? (
+              /* Both empty cases, said apart: a search that matched nothing is
+                 not the same answer as being signed in nowhere else. */
+              <div className="mcm-devices-empty">
+                <MonitorSmartphone className="h-6 w-6" aria-hidden="true" />
+                <p className="mcm-devices-empty-t">
+                  {isSearching ? 'No device matches that' : 'No sessions to show'}
+                </p>
+                <p className="mcm-devices-empty-d">
+                  {isSearching
+                    ? 'Try part of a browser name, an operating system or an IP address.'
+                    : 'Sign in from another browser or the mobile app and it will be listed here.'}
+                </p>
+              </div>
+            ) : (
+              <div className="mcm-devices-list">
+                {ownDevices.map((item: any) => {
+                  const isCurrent = user?.device_token === item?.uuid;
+                  const name =
+                    capitalizeFirstLetter(
+                      `${item?.user_detail?.first_name || ''} ${item?.user_detail?.last_name || ''}`.trim(),
+                    ) || 'Unknown user';
+                  return (
+                    /* Keyed on the session uuid. This list had no key at all,
+                       so signing one device out made React reuse the row above
+                       it and the wrong device appeared to disappear. */
+                    <article
+                      className={`mcm-device${isCurrent ? ' is-current' : ''}`}
+                      key={item?.uuid || `${item?.ip_address}-${item?.user_agent}`}
+                    >
+                      <div className="mcm-device-id">
+                        <CustomAvatar
+                          name={name}
+                          showPresence={false}
+                          size="40"
+                          image={item?.user_detail?.profile}
+                          extension={item?.user_detail?.extension}
+                        />
+                        <span className="mcm-device-kind" aria-hidden="true">
+                          {item?.device_type === 'W' ? (
+                            <LucideMonitor className="w-4 h-4" />
+                          ) : (
+                            <LucideTablet className="w-4 h-4" />
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="mcm-device-main">
+                        <p className="mcm-device-n" title={item?.user_agent || undefined}>
+                          {describeAgent(item?.user_agent)}
                         </p>
-                        <p className="text-[#9A948F] text-xs">{item?.user_detail?.email || ''}</p>
+                        <p className="mcm-device-m">
+                          {name}
+                          {item?.user_detail?.email ? ` · ${item.user_detail.email}` : ''}
+                        </p>
+                        <p className="mcm-device-ip">
+                          IP {item?.ip_address || 'not recorded'}
+                          {item?.device_type === 'W' ? ' · Desktop' : ' · Mobile'}
+                        </p>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[#9A948F] text-xs">User Agent: {item?.user_agent}</p>
-                        <p className="text-[#9A948F] text-xs">IP Address: {item?.ip_address}</p>
+
+                      <div className="mcm-device-act">
+                        {isCurrent ? (
+                          <span className="mcm-device-here">
+                            <LucideShieldCheck className="w-4 h-4" aria-hidden="true" />
+                            This device
+                          </span>
+                        ) : (
+                          <Button
+                            variant={'outline'}
+                            onClick={() => logoutDevice('single', item)}
+                            disabled={isSigningOut}
+                            className="justify-center"
+                          >
+                            Sign out
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    {user?.device_token === item?.uuid ? (
-                      <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg whitespace-nowrap">
-                        <LucideShieldCheck className="text-green-600 w-4 h-4" />
-                        <span className="text-green-700 text-sm font-medium">Current Device</span>
-                      </div>
-                    ) : (
-                      <Button
-                        variant={'outline'}
-                        onClick={() => logoutDevice('single', item)}
-                        className="flex items-center justify-center"
-                      >
-                        Logout
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
       </div>
       <ChangePassword modalState={isChangePasswordOpen} setModalState={setIsChangePasswordOpen} />

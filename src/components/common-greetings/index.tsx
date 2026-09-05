@@ -82,12 +82,24 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
     <div className={`w-full ${customClass} overflow-y-auto`}>
       <div className="flex flex-col gap-4 p-4 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] ">
         <div className="w-full">
-          {visibleMediaOptions.map(({ name, label, icon, iconClass, disabled }) => (
+          {visibleMediaOptions.map(({ name, label, placeholder, icon, iconClass, disabled }) => (
             <div key={name} className="flex flex-col gap-4 w-full py-2 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center flex-wrap gap-1">
                   <Icon name={icon} className={iconClass} />
-                  <p className="text-[#2E2D35] text-sm font-medium">{`Do you want to add "${capitalizeFirstLetter(label)} message" ?`}</p>
+                  {/* The name of the slot, not a question about it. This read
+                      `Do you want to add "{label} message" ?`, which produced
+                      "On hold music message" and, on the call queue,
+                      "Waiting | No agent available | All agent busy message".
+                      Every caller already passes a display name in
+                      `placeholder`; `label` stays as the fallback. Made a
+                      <label> so the name toggles the switch beside it. */}
+                  <label
+                    htmlFor={`switch-${name}`}
+                    className="text-[#2E2D35] text-sm font-medium cursor-pointer"
+                  >
+                    {placeholder || capitalizeFirstLetter(label)}
+                  </label>
                 </div>
 
                 {name === 'waiting' ? null : (

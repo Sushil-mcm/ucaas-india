@@ -46,6 +46,11 @@ const asObject = (value: unknown): any => {
   }
 };
 
+/* One fact per row rather than a tile in a three-across grid: this panel
+   now sits in a 360px column beside the form, where three tiles would be
+   three cramped boxes. A row gives the value room and keeps the hint on
+   one line. Colours come from the design tokens rather than the hex
+   literals this was written with, so it follows the theme. */
 const Fact = ({
   icon,
   label,
@@ -57,13 +62,15 @@ const Fact = ({
   value?: string;
   hint: string;
 }) => (
-  <div className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
-    <div className="flex items-center gap-2">
-      <span className="text-primary">{icon}</span>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9A948F]">{label}</p>
+  <div className="mcm-coverage-fact">
+    <span className="mcm-coverage-fact-icon" aria-hidden="true">
+      {icon}
+    </span>
+    <div className="min-w-0">
+      <p className="mcm-coverage-fact-k">{label}</p>
+      <p className="mcm-coverage-fact-v">{value?.trim() ? value : '—'}</p>
+      <p className="mcm-coverage-fact-hint">{hint}</p>
     </div>
-    <p className="mt-1 text-sm font-semibold text-[#2E2D35]">{value?.trim() ? value : '—'}</p>
-    <p className="mt-0.5 text-xs text-[#9A948F]">{hint}</p>
   </div>
 );
 
@@ -99,13 +106,39 @@ const HowCallsReachYou = ({
   const covered = coverage.state === 'covered';
 
   return (
-    <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/60 p-3">
-      <p className="text-sm font-semibold text-[#2E2D35]">How calls reach you</p>
-      <p className="mt-0.5 text-xs text-[#9A948F]">
-        Where a call comes in, and what happens if you do not pick it up.
-      </p>
+    <section className="mcm-coverage">
+      <div className="mcm-coverage-h">
+        <h2 className="mcm-coverage-t">How calls reach you</h2>
+        <p className="mcm-coverage-d">
+          Where a call comes in, and what happens if you do not pick it up.
+        </p>
+      </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {/* The answer people came for goes first, not after three reference
+          facts. The heading covers every answer this can give, including
+          the one where forwarding means the phone never rings at all. */}
+      <div className={`mcm-coverage-verdict ${covered ? 'is-ok' : 'is-warn'}`}>
+        {covered ? (
+          <CheckCircle2 className="mcm-coverage-verdict-icon" aria-hidden="true" />
+        ) : (
+          <AlertTriangle className="mcm-coverage-verdict-icon" aria-hidden="true" />
+        )}
+        <div className="min-w-0">
+          <p className="mcm-coverage-verdict-t">When someone calls you</p>
+          <p className="mcm-coverage-verdict-d">{coverage.detail}</p>
+          {covered && voicemailGreeting && (
+            <p className="mcm-coverage-verdict-note">
+              <Voicemail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              Callers hear: {voicemailGreeting}
+            </p>
+          )}
+          <p className="mcm-coverage-verdict-note">
+            Change this under <strong>My Account → My Phone</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div className="mcm-coverage-facts">
         <Fact
           icon={<Hash className="h-4 w-4" />}
           label="Extension"
@@ -129,36 +162,7 @@ const HowCallsReachYou = ({
           hint={timezone ? `Your hours run on ${timezone}.` : 'No timezone set for your location.'}
         />
       </div>
-
-      {/* The consequence of missing a call is the part people are actually
-          unsure about, so it gets its own row rather than a fourth tile. The
-          heading covers every answer this can give, including the one where
-          forwarding means the phone never rings at all. */}
-      <div
-        className={`mt-2 flex items-start gap-2 rounded-lg border p-3 ${
-          covered ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'
-        }`}
-      >
-        {covered ? (
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
-        ) : (
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-        )}
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-[#2E2D35]">When someone calls you</p>
-          <p className="text-xs text-[#2E2D35]">{coverage.detail}</p>
-          {covered && voicemailGreeting && (
-            <p className="mt-1 inline-flex items-center gap-1 text-xs text-[#9A948F]">
-              <Voicemail className="h-3.5 w-3.5" />
-              Callers hear: {voicemailGreeting}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-[#9A948F]">
-            Change this under <span className="font-medium">My Account → My Phone</span>.
-          </p>
-        </div>
-      </div>
-    </div>
+    </section>
   );
 };
 

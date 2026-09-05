@@ -13,6 +13,49 @@ import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
+import { Hash, PhoneIncoming, PhoneOutgoing } from 'lucide-react';
+import { isUnchanged } from '@/lib/form-baseline';
+import '@/components/mcm/mcm-page.css';
+
+/* What the save bar compares, which is not the raw form values.
+ *
+ * The switches on this screen do not toggle a flag — they rewrite the rule's
+ * whole object as they go. Turning Forward All Calls off writes a fresh
+ * default destination rather than restoring the one that was there, and
+ * turning a device off resets its ring time to "6 times / 30 secs". So a
+ * switch flipped on and straight back off left the form holding different
+ * values from the ones it loaded, and the save bar stayed up over a screen
+ * nobody had changed.
+ *
+ * A rule that is switched off has no destination, and a device that is
+ * switched off has no ring time — neither reaches a caller, and neither is
+ * visible on the page while it is off. Reducing both to "off" on each side of
+ * the comparison is what somebody looking at the screen means by "I have not
+ * changed anything". What gets saved is untouched: this only decides whether
+ * the bar is up. */
+const comparable = (rules: any) => {
+  if (!rules || typeof rules !== 'object') return rules;
+  const next: any = { ...rules };
+
+  if (next.forwardCall && !next.forwardCall.enabled) {
+    next.forwardCall = { enabled: false };
+  }
+
+  const devices = next.incomingCall?.deviceOptions;
+  if (devices && typeof devices === 'object') {
+    next.incomingCall = {
+      ...next.incomingCall,
+      deviceOptions: Object.fromEntries(
+        Object.entries(devices).map(([key, device]: [string, any]) => [
+          key,
+          device?.status ? device : { status: false },
+        ]),
+      ),
+    };
+  }
+
+  return next;
+};
 
 const IncomingCalls = () => {
   /* The page head above prints the title; this puts the sentence that used
@@ -20,6 +63,13 @@ const IncomingCalls = () => {
   useSetAdminPageMeta({ description: 'How calls reach you: your devices, forwarding rules and what happens when you do not answer.' });
 
   const [schemaContext, setSchemaContext] = useState(null);
+  /* Serialised copy of the call rules as they arrived, so "has anything
+     changed" is a comparison rather than a flag something else has to set.
+     `formState.isDirty` is no use here: every control on this page belongs to
+     the shared CallRules component, which writes through `setValue` without
+     `shouldDirty`, so the flag never leaves false however much you change.
+     This snapshot is also what Discard restores. */
+  const [baselineRules, setBaselineRules] = useState<string | null>(null);
   const queryClient: any = useQueryClient();
   const { socketEventsManager } = useSocketEvents();
   const { user } = useUser();
@@ -439,6 +489,12 @@ const IncomingCalls = () => {
         value: fallbackValue,
       });
       setValue('callRules.forwardCall.type', { label: 'Send to Voicemail', value: 'VOICEMAIL' });
+      /* Written explicitly rather than left undefined. Everything that reads it
+         already treats undefined as off, so this changes nothing that is saved
+         — but an absent key is dropped by JSON.stringify, which made the
+         snapshot below disagree with the form the moment somebody switched
+         forwarding on and straight back off again. */
+      setValue('callRules.forwardCall.enabled', false);
 
       /* Presence is not edited on this screen, but it is part of the payload it
          saves. With no stored rules there is nothing to hydrate it from, so it
@@ -447,56 +503,139 @@ const IncomingCalls = () => {
          value for a record that has never stored one. */
       setValue('callRules.status', user?.socket_status || 'online');
     }
+    /* Taken after the branch above has finished writing, so it is the record as
+       it arrived rather than a half-populated form. Everything below compares
+       against this to decide whether there is anything to save. */
+    setBaselineRules(JSON.stringify(methods.getValues('callRules')));
   }, [userDetails]);
 
-  useEffect(() => {
-    const subscription = watch((value) => {
-      setSchemaContext(value);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch]);
+  /* The three facts that identify this line on the network. None of them are
+     edited on this page — extension and direct number are set by an admin, and
+     the caller ID is picked from the assigned numbers further down — but they
+     are what somebody checks first, and reading them off three other screens is
+     the reason this page felt like it started mid-sentence. The caller ID is
+     watched rather than read from the record so the band agrees with the
+     dropdown below while a change is still unsaved. */
+  const outboundCallerId = watch('callRules.outgoingCall.defaultCallerId')?.label;
+  const lineFacts = [
+    {
+      key: 'extension',
+      icon: <Hash className="h-4 w-4" aria-hidden="true" />,
+      label: 'Extension',
+      value: userDetails?.user_info?.extension,
+      hint: 'Colleagues dial this from inside the company.',
+      empty: 'Not assigned',
+    },
+    {
+      key: 'direct',
+      icon: <PhoneIncoming className="h-4 w-4" aria-hidden="true" />,
+      label: 'Direct number',
+      value: userDetails?.user_info?.phone,
+      hint: userDetails?.user_info?.phone
+        ? 'Outside callers reach you on this number.'
+        : 'Outside callers cannot dial you straight.',
+      empty: 'None',
+    },
+    {
+      key: 'callerid',
+      icon: <PhoneOutgoing className="h-4 w-4" aria-hidden="true" />,
+      label: 'Your caller ID',
+      value: outboundCallerId,
+      hint: 'What people see when you call them.',
+      empty: 'Not chosen',
+    },
+  ];
+
+  /* Two separate reasons the save bar can be up, and they read differently.
+     One is the ordinary "you changed something". The other is that the
+     fallback shown below has never actually been stored, so there is
+     something to save on a form nobody has touched — which is exactly the
+     case the notice above the rules is warning about. */
+  const currentRules = watch('callRules');
+  const isDirty = Boolean(
+    baselineRules && !isUnchanged(comparable(JSON.parse(baselineRules)), comparable(currentRules)),
+  );
+  const hasUnsavedChanges = isDirty || !fallbackSaved;
 
   return (
-    <section className="w-full flex flex-col overflow-x-auto overflow-y-hidden">
-      <FormProvider {...methods}>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="gap-3 flex flex-col justify-between h-full p-3"
-        >
-          {!fallbackSaved ? (
-            <div className="mcm-notsaved" role="status">
-              <strong>Voicemail is not saved yet.</strong>
-              <span>
-                “If Busy / Unanswered / Unreachable” shows Send to Voicemail below, but nothing has
-                been stored for this account — so unanswered and rejected calls are hung up on
-                instead. Press Submit to apply it.
-              </span>
-            </div>
-          ) : null}
-          {/* What the call path actually reads today, said before the rules
-              rather than left for someone to find out by being rung. The
-              "when someone calls you now" strip inside the rules says what is
-              set; this says which of those settings are in force. */}
-          <div className="mcm-callsummary" role="status">
-            <span className="mcm-callsummary-l">What works today</span>
-            <p>
-              Forward All Calls, Do Not Disturb, your ring time and Default Caller ID are live for
-              calls straight to you. What happens after ringing is live when it sends callers to
-              voicemail, to an extension or hangs up; an outside number, a queue or a menu is saved
-              but not followed after the ring. Which devices ring, and in what order, is saved, not
-              applied yet. Do Not Disturb here means the one in your call rules: the DND status in
-              your avatar menu does not stop calls. Calls through a queue or a menu follow that
-              queue&rsquo;s or menu&rsquo;s own rules.
-            </p>
+    <section className="mcm-page mcm-admin mcm-acct">
+      <div className="mcm-acct-body">
+        <div className="mcm-acct-narrow">
+          <div className="mcm-lineband">
+            {lineFacts.map((fact) => {
+              const set = String(fact.value ?? '').trim();
+              return (
+                <div key={fact.key} className="mcm-lineband-item">
+                  <span className="mcm-lineband-ico">{fact.icon}</span>
+                  <div className="min-w-0">
+                    <p className="mcm-lineband-k">{fact.label}</p>
+                    <p className={`mcm-lineband-v${set ? '' : ' is-empty'}`}>
+                      {set || fact.empty}
+                    </p>
+                    <p className="mcm-lineband-hint">{fact.hint}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <CallRules customClass="md:min-h-[calc(100vh_-_13rem)]" />
-          <div className="flex justify-end gap-2">
-            <Button variant={'primary'} type="submit" disabled={isPendingUpdateMember}>
-              {isPendingUpdateMember ? 'Please wait...' : 'Submit'}
-            </Button>
-          </div>
-        </form>
-      </FormProvider>
+
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+              {!fallbackSaved ? (
+                <div className="mcm-notsaved" role="status">
+                  <strong>Voicemail is not saved yet.</strong>
+                  <span>
+                    “If Busy / Unanswered / Unreachable” shows Send to Voicemail below, but nothing
+                    has been stored for this account — so unanswered and rejected calls are hung up
+                    on instead. Save changes to apply it.
+                  </span>
+                </div>
+              ) : null}
+
+              {/* The page scrolls as one column now, so the rules no longer need
+                  to be their own inner scroller with a hand-computed height. */}
+              <CallRules customClass="" />
+
+              {hasUnsavedChanges && (
+                <div className="mcm-savebar" role="status">
+                  <span className="mcm-savebar-dot" aria-hidden="true" />
+                  <span className="mcm-savebar-text">
+                    {isDirty ? 'Unsaved changes' : 'Nothing stored yet'}
+                    <span className="mcm-savebar-sub">
+                      {isDirty
+                        ? 'These apply to your calls only, not the whole company.'
+                        : 'Save to store the fallback this page is showing you.'}
+                    </span>
+                  </span>
+                  {isDirty && (
+                    <button
+                      type="button"
+                      className="mcm-savebar-discard"
+                      onClick={() => {
+                        if (baselineRules) setValue('callRules', JSON.parse(baselineRules));
+                      }}
+                      disabled={isPendingUpdateMember}
+                    >
+                      Discard
+                    </button>
+                  )}
+                  {/* The `.mcm-page button` reset strips this button's background
+                      and text colour, so `!` forces them back — same as the other
+                      account pages. */}
+                  <Button
+                    variant={'primary'}
+                    type="submit"
+                    disabled={isPendingUpdateMember}
+                    className="!bg-primary !text-white !border-primary hover:!bg-primary/90 min-w-[128px] justify-center"
+                  >
+                    {isPendingUpdateMember ? 'Saving…' : 'Save changes'}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </FormProvider>
+        </div>
+      </div>
     </section>
   );
 };
