@@ -270,6 +270,10 @@ export const GUEST_MEETING_TOKEN_UPDATED_EVENT = 'guest-meeting-token-updated';
 /** Persistent device identifier for this browser; used in login, send-otp, verify-otp */
 export const DEVICE_ID_KEY = 'ucaas-device-id';
 
+/** Whether this browser opted out of the emailed code. Read on the next sign-in,
+    before any code is sent, so it has to outlive the session that set it. */
+export const REMEMBER_DEVICE_KEY = 'ucaas-remember-device';
+
 /** Get or create a persistent device id for this browser (stored in localStorage). */
 export const getDeviceId = (): string => {
   let id = typeof localStorage !== 'undefined' ? localStorage.getItem(DEVICE_ID_KEY) : null;
@@ -278,6 +282,31 @@ export const getDeviceId = (): string => {
     localStorage.setItem(DEVICE_ID_KEY, id);
   }
   return id;
+};
+
+/**
+ * Sign the person out without forgetting which browser this is.
+ *
+ * `localStorage.clear()` looks like the thorough way to end a session, and it is
+ * the reason "Skip the code on this device for 30 days" never worked: it takes
+ * the device id with everything else, so the next sign-in introduces itself as a
+ * brand new device and the server — which matches the 30-day trust on
+ * `device_id` — has nothing to match against. Every sign-in was a first one.
+ *
+ * These two keys describe the browser, not the session, so they are the two that
+ * have to survive a logout. Everything else still goes.
+ */
+export const clearStorageKeepingDeviceIdentity = (): void => {
+  try {
+    const deviceId = localStorage.getItem(DEVICE_ID_KEY);
+    const rememberDevice = localStorage.getItem(REMEMBER_DEVICE_KEY);
+    localStorage.clear();
+    if (deviceId) localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    if (rememberDevice) localStorage.setItem(REMEMBER_DEVICE_KEY, rememberDevice);
+  } catch {
+    /* Storage can be unavailable in a private window or with site data blocked.
+       Losing the device id there costs an extra code, not a broken sign-in. */
+  }
 };
 
 /** When API returns plan expired with isPlanPaymentPending + token, we store company uuid for renew-plan page */

@@ -23,6 +23,7 @@ import {
   handleAlert,
   PLAN_PENDING_COMPANY_UUID_KEY,
   PLAN_PENDING_FLAG_KEY,
+  REMEMBER_DEVICE_KEY,
   RENEW_PLAN_FROM_APP_KEY,
   SESSION_NAME,
 } from '@/lib/utils';
@@ -122,9 +123,9 @@ const Login = () => {
   /* Kept so a trusted device can finish sign-in from the /login response alone,
      without a verify-otp round trip. */
   const loginResponseRef = useRef<any>(null);
-  /* The choice has to outlive the session it was made in — it is read on the
-     next sign-in, before any code is sent. */
-  const REMEMBER_DEVICE_KEY = 'ucaas-remember-device';
+  /* The key lives in utils beside the device id, because logout has to know to
+     keep both: a second copy of the string here is one edit away from the two
+     drifting apart and silently losing the choice again. */
   const [rememberDevice, setRememberDevice] = useState<boolean>(() => {
     try {
       return localStorage.getItem(REMEMBER_DEVICE_KEY) === '1';
@@ -509,7 +510,7 @@ const Login = () => {
                                 }}
                               />
                               <span className="text-sm text-gray-600">
-                                Skip the code on this device for 30 days
+                                Remember me
                               </span>
                             </label>
                             <div

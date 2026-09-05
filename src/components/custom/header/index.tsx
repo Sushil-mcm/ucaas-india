@@ -20,7 +20,7 @@ import ThemeToggle from '@/components/custom/theme-toggle';
 import PendingChatRequestsDrawer from './PendingChatRequestsDrawer';
 import { ChevronDown, Menu, Wallet, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { cn, SESSION_NAME } from '@/lib/utils';
+import { clearStorageKeepingDeviceIdentity, cn, SESSION_NAME } from '@/lib/utils';
 import { DASHBOARDCONST } from '@/pages/dashboard/constant';
 import AlertConfirm from '../alert-confirm';
 import { toast } from 'react-toastify';
@@ -518,7 +518,10 @@ const Header = () => {
           singleButtonText="Okay"
           singleButtonHandler={() => {
             sessionStorage.clear();
-            localStorage.clear();
+            /* Keeps the device id, so a terminated session does not also cost
+               this browser its 30-day trust and force a code on the way back
+               in. Everything else is still cleared. */
+            clearStorageKeepingDeviceIdentity();
             handleRemoveUser();
           }}
           descriptionTextComp={
