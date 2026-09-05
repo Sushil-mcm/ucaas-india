@@ -16,6 +16,7 @@ import {
   Star,
   Trash2,
 } from 'lucide-react';
+import { mayActOn } from '@/lib/role-rank';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
@@ -85,6 +86,11 @@ const People = () => {
     features?.plan_features?.virtual_numbers?.action?.assign_number,
   );
 
+  /* Rank, not a string test. A plan permission says the feature exists on the
+     account; it says nothing about who you may point it at. `outranks` answers
+     that one way for every action on this screen -- see lib/role-rank.ts. */
+  const outranks = (row: PersonRow) => mayActOn(user?.user_info, row.raw);
+
   /* Same gate the Extension page puts on Add Users: trial accounts and users
      without the add permission don't get an invite button that would fail. */
   const canInvite = Boolean(userAccess?.add) && user?.company_info?.is_trial !== 'Y';
@@ -126,10 +132,9 @@ const People = () => {
     },
   });
 
-  /* Admins may change anyone's role except another admin's — the same rule the
-     Extension page applies to its inline role control. */
-  const canChangeRoleOf = (row: PersonRow) =>
-    isAdmin && String(row.role || '').toUpperCase() !== 'ADMIN';
+  /* Was `row.role !== 'ADMIN'`, which reads the label: an administrator on a
+     custom role named anything else passed it. Rank reads the stored role. */
+  const canChangeRoleOf = (row: PersonRow) => isAdmin && outranks(row);
 
   const [changingRole, setChangingRole] = useState<PersonRow | null>(null);
   const [assigningCallerId, setAssigningCallerId] = useState<PersonRow | null>(null);
@@ -456,7 +461,7 @@ const People = () => {
                               <ShieldCheck className="h-4 w-4" /> Change role
                             </DropdownMenuItem>
                           ) : null}
-                          {canAssignCallerId ? (
+                          {canAssignCallerId && outranks(row) ? (
                             <DropdownMenuItem
                               className="cursor-pointer"
                               onClick={() => setAssigningCallerId(row)}
@@ -464,7 +469,7 @@ const People = () => {
                               <PhoneOutgoing className="h-4 w-4" /> Assign caller ID
                             </DropdownMenuItem>
                           ) : null}
-                          {canAssignCallerId && row.callerId ? (
+                          {canAssignCallerId && row.callerId && outranks(row) ? (
                             <DropdownMenuItem
                               className="cursor-pointer"
                               onClick={() => setUnassigning(row)}
@@ -474,7 +479,7 @@ const People = () => {
                           ) : null}
                           {/* Admins can remove a person; never yourself, and
                               never another admin unless you are one. */}
-                          {canDelete && row.uuid !== myUuid ? (
+                          {canDelete && row.uuid !== myUuid && outranks(row) ? (
                             <DropdownMenuItem
                               className="cursor-pointer text-red-600 focus:text-red-600"
                               onClick={() => setDeleting(row)}
