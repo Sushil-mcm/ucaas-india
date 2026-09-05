@@ -228,7 +228,7 @@ const Sidebar = () => {
         className={`fixed left-0 top-16 z-20 h-[calc(100vh-4rem)] w-20 border-r border-white/50 transition-transform duration-200 ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
-        style={{ background: '#fffaf4' }}
+        style={{ background: '#ffffff' }}
       >
         {/* This wrapper had no height, so the scroller's `h-full` below
             resolved against auto and never constrained anything — the views
