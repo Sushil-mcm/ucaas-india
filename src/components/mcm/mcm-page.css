@@ -6323,21 +6323,17 @@
   min-width: 0;
 }
 
-/* Sticky so the call-coverage answer stays on screen while you edit; it
-   is the thing people came to check. Falls back to a normal stacked
-   block on narrow screens, where sticky would just eat the viewport. */
 .mcm-profile-aside {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-@media (min-width: 1180px) {
-  .mcm-profile-aside {
-    position: sticky;
-    top: 0;
-  }
-}
+/* The aside used to be `position: sticky; top: 0`, so it pinned while the
+   form scrolled past it. Two panels of reference material holding still
+   against moving content is restless to read, and it also meant the panel
+   could never be taller than the viewport without its own scrollbar
+   appearing inside the page's. It scrolls with everything else now. */
 
 /* ---- identity header ----
    Avatar, name and the two facts that identify a person on a phone
