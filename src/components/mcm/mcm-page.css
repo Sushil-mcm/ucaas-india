@@ -2920,6 +2920,76 @@
 .mcm-admincard li:hover a {
   color: var(--accent-ink);
 }
+/* ---- All admin screens: the section card ----
+
+   The card was a label over a list of plain links: 55 screens in twelve
+   identical white blocks, with nothing to tell one section from another at a
+   glance and no sign that a row was clickable until you were on it. The header
+   now carries the section's own icon -- the same one the rail uses, so the card
+   and the entry that opens it read as one thing -- and the number of screens
+   behind it. Each row gets a chevron that arrives on hover, which is what makes
+   it look like a way in rather than text. */
+.mcm-admin .mcm-admincard-h {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mcm-admin .mcm-admincard-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.mcm-admin .mcm-admincard-t {
+  min-width: 0;
+  flex: 1;
+}
+/* The count sits quiet: it answers "how much is in here" without competing
+   with the section name for the eye. */
+.mcm-admin .mcm-admincard-n {
+  flex: none;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.mcm-admin .mcm-admincard li {
+  padding-right: 8px;
+}
+.mcm-admin .mcm-admincard-go {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--accent-ink);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+.mcm-admin .mcm-admincard li:hover .mcm-admincard-go,
+.mcm-admin .mcm-admincard li:focus-within .mcm-admincard-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcm-admin .mcm-admincard-go {
+    transition: none;
+    transform: none;
+  }
+}
+
 .mcm-admincard-group {
   font-size: 11px;
   font-weight: 500;

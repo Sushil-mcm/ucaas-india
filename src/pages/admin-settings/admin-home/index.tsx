@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import { Icon } from '@/assets/icons/icon';
+import type { IconType } from '@/assets/icons/type';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useUser } from '@/hooks/use-user';
 import Loader from '@/components/custom/loader';
@@ -164,11 +167,22 @@ const AdminHome = () => {
             <div className="mcm-admingrid">
               {visibleGroups.map((group) => (
                 <div className="mcm-admincard" key={group.title}>
-                  <div className="mcm-admincard-h">{group.title}</div>
+                  {/* The section's own icon, the one the rail uses, so a card
+                      here and the entry that opens it are recognisably the same
+                      thing. The count says how much is behind it without
+                      opening it. */}
+                  <div className="mcm-admincard-h">
+                    <span className="mcm-admincard-ic" aria-hidden="true">
+                      <Icon name={group.icon as IconType} className="h-4 w-4" />
+                    </span>
+                    <span className="mcm-admincard-t">{group.title}</span>
+                    <span className="mcm-admincard-n">{group.entries.length}</span>
+                  </div>
                   <ul>
                     {group.entries.map((entry) => (
                       <li key={entry.path}>
                         <Link to={entry.path}>{entry.title}</Link>
+                        <ChevronRight className="mcm-admincard-go" aria-hidden="true" />
                       </li>
                     ))}
                   </ul>
