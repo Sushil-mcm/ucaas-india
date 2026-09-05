@@ -1882,7 +1882,7 @@ const Inbox = () => {
             ? hasActiveConversation
               ? 'hidden'
               : 'w-full'
-            : 'w-full min-w-0 lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]',
+            : 'w-full min-w-0 lg:w-[24rem] lg:min-w-[24rem] lg:max-w-[24rem]',
         )}
       >
         {/* Not collapsible. The conversation list is half of what this screen

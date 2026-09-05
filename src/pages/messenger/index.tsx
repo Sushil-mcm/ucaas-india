@@ -1471,7 +1471,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
           <>
             <section
               className={cn(
-                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]',
+                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]',
                 activeChatId ? 'hidden lg:block' : 'w-full',
               )}
             >

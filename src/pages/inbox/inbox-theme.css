@@ -142,8 +142,13 @@
 .mcm-inbox .mcm-col-head {
   /* Roomier, and the divider is the faint line rather than the strong one:
      the head already separates itself by sitting above a list of rows, so a
-     hard rule on top of that reads as a second, competing edge. */
-  padding: 16px 16px 14px;
+     hard rule on top of that reads as a second, competing edge.
+
+     Sides are 8px, not 16, to match the Video rail's `p-2`. Both columns are
+     the same 22rem, but at 16px the tabs and the search box sat a full 16px
+     further in on each side, which is what made this column read as the
+     narrower of the two. Vertical padding is unchanged. */
+  padding: 16px 8px 14px;
   border-bottom: 1px solid var(--mcm-line-2);
   display: flex;
   flex-direction: column;
@@ -327,8 +332,11 @@
   gap: 12px;
   /* Roomier, and separated by the faintest line the palette has. A row list
      is read by scanning names, and hard rules between every pair compete
-     with that far more than whitespace does. */
-  padding: 13px 16px;
+     with that far more than whitespace does.
+
+     Sides follow the head above at 8px, so a conversation lines up with the
+     search box over it rather than starting further in. */
+  padding: 13px 8px;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--mcm-line-2) 60%, transparent);
   background: none;

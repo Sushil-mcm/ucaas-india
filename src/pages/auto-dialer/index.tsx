@@ -28,7 +28,7 @@ const AutoDialer = () => {
             isTab={false}
             title="Campaign"
             hideHeading
-            widthClass="w-full min-w-0 lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]"
+            widthClass="w-full min-w-0 lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]"
             content={<CampaignSidebar />}
             collapsible={false}
           />

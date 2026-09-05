@@ -93,7 +93,7 @@ const VideoMeetings = () => {
             collapsible={false}
             hideHeading
             title="Meetings"
-            widthClass="w-full min-w-0 lg:w-[22rem] lg:min-w-[22rem] lg:max-w-[22rem]"
+            widthClass="w-full min-w-0 lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]"
             content={<Sidebar />}
           />
         </div>
