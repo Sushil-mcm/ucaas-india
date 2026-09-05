@@ -266,15 +266,12 @@
   color: var(--pc-muted);
 }
 
-/* Pagination footer's own refresh button (table-manager.tsx) carries its
-   own cream/tan pill as Tailwind arbitrary-value classes, which the design
-   system's `.mcm-page button:not([data-slot='tabs-trigger'])` reset strips
-   anyway — same mcm-page button-reset fight fixed elsewhere in this theme.
-   The outer bar (a `<div>`) is untouched by that reset already. */
-.perf-callbacks button[class*='backdrop-blur'] {
-  background: rgba(251, 249, 246, 0.88) !important;
-  border: 1px solid rgba(225, 200, 165, 0.9) !important;
-}
+/* Pagination footer's own refresh button (table-manager.tsx,
+   `.table-refresh-btn`) is now styled once, authoritatively, in
+   mcm-page.css — rest/hover colour and a proper 32px circle for every
+   Performance page. Removed the per-page duplicate that used to live
+   here — see live-theme.css for why an unconditional (no `:hover`)
+   per-page rule like this actively broke the hover state elsewhere. */
 
 /* The pager group (« ‹ 1 › ») is intentionally left at its global default
    (index.css `.mcm-pager*`) — plain white/gray with a solid orange current

@@ -198,6 +198,52 @@
   background: none;
   cursor: pointer;
 }
+
+/* Pagination footer's manual-refresh button (table-manager.tsx,
+   `.table-refresh-btn`) — one authoritative definition here instead of a
+   different partial patch per Performance page (Campaigns had its own,
+   Queues/Agents/Calls/etc. had none). The actual bug: the component's own
+   className pairs `hover:text-white` with the shadcn Button `ghost`
+   variant's `hover:bg-accent` — on hover the background stays light
+   (`--accent` is a pale gray/white, not orange) while the icon turns pure
+   white, vanishing completely. At rest, several pages' broader theme
+   selectors (row/toolbar action-button glass-circle rules keyed off
+   `[class*='rounded-full']`) happened to also match this button and left
+   it with whatever icon colour that theme used for something else
+   entirely, sometimes a near-white one. Sized to an exact 32px circle
+   (the surrounding Button component only gets a rectangular pill from its
+   own default padding otherwise) and given one fixed rest/hover colour
+   pair that is never white-on-light or light-on-white. */
+.mcm-page .table-refresh-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(249, 115, 22, 0.28) !important;
+  color: #ea580c !important;
+  box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .table-refresh-btn svg {
+  color: inherit !important;
+  stroke: currentColor;
+}
+.mcm-page .table-refresh-btn:hover {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(234, 88, 12, 0.28);
+}
 .mcm-page input,
 .mcm-page textarea,
 .mcm-page select {
