@@ -6,7 +6,6 @@ import LocationFacts from './location-facts';
 import CompanyRecord from './company-record';
 import CompanySettingsCard from './company-settings-card';
 import CompanyLogo from './company-logo';
-import SetupGuide from '@/components/mcm/setup-guide';
 import { Button } from '@/components/ui/button';
 import NewSiteSteps from './new-site-steps';
 import AlertConfirm from '@/components/custom/alert-confirm';
@@ -192,10 +191,6 @@ const CompanyInfo = () => {
             {/* Organisation before locations — the order established systems
                 use, and the order the platform's own data follows: a location
                 belongs to a company. */}
-            {/* Above the company record: it is the thing a new admin should read
-                first, and it disappears once everything is done. */}
-            <SetupGuide companyInfo={user?.company_info} />
-
             <div id="setup-company-record" className="rounded-xl">
               <CompanyRecord companyInfo={user?.company_info} defaultSite={defaultSite} />
             </div>

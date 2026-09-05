@@ -1,5 +1,4 @@
 import { Plus, SearchLine } from '@/assets/icons';
-import SetupGuide from '@/components/mcm/setup-guide';
 import TableManager from '@/components/custom/table-manager';
 import { Button } from '@/components/ui/button';
 import { deleteMember, getUserList, removeAssignNumber } from '@/services/api';
@@ -409,12 +408,6 @@ const UsersExtension: FC = () => {
   return (
     <>
       <section className="w-full overflow-x-auto overflow-y-hidden">
-        {/* The same guide as Company & Locations, so the thread carries through
-            the sections rather than stopping at the first screen. It hides itself
-            once setup is finished. */}
-        <div className="px-3 pt-3">
-          <SetupGuide companyInfo={user?.company_info} />
-        </div>
         <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
           <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
             Users
