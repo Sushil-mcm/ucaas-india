@@ -54,6 +54,13 @@ const Header = () => {
   const [walletUpdatedAmount, setWalletUpdatedAmount] = useState<number | null>(null);
   const navigate = useNavigate();
   const { pathname = '' } = useLocation();
+  /* The icon rail (Phone/Chat/Agent Chat/Video/Inbox/Campaign) sits flush
+     against the header's bottom edge on these routes, so the header's
+     border-b reads as a stray line cutting across the rail's corner. Hidden
+     only here — every other page keeps the visible border. */
+  const hidesHeaderBorderForRail = ['/phone', '/messenger', '/agent-chat', '/video', '/inbox', '/campaign'].some(
+    (path) => pathname === path || pathname?.startsWith(`${path}/`),
+  );
   const companyAmount = user?.company_info?.amount;
   const totalFunds =
     companyAmount !== null && companyAmount !== undefined ? `$${companyAmount}` : '00.00';
@@ -295,7 +302,7 @@ const Header = () => {
           /* Upstream's px-4/py-2.5 padding, but keeping `h-16` over
              `min-h-16` and a visible `border-gray-200` over
              `border-white/50` — see the note above the tag. */
-          className="h-16 text-gray-900/80 border-b border-gray-200 px-4 py-2.5"
+          className={`h-16 text-gray-900/80 border-b px-4 py-2.5 ${hidesHeaderBorderForRail ? 'border-transparent' : 'border-gray-200'}`}
           style={{
             background: 'rgba(255, 255, 255, 0.78)',
             backdropFilter: 'blur(12px) saturate(160%)',
