@@ -133,15 +133,20 @@ const CallSetupGuide = ({ userInfo }: { userInfo: any }) => {
             <div className="mcm-setupguide-body">
               <h3>{step.title}</h3>
               <p className="mcm-setupguide-status">{step.status}</p>
-              <p className="mcm-setupguide-explain">{step.explain}</p>
+              {/* A step that is already set up says so in one line. The
+                  paragraph explaining why the step exists, and the link to go
+                  and change it, are what somebody needs when something is NOT
+                  set up — carrying them on the finished steps too made the
+                  panel taller than the screen and buried the two rows that
+                  actually wanted attention among four that did not. The
+                  checklist is now as long as the work left in it. */}
+              {!step.ok && <p className="mcm-setupguide-explain">{step.explain}</p>}
             </div>
-            {step.action ? (
+            {!step.ok && step.action ? (
               <Link className="mcm-setupguide-action" to={step.action.to}>
                 {step.action.label}
               </Link>
-            ) : (
-              <span />
-            )}
+            ) : null}
           </li>
         ))}
       </ol>

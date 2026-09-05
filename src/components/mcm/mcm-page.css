@@ -7757,3 +7757,259 @@
     transform: none;
   }
 }
+
+/* ==================================================================
+   Greetings — the four audio slots
+   ------------------------------------------------------------------
+   This page used to show the same four slots twice: summary tiles at
+   the top, editor rows underneath. One set of cards that each state
+   their own outcome removes the duplication and leaves room to say
+   something worth saying per slot.
+
+   The structure carries information rather than decorating it. The
+   three a caller meets are numbered, because they genuinely are a
+   sequence — answer, wait, miss — and the ring tone is separated out
+   under its own heading because it is the one recording on the page
+   the caller never hears. Numbering four unrelated settings would be
+   ornament; numbering a call's actual order is not.
+   ================================================================== */
+.mcm-page .mcm-gsec + .mcm-gsec {
+  margin-top: 22px;
+}
+.mcm-page .mcm-gsec-h {
+  margin-bottom: 11px;
+}
+.mcm-page .mcm-gsec-h h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+.mcm-page .mcm-gsec-h p {
+  margin: 3px 0 0;
+  max-width: 68ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.mcm-page .mcm-gslots {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 880px) {
+  .mcm-page .mcm-gslots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  /* The desk slot stands alone rather than being stretched across a
+     three-column track it does not fill. */
+  .mcm-page .mcm-gslots.is-single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- the card ---- */
+.mcm-page .mcm-gslot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 15px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mcm-page .mcm-gslot:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-edge);
+  box-shadow: var(--lift);
+}
+.mcm-page .mcm-gslot:focus-within {
+  border-color: var(--accent-edge);
+}
+/* A slot playing the person's own recording is the finished state, and
+   the card says so with its edge rather than with another badge. */
+.mcm-page .mcm-gslot.is-custom {
+  border-color: var(--accent-edge);
+}
+
+.mcm-page .mcm-gslot-h {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+/* The step number. Tabular so 01/02/03 sit on the same width, and
+   quiet until the card is doing something. */
+.mcm-page .mcm-gslot-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink-4);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+.mcm-page .mcm-gslot.is-custom .mcm-gslot-step {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+/* The desk slot has no place in the caller's sequence, so it carries an
+   icon rather than a number — the contrast is what says "this one is not
+   part of the run". Dashed edge for the same reason. */
+.mcm-page .mcm-gslot-step.is-desk {
+  border-style: dashed;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-gslot-step.is-desk svg {
+  width: 14px;
+  height: 14px;
+}
+.mcm-page .mcm-gslot.is-custom .mcm-gslot-step.is-desk {
+  border-style: solid;
+}
+.mcm-page .mcm-gslot-t {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.mcm-page .mcm-gslot-t label {
+  cursor: pointer;
+}
+.mcm-page .mcm-gslot-m {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-4);
+  text-wrap: pretty;
+}
+.mcm-page .mcm-gslot-h > button[role='switch'] {
+  margin-left: auto;
+  flex: none;
+}
+
+/* ---- what actually plays ----
+   The line people came for. Written as an outcome, not a switch
+   position, and held to two lines so four cards keep level tops. */
+.mcm-page .mcm-gslot-out {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  min-height: 54px;
+}
+.mcm-page .mcm-gslot-out-k {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-page .mcm-gslot-out-v {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.mcm-page .mcm-gslot-out.is-custom {
+  background: var(--accent-wash);
+}
+.mcm-page .mcm-gslot-out.is-custom .mcm-gslot-out-v {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+/* Switched on with nothing picked: the state that looks finished and is
+   not, so it is the one that gets the warning tone. */
+.mcm-page .mcm-gslot-out.is-unset {
+  background: var(--warn-wash);
+}
+.mcm-page .mcm-gslot-out.is-unset .mcm-gslot-out-v {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+/* ---- the picker, revealed by the switch ---- */
+.mcm-page .mcm-gslot-pick {
+  animation: mcm-rise-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+/* `SelectGreeting` lays its select and buttons out as a flex row sized
+   for a drawer. In a card column the select needs to take the space and
+   the 40px buttons need to stop shrinking. */
+.mcm-page .mcm-gslot-pick > div {
+  width: 100%;
+}
+.mcm-page .mcm-gslot-pick > div > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.mcm-page .mcm-gslot-pick button {
+  flex: none;
+}
+
+/* ---- the count beside the page title ---- */
+.mcm-page .mcm-gcount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.mcm-page .mcm-gcount.is-custom {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+}
+.mcm-page .mcm-gcount-n {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-gcount.is-custom .mcm-gcount-n {
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-gcount-l {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcm-page .mcm-gslot,
+  .mcm-page .mcm-gslot-step {
+    transition: none;
+  }
+  .mcm-page .mcm-gslot:hover {
+    transform: none;
+  }
+  .mcm-page .mcm-gslot-pick {
+    animation: none;
+  }
+}
