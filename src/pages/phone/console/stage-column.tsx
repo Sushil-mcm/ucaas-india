@@ -15,7 +15,7 @@ import { useConsoleDialer } from './dial-number';
 import CallRecord from './call-record';
 import { isTerminalSession, mmss, type ConsoleCallState } from './use-console-call';
 import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
-import ReactCountryFlag from 'react-country-flag';
+import CountryFlag, { flagCodeFor } from '@/components/custom/country-flag';
 import { isIndiaCallerIdOption } from '@/lib/india-caller-ids';
 import type { Call as TwilioCall } from '@twilio/voice-sdk';
 import type { CallerIdOption } from '@/components/dialpad/types';
@@ -624,14 +624,21 @@ const StageColumn = ({
                       mislabelled every non-Indian caller ID. The globe stays for
                       the "No caller ID" case, where there is no country to show.
 
-                      `svg` for the same reason as the list below — Windows has
-                      no glyph for the flag emoji. */}
-                  {effectiveCallerId?.country && effectiveCallerId?.number?.startsWith('+') ? (
-                    <ReactCountryFlag
-                      countryCode={effectiveCallerId.country}
-                      svg
-                      aria-hidden
-                      style={{ width: '1.2em', height: '1.2em' }}
+                      Drawn inline rather than fetched. react-country-flag's emoji
+                      mode has no glyph on Windows, and its `svg` mode pulls an
+                      image from cdn.jsdelivr.net, which is blocked on this
+                      network — that is what put a broken-image icon in the chip.
+                      The code comes from flagCodeFor, which reads the dialling
+                      code before the label: `did_country` is missing on some
+                      assigned DIDs and defaults to 'US', and when it held
+                      anything that was not an ISO code this branch rendered a
+                      null flag with no globe behind it — the chip showed no icon
+                      at all. Deciding the code first means the globe is chosen
+                      properly whenever there is no flag to draw. */}
+                  {flagCodeFor(effectiveCallerId?.number, effectiveCallerId?.country) ? (
+                    <CountryFlag
+                      code={flagCodeFor(effectiveCallerId?.number, effectiveCallerId?.country)}
+                      className="h-[1.15em] w-[1.6em] shrink-0"
                     />
                   ) : (
                     <Ic n="globe" size={12} />
@@ -694,17 +701,14 @@ const StageColumn = ({
                             }}
                           >
                             <span className="k" style={{ minWidth: 62 }}>
-                              {/* `svg` matters: without it react-country-flag
-                                  emits the flag emoji, and Windows ships no
-                                  glyph for regional-indicator pairs — every row
-                                  would read "IN" instead of a flag. */}
+                              {/* Inline SVG for the same reason as the chip above:
+                                  the emoji has no glyph on Windows, and the
+                                  library's CDN image is blocked on this network. */}
                               {isIndiaCallerIdOption(option) ? (
-                                <ReactCountryFlag
-                                  countryCode="IN"
-                                  svg
+                                <CountryFlag
+                                  code="IN"
                                   title="India"
-                                  aria-label="India"
-                                  style={{ width: '1.35em', height: '1.35em' }}
+                                  className="h-[1.25em] w-[1.75em] shrink-0"
                                 />
                               ) : (
                                 option.label
