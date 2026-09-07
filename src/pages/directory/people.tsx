@@ -1,4 +1,8 @@
 import { useMemo, useState } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { useRecentlyRemoved } from './use-recently-removed';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +32,7 @@ import { usePeopleRows, type PersonRow } from './people-rows';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import { useUser } from '@/hooks/use-user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteMember, removeAssignNumber } from '@/services/api';
+import { deleteMember, removeAssignNumber, updateMemberForwading } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
@@ -107,10 +111,13 @@ const People = () => {
   const removal = useRemovalImpact((deleting?.raw ?? null) as any, Boolean(deleting), roster);
   const [unassigning, setUnassigning] = useState<PersonRow | null>(null);
 
+  const { show: showRemoved, setShow: setShowRemoved, entries: recentlyRemoved, track: trackRemoval } = useRecentlyRemoved();
+
   const { mutate: removePerson, isPending: isDeletingPerson } = useMutation({
     mutationKey: ['deleteMember'],
     mutationFn: deleteMember,
     onSuccess: ({ data }: any) => {
+      if (deleting) trackRemoval(deleting);
       queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
       queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
       invalidateGlobalUsersDirectory(queryClient);
@@ -147,6 +154,33 @@ const People = () => {
   const [location, setLocation] = useState('All');
   const [open, setOpen] = useState<PersonRow | null>(null);
   const [editing, setEditing] = useState<PersonRow | null>(null);
+
+  const [personForm, setPersonForm] = useState({
+    first_name: '', last_name: '', email: '', phone: '', site: '', extension: '',
+  });
+
+  const openPerson = (row: PersonRow) => {
+    setOpen(row);
+    setPersonForm({
+      first_name: row.raw?.first_name || row.name.split(' ')[0] || '',
+      last_name: row.raw?.last_name || row.name.split(' ').slice(1).join(' ') || '',
+      email: row.email || '',
+      phone: row.phone || '',
+      site: row.location || '',
+      extension: row.extension || '',
+    });
+  };
+
+  const { mutate: savePerson, isPending: isSavingPerson } = useMutation({
+    mutationFn: (payload: Record<string, string>) =>
+      updateMemberForwading({ userID: open?.uuid, uuid: open?.uuid, ...payload }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
+      invalidateGlobalUsersDirectory(queryClient);
+      handleAlert({ text: data?.data?.data?.message || 'Saved', type: 'success' });
+      setOpen(null);
+    },
+  });
 
   const departments = useMemo(() => {
     const found = new Set<string>();
@@ -282,12 +316,53 @@ const People = () => {
               onChange={setPresence}
             />
             <SearchChip value={search} onChange={setSearch} placeholder="Search people" />
+            <button type="button" className="fchip" style={{ cursor: 'pointer', gap: 6, fontWeight: showRemoved ? 700 : undefined, background: showRemoved ? 'var(--primary)' : undefined, color: showRemoved ? '#fff' : undefined, borderColor: showRemoved ? 'var(--primary)' : undefined }} onClick={() => setShowRemoved((v) => !v)}>
+              <Ic n="clock" size={12} />
+              Recently removed
+            </button>
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               <span className="num">{onQueue}</span> available
             </span>
           </>
         }
       >
+        {showRemoved && (
+          <table>
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th>Role</th>
+                <th>Groups</th>
+                <th>Location</th>
+                <th>Numbers</th>
+                <th>ACD skills</th>
+                <th>Presence</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentlyRemoved.length ? recentlyRemoved.map((entry) => {
+                const hoursAgo = Math.round((Date.now() - entry.removedAt) / 3600000);
+                return (
+                  <tr key={entry.uuid}>
+                    <td><span className="flex items-center gap-2.5"><CustomAvatar name={entry.name} size="30" /><span style={{ fontWeight: 700 }}>{entry.name}</span></span></td>
+                    <td>{entry.role || '—'}</td>
+                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
+                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
+                    <td className="num">{entry.extension || '—'}</td>
+                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
+                    <td><span className="tag neg">Removed {hoursAgo < 1 ? 'just now' : `${hoursAgo}h ago`}</span></td>
+                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
+                  </tr>
+                );
+              }) : (
+                <EmptyRow span={8} message="Nobody has been removed in the last 72 hours." />
+              )}
+            </tbody>
+          </table>
+        )}
+
+        {!showRemoved && (
         <table>
           <thead>
             <tr>
@@ -306,7 +381,7 @@ const People = () => {
               <EmptyRow span={8} message="Loading the roster…" />
             ) : visible.length ? (
               visible.map((row: PersonRow) => (
-                <tr key={row.uuid} className="gp-person-row" onClick={() => setOpen(row)}>
+                <tr key={row.uuid} className="gp-person-row" onClick={() => openPerson(row)}>
                   <td>
                     <span className="flex items-center gap-2.5">
                       <CustomAvatar name={row.name} image={row.image} size="30" />
@@ -503,120 +578,135 @@ const People = () => {
             )}
           </tbody>
         </table>
+        )}
 
-        {open ? (
-          <DirectoryDrawer
-            title={open.name}
-            onClose={() => setOpen(null)}
-            footer={
-              <>
-                <button type="button" className="btn ghost" onClick={() => setOpen(null)}>
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="btn ghost"
-                  onClick={() => navigate(`/department/extension/${open.uuid}`)}
-                >
-                  <Ic n="user" />
-                  Full record
-                </button>
-                {canEdit ? (
-                  <button type="button" className="btn primary" onClick={() => setEditing(open)}>
-                    <Ic n="sliders" />
-                    Edit
+        <Dialog open={Boolean(open)} onOpenChange={(next) => !next && setOpen(null)}>
+          <DialogContent className="sm:max-w-[560px] w-[calc(100vw-32px)] p-0 gap-0 rounded-2xl overflow-hidden border border-[rgba(225,200,165,0.5)]">
+            {open && (
+              <div className="flex flex-col">
+                {/* Header */}
+                <div className="flex items-center gap-3.5 px-6 py-5 border-b border-gray-100 bg-[rgba(251,249,246,0.6)]">
+                  <CustomAvatar name={open.name} image={open.image} size="48" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[17px] font-bold text-gray-900 truncate">{open.name}</div>
+                    <div className="text-[13px] text-gray-500 mt-0.5">{open.role}</div>
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                    open.tone === 'good' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    open.tone === 'busy' ? 'bg-red-50 text-red-600 border border-red-200' :
+                    open.tone === 'warn' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    'bg-gray-100 text-gray-500 border border-gray-200'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${
+                      open.tone === 'good' ? 'bg-emerald-500' :
+                      open.tone === 'busy' ? 'bg-red-500' :
+                      open.tone === 'warn' ? 'bg-amber-500' :
+                      'bg-gray-400'
+                    }`} />
+                    {open.presence}
+                  </span>
+                </div>
+
+                {/* Form fields */}
+                <div className="px-6 py-5 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">First Name</label>
+                      <input className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors" value={personForm.first_name} onChange={(e) => setPersonForm((p) => ({ ...p, first_name: e.target.value }))} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Last Name</label>
+                      <input className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors" value={personForm.last_name} onChange={(e) => setPersonForm((p) => ({ ...p, last_name: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                      <input className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors" type="email" value={personForm.email} onChange={(e) => setPersonForm((p) => ({ ...p, email: e.target.value }))} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
+                      <div className="[&_.react-tel-input_.form-control]:!h-10 [&_.react-tel-input_.form-control]:!rounded-lg [&_.react-tel-input_.form-control]:!border-gray-200 [&_.react-tel-input_.form-control]:!text-sm [&_.react-tel-input_.form-control]:!w-full [&_.react-tel-input_.flag-dropdown]:!rounded-l-lg [&_.react-tel-input_.flag-dropdown]:!border-gray-200">
+                        <PhoneInput country={'in'} onlyCountries={['in']} disableDropdown value={personForm.phone} onChange={(value) => setPersonForm((p) => ({ ...p, phone: `+${value.startsWith('91') ? value : '91'}` }))} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Site</label>
+                      <input className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 cursor-not-allowed" value={personForm.site} disabled />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Extension</label>
+                      <input className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 cursor-not-allowed" value={personForm.extension} disabled />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-1">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Caller ID</span>
+                    {open.callerId ? (
+                      <span className="text-sm font-medium text-gray-900">{open.callerId}</span>
+                    ) : canAssignCallerId ? (
+                      <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors" onClick={() => setAssigningCallerId(open)}>
+                        <Ic n="vm" size={14} />
+                        Assign Number
+                      </button>
+                    ) : (
+                      <span className="text-sm text-gray-400">Not assigned</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div className="px-6 pb-5 flex items-center gap-3">
+                  <button
+                    type="button"
+                    className="group flex-1 flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm hover:bg-primary hover:border-primary hover:text-white active:scale-[0.98] transition-all duration-150 disabled:opacity-40"
+                    disabled={!open.extension}
+                    onClick={() => open.extension && dial(open.extension, { forceRefreshContactInfo: true })}
+                  >
+                    <span className="inline-flex [&_svg]:fill-white [&_svg]:stroke-gray-700 [&_svg]:[stroke-width:1.5px] group-hover:[&_svg]:stroke-white"><Ic n="phone" size={16} /></span>
+                    <span className="transition-colors">Call</span>
                   </button>
-                ) : null}
-              </>
-            }
-          >
-            <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
-              <CustomAvatar name={open.name} image={open.image} size="44" />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 15 }}>{open.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{open.role}</div>
+                  <button
+                    type="button"
+                    className="group flex-1 flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm hover:bg-primary hover:border-primary hover:text-white active:scale-[0.98] transition-all duration-150"
+                    onClick={() => navigate(`/messenger?chatId=${open.uuid}&chatType=chat`)}
+                  >
+                    <span className="inline-flex [&_svg]:fill-white [&_svg]:stroke-gray-700 [&_svg]:[stroke-width:1.5px] group-hover:[&_svg]:stroke-white"><Ic n="chat" size={16} /></span>
+                    <span className="transition-colors">Message</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="group flex-1 flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm hover:bg-primary hover:border-primary hover:text-white active:scale-[0.98] transition-all duration-150 disabled:opacity-40"
+                    disabled={isStarting}
+                    onClick={() => startVideoCall({ user_uuid: open.uuid, name: open.name, email: open.email }, `Call with ${open.name}`)}
+                  >
+                    <span className="inline-flex [&_svg]:fill-white [&_svg]:stroke-gray-700 [&_svg]:[stroke-width:1.5px] group-hover:[&_svg]:stroke-white"><Ic n="video" size={16} /></span>
+                    <span className="transition-colors">Video</span>
+                  </button>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                  <button type="button" className="h-9 px-5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setOpen(null)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="h-9 px-5 rounded-lg bg-primary text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    disabled={isSavingPerson}
+                    onClick={() => savePerson({ first_name: personForm.first_name, last_name: personForm.last_name, email: personForm.email, phone: personForm.phone })}
+                  >
+                    {isSavingPerson ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
               </div>
-              <span
-                className={`${TONE_CLASS[open.tone] || 'tag neu'}`}
-                style={{ marginLeft: 'auto' }}
-              >
-                {open.presence}
-              </span>
-            </div>
-
-            <div className="kv">
-              <span className="k">Groups</span>
-              <span className="v">{open.department}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Job title</span>
-              <span className="v">{open.jobTitle || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Location</span>
-              <span className="v">
-                {open.location}
-                {open.locationPlace ? ` · ${open.locationPlace}` : ''}
-              </span>
-            </div>
-            <div className="kv">
-              <span className="k">Extension</span>
-              <span className="v num">{open.extension || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Email</span>
-              <span className="v">{open.email || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Caller ID</span>
-              <span className="v">{open.callerId || 'Not assigned'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Phone</span>
-              <span className="v num">{open.phone || '—'}</span>
-            </div>
-            <div className="kv">
-              <span className="k">ACD skills</span>
-              <span className="v">{open.skills.length ? open.skills.join(', ') : '—'}</span>
-            </div>
-
-            <div className="ac-acts" style={{ marginTop: 14 }}>
-              <button
-                type="button"
-                className="mini solid"
-                disabled={!open.extension}
-                onClick={() =>
-                  open.extension && dial(open.extension, { forceRefreshContactInfo: true })
-                }
-              >
-                <Ic n="phone" size={12} />
-                Call
-              </button>
-              <button
-                type="button"
-                className="mini"
-                onClick={() => navigate(`/messenger?chatId=${open.uuid}&chatType=chat`)}
-              >
-                <Ic n="chat" size={12} />
-                Message
-              </button>
-              <button
-                type="button"
-                className="mini"
-                disabled={isStarting}
-                onClick={() =>
-                  startVideoCall(
-                    { user_uuid: open.uuid, name: open.name, email: open.email },
-                    `Call with ${open.name}`,
-                  )
-                }
-              >
-                <Ic n="video" size={12} />
-                Video
-              </button>
-            </div>
-          </DirectoryDrawer>
-        ) : null}
+            )}
+          </DialogContent>
+        </Dialog>
       </DirectoryPage>
       </div>
 

@@ -148,7 +148,7 @@ const AssignCallerIdModal: FC<AssignCallerIdModalProps> = ({
         }
       }}
     >
-      <DialogContent className="w-[680px] p-0 gap-0" showCloseButton={false}>
+      <DialogContent className="w-[calc(100vw-32px)] sm:max-w-[560px] p-0 gap-0 rounded-2xl overflow-hidden border border-[rgba(225,200,165,0.5)]" showCloseButton={false}>
         <div className="p-5 border-b border-gray-200 flex items-start justify-between gap-4">
           <div className="flex flex-col gap-0.5">
             <h4 className="text-gray-900 font-semibold text-xl">Assign Caller ID</h4>
@@ -345,7 +345,7 @@ const AssignCallerIdModal: FC<AssignCallerIdModalProps> = ({
           }))
         }
       >
-        <DialogContent className="w-[460px] max-w-[calc(100%-2rem)] p-6" showCloseButton={false}>
+        <DialogContent className="w-[calc(100vw-32px)] sm:max-w-[460px] p-6 rounded-2xl" showCloseButton={false}>
           <div className="flex flex-col items-center text-center gap-4">
             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500">
               <Icon name="AlertIcon" className="w-8 h-8" />

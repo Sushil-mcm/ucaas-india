@@ -238,3 +238,15 @@
 .gp-create-group-body .gp-role-form-footer button[type='submit']:disabled {
   opacity: 0.6 !important;
 }
+
+/* Orange-bordered ghost buttons, matching People's header style. */
+.gp-groups .btn.ghost {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.gp-groups .btn.ghost:hover {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
