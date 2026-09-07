@@ -1,4 +1,4 @@
-import { formatPhoneNumber } from '@/lib/utils';
+import { formatPhoneNumber, toE164 } from '@/lib/utils';
 import { memo, useMemo } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import CountryFlag, { flagCodeFor } from './country-flag';
@@ -28,9 +28,12 @@ export const isDiallableNumber = (number: unknown) =>
 export const formatDialNumber = (number: unknown): string => {
   if (!number) return '';
   if (!isDiallableNumber(number)) return String(number);
-  const withPlus = filterPhoneNumber(String(number));
+  /* The raw value, NOT `filterPhoneNumber`'s "+" form. Sticking a plus on bare
+     digits states a country nobody told us: `7666718264` read as "+7 666718264"
+     (Russia) when it is this deployment's own `+91 76667 18264`.
+     `formatPhoneNumber` works that out properly and never throws. */
   try {
-    return formatPhoneNumber(withPlus) || withPlus;
+    return formatPhoneNumber(String(number)) || String(number);
   } catch {
     return String(number);
   }
@@ -47,7 +50,7 @@ const NumberWithFlag = ({ number = null, isFlag = true, className = '' }: any) =
           Windows (the flag came out as the letters "IN") and its `svg` mode
           fetches from jsdelivr, which is blocked on this network. */}
       <CountryFlag
-        code={flagCodeFor(filterPhoneNumber(String(number)))}
+        code={flagCodeFor(toE164(number) || filterPhoneNumber(String(number)))}
         className="w-4 flex-shrink-0"
       />
       {formattedNumber}

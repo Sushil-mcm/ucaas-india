@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { pickCounterpartNumber } from '@/lib/call-number';
 import moment from 'moment';
 import { fetchPhone } from '@/services/api';
 import { useFetchContact } from '@/hooks/common';
@@ -10,7 +11,7 @@ import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dro
 import { Ic } from './icons';
 import { useConsoleDialer } from './dial-number';
 import NumberWithFlag from '@/components/custom/number-with-flag';
-import { isNumberLike } from './copilot-adapter';
+import { formatDuration, isNumberLike, talkSeconds } from './copilot-adapter';
 
 /** The three call-log sources the old phone page exposed, same `tabType` values. */
 export type ConsoleLogSource = 'call' | 'recording' | 'voicemail';
@@ -52,12 +53,13 @@ const sortStamp = (raw: any): number => {
   return parsed.isValid() ? parsed.valueOf() : 0;
 };
 
-const secondsToClock = (value: unknown) => {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return '—';
-  const m = Math.floor(n / 60);
-  const s = Math.floor(n % 60);
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+/* `billsec` and `duration` come back as "HH:MM:SS" strings, so `Number()` on
+   them was NaN and every row in this list read "—". `talkSeconds` parses all
+   the shapes the API uses, and prefers connected time over total time so a
+   call that only rang does not print its ring length as a conversation. */
+const secondsToClock = (row: any) => {
+  const seconds = talkSeconds(row);
+  return seconds > 0 ? formatDuration(seconds) : '—';
 };
 
 const timeLabel = (stamp: unknown) => {
@@ -74,10 +76,11 @@ const getEntryLogs = (main: any = {}) => {
   return callLogs.length ? callLogs : main && Object.keys(main).length ? [main] : [];
 };
 
-const getEntryRawNumber = (main: any = {}) =>
-  String(
-    (main?.direction === 'Outbound' ? main?.destination_number : main?.caller_id_number) || '',
-  );
+/* Which side of the call is the OTHER party — decided by looking at the
+   values, not at the direction label. A call started in the web phone is
+   logged as Inbound with our own `<extension>_web` as the caller, so going by
+   direction alone showed people their own extension back. */
+const getEntryRawNumber = (main: any = {}) => pickCounterpartNumber(main);
 
 const getEntryNumber = (main: any = {}) => getEntryRawNumber(main).replace(/ /g, '');
 
@@ -113,7 +116,9 @@ export const toCallRow = (raw: any, contactsByNumber: Record<string, any>): Cons
   const isMissed =
     rawDirection === 'missed' ||
     String(raw?.hangup_cause || '').toUpperCase() === 'NO_ANSWER' ||
-    (rawDirection === 'inbound' && Number(raw?.billsec || raw?.duration || 0) === 0);
+    /* Talk time, not total: an unanswered call still has a `duration` — how
+       long it rang — so testing that never found a missed call. */
+    (rawDirection === 'inbound' && talkSeconds(raw) === 0);
   const direction: ConsoleCallRow['direction'] = isMissed
     ? 'miss'
     : rawDirection === 'outbound'
@@ -144,7 +149,7 @@ export const toCallRow = (raw: any, contactsByNumber: Record<string, any>): Cons
     name: contactName || number || 'Unknown',
     number,
     time: timeLabel(raw?.start_stamp),
-    duration: secondsToClock(raw?.billsec ?? raw?.duration),
+    duration: secondsToClock(raw),
     topic: String(raw?.disposition || raw?.queue_name || '').trim(),
     contactId: contact?.id || null,
     hasRecording,

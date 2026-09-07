@@ -13,12 +13,10 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import NotFound from '@/assets/images/not-found-img.svg';
 import { fetchPhone } from '@/services/api';
+import { pickCounterpartNumber } from '@/lib/call-number';
 
-const getEntryNumber = (main: any = {}) => {
-  const number =
-    main?.direction === 'Outbound' ? main?.destination_number : `${main?.caller_id_number || ''}`;
-  return String(number || '').replace(/ /g, '');
-};
+const getEntryNumber = (main: any = {}) =>
+  pickCounterpartNumber(main).replace(/ /g, '');
 
 const getEntryLogs = (main: any = {}) => {
   const callLogs = Array.isArray(main?.call_logs)
@@ -41,8 +39,7 @@ const getFilteredData = ({ result = [], dataFetchContact = {}, search = '' }: an
   if (!result?.length) return [];
 
   const list = result.filter((item: any) => {
-    const getNumber =
-      item?.direction === 'Outbound' ? item?.destination_number : item?.caller_id_number;
+    const getNumber = pickCounterpartNumber(item);
 
     const filterNumber = getNumber || '';
     const getUser = dataFetchContact?.[filterNumber] || {};

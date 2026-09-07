@@ -14,6 +14,9 @@
  * can fall back to its own icon rather than show a wrong flag.
  */
 
+import { parsePhoneNumber as parsePhoneNumberMax } from 'libphonenumber-js/max';
+import { toE164 } from '@/lib/utils';
+
 const FLAGS: Record<string, React.ReactNode> = {
   /* 3:2, the Indian flag's official ratio. The chakra is a ring with eight
      spokes rather than the true twenty-four: at 20px the real count collapses
@@ -61,7 +64,24 @@ export const hasFlag = (code?: string) => Boolean(FLAGS[String(code || '').toUpp
  * A dialling code is unambiguous: +91 is India, +1 is the US. The label is only
  * consulted when the number says nothing.
  */
+/** The country a number belongs to, or '' when the digits do not name one. */
+const countryOfNumber = (number?: string) => {
+  try {
+    const parsed = parsePhoneNumberMax(toE164(number) || String(number || ''));
+    return parsed?.isValid() && parsed.country ? String(parsed.country).toUpperCase() : '';
+  } catch {
+    return '';
+  }
+};
+
 export const flagCodeFor = (number?: string, country?: string) => {
+  /* Ask the number itself first. The two shapes below only recognised a DID
+     already carrying its country code, so the bare `7666718264` the call log
+     also stores got no flag at all — and the country passed alongside defaults
+     to 'US' on some assigned DIDs, which would then have flown the wrong one. */
+  const parsed = countryOfNumber(number);
+  if (parsed) return parsed;
+
   const digits = String(number || '').replace(/\D/g, '');
   if (digits.length === 12 && digits.startsWith('91')) return 'IN';
   if (digits.length === 11 && digits.startsWith('1')) return 'US';

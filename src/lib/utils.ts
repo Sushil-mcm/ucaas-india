@@ -16,6 +16,7 @@ import {
   VoicemailLineIcon,
 } from '@/assets/icons';
 import parsePhoneNumber from 'libphonenumber-js';
+import { parsePhoneNumber as parsePhoneNumberMax } from 'libphonenumber-js/max';
 import { CreditCardIcon } from 'lucide-react';
 import { COMMN_CONST, COMMON_CONST } from '@/constants/common-const';
 import { getDomain } from 'tldts';
@@ -1175,10 +1176,93 @@ export const notificationIconColorLookup: any = {
   did_purchase: 'text-success-500',
   change_plan_request: 'text-success-500',
 };
+/**
+ * The country to read a number as when it carries no country code of its own.
+ *
+ * The call log stores both forms of the same number — `917666718264` and the
+ * bare `7666718264` — and the second says nothing about where it is from. This
+ * is an Indian deployment, so a bare national number is Indian. It is only ever
+ * a fallback: a number that arrives with a "+" states its own country and this
+ * never overrides it.
+ */
+const DEFAULT_PHONE_COUNTRY = 'IN';
+
+/**
+ * A number in international form, e.g. `+91 76667 18264`.
+ *
+ * Three things this has to get right, because numbers reach it from the call
+ * log, the contact book, assigned DIDs and the dialler, each storing them
+ * differently:
+ *
+ *  1. It must not throw. `parsePhoneNumber` throws INVALID_COUNTRY on bare
+ *     digits, and an uncaught throw takes down whatever was rendering the
+ *     number.
+ *  2. Bare digits must not be turned into a foreign number by sticking a "+"
+ *     in front. `7666718264` became "+7 666718264" — Russia — and
+ *     `9004583988` became "+90 4583988", Turkey. Reading it as a national
+ *     number of this deployment's country is what makes it +91 76667 18264.
+ *  3. A guess is only believed when the result is a number that could actually
+ *     exist. Both guesses are checked with `isValid()` against the full
+ *     metadata (`libphonenumber-js/max` — the default build is lenient enough
+ *     to call "+91 16059713935" valid), and the country code found in the
+ *     digits wins over the assumed one: `16059713935` is +1 605 971 3935 in
+ *     the United States, not an Indian number.
+ *
+ * When neither reading holds up, the digits are returned as they came. Saying
+ * "we do not know where this is from" is honest; inventing a country is not.
+ */
 export const formatPhoneNumber = (number: string) => {
   if (!number || typeof number === 'object') return;
-  const phoneNumber = parsePhoneNumber(`${number.replace(/\s/g, '')}`);
-  return phoneNumber?.formatInternational() ?? number?.replace('+', '');
+  const cleaned = String(number).replace(/\s/g, '');
+  if (!cleaned) return;
+
+  /** Formatted only when the parse produced a number that could really exist. */
+  const attempt = (value: string, country?: 'IN') => {
+    try {
+      const parsed = parsePhoneNumberMax(value, country as any);
+      return parsed?.isValid() ? parsed.formatInternational() : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  // Already states its own country — nothing to guess.
+  if (cleaned.startsWith('+')) return attempt(cleaned) ?? cleaned;
+
+  const digits = cleaned.replace(/\D/g, '');
+  const formatted =
+    // A national number of this deployment's country, or one that already
+    // carries its country code — libphonenumber reads both from this.
+    attempt(cleaned, DEFAULT_PHONE_COUNTRY) ??
+    // Otherwise the digits may be an international number that simply lost its
+    // "+" somewhere: believed only if that reading is valid.
+    (digits ? attempt(`+${digits}`) : undefined);
+
+  return formatted ?? cleaned.replace('+', '');
+};
+
+/**
+ * The same resolution as `formatPhoneNumber`, but handing back E.164
+ * (`+917666718264`) rather than a display string — for anything that needs the
+ * country rather than the formatting, such as the flag beside the number.
+ * Empty when no reading of the digits produced a real number.
+ */
+export const toE164 = (number: unknown): string => {
+  const cleaned = String(number ?? '').replace(/\s/g, '');
+  if (!cleaned) return '';
+
+  const attempt = (value: string, country?: 'IN') => {
+    try {
+      const parsed = parsePhoneNumberMax(value, country as any);
+      return parsed?.isValid() ? parsed.number : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  if (cleaned.startsWith('+')) return attempt(cleaned) ?? '';
+  const digits = cleaned.replace(/\D/g, '');
+  return attempt(cleaned, DEFAULT_PHONE_COUNTRY) ?? (digits ? attempt(`+${digits}`) : '') ?? '';
 };
 
 /**

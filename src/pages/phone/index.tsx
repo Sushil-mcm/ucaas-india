@@ -25,6 +25,7 @@ import { useUsersDirectory } from '@/hooks/use-users-directory';
 import { getUserNameByExtension } from '@/lib/extension-utility';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
+import { pickCounterpartNumber } from '@/lib/call-number';
 
 export const initialDrawerState = {
   url: '',
@@ -280,9 +281,11 @@ export const LogContent = ({
     });
   };
 
-  const contact_number = ['Inbound', 'Missed'].includes(logData?.main?.direction)
-    ? logData?.main?.caller_id_number
-    : logData?.main?.destination_number;
+  /* The other party, decided from the values rather than the direction label —
+     otherwise redial rang the viewer's own extension back on any call that
+     started in the web phone, and dialled the carrier's routing prefix along
+     with the number on the ones that went out. */
+  const contact_number = pickCounterpartNumber(logData?.main || {});
   const normalizedContactNumber = String(contact_number ?? '').trim();
   const canCallOrMessage = isMeaningfulValue(normalizedContactNumber);
   const resolvedHeaderName = logData?.main?.contact_name
