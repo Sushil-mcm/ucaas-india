@@ -1,5 +1,5 @@
+import AlertConfirm from '@/components/custom/alert-confirm';
 import FileCropper from '@/components/custom/file-cropper';
-import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -7,6 +7,7 @@ import { requiredString } from '@/lib/schema';
 import { Icon } from '@/assets/icons/icon';
 import { handleAlert, MAX_FILE_SIZE, validateFileSize } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { isDemoMode } from '@/lib/demo-mode';
 import { basicInitialState } from '@/pages/admin-settings/constants';
 import BasicInformation from '@/pages/admin-settings/people/update-forwarding/basic-information';
 import '@/components/mcm/mcm-page.css';
@@ -17,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import CustomAvatar from '@/components/custom/custom-avatar';
+import AccountPageHead from '../account-page-head';
 import HowCallsReachYou from './how-calls-reach-you';
 import CallSetupGuide from './call-setup-guide';
 import { buildProfileUpdatePayload } from './profile-update-payload';
@@ -25,20 +27,21 @@ export const BasicInfoSettingSchema = yup.object().shape({
   basic: yup.object().shape({
     first_name: requiredString('First name', 2, 50),
     last_name: requiredString('Last name', 2, 50),
+    job_title: yup.string().trim().required('Fill a job title'),
+    site: yup.object().shape({
+      value: yup.string().trim().required('Select a location'),
+    }),
   }),
 });
 
 const BasicInfoSettings = () => {
-  /* The page head above prints the title; this puts the sentence that used
-     to sit under it behind that head's info button instead. */
-  useSetAdminPageMeta({ description: 'Your name, job title and location as colleagues see them in the directory — and below, how calls actually reach you.' });
-
   const [image, setImage] = useState<any>(null);
   const [fileName, setFileName] = useState<any>(null);
   const [modalState, setModalState] = useState(false);
   const [loader, setLoader] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const cropperUploadRef = useRef<any>(null);
   const queryClient: any = useQueryClient();
   const { features } = useCompanyFeatures();
@@ -147,6 +150,18 @@ const BasicInfoSettings = () => {
 
     setImagePreview(blobUrl);
     if (file) {
+      /* Demo mode has no real object storage to hand back a presigned URL,
+         so the upload/PUT round trip below has nothing to talk to — it used
+         to fail silently and leave the crop dialog stuck open with no
+         feedback. The cropped image is already right here in the browser,
+         so demo mode just uses it directly instead of a network round trip
+         that can never succeed. */
+      if (isDemoMode()) {
+        setValue('profile', blobUrl);
+        setIsImageRemoved(false);
+        setModalState(false);
+        return;
+      }
       try {
         const uploadMediaResponse = await uploadMediaMutate({
           uuid: userInfoData?.company_info?.uuid,
@@ -168,6 +183,12 @@ const BasicInfoSettings = () => {
             setIsImageRemoved(false);
             setModalState(false);
           }
+        } else {
+          handleAlert({
+            text: 'Could not upload the image. Please try again.',
+            type: 'error',
+          });
+          setLoader(false);
         }
       } catch (error) {
         console.log(error);
@@ -184,6 +205,7 @@ const BasicInfoSettings = () => {
           first_name: watch('basic.first_name'),
           last_name: watch('basic.last_name'),
           job_title: watch('basic.job_title'),
+          site_uuid: watch('basic.site')?.value,
         },
         uploadedProfile: watch('profile'),
         isImageRemoved,
@@ -233,6 +255,11 @@ const BasicInfoSettings = () => {
           a ten-property inline style undoing its own layout and font rules;
           `.mcm-profile` sets what this page actually wants instead. */}
       <section className="mcm-page mcm-admin mcm-acct">
+        <AccountPageHead
+          title="Profile"
+          about="Your name, job title and location as colleagues see them in the directory, alongside the numbers that reach you."
+        />
+
         {PendingUserData ? (
           <div className="flex items-center justify-center p-5">
             <Loader variant="blue" size="sm" />
@@ -321,7 +348,7 @@ const BasicInfoSettings = () => {
                   <form onSubmit={handleSubmit(onSubmit)}>
                     <BasicInformation
                       isChooseTemplate={false}
-                      isSiteDisabled={true}
+                      isSiteDisabled={false}
                       customClass=""
                     />
                     {basicInfoAccess?.edit && hasUnsavedChanges && (
@@ -383,6 +410,20 @@ const BasicInfoSettings = () => {
             </div>
           </div>
         )}
+        <AlertConfirm
+          open={removeConfirmOpen}
+          setOpen={setRemoveConfirmOpen}
+          headerText="Remove profile picture"
+          descriptionTextComp={
+            <div className="text-md">
+              Are you sure you want to remove your profile picture?
+            </div>
+          }
+          closeBtnText="No"
+          confirmBtnText="Yes"
+          onConfirm={handleRemoveImage}
+          onCancel={() => setRemoveConfirmOpen(false)}
+        />
         {modalState && (
           <FileCropper
             {...{

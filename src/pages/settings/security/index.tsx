@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useUser } from '@/hooks/use-user';
 import { handleAlert, capitalizeFirstLetter } from '@/lib/utils';
 import { deviceSecurityList, logout } from '@/services/api';
@@ -19,6 +18,7 @@ import { useState, useMemo } from 'react';
 import useDebounce from '@/hooks/use-debounce';
 import ChangePassword from '@/pages/change-password';
 import '@/components/mcm/mcm-page.css';
+import AccountPageHead from '../account-page-head';
 
 /* The list printed the raw `navigator.userAgent` string against every row —
    ninety characters of version numbers and compatibility tokens that answer
@@ -64,10 +64,6 @@ const describeAgent = (ua?: string): string => {
 };
 
 const Security = () => {
-  /* The page head above prints the title; this puts the sentence that used
-     to sit under it behind that head's info button instead. */
-  useSetAdminPageMeta({ description: 'Your password, and every device currently signed in as you.' });
-
   const { user } = useUser();
   const [search, setSearch] = useState('');
   const [selectedUserExtension, setSelectedUserExtension] = useState<string>('');
@@ -160,6 +156,21 @@ const Security = () => {
 
   return (
     <section className="mcm-page mcm-admin mcm-acct">
+      <AccountPageHead
+        title="Security & Privacy"
+        about="Your password, and every device currently signed in as you."
+      >
+        {!isLoading && !isSearching && deviceCount > 0 && (
+          <div className="mcm-acct-note">
+            <MonitorSmartphone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              {deviceCount} {deviceCount === 1 ? 'device is' : 'devices are'} signed in as you
+              {otherCount > 0 ? `, ${otherCount} besides this one.` : '.'}
+            </span>
+          </div>
+        )}
+      </AccountPageHead>
+
       <div className="mcm-acct-body">
         <div className="mcm-acct-narrow">
           <div className="mcm-seccards">

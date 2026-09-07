@@ -1,9 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { FORWARDING_TAB_CONSTANT, greetingsInitialState } from '@/pages/admin-settings/constants';
-import GreetingSlots from './greeting-slots';
 import { upsertUserSettingsSchema } from '@/pages/admin-settings/people/update-forwarding/schema';
 import { getUserDetails, updateUserSettings } from '@/services/api';
 import { useIsStarterPlan } from '@/hooks/use-is-starter-plan';
@@ -11,6 +9,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import AccountPageHead from '../account-page-head';
+import GreetingSlots from './greeting-slots';
 import '@/components/mcm/mcm-page.css';
 
 type GreetingValue = {
@@ -39,8 +39,6 @@ interface GreetingField {
 type GreetingsForm = Record<GreetingKey, GreetingField>;
 
 const Greetings = () => {
-  useSetAdminPageMeta({ description: 'The recordings callers hear on your extension — welcome message, hold music and voicemail.' });
-
   const [schemaContext, setSchemaContext] = useState<any>(null);
   const hasHydratedGreetingsRef = useRef(false);
   /* The record as it arrived, kept so Discard has something to put back. */
@@ -148,8 +146,7 @@ const Greetings = () => {
   /* Read off the live form rather than the saved record, so the count tracks
      an unsaved change. "Set to your own recording" means the slot is on AND a
      file is picked — a slot switched on with nothing chosen is not finished,
-     and counting it as though it were is how a half-done page looks done.
-     Hold music is dropped on the starter plan, same as the editor drops it. */
+     and counting it as though it were is how a half-done page looks done. */
   const greetings: any = watch('greetings');
   const slotKeys: GreetingKey[] = isStarterPlan
     ? ['welcome_greeting', 'voicemail', 'ring_tone']
@@ -160,13 +157,20 @@ const Greetings = () => {
 
   return (
     <section className="mcm-page mcm-admin mcm-acct">
+      <AccountPageHead
+        title="Greetings"
+        about="The audio on your extension: the message that answers, the music while somebody waits, and what they hear if you do not pick up."
+      >
+        <span className={`mcm-gcount${chosenCount ? ' is-custom' : ''}`}>
+          <span className="mcm-gcount-n">{chosenCount}</span>
+          <span className="mcm-gcount-l">of {slotKeys.length} use your own recording</span>
+        </span>
+      </AccountPageHead>
+
       <div className="mcm-acct-body">
         <div className="mcm-acct-narrow">
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* One set of cards that each state their own outcome, in place of
-                  the summary tiles and the editor rows that used to say the same
-                  four things twice. */}
               <GreetingSlots />
 
               {isDirty && (
