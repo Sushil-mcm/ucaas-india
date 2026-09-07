@@ -167,45 +167,52 @@ const AgentsTab = ({
 
   return (
     <div className="perf-agents flex flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-2 py-3 md:grid-cols-8">
         <PerfStatCard
-          label="Online"
+          label={'Agents\nOnline'}
           value={String(onlineCount)}
           sub={`of ${rows.length} agents`}
           icon={Users}
         />
         <PerfStatCard
-          label="Top performer"
+          label={'Top\nPerformer'}
           value={hasTopPerformer ? topPerformer!.name : '—'}
           sub={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : undefined}
           icon={Trophy}
+          highlight="gold"
         />
         <PerfStatCard
-          label="On a call"
+          label={'Active\nCalls'}
           value={String(onCallCount)}
           sub={`of ${onlineCount} online`}
           icon={PhoneCall}
         />
         <PerfStatCard
-          label="Zero activity"
+          label={'Zero\nActivity'}
           value={String(zeroActivityCount)}
-          sub="online, nothing handled"
+          sub="Idle agents"
           icon={AlertTriangle}
         />
         <PerfStatCard
-          label="Avg AHT"
+          label={'Handle\nTime'}
           value={avgAht === null ? '—' : formatSecsToClock(avgAht)}
+          sub="Team average"
           icon={Gauge}
         />
         <PerfStatCard
-          label="In / out calls"
+          label={'Inbound\nOutbound'}
           value={`${totalIncoming} / ${totalOutgoing}`}
           sub="incoming / outgoing"
           icon={ArrowLeftRight}
         />
-        <PerfStatCard label="No queue assigned" value={String(noQueueCount)} icon={AlertCircle} />
         <PerfStatCard
-          label="Talk time today"
+          label={'No\nQueue'}
+          value={String(noQueueCount)}
+          sub="agents"
+          icon={AlertCircle}
+        />
+        <PerfStatCard
+          label={'Talk\nTime'}
           value={formatSecsToClock(totalTalkMinutes * 60)}
           sub="combined, all agents"
           icon={Clock}
@@ -218,6 +225,8 @@ const AgentsTab = ({
         showPagination={false}
         emptyTablePlaceholder="No agent activity yet"
         descriptionEmptyTable="Agent stats appear once calls are handled today."
+        splitStickyHeader
+        visibleRowCount={6}
       />
     </div>
   );

@@ -68,6 +68,12 @@ body.perf-warm-backdrop.dark {
   border: 1px solid var(--aa-glass-border);
   border-radius: 20px;
   box-shadow: var(--aa-glass-shadow);
+  /* Tighter than the base `.mcm-page .stat` (14px 15px) — eight tiles now
+     share one row, and the roomier default padding left each one looking
+     mostly empty around a single number. */
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease,
@@ -78,14 +84,45 @@ body.perf-warm-backdrop.dark {
   box-shadow: var(--aa-glass-shadow-hover);
   transform: translateY(-2px);
 }
+/* Every label carries a literal `\n` (agents-tab.tsx) so it always breaks
+   into two lines at that exact word, regardless of how wide this card ends
+   up — not left to chance the way plain word-wrap would (narrower card and
+   it wraps oddly or overflows to three lines; wider card and it collapses
+   to one), so every tile's icon/value/sub line up on the same rows. */
 .mcm-page .perf-agents .stat .k {
   color: var(--aa-muted);
+  white-space: pre-line;
 }
+/* Fixed (not auto-centered) so heading-to-value spacing is the same 6px on
+   every card, now that every label above is forced to the same two-line
+   height — matches Performance ▸ Queues Activity's KPI strip. */
 .mcm-page .perf-agents .stat .v {
   color: var(--aa-ink);
+  margin-top: 6px;
+  white-space: nowrap;
+}
+/* Top performer's value is a person's name, not a number — at the base
+   25px it wrapped to two lines the moment a name ran longer than ~9
+   characters, in a card no wider than any of its neighbours. Smaller and
+   pinned to one line, trimmed with an ellipsis for the rare name that
+   still doesn't fit rather than reflowing the card. The 25px line-height
+   (not the base rule's 1) keeps its line box the same height as every
+   other card's 25px value despite the smaller font, so its own sub caption
+   below still lands on the same row as its neighbours' instead of riding
+   up with the shorter box. */
+.mcm-page .perf-agents .stat-hl-gold .v {
+  font-size: 16px;
+  line-height: 25px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mcm-page .perf-agents .stat .d {
   color: var(--aa-muted) !important;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ------------------------------------------------------------
@@ -93,7 +130,21 @@ body.perf-warm-backdrop.dark {
    Directory's signature left accent-bar row hover.
    ------------------------------------------------------------ */
 .mcm-page .perf-agents .table-scroll {
-  border-radius: 20px;
+  /* Bottom corners only — NOT a byte-for-byte copy of Calls
+     (`.perf-interactions .table-scroll`, all four corners), despite that
+     being requested: Calls' table body doesn't scroll far enough for its
+     own vertical scrollbar to reach the header seam, so its all-corner
+     radius never gets exercised. This table's does. With all four
+     corners rounded, `.table-scroll`'s own top-right corner sits in the
+     middle of the wrapper's right edge (below the separate header box),
+     carving a curved notch out of the body box exactly where the
+     scrollbar track starts — the scrollbar renders with a rounded,
+     malformed top instead of a flush one. Bottom-only removes that
+     corner entirely, so there's nothing for the scrollbar to collide
+     with. Confirmed live: this is what "the scroller on the right side"
+     was — same root cause as the header/body seam this rule was
+     originally written to prevent. */
+  border-radius: 0 0 20px 20px;
   border: 1px solid var(--aa-glass-border);
   background: var(--aa-glass);
   backdrop-filter: var(--aa-glass-blur);
@@ -110,24 +161,58 @@ body.perf-warm-backdrop.dark {
   border-radius: 20px;
   overflow: hidden;
 }
-.mcm-page .perf-agents .table-scroll thead {
-  background: rgba(255, 250, 244, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 var(--aa-hairline);
+/* The scrollbar track used to run the full height of the card, alongside
+   the sticky 40px header — pushing it down so it only travels next to the
+   actual data rows, not the header. Measured, not guessed: the header's
+   real rendered height on this table is 40px. */
+/* No margin-top here (unlike a leftover you'll still find on some other
+   Performance tables, e.g. Calls) — that 40px was compensating for the
+   header used to living *inside* `.table-scroll` before this table moved
+   to `splitStickyHeader`. The header is a separate sibling box now, so
+   `.table-scroll`'s own top edge already starts right at the first data
+   row; padding the scrollbar-track down further left a visible gap
+   between the header's bottom edge and the top of the scroll thumb. */
+.mcm-page .perf-agents .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
-.dark .mcm-page .perf-agents .table-scroll thead {
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 10px/800/0.09em, 9px
+   12px padding, a 2px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-agents thead` directly, NOT `.table-scroll thead` — this
+   table renders with `splitStickyHeader`, which (table-manager.tsx) puts
+   the header in its own non-scrolling box, a *sibling* of `.table-scroll`,
+   not a descendant of it. A `.table-scroll`-anchored selector silently
+   never matched this table's header at all, leaving it on TableManager's
+   own default `bg-[#faf5ee]` cream and base ink colour instead of this
+   theme (same gotcha already hit and fixed in interactions-theme.css). */
+.mcm-page .perf-agents thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .mcm-page .perf-agents thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.mcm-page .perf-agents .table-scroll thead th {
-  color: var(--aa-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.mcm-page .perf-agents thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  border-bottom-color: var(--aa-hairline);
+  padding: 9px 12px !important;
+  /* Matches Performance ▸ Calls (`.perf-interactions`) and Directory ▸
+     People exactly — this table previously used a weaker 2px/0.25-alpha
+     line. */
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   background: transparent;
+}
+.mcm-page .perf-agents thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.mcm-page .perf-agents thead th:last-child {
+  border-top-right-radius: 20px;
 }
 
 .mcm-page .perf-agents .table-scroll tbody tr {
