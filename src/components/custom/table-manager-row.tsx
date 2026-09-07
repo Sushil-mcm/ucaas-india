@@ -87,13 +87,28 @@ export const TableManagerRow: FC<{
         )}
 
         {row.getVisibleCells().map((cell: any, cellIndex: number) => {
+          /* The header for a column with meta.textAlign: 'center'/'right' is
+             already aligned that way (table-manager.tsx). The body cell used
+             to stay left unless it was specifically the 'action' column —
+             every other aligned column's own content (a badge, an avatar, a
+             number) defaults to block width, sits flush left inside it, and
+             reads as a header sitting over a gap of empty space rather than
+             over its own row's content. Aligning the body wrapper too, for
+             any column that asked for it, keeps the header and its column's
+             actual content lined up with each other. */
+          const bodyAlign =
+            cell?.column?.id === 'action'
+              ? 'center'
+              : cell?.column?.columnDef?.meta?.textAlign;
           return (
             <TableCell
               key={`${row.id}_${cell.column.id}_${cellIndex}`}
               className="px-2 xl:px-4 py-2 border-b  border-gray-200 last-of-type:border-r-0 h-11 min-h-11 text-black font-semibold"
             >
-              {cell?.column?.id === 'action' ? (
-                <div className="flex items-center justify-center">
+              {bodyAlign === 'center' || bodyAlign === 'right' ? (
+                <div
+                  className={`flex items-center ${bodyAlign === 'right' ? 'justify-end' : 'justify-center'}`}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>
               ) : (

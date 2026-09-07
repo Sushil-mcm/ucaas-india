@@ -1,31 +1,32 @@
 import { useEffect } from 'react';
+import {
+  Clock,
+  Timer as TimerIcon,
+  PhoneCall,
+  Users,
+  CheckCircle2,
+  Target,
+  Gauge,
+  PhoneMissed,
+} from 'lucide-react';
 import TableManager from '@/components/custom/table-manager';
 import Timer from '@/components/timer';
 import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers';
 import PerfStatCard from './stat-card';
-import KpiStrip from './kpi-strip';
 import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
 import type { QueueRow, QueueStats, LiveQueueStats } from './queue-rows';
+import StatusPill, { abandonPillTone, parsePercent, slaPillTone } from './status-pill';
+import KpiStrip from './kpi-strip';
 import './queues-theme.css';
 
 export type { QueueRow } from './queue-rows';
 
-const STATUS_STYLES: Record<string, string> = {
-  'On Call': 'state busy',
-  Available: 'state q',
-  Offline: 'state away',
-};
-
-const getMemberStatus = (member: any, usersOnlineStatus: any[], activeQueueCalls: any[]) => {
-  const key = member?.user_uuid || member?.extension || member?.uuid;
-  if (!key) return 'Offline';
-  if (activeQueueCalls.some((call) => isMonitoringCallForMember(call, key))) return 'On Call';
-  const presence = usersOnlineStatus?.find((u: any) => String(u?.userId) === String(key));
-  return presence?.online ? 'Available' : 'Offline';
-};
-
+/* Module-level rather than inline in one return branch — this component has
+   two, and a <style> block that only rendered on one of them left the other
+   (the per-queue detail view) with unstyled `.stat-inline`/`.summary-grid`
+   markup, since neither has any base definition outside this scope. */
 const QUEUE_TAB_STYLES = `
   .mcm-page .live-pulse-dot-wrap { display:inline-flex; align-items:center; gap:5px; }
   .mcm-page .live-pulse-dot {
@@ -107,6 +108,20 @@ const QUEUE_TAB_STYLES = `
     .mcm-page .kpi-strip-cell { flex:1 1 50%; }
   }
 `;
+
+const STATUS_STYLES: Record<string, string> = {
+  'On Call': 'state busy',
+  Available: 'state q',
+  Offline: 'state away',
+};
+
+const getMemberStatus = (member: any, usersOnlineStatus: any[], activeQueueCalls: any[]) => {
+  const key = member?.user_uuid || member?.extension || member?.uuid;
+  if (!key) return 'Offline';
+  if (activeQueueCalls.some((call) => isMonitoringCallForMember(call, key))) return 'On Call';
+  const presence = usersOnlineStatus?.find((u: any) => String(u?.userId) === String(key));
+  return presence?.online ? 'Available' : 'Offline';
+};
 
 const QueuesActivityTab = ({
   queues,
@@ -225,7 +240,19 @@ const QueuesActivityTab = ({
         ),
     },
     { header: 'Members', accessorKey: 'membersCount' },
-    { header: 'Interacting', accessorKey: 'interacting' },
+    {
+      header: 'Interacting',
+      accessorKey: 'interacting',
+      cell: ({ row }: any) =>
+        row.original.interacting > 0 ? (
+          <span className="live-pulse-dot-wrap">
+            <span className="live-pulse-dot" />
+            {row.original.interacting}
+          </span>
+        ) : (
+          row.original.interacting
+        ),
+    },
     {
       header: 'Offered',
       accessorKey: 'offered',
@@ -243,7 +270,13 @@ const QueuesActivityTab = ({
       header: 'SL today',
       accessorKey: 'sla',
       cell: ({ row }: any) =>
-        row.original.sla === null ? '—' : `${Math.round(row.original.sla)}%`,
+        row.original.sla === null ? (
+          '—'
+        ) : (
+          <StatusPill tone={slaPillTone(row.original.sla)}>
+            {Math.round(row.original.sla)}%
+          </StatusPill>
+        ),
     },
     {
       header: 'ASA',
@@ -259,7 +292,18 @@ const QueuesActivityTab = ({
       cell: ({ row }: any) =>
         row.original.aht === null ? '—' : formatSecsToClock(row.original.aht),
     },
-    { header: 'Abandon', accessorKey: 'abandonRate' },
+    {
+      header: 'Abandon',
+      accessorKey: 'abandonRate',
+      cell: ({ row }: any) => {
+        const percent = parsePercent(row.original.abandonRate);
+        return percent === null ? (
+          row.original.abandonRate
+        ) : (
+          <StatusPill tone={abandonPillTone(percent)}>{row.original.abandonRate}</StatusPill>
+        );
+      },
+    },
   ];
 
   if (selectedRow) {
@@ -284,7 +328,7 @@ const QueuesActivityTab = ({
     ];
 
     const detailKpis = [
-      { label: 'Waiting', value: String(selectedRow.waiting) },
+      { label: 'Waiting', value: String(selectedRow.waiting), icon: Clock },
       {
         label: 'Longest wait',
         value: selectedRow.longestWaitTimestamp ? (
@@ -292,19 +336,22 @@ const QueuesActivityTab = ({
         ) : (
           '00:00'
         ),
+        icon: TimerIcon,
       },
-      { label: 'Interacting', value: String(selectedRow.interacting) },
-      { label: 'Members', value: String(selectedRow.membersCount) },
+      { label: 'Interacting', value: String(selectedRow.interacting), icon: PhoneCall },
+      { label: 'Members', value: String(selectedRow.membersCount), icon: Users },
       {
         label: 'Handled',
         value:
           selectedRow.handledToday === null || selectedRow.handledToday === undefined
             ? '—'
             : String(selectedRow.handledToday),
+        icon: CheckCircle2,
       },
       {
         label: 'Service level',
         value: selectedRow.sla === null ? '—' : `${Math.round(selectedRow.sla)}%`,
+        icon: Target,
       },
       {
         label: 'ASA',
@@ -312,8 +359,9 @@ const QueuesActivityTab = ({
           selectedRow.asa === null || selectedRow.asa === undefined
             ? '—'
             : formatSecsToClock(selectedRow.asa),
+        icon: Gauge,
       },
-      { label: 'Abandon', value: selectedRow.abandonRate },
+      { label: 'Abandon', value: selectedRow.abandonRate, icon: PhoneMissed },
     ];
 
     return (
@@ -339,7 +387,13 @@ const QueuesActivityTab = ({
 
         <div className="summary-grid">
           {detailKpis.map((kpi) => (
-            <PerfStatCard key={kpi.label} label={kpi.label} value={kpi.value} />
+            <PerfStatCard
+              key={kpi.label}
+              label={kpi.label}
+              value={kpi.value}
+              icon={kpi.icon}
+              layout="inline"
+            />
           ))}
         </div>
 
@@ -450,6 +504,7 @@ const QueuesActivityTab = ({
         showPagination={false}
         emptyTablePlaceholder="No queues configured"
         descriptionEmptyTable="Call queues you create will show live activity here."
+        splitStickyHeader
       />
     </div>
   );

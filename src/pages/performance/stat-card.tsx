@@ -32,6 +32,9 @@ const PerfStatCard = ({
      unopinionated about what that treatment looks like. Default 'none'
      adds nothing, so every existing usage renders exactly as before. */
   highlight = 'none',
+  iconBg,
+  iconColor,
+  labelColor,
 }: {
   label: string;
   value: ReactNode;
@@ -40,6 +43,9 @@ const PerfStatCard = ({
   tone?: StatCardTone;
   layout?: 'stacked' | 'inline';
   highlight?: 'none' | 'gold' | 'warning' | 'ai';
+  iconBg?: string;
+  iconColor?: string;
+  labelColor?: string;
 }) => {
   const highlightClass = highlight !== 'none' ? ` stat-hl-${highlight}` : '';
   if (layout === 'inline') {
@@ -70,7 +76,7 @@ const PerfStatCard = ({
       <div
         style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}
       >
-        <span className="k">{label}</span>
+        <span className="k" style={{ color: labelColor }}>{label}</span>
         {Icon && (
           <span
             className="stat-icon"
@@ -81,8 +87,8 @@ const PerfStatCard = ({
               height: 22,
               flex: 'none',
               borderRadius: 99,
-              background: 'var(--accent-wash)',
-              color: 'var(--accent-ink)',
+              background: iconBg ?? 'var(--accent-wash)',
+              color: iconColor ?? 'var(--accent-ink)',
             }}
           >
             <Icon style={{ width: 13, height: 13 }} />

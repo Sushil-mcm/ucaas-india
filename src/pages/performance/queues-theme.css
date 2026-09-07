@@ -95,22 +95,27 @@ body.perf-warm-backdrop .mcm-page .grouped-row .stat {
     border-color 0.2s ease,
     transform 0.2s ease;
 }
-body.perf-warm-backdrop .mcm-page .hero-row .stat:hover,
-body.perf-warm-backdrop .mcm-page .grouped-row .stat:hover {
+body.perf-warm-backdrop .mcm-page .hero-row .stat:hover {
   border-color: rgba(249, 115, 22, 0.3);
   box-shadow: var(--qa-glass-shadow-hover);
   transform: translateY(-2px);
 }
-body.perf-warm-backdrop .mcm-page .hero-row .k,
-body.perf-warm-backdrop .mcm-page .grouped-row .k {
+body.perf-warm-backdrop .mcm-page .hero-row .k {
   color: var(--qa-muted);
 }
 body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-value {
   color: var(--qa-ink);
 }
-body.perf-warm-backdrop .mcm-page .hero-row .d,
-body.perf-warm-backdrop .mcm-page .grouped-row .d {
+body.perf-warm-backdrop .mcm-page .hero-row .d {
   color: var(--qa-muted) !important;
+}
+/* Breaching hero card: heading + bottom line flip to the same crit red as
+   the value, instead of staying the muted grey above — needs to outrank
+   the plain `.hero-row .k` / `.hero-row .d` (incl. its `!important`) rules
+   just above, which is why this repeats the full `body...` chain. */
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach .k,
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach .d {
+  color: var(--crit) !important;
 }
 
 /* "Longest wait", past target, used a flat solid crit-red ring — striking,
@@ -141,10 +146,6 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
     animation: none;
   }
 }
-body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
-  background: var(--qa-hairline);
-}
-
 /* ------------------------------------------------------------
    2. Live-sync notice — a frosted glass pill instead of floating text.
    Muted slate on translucent white, matching the notice pill standard set
@@ -270,8 +271,17 @@ body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
    Directory's signature left accent-bar row hover.
    ------------------------------------------------------------ */
 .mcm-page .perf-queues .table-scroll {
-  border-radius: 20px;
-  border: 1px solid var(--qa-glass-border);
+  /* Bottom corners only — `splitStickyHeader` puts the header above this
+     in its own box, which already owns the top corners (via the
+     `thead th:first-child`/`:last-child` rules below, same precedent as
+     agents-theme.css). Rounding all four here drew a second curve right
+     under the header, where this box's own top corners traced against
+     the header's straight bottom edge. */
+  border-radius: 0 0 20px 20px;
+  /* Directory's exact card border — not `--qa-glass-border` (a near-white
+     rgba(255,255,255,0.95) used by this page's other frosted KPI cards),
+     which read as a mismatched pale line against Directory's warm tan. */
+  border: 1px solid rgba(225, 200, 165, 0.9);
   background: var(--qa-glass);
   backdrop-filter: var(--qa-glass-blur);
   -webkit-backdrop-filter: var(--qa-glass-blur);
@@ -289,27 +299,68 @@ body.perf-warm-backdrop .mcm-page .grouped-row .grouped-stat-divider {
   border-radius: 20px;
   overflow: hidden;
 }
-
-/* Sticky header — near-opaque frosted fill so scrolling rows never bleed
-   through the header text, plus a hairline shadow to seat it above them. */
-.mcm-page .perf-queues .table-scroll thead {
-  background: rgba(255, 250, 244, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 var(--qa-hairline);
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
-.dark .mcm-page .perf-queues .table-scroll thead {
+/* Directory's exact thumb recipe (people-glass.css) — without this the
+   thumb falls back to the generic `--line` (#eee7dd) used everywhere else
+   on the page instead of Directory's warm-orange tone. */
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-queues thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (table-manager.tsx), which
+   puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it (same gotcha already hit and
+   fixed in agents-theme.css/interactions-theme.css). A `.table-scroll`-
+   anchored selector would silently never match this table's header.
+   This also fixes a real rendering bug the old non-split header had: its
+   row height came out of flex/table layout as a fraction of a device
+   pixel, so the border-bottom got anti-aliased into a faint, washed-out
+   band despite being the same 3px/0.4-alpha value Directory uses — the
+   split header's own single-row table doesn't share that fractional
+   layout chain, so the identical value renders crisp here (verified
+   against Performance ▸ Calls, `.perf-interactions`, which uses this same
+   splitStickyHeader + plain-`thead` pattern and the exact same rgba). */
+.mcm-page .perf-queues thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .mcm-page .perf-queues thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.mcm-page .perf-queues .table-scroll thead th {
-  color: var(--qa-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.mcm-page .perf-queues thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  border-bottom-color: var(--qa-hairline);
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   background: transparent;
+}
+.mcm-page .perf-queues thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.mcm-page .perf-queues thead th:last-child {
+  border-top-right-radius: 20px;
 }
 
 /* Rows — transparent at rest, warm tint plus the 3px left accent bar on
