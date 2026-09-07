@@ -3,7 +3,6 @@ import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
 import { AdminHeadActions } from '@/pages/admin-settings/admin-page-head';
-import { Input } from '@/components/ui/input';
 import { useUser } from '@/hooks/use-user';
 import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
 import {
@@ -508,7 +507,11 @@ const NumberList = () => {
           cb: () => handleNumberState(data, stateAction),
         });
 
-        const neutral = 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white';
+        /* A bordered square that tints on hover, not a filled grey disc. Five
+           solid circles per row competed with the number itself for attention;
+           the Directory roster this screen is matched to uses the same quiet
+           treatment for its row actions. */
+        const neutral = 'mcm-rowact';
 
         const assignNumberAction =
           !data?.User && virtualNumberAccess?.action?.assign_number
@@ -594,7 +597,9 @@ const NumberList = () => {
                 'Release Number',
                 'ReleaseNumber',
                 'w-5 h-5',
-                'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+                /* Releasing a number is the one action here that cannot be
+                   undone, so it keeps a colour the others do not have. */
+                'mcm-rowact is-danger',
                 'releaseConfirmationAlert',
               ),
             ]
@@ -622,7 +627,7 @@ const NumberList = () => {
             {actions?.map((action: any) => (
               <CustomTooltip key={action.id} text={action.tooltipText} side="top">
                 <div
-                  className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8 ${action.className}`}
+                  className={`cursor-pointer flex items-center justify-center ${action.className}`}
                   onClick={action.cb}
                 >
                   <Icon name={action.icon as IconName} className={action.iconClass} />
@@ -656,52 +661,54 @@ const NumberList = () => {
       <AdminPage
         hideHead
         filters={
-          <Input
-            placeholder="Search numbers"
-            className="pl-10 w-full min-h-9 rounded-lg"
-            IconPosition="left-0 pl-2 inset-y-0"
-            value={search}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.startsWith(' ')) return;
-              setSearch(value);
-            }}
-            Icon={<SearchLine className=" text-gray-700" />}
-          />
-        }
-      >
-        <div className="flex flex-col gap-3">
-          {/* One list, three views. Each keeps its own address so a view can be
-              linked to and reloaded. */}
-          <nav
-            className="flex items-center gap-1 border-b border-gray-200"
-            aria-label="Number views"
-          >
-            {Object.values(VIEWS).map((item) => {
-              const isActive = item.key === view.key;
-              return (
+          /* Views and search on one row, like the Directory filter bar this
+             screen is meant to match. The tabs used to sit inside the table
+             card, which read as part of the table rather than as a control on
+             the page, and pushed the first row a long way down. */
+          <div className="mcm-numbar">
+            <nav className="mcm-numtabs" aria-label="Number views">
+              {Object.values(VIEWS).map((item) => (
                 <Link
                   key={item.key}
                   to={item.path}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
-                    isActive
-                      ? 'border-primary font-semibold text-primary'
-                      : 'border-transparent text-gray-500 hover:text-gray-900'
-                  }`}
+                  aria-current={item.key === view.key ? 'page' : undefined}
+                  className={`mcm-numtab ${item.key === view.key ? 'on' : ''}`}
                 >
                   {item.tab}
                 </Link>
-              );
-            })}
-          </nav>
-
+              ))}
+            </nav>
+            <label className="mcm-numsearch">
+              <SearchLine />
+              <input
+                type="search"
+                placeholder="Search numbers"
+                value={search}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearch(value);
+                }}
+              />
+            </label>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          {/* The billing note, in one line instead of three. It matters when
+              somebody is about to buy, and it was spending a full paragraph
+              above every row of the table to say so on every visit. */}
           {view.key === 'all' && (
-            <p className="text-gray-900 text-sm">
-              Adding an additional number to an existing user/plan will only incur a charge for the
-              phone number itself. This action does not create a new subscription or user plan. Your
-              monthly recurring total will be updated based on the quantity of numbers added.
-            </p>
+            <CustomTooltip
+              text="Adding an additional number to an existing user or plan charges only for the phone number itself. It does not create a new subscription or user plan. Your monthly recurring total is updated by the quantity of numbers added."
+              side="bottom"
+              className="max-w-sm"
+            >
+              <p className="mcm-numnote">
+                <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
+                Extra numbers are charged per number — no new subscription or user plan.
+              </p>
+            </CustomTooltip>
           )}
 
           {view.isGrouped ? (

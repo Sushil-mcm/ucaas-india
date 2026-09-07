@@ -8138,3 +8138,160 @@
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Admin ▸ Numbers ▸ All numbers — the view tabs and search.
+
+   Five views of one table, so the tabs belong with the page's controls rather
+   than inside the table card, where they read as part of the table and pushed
+   the first row well down the screen. Laid out and shaped like the Directory
+   filter bar (`.tbar` + `.fchip`), which is the pattern this screen was asked
+   to match: pill chips, the lit one carrying the accent.
+   --------------------------------------------------------------------------- */
+
+/* The bar caps its children at 380px so a lone search box does not stretch
+   across a 1900px screen. This row is the whole bar, so it opts out. */
+.mcm-admin .mcm-adminpage-bar > .mcm-numbar {
+  max-width: none;
+}
+
+.mcm-admin .mcm-numbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.mcm-admin .mcm-numtabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.mcm-admin .mcm-numtab {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mcm-admin .mcm-numtab:hover {
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+}
+
+/* The current view. Filled rather than underlined, so which table you are
+   looking at survives being read at a glance from across the page. */
+.mcm-admin .mcm-numtab.on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.mcm-admin .mcm-numtab.on:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: #fff;
+}
+
+/* Search takes the space the tabs leave, and gives it back first when the row
+   runs out of room -- same behaviour as the Directory search chip. */
+.mcm-admin .mcm-numsearch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 160px;
+  max-width: 320px;
+  min-width: 0;
+  margin-left: auto;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-3);
+}
+
+.mcm-admin .mcm-numsearch:focus-within {
+  border-color: var(--accent-edge);
+}
+
+.mcm-admin .mcm-numsearch svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.mcm-admin .mcm-numsearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The billing note. One quiet line with the full wording behind it, instead of
+   a three-line paragraph restating itself above every row on every visit. */
+.mcm-admin .mcm-numnote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: help;
+}
+
+.mcm-admin .mcm-numnote svg {
+  flex: none;
+  color: var(--accent-ink);
+}
+
+/* Row actions in the Admin tables — the same quiet treatment the Directory
+   roster gives its row buttons, rather than a row of filled discs. */
+.mcm-admin .mcm-rowact {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-3);
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mcm-admin .mcm-rowact:hover {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+/* Release is the only irreversible action on these rows. */
+.mcm-admin .mcm-rowact.is-danger:hover {
+  border-color: var(--crit);
+  background: color-mix(in srgb, var(--crit) 10%, transparent);
+  color: var(--crit);
+}

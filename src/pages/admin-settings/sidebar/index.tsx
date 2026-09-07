@@ -163,6 +163,10 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           title: 'All numbers',
           path: '/admin-settings/numbers/all',
           icon: 'AllNumberIcon',
+          /* The tabs inside this screen navigate to their own addresses, so
+             without these the nav entry unlit itself the moment somebody
+             switched tab. */
+          extraActiveTab: ['in-use', 'by-line', 'inventory', 'released'],
         },
         {
           title: 'Identities & addresses',
@@ -170,30 +174,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'AllNumberIcon',
           extraActiveTab: ['addresses', 'verifications'],
         },
-        {
-          title: 'Numbers in use',
-          path: '/admin-settings/numbers/in-use',
-          icon: 'TickCircleIcon',
-        },
-        {
-          /* The same numbers read from the line's side rather than the
-             number's, which is how an admin asks the question. */
-          title: 'Numbers by line',
-          path: '/admin-settings/numbers/by-line',
-          icon: 'AllNumberIcon',
-        },
-        {
-          title: 'Unused numbers',
-          path: '/admin-settings/numbers/inventory',
-          icon: 'InventoryIcon',
-        },
-        {
-          title: 'Released numbers',
-          path: '/admin-settings/numbers/released',
-          icon: 'HashIcon',
-          enabled: true,
-          visible: Boolean(features?.plan_features?.virtual_numbers?.action?.view),
-        },
+        /* "Numbers in use", "Numbers by line", "Unused numbers" and "Released
+           numbers" are not separate screens: all four render the same
+           `NumberList` component, which reads the view from the URL, and All
+           numbers already carries them as tabs. Listing them here made one
+           screen look like five and put the same table five times in the nav.
+           Their routes are kept so the tabs and any existing bookmark still
+           work — see `extraActiveTab`, which keeps this entry lit on all of
+           them. */
         {
           title: 'Call Coverage',
           path: '/admin-settings/numbers/coverage',
