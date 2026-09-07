@@ -4062,13 +4062,24 @@
 .mcm-console .col.stage .stage-inner .btn.primary:active {
   transform: translateY(0);
 }
+/* The shared surface for every ghost button on the call screen — the same
+   height and pill as the primary button above, so a pair of them sits level. */
 .mcm-console .col.stage .stage-inner .btn.ghost {
   height: 44px;
+  border-radius: 22px;
+  background: linear-gradient(175deg, #fff 0%, var(--surface-2) 100%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Only the dialpad's Clear (✕) is a circle, because it is the one ghost button
+   here with an icon and no words. The circle used to be part of the rule above,
+   which caught every labelled ghost button on the stage: "Close wrap-up" is
+   width:100%, and a 100%-wide box with border-radius:50% and no padding is a
+   wide white ellipse, which is exactly how it rendered. */
+.mcm-console .col.stage .stage-inner .btn.ghost[aria-label='Clear'] {
   width: 44px;
   padding: 0;
   border-radius: 50%;
-  background: linear-gradient(175deg, #fff 0%, var(--surface-2) 100%);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .mcm-console .col.stage .stage-inner .btn.ghost:hover {
   background: var(--accent-wash);
