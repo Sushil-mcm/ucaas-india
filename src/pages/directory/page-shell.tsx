@@ -115,7 +115,11 @@ export const SearchChip = ({
   onChange: (value: string) => void;
   placeholder: string;
 }) => (
-  <label className="fchip" style={{ flex: '1 1 220px', maxWidth: 320 }}>
+  /* A small basis, not a small box: it still grows to fill whatever the other
+     chips leave, up to 320px. The basis is what the browser measures when
+     deciding whether the row fits, so a large one made the row wrap while the
+     box was still willing to shrink. */
+  <label className="fchip" style={{ flex: '1 1 120px', maxWidth: 320 }}>
     <Ic n="search" size={13} />
     <input
       value={value}
