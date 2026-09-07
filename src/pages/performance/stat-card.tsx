@@ -32,8 +32,15 @@ const PerfStatCard = ({
      unopinionated about what that treatment looks like. Default 'none'
      adds nothing, so every existing usage renders exactly as before. */
   highlight = 'none',
+  /* Per-card icon wash/ink override — every existing caller keeps the
+     shared accent-wash/accent-ink pair by leaving these unset; a caller
+     that wants each tile's icon in its own colour (a dashboard-style KPI
+     row, one hue per metric) passes both together. */
   iconBg,
   iconColor,
+  /* Colours just the label text, independent of `tone` (which colours the
+     value) — for a single standout tile (e.g. "Top performer") without
+     touching every other card's label. */
   labelColor,
 }: {
   label: string;
@@ -76,7 +83,9 @@ const PerfStatCard = ({
       <div
         style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}
       >
-        <span className="k" style={{ color: labelColor }}>{label}</span>
+        <span className="k" style={{ color: labelColor }}>
+          {label}
+        </span>
         {Icon && (
           <span
             className="stat-icon"
