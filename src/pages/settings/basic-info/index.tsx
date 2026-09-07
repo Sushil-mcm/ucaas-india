@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import CustomAvatar from '@/components/custom/custom-avatar';
-import AccountPageHead from '../account-page-head';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import HowCallsReachYou from './how-calls-reach-you';
 import CallSetupGuide from './call-setup-guide';
 import { buildProfileUpdatePayload } from './profile-update-payload';
@@ -35,6 +35,8 @@ export const BasicInfoSettingSchema = yup.object().shape({
 });
 
 const BasicInfoSettings = () => {
+  useSetAdminPageMeta({ description: 'Your name, job title and location as colleagues see them in the directory, alongside the numbers that reach you.' });
+
   const [image, setImage] = useState<any>(null);
   const [fileName, setFileName] = useState<any>(null);
   const [modalState, setModalState] = useState(false);
@@ -255,11 +257,6 @@ const BasicInfoSettings = () => {
           a ten-property inline style undoing its own layout and font rules;
           `.mcm-profile` sets what this page actually wants instead. */}
       <section className="mcm-page mcm-admin mcm-acct">
-        <AccountPageHead
-          title="Profile"
-          about="Your name, job title and location as colleagues see them in the directory, alongside the numbers that reach you."
-        />
-
         {PendingUserData ? (
           <div className="flex items-center justify-center p-5">
             <Loader variant="blue" size="sm" />

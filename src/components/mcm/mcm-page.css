@@ -334,6 +334,13 @@
 }
 .mcm-page .page-head .btn {
   margin-left: auto;
+  height: 34px;
+  padding: 0 13px;
+  font-size: 12.5px;
+}
+.mcm-page .page-head .btn .ic {
+  width: 14px;
+  height: 14px;
 }
 
 .mcm-page .grid2 {

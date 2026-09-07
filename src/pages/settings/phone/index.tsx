@@ -14,7 +14,7 @@ import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-di
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 import { Hash, PhoneIncoming, PhoneOutgoing } from 'lucide-react';
 import { isUnchanged } from '@/lib/form-baseline';
-import AccountPageHead from '../account-page-head';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import '@/components/mcm/mcm-page.css';
 
 /* What the save bar compares, which is not the raw form values.
@@ -58,6 +58,8 @@ const comparable = (rules: any) => {
 };
 
 const IncomingCalls = () => {
+  useSetAdminPageMeta({ description: 'How calls reach you: your devices, forwarding rules and what happens when you do not answer.' });
+
   const [schemaContext, setSchemaContext] = useState(null);
   /* Serialised copy of the call rules as they arrived, so "has anything
      changed" is a comparison rather than a flag something else has to set.
@@ -555,11 +557,6 @@ const IncomingCalls = () => {
 
   return (
     <section className="mcm-page mcm-admin mcm-acct">
-      <AccountPageHead
-        title="My Phone"
-        about="Which of your devices ring, where calls go while you are away, and what happens when nobody answers."
-      />
-
       <div className="mcm-acct-body">
         <div className="mcm-acct-narrow">
           <div className="mcm-lineband">

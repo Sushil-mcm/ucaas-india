@@ -9,7 +9,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import AccountPageHead from '../account-page-head';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import GreetingSlots from './greeting-slots';
 import '@/components/mcm/mcm-page.css';
 
@@ -39,6 +39,8 @@ interface GreetingField {
 type GreetingsForm = Record<GreetingKey, GreetingField>;
 
 const Greetings = () => {
+  useSetAdminPageMeta({ description: 'The recordings callers hear on your extension — welcome message, hold music and voicemail.' });
+
   const [schemaContext, setSchemaContext] = useState<any>(null);
   const hasHydratedGreetingsRef = useRef(false);
   /* The record as it arrived, kept so Discard has something to put back. */
@@ -157,16 +159,6 @@ const Greetings = () => {
 
   return (
     <section className="mcm-page mcm-admin mcm-acct">
-      <AccountPageHead
-        title="Greetings"
-        about="The audio on your extension: the message that answers, the music while somebody waits, and what they hear if you do not pick up."
-      >
-        <span className={`mcm-gcount${chosenCount ? ' is-custom' : ''}`}>
-          <span className="mcm-gcount-n">{chosenCount}</span>
-          <span className="mcm-gcount-l">of {slotKeys.length} use your own recording</span>
-        </span>
-      </AccountPageHead>
-
       <div className="mcm-acct-body">
         <div className="mcm-acct-narrow">
           <FormProvider {...methods}>

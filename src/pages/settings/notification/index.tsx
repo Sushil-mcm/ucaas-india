@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import PhoneInput from 'react-phone-input-2';
 import { BellOff, MessageSquareText, PhoneMissed, Voicemail } from 'lucide-react';
 import { isUnchanged } from '@/lib/form-baseline';
-import AccountPageHead from '../account-page-head';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import '@/components/mcm/mcm-page.css';
 
 /* What the save bar compares, which is not the raw form values.
@@ -41,6 +41,8 @@ const EVENT_ICONS: Record<string, React.ReactNode> = {
 };
 
 const SettingsNotification = () => {
+  useSetAdminPageMeta({ description: 'What you get alerted about, and whether it arrives in the browser, by email or both.' });
+
   const { data: userInfoData } = useQuery({
     queryKey: ['getUserDetailsForNotification'],
     queryFn: getUserDetails,
@@ -132,21 +134,6 @@ const SettingsNotification = () => {
 
   return (
     <section className="mcm-page mcm-admin mcm-acct">
-      <AccountPageHead
-        title="Notifications"
-        about="What you get told about, and whether it reaches you by email, in the browser, by text or on the mobile app."
-      >
-        {silentCount > 0 && (
-          <div className="mcm-acct-note">
-            <BellOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span>
-              {silentCount} of {NOTIFICATION_TYPES_LIST.length}{' '}
-              {silentCount === 1 ? 'event reaches' : 'events reach'} you nowhere.
-            </span>
-          </div>
-        )}
-      </AccountPageHead>
-
       <div className="mcm-acct-body">
         <div className="mcm-acct-narrow">
           {/* Voicemail, missed calls and SMS all save, and nothing reads them.
