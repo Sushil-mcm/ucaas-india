@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatDialNumber } from '@/components/custom/number-with-flag';
 import DialpadMaxiTabDispositions from '@/components/dialpad/components/dialpad-maxi-tab-dispositions';
 import DialpadEndedScreen from '@/components/dialpad/components/dialpad-ended-screen';
 import DialpadAddUserList from '@/components/dialpad/components/dialpad-add-user-list';
@@ -645,7 +646,7 @@ const StageColumn = ({
                   )}
                   {isCallerIdUpdating
                     ? 'Saving…'
-                    : effectiveCallerId?.number || 'No caller ID'}
+                    : formatDialNumber(effectiveCallerId?.number) || 'No caller ID'}
                   {callerIdOptions.length > 1 ? <Ic n="chev" size={11} /> : null}
                 </button>
 
@@ -715,7 +716,7 @@ const StageColumn = ({
                               )}
                             </span>
                             <span className="v" style={{ flex: 1 }}>
-                              {option.number}
+                              {formatDialNumber(option.number)}
                             </span>
                             {active ? <Ic n="check" size={12} /> : null}
                           </button>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DialpadSession } from '@/context/dialpad-context';
 import type { ConsoleCallRow } from './call-list-column';
 import { Ic } from './icons';
+import { isNumberLike } from './copilot-adapter';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import type { ConsoleCallState } from './use-console-call';
 import { useCopilotAsk } from './use-copilot-ask';
 import { useCopilotContext, useCopilotSuggestions } from './copilot-client';
@@ -284,11 +286,19 @@ const CopilotPane = ({
                 </div>
                 <div className="kv">
                   <span className="k">Contact</span>
-                  <span className="v">{selectedCall.name}</span>
+                  <span className="v">
+                    {isNumberLike(selectedCall.name) ? (
+                      <NumberWithFlag number={selectedCall.name} className="num" />
+                    ) : (
+                      selectedCall.name
+                    )}
+                  </span>
                 </div>
                 <div className="kv">
                   <span className="k">Number</span>
-                  <span className="v num">{selectedCall.number}</span>
+                  <span className="v">
+                    <NumberWithFlag number={selectedCall.number} className="num" />
+                  </span>
                 </div>
                 <div className="kv">
                   <span className="k">Direction</span>

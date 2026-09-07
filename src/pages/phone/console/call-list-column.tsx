@@ -9,6 +9,7 @@ import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
 import { Ic } from './icons';
 import { useConsoleDialer } from './dial-number';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import { isNumberLike } from './copilot-adapter';
 
 /** The three call-log sources the old phone page exposed, same `tabType` values. */
@@ -298,6 +299,7 @@ const CallListColumn = ({
               setDropdownVal={setDropdownVal}
               customPickerPlacement="bottom"
               shortenSelectedLabel
+              inputClass=""
             />
           </div>
         </div>
@@ -401,12 +403,11 @@ const CallListColumn = ({
                     <div className="cr-top">
                       <span className="cr-name">
                         {/* an unknown number is its own title — don't print it twice */}
-                        {/* Plain text, not a dial button. Every row carries its
-                            own call button on the right, so a number that also
-                            dialled meant a stray click on the label placed a
-                            call. */}
+                        {/* Not a dial button: every row already has a call
+                            button on the right, so a number that also dialled
+                            meant a stray click placed a call. */}
                         {isNumberLike(row.name) ? (
-                          <span className="num">{row.number}</span>
+                          <NumberWithFlag number={row.number} className="num" />
                         ) : (
                           row.name
                         )}
@@ -417,7 +418,7 @@ const CallListColumn = ({
                       {isNumberLike(row.name) ? (
                         <span style={{ color: 'var(--ink-4)' }}>Not in contacts</span>
                       ) : (
-                        <span className="num">{row.number}</span>
+                        <NumberWithFlag number={row.number} className="num" />
                       )}
                       {row.duration !== '—' ? (
                         <span style={{ color: 'var(--ink-4)' }}> · {row.duration}</span>
