@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import moment from 'moment';
+import { callMoment } from '@/lib/call-time';
 import { AuthenticatedAudio } from '@/components/custom/authenticated-media';
 import { handleDownloadFile, MEDIA_URL } from '@/lib/utils';
 import { useGetExtensions } from '@/hooks/common';
@@ -99,7 +99,10 @@ const CallRecord = ({
         id: String(log?.uuid || log?.sipcall_id || log?.xml_cdr_uuid || `${i}`),
         raw: log,
         direction: isMissed ? 'miss' : isOutbound ? 'out' : 'in',
-        when: start && moment(start).isValid() ? moment(start).format('DD MMM, h:mm A') : '—',
+        when:
+          start && callMoment(start).isValid()
+            ? callMoment(start).format('DD MMM, h:mm A')
+            : '—',
         duration: clock(log?.billsec ?? log?.duration),
         by,
         viaDid: isMeaningful(log?.via_did) ? String(log.via_did).trim() : '',

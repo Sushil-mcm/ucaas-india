@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { pickCounterpartNumber } from '@/lib/call-number';
 import moment from 'moment';
+import { callMoment, callTimestamp } from '@/lib/call-time';
 import { fetchPhone } from '@/services/api';
 import { useFetchContact } from '@/hooks/common';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -49,8 +50,7 @@ const DIRECTION_FILTERS: { key: 'all' | 'in' | 'out' | 'miss'; label: string; fi
 const sortStamp = (raw: any): number => {
   const value = raw?.start_stamp || raw?.created_at || raw?.answer_stamp || raw?.end_stamp;
   if (!value) return 0;
-  const parsed = moment(value as any);
-  return parsed.isValid() ? parsed.valueOf() : 0;
+  return callTimestamp(value);
 };
 
 /* `billsec` and `duration` come back as "HH:MM:SS" strings, so `Number()` on
@@ -64,7 +64,7 @@ const secondsToClock = (row: any) => {
 
 const timeLabel = (stamp: unknown) => {
   if (!stamp) return '';
-  const m = moment(stamp as any);
+  const m = callMoment(stamp);
   if (!m.isValid()) return String(stamp);
   return m.isSame(moment(), 'day') ? m.format('HH:mm') : m.format('DD MMM');
 };

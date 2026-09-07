@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import moment from 'moment';
+import { callMoment } from '@/lib/call-time';
 import { callList } from '@/services/api';
 import Loader from '@/components/custom/loader';
 import type { DialpadSession } from '@/context/dialpad-context';
@@ -107,7 +107,7 @@ const HistoryPane = ({
       const direction = String(row?.direction || '').trim() || 'Inbound';
       const missed =
         direction === 'Missed' || String(row?.hangup_cause || '').toUpperCase() === 'NO_ANSWER';
-      const at = start && moment(start).isValid() ? moment(start) : null;
+      const at = start && callMoment(start).isValid() ? callMoment(start) : null;
       return {
         id: String(row?.uuid || row?.sipcall_id || `${i}`),
         when: at ? at.format('DD MMM YYYY · HH:mm') : '—',
