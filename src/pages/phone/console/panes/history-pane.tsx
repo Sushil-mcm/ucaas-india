@@ -8,6 +8,7 @@ import { Ic } from '../icons';
 import { DialNumber, useConsoleDialer } from '../dial-number';
 import type { ConsoleCallRow } from '../call-list-column';
 import { durationSeconds } from '../copilot-adapter';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import { DEMO_ENABLED, demoInteractions } from '../demo-data';
 import DemoChip from './demo-chip';
 
@@ -37,6 +38,27 @@ type Item = {
   summary: string;
   items: string[];
   isDemoNarrative: boolean;
+  /** Our own number on this call — the DID it went out from, or came in on. */
+  did: string;
+  didLabel: string;
+};
+
+/**
+ * Which of the company's numbers was on this call.
+ *
+ * A log row holds both ends, and which field is *ours* flips with the
+ * direction: on an outbound call the far end is `destination_number` and we are
+ * the caller ID, on an inbound one it is the other way round.
+ * `display_caller_number` wins for outbound when it differs — that is the
+ * number actually presented to the person being called, which is what "the
+ * number this call was made from" means to whoever is reading it.
+ */
+const ownNumberOf = (row: any, direction: string) => {
+  const outbound = direction === 'Outbound';
+  const value = outbound
+    ? row?.display_caller_number || row?.caller_id_number
+    : row?.destination_number;
+  return String(value ?? '').trim();
 };
 
 /** 0 -> "not answered", 45 -> "45s", 605 -> "10m 05s", 3725 -> "1h 02m" */
@@ -104,6 +126,8 @@ const HistoryPane = ({
           : demo?.summary || '',
         items: missed ? [] : demo?.items || [],
         isDemoNarrative: !missed && DEMO_ENABLED,
+        did: ownNumberOf(row, direction),
+        didLabel: direction === 'Outbound' ? 'Called from' : 'Received on',
       };
     });
   }, [rows, phone]);
@@ -174,6 +198,14 @@ const HistoryPane = ({
                           {item.direction}
                         </span>
                       </div>
+                      {/* Own line rather than a fourth segment above: the date
+                          and time already fill that row at this panel width. */}
+                      {item.did ? (
+                        <div className="tl-sub tl-did">
+                          <span>{item.didLabel}</span>
+                          <NumberWithFlag number={item.did} className="num" />
+                        </div>
+                      ) : null}
                     </div>
                     <div className="tl-right">
                       <span className="tl-dur num">{item.duration}</span>
@@ -185,6 +217,14 @@ const HistoryPane = ({
                   </button>
 
                   <div className="tl-detail">
+                    {item.did ? (
+                      <div className="kv">
+                        <span className="k">{item.didLabel}</span>
+                        <span className="v num">
+                          <NumberWithFlag number={item.did} />
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="kv">
                       <span className="k">Handled by</span>
                       <span className="v">{item.agent}</span>

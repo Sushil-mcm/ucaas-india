@@ -7,6 +7,7 @@ import { useCompanyFeatures } from '@/hooks/rbac';
 import { useUser } from '@/hooks/use-user';
 import { getUserNameByExtension } from '@/lib/extension-utility';
 import { Ic } from './icons';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import { DialNumber, useConsoleDialer } from './dial-number';
 import { initialsOf, isNumberLike } from './copilot-adapter';
 import type { ConsoleCallRow } from './call-list-column';
@@ -127,7 +128,11 @@ const CallRecord = ({
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="record-name">
-            {isNumberLike(row.name) ? <span className="num">{row.name}</span> : row.name}
+            {isNumberLike(row.name) ? (
+              <NumberWithFlag number={row.name} className="num" />
+            ) : (
+              row.name
+            )}
             {row.contactId ? <span className="tag acc">Contact</span> : null}
           </div>
           <div className="record-sub num">

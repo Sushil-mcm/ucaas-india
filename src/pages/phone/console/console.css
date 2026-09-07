@@ -3420,6 +3420,19 @@
 .mcm-console .tl-dot {
   color: var(--ink-4);
 }
+
+/* The "Called from / Received on" line under a history row. Quieter than the
+   date above it — it answers a question you only ask sometimes, and should not
+   compete with the call's own facts. */
+.mcm-console .tl-did {
+  gap: 5px;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+.mcm-console .tl-did .num {
+  color: var(--ink-3);
+  font-weight: 600;
+}
 .mcm-console .tl-right {
   display: flex;
   flex-direction: column;

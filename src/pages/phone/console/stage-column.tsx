@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatDialNumber } from '@/components/custom/number-with-flag';
+import NumberWithFlag, { formatDialNumber } from '@/components/custom/number-with-flag';
 import DialpadMaxiTabDispositions from '@/components/dialpad/components/dialpad-maxi-tab-dispositions';
 import DialpadEndedScreen from '@/components/dialpad/components/dialpad-ended-screen';
 import DialpadAddUserList from '@/components/dialpad/components/dialpad-add-user-list';
@@ -25,6 +25,7 @@ import {
   CHECKLIST,
   contactDisplayName,
   initialsOf,
+  isNumberLike,
   lineHealth,
   type ConsoleTurn,
 } from './copilot-adapter';
@@ -96,9 +97,13 @@ const CallerBlock = ({
           </div>
         </div>
         <div style={{ minWidth: 0 }}>
-          <div className="caller-name">{name}</div>
+          {/* The name falls back to the number when the caller is not in the
+              book, so both lines get the readable form. */}
+          <div className="caller-name">
+            {isNumberLike(name) ? <NumberWithFlag number={name} /> : name}
+          </div>
           <div className="caller-num num">
-            {session?.remoteNumber}
+            <NumberWithFlag number={session?.remoteNumber} />
             {contact?.company ? ` · ${contact.company}` : ''}
           </div>
         </div>

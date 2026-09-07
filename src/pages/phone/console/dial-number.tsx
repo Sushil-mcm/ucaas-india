@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useDialpadCallerIdOptions } from '@/hooks/use-dialpad-caller-id-options';
 import { isExtensionDialTarget } from '@/lib/extension-utility';
+import { formatDialNumber } from '@/components/custom/number-with-flag';
 import type { DialpadMakeCallOptions } from '@/context/dialpad-context';
 import { Ic } from './icons';
 
@@ -98,14 +99,17 @@ export const DialNumber = ({
     <button
       type="button"
       className={`dialnum ${className}`}
-      title={title || `Call ${value}`}
-      aria-label={`Call ${value}`}
+      title={title || `Call ${formatDialNumber(value)}`}
+      aria-label={`Call ${formatDialNumber(value)}`}
       onClick={(e) => {
         e.stopPropagation();
         dial(value);
       }}
     >
-      <span className="dialnum-text">{children ?? value}</span>
+      {/* Dial the stored value, show the readable one: the log holds
+          `917666718264`, people read `+91 76667 18264`. Doing it here covers
+          every number the console renders as a dial action at once. */}
+      <span className="dialnum-text">{children ?? formatDialNumber(value)}</span>
       <Ic n="phone" size={11} className="dialnum-ic" />
     </button>
   );
