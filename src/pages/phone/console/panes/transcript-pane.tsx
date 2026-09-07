@@ -6,11 +6,10 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import type { DialpadSession } from '@/context/dialpad-context';
 import TranscriptInfo from '../../transcript-info';
 import { Ic } from '../icons';
-import { isNumberLike, languageLabel, type ConsoleTurn } from '../copilot-adapter';
+import { languageLabel, type ConsoleTurn } from '../copilot-adapter';
+import { isTerminalSession } from '../use-console-call';
 import type { ConsoleCallRow } from '../call-list-column';
 import Turn from './turn';
-import { DEMO_ENABLED, demoTranscript } from '../demo-data';
-import DemoChip from './demo-chip';
 
 /**
  * Transcript — live while a call is up, the stored transcript for a past call.
@@ -83,8 +82,14 @@ const TranscriptPane = ({
 
   // ---- live ----
   if (session) {
+    /* The session object survives through wrap-up, so "session is not null"
+       does NOT mean the call is up. Without this the badge kept reading
+       "streaming" after hangup and the Start button was still offered — which
+       would have asked the platform to transcribe a call that had ended. */
+    const ended = isTerminalSession(session);
     const streaming =
-      session.transcriptionHasStarted === 'start' || session.transcriptionHasStarted === 'resume';
+      !ended &&
+      (session.transcriptionHasStarted === 'start' || session.transcriptionHasStarted === 'resume');
     const q = query.trim().toLowerCase();
     const visible = q ? turns.filter((t) => `${t.who} ${t.text}`.toLowerCase().includes(q)) : turns;
     // languages the ASR actually reported on this call
@@ -94,23 +99,26 @@ const TranscriptPane = ({
       <div className="pscroll">
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="eyebrow">Live transcript</span>
-          <span className={`tag ${streaming ? 'pos' : 'neu'}`}>
-            {streaming ? 'streaming' : 'stopped'}
+          <span className={`tag ${ended ? 'neu' : streaming ? 'pos' : 'neu'}`}>
+            {ended ? 'call ended' : streaming ? 'streaming' : 'stopped'}
           </span>
           {languages.map((code) => (
             <span className="tag acc" key={code} title={code}>
               <Ic n="globe" size={9} /> {languageLabel(code)}
             </span>
           ))}
-          <button
-            type="button"
-            className="mini"
-            style={{ marginLeft: 'auto' }}
-            onClick={() => dialpad.handleTranscription(session, streaming ? 'stop' : 'start')}
-          >
-            <Ic n={streaming ? 'pause' : 'play'} size={12} />
-            {streaming ? 'Stop' : 'Start'}
-          </button>
+          {/* Nothing to start or stop once the call is down. */}
+          {ended ? null : (
+            <button
+              type="button"
+              className="mini"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => dialpad.handleTranscription(session, streaming ? 'stop' : 'start')}
+            >
+              <Ic n={streaming ? 'pause' : 'play'} size={12} />
+              {streaming ? 'Stop' : 'Start'}
+            </button>
+          )}
         </div>
 
         <div className="search-mini">
@@ -144,9 +152,11 @@ const TranscriptPane = ({
             <p>
               {turns.length
                 ? 'Nothing in this transcript matches that search.'
-                : streaming
-                  ? 'Listening — turns appear as they are spoken.'
-                  : 'Transcription is stopped for this call.'}
+                : ended
+                  ? 'No transcript was captured on this call.'
+                  : streaming
+                    ? 'Listening — turns appear as they are spoken.'
+                    : 'Transcription is stopped for this call.'}
             </p>
           </div>
         )}
@@ -167,24 +177,6 @@ const TranscriptPane = ({
           }}
           setTranscriptionState={setTranscriptState}
         />
-      </div>
-    );
-  }
-
-  if (selectedCall && DEMO_ENABLED) {
-    const demoTurns = demoTranscript(
-      selectedCall.number,
-      isNumberLike(selectedCall.name) ? 'Customer' : selectedCall.name,
-    );
-    return (
-      <div className="pscroll">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span className="eyebrow">Transcript</span>
-          <DemoChip />
-        </div>
-        {demoTurns.map((t) => (
-          <Turn key={t.id} turn={t as ConsoleTurn} />
-        ))}
       </div>
     );
   }

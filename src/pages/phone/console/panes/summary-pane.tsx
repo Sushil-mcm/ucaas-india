@@ -74,8 +74,10 @@ const SummaryPane = ({
           <span className="tag ai">
             <Ic n="spark" size={9} fill /> Speech service
           </span>
-        ) : (
+        ) : DEMO_ENABLED ? (
           <DemoChip />
+        ) : (
+          <span className="tag">No recap yet</span>
         )}
       </div>
 
@@ -216,8 +218,9 @@ const SummaryPane = ({
 
       {!measured ? (
         <div className="demo-foot">
-          No transcript was captured for this call, so the measured rows read “—”. The recap above
-          is placeholder content for layout review.
+          {DEMO_ENABLED
+            ? 'No transcript was captured for this call, so the measured rows read “—”. The recap above is placeholder content for layout review.'
+            : 'No transcript was captured for this call, so the measured rows read “—”. A recap appears once the speech service is connected and transcribes a call.'}
         </div>
       ) : null}
     </div>

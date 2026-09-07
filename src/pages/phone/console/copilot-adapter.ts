@@ -76,6 +76,113 @@ export const languageLabel = (tag?: string) => {
 };
 
 /* ---------------------------------------------------------------------------
+ * CALL DURATION
+ *
+ * The call-log API is not consistent about this: `billsectotal` is a number of
+ * seconds, while `billsec` and `duration` come back as "HH:MM:SS" strings. A
+ * bare Number() on those yields NaN, which is why every duration in this panel
+ * rendered as 00:00 or "not answered". Parse all three shapes, and try the
+ * fields in the order that gives the truest talk time.
+ * ------------------------------------------------------------------------ */
+
+/** Seconds from a number, a numeric string, or "mm:ss" / "hh:mm:ss". */
+export const parseDurationValue = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? value : null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+
+  if (text.includes(':')) {
+    const parts = text.split(':');
+    if (parts.length > 3) return null;
+    let total = 0;
+    for (const part of parts) {
+      const n = Number(part.trim());
+      if (!Number.isFinite(n) || n < 0) return null;
+      total = total * 60 + n;
+    }
+    return total;
+  }
+
+  const n = Number(text);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+};
+
+/**
+ * The talk length of a call row, in seconds.
+ *
+ * Pass either the raw log (fields are tried in order billsectotal → billsec →
+ * duration → recording_duration) or explicit values. The first value that
+ * parses to a real length wins; 0 when nothing does, never NaN.
+ */
+export const durationSeconds = (...values: unknown[]): number => {
+  const candidates: unknown[] = [];
+  for (const value of values) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const row = value as Record<string, unknown>;
+      candidates.push(row.billsectotal, row.billsec, row.duration, row.recording_duration);
+    } else {
+      candidates.push(value);
+    }
+  }
+  for (const candidate of candidates) {
+    const parsed = parseDurationValue(candidate);
+    if (parsed !== null && parsed > 0) return parsed;
+  }
+  // Nothing was positive — a genuine zero still beats "unknown".
+  for (const candidate of candidates) {
+    const parsed = parseDurationValue(candidate);
+    if (parsed !== null) return parsed;
+  }
+  return 0;
+};
+
+/** Present and non-blank on the row, as opposed to absent entirely. */
+const hasValue = (raw: any, key: string) => {
+  const value = raw?.[key];
+  return value !== undefined && value !== null && String(value).trim() !== '';
+};
+
+/**
+ * Talk time — the seconds two people were actually connected, never ringing.
+ *
+ * `duration` covers the WHOLE call including the time it rang; `billsec` /
+ * `billsectotal` are talk time. Falling through to `duration` when billsec is
+ * zero is right for a row that has no billsec at all, and wrong for one that
+ * reports zero — that call simply rang out, and printing its ring time reads
+ * as a conversation that never happened. So `duration` is used only when
+ * neither billsec field is present.
+ */
+export const talkSeconds = (raw: any): number => {
+  const talk = durationSeconds(raw?.billsectotal, raw?.billsec);
+  if (talk > 0) return talk;
+  if (hasValue(raw, 'billsectotal') || hasValue(raw, 'billsec')) return 0;
+  return durationSeconds(raw?.duration, raw?.recording_duration);
+};
+
+/**
+ * Did anyone pick up?
+ *
+ * Talk time IS the answer — a call with connected seconds was answered, one
+ * without was not. This deliberately does not consult `status`: that column
+ * carries values this code cannot enumerate, and an allowlist of the two it was
+ * assumed to hold ("ANSWERED"/"SUCCESS") matched nothing in production and hid
+ * the duration on every call, answered or not.
+ */
+export const wasAnswered = (raw: any): boolean => talkSeconds(raw) > 0;
+
+/** mm:ss, widening to h:mm:ss once the call runs past an hour. */
+export const formatDuration = (seconds: unknown): string => {
+  const total = Math.max(0, Math.floor(parseDurationValue(seconds) ?? 0));
+  const s = total % 60;
+  const m = Math.floor(total / 60) % 60;
+  const h = Math.floor(total / 3600);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+};
+
+/* ---------------------------------------------------------------------------
  * TRANSCRIPT (live) — normalises the dialpad's socket messages into the shape
  * the artifact's transcript rows expect.
  * ------------------------------------------------------------------------ */
@@ -252,16 +359,63 @@ const headerValue = (session: DialpadSession | null, name: string) => {
   return Array.isArray(values) && values.length ? String(values[0] || '').trim() : '';
 };
 
-export const contactDisplayName = (session: DialpadSession | null): string => {
+/**
+ * Placeholders the switch and the CRM send when they could NOT identify who is
+ * on the call. Treating one as a name is how an extension call ended up
+ * captioned "Unknown" — the colleague's name was in the users directory the
+ * whole time, but this never fell through far enough to go and look for it.
+ */
+const NOT_A_NAME = new Set([
+  'unknown',
+  'unknown contact',
+  'unknown caller',
+  // getUserDisplayName's own last resort, for a directory row with no name
+  'unknown user',
+  'not in contacts',
+  'anonymous',
+  'restricted',
+  'private',
+  'null',
+  'na',
+  'n/a',
+  '-',
+  '--',
+  '—',
+]);
+
+/** '' for a placeholder, so the caller keeps looking for a real name. */
+export const realNameOrEmpty = (value: unknown): string => {
+  const text = String(value ?? '').trim();
+  if (!text) return '';
+  return NOT_A_NAME.has(text.toLowerCase()) ? '' : text;
+};
+
+/**
+ * Who is on the call.
+ *
+ * `resolveName` is the console's directory + contact-book lookup — see
+ * `useCallerName`. It is optional so this stays a pure function for the
+ * non-React callers, but without it an internal extension has no name to find:
+ * the switch does not send one, it sends "Unknown".
+ */
+export const contactDisplayName = (
+  session: DialpadSession | null,
+  resolveName?: (number: string) => string,
+): string => {
   const first = String(session?.contactInfo?.name?.first || '').trim();
   const last = String(session?.contactInfo?.name?.last || '').trim();
-  const joined = `${first} ${last}`.trim();
+  const joined = realNameOrEmpty(`${first} ${last}`.trim());
+  const number = String(session?.remoteNumber || '').trim();
+
   return (
     joined ||
-    String(session?.liveCallData?.contact_name || '').trim() ||
-    headerValue(session, 'x-contactname') ||
-    String(session?.remoteName || '').trim() ||
-    String(session?.remoteNumber || '').trim() ||
+    /* Looked up BEFORE the switch's own labels: the directory knows an
+       extension's owner, and the switch only ever sends "Unknown" for one. */
+    (resolveName ? realNameOrEmpty(resolveName(number)) : '') ||
+    realNameOrEmpty(session?.liveCallData?.contact_name) ||
+    realNameOrEmpty(headerValue(session, 'x-contactname')) ||
+    realNameOrEmpty(session?.remoteName) ||
+    number ||
     'Unknown contact'
   );
 };
@@ -287,7 +441,10 @@ export const initialsOf = (name: string) => {
   );
 };
 
-export const buildEnrichment = (session: DialpadSession | null): EnrichmentRow[] => {
+export const buildEnrichment = (
+  session: DialpadSession | null,
+  resolveName?: (number: string) => string,
+): EnrichmentRow[] => {
   const contact = session?.contactInfo;
   const queue = session?.queueMetaData?.response;
   const campaign = session?.campaignMetaData?.response;
@@ -296,9 +453,13 @@ export const buildEnrichment = (session: DialpadSession | null): EnrichmentRow[]
   const rows: EnrichmentRow[] = [
     {
       k: 'Number match',
-      v: contact
-        ? `${session?.remoteNumber || ''} → ${contactDisplayName(session)}`
-        : `${session?.remoteNumber || 'Unknown'} — no contact record`,
+      v: (() => {
+        const number = String(session?.remoteNumber || '').trim();
+        const name = contactDisplayName(session, resolveName);
+        // Don't print "7242 → 7242" when no name was found — say so instead.
+        if (name && name !== number && name !== 'Unknown contact') return `${number} → ${name}`;
+        return `${number || 'Unknown'} — no contact record`;
+      })(),
       src: 'Contacts',
       source: 'live',
       ms: null,

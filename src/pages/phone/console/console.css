@@ -1053,9 +1053,18 @@
   padding: 0 6px;
   flex: none;
   overflow-x: auto;
+  /* `overflow-x: auto` with nothing set on the other axis makes overflow-y
+     compute to auto as well, which drew a scrollbar across a strip that is
+     only one row of tabs tall. */
+  overflow-y: hidden;
+  /* The ::-webkit-scrollbar rule below zeroes only the horizontal bar's
+     height, and only in WebKit. This is the standard property, so Firefox
+     stops reserving room for a bar as well. */
+  scrollbar-width: none;
 }
 .mcm-console .panel-tabs::-webkit-scrollbar {
   height: 0;
+  width: 0;
 }
 .mcm-console .ptab {
   padding: 12px 11px 10px;

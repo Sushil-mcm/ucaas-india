@@ -37,7 +37,8 @@ const toSuggestion = (row: any): ContactSuggestion | null => {
   };
 };
 
-export const useContactSuggestions = (query: string, limit = 6) => {
+/** Every saved contact, normalised. One cache entry, shared by both hooks. */
+export const useContactBook = () => {
   /* The key shares the `getContactList` prefix that create/edit already
      invalidates, so a contact saved elsewhere becomes suggestable without a
      reload. */
@@ -50,6 +51,12 @@ export const useContactSuggestions = (query: string, limit = 6) => {
         .filter(Boolean) as ContactSuggestion[],
     staleTime: 60_000,
   });
+
+  return { contacts, isFetching };
+};
+
+export const useContactSuggestions = (query: string, limit = 6) => {
+  const { contacts, isFetching } = useContactBook();
 
   const matches = useMemo(() => {
     const raw = String(query || '').trim();
@@ -77,20 +84,32 @@ export const useContactSuggestions = (query: string, limit = 6) => {
       .slice(0, limit);
   }, [contacts, query, limit]);
 
-  /** The saved name for a number, matched on the last 10 digits so a stored
-      `+919004583988` answers a typed `+91 90045-83988`. */
-  const nameForNumber = useMemo(() => {
+  const nameForNumber = useNameForNumber();
+
+  return { contacts, matches, nameForNumber, isFetching };
+};
+
+/**
+ * The saved name for a number, or '' when nothing is saved.
+ *
+ * Matched on the last 10 digits, so a stored `+919004583988` answers a typed
+ * `+91 90045-83988` — the two forms disagree about country code and
+ * punctuation, and neither is more correct than the other. Returning '' rather
+ * than the number itself lets the caller decide what to show instead.
+ */
+export const useNameForNumber = () => {
+  const { contacts } = useContactBook();
+
+  return useMemo(() => {
     const byTail = new Map<string, string>();
     contacts.forEach((c) => {
       const d = digitsOf(c.number);
       if (d.length >= 7 && c.name) byTail.set(d.slice(-10), c.name);
     });
-    return (value: string) => {
+    return (value: unknown) => {
       const d = digitsOf(value);
       if (d.length < 7) return '';
       return byTail.get(d.slice(-10)) || '';
     };
   }, [contacts]);
-
-  return { contacts, matches, nameForNumber, isFetching };
 };

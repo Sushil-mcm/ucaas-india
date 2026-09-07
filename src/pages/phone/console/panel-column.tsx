@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { getEnv } from '@/lib/utils';
 import type { DialpadSession } from '@/context/dialpad-context';
 import type { ConsoleCallRow } from './call-list-column';
 import { Ic } from './icons';
 import { isNumberLike } from './copilot-adapter';
+import { isExtensionDialTarget } from '@/lib/extension-utility';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import type { ConsoleCallState } from './use-console-call';
 import { useCopilotAsk } from './use-copilot-ask';
@@ -353,12 +355,26 @@ const CopilotPane = ({
           ) : (
             <div className="empty" style={{ padding: '20px 0' }}>
               <Ic n="spark" size={34} fill />
-              <p>
-                <strong style={{ color: 'var(--ink)' }}>Copilot is armed.</strong>
-                <br />
-                It transcribes as soon as a call connects, and you can ask it about the call while
-                you are on it.
-              </p>
+              {/* Only promise what this portal can actually do. Without the AI
+                  service linked, "Copilot is armed" was a claim about a feature
+                  that would never fire. */}
+              {String(getEnv().VITE_AI_SOCKET_URL || '').trim() ? (
+                <p>
+                  <strong style={{ color: 'var(--ink)' }}>Copilot is armed.</strong>
+                  <br />
+                  It transcribes as soon as a call connects, and you can ask it about the call
+                  while you are on it.
+                </p>
+              ) : (
+                <p>
+                  <strong style={{ color: 'var(--ink)' }}>
+                    Copilot is not connected on this portal yet.
+                  </strong>
+                  <br />
+                  Live transcription and questions about the call switch on once the AI service is
+                  linked to this site.
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -480,6 +496,26 @@ const PanelColumn = (props: Props) => {
 
   const counts: Partial<Record<PanelTab, number>> = { copilot: turns.length || 0 };
 
+  /* A call between two of the company's own extensions has no customer on the
+     other end for any of these tabs to say anything useful about. Checked
+     against both a live session's remote party and a past call's number, the
+     same way the rest of the console already tells an internal call apart. */
+  const isInternalCall = useMemo(() => {
+    const liveTarget = String(
+      (session as any)?.remoteNumber || (session as any)?.extension || '',
+    ).trim();
+    const pastTarget = String(props.selectedCall?.number || '').trim();
+    /* A stored transcript is a fact about the call, not a live AI service: a
+       voicemail left by a colleague has one, and hiding the panel for
+       "internal" would hide it. */
+    const hasStoredTranscript = Boolean(
+      (props.selectedCall as any)?.raw?.transcript_file ||
+        (props.selectedCall as any)?.transcript_file,
+    );
+    if (hasStoredTranscript) return false;
+    return isExtensionDialTarget(liveTarget) || isExtensionDialTarget(pastTarget);
+  }, [session, props.selectedCall]);
+
   return (
     <div className="col panel-col">
       <div className="panel">
@@ -489,6 +525,7 @@ const PanelColumn = (props: Props) => {
               type="button"
               key={t.id}
               className={`ptab ${t.ai ? 'ai-tab' : ''} ${tab === t.id ? 'on' : ''}`}
+              disabled={isInternalCall}
               onClick={() => setTab(t.id)}
             >
               {t.ai ? <Ic n="spark" size={12} fill /> : null}
@@ -506,41 +543,94 @@ const PanelColumn = (props: Props) => {
             overflow: 'hidden',
           }}
         >
-          <div className="ppane on">
-            {tab === 'copilot' ? <CopilotPane {...props} onGoTab={setTab} /> : null}
-            {tab === 'summary' ? (
-              <SummaryPane
-                state={state}
-                session={session}
-                turns={turns}
-                sentiment={props.sentiment}
-                talk={props.talk}
-                checklist={props.checklist}
-                selectedCall={props.selectedCall}
-              />
-            ) : null}
-            {tab === 'transcript' ? (
-              <TranscriptPane
-                session={session}
-                turns={turns}
-                selectedCall={props.selectedCall}
-                legOverride={props.panelRequest?.leg}
-              />
-            ) : null}
-            {tab === 'notes' ? (
-              <NotesPane session={session} selectedCall={props.selectedCall} />
-            ) : null}
-            {tab === 'history' ? (
-              <HistoryPane
-                session={session}
-                selectedCall={props.selectedCall}
-                selectedNumber={props.selectedNumber}
-              />
-            ) : null}
-            {tab === 'contact' ? (
-              <ContactPane session={session} selectedCall={props.selectedCall} />
-            ) : null}
-          </div>
+          {isInternalCall ? (
+            <div className="ppane on" style={{ position: 'relative' }}>
+              {/* Blurred stand-in behind the notice: the panel keeps its shape,
+                  so the column does not collapse to an empty box. */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  filter: 'blur(6px)',
+                  opacity: 0.5,
+                  pointerEvents: 'none',
+                  padding: 16,
+                }}
+              >
+                <div className="card card-pad" style={{ marginBottom: 10 }}>
+                  <div className="kv">
+                    <span className="k">Contact</span>
+                    <span className="v">████████</span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">Summary</span>
+                    <span className="v">████████████████</span>
+                  </div>
+                  <div className="kv">
+                    <span className="k">Transcript</span>
+                    <span className="v">████████████</span>
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  height: '100%',
+                  padding: 24,
+                  textAlign: 'center',
+                }}
+              >
+                <Ic n="shield" size={22} />
+                <strong style={{ color: 'var(--ink)' }}>Internal call</strong>
+                <p style={{ color: 'var(--muted)', maxWidth: 280, margin: 0 }}>
+                  Copilot, summaries, transcripts and notes aren't generated for calls between
+                  your own extensions.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="ppane on">
+              {tab === 'copilot' ? <CopilotPane {...props} onGoTab={setTab} /> : null}
+              {tab === 'summary' ? (
+                <SummaryPane
+                  state={state}
+                  session={session}
+                  turns={turns}
+                  sentiment={props.sentiment}
+                  talk={props.talk}
+                  checklist={props.checklist}
+                  selectedCall={props.selectedCall}
+                />
+              ) : null}
+              {tab === 'transcript' ? (
+                <TranscriptPane
+                  session={session}
+                  turns={turns}
+                  selectedCall={props.selectedCall}
+                  legOverride={props.panelRequest?.leg}
+                />
+              ) : null}
+              {tab === 'notes' ? (
+                <NotesPane session={session} selectedCall={props.selectedCall} />
+              ) : null}
+              {tab === 'history' ? (
+                <HistoryPane
+                  session={session}
+                  selectedCall={props.selectedCall}
+                  selectedNumber={props.selectedNumber}
+                />
+              ) : null}
+              {tab === 'contact' ? (
+                <ContactPane session={session} selectedCall={props.selectedCall} />
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     </div>
