@@ -188,6 +188,48 @@ body.perf-warm-toolbar .mcm-page .perf-tbar .fchip.live .dot.green.pulsing {
   }
 }
 
+/* "Waiting for data" — the freshness badge's third state (no successful
+   fetch yet), before it ever becomes `.live`/`.stale`. `.fchip`'s own
+   default styling (mcm-page.css) is a plain near-white chip tuned for the
+   flat toolbar it normally sits on; against this view's warm gradient that
+   read as flat and out of place next to the rest of the frosted glass
+   toolbar. `:not(.live):not(.stale)` — rather than a class of its own —
+   targets exactly this one state without data-freshness.tsx needing to
+   know anything about this view's theme. */
+body.perf-warm-toolbar .mcm-page .perf-tbar .fchip:not(.live):not(.stale) {
+  /* Was near-white (`rgba(255,255,255,0.85)`) with a barely-there 20%-
+     opacity border — against this toolbar's already-pale `#fffaf4` tint
+     that read as almost no chip at all, just faint text floating with no
+     visible container. A warmer, more opaque peach fill + a stronger
+     border give it an actual edge to read against the toolbar. */
+  background: rgba(255, 237, 213, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 600;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar .fchip:not(.live):not(.stale) .dot.amber {
+  animation: perf-waiting-pulse 2s ease-out infinite;
+}
+@keyframes perf-waiting-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(217, 119, 6, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.perf-warm-toolbar .mcm-page .perf-tbar .fchip:not(.live):not(.stale) .dot.amber {
+    animation: none;
+  }
+}
+
 /* Secondary action ("Wallboard") — `.btn.ghost`'s default styling
    (`var(--surface-2)` fill, `var(--line)` border) is a near-white on
    near-white against this toolbar's `#fffaf4` tint, reading as barely
@@ -211,17 +253,35 @@ body.perf-warm-toolbar .mcm-page .perf-tbar .btn.ghost.sm:hover {
   box-shadow: 0 3px 10px -3px rgba(249, 115, 22, 0.3);
 }
 
-/* Primary CTA ("My dashboards") stays `.btn.primary`'s flat solid accent at
-   rest on purpose — it already reads correctly, and re-declaring the fill
-   here would just be a second copy of the same colour. Hover gets a richer
-   sunset gradient + glow, scoped to this one toolbar button via `.perf-tbar`
-   rather than on `.btn.primary` itself, which is a global class used by
-   buttons across the whole app — not just this one. */
+/* Primary CTA ("My dashboards") — the plain `.btn.primary` it started from
+   (mcm-page.css) is 40px tall with `--accent`/`--accent-ink`, a dull rust-
+   brown pairing tuned for the plain toolbar it normally sits on. Against
+   this view's warm glass toolbar, next to the slim ~34px "Waiting for
+   data" pill beside it, that read as both too tall/chunky and too muddy a
+   colour. Slimmed to match the pill's own height and given the same
+   sunset-orange gradient the rest of this view's warm accents use. */
+body.perf-warm-toolbar .mcm-page .perf-tbar .btn.primary {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #fb923c, #ea580c) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.22);
+  transition:
+    filter 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* A brightness lift, not the flat darker rust-brown swap `.btn.primary`'s
+   own default hover (`--accent-ink`) would otherwise give it — a gradient
+   fill doesn't have a single flat colour to swap to a darker version of,
+   so the same "still clearly the same button, just lit up" feedback the
+   rest of this view's hover states use fits better here too. */
 body.perf-warm-toolbar .mcm-page .perf-tbar .btn.primary:hover {
-  background: linear-gradient(135deg, #fb923c 0%, #ea580c 60%, #c2410c 100%);
-  box-shadow:
-    0 6px 18px -4px rgba(234, 88, 12, 0.45),
-    0 2px 6px -1px rgba(234, 88, 12, 0.3);
+  background: linear-gradient(135deg, #fb923c, #ea580c) !important;
+  filter: brightness(1.05);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
 }
 
 /* The live queue KPI band (Waiting, Longest wait, Service level, ...) sits
@@ -320,7 +380,10 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
   backdrop-filter: var(--pl-glass-blur);
   -webkit-backdrop-filter: var(--pl-glass-blur);
   border: 1px solid var(--pl-glass-border);
-  border-radius: var(--pl-r);
+  /* 20px, matching the Directory-benchmark radius every other Performance
+     tab's KPI cards use (Agents, Flows, Dashboards) — `--pl-r` (18px) was
+     this view's own value, one gap this pass was asked to close. */
+  border-radius: 20px;
   padding: 16px 18px;
   box-shadow: var(--pl-glass-shadow);
   transition:
@@ -358,76 +421,279 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
 /* ------------------------------------------------------------
    3. Live data table — frosted glass
    ------------------------------------------------------------ */
+/* `--pl-glass-border`/`--pl-glass-shadow` (the KPI cards, the pagination
+   footer, and this table all shared them) gave the table a near-invisible
+   white border and a tight, sharp shadow — against the page's own pale
+   ambient gradient that read as a flat, stark white slab rather than a
+   card with any depth of its own. Overridden here, scoped to the table
+   only (not the shared tokens, so the KPI cards/pager keep their own
+   look): a warm-tinted border gives the card a visible edge, and a
+   larger, softer, warm-toned glow lifts it off the backdrop instead of
+   blending into it. */
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls/Flows/Callbacks/Speech). */
 .mcm-page .perf-live .table-scroll {
-  border-radius: var(--pl-r-lg);
-  border: 1px solid var(--pl-glass-border);
-  background: var(--pl-glass);
-  backdrop-filter: var(--pl-glass-blur);
-  -webkit-backdrop-filter: var(--pl-glass-blur);
-  box-shadow: var(--pl-glass-shadow);
+  border-radius: 0 0 var(--pl-r-lg) var(--pl-r-lg);
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  /* Defensive floor against any cell's content (a table-layout: fixed
+     column can't grow to fit overflowing content, but an un-clipped cell
+     can still inflate this box's own `scrollWidth` even while nothing
+     visibly overflows) ever turning into a real, if invisible-looking,
+     horizontal scroll capability — the same guarantee `overflow-x: hidden`
+     already gives the Interactions table for the identical reason. */
+  overflow-x: hidden !important;
 }
 /* TableManager's own outer wrapper div (`rounded-xl border ...
    overflow-hidden`), not `.table-scroll` itself, is what actually clips a
    native scrollbar — a scrollbar isn't clipped by the scrolling
    element's own border-radius, only by an ancestor's overflow:hidden.
    That wrapper's default 12px Tailwind radius didn't match this one, so
-   the scrollbar rendered as a flat rectangle poking through the corner. */
+   the scrollbar rendered as a flat rectangle poking through the corner.
+   An opaque `#fffdfb` background (matching the header) is what actually
+   fixes the top-right corner seam — see the note by `thead th:last-child`
+   below for why the seam lived here rather than in the header cell that
+   kept getting patched instead. */
 .mcm-page .perf-live div:has(> .table-scroll) {
+  background: #fffdfb;
   border-radius: var(--pl-r-lg);
   overflow: hidden;
 }
-
-/* Header — translucent light tint, uppercase muted slate. */
-/* The header is `sticky` (table-manager.tsx), so it sits over rows as the
-   body scrolls underneath it — a translucent fill here let row text show
-   straight through the header labels instead of being covered by them.
-   Opaque + its own blur keeps the frosted look without that bleed-through,
-   and each `th` matches rather than staying transparent, since a sticky
-   header is only as opaque as its least-opaque layer. */
-.mcm-page .perf-live .table-scroll thead {
-  background: rgba(255, 246, 238, 0.97);
-  backdrop-filter: var(--pl-glass-blur);
-  -webkit-backdrop-filter: var(--pl-glass-blur);
-  box-shadow: 0 1px 0 0 var(--pl-hairline);
-}
-.dark .mcm-page .perf-live .table-scroll thead {
+.dark .mcm-page .perf-live div:has(> .table-scroll) {
   background: rgba(23, 15, 10, 0.97);
 }
-.mcm-page .perf-live .table-scroll thead th {
-  color: var(--pl-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  border-bottom-color: var(--pl-hairline);
-  background: transparent;
+.mcm-page .perf-live .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
 
-/* Rows — soft translucent, warm hover. The tints this table paints on a row
-   that has a live call (`bg-green-100` / `bg-yellow-100`) are load-bearing
-   information, so hover only touches rows carrying neither. */
+/* Column widths — `splitStickyHeader`'s own measured `<colgroup>`
+   (table-manager.tsx) sizes every column off its real content (`scrollWidth`,
+   off both the header label and the widest rendered row) as a PERCENTAGE
+   OF THE SUM of every column's own measured width — not a percentage of
+   the table's actual available width. Whenever that sum runs wider than
+   the table really is (near-certain here: Name + Contact + DID + Call
+   Path + a 5-button Actions column easily add up to more px than this
+   card is wide), every column gets proportionally shrunk by the same
+   ratio to force the total back to 100%, regardless of whether its own
+   individual content still fits afterwards — which is exactly what
+   truncated "Karan Malhotra" down to "Karan Malho…" and "Onboarding
+   Queue" back to "Onboarding Qu…": both measured wide enough on their
+   own, but the shared column, Actions, is wide/fixed enough (5 buttons)
+   that the proportional shrink still cut into them.
+   `min-width` on the `td`/`th` themselves cannot fix this — under
+   `table-layout: fixed`, the `<col>` element's own width is the sole
+   authority a browser will size a column to, and even an `!important`
+   `min-width` on a cell inside that column is simply not honoured (a real
+   difference from ordinary block-level min-width, verified: the cell
+   still rendered at its colgroup-assigned width, not the larger
+   min-width). The only lever that actually works is overriding the `<col>`
+   elements directly, which is what these do — explicit pixel widths,
+   summing (270+130+140+58+80+72+175+210 = 1135px) to sit under this
+   card's own measured content width (~1141px) with a small margin rather
+   than exactly matching it, so no fractional-pixel rounding tips it into
+   a real (if barely visible) horizontal scrollbar. Both the header
+   table's colgroup
+   and the body table's colgroup (two separate `<table>`s under
+   `splitStickyHeader`, each built off the same measured-widths array) are
+   covered by one selector, since neither is more specifically scoped than
+   the other and both need to end up column-aligned with each other. */
+.mcm-page .perf-live table colgroup col:nth-child(1) {
+  width: 270px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(2) {
+  width: 130px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(3) {
+  width: 140px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(4) {
+  width: 58px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(5) {
+  width: 80px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(6) {
+  width: 72px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(7) {
+  width: 175px !important;
+}
+.mcm-page .perf-live table colgroup col:nth-child(8) {
+  width: 210px !important;
+}
+.mcm-page .perf-live .table-scroll td:nth-child(1) {
+  overflow: hidden;
+  /* Belt-and-suspenders alongside the JS-side `min-w-0` fix in
+     all-users/index.tsx: even if a future edit to that cell ever
+     reintroduces unclamped content, the cell itself now hard-clips rather
+     than letting text bleed into Contact's column visually. */
+  padding-right: 18px !important;
+}
+.mcm-page .perf-live .table-scroll td:nth-child(2) {
+  padding-left: 16px !important;
+}
+/* Call Path (7th) — its own content (current call context) is a single
+   short phrase, not a value meant to wrap onto a second line, so it still
+   ellipsizes rather than wrapping if a queue name ever runs longer than
+   the 175px floor above. */
+.mcm-page .perf-live .table-scroll td:nth-child(7) {
+  overflow: hidden;
+}
+.mcm-page .perf-live .table-scroll td:nth-child(7) .capitalize {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Duration (4th) — centered, tabular-numeral clock reading rather than
+   right-aligned (meta.textAlign in all-users/index.tsx already centers the
+   wrapper div; this makes sure the number itself never regresses back to
+   an edge alignment under any future shared-component change). */
+.mcm-page .perf-live .table-scroll td:nth-child(4) {
+  text-align: center !important;
+}
+/* Actions (last) column's own right clearance is set further below,
+   alongside the `.ma-action-*` button colours — see the `padding-right:
+   34px` rule near them for why 10px (every other column's base) wasn't
+   enough once this table started scrolling internally. */
+
+/* Header — translucent light tint, uppercase muted slate. */
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-live thead` directly, NOT `.table-scroll thead` — this
+   table renders with `splitStickyHeader` (conditionally, only when
+   `embedded` — see all-users/index.tsx), which puts the header in its own
+   non-scrolling box, a *sibling* of `.table-scroll`, not a descendant of
+   it. */
+.mcm-page .perf-live thead {
+  background: #fffdfb;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.dark .mcm-page .perf-live thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.mcm-page .perf-live thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  /* Headers must always show their full label — never ellipsis, never wrap.
+     Each column above is sized generously enough (Duration/Direction at
+     9% specifically) that this shouldn't ever need to truncate; nowrap +
+     visible is the hard guarantee that it never silently does anyway. */
+  white-space: nowrap !important;
+  overflow: visible !important;
+  padding: 9px 12px !important;
+  border-bottom: none;
+  /* The 3px hairline used to be a single `box-shadow` on the sticky
+     `thead` itself, painting once under the whole header row — a normal
+     in-flow child's own background paints ABOVE its ancestor's background/
+     box-shadow, so wherever a `th` had its own opaque fill (the two corner
+     cells, below, which need one for their border-radius to have anything
+     to clip), that cell's own background silently covered the hairline
+     for its entire column width, breaking it into two separate segments
+     instead of one continuous line. Moving the same box-shadow onto every
+     `th` individually — not just the two corner ones — means each cell
+     paints its own hairline as part of its own box, so it can never be
+     covered by that same cell's background, and it lines up seamlessly
+     with its neighbours since every `th` is styled identically. */
+  box-shadow: inset 0 -3px 0 0 rgba(242, 153, 74, 0.4);
+  background: transparent;
+}
+.mcm-page .perf-live thead th:first-child {
+  border-top-left-radius: 20px;
+  background: #fffdfb;
+}
+/* This used to need an elaborate `box-shadow`-spread + `::after` hack to
+   bridge a ~9-10px scrollbar-gutter seam at this corner — that gutter only
+   existed because the header used to be `position: sticky` *inside* the
+   same scrolling box as the body (`.table-scroll`), which reserves a
+   native scrollbar's width right next to the header with nothing to fill
+   it. Once `embedded` opted into `splitStickyHeader` (all-users/index.tsx),
+   the header became its own separate, non-scrolling table — a sibling of
+   `.table-scroll`, not sharing its scrollbar or its reserved gutter at
+   all — so there's no seam left to bridge. Plain `border-radius` is
+   sufficient again, the same as every other split-header Performance
+   table (Agents/Calls/Flows/Callbacks/Speech). */
+.mcm-page .perf-live thead th:last-child {
+  border-top-right-radius: 20px;
+  background: #fffdfb;
+}
+.dark .mcm-page .perf-live thead th:first-child,
+.dark .mcm-page .perf-live thead th:last-child {
+  background: rgba(23, 15, 10, 0.97);
+}
+/* "ACTIONS" label only — the body row underneath stays left-aligned (its
+   own default, not centered via `meta.textAlign`; see the comment on this
+   column in all-users/index.tsx for why centering the row itself clips the
+   first button once the measured column is exactly as wide as the row). */
+.mcm-page .perf-live thead th:last-child {
+  text-align: center;
+}
+
+/* Rows — soft translucent, warm hover. Same peach wash + left accent-bar on
+   every row regardless of whether it also carries a live-call tint
+   (`bg-green-100` / `bg-yellow-100`) — one consistent hover colour, not a
+   different one depending on the row's state. */
 .mcm-page .perf-live .table-scroll tbody {
   background: transparent;
 }
 .mcm-page .perf-live .table-scroll tbody tr {
   border-color: var(--pl-hairline);
   background: transparent;
-  transition: background-color 0.16s ease;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
-.mcm-page
-  .perf-live
-  .table-scroll
-  tbody
-  tr:not([class*='bg-green']):not([class*='bg-yellow']):hover {
-  background: var(--pl-row-hover);
+/* Directory's signature left accent-bar + peach wash row hover — every
+   other Performance table already carries this; Live was the one gap.
+   `!important` on the background because a tinted row's own `bg-green-100`
+   / `bg-yellow-100` (Tailwind utility class, applied inline via
+   getRowClassName) otherwise wins the specificity tie against this plain
+   class selector. */
+.mcm-page .perf-live .table-scroll tbody tr:hover {
+  background: rgba(254, 215, 170, 0.22) !important;
+  box-shadow: inset 3px 0 0 var(--pl-accent);
 }
 .mcm-page .perf-live .table-scroll tbody td {
   padding-top: 11px;
   padding-bottom: 11px;
+  /* Tailwind's `px-2 xl:px-4` (table-manager-row.tsx) gives every cell 16px
+     of horizontal padding at desktop widths — across 8 columns, the last
+     being 5 actions buttons wide, that was enough alone to push the row's
+     total content past the card's width, forcing the whole table into a
+     horizontal scrollbar with the Hangup button (5th action, right edge)
+     half-clipped by the card boundary. A tighter, single value at every
+     width reclaims that space without needing to touch the shared
+     component every other table in the app also renders through. */
+  padding-left: 10px !important;
+  padding-right: 10px !important;
   border-bottom-color: var(--pl-hairline);
   color: #334155;
   background: transparent;
+  /* Belt-and-suspenders against any cell's content (the Actions row of 5
+     non-shrinking buttons, in particular) extending past its own
+     `table-layout: fixed` column width — visually the fixed layout already
+     clips that content, but without `overflow: hidden` the un-rendered
+     overflow still counts toward the `<table>`'s own `scrollWidth`,
+     making `.table-scroll` genuinely horizontally scrollable by that same
+     amount even though nothing visibly changes. Only Name and Call Path
+     had this before (each for their own specific overflow bug); every
+     cell gets it now instead of re-diagnosing which one is the culprit
+     each time a cell's content changes. */
+  overflow: hidden;
 }
 .dark .mcm-page .perf-live .table-scroll tbody td {
   color: var(--pl-muted);
@@ -458,53 +724,166 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
     0 0 0 2px var(--pl-wash),
     0 2px 6px rgba(15, 23, 42, 0.1);
 }
+/* The presence dot (CustomAvatar's `showPresence`) sat directly on the
+   avatar's own hashed background colour with no separation of its own —
+   easy to miss exactly the state (on call, in particular) a supervisor is
+   scanning this table for. A white ring, the same idiom every other status
+   dot in the app already uses, is enough to make it read clearly against
+   any avatar colour without changing what each colour means. */
+.mcm-page .perf-live .table-scroll tbody td:first-child [class*='rounded-full'][class^='bg-'],
+.mcm-page .perf-live .table-scroll tbody td:first-child [class*='rounded-full'][class*=' bg-'] {
+  box-shadow: 0 0 0 2px #fff;
+}
 
-/* Status (5th) and Direction (6th) columns render bare text; here they read
-   as soft pills. Column order is fixed by the table's own column list. */
-.mcm-page .perf-live .table-scroll tbody td:nth-child(5) > div > p,
-.mcm-page .perf-live .table-scroll tbody td:nth-child(6) > div > p {
+/* Status (5th) and Direction (6th) columns — Directory-standard semantic
+   `.tag`-style badges rather than a single flat neutral pill for every
+   value. Class names (`pl-tag-pos`/`pl-tag-warn`/`pl-tag-neu`/`pl-tag-dir`)
+   are set directly in all-users/index.tsx's cell renderers, driven by the
+   same connected/ringing split the avatar's presence dot uses
+   (`getActiveCallTone`) — scoped under `.perf-live` here so the standalone
+   `/monitoring/all-users` route (no `.perf-live` ancestor) keeps its own
+   plain look untouched. */
+.mcm-page .perf-live .table-scroll tbody td .pl-tag {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(241, 245, 249, 0.8);
-  color: #475569;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
-.dark .mcm-page .perf-live .table-scroll tbody td:nth-child(5) > div > p,
-.dark .mcm-page .perf-live .table-scroll tbody td:nth-child(6) > div > p {
+.mcm-page .perf-live .table-scroll tbody td .pl-tag-pos {
+  background: rgba(220, 252, 231, 0.85);
+  color: #15803d;
+  border-color: rgba(187, 247, 208, 0.7);
+}
+.mcm-page .perf-live .table-scroll tbody td .pl-tag-warn {
+  background: rgba(254, 243, 199, 0.85);
+  color: #b45309;
+  border-color: rgba(253, 230, 138, 0.7);
+}
+.mcm-page .perf-live .table-scroll tbody td .pl-tag-neu {
+  background: rgba(241, 245, 249, 0.85);
+  color: #475569;
+}
+/* Direction is not a health/urgency signal like Status — a plain, distinct
+   slate/blue pill rather than borrowing the green/amber vocabulary. */
+.mcm-page .perf-live .table-scroll tbody td .pl-tag-dir {
+  background: rgba(219, 234, 254, 0.55);
+  color: #334e68;
+  border-color: rgba(191, 219, 254, 0.6);
+}
+.dark .mcm-page .perf-live .table-scroll tbody td .pl-tag-pos {
+  background: rgba(22, 163, 74, 0.16);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.28);
+}
+.dark .mcm-page .perf-live .table-scroll tbody td .pl-tag-warn {
+  background: rgba(217, 119, 6, 0.18);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.28);
+}
+.dark .mcm-page .perf-live .table-scroll tbody td .pl-tag-neu,
+.dark .mcm-page .perf-live .table-scroll tbody td .pl-tag-dir {
   background: rgba(148, 163, 184, 0.16);
   color: var(--pl-muted);
-}
-/* A live row's own tint already says the call is up; the pill on it goes warm
-   so it does not disappear into the tinted cell. */
-.mcm-page .perf-live .table-scroll tbody tr[class*='bg-green'] td:nth-child(5) > div > p,
-.mcm-page .perf-live .table-scroll tbody tr[class*='bg-yellow'] td:nth-child(5) > div > p {
-  background: var(--pl-wash);
-  color: var(--pl-accent-ink);
+  border-color: transparent;
 }
 
-/* Monitoring actions (Listen / Whisper / Barge / Intercept / Hangup) — the
-   same glass language as everything else on the view. */
-.mcm-page .perf-live .table-scroll tbody td:last-child span[class*='rounded-lg'] {
-  border-radius: 10px;
-  border-color: var(--pl-edge);
-  color: var(--pl-accent);
-  background: rgba(255, 255, 255, 0.6);
+/* Monitoring actions (Listen / Whisper / Barge / Intercept / Hangup) — each
+   its own functional colour rather than one uniform orange outline, so the
+   5 icons read at a glance instead of needing the tooltip to tell them
+   apart. `.ma-action-btn` (all-users/index.tsx) is the shared shape/motion;
+   the 5 `.ma-action-*` modifiers are the only thing that differs between
+   them. Buttons are real `<button>` elements now (were `<span>`), always
+   mounted — a pending/locked row disables them via the `disabled`
+   attribute rather than unmounting them, so `:disabled` here is what
+   dims a button instead of it vanishing. */
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-btn {
+  border-radius: 999px;
+  /* `.mcm-page button:where(:not([data-slot=...]))` (mcm-page.css) is a
+     plain, unlayered reset that zeroes every plain `<button>`'s border —
+     it beats Tailwind's `border` utility class outright regardless of
+     specificity, since Tailwind's utilities live in a `@layer` and an
+     unlayered author rule always wins over any layered one. `!important`
+     is what it takes to win that fight back for these 5 buttons, the same
+     reasoning every other mcm-page button-reset fight in this theme
+     already needed it for. */
+  border-width: 1px !important;
+  border-style: solid !important;
   box-shadow: var(--pl-glass-shadow);
   transition:
     background-color 0.16s ease,
     color 0.16s ease,
-    box-shadow 0.16s ease;
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
-.mcm-page .perf-live .table-scroll tbody td:last-child span[class*='rounded-lg']:hover {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.26);
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-btn:disabled {
+  box-shadow: none;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-listen {
+  background: rgba(239, 246, 255, 0.9);
+  border-color: rgba(186, 230, 253, 0.7);
+  color: #0284c7;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-listen:hover:not(:disabled) {
+  background: rgba(224, 242, 254, 0.95);
+  border-color: #7dd3fc;
+  box-shadow: 0 6px 14px rgba(2, 132, 199, 0.22);
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-whisper {
+  background: rgba(245, 243, 255, 0.9);
+  border-color: rgba(221, 214, 254, 0.7);
+  color: #7c3aed;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-whisper:hover:not(:disabled) {
+  background: rgba(237, 233, 254, 0.95);
+  border-color: #c4b5fd;
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.22);
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-barge {
+  background: rgba(254, 252, 232, 0.9);
+  border-color: rgba(254, 240, 138, 0.7);
+  color: #d97706;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-barge:hover:not(:disabled) {
+  background: rgba(254, 249, 195, 0.95);
+  border-color: #fde047;
+  box-shadow: 0 6px 14px rgba(217, 119, 6, 0.22);
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-transfer {
+  background: rgba(255, 247, 237, 0.9);
+  border-color: rgba(254, 215, 170, 0.7);
+  color: #ea580c;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-transfer:hover:not(:disabled) {
+  background: rgba(254, 237, 213, 0.95);
+  border-color: #fdba74;
+  box-shadow: 0 6px 14px rgba(234, 88, 12, 0.22);
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-hangup {
+  background: rgba(254, 242, 242, 0.9);
+  border-color: rgba(254, 202, 202, 0.7);
+  color: #ef4444;
+}
+.mcm-page .perf-live .table-scroll tbody td:last-child .ma-action-hangup:hover:not(:disabled) {
+  background: rgba(254, 226, 226, 0.95);
+  border-color: #fca5a5;
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.22);
+}
+/* The shared 10px right padding every other cell gets (above) put the last
+   action button flush against the card's own edge — worse now that this
+   table scrolls internally (visibleRowCount), since the vertical scrollbar
+   sits in that same 10px, leaving no visible gap at all. Extra clearance
+   on just this column's right side, not all of them. */
+.mcm-page .perf-live .table-scroll tbody td:last-child {
+  padding-right: 34px !important;
+}
+.mcm-page .perf-live thead th:last-child {
+  padding-right: 34px !important;
 }
 
 /* Pagination bar, matched to the table it belongs to. `.table-scroll` also
@@ -541,3 +920,285 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
    (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
    page — per explicit request to match that look exactly rather than
    re-theming it warm like the rest of this page. */
+
+/* ==================================================================
+   Page shell: toolbar and KPI band
+   ------------------------------------------------------------------
+   These rules used to be two `<style>{`...`}</style>` blocks rendered
+   inside `index.tsx` — about 150 lines of CSS living in the component
+   tree, invisible to anyone searching this folder's stylesheets, and
+   re-inserted into the document every time the KPI band mounted.
+   Moved here verbatim; the mobile corrections that follow at the end
+   of this file are the only behavioural change.
+   ================================================================== */
+.mcm-page .perf-tbar {
+  display:flex; align-items:center; gap:10px 16px;
+  flex-wrap:wrap; margin-bottom:0;
+}
+.mcm-page .perf-tbar-group {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;
+}
+.mcm-page .perf-tbar-end { margin-left:auto; }
+.mcm-page .perf-tbar .fchip,
+.mcm-page .perf-tbar .btn.sm { height:36px; border-radius:9px; }
+/* the date dropdown ships its own grey border — align it to the tokens */
+.mcm-page .perf-tbar input,
+.mcm-page .perf-tbar select,
+.mcm-page .perf-tbar [role="combobox"] { border-color:var(--line); }
+
+/* Date range, division and media used to be three separately
+   bordered controls sitting side by side, reading as three
+   unrelated filters rather than one "what am I looking at" bar.
+   One pill, divided into segments, reads as a single filter. */
+.mcm-page .perf-filter-pill {
+  display:flex; align-items:center; height:36px;
+  border:1px solid var(--line); border-radius:999px;
+  background:var(--surface); padding:0 2px;
+  /* The pill's own rounded look comes from its border-radius,
+ border and background — none of its children (plain text
+ segments, no backgrounds of their own) actually need
+ clipping to stay inside that shape. overflow:hidden was
+ blocking the "Date Range" floating panel below (a position:
+ absolute descendant of the date dropdown, several levels in)
+ from ever being visible: an ancestor's overflow:hidden clips
+ absolutely-positioned descendants too, regardless of their
+ own z-index. */
+  overflow:visible;
+}
+.mcm-page .perf-filter-pill .pf-seg {
+  display:flex; align-items:center; height:100%;
+  padding:0 14px; white-space:nowrap;
+  font-size:12px; font-weight:600; color:var(--ink-2);
+  border-left:1px solid var(--line);
+}
+.mcm-page .perf-filter-pill .pf-seg:first-child { border-left:none; padding-left:4px; }
+.mcm-page .perf-filter-pill .pf-range { font-weight:500; color:var(--ink-3, #8b8478); }
+/* The date dropdown is a react-select instance with its own control
+   chrome (border, background, padding) — strip that so it sits flush
+   as the pill's first segment instead of a select-box-in-a-pill. */
+.mcm-page .perf-filter-pill .custom-react-select__control {
+  border:none !important; background:transparent !important;
+  box-shadow:none !important; min-height:34px !important;
+}
+.mcm-page .perf-filter-pill .custom-react-select__value-container { padding-left:14px; }
+.mcm-page .perf-filter-pill .custom-react-select__indicator-separator { display:none; }
+/* The "Date Range" floating panel (DateDropdown's own
+   customPickerPlacement="bottom" markup) is right-0 against its
+   own narrow .relative wrapper — the date select itself, not the
+   toolbar. That wrapper sits right at the pill's left edge, so
+   anchoring the panel's right edge to it pushed the panel almost
+   entirely off-screen to the left. left-0 anchors its LEFT edge
+   there instead, opening the panel rightward into the open space
+   the rest of the toolbar already has. Everything else about the
+   panel's own look (background, padding, shadow, radius) is set
+   directly on it in date-dropdown/index.tsx now — it's a single
+   compact row, not the taller two-row card this override used to
+   also have to reshape. */
+.mcm-page .perf-filter-pill [class*="right-0"][class*="top-full"] {
+  right:auto; left:0;
+}
+/* The toolbar's own "Sep 2 – Sep 3" segment — clickable once a
+   custom range is active, reopening the panel in one click instead
+   of needing the preset re-picked from the select beside it. */
+.mcm-page .perf-filter-pill .pf-range.pf-range-clickable {
+  cursor:pointer; border-radius:999px; margin:0 2px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.mcm-page .perf-filter-pill .pf-range.pf-range-clickable:hover {
+  background: rgba(249,115,22,0.1); color:var(--accent-ink);
+}
+      
+
+/* Waiting / Longest wait are what a supervisor triages on first —
+   sized up and, past target, ringed so they're findable without
+   reading every tile. Everything else groups into three denser
+   cards instead of six single-metric ones. */
+.mcm-page .hero-row {
+  display:grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items:start; gap:10px; margin-bottom:10px;
+}
+.mcm-page .hero-stat { padding:16px 18px; position:relative; }
+.mcm-page .hero-stat-icon {
+  position:absolute; top:16px; right:18px;
+  display:grid; place-items:center; width:44px; height:44px; border-radius:99px;
+  background:var(--accent-wash); color:var(--accent-ink);
+}
+.mcm-page .hero-stat-icon-breach { background:var(--crit-wash); color:var(--crit); }
+.mcm-page .hero-stat-value-row { display:flex; align-items:baseline; gap:8px; margin-top:6px; }
+.mcm-page .hero-stat-value { font-size:38px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+.mcm-page .hero-stat-trend { font-size:18px; font-weight:800; line-height:1; }
+.mcm-page .hero-stat-trend.bad { color:var(--crit); }
+.mcm-page .hero-stat-trend.good { color:var(--live); }
+.mcm-page .hero-stat-breach {
+  border-color: var(--crit);
+  box-shadow: 0 0 0 1px var(--crit);
+  animation: heroBreachPulse 1.8s ease-in-out infinite;
+}
+.mcm-page .hero-stat-breach .hero-stat-value { color: var(--crit); }
+@keyframes heroBreachPulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--crit), 0 0 0 0 var(--crit-wash); }
+  50% { box-shadow: 0 0 0 1px var(--crit), 0 0 0 8px transparent; }
+}
+
+.mcm-page .grouped-row {
+  display:grid; grid-template-columns: repeat(1, minmax(0, 1fr));
+  /* "start" let each of the three cards size to its own content
+     — Service's longer "target 80% in 20s" label made it taller
+     than Volume/Coverage, so the row read as uneven. "stretch"
+     (the grid default) makes every card fill the tallest one's
+     height instead. */
+  align-items:stretch; gap:10px; margin-bottom:16px;
+}
+@media (min-width: 700px) {
+  .mcm-page .grouped-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.mcm-page .grouped-stat { padding:14px 14px; height:100%; }
+.mcm-page .grouped-stat-row { display:flex; align-items:stretch; gap:12px; margin-top:8px; }
+.mcm-page .grouped-stat-metric { flex:1; min-width:0; }
+.mcm-page .grouped-stat-divider { width:1px; background:var(--line); flex:none; }
+.mcm-page .grouped-stat-value { display:flex; align-items:baseline; gap:5px; font-size:21px; }
+.mcm-page .grouped-stat-trend { font-size:13px; font-weight:800; }
+.mcm-page .grouped-stat-trend.bad { color:var(--crit); }
+.mcm-page .grouped-stat-trend.good { color:var(--live); }
+/* Metric captions ("Service level · target 80% in 20s") — one
+   line, always. A metric that runs long ellipsizes rather than
+   wrapping and pushing its own card taller than its siblings.
+   .stat .d (mcm-page.css) is display:flex — text-overflow
+   doesn't reliably ellipsize on a flex container, it just hard
+   -clips the last character instead of showing an ellipsis,
+   which is what cut the final "s" off "20s". display:block
+   restores normal single-line text truncation. */
+.mcm-page .grouped-stat-metric .d {
+  display:block; font-size:10px; letter-spacing:-0.005em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* A pulsing `box-shadow` glow used to sit on this rule — meant to
+   reinforce "live" beyond the word itself, but with no page-scoping at
+   all (`.mcm-page .fchip.live`, not `.perf-live .fchip.live`), it applied
+   to every `.fchip.live` badge across the app (Directory's People,
+   Blocked, External, Favourites, Locations, Roles — anywhere the shared
+   `.fchip.live` chip renders), not just this one. The soft ring it added
+   around the badge's own existing border read as a double border/halo
+   rather than reinforcement. Removed rather than re-scoped: the badge's
+   own flat `--live-wash` background + `--live` text (mcm-page.css) already
+   says "live" on its own. */
+
+/* ------------------------------------------------------------------
+   Narrow screens
+   ------------------------------------------------------------------
+   Two rules above are right on a wide screen and wrong on a phone,
+   because both exist to keep cards that SHARE A ROW the same height.
+   Below the breakpoint where the cards stack one per row, that
+   benefit is gone and only the cost remains.
+   ------------------------------------------------------------------ */
+@media (max-width: 699px) {
+  /* `.grouped-stat-metric .d` clips its caption to one line so a longer
+     label cannot make its card taller than its siblings. Stacked, there
+     are no siblings on the row — and the clipping was eating the part
+     that carries the meaning: "Service level · target 80% i…",
+     "Occupancy · target 75–85…". A target nobody can read is not a
+     target. */
+  .mcm-page .grouped-stat-metric .d {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* The band's legend is the only thing on the page that says which figures
+   are live and which cover the selected date range. It was truncated to
+   "Waiting, Longest wait, Service level, On queu…" — cut off exactly where
+   it starts to distinguish the two.
+
+   It is laid out as a single-line pill: the notice is a flex row with
+   `border-radius: 999px` and `overflow: hidden`, and the note inside it is
+   `white-space: nowrap`. That reads well on a wide screen and is unreadable
+   on a phone, so below the width where the sentence stops fitting the pill
+   becomes an ordinary rounded block and the text wraps.
+
+   Written at the same specificity as the pill rule above
+   (`body.perf-warm-backdrop .mcm-page .page-band …`) because a shorter
+   selector loses to it — which is exactly what happened on the first
+   attempt at this fix. */
+@media (max-width: 780px) {
+  body.perf-warm-backdrop .mcm-page .page-band .hero-notice {
+    align-items: flex-start;
+    border-radius: var(--r, 12px);
+  }
+  body.perf-warm-backdrop .mcm-page .page-band .hero-notice .page-note {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Unreadable-source banner
+   ------------------------------------------------------------------
+   Shown when one of the five feeds behind the KPI band fails. It sits
+   above the legend rather than replacing a card, because a failure is
+   usually partial — some cards are still true.
+   ------------------------------------------------------------------ */
+.mcm-page .hero-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--crit);
+  border-left-width: 3px;
+  border-radius: var(--r, 10px);
+  background: var(--crit-wash);
+}
+.mcm-page .hero-error-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--crit);
+}
+.mcm-page .hero-error-body {
+  flex: 1;
+  min-width: 0;
+}
+.mcm-page .hero-error-t {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--crit);
+}
+.mcm-page .hero-error-d {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.mcm-page .hero-error-retry {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.mcm-page .hero-error-retry-icon {
+  width: 14px;
+  height: 14px;
+}
+@media (max-width: 620px) {
+  .mcm-page .hero-error {
+    flex-wrap: wrap;
+  }
+  .mcm-page .hero-error-retry {
+    margin-left: 28px;
+  }
+}
+
+/* The freshness badge's stale state. The live variant already exists
+   above; this is what it becomes when no feed has answered recently. */
+.mcm-page .fchip.stale {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.mcm-page .fchip .dot.amber {
+  background: var(--warn);
+}
