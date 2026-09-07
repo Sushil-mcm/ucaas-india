@@ -2,7 +2,7 @@ import NumberWithFlag from '@/components/custom/number-with-flag';
 import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
-import { AdminHeadActions } from '@/pages/admin-settings/admin-page-head';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useUser } from '@/hooks/use-user';
 import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
 import {
@@ -159,6 +159,14 @@ interface INumberListState {
 const NumberList = () => {
   const { pathname } = useLocation();
   const view = VIEWS[viewFromPath(pathname)];
+
+  /* The head reads its title from the nav registry, and only "All numbers" is
+     listed there now — the other four views were taken out of the sidebar
+     because they are tabs on this same screen. Without a title the head
+     renders nothing at all, so switching tab dropped the whole 65px bar and
+     took the "Add number" button, which portals into it, along with it.
+     Each view names itself here instead, which is what this hook is for. */
+  useSetAdminPageMeta({ title: view.title, description: view.description });
 
   const [search, setSearch] = useState<string>('');
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -660,6 +668,7 @@ const NumberList = () => {
       ) : null}
       <AdminPage
         hideHead
+        bareBody
         filters={
           /* Views and search on one row, like the Directory filter bar this
              screen is meant to match. The tabs used to sit inside the table
@@ -712,11 +721,16 @@ const NumberList = () => {
           )}
 
           {view.isGrouped ? (
-            <NumbersByLine
-              search={search}
-              canLabel={Boolean(virtualNumberAccess?.action?.update_forwarding)}
-              onEditLabel={(did) => handleNumberState(did, 'editLabel')}
-            />
+            /* Every other view gets TableManager's own card. This one draws a
+               plain list, so it needs the matching surface or the tab would be
+               the one screen with nothing under its content. */
+            <div className="mcm-numcard">
+              <NumbersByLine
+                search={search}
+                canLabel={Boolean(virtualNumberAccess?.action?.update_forwarding)}
+                onEditLabel={(did) => handleNumberState(did, 'editLabel')}
+              />
+            </div>
           ) : (
             <TableManager
               {...{

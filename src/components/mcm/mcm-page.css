@@ -8295,3 +8295,13 @@
   background: color-mix(in srgb, var(--crit) 10%, transparent);
   color: var(--crit);
 }
+
+/* The By line view draws a plain list rather than a TableManager, so it needs
+   the same surface that component brings with it -- otherwise switching to
+   that tab dropped the card and left the content sitting on the page. */
+.mcm-admin .mcm-numcard {
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: rgba(251, 249, 246, 0.88);
+}

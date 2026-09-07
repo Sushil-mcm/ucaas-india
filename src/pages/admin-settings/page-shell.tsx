@@ -24,6 +24,7 @@ export const AdminPage = ({
   actions,
   filters,
   hideHead,
+  bareBody,
   children,
 }: {
   /** The area this screen belongs to, e.g. "Numbers". */
@@ -45,6 +46,14 @@ export const AdminPage = ({
    * than restructure its JSX to keep its buttons.
    */
   hideHead?: boolean;
+  /**
+   * Drops the outer card, leaving the children to bring their own.
+   *
+   * `TableManager` already renders a bordered, rounded, tinted card of its
+   * own, so a screen built on it was drawing two nested cards — a white band
+   * showing around and below the table with nothing in it.
+   */
+  bareBody?: boolean;
   children: ReactNode;
 }) => (
   <section className="mcm-adminpage">
@@ -65,11 +74,15 @@ export const AdminPage = ({
     )}
     {filters ? <div className="mcm-adminpage-bar">{filters}</div> : null}
     <div className="mcm-adminpage-body">
-      {/* Same card the Directory tables sit in, so the two areas read as one
-          product rather than a styled header bolted onto a bare table. */}
-      <div className="panel-card">
-        <div className="tbl-wrap">{children}</div>
-      </div>
+      {bareBody ? (
+        children
+      ) : (
+        /* Same card the Directory tables sit in, so the two areas read as one
+           product rather than a styled header bolted onto a bare table. */
+        <div className="panel-card">
+          <div className="tbl-wrap">{children}</div>
+        </div>
+      )}
     </div>
   </section>
 );
