@@ -85,31 +85,127 @@
 .mcm-datepicker .react-datepicker__day--disabled:hover {
   background: transparent;
 }
-.mcm-datepicker .react-datepicker__navigation {
-  top: 14px;
+/* `renderCustomHeader` swaps react-datepicker's default header — its
+   plain-text month/year, `.react-datepicker__navigation` arrows and native
+   `<select>`s — for the layout below, so none of the library's own header
+   classes render here any more.
+   The month/year triggers are a hand-built dropdown (`MiniMonthYearSelect`
+   in index.tsx), not `CustomSelect`/react-select: that component's own
+   value-container/indicator padding couldn't be trimmed enough to match a
+   native `<select>`'s footprint without still widening this calendar past
+   its own day-grid — tried twice, reverted both times. This trigger is
+   sized to the exact footprint the native `<select>` it replaces measured
+   at (113px, confirmed via computed style), so the calendar's overall
+   width is unchanged; only the open list — the one part CSS could never
+   restyle on a native `<select>`, since the OS paints that popup itself —
+   is actually new. */
+.mcm-datepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
-.mcm-datepicker .react-datepicker__navigation-icon::before {
-  border-color: #9a948f;
-  border-width: 2px 2px 0 0;
+.mcm-datepicker-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #9a948f;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
-.mcm-datepicker .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
-  border-color: #f2994a;
+.mcm-datepicker-nav:hover:not(:disabled) {
+  color: #f2994a;
+  background: rgba(251, 226, 200, 0.5);
 }
-.mcm-datepicker .react-datepicker__month-select,
-.mcm-datepicker .react-datepicker__year-select {
+.mcm-datepicker-nav:disabled {
+  color: #d8d2c8;
+  cursor: not-allowed;
+}
+.mcm-mini-select {
+  position: relative;
+}
+.mcm-mini-select-trigger {
+  height: 22px;
   border-radius: 8px;
   border: 1px solid rgba(225, 200, 165, 0.9);
-  background: #fff;
-  padding: 3px 6px;
+  background:
+    #fff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239a948f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7l5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 6px center / 12px 12px;
+  padding: 0 20px 0 8px;
   font-size: 12px;
   font-weight: 700;
   color: #2e2d35;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
-.mcm-datepicker .react-datepicker__month-select:focus,
-.mcm-datepicker .react-datepicker__year-select:focus {
-  outline: none;
+.mcm-mini-select-trigger:hover,
+.mcm-mini-select-trigger.is-open {
   border-color: #f2994a;
 }
+.mcm-mini-select-trigger-month {
+  width: 120px;
+}
+.mcm-mini-select-trigger-year {
+  width: 66px;
+}
+/* Same list styling every dropdown in the app already uses (peach hover,
+   solid-orange selected) — the "Assign Groups" checklist, the "Date
+   Range" preset list — just wrapped around a hand-built list instead of
+   react-select's, since that's the part this trigger size can't afford. */
+.mcm-mini-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  min-width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(160, 95, 30, 0.16);
+  padding: 4px;
+}
+.mcm-mini-select-option {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2e2d35;
+  text-align: left;
+  cursor: pointer;
+}
+.mcm-mini-select-option:hover {
+  background: rgba(255, 241, 235, 0.65);
+  color: #1a1a1a;
+}
+.mcm-mini-select-option.is-selected {
+  background: rgba(249, 115, 22, 0.12);
+  color: #ea580c;
+}
+
+/* The preset list ("Today", "Yesterday", "Last 7 Days", ...) is themed in
+   index.css's `@layer base` instead of here — that's where the shared
+   `.custom-react-select__*` rules it needs to outrank live. For
+   `!important` declarations the cascade reverses layer order and treats
+   unlayered styles as the lowest priority, so a plain override in this
+   file can never beat an `!important` declaration inside `@layer base`,
+   no matter how specific it is. See index.css for the actual rules,
+   scoped via `inputClass="mcm-date-preset"` on the CustomSelect in
+   index.tsx. */
 
 /* The "From" / "To" cards that trigger each of the two calendars. */
 .mcm-date-field {
@@ -139,6 +235,16 @@
 }
 .mcm-date-input:hover {
   border-color: #f2994a;
+}
+/* The single-row toolbar bar (`customPickerPlacement="bottom"`) packs From,
+   To, Reset and Apply onto one ~46px-tall line — the default 36px input
+   plus this bar's own 10px (p-2.5) top/bottom padding would land near
+   56px, taller than that slim target. Scoped to `.mcm-date-range-bar` only,
+   so every other caller of this same `.mcm-date-input` (the inline
+   placement mode, still two rows) keeps its original size. */
+.mcm-date-range-bar .mcm-date-input {
+  height: 28px;
+  padding: 0 8px;
 }
 .mcm-date-input:focus,
 .mcm-date-input:focus-visible {

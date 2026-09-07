@@ -240,3 +240,15 @@ const externalViewPrefixes = (): { prefix: string; area: AreaId }[] =>
       return [...(prefix ? [{ prefix, area }] : []), ...(view.altPaths ?? []).map((alt) => ({ prefix: alt, area }))];
     }),
   );
+
+export const isViewAllowedByPlan = (
+  view: Pick<AreaView, 'feature'>,
+  companyPlanFeatures: any,
+): boolean => {
+  if (!view.feature) return true;
+  if (view.feature === 'video') return Boolean(companyPlanFeatures?.video?.IS_SHOW);
+  if (view.feature === 'ai') return Boolean(companyPlanFeatures?.ai?.IS_SHOW);
+  if (view.feature === 'queue')
+    return Boolean(companyPlanFeatures?.phone_system_action?.access?.QUEUE);
+  return true;
+};
