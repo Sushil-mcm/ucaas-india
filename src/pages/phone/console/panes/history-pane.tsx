@@ -8,7 +8,8 @@ import { Ic } from '../icons';
 import { DialNumber, useConsoleDialer } from '../dial-number';
 import type { ConsoleCallRow } from '../call-list-column';
 import { durationSeconds } from '../copilot-adapter';
-import NumberWithFlag from '@/components/custom/number-with-flag';
+import NumberWithFlag, { isDiallableNumber } from '@/components/custom/number-with-flag';
+import { normalizeCallNumber } from '@/lib/call-number';
 import { DEMO_ENABLED, demoInteractions } from '../demo-data';
 import DemoChip from './demo-chip';
 
@@ -49,16 +50,25 @@ type Item = {
  * A log row holds both ends, and which field is *ours* flips with the
  * direction: on an outbound call the far end is `destination_number` and we are
  * the caller ID, on an inbound one it is the other way round.
- * `display_caller_number` wins for outbound when it differs — that is the
- * number actually presented to the person being called, which is what "the
- * number this call was made from" means to whoever is reading it.
+ *
+ * Every candidate is checked before it is shown. `display_caller_number` is the
+ * number actually presented to the person being called, so it is asked first —
+ * but it is a varchar(16) the switch does not always fill honestly, and rows
+ * carrying stubs like "000" were being printed as though they were the DID.
+ * A value that is not a real number tells the reader nothing, so the line is
+ * left off the row entirely rather than filled with something untrue.
  */
 const ownNumberOf = (row: any, direction: string) => {
-  const outbound = direction === 'Outbound';
-  const value = outbound
-    ? row?.display_caller_number || row?.caller_id_number
-    : row?.destination_number;
-  return String(value ?? '').trim();
+  const candidates =
+    direction === 'Outbound'
+      ? [row?.display_caller_number, row?.caller_id_number]
+      : [row?.destination_number, row?.caller_destination];
+
+  for (const candidate of candidates) {
+    const value = normalizeCallNumber(candidate);
+    if (isDiallableNumber(value)) return value;
+  }
+  return '';
 };
 
 /** 0 -> "not answered", 45 -> "45s", 605 -> "10m 05s", 3725 -> "1h 02m" */

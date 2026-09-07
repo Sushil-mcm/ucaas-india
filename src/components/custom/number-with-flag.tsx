@@ -44,7 +44,20 @@ const NumberWithFlag = ({ number = null, isFlag = true, className = '' }: any) =
   const formattedNumber = useMemo(() => formatDialNumber(number), [number]);
 
   if (!number) return '---';
-  return isFlag && isExternal ? (
+
+  /* Anything that is not a real number -- an extension, or a stub the switch
+     left in a caller-id column -- is printed exactly as it is stored.
+
+     It used to fall through to the disabled `PhoneInput` below, whose country
+     is hardcoded to 'us', so a stored "000" was drawn as a United States field
+     reading "+1 (000)" with a US flag beside it. That is an invented number
+     presented as a fact. There is nothing to look up here, so show the value
+     and let it speak for itself. */
+  if (!isExternal) {
+    return <span className={className}>{String(number)}</span>;
+  }
+
+  return isFlag ? (
     <span className={`inline-flex items-center gap-1   ${className}`}>
       {/* Inline SVG, not react-country-flag: its emoji mode has no glyph on
           Windows (the flag came out as the letters "IN") and its `svg` mode
