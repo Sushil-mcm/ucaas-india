@@ -3485,10 +3485,13 @@
   color: var(--ink-2);
   gap: 10px;
 }
+/* The same wash the rail hovers with. This used to be a cool grey, so the nav
+   beside a warm rail hovered a different colour from it. Kept in step with the
+   block further down that owns the lit state. */
 .mcm-admin .mcm-adminnav .h-14:hover,
 .mcm-admin .mcm-adminnav .min-h-14:hover {
-  background: var(--surface-2);
-  color: var(--ink);
+  background: var(--color-ucass-active-bg, #fde9d2);
+  color: var(--color-ucass-active, #c96f1f);
 }
 
 /* Icons sized to the text, not to the row. */
@@ -3521,7 +3524,7 @@
 /* The current page: accent text on a soft wash, with a left rail. The old
    treatment put a 2px rail on the RIGHT, which read as a scrollbar. */
 .mcm-admin .mcm-adminnav .text-primary {
-  color: var(--accent-ink);
+  color: var(--color-ucass-active, #c96f1f);
   font-weight: 700;
 }
 .mcm-admin .mcm-adminnav .border-r-primary {
@@ -8445,18 +8448,58 @@
   padding-right: 0;
 }
 
-/* The current row, matched to the Activity/Directory rail: a soft wash in a
-   rounded pill with a short accent bar down its inner edge, rather than the
-   2px line the old treatment drew on the RIGHT, where it read as a scrollbar.
-   `.mcm-rail-item.is-lit` uses the same 3px bar and the same accent. */
+/* The current row, drawn as the Activity/Directory/Performance rail draws its
+   lit tile -- not merely "like" it: the same two brand tokens the rail reads
+   (`--color-ucass-active-bg` behind, `--color-ucass-active` on top) and the
+   same 3px bar on the inner edge that `.mcm-rail-item.is-lit::before` uses.
+
+   `border`, `outline` and `box-shadow` are all cleared. The row was carrying a
+   ring right around itself, which no rail tile has: the trigger keeps focus
+   after you click it, and the shared Accordion's class list turns that into a
+   3px ring. A rail tile says which page you are on with fill and a bar, and
+   nothing else. */
 .mcm-admin .mcm-adminnav .border-r-primary,
 .mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open'] {
-  border-right: 0 !important;
+  position: relative;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  /* 10px, which is what `rounded-lg` computes to on a rail tile — measured
+     against one rather than guessed. */
   border-radius: 10px;
-  background: var(--accent-wash);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--color-ucass-active-bg, #fde9d2);
+  color: var(--color-ucass-active, #c96f1f);
+}
+
+.mcm-admin .mcm-adminnav .border-r-primary::before,
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open']::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-ucass-active, #c96f1f);
+}
+
+/* The rail hovers with the same wash it lights with, so the nav beside it does
+   too rather than reaching for a grey of its own. */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger']:hover,
+.mcm-admin .mcm-adminnav .min-h-14:hover {
+  background: var(--color-ucass-active-bg, #fde9d2);
+  color: var(--color-ucass-active, #c96f1f);
 }
 
 .mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open']:hover {
-  background: var(--accent-wash);
+  background: var(--color-ucass-active-bg, #fde9d2);
 }
+
+/* Focus stays reachable for the keyboard, just not drawn as a ring around a row
+   that is merely current. */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger']:focus-visible {
+  outline: 2px solid var(--color-ucass-active, #c96f1f) !important;
+  outline-offset: -2px;
+}
+

@@ -353,15 +353,15 @@ function Playground() {
           description and no actions. Dropped rather than moved. */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4 pb-2">
         {/* Dynamic Stats Banner */}
-        <div className="relative overflow-hidden bg-slate-900 border border-slate-800 text-white rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.15),transparent_60%)] pointer-events-none" />
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#fff6ec] via-[#fdece0] to-[#f9c9a3] border border-[rgba(225,200,165,0.9)] text-[#2E2D35] rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.55),transparent_60%)] pointer-events-none" />
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <div className="w-12 h-12 rounded-full bg-[var(--color-ucass-active,#c96f1f)] flex items-center justify-center shadow-sm">
               <Sparkles className="w-6 h-6 text-white animate-pulse" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight">Agent Playground</h1>
-              <p className="text-slate-400 text-sm mt-1 max-w-lg">
+              <p className="text-[#6B5B4D] text-sm mt-1 max-w-lg">
                 Test any AI Receptionist (voice) or Chat Agent in a safe sandbox. Sessions don't
                 count toward analytics.
               </p>
@@ -370,28 +370,28 @@ function Playground() {
 
           <div className="flex items-center gap-6 md:gap-8 relative z-10 shrink-0">
             <div className="text-center md:text-left">
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <p className="text-xs text-[#8A7B6C] font-semibold uppercase tracking-wider">
                 Total Agents
               </p>
-              <p className="text-3xl font-extrabold text-white mt-1">
+              <p className="text-3xl font-extrabold text-[#2E2D35] mt-1">
                 {isPageLoading ? '...' : totalAgentsCount}
               </p>
             </div>
-            <div className="w-px h-10 bg-slate-800" />
+            <div className="w-px h-10 bg-[rgba(201,111,31,0.22)]" />
             <div className="text-center md:text-left">
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <p className="text-xs text-[#8A7B6C] font-semibold uppercase tracking-wider">
                 Receptionists
               </p>
-              <p className="text-3xl font-extrabold text-indigo-400 mt-1">
+              <p className="text-3xl font-extrabold text-[var(--color-ucass-active,#c96f1f)] mt-1">
                 {isPageLoading ? '...' : receptionistAgents?.length}
               </p>
             </div>
-            <div className="w-px h-10 bg-slate-800" />
+            <div className="w-px h-10 bg-[rgba(201,111,31,0.22)]" />
             <div className="text-center md:text-left">
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+              <p className="text-xs text-[#8A7B6C] font-semibold uppercase tracking-wider">
                 AI Chatbots
               </p>
-              <p className="text-3xl font-extrabold text-purple-400 mt-1">
+              <p className="text-3xl font-extrabold text-[var(--color-ucass-active,#c96f1f)] mt-1">
                 {isPageLoading ? '...' : chatAgents?.length || 0}
               </p>
             </div>
