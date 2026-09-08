@@ -26,10 +26,14 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Bell,
   Bot,
+  CheckCircle2,
   Clock3,
   Gauge,
   Headset,
+  LogIn,
+  PauseCircle,
   PhoneCall,
   PhoneIncoming,
   PhoneOutgoing,
@@ -38,10 +42,10 @@ import {
   Ear,
   MicIcon,
   UsersIcon,
+  WifiOff,
   Info,
   Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { isDemoMode } from '@/lib/demo-mode';
 import { useDialpad } from '@/hooks/use-dialpad';
@@ -66,20 +70,26 @@ import { CallPathCell, CallPathDialog } from '@/pages/monitoring/call-path-cell'
 import CallHistory from '@/pages/reports/call-logs/call-history';
 import { useCallStats } from '@/hooks/use-call-stats';
 
-type MetricTone = 'neutral' | 'success' | 'warning' | 'danger' | 'primary';
 type Trend = 'up' | 'down' | 'flat';
 type DashboardCallListKey = 'total' | 'inbound' | 'outbound' | 'missed';
 type DashboardTaskListKey = 'callbacks';
+
+type MetricGroup = 'Call Volume' | 'Quality & SLA' | 'Timing Averages';
 
 type MetricCard = {
   label: string;
   value: string;
   icon: any;
   trend: Trend;
-  tone: MetricTone;
+  /* Health derived from this reading. Optional: a metric with no meaningful
+     threshold leaves it unset rather than being given an invented target. */
+  state?: MetricState;
+  group: MetricGroup;
   callListKey?: DashboardCallListKey;
   taskListKey?: DashboardTaskListKey;
 };
+
+const METRIC_GROUP_ORDER: MetricGroup[] = ['Call Volume', 'Quality & SLA', 'Timing Averages'];
 
 type FunnelPoint = {
   label: string;
@@ -110,12 +120,43 @@ type AgentStatus = 'AVAILABLE' | 'ON CALL' | 'RINGING' | 'WRAP UP' | 'ON HOLD' |
 
 const AGENT_PAGE_LIMIT = 25;
 
-const toneClasses: Record<MetricTone, string> = {
-  neutral: 'text-[#2E2D35]',
-  success: 'text-[#4EAE6E]',
-  warning: 'text-amber-600',
-  danger: 'text-[#DC5049]',
-  primary: 'text-primary',
+
+/**
+ * Metric health, derived from the value rather than fixed per metric.
+ *
+ * `tone` already existed but describes the metric's *kind*: Abandoned was
+ * styled `danger` at 0% and Service Level `success` at 40%, so the colour said
+ * the same thing whatever the number did. On a board watched from across a
+ * room, saying when something has gone wrong is the one job colour has.
+ *
+ * A metric with no meaningful threshold -- Total Today is neither good nor bad
+ * -- returns undefined and stays neutral, rather than being given an invented
+ * target.
+ */
+type MetricState = 'ok' | 'warn' | 'breach';
+
+/** Higher is better: service level. */
+const stateAbove = (value: number, ok: number, warn: number): MetricState =>
+  value >= ok ? 'ok' : value >= warn ? 'warn' : 'breach';
+
+/** Lower is better: waits, abandons, misses. */
+const stateBelow = (value: number, ok: number, warn: number): MetricState =>
+  value <= ok ? 'ok' : value <= warn ? 'warn' : 'breach';
+
+/* Only warn and breach paint. A board that colours every healthy figure too
+   has spent the signal before anything has gone wrong. */
+const metricStateClasses: Record<MetricState, { value: string; edge: string; cell: string }> = {
+  ok: { value: 'text-[#1A1A1A]', edge: '', cell: '' },
+  warn: {
+    value: 'text-[#C2670A]',
+    edge: 'bg-[#E8A33D]',
+    cell: 'bg-[#FDF1DE]',
+  },
+  breach: {
+    value: 'text-[#C0261F]',
+    edge: 'bg-[#D8453C]',
+    cell: 'bg-[#FDECEB]',
+  },
 };
 
 const statusPillClass: Record<AgentStatus, string> = {
@@ -124,7 +165,7 @@ const statusPillClass: Record<AgentStatus, string> = {
   RINGING: 'bg-indigo-100 text-indigo-700 border border-indigo-200',
   'WRAP UP': 'bg-amber-100 text-amber-700 border border-amber-200',
   'ON HOLD': 'bg-red-100 text-red-700 border border-red-200',
-  OFFLINE: 'bg-[#FBE2C8]/40 text-[#9A948F] border border-[#EEE7DD]',
+  OFFLINE: 'bg-[#FBE2C8]/40 text-[#6b6459] border border-[#EEE7DD]',
 };
 
 const getCallbackTaskContactPhone = (task: any) =>
@@ -199,10 +240,24 @@ const ActionButtons = ({
     hasAnyActiveCallSession ||
     isMonitoringActionLocked;
 
-  if (isButtonDisabled) return <span className="text-xs text-[#9A948F]">---</span>;
+  if (isButtonDisabled) return <span className="text-xs text-[#6b6459]">---</span>;
 
-  const actionButtonClass =
-    'cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white';
+  /* These five escalate in how far they reach into a live call: listening is
+     passive, whisper is audible to the agent, barge is audible to both
+     parties, intercept takes the call away from the agent, hangup ends it on
+     the caller. One shared orange gave a supervisor no way to tell them apart
+     at a glance — the destructive one looked exactly like the harmless one.
+     The tones below are that ladder, cool through to red.
+
+     Each is a whole literal class string rather than one assembled from
+     parts: Tailwind only emits a utility it can actually see in the source. */
+  const actionButtonBase =
+    'cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-full w-8 h-8 border shadow-sm transition-colors';
+  const listenButtonClass = `${actionButtonBase} bg-[#EAF2F9] border-[#CBDDEC] text-[#2E6FA7] hover:bg-[#2E6FA7] hover:border-[#2E6FA7] hover:text-white`;
+  const whisperButtonClass = `${actionButtonBase} bg-[#EEEDFB] border-[#D5D2F3] text-[#5A54C9] hover:bg-[#5A54C9] hover:border-[#5A54C9] hover:text-white`;
+  const bargeButtonClass = `${actionButtonBase} bg-[#FDF3E1] border-[#F0DCB8] text-[#B8791B] hover:bg-[#B8791B] hover:border-[#B8791B] hover:text-white`;
+  const interceptButtonClass = `${actionButtonBase} bg-[#FBE2C8]/50 border-[#EEE7DD] text-[#C96F1F] hover:bg-[#C96F1F] hover:border-[#C96F1F] hover:text-white`;
+  const hangupButtonClass = `${actionButtonBase} bg-[#FDECEA] border-[#F5C6C2] text-[#DC5049] hover:bg-[#DC5049] hover:border-[#DC5049] hover:text-white`;
 
   return (
     <div className="flex items-center gap-2">
@@ -210,8 +265,9 @@ const ActionButtons = ({
         <CustomTooltip text="Listen" side="top">
           <button
             type="button"
+            data-slot="button"
             onClick={() => handleActionClick('*87', call)}
-            className={actionButtonClass}
+            className={listenButtonClass}
           >
             <Ear className="w-4 h-4" />
           </button>
@@ -221,8 +277,9 @@ const ActionButtons = ({
         <CustomTooltip text="Whisper" side="top">
           <button
             type="button"
+            data-slot="button"
             onClick={() => handleActionClick('*86', call)}
-            className={actionButtonClass}
+            className={whisperButtonClass}
           >
             <MicIcon className="w-4 h-4" />
           </button>
@@ -232,8 +289,9 @@ const ActionButtons = ({
         <CustomTooltip text="Barge" side="top">
           <button
             type="button"
+            data-slot="button"
             onClick={() => handleActionClick('*88', call)}
-            className={actionButtonClass}
+            className={bargeButtonClass}
           >
             <UsersIcon className="w-4 h-4" />
           </button>
@@ -243,8 +301,9 @@ const ActionButtons = ({
         <CustomTooltip text="Intercept" side="top">
           <button
             type="button"
+            data-slot="button"
             onClick={() => handleActionClick('*89', call)}
-            className={actionButtonClass}
+            className={interceptButtonClass}
           >
             <CallIntersection className="w-5 h-5" />
           </button>
@@ -254,8 +313,9 @@ const ActionButtons = ({
         <CustomTooltip text="Hangup" side="top">
           <button
             type="button"
+            data-slot="button"
             onClick={() => handleHangupClick(call)}
-            className={actionButtonClass}
+            className={hangupButtonClass}
           >
             <ImPhoneHangUp className="w-5 h-5" />
           </button>
@@ -615,7 +675,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
               <span className="text-xs text-slate-600">
                 {moment(createdAt).format('MMM DD, YYYY')}
               </span>
-              <span className="text-[10px] uppercase text-slate-500">
+              <span className="text-[11px] uppercase text-[#475569]">
                 {moment(createdAt).format('hh:mm A')}
               </span>
             </div>
@@ -644,7 +704,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
               <span className="text-xs font-medium text-slate-700">
                 {moment(startTime).format('MMM DD, YYYY')}
               </span>
-              <span className="text-[10px] uppercase text-slate-500">
+              <span className="text-[11px] uppercase text-[#475569]">
                 {moment(startTime).format('hh:mm A')}
               </span>
             </div>
@@ -684,7 +744,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
 
           return (
             <span
-              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
                 isCompleted
                   ? 'border-emerald-100 bg-emerald-50 text-emerald-600'
                   : isOverdue
@@ -804,7 +864,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: String(totalCalls),
       icon: PhoneCall,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Call Volume',
       callListKey: 'total',
     },
     {
@@ -812,7 +872,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: String(inboundCalls),
       icon: PhoneIncoming,
       trend: 'flat',
-      tone: 'primary',
+      group: 'Call Volume',
       callListKey: 'inbound',
     },
     {
@@ -820,7 +880,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: String(outboundCalls),
       icon: PhoneOutgoing,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Call Volume',
       callListKey: 'outbound',
     },
     {
@@ -828,7 +888,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: String(agentsOnCall),
       icon: Activity,
       trend: 'flat',
-      tone: 'success',
+      group: 'Call Volume',
     },
     {
       label: 'Calls Waiting',
@@ -838,28 +898,37 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       ),
       icon: Timer,
       trend: 'flat',
-      tone: 'warning',
+      state: stateBelow(
+        liveCallsData?.filter((c: any) =>
+          ['ringing', 'connecting', 'waiting'].includes(c.status),
+        ).length || 0,
+        3,
+        9,
+      ),
+      group: 'Call Volume',
     },
     {
       label: 'In IVR',
       value: String(summary?.ivr_call || 0),
       icon: Bot,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Call Volume',
     },
     {
       label: 'Abandoned',
       value: `${summary?.abandoned_in_call_percent || 0}%`,
       icon: AlertTriangle,
       trend: 'flat',
-      tone: 'danger',
+      state: stateBelow(Number(summary?.abandoned_in_call_percent || 0), 5, 8),
+      group: 'Quality & SLA',
     },
     {
       label: 'Missed',
       value: String(missedCalls),
       icon: AlertTriangle,
       trend: 'flat',
-      tone: 'danger',
+      state: stateBelow(Number(missedCalls || 0), 0, 5),
+      group: 'Quality & SLA',
       callListKey: 'missed',
     },
     {
@@ -867,7 +936,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: String(summary?.callback_count || 0),
       icon: Headset,
       trend: 'flat',
-      tone: 'warning',
+      group: 'Quality & SLA',
       taskListKey: 'callbacks',
     },
     {
@@ -875,64 +944,98 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
       value: `${summary?.service_level_percent || 0}%`,
       icon: Gauge,
       trend: 'flat',
-      tone: 'success',
+      /* 80% is the target already named in this metric's own label. */
+      state: stateAbove(Number(summary?.service_level_percent || 0), 80, 70),
+      group: 'Quality & SLA',
     },
     {
       label: 'Avg Speed Answer',
       value: formatSecs(summary?.avg_speed_answer),
       icon: Clock3,
       trend: 'flat',
-      tone: 'primary',
+      state: stateBelow(Number(summary?.avg_speed_answer || 0), 20, 40),
+      group: 'Timing Averages',
     },
     {
       label: 'Avg Handle Time',
       value: formatSecs(summary?.avg_handle_time),
       icon: Timer,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Timing Averages',
     },
     {
       label: 'Avg Talk Time',
       value: formatSecs(summary?.avg_talk_time),
       icon: PhoneCall,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Timing Averages',
     },
     {
       label: 'Avg Hold Time',
       value: formatSecs(summary?.avg_hold_time),
       icon: Clock3,
       trend: 'flat',
-      tone: 'warning',
+      state: stateBelow(Number(summary?.avg_hold_time || 0), 45, 90),
+      group: 'Timing Averages',
     },
     {
       label: 'Avg Wrap-up',
       value: formatSecs(summary?.avg_wrap_time_sec),
       icon: Activity,
       trend: 'flat',
-      tone: 'neutral',
+      group: 'Timing Averages',
     },
     {
       label: 'Max Wait Time',
       value: formatSecs(summary?.max_wait_time),
       icon: AlertTriangle,
       trend: 'flat',
-      tone: 'danger',
+      state: stateBelow(Number(summary?.max_wait_time || 0), 60, 180),
+      group: 'Timing Averages',
     },
     {
       label: 'Longest Active',
       value: formatSecs(summary?.longest_active),
       icon: Timer,
       trend: 'flat',
-      tone: 'warning',
+      group: 'Timing Averages',
     },
   ];
+
+  const dashboardMetricsByGroup = METRIC_GROUP_ORDER.map((group) => ({
+    group,
+    items: dashboardMetrics.filter((item) => item.group === group),
+  })).filter((section) => section.items.length > 0);
+
+  /* The question a wallboard exists to answer, which the page never answered:
+     does the floor need someone right now? Reading seventeen figures to find
+     out is the work this is meant to save. */
+  const breaching = dashboardMetrics.filter((item) => item.state === 'breach');
+  const warning = dashboardMetrics.filter((item) => item.state === 'warn');
+  const floorState: MetricState = breaching.length ? 'breach' : warning.length ? 'warn' : 'ok';
+  const floorIssues = [...breaching, ...warning];
+
+  /* The five readings that change minute to minute and actually prompt an
+     action. Everything else on this page is either a total for the day or a
+     rolling average -- context, not signal. Pulled from `dashboardMetrics` by
+     label so there is one definition of each figure, not two. */
+  const heroMetrics = ['Calls Waiting', 'Max Wait Time', 'Active Calls', 'Service Level']
+    .map((name) => dashboardMetrics.find((item) => item.label.startsWith(name)))
+    .filter(Boolean) as MetricCard[];
+
+  /* Reuses the roster's own status rule rather than re-deriving "free" from
+     presence and call state, which is what the table below already does. */
+  const agentsAvailableNow = (agents || []).filter(
+    (agent: any) => getAgentStatus(agent) === 'AVAILABLE',
+  ).length;
 
   const liveStripStats = [
     {
       label: 'Logged In',
       value: String(usersOnlineStatus?.filter((u: any) => u.online).length || 0),
-      tone: 'text-[#2E2D35]',
+      hoverText: 'group-hover:text-[#2E2D35]',
+      hoverBar: 'group-hover:bg-[#2E2D35]',
+      icon: LogIn,
     },
     {
       label: 'Available',
@@ -944,12 +1047,16 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
             !filteredActiveCalls?.some((call: any) => isMonitoringCallForMember(call, u?.userId)),
         ).length || 0,
       ),
-      tone: 'text-[#4EAE6E]',
+      hoverText: 'group-hover:text-[#4EAE6E]',
+      hoverBar: 'group-hover:bg-[#4EAE6E]',
+      icon: CheckCircle2,
     },
     {
       label: 'On Call',
       value: String(agentsOnCall),
-      tone: 'text-ucass-active',
+      hoverText: 'group-hover:text-ucass-active',
+      hoverBar: 'group-hover:bg-ucass-active',
+      icon: PhoneCall,
     },
     {
       label: 'Ringing',
@@ -963,12 +1070,16 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           callLogSummary?.ringing_calls ||
           0,
       ),
-      tone: 'text-indigo-600',
+      hoverText: 'group-hover:text-indigo-600',
+      hoverBar: 'group-hover:bg-indigo-600',
+      icon: Bell,
     },
     {
       label: 'Wrap Up',
       value: '0',
-      tone: 'text-amber-600',
+      hoverText: 'group-hover:text-amber-600',
+      hoverBar: 'group-hover:bg-amber-600',
+      icon: Clock3,
     },
     {
       label: 'On Hold',
@@ -977,12 +1088,14 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           callLogSummary?.hold_calls ||
           0,
       ),
-      tone: 'text-[#DC5049]',
+      hoverText: 'group-hover:text-[#DC5049]',
+      hoverBar: 'group-hover:bg-[#DC5049]',
+      icon: PauseCircle,
     },
     // {
     //   label: 'Aux Break',
     //   value: '0',
-    //   tone: 'text-[#9A948F]',
+    //   tone: 'text-[#6b6459]',
     // },
     {
       label: 'Offline',
@@ -992,14 +1105,18 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           (agents?.length || 0) - (usersOnlineStatus?.filter((u: any) => u.online).length || 0),
         ),
       ),
-      tone: 'text-[#9A948F]',
+      hoverText: 'group-hover:text-[#6b6459]',
+      hoverBar: 'group-hover:bg-[#6b6459]',
+      icon: WifiOff,
     },
     {
       label: 'Occupancy',
       value: agents?.length
         ? `${Math.round(((liveCallsData?.length || 0) / agents.length) * 100)}%`
         : '0%',
-      tone: 'text-[#4EAE6E]',
+      hoverText: 'group-hover:text-[#4EAE6E]',
+      hoverBar: 'group-hover:bg-[#4EAE6E]',
+      icon: Gauge,
     },
   ];
 
@@ -1046,11 +1163,19 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
   }, [selectedCallListMetric]);
 
   return (
-    <div className="live-wallboard-theme h-full overflow-auto p-3">
+    <div className="live-wallboard-theme p-3">
       {/* Global --primary carries !important (src/index.css), so only another
           !important author rule can out-cascade it here; a plain inline style
-          override would silently lose. */}
-      <style>{`.live-wallboard-theme { --primary: #EA8A3F !important; }`}</style>
+          override would silently lose.
+
+          The scrollbar rules that used to live here are gone: the lists now
+          carry `.perf-thin-scroll`, defined once in src/index.css, which hides
+          the indicator while leaving the list scrollable. Styling it in two
+          places is what made it look unfixable -- the page-level rule kept
+          winning on specificity. */}
+      <style>{`
+        .live-wallboard-theme { --primary: #EA8A3F !important; }
+      `}</style>
       {/* TODO:on ERROR */}
       {/* <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1076,203 +1201,805 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
           </div>
         </div> */}
 
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-[#2E2D35]">Agent Performance Overview</h3>
-        <Button
-          onClick={handleRefreshCampaignStats}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          disabled={isRefreshing}
+
+      {/* ── Floor state ──────────────────────────────────────────────────
+          One line: is anything wrong, and what. A wallboard is watched from
+          across a room and mostly unattended, so it has to answer that
+          without the reader totting up seventeen figures first. */}
+      <div
+        className={`mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[20px] border px-4 py-3 ${
+          floorState === 'breach'
+            ? 'border-[rgba(216,69,60,0.3)] bg-[#FDECEB]'
+            : floorState === 'warn'
+              ? 'border-[rgba(232,163,61,0.32)] bg-[#FDF1DE]'
+              : 'border-[rgba(13,148,136,0.22)] bg-[#E0F6F3]'
+        }`}
+      >
+        <span
+          className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+            floorState === 'breach'
+              ? 'bg-[#D8453C]'
+              : floorState === 'warn'
+                ? 'bg-[#E8A33D]'
+                : 'bg-[#0D9488]'
+          }`}
+        />
+        <span
+          className={`text-sm font-bold ${
+            floorState === 'breach'
+              ? 'text-[#C0261F]'
+              : floorState === 'warn'
+                ? 'text-[#C2670A]'
+                : 'text-[#0F766E]'
+          }`}
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {floorState === 'ok'
+            ? 'All clear'
+            : `${floorIssues.length} ${floorIssues.length === 1 ? 'metric needs' : 'metrics need'} attention`}
+        </span>
+        {floorIssues.length ? (
+          <span className="text-xs text-[#475569]">
+            {floorIssues.map((item) => `${item.label} ${item.value}`).join('  ·  ')}
+          </span>
+        ) : (
+          <span className="text-xs text-[#475569]">
+            Every tracked metric is inside target.
+          </span>
+        )}
+        {/* Page-level, because that is its actual scope. Despite the name,
+            `handleRefreshCampaignStats` re-fetches `campaignLiveCallsData`,
+            and `summary` -- the source of nearly every figure on this page --
+            is read straight off it. Campaigns are one consumer of that
+            payload, not its subject. */}
+        {/* `data-slot="button"` is load-bearing: mcm-page.css resets every bare
+            <button> inside `.mcm-page` to `border: 0; background: none;
+            color: inherit`, and because that selector wraps its exclusions in
+            a zero-specificity `:where()` it scores (0,1,1) and outranks every
+            Tailwind utility here. Without the attribute the fill, border and
+            colour below are dropped and the control renders as plain text.
+            Same styling as the AI Wall refresh so the two boards match. */}
+        <button
+          type="button"
+          data-slot="button"
+          onClick={handleRefreshCampaignStats}
+          disabled={isRefreshing}
+          title="Refresh live figures"
+          aria-label="Refresh live figures"
+          className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full border border-[rgba(214,163,90,0.6)] bg-white px-4 py-2 text-xs font-semibold text-primary shadow-[0_2px_8px_rgba(194,98,46,0.16)] transition hover:border-primary/60 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? 'Refreshing' : 'Refresh'}
-        </Button>
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-6 xl:grid-cols-9">
-        {dashboardMetrics.map((item) => {
-          const IconComp = item.icon;
-          const isClickableMetric = Boolean(item.callListKey || item.taskListKey);
-          const openDashboardMetric = () => {
-            if (isClickableMetric) setSelectedCallListMetric(item);
-          };
+      {/* ── Right now ───────────────────────────────────────────────────
+          The readings that prompt an action, at a size readable across a
+          room, sitting directly under the line that flags them. */}
+      {/* Grid, not a justified flex row: on a wide wallboard, five compact
+          cards under `justify-between` leave both huge inter-card gaps and a
+          dead strip inside each card past the number. A grid divides the
+          full width up front, and the icon badge gives that reclaimed space
+          inside the card a job instead of sitting blank. */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {heroMetrics.map((item) => {
+          const heroState = item.state && item.state !== 'ok' ? metricStateClasses[item.state] : null;
+          const HeroIcon = item.icon;
           return (
             <div
               key={item.label}
-              role={isClickableMetric ? 'button' : undefined}
-              tabIndex={isClickableMetric ? 0 : undefined}
-              onClick={openDashboardMetric}
-              onKeyDown={(event) => {
-                if (!isClickableMetric) return;
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  openDashboardMetric();
-                }
-              }}
-              className={`rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] hover:bg-green-50 hover:border-green-300 hover:text-green-700 justify-between flex-col flex ${
-                isClickableMetric
-                  ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30'
-                  : ''
+              className={`relative flex items-start justify-between gap-3 overflow-hidden rounded-[20px] border px-5 py-3.5 shadow-[0_10px_34px_rgba(160,95,30,0.14)] ${
+                heroState
+                  ? `${heroState.cell} border-[rgba(249,115,22,0.14)]`
+                  : 'border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%]'
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
+              {heroState ? (
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-y-0 left-0 w-1 ${heroState.edge}`}
+                />
+              ) : null}
+              <div>
+                <p
+                  className={`num text-[28px] font-bold leading-none tracking-tight ${
+                    heroState ? heroState.value : 'text-[#1A1A1A]'
+                  }`}
+                >
+                  {item.value}
+                </p>
+                <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#475569]">
                   {item.label}
                 </p>
-                <IconComp className={`h-3.5 w-3.5 ${toneClasses[item.tone]}`} />
               </div>
-              <div className="mt-1 flex items-end gap-1.5">
-                <span className="v num">{item.value}</span>
-                {item.trend === 'up' && <ArrowUp className="mb-1 h-3.5 w-3.5 text-[#4EAE6E]" />}
-                {item.trend === 'down' && <ArrowDown className="mb-1 h-3.5 w-3.5 text-[#DC5049]" />}
-              </div>
+              {HeroIcon ? (
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
+                  <HeroIcon
+                    className={`h-4.5 w-4.5 ${heroState ? heroState.value : 'text-primary'}`}
+                  />
+                </div>
+              ) : null}
             </div>
           );
         })}
+        <div className="relative flex items-start justify-between gap-3 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%] px-5 py-3.5 shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+          <div>
+            <p className="num text-[28px] font-bold leading-none tracking-tight text-[#1A1A1A]">
+              {agentsAvailableNow}
+            </p>
+            <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#475569]">
+              Agents Available
+            </p>
+          </div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
+            <UsersIcon className="h-4.5 w-4.5 text-primary" />
+          </div>
+        </div>
       </div>
-      <div className="mx-auto flex w-full max-w-[1880px] flex-col mt-3">
-        <div className="flex w-full  gap-4 xl:flex-row flex-col">
-          <div className="flex w-full flex-col sm:flex-row xl:flex-col gap-3 sm:max-w-full  xl:max-w-96 min-w-72">
-            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
-                Call Flow Funnel (Live)
-              </h4>
-              <div className="mt-3 flex flex-col gap-3">
-                {funnelData.map((item) => (
-                  <div key={item.label} className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-[#2E2D35]">{item.label}</span>
-                      <span className="text-[#9A948F]">
-                        {item.value}% - {item.count}
-                      </span>
-                    </div>
-                    <LinearProgress
-                      color={item.color}
-                      outOfValue={100}
-                      taskDoneValue={item.value}
-                      className="bg-[#F0DFC5]"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
-                Queue Status
-              </h4>
-              <div className="mt-3 space-y-2.5 max-h-86 overflow-auto">
-                {queueStatusData.length > 0 ? (
-                  queueStatusData.map((queue) => {
-                    const slaValue = typeof queue.sla === 'number' ? queue.sla : 0;
-                    return (
-                      <div
-                        key={queue?.queue}
-                        className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-[#2E2D35]">{queue?.queue}</p>
-                          <p className="text-xs font-semibold text-amber-600">
-                            {queue?.total || 0}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex justify-between gap-2 text-[11px] text-[#9A948F] w-full">
-                          <p className="flex flex-col justify-center items-center text-center ">
-                            Avg Wait{' '}
-                            <span className="font-medium text-primary">{queue?.avgWait}</span>
-                          </p>
-                          <p className="flex flex-col justify-center items-center text-center ">
-                            Available{' '}
-                            <span className="font-medium text-[#4EAE6E]">{queue?.available}</span>
-                          </p>
-                          <p className=" flex flex-col justify-center items-center text-right ">
-                            SLA{' '}
-                            <span className="font-medium text-[#4EAE6E]">{queue?.sla || 0}</span>
-                          </p>
-                        </div>
-                        <div className="mt-2 h-1.5 w-full rounded-full bg-[#F0DFC5]">
-                          <div
-                            className={`h-1.5 rounded-full ${getBarColor(slaValue)}`}
-                            style={{ width: `${slaValue}%` }}
+      <div className="mb-3 mt-5">
+        <h3 className="text-base font-semibold text-[#1A1A1A]">Today so far</h3>
+      </div>
+
+      {(() => {
+        /* Same panel markup for every group; only the outer arrangement
+           differs between the top split row and the full-width row below,
+           so the panel itself is built once and placed twice. */
+        const renderMetricGroupPanel = (
+          section: (typeof dashboardMetricsByGroup)[number],
+          fill: boolean,
+        ) => (
+          <div key={section.group} className={fill ? 'flex-1 min-w-0' : undefined}>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#475569]">
+              {section.group}
+            </p>
+            {/* One panel per group, not one card per metric. Border, fill,
+                radius and shadow each say "separate object", and spending all
+                four on all fifteen tiles left nothing to tell them apart --
+                the group is the object, the metrics are its cells. The 1px
+                gap over a tinted panel draws the hairlines, so they stay
+                exact however the grid wraps. */}
+            {/* auto-fit, not a fixed column count. The three groups hold six,
+                four and seven metrics; forcing them all into a nine-column
+                grid left Quality with five empty cells and stranded Longest
+                Active alone on a row. Tracks now exist only where an item
+                does, so every group fills its band exactly. */}
+            {/* The cells size to their content and the card hugs them, rather
+                than six readings being stretched across the full page width.
+                A count like 64 does not need 280px, and the empty half of
+                each cell was reading as unfinished layout. Split-row panels
+                get a fixed two-row grid instead: Call Volume's six items
+                become 3 columns and Quality's four become 2, so both sit at
+                exactly two full rows with no stray empty cell and no
+                stretch, and the two panels land at the same height without
+                either looking sparse or cramped next to the other.
+
+                The full-width row underneath (Timing Averages) deliberately
+                breaks from that joined-card pattern: three bordered boxes in
+                a row, all built the same way, starts reading as one repeated
+                widget rather than three distinct readings. It renders as a
+                loose strip of separate pill chips instead -- rounded-full,
+                icon-in-a-circle on the left rather than a small glyph beside
+                the label -- so it's recognizably part of the same family
+                without being a fourth copy of the same box. */}
+            {fill ? (
+              /* Opaque fill, no backdrop filter. Every panel, hero card and
+                 timing pill on this board used to be `rgba(255,255,255,0.85)`
+                 over `backdrop-saturate-[190%]`, which meant each one tinted
+                 itself from whatever part of the page's warm radial gradient
+                 happened to sit behind it - and the saturate multiplied that
+                 orange rather than muting it. Two panels with identical markup
+                 (Call Volume, Quality & SLA) landed at visibly different
+                 shades purely because they sit at different x positions.
+                 `--surface` is opaque, so a panel now looks the same wherever
+                 it lands, and it tracks light/dark on its own. */
+              /* The panel-as-one-object reasoning above still holds -- these
+                 stay grid compartments of one card, not fifteen separate
+                 ones -- but flat cells on flush hairlines read as a
+                 spreadsheet dropped onto a board that floats rounded,
+                 shadowed pill cards everywhere else on this exact screen
+                 (the row directly above this one, the Timing Averages strip
+                 below it). The gap and cream (`--surface-2` / `#fbf3e8`)
+                 fill give each cell the same "resting on a surface" depth
+                 the rest of the page has, without fragmenting the group
+                 back into individually-bordered boxes: it's the nested
+                 card-in-card pattern the queue cards already use elsewhere
+                 (`--surface` housing `--surface-2` compartments), applied
+                 here instead of literally cloning the floating-pill shape. */
+              <div
+                className="grid w-full gap-1.5 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] p-1.5 backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]"
+                style={{
+                  gridTemplateColumns: `repeat(${Math.max(1, Math.ceil(section.items.length / 2))}, minmax(140px, 1fr))`,
+                }}
+              >
+                {section.items.map((item) => {
+                  const IconComp = item.icon;
+                  const isClickableMetric = Boolean(item.callListKey || item.taskListKey);
+                  /* Undefined for metrics with no meaningful threshold, and for
+                     healthy ones -- both render plain. */
+                  const stateStyle =
+                    item.state && item.state !== 'ok' ? metricStateClasses[item.state] : null;
+                  const openDashboardMetric = () => {
+                    if (isClickableMetric) setSelectedCallListMetric(item);
+                  };
+                  return (
+                    <div
+                      key={item.label}
+                      role={isClickableMetric ? 'button' : undefined}
+                      tabIndex={isClickableMetric ? 0 : undefined}
+                      onClick={openDashboardMetric}
+                      onKeyDown={(event) => {
+                        if (!isClickableMetric) return;
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openDashboardMetric();
+                        }
+                      }}
+                      className={`group relative flex flex-col justify-between gap-2.5 overflow-hidden rounded-[14px] px-4 py-3.5 transition-colors duration-150 ${
+                        stateStyle?.cell || 'bg-[#fbf3e8] hover:bg-[#f7ead9]'
+                      } ${
+                        isClickableMetric
+                          ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary/40'
+                          : ''
+                      }`}
+                    >
+                      {/* A 3px edge on the breaching cell only. Reads as a
+                          flag down the left of the panel from a distance,
+                          before any of the numbers are legible. */}
+                      {stateStyle ? (
+                        <span
+                          aria-hidden="true"
+                          className={`absolute inset-y-0 left-0 w-[3px] ${stateStyle.edge}`}
+                        />
+                      ) : null}
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
+                          {item.label}
+                        </p>
+                        {/* Plain white, not the usual peach `#FFF1E0` badge:
+                            on the cell's own cream fill that peach nearly
+                            disappeared into it -- barely more than a shade
+                            apart. White is what actually lifts off a cream
+                            surface, the same reason the queue cards' avatars
+                            sit on `--surface` rather than another
+                            `--surface-2` tint. */}
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105 ${
+                            stateStyle ? 'bg-white/70' : 'bg-white'
+                          }`}
+                        >
+                          <IconComp
+                            className={`h-3.5 w-3.5 ${
+                              stateStyle ? stateStyle.value : 'text-primary'
+                            }`}
                           />
                         </div>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-lg border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/45 p-3 text-center">
-                    <p className="text-xs font-medium text-[#9A948F]">No record</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
-                Active Campaigns
-              </h4>
-              <div className="mt-2 space-y-2 min-h-40 max-h-64 overflow-y-auto pr-1">
-                {activeCampaignsData.length > 0 ? (
-                  activeCampaignsData.map((campaign) => (
-                    <div
-                      key={campaign.name}
-                      className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 p-2.5"
-                    >
-                      <p className="text-xs font-semibold text-primary">{campaign.name}</p>
-                      <div className="mt-2 grid grid-cols-2 gap-y-1 text-[11px] text-[#9A948F]">
-                        <p>Dialed: {campaign.dialed}</p>
-                        <p>Connected: {campaign.connected}</p>
-                        <p>Answered %: {campaign.answerRate}</p>
-                        <p>Failed: {campaign.failed}</p>
+                      <div className="flex items-end gap-1.5">
+                        <span
+                          className={`v num text-[24px] font-bold leading-none tracking-tight ${
+                            stateStyle ? stateStyle.value : 'text-[#1A1A1A]'
+                          }`}
+                        >
+                          {item.value}
+                        </span>
+                        {item.trend === 'up' && (
+                          <ArrowUp className="mb-1 h-3.5 w-3.5 text-[#4EAE6E]" />
+                        )}
+                        {item.trend === 'down' && (
+                          <ArrowDown className="mb-1 h-3.5 w-3.5 text-[#DC5049]" />
+                        )}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="rounded-lg border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/45 p-3 text-center">
-                    <p className="text-xs font-medium text-[#9A948F]">No record</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
+            ) : (
+              /* One joined panel, not seven free-floating pills. Seven chips
+                 each carrying their own border, fill and shadow read as seven
+                 competing objects, on a page whose other two metric groups are
+                 each a single surface divided by hairlines -- the strip is the
+                 object, the seven readings are its cells. Same fill, radius,
+                 hairline and shadow as those panels, so the three groups now
+                 look like one family instead of two plus a loose row. */
+              <div className="w-full overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+                  {section.items.map((item) => {
+                    const IconComp = item.icon;
+                    const isClickableMetric = Boolean(item.callListKey || item.taskListKey);
+                    const stateStyle =
+                      item.state && item.state !== 'ok' ? metricStateClasses[item.state] : null;
+                    const openDashboardMetric = () => {
+                      if (isClickableMetric) setSelectedCallListMetric(item);
+                    };
+                    return (
+                      <div
+                        key={item.label}
+                        role={isClickableMetric ? 'button' : undefined}
+                        tabIndex={isClickableMetric ? 0 : undefined}
+                        onClick={openDashboardMetric}
+                        onKeyDown={(event) => {
+                          if (!isClickableMetric) return;
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openDashboardMetric();
+                          }
+                        }}
+                        /* Hairlines drawn as insets rather than borders, the
+                           same trick the grids above use, so they stay exact
+                           however the row wraps at each breakpoint. */
+                        className={`group relative flex items-center gap-2.5 px-3.5 py-3 shadow-[1px_0_0_rgba(225,200,165,0.4),0_1px_0_rgba(225,200,165,0.4)] transition-colors duration-150 ${
+                          stateStyle?.cell || 'hover:bg-[rgba(249,115,22,0.05)]'
+                        } ${
+                          isClickableMetric
+                            ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary/40'
+                            : ''
+                        }`}
+                      >
+                        {/* 3px edge on the breaching cell only -- reads as a
+                            flag down the strip before the numbers are legible,
+                            matching how the panels above flag a breach. */}
+                        {stateStyle ? (
+                          <span
+                            aria-hidden="true"
+                            className={`absolute inset-y-0 left-0 w-[3px] ${stateStyle.edge}`}
+                          />
+                        ) : null}
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                            stateStyle ? 'bg-white/60' : 'bg-[#FFF1E0]'
+                          }`}
+                        >
+                          <IconComp
+                            className={`h-3.5 w-3.5 ${stateStyle ? stateStyle.value : 'text-primary'}`}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <span
+                            className={`v num text-[15px] font-bold leading-none tracking-tight ${
+                              stateStyle ? stateStyle.value : 'text-[#1A1A1A]'
+                            }`}
+                          >
+                            {item.value}
+                          </span>
+                          <p className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
+                            {item.label}
+                          </p>
+                        </div>
+                        {item.trend === 'up' && (
+                          <ArrowUp className="ml-auto h-3.5 w-3.5 shrink-0 text-[#4EAE6E]" />
+                        )}
+                        {item.trend === 'down' && (
+                          <ArrowDown className="ml-auto h-3.5 w-3.5 shrink-0 text-[#DC5049]" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+        const [topLeft, topRight, ...rest] = dashboardMetricsByGroup;
+
+        return (
+          <div className="flex flex-col gap-3">
+            {(topLeft || topRight) && (
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+                {topLeft ? renderMetricGroupPanel(topLeft, true) : null}
+                {topRight ? renderMetricGroupPanel(topRight, true) : null}
+              </div>
+            )}
+            {rest.map((section) => renderMetricGroupPanel(section, false))}
+          </div>
+        );
+      })()}
+
+      <div className="mx-auto flex w-full max-w-[1880px] flex-col mt-3">
+          {/* One surface, three bands divided by hairlines, rather than three
+              stacked cards each carrying its own border and shadow. Each band
+              opens with a rule, an eyebrow and a sentence saying what it is
+              for, so the panel reads before its numbers do. */}
+          <div className="w-full rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+            <div className="grid grid-cols-1 divide-y divide-[rgba(225,200,165,0.4)] md:grid-cols-3 md:divide-x md:divide-y-0">
+
+              <section className="p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-[2px] w-6 rounded-full bg-[#ea580c]" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#475569]">
+                    Call Flow Funnel
+                  </span>
+                </div>
+                <h4 className="mt-2 text-xl font-bold tracking-tight text-[#1A1A1A]">
+                  From calls to conversations
+                </h4>
+                <p className="mt-1 text-xs text-[#475569]">
+                  How calls move through the contact centre, live.
+                </p>
+
+                <div className="mt-5 flex flex-col gap-4">
+                  {funnelData.map((item, index) => (
+                    /* `-mx-2 px-2` cancel out visually (the connector below
+                       is positioned off this box's padding edge, which lands
+                       in the same place either way) — they exist only to
+                       give the hover wash room to breathe past the numbered
+                       badge's own edge rather than hugging it. */
+                    <div
+                      key={item.label}
+                      className="group relative -mx-2 flex gap-3 rounded-xl px-2 py-1 transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
+                    >
+                      {index < funnelData.length - 1 && (
+                        <span className="absolute left-[13px] top-7 h-[calc(100%+1rem-14px)] w-px bg-[rgba(225,200,165,0.6)]" />
+                      )}
+                      {/* `#ea580c` measured 3.21:1 against this badge's own
+                          `#FFF1E0` fill at 11px. */}
+                      <span className="relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] text-[11px] font-bold text-[#a8460f] transition-transform duration-150 group-hover:scale-110">
+                        {index + 1 < 10 ? `0${index + 1}` : index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="truncate text-sm font-semibold text-[#1A1A1A]">
+                            {item.label}
+                          </span>
+                          <span className="flex shrink-0 items-baseline gap-2">
+                            {/* What a funnel is actually read for is the loss
+                                between steps, and that was the one figure not
+                                on it -- "78%" and "50" both describe the step
+                                you are looking at, leaving the reader to
+                                subtract the previous row themselves. */}
+                            {index > 0 &&
+                              Number(funnelData[index - 1]?.count) > Number(item.count) && (
+                                <span
+                                  className="num rounded-full bg-[rgba(216,69,60,0.1)] px-1.5 py-0.5 text-[10px] font-bold text-[#C0261F]"
+                                  title={`${Number(funnelData[index - 1].count) - Number(item.count)} lost since ${funnelData[index - 1].label}`}
+                                >
+                                  −{Number(funnelData[index - 1].count) - Number(item.count)}
+                                </span>
+                              )}
+                            <span className="num text-sm font-bold text-[#1A1A1A]">
+                              {item.value}%
+                            </span>
+                            <span className="num text-xs text-[#475569]">{item.count}</span>
+                          </span>
+                        </div>
+                        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(225,200,165,0.35)]">
+                          <span
+                            className={`block h-full rounded-full ${item.color}`}
+                            style={{ width: `${Math.min(Math.max(item.value, 0), 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="p-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-[2px] w-6 rounded-full bg-[#ea580c]" />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#475569]">
+                    Queue Status
+                  </span>
+                </div>
+                <h4 className="mt-2 text-xl font-bold tracking-tight text-[#1A1A1A]">
+                  Keep every queue moving
+                </h4>
+                <p className="mt-1 text-xs text-[#475569]">
+                  Live queue performance and agent availability.
+                </p>
+
+                {queueStatusData.length > 0 ? (
+                  /* Scrolls in place once the list outgrows the column, so ten
+                     queues do not stretch the funnel and campaigns beside it. */
+                  <div className="perf-thin-scroll mt-5 max-h-[300px] overflow-y-auto overflow-x-auto">
+                    {/* `!text-[#475569]` on every header cell below is not
+                        decorative: `.mcm-page th` (mcm-page.css) is an
+                        unlayered base rule setting `color: var(--ink-4)`
+                        (`#93a0b8`, a cool blue-grey), which beats a plain
+                        Tailwind `text-[#475569]` on these `<th>` regardless
+                        of specificity — the labels rendered in that cool
+                        grey at a 2.5:1 contrast ratio against the warm cream
+                        header, well under the 4.5:1 small text needs, while
+                        the class name insisted they were `#475569`. Same
+                        trap as `.mcm-page button`'s reset, different
+                        property, first found on this table. */}
+                    <table className="w-full min-w-[330px]">
+                      <thead>
+                        <tr>
+                          <th className="pb-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] !text-[#475569]">
+                            Queue
+                          </th>
+                          {/* Durations right, counts centre - the handoff
+                              guide's alignment rule. Right-aligned digits also
+                              line up their units, so 8s and 34s compare down
+                              the column instead of drifting. */}
+                          <th className="pb-2 text-right text-[11px] font-bold uppercase tracking-[0.1em] !text-[#475569]">
+                            Avg wait
+                          </th>
+                          <th className="pb-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] !text-[#475569]">
+                            Available
+                          </th>
+                          <th className="pb-2 text-right text-[11px] font-bold uppercase tracking-[0.1em] !text-[#475569]">
+                            SLA
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[rgba(225,200,165,0.4)]">
+                        {queueStatusData.map((queue) => {
+                          const slaState = stateAbove(Number(queue.sla || 0), 80, 70);
+                          const slaClass =
+                            slaState === 'breach'
+                              ? 'text-[#C0261F]'
+                              : slaState === 'warn'
+                                ? 'text-[#C2670A]'
+                                : 'text-[#0F766E]';
+                          const edge =
+                            slaState === 'breach'
+                              ? 'bg-[#D8453C]'
+                              : slaState === 'warn'
+                                ? 'bg-[#E8A33D]'
+                                : 'bg-[#0D9488]';
+                          return (
+                            /* A soft background wash, not another accent bar:
+                               each row already carries a permanent colour
+                               identity of its own (`edge`, the pill beside
+                               the queue name), so a second bar arriving on
+                               hover only ever sat awkwardly beside the first
+                               — two lines doing the same job at the same
+                               edge. The wash gives the row the same "you are
+                               looking at this one" feedback without a second
+                               line to collide with the first. */
+                            <tr
+                              key={queue.queue}
+                              className="group transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
+                            >
+                              <td className="py-3 text-left">
+                                <span className="flex items-center gap-2.5">
+                                  <span
+                                    className={`h-8 w-[3px] shrink-0 rounded-full transition-transform duration-150 group-hover:scale-x-150 ${edge}`}
+                                  />
+                                  <span className="truncate text-sm font-semibold text-[#1A1A1A]">
+                                    {queue.queue}
+                                  </span>
+                                </span>
+                              </td>
+                              <td className="num py-3 text-right text-sm text-[#1A1A1A]">
+                                {queue.avgWait}s
+                              </td>
+                              <td className="num py-3 text-center text-sm font-semibold text-[#1A1A1A]">
+                                {queue.available}
+                              </td>
+                              {/* The percentage alone has to be read one row
+                                  at a time; the bar underneath is comparable
+                                  down the column at a glance, which is how a
+                                  wallboard is actually scanned. Same colour
+                                  as the row's edge, so the two agree. */}
+                              <td className="py-3 text-right align-middle">
+                                <span className={`num text-sm font-bold ${slaClass}`}>
+                                  {queue.sla}%
+                                </span>
+                                <span className="mt-1 ml-auto block h-[3px] w-12 overflow-hidden rounded-full bg-[rgba(225,200,165,0.45)]">
+                                  <span
+                                    className={`block h-full rounded-full ${edge}`}
+                                    style={{
+                                      width: `${Math.min(Math.max(Number(queue.sla) || 0, 0), 100)}%`,
+                                    }}
+                                  />
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="mt-5 rounded-xl border border-dashed border-[rgba(225,200,165,0.6)] py-6 text-center text-xs text-[#64748b]">
+                    No active queues
+                  </p>
+                )}
+              </section>
+
+              <section className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-[2px] w-6 rounded-full bg-[#ea580c]" />
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#475569]">
+                      Active Campaigns
+                    </span>
+                  </div>
+                  {/* `#ea580c` measured 3.23:1 against this pill's own
+                      `#FFF1EB` fill at 11px. */}
+                  {activeCampaignsData.length > 0 && (
+                    <span className="rounded-full bg-[#FFF1EB] px-2.5 py-1 text-[11px] font-bold text-[#a8460f]">
+                      {activeCampaignsData.length} Live
+                    </span>
+                  )}
+                </div>
+                <h4 className="mt-2 text-xl font-bold tracking-tight text-[#1A1A1A]">
+                  Drive more conversations
+                </h4>
+                <p className="mt-1 text-xs text-[#475569]">
+                  Outbound campaign progress, live.
+                </p>
+
+                {activeCampaignsData.length > 0 ? (
+                  <div className="perf-thin-scroll mt-5 flex max-h-[300px] flex-col divide-y divide-[rgba(225,200,165,0.4)] overflow-y-auto">
+                    {activeCampaignsData.map((campaign) => {
+                      const reached =
+                        campaign.dialed > 0
+                          ? Math.min(Math.round((campaign.connected / campaign.dialed) * 100), 100)
+                          : 0;
+                      return (
+                        <div
+                          key={campaign.name}
+                          className="group -mx-2 rounded-xl px-2 py-3.5 transition-colors duration-150 first:pt-0 last:pb-0 hover:bg-[rgba(249,115,22,0.05)]"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <span className="h-2 w-2 shrink-0 rounded-full bg-[#ea580c] transition-transform duration-150 group-hover:scale-125" />
+                              <span className="truncate text-sm font-semibold text-[#1A1A1A]">
+                                {campaign.name}
+                              </span>
+                            </span>
+                            <span className="flex shrink-0 items-start gap-5 text-right">
+                              <span className="flex flex-col">
+                                <span className="num text-sm font-bold text-[#1A1A1A]">
+                                  {campaign.connected}
+                                </span>
+                                <span className="text-[11px] uppercase tracking-wide text-[#475569]">
+                                  Connected
+                                </span>
+                              </span>
+                              <span className="flex flex-col">
+                                <span className="num text-sm font-bold text-[#ea580c]">
+                                  {campaign.answerRate}%
+                                </span>
+                                <span className="text-[11px] uppercase tracking-wide text-[#475569]">
+                                  Connect rate
+                                </span>
+                              </span>
+                            </span>
+                          </div>
+                          {/* The bar carried no label, so its width -- which is
+                              connected over dialed -- was the one figure on this
+                              card the reader had to guess at. Naming it costs a
+                              line and makes the fill mean something. */}
+                          <div className="mt-2.5 flex items-center gap-2">
+                            <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[rgba(225,200,165,0.35)]">
+                              <span
+                                className="block h-full rounded-full bg-[#ea580c] transition-[width] duration-500"
+                                style={{ width: `${reached}%` }}
+                              />
+                            </span>
+                            <span className="num shrink-0 text-[11px] font-bold text-[#475569]">
+                              {reached}% reached
+                            </span>
+                          </div>
+                          {/* Figures bold, captions plain: the row is scanned
+                              for the numbers, not the words between them. */}
+                          <p className="mt-2 text-[11px] text-[#475569]">
+                            Dialed <span className="num font-bold text-[#1A1A1A]">
+                              {campaign.dialed}
+                            </span>
+                            &nbsp;&middot;&nbsp; Conversions{' '}
+                            <span className="num font-bold text-[#0F766E]">
+                              {campaign.conversions}
+                            </span>
+                            &nbsp;&middot;&nbsp; Failed{' '}
+                            <span className="num font-bold text-[#C0261F]">{campaign.failed}</span>
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="mt-5 rounded-xl border border-dashed border-[rgba(225,200,165,0.6)] py-6 text-center text-xs text-[#64748b]">
+                    No active campaigns
+                  </p>
+                )}
+              </section>
+
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-3">
-            <div className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-2.5 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] w-full">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-9">
-                {liveStripStats.map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="rounded-lg border border-[#EEE7DD] bg-[#FBE2C8]/45 px-2.5 py-1.5 text-center"
-                  >
-                    <p className={`text-lg font-semibold leading-none ${stat.tone}`}>
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-[#9A948F] flex items-center justify-center gap-1">
-                      <span>{stat.label}</span>
-                      {stat.label === 'Occupancy' && (
-                        <CustomTooltip
-                          text="Calculated based on total agent and number of agents on the call"
-                          side="top"
+        <div className="mt-3 flex w-full  gap-4 xl:flex-row flex-col">
+
+          <div className="flex w-full flex-col gap-3 xl:min-h-[1400px]">
+            <div className="rounded-xl border border-[rgba(214,163,90,0.55)] bg-[rgba(255,252,248,0.97)] backdrop-blur-[12px] p-2.5 shadow-[0_16px_36px_-8px_rgba(154,78,30,0.35),0_4px_12px_rgba(154,78,30,0.18),0_1px_0_rgba(255,255,255,0.6)_inset] w-full">
+              <div className="mb-2.5 flex items-center justify-between px-0.5">
+                <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#6b6459]">
+                  <UsersIcon className="h-4 w-4 text-primary" />
+                  Live Agent Status
+                </h4>
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#4EAE6E]">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4EAE6E] opacity-60" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#4EAE6E]" />
+                  </span>
+                  Live
+                </span>
+              </div>
+              {/* An even grid rather than `flex flex-wrap`: wrapping sized every
+                  tile to its own content, so eight tiles carrying one- to
+                  three-character values ended up eight different widths with
+                  the gaps between them reading as uneven. */}
+              {/* `lg`, not `xl`: this project resets Tailwind's breakpoints
+                  (index.css) and `xl` is 1500px here, so keying the eight-wide
+                  row to it would have left a 1366px screen — the common one —
+                  on two rows of four. */}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                {liveStripStats.map((stat) => {
+                  const StatIcon = stat.icon;
+                  return (
+                    <div
+                      key={stat.label}
+                      className="group relative flex items-center gap-2.5 overflow-hidden rounded-[16px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] px-3 py-2.5 shadow-[0_6px_18px_rgba(160,95,30,0.1)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(214,163,90,0.7)] hover:shadow-[0_12px_26px_-6px_rgba(154,78,30,0.28)]"
+                    >
+                      {/* Icon badge (#FFF1E0/#ea580c) and card hairline
+                          (rgba(249,115,22,.14)) are the design system's own
+                          standing tokens, always on — an all-neutral rest
+                          state read as a plain white box, not a themed card.
+                          The per-stat colour (bar tint, number, label) stays
+                          held back until hover: at rest the eight numbers
+                          read as one set: on hover the tile you are pointing
+                          at is the only one whose value carries its own
+                          colour. Those hover classes come from the stat
+                          itself as whole literal strings
+                          (`group-hover:text-[#4EAE6E]`) rather than being
+                          assembled at runtime — Tailwind only emits a
+                          utility it can actually see in the source, so the
+                          `tone.replace('text-','bg-')` this used to do was
+                          relying on those bar colours happening to be
+                          generated by some other file. */}
+                      <span
+                        aria-hidden="true"
+                        className={`absolute inset-y-0 left-0 w-[3px] bg-[#f97316]/25 transition-colors duration-200 ${stat.hoverBar}`}
+                      />
+                      {StatIcon ? (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] transition-transform duration-200 group-hover:scale-105">
+                          <StatIcon className="h-4 w-4 text-[#ea580c]" />
+                        </div>
+                      ) : null}
+                      <div className="min-w-0 text-left">
+                        {/* The tooltip sits on the value, not the label. Equal
+                            columns give each label ~62px and "OCCUPANCY" needs
+                            75px once an info icon shares its line — it was the
+                            one label of the eight that truncated. Beside the
+                            short value ("47%") it costs nothing, and it is
+                            explaining that number anyway. */}
+                        <p
+                          className={`num flex items-center gap-1 text-lg font-bold leading-none tracking-tight text-[#2E2D35] transition-colors duration-200 ${stat.hoverText}`}
                         >
-                          <Info className="h-3.5 w-3.5 text-[#9A948F] cursor-pointer" />
-                        </CustomTooltip>
-                      )}
-                    </p>
-                  </div>
-                ))}
+                          {stat.value}
+                          {stat.label === 'Occupancy' && (
+                            <CustomTooltip
+                              text="Calculated based on total agent and number of agents on the call"
+                              side="top"
+                            >
+                              <Info className="h-3.5 w-3.5 shrink-0 text-[#6b6459] cursor-pointer" />
+                            </CustomTooltip>
+                          )}
+                        </p>
+                        <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
+                          {stat.label}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {canViewAgentRosterAndControls ? (
-              <div className="rounded-xl overflow-hidden  border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
-                <div className="flex flex-wrap items-center justify-between border-b border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2.5">
-                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#9A948F]">
+              <div className="sticky top-0 z-10 flex max-h-[calc(100vh-4rem)] flex-col rounded-xl overflow-hidden  border border-[rgba(214,163,90,0.55)] bg-[rgba(255,252,248,0.97)] backdrop-blur-[12px] shadow-[0_16px_36px_-8px_rgba(154,78,30,0.35),0_4px_12px_rgba(154,78,30,0.18),0_1px_0_rgba(255,255,255,0.6)_inset]">
+                <div className="shrink-0 flex flex-wrap items-center justify-between border-b border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-2.5">
+                  <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#6b6459]">
                     <Headset className="h-4 w-4 text-primary" />
                     Agent Real-time Roster and Controls
                   </h4>
-                  <div className="rounded-md border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-1.5 max-sm:w-full">
-                    <p className="text-[11px] font-medium text-[#9A948F]">
+                  <div className="rounded-md border border-[rgba(214,163,90,0.55)] bg-[rgba(255,252,248,0.97)] backdrop-blur-[12px] px-3 py-1.5 max-sm:w-full">
+                    <p className="text-[11px] font-medium text-[#6b6459]">
                       Top: {topCallsText} &nbsp; | &nbsp; Bottom: {bottomCallsText}
                     </p>
                   </div>
@@ -1291,22 +2018,22 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                           </div>
                           <div className="flex flex-col">
                             <p className="text-[13px] font-semibold text-[#2E2D35]">{agent.name}</p>
-                            <p className="flex items-center gap-1 text-[11px] font-medium text-[#9A948F]">
+                            <p className="flex items-center gap-1 text-[11px] font-medium text-[#6b6459]">
                               <span className="h-2 w-2 rounded-full bg-green-500" />
                               Ext: {agent.ext}
                             </p>
                           </div>
                         </div>
                         <span
-                          className={`rounded-sm px-2 py-0.5 text-[10px] font-semibold tracking-wide ${statusPillClass[agent.status]}`}
+                          className={`rounded-sm px-2 py-0.5 text-[11px] font-semibold tracking-wide ${statusPillClass[agent.status]}`}
                         >
                           {agent.status}
                         </span>
                       </div>
 
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-[#9A948F]">
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-[#6b6459]">
                         <p className="flex items-center gap-1.5">
-                          <Timer className="h-3.5 w-3.5 text-[#9A948F]" />
+                          <Timer className="h-3.5 w-3.5 text-[#6b6459]" />
                           {agent.timeInState}
                         </p>
                         <p className="truncate">{agent.queue}</p>
@@ -1324,7 +2051,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                             style={{ width: `${agent.utilization}%` }}
                           />
                         </div>
-                        <p className="text-[11px] font-semibold text-[#9A948F]">
+                        <p className="text-[11px] font-semibold text-[#6b6459]">
                           {agent.utilization}%
                         </p>
                       </div>
@@ -1339,33 +2066,33 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
 
                 <div
                   ref={agentRosterScrollRef}
-                  className="block max-h-190 overflow-auto overflow-x-auto lg:block"
+                  className="agent-roster-scroll block flex-1 min-h-0 overflow-auto overflow-x-auto lg:block"
                 >
                   <Table className="min-w-245 xl:min-w-280">
-                    <TableHeader className="sticky top-0 z-10 bg-[#FBE2C8]">
+                    <TableHeader className="sticky top-0 z-10">
                       <TableRow>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead>
                           Agent Info
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead className="lt-align-center">
                           Live Status
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead className="lt-align-right">
                           Time In State
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead>
                           Queue / Campaign
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead>
                           Caller ID
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead className="lt-align-center">
                           Utilization
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead>
                           Daily Stats
                         </TableHead>
-                        <TableHead className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-black">
+                        <TableHead className="lt-align-center">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -1374,7 +2101,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                       <TableBody>
                         <TableRow>
                           <TableCell colSpan={8} className="h-40">
-                            <div className="flex items-center justify-center gap-2 text-sm text-[#9A948F]">
+                            <div className="flex items-center justify-center gap-2 text-sm text-[#6b6459]">
                               <Loader2 className="h-5 w-5 animate-spin text-primary" />
                               <span>Loading agents...</span>
                             </div>
@@ -1383,18 +2110,23 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                       </TableBody>
                     ) : agents?.length > 0 ? (
                       <TableBody>
-                        {agents?.map((agent: any) => (
-                          <TableRow key={agent?.extension} className="hover:bg-[#FBE2C8]/60">
+                        {agents?.map((agent: any, agentIndex: number) => (
+                          <TableRow
+                            key={agent?.extension}
+                            className={`border-l-2 border-l-transparent transition-colors hover:border-l-primary/50 hover:bg-[#FBE2C8]/60 ${
+                              agentIndex % 2 === 1 ? 'bg-[#FBF6EE]/40' : ''
+                            }`}
+                          >
                             <TableCell className="px-3 py-2.5">
                               <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[12px] font-semibold text-[#2E2D35]">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#F2994A] to-[#C96F1F] text-[12px] font-semibold text-white shadow-sm">
                                   {getInitials(`${agent?.first_name} ${agent?.last_name}`)}
                                 </div>
                                 <div className="flex flex-col">
                                   <p className="text-[13px] font-semibold text-[#2E2D35]">
                                     {agent?.first_name || ''} {agent?.last_name || ''}
                                   </p>
-                                  <p className="flex items-center gap-1 text-[11px] font-medium text-[#9A948F]">
+                                  <p className="flex items-center gap-1 text-[11px] font-medium text-[#6b6459]">
                                     <span className="inline-flex items-center justify-center">
                                       {statusImageLookup[getAgentPresenceStatus(agent)] ||
                                         statusImageLookup.offline}
@@ -1404,21 +2136,22 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="px-3 py-2.5">
+                            <TableCell className="lt-align-center px-3 py-2.5">
                               {(() => {
                                 const status = getAgentStatus(agent);
                                 return (
                                   <span
-                                    className={`rounded-sm px-2 py-0.5 text-[10px] font-semibold tracking-wide ${statusPillClass[status]}`}
+                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${statusPillClass[status]}`}
                                   >
+                                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
                                     {status}
                                   </span>
                                 );
                               })()}
                             </TableCell>
-                            <TableCell className="px-3 py-2.5">
-                              <p className="flex items-center gap-1.5 text-xs font-medium text-[#2E2D35]">
-                                <Timer className="h-3.5 w-3.5 text-[#9A948F]" />
+                            <TableCell className="lt-align-right px-3 py-2.5">
+                              <p className="flex items-center justify-end gap-1.5 text-xs font-medium text-[#2E2D35]">
+                                <Timer className="h-3.5 w-3.5 text-[#6b6459]" />
                                 {(() => {
                                   const liveCall = getLiveCallForAgent(agent);
                                   const timestamp = getMonitoringCallTimestamp(liveCall, agent);
@@ -1441,7 +2174,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 );
                               })()}
                             </TableCell>
-                            <TableCell className="px-3 py-2.5 text-xs font-medium text-[#9A948F]">
+                            <TableCell className="px-3 py-2.5 text-xs font-medium text-[#6b6459]">
                               {(() => {
                                 const liveCall = getLiveCallForAgent(agent);
                                 const direction = String(liveCall?.direction || '')
@@ -1451,7 +2184,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 return liveCall?.caller_number || '--';
                               })()}
                             </TableCell>
-                            <TableCell className="px-3 py-2.5">
+                            <TableCell className="lt-align-center px-3 py-2.5">
                               {(() => {
                                 const utilizationPercent = getCampaignUtilizationPercent(
                                   String(agent?.extension || ''),
@@ -1464,7 +2197,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                       taskDoneValue={utilizationPercent}
                                       className="bg-[#F0DFC5]"
                                     />
-                                    <p className="text-[11px] font-semibold text-[#9A948F]">
+                                    <p className="text-[11px] font-bold text-[#2E2D35]">
                                       {formatUtilizationPercent(utilizationPercent)}
                                     </p>
                                   </div>
@@ -1472,7 +2205,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                               })()}
                             </TableCell>
                             <TableCell className="px-3 py-2.5">
-                              <div className="flex flex-col text-[11px] leading-5 text-[#9A948F]">
+                              <div className="flex flex-col text-[11px] leading-5 text-[#6b6459]">
                                 {(() => {
                                   const agentStats = getCampaignAgentStats(
                                     String(agent?.extension || ''),
@@ -1496,7 +2229,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 })()}
                               </div>
                             </TableCell>
-                            <TableCell className="px-3 py-2.5">
+                            <TableCell className="lt-align-center px-3 py-2.5">
                               {(() => {
                                 const liveCallForThisAgent = getLiveCallForAgent(agent);
                                 const monitorTargetCallId =
@@ -1562,19 +2295,28 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
               {selectedCallListMetric?.label || 'Call'}{' '}
               {isSelectedCallbackTaskMetric ? 'tasks' : 'records'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#9A948F]">
+            <DialogDescription className="text-xs text-[#6b6459]">
               {isSelectedCallbackTaskMetric
                 ? 'Showing callback tasks from the calendar task list.'
                 : 'Showing records from today using the phone call list report.'}
             </DialogDescription>
           </DialogHeader>
           <div className="dashboard-modal-horizontal-scroll p-4">
+            {/* The floor these min-widths set is the point below which the
+                columns would cram, not a fixed table width. The call list's
+                was 1280px, wider than the table actually needs (~1224px at
+                the dialog's own width) — so the drill-in always overflowed
+                its dialog by a few dozen pixels and carried a horizontal
+                scrollbar that bought nothing. 1000px is where this table
+                genuinely stops shrinking (min-content is 994px), so it now
+                fills the dialog when there is room and scrolls only when
+                the viewport is too narrow to hold it. */}
             <div
               className={
                 isSelectedCallbackTaskMetric
                   ? 'min-w-[1050px]'
                   : selectedCallListMetric?.callListKey
-                    ? 'min-w-[1280px]'
+                    ? 'min-w-[1000px]'
                     : ''
               }
             >
