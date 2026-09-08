@@ -8370,11 +8370,17 @@
   min-width: 0;
 }
 
-/* The note takes the space the controls do not, and yields it first. */
-.mcm-admin .mcm-listbar > :first-child {
-  flex: 1 1 auto;
+/* Children may shrink rather than push the row wide. Nothing here claims the
+   free space: `.mcm-numsearch` carries `margin-left: auto` and takes it, which
+   puts the controls at the right end whether or not a note sits on the left.
+
+   This used to give the first child `margin-right: auto` as well, on the
+   assumption there was always a note in front of the search. On Manage Webhook
+   there is no note, so the search WAS the first child — an auto margin on both
+   sides of it, which is the recipe for centring. It sat marooned in the middle
+   of the row. */
+.mcm-admin .mcm-listbar > * {
   min-width: 0;
-  margin-right: auto;
 }
 
 /* ---------------------------------------------------------------------------
