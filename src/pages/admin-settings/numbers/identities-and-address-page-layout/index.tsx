@@ -1,9 +1,7 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Identities from './Identities';
 import Addresses from './addresses';
 import Verification from './verification';
-import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import useDebounce from '@/hooks/use-debounce';
 // import { Button } from '@/components/ui/button';
@@ -12,6 +10,7 @@ import { SearchLine } from '@/assets/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import CreateNewAddress from './addresses/create-new-address';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 const routeObj = {
   identities: '/admin-settings/numbers/identities',
   addresses: '/admin-settings/numbers/addresses',
@@ -42,51 +41,62 @@ const IdentitiesAndAddressesPageLayout = () => {
   };
 
   const tabList = ['Identities', 'Addresses', 'Verifications'];
+
+  /* The head takes its title from the nav registry, which lists this screen
+     once, at /identities. The Addresses and Verifications tabs navigate to
+     their own addresses, so there was nothing for the registry to match and
+     the head rendered nothing at all — switching tab dropped the whole title
+     bar. Naming it here keeps one title across all three, and puts the
+     description behind the info button beside it: the AdminPage head that used
+     to print it is turned off by `hideHead`, so it had gone unread. */
+  useSetAdminPageMeta({
+    title: 'Identities & addresses',
+    description:
+      'The registered identities and service addresses your numbers are issued against. Records are created while buying a number that requires one — this page is where you review and edit them.',
+  });
   // const handleNewAddress = () => setDrawerState((prev) => ({ ...prev, addNewAddress: true }));
   return (
     <>
       <AdminPage
-      hideHead
-        section="Numbers"
-        title="Identities & addresses"
-        description="The registered identities and service addresses your numbers are issued against. Records are created while buying a number that requires one — this page is where you review and edit them."
+        hideHead
+        bareBody
         filters={
-          <Input
-            placeholder="Search"
-            className="pl-10 w-full min-h-9 rounded-lg"
-            IconPosition="left-0 pl-2 inset-y-0"
-            value={search}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.startsWith(' ')) return;
-              setSearch(e.target.value);
-            }}
-            Icon={<SearchLine className=" text-gray-700" />}
-          />
-        }
-      >
-        <Tabs
-          defaultValue={activeTab}
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="flex w-full"
-        >
-          <div className="w-full">
-            <TabsList className="ptabstrip">
-              {tabList?.map((tab: any) => {
+          /* Tabs and search on one row, the same bar All numbers uses, so the
+             two Numbers screens read as one design. */
+          <div className="mcm-numbar">
+            <nav className="mcm-numtabs" aria-label="Identity views">
+              {tabList.map((tab) => {
+                const key = tab.toLocaleLowerCase();
                 return (
-                  <TabsTrigger className="" value={tab?.toLocaleLowerCase()}>
+                  <button
+                    type="button"
+                    key={key}
+                    aria-current={activeTab === key ? 'page' : undefined}
+                    className={`mcm-numtab ${activeTab === key ? 'on' : ''}`}
+                    onClick={() => handleTabChange(key)}
+                  >
                     {tab}
-                  </TabsTrigger>
+                  </button>
                 );
               })}
-            </TabsList>
+            </nav>
+            <label className="mcm-numsearch">
+              <SearchLine />
+              <input
+                type="search"
+                placeholder="Search"
+                value={search}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearch(value);
+                }}
+              />
+            </label>
           </div>
-
-          <TabsContent value={activeTab}>
-            {RenderTabComponents[activeTab as keyof typeof RenderTabComponents]}
-          </TabsContent>
-        </Tabs>
+        }
+      >
+        {RenderTabComponents[activeTab as keyof typeof RenderTabComponents]}
       </AdminPage>
       {drawerState.addNewAddress && (
         <SideDrawer

@@ -178,7 +178,7 @@ const Identities = ({ search }: { search: string }) => {
               setRowData({ isEdit: true, formData: data });
               setDrawerState((prev) => ({ ...prev, editIdentity: true }));
             },
-            className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+            className: 'mcm-rowact',
             tooltipText: 'Edit',
           },
           {
@@ -187,7 +187,7 @@ const Identities = ({ search }: { search: string }) => {
               setRowData({ isEdit: true, formData: data });
               setModalState((prev) => ({ ...prev, deleteIdentity: true }));
             },
-            className: 'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+            className: 'mcm-rowact is-danger',
             tooltipText: 'Delete',
           },
         ];
@@ -198,7 +198,7 @@ const Identities = ({ search }: { search: string }) => {
               <CustomTooltip text={action.tooltipText} side="top">
                 <div
                   key={index}
-                  className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8 ${action.className}`}
+                  className={`cursor-pointer flex items-center justify-center ${action.className}`}
                   onClick={() => {
                     action.onClick();
                   }}
@@ -267,7 +267,7 @@ const Identities = ({ search }: { search: string }) => {
 
   return (
     <div>
-      <div className="w-ful p-3 flex flex-col gap-2">
+      <div className="flex w-full flex-col gap-2">
         <TableManager
           {...{
             columns,
