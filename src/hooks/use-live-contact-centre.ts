@@ -57,6 +57,13 @@ export type LiveQueue = {
   members: any[];
 };
 
+export const PERF_QUERY_KEYS = {
+  queueList: 'performanceQueueList',
+  userRoster: 'performanceUserRoster',
+  agentReport: 'performanceAgentReportList',
+  queueStats: 'performanceQueueStatsList',
+} as const;
+
 export const useLiveContactCentre = (selectedRange: any) => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 

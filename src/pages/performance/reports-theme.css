@@ -85,7 +85,7 @@ body.perf-warm-backdrop .perf-reports {
 .perf-reports .rp-toolbar {
   background: #fffaf4;
   border: 1px solid rgba(249, 115, 22, 0.14);
-  border-radius: 999px;
+  border-radius: var(--r);
   box-shadow: 0 1px 2px rgba(234, 88, 12, 0.05);
 }
 .dark .perf-reports .rp-toolbar {
@@ -131,10 +131,10 @@ body.perf-warm-backdrop .perf-reports {
   padding: 0 10px !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.75) !important;
-  border: 1px solid rgba(249, 115, 22, 0.18) !important;
-  color: var(--rp-ink) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent-ink) !important;
   cursor: pointer;
   transition:
     border-color 0.16s ease,
@@ -142,15 +142,10 @@ body.perf-warm-backdrop .perf-reports {
 }
 .dark .perf-reports .rp-select-trigger {
   background: rgba(17, 24, 39, 0.55) !important;
-  color: var(--rp-ink) !important;
-}
-.perf-reports .rp-select-trigger:hover {
-  border-color: rgba(249, 115, 22, 0.35) !important;
 }
 .perf-reports .rp-select-trigger[data-state='open'] {
   outline: none;
-  border-color: #f97316 !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
 }
 .perf-reports .rp-select-value {
   overflow: hidden;
@@ -165,7 +160,7 @@ body.perf-warm-backdrop .perf-reports {
 }
 .perf-reports .rp-select-trigger[data-state='open'] .rp-select-chevron {
   transform: rotate(180deg);
-  color: var(--rp-accent-ink);
+  color: var(--accent-ink);
 }
 
 /* The dropdown's own content renders through a portal to `document.body`,
@@ -174,19 +169,45 @@ body.perf-warm-backdrop .perf-reports {
 .rp-report-menu {
   min-width: 260px;
   max-width: 320px;
-  padding: 6px;
-  border-radius: 14px;
-  border: 1px solid rgba(249, 115, 22, 0.16);
-  background: rgba(255, 250, 244, 0.98);
-  backdrop-filter: blur(20px) saturate(190%);
-  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  padding: 4px;
+  border-radius: 12px;
+  /* Hardcoded, not var(--accent) — this menu renders through a portal to
+     document.body (see note above), outside .mcm-page's subtree, so the
+     app's own --accent custom property isn't in scope here; it would
+     silently resolve to shadcn's unrelated same-named token instead. */
+  border: 1px solid #f2994a;
+  background: #fff;
   box-shadow:
-    0 14px 35px -8px rgba(234, 88, 12, 0.22),
-    0 4px 12px -2px rgba(60, 40, 30, 0.1);
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+/* This is the scrolling element itself (Radix's own `overflow-y-auto`,
+   from `dropdown-menu.tsx`), not a wrapper around it — so the global
+   scrollbar in `index.css` (`::-webkit-scrollbar{width:4px}` plus a
+   `3px solid` border on the thumb, wider than its own 4px track) rendered
+   here as a fat grey bar poking past this menu's rounded corner. Overriding
+   it locally with a slim borderless thumb, inset from the top/bottom
+   curves, rather than touching that global rule and risking every other
+   scrollbar in the app. */
+.rp-report-menu::-webkit-scrollbar {
+  width: 3px;
+}
+.rp-report-menu::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+  margin: 6px 0;
+}
+.rp-report-menu::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.25);
+  border: none;
+  border-radius: 999px;
+}
+.rp-report-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.45);
 }
 .dark .rp-report-menu {
-  background: rgba(23, 15, 10, 0.98);
-  border-color: rgba(251, 146, 60, 0.22);
+  background: #171717;
+  border-color: #ffab5e;
 }
 .rp-report-menu-group + .rp-report-menu-group {
   margin-top: 4px;
@@ -208,8 +229,8 @@ body.perf-warm-backdrop .perf-reports {
   color: #93a1ba;
 }
 .rp-report-menu-item {
-  border-radius: 8px;
-  padding: 7px 9px !important;
+  border-radius: 6px;
+  padding: 6px 8px !important;
   font-size: 12.5px;
   font-weight: 500;
   color: #1a1a1a;
@@ -217,10 +238,12 @@ body.perf-warm-backdrop .perf-reports {
 .dark .rp-report-menu-item {
   color: #f4f6fb;
 }
+/* Same peach-hover Directory ▸ People uses for its own filter/action menus
+   (page-shell.css / people-glass.css: `background:#fff1e0; color:#c96f1f`). */
 .rp-report-menu-item:focus,
 .rp-report-menu-item:hover:not([data-disabled]) {
-  background: rgba(255, 241, 235, 0.9) !important;
-  color: #ea580c !important;
+  background: #fff1e0 !important;
+  color: #c96f1f !important;
 }
 .dark .rp-report-menu-item:focus,
 .dark .rp-report-menu-item:hover:not([data-disabled]) {
@@ -228,8 +251,8 @@ body.perf-warm-backdrop .perf-reports {
   color: #fdba74 !important;
 }
 .rp-report-menu-item[data-selected] {
-  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%);
-  color: #c2410c;
+  background: #fff1e0;
+  color: #c96f1f;
   font-weight: 700;
 }
 .dark .rp-report-menu-item[data-selected] {
@@ -251,24 +274,29 @@ body.perf-warm-backdrop .perf-reports {
   color: #93a1ba;
 }
 
-/* Date range — a quiet chip rather than plain text floating in the bar. */
+/* Date range — a quiet chip rather than plain text floating in the bar.
+   Same frame (background/border/height) as its "All reports"/"Queue
+   Summary"/"Export CSV" neighbours, so it reads as one more control in the
+   toolbar instead of plain text that happens to sit between them. */
 .perf-reports .rp-range {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(249, 115, 22, 0.06);
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
   color: var(--rp-ink) !important;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
 .dark .perf-reports .rp-range {
-  background: rgba(251, 146, 60, 0.1);
+  background: rgba(17, 24, 39, 0.55);
 }
 .perf-reports .rp-range svg {
-  color: var(--rp-accent-ink);
+  color: var(--accent-ink);
   flex: none;
 }
 .perf-reports .rp-range-arrow {
@@ -281,36 +309,73 @@ body.perf-warm-backdrop .perf-reports {
   font-weight: 500;
 }
 
-/* "All reports" toggle and "Export CSV" — warm glass hover, matching every
-   other row/toolbar action across the Performance theme (e.g. Campaigns'
-   `.mini.ic`). `.btn.primary` (the toggle when the catalog is open) is left
-   alone, same reasoning as the toolbar's own primary CTA: it already reads
-   solid accent orange from the global design system. */
-.perf-reports .rp-toolbar .btn.ghost.sm {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  border-radius: 999px;
-  color: var(--rp-accent-ink);
+/* "Export CSV" — same orange-outline-until-filled-on-hover ghost button
+   Directory ▸ People uses for its own "Groups"/"Export" (people-glass.css),
+   not a bespoke gradient-hover pill. "All reports" (`.btn.primary` while
+   the catalog is open) is left on the shared `.mcm-page .btn.primary` this
+   matches too — solid `--accent` fill, white text — rather than toned down
+   to a wash, so "active" reads the same way here as everywhere else. */
+.perf-reports .rp-toolbar .btn.ghost {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.perf-reports .rp-toolbar .btn.ghost:hover:not(:disabled) {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
+
+/* "Open a full report page" quick links — same family as the toolbar's
+   ghost buttons above, but scoped separately since these sit in a plain
+   `.pc-body`, not `.rp-toolbar`, and the hover here is a lift rather than
+   a solid-fill flip (a full-page-open action reads better as a subtler
+   nudge than the toolbar's primary-looking accent flip). */
+.perf-reports button.rp-linked-chip {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(249, 115, 22, 0.15) !important;
+  border-radius: 999px !important;
+  color: var(--rp-ink) !important;
   transition:
-    background-color 0.16s ease,
+    transform 0.16s ease,
     color 0.16s ease,
     border-color 0.16s ease,
     box-shadow 0.16s ease;
 }
-.perf-reports .rp-toolbar .btn.ghost.sm:hover:not(:disabled) {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 4px 14px -2px rgba(249, 115, 22, 0.35);
+.dark .perf-reports button.rp-linked-chip {
+  background: rgba(17, 24, 39, 0.5) !important;
+}
+.perf-reports button.rp-linked-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  color: var(--rp-accent-ink) !important;
+  box-shadow: 0 6px 16px -4px rgba(234, 88, 12, 0.24);
 }
 
 /* ------------------------------------------------------------
    3. Info/SL notice banner
    ------------------------------------------------------------ */
+/* One slim pill for every note this panel has to show — the SL% caption
+   and the "sampled data" caveat used to be two different treatments (a
+   styled pill plus a bare unstyled <p> right under it); they're combined
+   into a single string by the caller now, so there's only ever one line
+   here, never a second raw paragraph competing with it. */
 .perf-reports .rp-notice {
-  background: linear-gradient(135deg, #fff1eb 0%, #ffe4d1 100%);
-  border: 1px solid rgba(249, 115, 22, 0.22);
-  color: var(--rp-accent-ink);
+  height: 34px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.perf-reports .rp-notice span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .dark .perf-reports .rp-notice {
   background: rgba(154, 82, 30, 0.22);
@@ -391,9 +456,9 @@ body.perf-warm-backdrop .perf-reports {
   background: rgba(17, 24, 39, 0.65) !important;
 }
 .perf-reports button.rp-catalog-card.is-selected {
-  border-color: #f97316 !important;
-  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%) !important;
-  box-shadow: 0 6px 18px -6px rgba(234, 88, 12, 0.28);
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  background: rgba(249, 115, 22, 0.12) !important;
+  box-shadow: none;
 }
 .dark .perf-reports button.rp-catalog-card.is-selected {
   background: rgba(251, 146, 60, 0.18) !important;
@@ -421,7 +486,7 @@ body.perf-warm-backdrop .perf-reports {
   color: var(--rp-ink);
 }
 .perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
-  color: #c2410c;
+  color: #ea580c;
 }
 .dark .perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
   color: #fdba74;
@@ -446,38 +511,66 @@ body.perf-warm-backdrop .perf-reports {
    crisp typography.
    ------------------------------------------------------------ */
 .perf-reports .rp-table-wrap {
-  border-radius: 14px;
+  /* 20px, matching the Directory-benchmark radius every other Performance
+     table now uses — this table's own inner card was 14px, one gap this
+     pass was asked to close. */
+  border-radius: 20px;
   overflow: hidden;
 }
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 2px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated. Font styling (size/weight/
+   tracking/case/colour) is set inline in reports-tab.tsx instead of here,
+   since columns are dynamic per report and that inline style is already
+   the one source of truth for it. */
 .perf-reports .rp-table-wrap table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(255, 246, 238, 0.97);
-  backdrop-filter: var(--rp-glass-blur);
-  -webkit-backdrop-filter: var(--rp-glass-blur);
-  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.12);
+  background: #fffdfb;
+  box-shadow: none;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
 }
 .dark .perf-reports .rp-table-wrap table thead th {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-reports .rp-table-wrap table tbody tr {
-  transition: background-color 0.16s ease;
+.perf-reports .rp-table-wrap table thead th:first-child {
+  border-top-left-radius: 20px;
 }
+.perf-reports .rp-table-wrap table thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.perf-reports .rp-table-wrap table tbody tr {
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* Directory's signature left accent-bar row hover — the one parity gap
+   this table was missing versus every other Performance table. */
 .perf-reports .rp-table-wrap table tbody tr:hover {
-  background: rgba(255, 241, 235, 0.5);
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--rp-accent);
 }
 .dark .perf-reports .rp-table-wrap table tbody tr:hover {
   background: rgba(251, 146, 60, 0.08);
 }
 .perf-reports .rp-table-wrap table tbody tr.rp-total-row {
-  background: rgba(249, 115, 22, 0.08);
+  background: rgba(254, 215, 170, 0.28);
 }
 .dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row {
   background: rgba(251, 146, 60, 0.12);
 }
+/* `border-collapse: collapse` on the table (set inline) means a border set
+   on the <tr> itself is silently dropped by the browser — it only ever
+   renders per-cell borders, so the elevated TOTAL row rule lives on `td`. */
 .perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
-  color: var(--rp-ink);
+  border-top: 1.5px solid rgba(249, 115, 22, 0.25);
+  border-bottom: 1.5px solid rgba(249, 115, 22, 0.25);
+  color: #1a1a1a;
+  font-weight: 800;
 }
 
 /* Row cell colour is set inline as `#334155` (slate-700, readable on the
