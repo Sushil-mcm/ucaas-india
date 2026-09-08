@@ -1,4 +1,7 @@
-import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { useEffect, useRef, useState } from 'react';
@@ -322,50 +325,49 @@ const Plan = () => {
   return (
     <>
       <section className="w-full overflow-x-auto overflow-y-hidden">
-        {/* The name and the sentence move to the Admin head and its info
-            button; what stays is the plan's own status and its actions. */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[52px]">
-          <div className="flex items-center gap-3">
-            {requestedPlanInfo?.action_type === 'CANCEL' ? (
-              <>
-                <span className="text-xs text-red-500 italic">
-                  A cancellation request is <span className="font-bold">active</span>, with
-                  cancellation set for{' '}
-                  <span className="font-bold">
-                    {`${
-                      dataGetMyPlanDetails?.current_plan_details?.plan_expiration_date
-                        ? moment(
-                            dataGetMyPlanDetails?.current_plan_details.plan_expiration_date,
-                          ).format('DD MMM, YYYY')
-                        : 'NA'
-                    }.`}
-                  </span>{' '}
-                  Revoke to continue your subscription
-                </span>
-                <Button
-                  variant={'default'}
-                  onClick={() => {
-                    setCancelRequestPlan(true);
-                    setAlertMessage('revoke-plan');
-                  }}
-                  className="border-green-600 text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700"
-                  size={'sm'}
-                >
-                  {isPendingCancelSubscription ? <Loader /> : 'Revoke Request'}
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant={'default'}
-                onClick={() => setIsCancelSubscriptionAlert(true)}
-                className="border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-500"
-                size={'sm'}
-              >
-                Cancel Subscription
-              </Button>
-            )}
-          </div>
-        </div>
+      {/* The status line and Cancel Subscription go up beside the title, where
+          Usage keeps its period picker and Export CSV. They had a 52px strip of
+          their own across the page for one button. */}
+      <AdminHeadActions>
+        {requestedPlanInfo?.action_type === 'CANCEL' ? (
+          <>
+            <span className="text-xs text-red-500 italic">
+              A cancellation request is <span className="font-bold">active</span>, with
+              cancellation set for{' '}
+              <span className="font-bold">
+                {`${
+                  dataGetMyPlanDetails?.current_plan_details?.plan_expiration_date
+                    ? moment(
+                        dataGetMyPlanDetails?.current_plan_details.plan_expiration_date,
+                      ).format('DD MMM, YYYY')
+                    : 'NA'
+                }.`}
+              </span>{' '}
+              Revoke to continue your subscription
+            </span>
+            <Button
+              variant={'default'}
+              onClick={() => {
+                setCancelRequestPlan(true);
+                setAlertMessage('revoke-plan');
+              }}
+              className="border-green-600 text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700"
+              size={'sm'}
+            >
+              {isPendingCancelSubscription ? <Loader /> : 'Revoke Request'}
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant={'default'}
+            onClick={() => setIsCancelSubscriptionAlert(true)}
+            className="border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-500"
+            size={'sm'}
+          >
+            Cancel Subscription
+          </Button>
+        )}
+      </AdminHeadActions>
 
         <div className="w-full p-3 flex flex-col gap-3">
           {/* The page showed today's price and next period's price in two
@@ -397,9 +399,15 @@ const Plan = () => {
               </div>
             );
           })()}
-          <div className="flex flex-col sm:flex-row gap-3 h-[calc(100vh_-_9.7rem)] overflow-auto">
+          {/* One scrollbar, the page's. This row, the card inside it and the
+              tab panel opposite each had a scroller of their own, so the left
+              column opened part-way down its own content and the page scrolled
+              underneath it. The heights were `100vh` minus a hardcoded guess at
+              the chrome above, which the head strip moving out has just made
+              52px wrong. Natural height instead. */}
+          <div className="flex flex-col sm:flex-row items-stretch gap-3">
             <div className="flex flex-col gap-2 sm:w-1/2 h-full">
-              <div className="border border-gray-200 rounded-xl w-full h-full p-3 bg-white overflow-y-auto">
+              <div className="border border-[rgba(225,200,165,0.9)] rounded-xl w-full h-full p-3 bg-[rgba(251,249,246,0.88)]">
                 <div className="w-full flex flex-col gap-3">
                   <div className="mcm-setcard p-3 flex flex-col gap-3">
                     <div className="w-full flex items-center justify-between gap-2">
@@ -831,10 +839,7 @@ const Plan = () => {
                   </TabsList>
                 </div>
 
-                <TabsContent
-                  value={selectedManagementTab}
-                  className="h-[calc(100vh_-_14.8rem)] overflow-y-auto overflow-x-hidden min-w-0"
-                >
+                <TabsContent value={selectedManagementTab} className="min-w-0 overflow-x-hidden">
                   {RenderTabComponents[selectedManagementTab as keyof typeof RenderTabComponents]}
                 </TabsContent>
               </Tabs>
