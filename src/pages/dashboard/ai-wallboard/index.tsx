@@ -1,12 +1,14 @@
-// import { Button } from '@/components/ui/button';
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from '@/components/ui/table';
+// import { Button } from '@/components/ui/button'; -- unused: the risk table's
+// Action column is a plain recommendation label, not a working shortcut (see
+// the comment on the "Agents Needing Attention" card below).
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { SocketEvents } from '@/context/socket-events-context';
 import { useUser } from '@/hooks/use-user';
 import { isDemoMode } from '@/lib/demo-mode';
@@ -21,7 +23,7 @@ import {
   MessageCircle,
   // MessageSquareWarning,
   PhoneCall,
-  // ShieldAlert,
+  ShieldAlert,
   RefreshCw,
   Sparkles,
   TrendingUp,
@@ -177,16 +179,17 @@ type CampaignAiLiveCallResult = {
 //   warning?: boolean;
 // };
 
-// type RiskCall = {
-//   intent: string;
-//   caller: string;
-//   agent: string;
-//   duration: string;
-//   score: string;
-//   factor: string;
-//   factorTone: 'red' | 'orange' | 'blue';
-//   action: string;
-// };
+/* No `caller`/`duration` fields: this page has no live per-call feed to
+   source them from (see the comment on `highRiskCalls` below) — a column
+   that is always "—" reads as broken, not as an intentional design. */
+type RiskCall = {
+  intent: string;
+  agent: string;
+  score: string;
+  factor: string;
+  factorTone: 'red' | 'orange';
+  action: string;
+};
 
 const kpiCards: KpiCard[] = [
   { label: 'Avg Sentiment', value: '8.4', icon: HeartPulse, tone: 'green' },
@@ -204,6 +207,20 @@ const sentimentBars: SentimentBar[] = [
   { label: 'Poor', value: 0 },
   { label: 'Critical', value: 0 },
 ];
+
+/* The five-step ramp both the Sentiment and Most Common AI Intents bars read
+   from, best to worst. Muted on purpose: the previous ramp reached straight
+   into the raw Tailwind palette for its middle steps (`yellow-400` #FACC15,
+   `orange-500` #F97316), and at full saturation those two glowed against the
+   cream card — the bars ended up louder than the numbers they exist to
+   support. These hold the same hues and the same order at roughly a quarter
+   less saturation, which is enough to keep all five steps apart from each
+   other while letting the value text lead again.
+
+   One shared constant rather than a copy per card: the two sat next to each
+   other on the board with independently written lists, so any later change to
+   one silently drifted from the other. */
+const SENTIMENT_BAR_RAMP = ['#57A177', '#D79A5B', '#D3B45C', '#CC7F52', '#C4645C'];
 
 const defaultAhtBuckets: AhtBucket[] = [
   { label: '0-2m', count: 0, percent: 0 },
@@ -368,38 +385,14 @@ const defaultAhtBuckets: AhtBucket[] = [
 //   { text: 'Support Q SLA at 65% (Threshold: 80%)', age: '15 min ago', tone: 'orange' },
 // ];
 
-// const highRiskCalls: RiskCall[] = [
-//   {
-//     intent: 'Billing Dispute',
-//     caller: '+1 (555) 019-2834',
-//     agent: 'Michael Chen',
-//     duration: '12:45',
-//     score: '3.2 / 10',
-//     factor: 'ANGER SPIKE',
-//     factorTone: 'red',
-//     action: 'Barge / Whisper',
-//   },
-//   {
-//     intent: 'Cancellation',
-//     caller: '+1 (555) 882-1022',
-//     agent: 'David Miller',
-//     duration: '08:15',
-//     score: '4.1 / 10',
-//     factor: 'HIGH FRUSTRATION',
-//     factorTone: 'orange',
-//     action: 'Monitor',
-//   },
-//   {
-//     intent: 'AI Receptionist',
-//     caller: 'Anonymous',
-//     agent: 'Unassigned',
-//     duration: '02:30',
-//     score: '4.5 / 10',
-//     factor: 'FALLBACK LOOP',
-//     factorTone: 'blue',
-//     action: 'Takeover Call',
-//   },
-// ];
+/* `highRiskCalls` used to be a static array here — fixed US phone numbers
+   (Michael Chen, +1 555...) with no connection to anything live. Nothing on
+   this page reads per-call caller ID or duration for an individual sentiment
+   event (the socket payload has no such field — see the "sentiment: null"
+   note in demo-mode.ts), so those two are not recoverable live; every other
+   column now comes from the same `agentSentimentCards` this page's own
+   sentiment cards already render, computed further down as
+   `highRiskCalls`. */
 
 const metricToneClasses = {
   green: { icon: 'text-[#4EAE6E]', value: 'text-[#4EAE6E]' },
@@ -435,7 +428,7 @@ const sentimentLabelBadgeClass = (value?: string) => {
 
 const scoreToneClass = (value: string) =>
   value === 'N/A'
-    ? 'text-[#9A948F]'
+    ? 'text-[#6b6459]'
     : value.trim().startsWith('-')
       ? 'text-[#DC5049]'
       : 'text-[#4EAE6E]';
@@ -453,11 +446,11 @@ const getAgentInitials = (name: string) => {
 //   return 'bg-green-500';
 // };
 
-// const factorBadgeClass = (tone: RiskCall['factorTone']) => {
-//   if (tone === 'red') return 'bg-red-100 text-red-600';
-//   if (tone === 'orange') return 'bg-amber-100 text-amber-700';
-//   return 'bg-ucass-active-bg text-ucass-active';
-// };
+const factorBadgeClass = (tone: RiskCall['factorTone']) => {
+  if (tone === 'red') return 'bg-red-100 text-red-600';
+  if (tone === 'orange') return 'bg-amber-100 text-amber-700';
+  return 'bg-ucass-active-bg text-ucass-active';
+};
 
 // const topicToneClass = (tone: TopicItem['tone']) => {
 //   if (tone === 'red') return 'text-red-500';
@@ -777,6 +770,35 @@ const AiWallboard = () => {
           };
         })
       : [];
+
+  /* Feeds the "Agents Needing Attention" card (below). `agentSentimentCards`
+     is per-agent, not per-call — this page has no live per-call sentiment
+     feed (see the note above the old static `highRiskCalls` array this
+     replaced) — so a genuinely "high-risk calls" table isn't buildable from
+     what this page has. This is the honest version of that: the same agents
+     already ranked in the sentiment cards above, filtered to the ones
+     actually running hot (>15% negative today) and re-sorted worst-first, so
+     the card only ever shows agents worth a supervisor's attention rather
+     than padding itself out with healthy ones. 15%, not the 40%/20% split
+     the dead code used for its risk *label* (kept below, for HIGH vs
+     ELEVATED) — a lower bar for appearing on the list at all than for being
+     called HIGH RISK once on it. */
+  const highRiskCalls: RiskCall[] = agentSentimentCards
+    .filter((agent) => agent.neg > 15)
+    .sort((a, b) => b.neg - a.neg)
+    .slice(0, 5)
+    .map((agent) => ({
+      intent:
+        agent.sentimentLabel && agent.sentimentLabel !== 'N/A'
+          ? agent.sentimentLabel
+          : 'Elevated negative sentiment',
+      agent: agent.name,
+      score: agent.todayAvg,
+      factor: agent.neg > 40 ? 'HIGH FRUSTRATION' : 'ELEVATED FRUSTRATION',
+      factorTone: agent.neg > 40 ? ('red' as const) : ('orange' as const),
+      action: agent.neg > 40 ? 'Recommend: Barge / Whisper' : 'Recommend: Monitor',
+    }));
+
   const getAgentStatus = (agent: any): AgentStatus => {
     const agentExt = String(agent?.extension || agent?.ext || '');
     if (!agentExt) return 'OFFLINE';
@@ -911,7 +933,7 @@ const AiWallboard = () => {
               <div>
                 <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight text-[#1A1A1A]">
                   Live AI Wallboard
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#DC5049]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold tracking-wide text-[#DC5049]">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#DC5049] opacity-60" />
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#DC5049]" />
@@ -919,13 +941,18 @@ const AiWallboard = () => {
                     LIVE
                   </span>
                 </h3>
-                <p className="mt-0.5 text-xs font-medium text-[#9A948F]">
+                <p className="mt-0.5 text-xs font-medium text-[#6b6459]">
                   Real-time sentiment, AI reception, and agent monitoring
                 </p>
               </div>
             </div>
+            {/* See the note on the Wallboard refresh: without
+                `data-slot="button"` the mcm-page bare-button reset strips the
+                border, fill and colour below. This one only still read as a
+                button because `box-shadow` is not in that reset. */}
             <button
               type="button"
+              data-slot="button"
               onClick={() => handleRefreshAiWallboard({ showLoader: true })}
               disabled={!canRefreshAiWallboard || isRefreshingAiWallboard}
               className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[rgba(214,163,90,0.6)] bg-white px-4 py-2 text-xs font-semibold text-primary shadow-[0_2px_8px_rgba(194,98,46,0.16)] transition hover:border-primary/60 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
@@ -966,7 +993,7 @@ const AiWallboard = () => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
+                  <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
                     {metric.label}
                   </p>
                   <p className={`mt-0.5 text-[26px] font-bold leading-tight ${metricToneClasses[metric.tone].value}`}>
@@ -1013,12 +1040,12 @@ const AiWallboard = () => {
 
                 const getSentimentColor = (label: string) => {
                   const l = label.toLowerCase();
-                  if (l === 'excellent' || l === 'high positive') return 'bg-[#4EAE6E]';
-                  if (l === 'good' || l === 'positive') return 'bg-[#f2994a]';
-                  if (l === 'neutral') return 'bg-yellow-400';
-                  if (l === 'poor' || l === 'negative') return 'bg-orange-500';
-                  if (l === 'critical' || l === 'high negative') return 'bg-[#DC5049]';
-                  return 'bg-gray-400';
+                  if (l === 'excellent' || l === 'high positive') return SENTIMENT_BAR_RAMP[0];
+                  if (l === 'good' || l === 'positive') return SENTIMENT_BAR_RAMP[1];
+                  if (l === 'neutral') return SENTIMENT_BAR_RAMP[2];
+                  if (l === 'poor' || l === 'negative') return SENTIMENT_BAR_RAMP[3];
+                  if (l === 'critical' || l === 'high negative') return SENTIMENT_BAR_RAMP[4];
+                  return '#A8A29A';
                 };
 
                 return (
@@ -1028,14 +1055,17 @@ const AiWallboard = () => {
                     </span>
                     <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-[rgba(225,200,165,0.3)]">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${getSentimentColor(mappedLabel)}`}
-                        style={{ width: `${Math.max(bar.value, 2)}%` }}
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.max(bar.value, 2)}%`,
+                          backgroundColor: getSentimentColor(mappedLabel),
+                        }}
                       />
                     </div>
                     <span className="w-16 shrink-0 text-right text-sm font-bold text-[#1A1A1A]">
                       {bar.value}%
                       {bar.count !== undefined && (
-                        <span className="ml-1 font-normal text-[#9A948F]">({bar.count})</span>
+                        <span className="ml-1 font-normal text-[#6b6459]">({bar.count})</span>
                       )}
                     </span>
                   </div>
@@ -1073,7 +1103,7 @@ const AiWallboard = () => {
                         <span className="w-16 shrink-0 text-right text-sm font-bold text-[#1A1A1A]">
                           {count}
                           {bucket?.percent !== undefined && (
-                            <span className="ml-1 font-normal text-[#9A948F]">
+                            <span className="ml-1 font-normal text-[#6b6459]">
                               ({bucket.percent}%)
                             </span>
                           )}
@@ -1085,8 +1115,8 @@ const AiWallboard = () => {
               ) : (
                 <div className="flex h-40 items-center justify-center">
                   <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white/90 backdrop-blur-sm px-4 py-1.5 shadow-xs">
-                    <Headphones className="h-3.5 w-3.5 text-[#9A948F]" />
-                    <span className="text-xs font-semibold text-[#9A948F]">No data found</span>
+                    <Headphones className="h-3.5 w-3.5 text-[#6b6459]" />
+                    <span className="text-xs font-semibold text-[#6b6459]">No data found</span>
                   </div>
                 </div>
               )}
@@ -1106,18 +1136,16 @@ const AiWallboard = () => {
                   {aiIntentBuckets.map((bar, index) => {
                     const maxCount = Math.max(...aiIntentChartValues, 1);
                     const widthPercent = bar.count ? (bar.count / maxCount) * 100 : 0;
-                    const colors = [
-                      'bg-[#4EAE6E]',
-                      'bg-[#f2994a]',
-                      'bg-yellow-400',
-                      'bg-orange-500',
-                      'bg-[#DC5049]',
-                    ];
-                    const colorClass = colors[index % colors.length] || 'bg-gray-400';
+                    const barColor =
+                      SENTIMENT_BAR_RAMP[index % SENTIMENT_BAR_RAMP.length] || '#A8A29A';
 
                     return (
                       <div key={bar.label} className="flex items-center gap-3">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] text-[10px] font-bold text-primary">
+                        {/* `text-primary` (#F2994A) measured 2.01:1 against
+                            this badge's own `#FFF1E0` fill at 11px — the
+                            same darker accent used elsewhere on this board
+                            for small text on a light fill. */}
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] text-[11px] font-bold text-[#a8460f]">
                           {index + 1}
                         </span>
                         <span
@@ -1128,8 +1156,11 @@ const AiWallboard = () => {
                         </span>
                         <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-[rgba(225,200,165,0.3)]">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
-                            style={{ width: `${Math.max(widthPercent, 2)}%` }}
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${Math.max(widthPercent, 2)}%`,
+                              backgroundColor: barColor,
+                            }}
                           />
                         </div>
                         <span className="w-8 shrink-0 text-right text-sm font-bold text-[#1A1A1A]">
@@ -1142,8 +1173,8 @@ const AiWallboard = () => {
               ) : (
                 <div className="flex h-40 items-center justify-center">
                   <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white/90 backdrop-blur-sm px-4 py-1.5 shadow-xs">
-                    <Bot className="h-3.5 w-3.5 text-[#9A948F]" />
-                    <span className="text-xs font-semibold text-[#9A948F]">No data found</span>
+                    <Bot className="h-3.5 w-3.5 text-[#6b6459]" />
+                    <span className="text-xs font-semibold text-[#6b6459]">No data found</span>
                   </div>
                 </div>
               )}
@@ -1174,7 +1205,7 @@ const AiWallboard = () => {
                   />
                 </div>
               </div>
-              <span className="whitespace-nowrap text-[10px] font-semibold text-[#9A948F]">
+              <span className="whitespace-nowrap text-[11px] font-semibold text-[#475569]">
                 Voice {voicePercent.toFixed(0)}% / Text {textPercent.toFixed(0)}%
               </span>
             </div>
@@ -1192,7 +1223,7 @@ const AiWallboard = () => {
                 className="flex items-center justify-between gap-2 rounded-[16px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
+                  <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
                     {stat.label}
                   </p>
                   <p className="mt-0.5 text-xl font-bold text-[#2E2D35]">{stat.value}</p>
@@ -1267,13 +1298,13 @@ const AiWallboard = () => {
                   Agent Sentiment Status
                 </h4>
                 <div className="rounded-md border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-1">
-                  <p className="text-[11px] font-medium text-[#9A948F]">
+                  <p className="text-[11px] font-medium text-[#6b6459]">
                     Top: {aiWallboardSummary?.agent_sentiment_top?.agent_name || 'N/A'} (
                     {aiWallboardSummary?.agent_sentiment_top?.avg_sentiment || '0'}) &nbsp; | &nbsp;
                     Bottom: {aiWallboardSummary?.agent_sentiment_bottom?.agent_name || 'N/A'} (
                     {aiWallboardSummary?.agent_sentiment_bottom?.avg_sentiment || '0'}) &nbsp; |
                     &nbsp;
-                    <span className="font-semibold text-[#9A948F]">
+                    <span className="font-semibold text-[#6b6459]">
                       Idle {'>'}5m: {aiWallboardSummary?.idle_over_5_minutes?.length || 0}
                     </span>
                   </p>
@@ -1319,7 +1350,11 @@ const AiWallboard = () => {
                             <p className="truncate text-base leading-5 font-semibold text-[#1A1A1A]">
                               {agent.name}
                             </p>
-                            <p className="mt-0.5 truncate text-[11px] font-medium text-[#94a3b8]">
+                            {/* `#94a3b8` (Tailwind slate-400) measured
+                                2.56:1 here — under the 4.5:1 small text
+                                needs. `#475569`, the muted-label colour this
+                                board uses everywhere else. */}
+                            <p className="mt-0.5 truncate text-[11px] font-medium text-[#475569]">
                               {statusNow}
                               {agent?.ext && agent.ext !== 'N/A'
                                 ? ` · ${agent.ext.length > 4 ? 'DID' : 'EXT'} ${agent.ext}`
@@ -1341,14 +1376,14 @@ const AiWallboard = () => {
                           </p>
                           {agent.sentimentLabel && agent.sentimentLabel !== 'N/A' ? (
                             <span
-                              className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sentimentLabelBadgeClass(
+                              className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${sentimentLabelBadgeClass(
                                 agent.sentimentLabel,
                               )}`}
                             >
                               {agent.sentimentLabel}
                             </span>
                           ) : (
-                            <p className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-[#94a3b8]">
+                            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[#475569]">
                               Avg sentiment
                             </p>
                           )}
@@ -1410,11 +1445,11 @@ const AiWallboard = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="rounded-full bg-[rgba(225,200,165,0.22)] py-1 text-center text-[10px] font-medium text-[#9A948F]">
+                          <p className="rounded-full bg-[rgba(225,200,165,0.22)] py-1 text-center text-[11px] font-medium text-[#475569]">
                             No sentiment scored yet
                           </p>
                         )}
-                        <div className="mt-1.5 flex items-center justify-between text-[10px] font-medium text-[#64748b]">
+                        <div className="mt-1.5 flex items-center justify-between text-[11px] font-medium text-[#475569]">
                           <span className="flex items-center gap-1">
                             <span className="h-1.5 w-1.5 rounded-full bg-[#7FBE97]" />
                             POS {agent.pos}%
@@ -1484,13 +1519,13 @@ const AiWallboard = () => {
                 <div className="space-y-3 p-4">
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-green-600">
                         Team Avg Score
                       </p>
                       <p className="text-3xl font-semibold text-green-600">+0.48</p>
                     </div>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-red-500">
                         % Negative (Last 15m)
                       </p>
                       <p className="text-3xl font-semibold text-red-500">18%</p>
@@ -1498,13 +1533,13 @@ const AiWallboard = () => {
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
                         Most Stressed
                       </p>
                       <p className="text-base font-semibold text-red-500">Michael Chen</p>
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9A948F]">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
                         Best Performer
                       </p>
                       <p className="text-base font-semibold text-green-600">Jessica Alba</p>
@@ -1513,92 +1548,70 @@ const AiWallboard = () => {
                 </div>
               </div>
             </div> */}
-            {/* <div className="overflow-hidden rounded-xl border border-red-200 bg-white shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-red-200 bg-red-50 px-4 py-3">
-                <div>
-                  <h4 className="flex items-center gap-2 text-lg font-semibold text-red-500">
-                    <ShieldAlert className="h-4 w-4" />
-                    Live High-Risk Calls
-                  </h4>
-                  <p className="text-xs font-medium text-red-300">
-                    Real-time monitoring of active calls with negative sentiment or high
-                    frustration.
-                  </p>
+            {/* This card was dead JSX for a "Live High-Risk Calls" table
+                keyed to fictional US callers with no live source. Restored
+                as "Agents Needing Attention": same warm-glass card shell as
+                "Most Common AI Intents" above rather than the old plain
+                white/red-bordered box, so it reads as part of this board
+                instead of a leftover from before the redesign. Red is kept
+                only where it is load-bearing (the icon badge, the count
+                pill, the per-row risk chip) — see legacy-table-theme.css for
+                why the table chrome itself (header, hover, borders) is not
+                styled here: it inherits from `.dash-legacy`, the same rule
+                Calls' own table is measured against. */}
+            {highRiskCalls.length > 0 && (
+              <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(225,200,165,0.4)] px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
+                      <ShieldAlert className="h-4 w-4 text-[#DC5049]" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-semibold text-[#1A1A1A]">
+                        Agents Needing Attention
+                      </h4>
+                      <p className="text-xs font-medium text-[#64748b]">
+                        Elevated negative sentiment today, worst first.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                    {highRiskCalls.length} ACTIVE
+                  </span>
                 </div>
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-500">
-                  3 ACTIVE
-                </span>
-              </div>
 
-              <div className="overflow-x-auto">
-                <Table className="min-w-[960px]">
-                  <TableHeader className="bg-gray-50">
-                    <TableRow>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Queue / Intent
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Caller Info
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Agent
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Duration
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Sentiment Score
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Risk Factor
-                      </TableHead>
-                      <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                        Action
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {highRiskCalls.map((call) => (
-                      <TableRow
-                        key={`${call.intent}-${call.caller}`}
-                        className="hover:bg-red-50/40"
-                      >
-                        <TableCell className="px-3 py-2 text-sm font-medium text-gray-700">
-                          {call.intent}
-                        </TableCell>
-                        <TableCell className="px-3 py-2 text-sm font-medium text-gray-500">
-                          {call.caller}
-                        </TableCell>
-                        <TableCell className="px-3 py-2 text-sm font-medium text-gray-700">
-                          {call.agent}
-                        </TableCell>
-                        <TableCell className="px-3 py-2 text-sm font-semibold text-amber-600">
-                          {call.duration}
-                        </TableCell>
-                        <TableCell className="px-3 py-2 text-sm font-semibold text-red-500">
-                          {call.score}
-                        </TableCell>
-                        <TableCell className="px-3 py-2">
-                          <span
-                            className={`inline-flex rounded-sm px-2 py-0.5 text-[10px] font-semibold ${factorBadgeClass(call.factorTone)}`}
-                          >
-                            {call.factor}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-3 py-2">
-                          <Button
-                            variant="transparent"
-                            className="h-auto px-0 py-0 text-xs font-semibold text-primary"
-                          >
-                            {call.action}
-                          </Button>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[640px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Sentiment</TableHead>
+                        <TableHead>Agent</TableHead>
+                        <TableHead className="lt-align-right">Today's Score</TableHead>
+                        <TableHead className="lt-align-center">Risk Factor</TableHead>
+                        <TableHead>Recommended Action</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {highRiskCalls.map((call) => (
+                        <TableRow key={call.agent}>
+                          <TableCell>{call.intent}</TableCell>
+                          <TableCell>{call.agent}</TableCell>
+                          <TableCell className="lt-align-right">{call.score}</TableCell>
+                          <TableCell className="lt-align-center">
+                            <span
+                              className={`inline-flex rounded-sm px-2 py-0.5 text-[11px] font-semibold ${factorBadgeClass(call.factorTone)}`}
+                            >
+                              {call.factor}
+                            </span>
+                          </TableCell>
+                          <TableCell>{call.action}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div> */}
+            )}
           </div>
         </div>
       </div>
