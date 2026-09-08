@@ -8,14 +8,13 @@ import AddEditIvrMenu from './add-edit-ivr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { handleAlert } from '@/lib/utils';
 import AlertConfirm from '@/components/custom/alert-confirm';
-import { Plus } from '@/assets/icons';
+import { Plus, SearchLine } from '@/assets/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import { IVR_PATH, IVR_DEFAULT_TAB } from './ivr-tabs';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import useDebounce from '@/hooks/use-debounce';
-import { Input } from '@/components/ui/input';
 import { useCompanyFeatures } from '@/hooks/rbac';
 
 interface IIVR {
@@ -96,14 +95,14 @@ const IvrMenus: FC = () => {
             ivrActions?.edit && {
               icon: 'EditStrokIcon',
               onClick: () => openIvr(data),
-              className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+              className: 'mcm-rowact',
               tooltipText: 'Edit',
             },
           hasIvrAccess &&
             ivrActions?.delete && {
               icon: 'TrashBin',
               onClick: () => setDeleteIVRMenu(data),
-              className: 'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+              className: 'mcm-rowact is-danger',
               tooltipText: 'Delete',
             },
         ].filter(Boolean);
@@ -116,7 +115,7 @@ const IvrMenus: FC = () => {
               <CustomTooltip text={action.tooltipText} side="top">
                 <div
                   key={index}
-                  className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8  ${action.className}`}
+                  className={`cursor-pointer flex items-center justify-center ${action.className}`}
                   onClick={() => {
                     action.onClick();
                   }}
@@ -134,7 +133,8 @@ const IvrMenus: FC = () => {
   return (
     <>
       <AdminPage
-      hideHead
+        hideHead
+        bareBody
         section="Phone System"
         title="IVR menus"
         description="Automated menus that greet callers and route them. Assign one to any number to control greetings, routing and voicemail."
@@ -151,20 +151,30 @@ const IvrMenus: FC = () => {
           ) : null
         }
         filters={
-          <Input
-            type="search"
-            placeholder="Search IVR menus"
-            onChange={(e) => setSearchedText(e.target.value)}
-            className="w-full min-h-9 rounded-lg"
-          />
+          /* The bar caps and stretches each child to 380px, so a lone input was
+             drawn as a wide empty field. Wrapped, it is a search chip like the
+             one every other Admin list now uses. */
+          <div className="mcm-numbar">
+            <label className="mcm-numsearch">
+              <SearchLine />
+              <input
+                type="search"
+                placeholder="Search IVR menus"
+                onChange={(e) => setSearchedText(e.target.value)}
+              />
+            </label>
+          </div>
         }
       >
         <div className="flex flex-col gap-2">
-          <p className="text-gray-900 text-sm">
-            Use this to build your automated menu. After creating your IVR here, you can assign it
-            to any Phone Number in your system to manage greetings, routing, and voicemail messages
-            automatically.
-          </p>
+          {/* One line with the full wording behind it, rather than a
+              paragraph restating the screen above every row on every visit. */}
+          <CustomTooltip text={"Build your automated menu here, then assign it to any phone number to control that number's greetings, routing and voicemail."} side="bottom" className="max-w-sm">
+            <p className="mcm-numnote">
+              <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
+              Assign a menu to a number to control its greetings, routing and voicemail.
+            </p>
+          </CustomTooltip>
           <TableManager
             {...{
               columns,

@@ -8359,3 +8359,16 @@
   line-height: 1.45;
   white-space: normal;
 }
+
+/* A dropdown filter sitting in the control bar — the site picker on Call
+   queues. Sized to what it holds rather than stretched to the bar's 380px cap,
+   which is what made it read as an empty field labelled "Select". */
+.mcm-admin .mcm-numselect {
+  flex: 0 1 220px;
+  min-width: 150px;
+}
+
+.mcm-admin .mcm-numselect [class*='control'] {
+  min-height: 30px;
+  border-radius: 20px;
+}

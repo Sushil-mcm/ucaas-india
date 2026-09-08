@@ -18,11 +18,10 @@ import { poolSummary } from '@/lib/queue-numbers';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
-import { Plus } from '@/assets/icons';
+import { Plus, SearchLine } from '@/assets/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
-import { Input } from '@/components/ui/input';
 import useDebounce from '@/hooks/use-debounce';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import AgentDetailsModal from '@/pages/auto-dialer/campaign/modal/agent-details-modal';
@@ -269,14 +268,14 @@ const CallQueues: FC = () => {
             queueActions?.edit && {
               icon: 'EditStrokIcon',
               onClick: () => openQueue(data),
-              className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
+              className: 'mcm-rowact',
               tooltipText: 'Edit',
             },
           hasQueueAccess &&
             queueActions?.delete && {
               icon: 'TrashBin',
               onClick: () => setDeleteCallQueue(row?.original),
-              className: 'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+              className: 'mcm-rowact is-danger',
               tooltipText: 'Delete',
             },
         ].filter(Boolean);
@@ -289,7 +288,7 @@ const CallQueues: FC = () => {
               <CustomTooltip text={action.tooltipText} side="top">
                 <div
                   key={index}
-                  className={`cursor-pointer flex items-center justify-center rounded-full w-8 h-8 ${action.className}`}
+                  className={`cursor-pointer flex items-center justify-center ${action.className}`}
                   onClick={() => {
                     action.onClick();
                   }}
@@ -313,7 +312,8 @@ const CallQueues: FC = () => {
   return (
     <>
       <AdminPage
-      hideHead
+        hideHead
+        bareBody
         section="Phone System"
         title="Call queues"
         description="Where incoming calls wait, and which people answer them. Queues can be company-wide or tied to one location."
@@ -330,39 +330,51 @@ const CallQueues: FC = () => {
           ) : null
         }
         filters={
-          <>
-            <Input
-              type="search"
-              placeholder="Search queues"
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value.startsWith(' ')) return;
-                setSearchedText(e.target.value);
-              }}
-              className="w-full min-h-9 rounded-lg"
-            />
-            <CustomSelect
-              className="w-full min-w-36"
-              options={
-                dataSiteList?.map((site: { name: string; uuid: string }) => ({
-                  label: site?.name,
-                  value: site?.uuid,
-                })) || []
-              }
-              handleChange={(e: ISELECTVALUE | null) => {
-                setSelectedSite(e || '');
-              }}
-              value={selectedSite}
-            />
-          </>
+          /* Each direct child of the bar is capped at 380px and stretched to
+             fill it, which is why the search box and an unlabelled "Select"
+             sat as two half-width fields. One row: search, then the site
+             filter, sized to what it holds. */
+          <div className="mcm-numbar">
+            <label className="mcm-numsearch">
+              <SearchLine />
+              <input
+                type="search"
+                placeholder="Search queues"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearchedText(e.target.value);
+                }}
+              />
+            </label>
+            <div className="mcm-numselect">
+              <CustomSelect
+                className="w-full"
+                placeholder="All sites"
+                options={
+                  dataSiteList?.map((site: { name: string; uuid: string }) => ({
+                    label: site?.name,
+                    value: site?.uuid,
+                  })) || []
+                }
+                handleChange={(e: ISELECTVALUE | null) => {
+                  setSelectedSite(e || '');
+                }}
+                value={selectedSite}
+              />
+            </div>
+          </div>
         }
       >
         <div className="flex flex-col gap-2">
-          <p className="text-gray-900 text-sm">
-            Set up call queues at the Company level or for Individual Site locations. This allows
-            you to organize incoming traffic for specific branches, ensuring callers are held
-            professionally until a user from that site is ready to answer.
-          </p>
+          {/* One line with the full wording behind it, rather than a
+              paragraph restating the screen above every row on every visit. */}
+          <CustomTooltip text={"Queues can be company-wide or tied to one site, so incoming traffic for a branch is held until somebody from that branch is ready to answer."} side="bottom" className="max-w-sm">
+            <p className="mcm-numnote">
+              <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
+              Queues can be company-wide or tied to a single site.
+            </p>
+          </CustomTooltip>
           <TableManager
             {...{
               columns,
