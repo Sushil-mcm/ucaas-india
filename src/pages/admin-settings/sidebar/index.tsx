@@ -326,6 +326,32 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
     },
 
     {
+      key: 'admin-settings.billing',
+      id: 'billing',
+      /* Billing's pages come from one shared list, so this menu and the router
+         cannot drift apart. Admin-only, because who may look at the company's
+         money is a question about the person, not about which calling features
+         the company has bought.
+
+         Lost in the "Bring across the admin work this build was missing" merge
+         (8819b63), which took the entry but left `BILLING_SECTIONS` and
+         `ABSOLUTE` imported at the top of this file — the ten screens and their
+         routes were all still there, with nothing in the nav pointing at
+         them. */
+      title: 'Billing',
+      type: 'accordion',
+      value: 'billing',
+      icon: 'Billing',
+      enabled: Boolean(IS_ADMIN),
+      visible: Boolean(IS_ADMIN),
+      children: BILLING_SECTIONS.map((section) => ({
+        title: section.label,
+        path: ABSOLUTE(section),
+        icon: section.icon,
+      })),
+    },
+
+    {
       key: 'admin-settings.compliance',
       id: 'compliance',
       title: '10DLC Compliance',
