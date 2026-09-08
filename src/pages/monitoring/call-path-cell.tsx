@@ -1,13 +1,7 @@
 import CustomTooltip from '@/components/custom/custom-tooltip';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Info } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Bot, Headphones, Info, UserCheck, Workflow, X } from 'lucide-react';
+import type { ComponentType, ReactNode } from 'react';
 
 function getContextPathValueLabel(value: any): string {
   if (value === null || value === undefined) return '';
@@ -118,8 +112,33 @@ type CallPathDialogProps = {
   onClose: () => void;
 };
 
+type CallPathStep = {
+  kind: string;
+  value: string;
+};
+
+/* Each raw value is usually "Label: Value" ("IVR: Main Menu", "Queue:
+   Support", "Agent: Priya Sharma") but isn't guaranteed to be — a step with
+   no colon just has no label, and renders with the generic node icon. */
+const parseCallPathStep = (raw: string): CallPathStep => {
+  const separatorIndex = raw.indexOf(':');
+  if (separatorIndex === -1) return { kind: '', value: raw };
+  return {
+    kind: raw.slice(0, separatorIndex).trim(),
+    value: raw.slice(separatorIndex + 1).trim(),
+  };
+};
+
+const getCallPathStepIcon = (kind: string): ComponentType<{ className?: string }> => {
+  const normalized = kind.toLowerCase();
+  if (normalized.includes('ivr')) return Bot;
+  if (normalized.includes('queue')) return Headphones;
+  if (normalized.includes('agent')) return UserCheck;
+  return Workflow;
+};
+
 export const CallPathDialog = ({ call, onClose }: CallPathDialogProps) => {
-  const contextPathValues = getContextPathValues(call?.context_path);
+  const steps = getContextPathValues(call?.context_path).map(parseCallPathStep);
 
   return (
     <Dialog
@@ -128,32 +147,83 @@ export const CallPathDialog = ({ call, onClose }: CallPathDialogProps) => {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="w-full max-w-[480px] p-5">
-        <DialogHeader>
-          <DialogTitle className="text-md">Call Path</DialogTitle>
-          <DialogDescription className="text-gray-500">
-            Current context:{' '}
-            <span className="font-medium capitalize text-gray-900">
-              {call?.current_context || '---'}
-            </span>
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Context Path
-          </p>
-          {contextPathValues.length ? (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <p className="break-words text-sm font-medium capitalize text-gray-900">
-                {contextPathValues.join(' -> ')}
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-dashed border-gray-200 p-3 text-sm text-gray-500">
-              No context path available
-            </div>
-          )}
+      <DialogContent
+        className="cpd-modal max-w-sm w-full rounded-[20px] p-4.5 gap-0 bg-[#fffdfb] border border-[rgba(249,115,22,0.18)] shadow-[0_20px_45px_rgba(160,95,30,0.20)] backdrop-blur-[20px]"
+        overlayClassName="bg-black/35 backdrop-blur-sm"
+        showCloseButton={false}
+      >
+        <DialogTitle className="sr-only">Call Routing Path</DialogTitle>
+        <div className="mb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-base font-bold text-[#1a1a1a]">
+            <Workflow className="h-4.5 w-4.5 text-[#ea580c]" />
+            Call Routing Path
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[rgba(249,115,22,0.2)] bg-[#fff7ed] text-[#8a6f57] transition-all hover:bg-[#ffedd5] hover:text-[#1a1a1a]"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
+        <p className="mb-3 text-sm text-[#64748b]">
+          Queue: <span className="font-medium capitalize text-[#1a1a1a]">{call?.current_context || '---'}</span>
+        </p>
+
+        {steps.length ? (
+          /* Enterprise call paths can run 4-6+ hops (IVR -> Language ->
+             Queue -> Transfer -> Agent); a scroll cap keeps a long path from
+             pushing the modal itself past the viewport instead of just
+             scrolling internally. */
+          <div className="flex max-h-[55vh] flex-col overflow-y-auto pr-1">
+            {steps.map((step, index) => {
+              const StepIcon = getCallPathStepIcon(step.kind);
+              const isAgent = step.kind.toLowerCase().includes('agent');
+              const isLast = index === steps.length - 1;
+              return (
+                <div key={`${step.kind}-${step.value}-${index}`} className="flex flex-col">
+                  <div
+                    className={`flex items-center gap-2.5 rounded-full border px-3 py-1.5 ${
+                      isAgent
+                        ? 'border-emerald-200 bg-emerald-50/80'
+                        : 'border-orange-100/70 bg-white/80'
+                    }`}
+                  >
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                        isAgent ? 'bg-emerald-100 text-emerald-600' : 'bg-[#fff1eb] text-[#ea580c]'
+                      }`}
+                    >
+                      <StepIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex min-w-0 items-baseline gap-1.5">
+                      {step.kind && (
+                        <span className="shrink-0 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                          {step.kind}
+                        </span>
+                      )}
+                      <span className="truncate text-xs font-semibold text-[#1a1a1a] capitalize">
+                        {step.value}
+                      </span>
+                    </div>
+                    {isAgent && (
+                      <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                    )}
+                  </div>
+                  {!isLast && (
+                    <div className="relative flex h-2 items-center justify-center">
+                      <div className="absolute h-full w-px bg-[rgba(249,115,22,0.25)]" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[rgba(249,115,22,0.25)] p-4 text-center text-sm text-[#64748b]">
+            No context path available
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

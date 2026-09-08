@@ -22,6 +22,7 @@ import NotFound from '@/assets/images/not-found-img.svg';
 import { capitalizeFirstLetter } from '@/lib/utils';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
+import { MonitoringTopbarSlot } from '../topbar';
 import {
   findMonitoringCallForMember,
   getMonitoringCallDid,
@@ -359,13 +360,21 @@ const DepartmentMonitoring = () => {
     <>
       <section className="w-full overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          {/* "Monitoring ›" dropped — the section head above the rail says it. */}
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            <span className="text-primary text-md">Department </span>
-          </p>
-          <div className="flex gap-2 "></div>
-        </div>
+        {/* Upstream's warm bar colours, still rendered through the topbar
+            slot: on Monitoring this bar is hoisted into the full-width row
+            above the sidebar, so it must portal rather than sit inline. */}
+        <MonitoringTopbarSlot>
+          <div className="flex items-center justify-between p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[65px] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+            <p className="text-[#2E2D35] font-semibold text-lg flex items-center gap-1">
+              Monitoring
+              <div className="-rotate-90 text-[#2E2D35]">
+                <Icon name="ChevronIcon" className="w-5 h-5" />
+              </div>
+              <span className="text-primary text-md">Department </span>
+            </p>
+            <div className="flex gap-2 "></div>
+          </div>
+        </MonitoringTopbarSlot>
         <div className="w-full h-full   p-3 flex flex-col gap-2">
           {/* <h6 className="text-gray-900 font-semibold text-lg">Department Monitoring</h6> */}
           <div className="flex flex-col gap-2 h-[calc(100vh_-_10rem)] overflow-auto">
@@ -396,7 +405,7 @@ const DepartmentMonitoring = () => {
                           className={`flex items-center justify-between gap-3 p-4 cursor-pointer rounded-lg border transition-all duration-200 ${
                             isOpen
                               ? 'bg-primary/5 border-primary shadow-sm mb-3'
-                              : 'bg-white border-gray-200 hover:border-primary/50 hover:shadow-md mb-2'
+                              : 'bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border-[rgba(225,200,165,0.9)] hover:border-primary/50 hover:shadow-md mb-2'
                           }`}
                           onClick={() => toggleCollapse(departmentKey)}
                         >

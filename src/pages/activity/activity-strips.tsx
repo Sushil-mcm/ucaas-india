@@ -1,20 +1,13 @@
 import React, { useMemo } from 'react';
 import moment from 'moment';
-import MinuteMark from './minute-mark';
+import { PhoneIncoming, PhoneOutgoing, Wifi, WifiOff, Radio } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  USER_ACTIVITY_CONST,
-  COMING_ACTIVITY,
-  getActivityIcon,
-  RangeDate,
-  Activity,
-} from './constant';
+import { USER_ACTIVITY_CONST, RangeDate, Activity } from './constant';
 
 interface ActivityTimeStripsProps {
   activityDetails: RangeDate;
@@ -23,11 +16,89 @@ interface ActivityTimeStripsProps {
   activityType: { value: string };
   expandedItem: string | null;
   setExpandedItem: (value: string | null) => void;
+  /** The agent whose timeline this is — shown on every entry so it's clear
+   *  whose login/logout/call this row belongs to. */
+  agentName: string;
 }
 
-const FIVE_MINUTE_INTERVALS = 12;
-const HOUR_DIVISIONS = 5;
-const NO_ACTION_TEXT = 'No action';
+type FeedKind = 'call_in' | 'call_out' | 'online' | 'offline' | 'other';
+
+type FeedItem = {
+  id: string;
+  kind: FeedKind;
+  label: string;
+  startedAt: moment.Moment;
+  durationMin?: number;
+  device?: { device_type?: string; ip_address?: string; browser_version?: string; os_version?: string };
+};
+
+const FEED_ICON: Record<FeedKind, React.ComponentType<{ className?: string }>> = {
+  call_in: PhoneIncoming,
+  call_out: PhoneOutgoing,
+  online: Wifi,
+  offline: WifiOff,
+  other: Radio,
+};
+
+const FeedRow = ({ item, agentName }: { item: FeedItem; agentName: string }) => {
+  const Icon = FEED_ICON[item.kind];
+  /* Login/logout only — a call's "Inbound call"/"Outbound call" label stays
+     on the left where it's always been, unchanged. */
+  const isSession = item.kind === 'online' || item.kind === 'offline';
+  const sessionColorClass = item.kind === 'online' ? 'bg-green-600' : 'bg-red-600';
+  const sessionTextColorClass = item.kind === 'online' ? 'text-green-600' : 'text-red-600';
+
+  return (
+    <div className="relative flex items-start gap-3.5 group">
+      <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 border border-orange-100 shadow-[0_1px_4px_rgba(194,98,15,0.08)] shrink-0 transition-transform duration-150 group-hover:scale-105">
+        <Icon className="w-4.5 h-4.5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0 flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3.5 transition-all duration-150 group-hover:border-orange-100 group-hover:shadow-[0_4px_14px_rgba(194,98,15,0.06)]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-gray-800">{agentName}</span>
+            {!isSession && (
+              <span className="text-[11px] text-gray-500">{item.label}</span>
+            )}
+            {typeof item.durationMin === 'number' && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-primary">
+                {item.durationMin} min
+              </span>
+            )}
+          </div>
+          {item.device?.device_type && (
+            <div className="text-[11px] text-gray-500 mt-0.5 truncate">
+              {item.device.device_type}
+              {item.device.browser_version ? ` · ${item.device.browser_version}` : ''}
+              {item.device.ip_address ? (
+                <>
+                  {' · '}
+                  <span className={isSession ? `font-semibold ${sessionTextColorClass}` : undefined}>
+                    {item.device.ip_address}
+                  </span>
+                </>
+              ) : (
+                ''
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {isSession && (
+            <span
+              className={`text-xs font-semibold whitespace-nowrap text-white px-2 py-0.5 rounded-full ${sessionColorClass}`}
+            >
+              {item.label}
+            </span>
+          )}
+          <span className="text-xs font-semibold text-gray-400 whitespace-nowrap">
+            {item.startedAt.format('hh:mm A')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ActivityTimeStrips = ({
   activityDetails,
@@ -36,10 +107,20 @@ const ActivityTimeStrips = ({
   activityType,
   expandedItem,
   setExpandedItem,
+  agentName,
 }: ActivityTimeStripsProps) => {
   const targetDate = useMemo(
     () => moment.parseZone(activityDetails?.date)?.format('DD-MM-YYYY'),
     [activityDetails?.date],
+  );
+
+  /* `timings` is the hour-label list the start/end time pickers above
+     narrowed the day down to (e.g. 12:00AM–8:00AM) — the old hour-by-hour
+     grid only ever rendered rows for those hours, so this feed has to
+     apply the same cutoff itself now that it isn't going hour-by-hour. */
+  const allowedHours = useMemo(
+    () => new Set((timings || []).map((t) => moment(t, 'hh:mm A')?.format('HH'))),
+    [timings],
   );
 
   const filteredActivities = useMemo(() => {
@@ -58,104 +139,102 @@ const ActivityTimeStrips = ({
     };
 
     return (
-      activities?.flatMap((data) =>
-        data?.activity?.filter((val: Activity) => {
-          const activityDate = moment.parseZone(val?.timestamp)?.format('DD-MM-YYYY');
-          return targetDate === activityDate && filterByType(val);
-        }),
-      ) ?? []
+      activities
+        ?.flatMap((data) =>
+          data?.activity?.filter((val: Activity) => {
+            const activityMoment = moment.parseZone(val?.timestamp);
+            const activityDate = activityMoment?.format('DD-MM-YYYY');
+            return (
+              targetDate === activityDate &&
+              (!allowedHours.size || allowedHours.has(activityMoment?.format('HH'))) &&
+              filterByType(val)
+            );
+          }),
+        )
+        ?.sort(
+          (a, b) => moment.parseZone(a?.timestamp).valueOf() - moment.parseZone(b?.timestamp).valueOf(),
+        ) ?? []
     );
-  }, [activities, targetDate, activityType?.value]);
+  }, [activities, targetDate, activityType?.value, allowedHours]);
 
-  const fiveMinutePositions = useMemo(
-    () =>
-      Array.from({ length: FIVE_MINUTE_INTERVALS }, (_, i) => (i * 100) / FIVE_MINUTE_INTERVALS),
-    [],
-  );
+  /* A raw call_start/call_end pair reads as two disconnected events on a
+     feed — merging each start with the call_end right after it into one
+     "Inbound/Outbound call · N min" row is what actually makes a vertical
+     feed readable instead of doubling every call. An end with no start (or
+     a start with no end, e.g. a call still running) still gets its own row
+     rather than being silently dropped. */
+  const feedItems = useMemo(() => {
+    const items: FeedItem[] = [];
+    let openCall: Activity | null = null;
+
+    filteredActivities.forEach((activity) => {
+      if (activity?.activity === USER_ACTIVITY_CONST?.CALL_STARTS) {
+        openCall = activity;
+        return;
+      }
+
+      if (activity?.activity === USER_ACTIVITY_CONST?.CALL_END) {
+        const start = openCall as Activity | null;
+        openCall = null;
+        const isOutbound = start?.data?.Direction === 'initiator';
+        items.push({
+          id: start?.id || activity?.id,
+          kind: isOutbound ? 'call_out' : 'call_in',
+          label: isOutbound ? 'Outbound call' : 'Inbound call',
+          startedAt: moment.parseZone(start?.timestamp || activity?.timestamp),
+          durationMin: start
+            ? Math.max(1, moment.parseZone(activity?.timestamp).diff(moment.parseZone(start.timestamp), 'minutes'))
+            : undefined,
+        });
+        return;
+      }
+
+      if (activity?.activity === USER_ACTIVITY_CONST?.ONLINE) {
+        items.push({
+          id: activity?.id,
+          kind: 'online',
+          label: 'Logged in',
+          startedAt: moment.parseZone(activity?.timestamp),
+          device: activity?.data?.[0],
+        });
+        return;
+      }
+
+      if (activity?.activity === USER_ACTIVITY_CONST?.OFFLINE) {
+        items.push({
+          id: activity?.id,
+          kind: 'offline',
+          label: 'Logged out',
+          startedAt: moment.parseZone(activity?.timestamp),
+          device: activity?.data?.[0],
+        });
+        return;
+      }
+
+      items.push({
+        id: activity?.id,
+        kind: 'other',
+        label: activity?.data?.forward_type || activity?.activity,
+        startedAt: moment.parseZone(activity?.timestamp),
+      });
+    });
+
+    if (openCall) {
+      const start = openCall as Activity;
+      const isOutbound = start?.data?.Direction === 'initiator';
+      items.push({
+        id: start?.id,
+        kind: isOutbound ? 'call_out' : 'call_in',
+        label: isOutbound ? 'Outbound call' : 'Inbound call',
+        startedAt: moment.parseZone(start?.timestamp),
+      });
+    }
+
+    return items;
+  }, [filteredActivities]);
 
   const handleAccordionChange = (value: string) => {
     setExpandedItem(value === activityDetails?.id ? value : null);
-  };
-
-  const RenderHourActivities = ({
-    hourActivities,
-    time,
-  }: {
-    hourActivities: Activity[];
-    time: string;
-  }) => {
-    return hourActivities?.map((activity) => {
-      const activityMoment = moment.parseZone(activity?.timestamp);
-      const baseTimeMoment = moment
-        .parseZone(`${moment(activityMoment)?.format('YYYY-MM-DD')} ${time}`, 'YYYY-MM-DD hh:mm A')
-        .utcOffset(activityMoment?.utcOffset(), true);
-
-      const minutes = activityMoment?.diff(baseTimeMoment, 'minutes');
-      const position = Math.min(100, Math.max(0, (minutes / 60) * 100));
-      const isDataArray = Array.isArray(activity?.data);
-      const isTopPosition = [
-        USER_ACTIVITY_CONST?.CALL_STARTS,
-        USER_ACTIVITY_CONST?.ONLINE,
-      ]?.includes(activity?.activity);
-
-      return (
-        <Tooltip key={`${activity?.id}-${activity?.timestamp}`}>
-          <TooltipTrigger asChild>
-            <div
-              className={`absolute -translate-y-1/2 z-3 cursor-pointer flex flex-col items-center ${
-                isTopPosition ? 'top-3.5' : '-bottom-0.5'
-              }`}
-              style={{ left: `${position}%` }}
-            >
-              {activity?.activity === USER_ACTIVITY_CONST?.CALL_END
-                ? getActivityIcon(activity?.activity)
-                : activity?.data && Array.isArray(activity?.data)
-                  ? getActivityIcon(activity?.activity)
-                  : activity?.data?.forward_type
-                    ? getActivityIcon(activity?.data?.forward_type)
-                    : getActivityIcon(activity?.data?.Direction)}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">
-            <div className="text-white text-sm space-y-1 capitalize">
-              <div>
-                {activity?.activity === USER_ACTIVITY_CONST?.CALL_END
-                  ? COMING_ACTIVITY[activity?.activity as keyof typeof COMING_ACTIVITY]
-                  : activity?.data && Array.isArray(activity?.data)
-                    ? COMING_ACTIVITY[activity?.activity as keyof typeof COMING_ACTIVITY]
-                    : activity?.data?.forward_type
-                      ? COMING_ACTIVITY[
-                          activity?.data?.forward_type as keyof typeof COMING_ACTIVITY
-                        ]
-                      : COMING_ACTIVITY[activity?.data?.Direction as keyof typeof COMING_ACTIVITY]}
-              </div>
-              {isDataArray && (
-                <>
-                  <p>
-                    <span className="font-semibold">Device</span>:{' '}
-                    {activity?.data?.[0]?.device_type}
-                  </p>
-                  <p>
-                    <span className="font-semibold">IP</span>:{' '}
-                    {activity?.data?.[0]?.ip_address || '---'}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Browser</span>:{' '}
-                    {activity?.data?.[0]?.browser_version}
-                  </p>
-                  <p>
-                    <span className="font-semibold">OS</span>: {activity?.data?.[0]?.os_version}
-                  </p>
-                </>
-              )}
-              <p>
-                <span className="font-semibold">Time</span>: {activityMoment?.format('hh:mm A')}
-              </p>
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      );
-    });
   };
 
   return (
@@ -167,68 +246,34 @@ const ActivityTimeStrips = ({
     >
       <AccordionItem
         value={activityDetails?.id}
-        className="border border-dashed border-primary/40 rounded-lg bg-white mb-2 p-2 last:border-b-1"
+        className="border border-gray-200 rounded-2xl bg-white mb-4 shadow-[0_2px_10px_rgba(15,23,42,0.04)] overflow-hidden"
       >
-        <AccordionTrigger className="flex items-center p-0">
-          <div className="flex items-center w-full bg-gray-50 sm:p-2 xs:py-2 xs:px-0">
-            <div className="w-[10%] text-center">
-              <div className="bg-ucass-primary-200 text-primary text-xs px-2 py-1 rounded">
-                {activityDetails?.label}
-              </div>
-            </div>
-            <div className="flex-1 flex justify-between px-2">
-              {fiveMinutePositions?.map((_, i) => (
-                <div key={i} className="text-xs text-gray-600">
-                  {i * HOUR_DIVISIONS}
-                </div>
-              ))}
-            </div>
+        <AccordionTrigger className="flex items-center p-0 hover:no-underline">
+          <div className="flex items-center justify-between w-full bg-orange-50/60 border-b border-orange-100 px-4 py-3.5">
+            <span className="inline-flex items-center bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+              {activityDetails?.label}
+            </span>
+            <span className="text-[11px] font-semibold text-primary bg-white px-2.5 py-1 rounded-full border border-orange-100">
+              {feedItems.length} {feedItems.length === 1 ? 'event' : 'events'}
+            </span>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="p-1">
-          {timings?.map((time: string) => {
-            const baseTime = moment(time, 'hh:mm A')?.format('HH');
-            const hourActivities = filteredActivities?.filter((activity) => {
-              const activityHour = moment.parseZone(activity?.timestamp)?.format('HH');
-              return activityHour === baseTime;
-            });
-
-            return (
-              <div key={time} className="flex items-center mb-1 h-12">
-                <div className="w-[10%] text-center text-xs text-gray-700">{time}</div>
-                <div className="relative flex-1 h-full bg-white ml-2">
-                  <div
-                    className={`absolute top-1/2 left-0 w-full border-t ${
-                      hourActivities?.length ? 'border-primary/30' : 'border-red-200'
-                    }`}
-                  ></div>
-                  {fiveMinutePositions?.map((pos, i) => (
-                    <MinuteMark key={i} position={pos} />
-                  ))}
-                  {hourActivities?.length > 0 &&
-                    fiveMinutePositions?.map((pos, i) => (
-                      <div
-                        key={`marker-${i}`}
-                        className="absolute top-1/2 left-0 z-3 -translate-y-1/2"
-                        style={{ left: `${pos}%`, transformOrigin: 'center' }}
-                      >
-                        <div className="h-2 bg-gray-400 border-l border-primary/30"></div>
-                      </div>
-                    ))}
-
-                  <TooltipProvider>
-                    {hourActivities?.length ? (
-                      <RenderHourActivities {...{ hourActivities, time }} />
-                    ) : (
-                      <div className="flex justify-center max-w-28 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border border-red-200 rounded px-4 py-1 text-xs text-red-500 bg-white z-10">
-                        {NO_ACTION_TEXT}
-                      </div>
-                    )}
-                  </TooltipProvider>
-                </div>
+        <AccordionContent className="p-4 sm:p-5">
+          {feedItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-10 text-gray-300">
+              <Radio className="w-7 h-7" />
+              <span className="text-xs font-medium">No activity recorded</span>
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="absolute left-5 top-2 bottom-2 w-px bg-gradient-to-b from-orange-200 via-gray-200 to-transparent" />
+              <div className="space-y-3">
+                {feedItems.map((item) => (
+                  <FeedRow key={item.id} item={item} agentName={agentName} />
+                ))}
               </div>
-            );
-          })}
+            </div>
+          )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>

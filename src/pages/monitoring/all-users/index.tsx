@@ -18,7 +18,7 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
 import { IUSERS } from '@/interfaces/extension-interface';
-import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
+import { capitalizeFirstLetter, formatPhoneNumber, handleAlert } from '@/lib/utils';
 import {
   MONITOR_ACTION_LABELS,
   getMonitorTargetCallId,
@@ -30,8 +30,9 @@ import { ColumnDef } from '@tanstack/react-table';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getUserNameByExtension } from '@/lib/extension-utility';
 import { useUsersDirectory } from '@/hooks/use-users-directory';
-import { Ear, MicIcon, UsersIcon } from 'lucide-react';
+import { Ear, Loader2, MicIcon, UsersIcon } from 'lucide-react';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
+import { MonitoringTopbarSlot } from '../topbar';
 import {
   getMonitoringCallDid,
   getMonitoringCallTimestamp,
@@ -49,6 +50,17 @@ const STATE_TYPE_NAME = {
   trying: 'Trying',
   started: 'Started',
   waiting: 'Waiting',
+};
+
+/* A call's raw `status` collapses into one of two visual tones wherever this
+   table shows it (the avatar's presence dot, the Status badge): 'connected'
+   (answered/bridged — a genuinely live, connected call) or 'ringing' (every
+   other in-progress state — ringing, waiting, on hold, trying, started).
+   Kept as one shared function so the dot and the badge never disagree with
+   each other about which state a given row is in. */
+const getActiveCallTone = (status?: string): 'connected' | 'ringing' | undefined => {
+  if (!status) return undefined;
+  return status === 'answered' || status === 'bridged' ? 'connected' : 'ringing';
 };
 
 type ActiveCallSortedUser = {
@@ -134,24 +146,13 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
     [getCallInfoByExtension, isUserOnCallByPresence],
   );
 
-  const getRowClassName = (row: any) => {
-    // const status = allOngoingCalls?.[`${row?.original?.extension}_web`]?.['State'];
-    const extension = row?.original?.extension;
-
-    const callInfo = getCallInfoByExtension(extension);
-    const status = callInfo?.status || '';
-    switch (status) {
-      case 'ringing':
-      case 'waiting':
-        return 'bg-yellow-100';
-      case 'answered':
-      case 'bridged':
-      case 'on_hold':
-        return 'bg-green-100';
-      default:
-        return isUserOnCallByPresence(extension) ? 'bg-green-100' : '';
-    }
-  };
+  /* No more full-row colour wash — the Status cell's own `pl-tag` badge
+     now carries that signal on its own. The actual hover colour is a
+     scoped CSS rule (`.mcm-allext table tbody tr:hover` in mcm-page.css)
+     rather than a Tailwind class here — this table inherits
+     `.mcm-admin table tbody tr:hover`, which a same-specificity Tailwind
+     utility can't outrank. */
+  const getRowClassName = () => 'transition-colors';
 
   const clearPendingMonitorLock = useCallback((callId: string) => {
     const normalizedCallId = normalizeMonitorDialValue(callId);
@@ -250,31 +251,48 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
       cell: ({ row }) => {
         const data = row?.original;
         const fullName = `${data?.first_name}${data?.last_name ? ` ${data?.last_name}` : ''}`;
+        const callInfo = getCallInfoByExtension(data?.extension);
         return (
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex items-center gap-2 w-full min-w-0">
             <div className="flex ">
               <CustomAvatar
                 name={fullName}
                 showPresence
                 extension={data?.extension}
                 image={data?.profile}
+                /* Only reskin the dot inside Performance ▸ Live Interactions
+                   (`embedded`) — the standalone Monitoring ▸ All Extensions
+                   route keeps its original red "on call" dot exactly as
+                   before. */
+                activeCallTone={embedded ? getActiveCallTone(callInfo?.status) : undefined}
               />
             </div>
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full min-w-0">
               <div className="flex items-center justify-between  gap-2">
-                <div className="flex flex-col items-start ">
-                  <p className="capitalize">{fullName}</p>
+                {/* `min-w-0` lets this block actually shrink below its own
+                    text's natural width inside a fixed-width column — without
+                    it, a flex child defaults to `min-width: auto` (its
+                    content's full width), so a longer name pushed the
+                    extension badge past the cell's own right edge and, with
+                    no overflow clipping on the cell, straight into the next
+                    column's text (`1005Pooja Bansal`). `truncate` below is
+                    then what actually uses that shrunk space to ellipsize
+                    instead of overflowing. */}
+                <div className="flex flex-col items-start min-w-0">
+                  <p className="capitalize w-full">{fullName}</p>
                   <small className="text-primary text-[10px]">
                     {data?.custom_role_data?.name || data?.role_data?.name || data?.role}
                   </small>
                 </div>
-                <div className="flex items-center gap-1 text-gray-500">
+                {/* `flex-shrink-0` — the extension badge is short and fixed,
+                    the name is what should give way when space is tight. */}
+                <div className="flex shrink-0 items-center gap-1 text-gray-500">
                   <Icon name="Grid" className="w-4 h-4 " />
                   <div>{data?.extension}</div>
                 </div>
               </div>
               <p className="text-gray-500 flex justify-between">
-                <div>{data?.email}</div>
+                <div className="truncate">{data?.email}</div>
               </p>
             </div>
           </div>
@@ -309,15 +327,23 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
     {
       header: 'DID',
       accessorKey: 'did',
+      meta: { textAlign: 'center' },
       cell: ({ row }) => {
         const extension = row?.original?.extension;
         const callInfo = getCallInfoByExtension(extension);
-        return <>{getMonitoringCallDid(callInfo)}</>;
+        const did = getMonitoringCallDid(callInfo);
+        // A dense run of digits (`+911800123456`) is a lot harder to scan
+        // than the spaced form a real dial pad or contact card would show
+        // (`+91 1800 12 3456`) — reuse the same international formatter the
+        // CRM number list already renders DIDs through, rather than a
+        // one-off regex just for this column.
+        return <>{did === '---' ? did : formatPhoneNumber(did) || did}</>;
       },
     },
     {
       header: 'Duration',
       accessorKey: 'phone',
+      meta: { textAlign: 'center' },
       cell: ({ row }) => {
         const extension = row?.original?.extension;
         const callInfo = getCallInfoByExtension(extension);
@@ -333,6 +359,7 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
     {
       header: '	Status',
       accessorKey: 'site_uuid',
+      meta: { textAlign: 'center' },
       cell: ({ row }) => {
         const extension = row?.original?.extension;
         const callInfo = getCallInfoByExtension(extension);
@@ -342,9 +369,17 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
           : isUserOnCallByPresence(extension)
             ? 'On Call'
             : '---';
+        /* Same 'connected'/'ringing' split the avatar dot uses
+           (getActiveCallTone) so the badge and the dot never disagree —
+           the presence-only "On Call" fallback (no callInfo, but the
+           socket says this extension is on a call) reads as connected
+           since that is the only tone that fallback can honestly claim. */
+        const tone = status ? getActiveCallTone(status) : statusLabel === 'On Call' ? 'connected' : undefined;
+        const tagClass =
+          tone === 'connected' ? 'pl-tag-pos' : tone === 'ringing' ? 'pl-tag-warn' : 'pl-tag-neu';
         return (
           <div>
-            <p>{statusLabel}</p>
+            <p className={`pl-tag ${tagClass}`}>{statusLabel}</p>
           </div>
         );
       },
@@ -352,12 +387,15 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
     {
       header: 'Direction',
       accessorKey: 'socket_status',
+      meta: { textAlign: 'center' },
       cell: ({ row }) => {
         const extension = row?.original?.extension;
         const callInfo = getCallInfoByExtension(extension);
         return (
           <div>
-            <p>{callInfo?.direction ? capitalizeFirstLetter(callInfo?.direction) : '---'}</p>
+            <p className="pl-tag pl-tag-dir">
+              {callInfo?.direction ? capitalizeFirstLetter(callInfo?.direction) : '---'}
+            </p>
           </div>
         );
       },
@@ -375,91 +413,126 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
     {
       header: 'Actions',
       accessorKey: 'socket_status',
+      /* NOT `meta: { textAlign: 'center' }` — that flag centers the BODY
+         cell's content too (table-manager-row.tsx wraps it in a centered
+         flex div), and once `splitStickyHeader`'s measured colgroup gives
+         this column exactly the 5-button row's own content width, centering
+         a row that's already exactly as wide as its column pushes it out
+         evenly on both sides — clipped by `overflow: hidden` on the cell,
+         so the Listen button's left edge silently vanished. The header
+         label alone is centered via CSS instead (`thead th:last-child`,
+         live-theme.css), leaving the body row's own left-aligned layout
+         untouched. */
       cell: ({ row }) => {
         const data = row?.original;
         const extension = row?.original?.extension;
         const callInfo = getCallInfoByExtension(extension);
         const callId = getMonitorTargetCallId(callInfo);
         const normalizedCallId = normalizeMonitorDialValue(callId);
-        const hasPendingMonitorAction = Boolean(pendingMonitorActions?.[normalizedCallId]);
+        const pendingActionCode = pendingMonitorActions?.[normalizedCallId];
         const hasActiveMonitorSession = hasActiveMonitorSessionForCall(normalizedCallId);
-        const isMonitoringActionLocked = hasPendingMonitorAction || hasActiveMonitorSession;
-        // const isCurrentSystemOnCall = Object.values(_uiSessions || {}).some((session: any) =>
-        //   [callInfo?.agent_extension, callInfo?.called_number].includes(
-        //     session?._number?.replace('+', ''),
-        //   ),
-        // );
+        /* Whether this row can start a NEW monitor action right now — a
+           different action already pending/active for this same call, or
+           any monitor session active anywhere (the dialpad can only run
+           one at a time). This only gates whether a click is *allowed*;
+           unlike the boolean this replaced, it never controls whether the
+           buttons themselves render — see the bug note below. */
+        const isRowLocked =
+          Boolean(pendingActionCode) || hasActiveMonitorSession || hasAnyActiveCallSession;
 
-        const isButtonDisabled =
-          !callInfo ||
-          !['bridged', 'answered'].includes(callInfo?.status) ||
-          (callInfo?.called_number?.length > 4 && callInfo?.agent_extension?.length > 4) ||
-          [callInfo?.agent_extension, callInfo?.called_number]?.includes(
+        const hasEligibleCall =
+          Boolean(callInfo) &&
+          ['bridged', 'answered'].includes(callInfo?.status) &&
+          !(callInfo?.called_number?.length > 4 && callInfo?.agent_extension?.length > 4) &&
+          ![callInfo?.agent_extension, callInfo?.called_number]?.includes(
             user?.user_info?.extension,
-          ) ||
-          hasAnyActiveCallSession ||
-          isMonitoringActionLocked;
-        //  &&
-        //   isCurrentSystemOnCall) ||
-        // monitoringCallJoined;
-        if (isButtonDisabled) return '---';
+          );
+
+        // No call on this row worth monitoring at all — nothing to click,
+        // ever, regardless of any pending action elsewhere.
+        if (!hasEligibleCall) return '---';
+
+        /* All 5 buttons used to be replaced outright by a bare "---" the
+           instant ANY monitor action started anywhere in the table — the
+           whole row (every other action too, on every other row) blinked
+           out for as long as that action stayed pending/active, reading as
+           "the icons disappeared" rather than "an action is running".
+           Buttons now stay mounted at all times; only their `disabled`
+           state changes, and only the one actually clicked shows a
+           spinner in place of its icon. */
+        const renderMonitorButton = (
+          show: boolean,
+          code: string,
+          label: string,
+          IconCmp: any,
+          colourClass: string,
+          onClick: () => void,
+        ) => {
+          if (!show) return null;
+          const isThisPending = pendingActionCode === code;
+          return (
+            <CustomTooltip text={label} side="top">
+              <button
+                type="button"
+                disabled={isRowLocked && !isThisPending}
+                onClick={onClick}
+                className={`ma-action-btn ${colourClass} flex min-h-8 min-w-8 max-h-8 max-w-8 h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-xs transition-all hover:scale-105 disabled:pointer-events-none disabled:opacity-50`}
+              >
+                {isThisPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <IconCmp className="h-4 w-4" />
+                )}
+              </button>
+            </CustomTooltip>
+          );
+        };
+
         return (
-          <span className="flex gap-2 items-center">
-            {monitoringAccessActions?.listen && (
-              <CustomTooltip text="Listen" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*87', data?.extension)}
-                >
-                  <Ear className="w-4 h-4" />
-                </span>
-              </CustomTooltip>
+          <span className="flex items-center gap-1.5">
+            {renderMonitorButton(
+              Boolean(monitoringAccessActions?.listen),
+              '*87',
+              'Listen',
+              Ear,
+              'ma-action-listen',
+              () => monitorCall('*87', data?.extension),
             )}
-            {monitoringAccessActions?.whisper && (
-              <CustomTooltip text="Whisper" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*86', data?.extension)}
-                >
-                  <MicIcon className="w-4 h-4" />
-                </span>
-              </CustomTooltip>
+            {renderMonitorButton(
+              Boolean(monitoringAccessActions?.whisper),
+              '*86',
+              'Whisper',
+              MicIcon,
+              'ma-action-whisper',
+              () => monitorCall('*86', data?.extension),
             )}
-            {monitoringAccessActions?.barge && (
-              <CustomTooltip text="Barge" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*88', data?.extension)}
-                >
-                  <UsersIcon className="w-4 h-4" />
-                </span>
-              </CustomTooltip>
+            {renderMonitorButton(
+              Boolean(monitoringAccessActions?.barge),
+              '*88',
+              'Barge',
+              UsersIcon,
+              'ma-action-barge',
+              () => monitorCall('*88', data?.extension),
             )}
-            {monitoringAccessActions?.intercept && (
-              <CustomTooltip text="Intercept" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*89', data?.extension)}
-                >
-                  <CallIntersection className="w-5 h-5" />
-                </span>
-              </CustomTooltip>
+            {renderMonitorButton(
+              Boolean(monitoringAccessActions?.intercept),
+              '*89',
+              'Intercept',
+              CallIntersection,
+              'ma-action-transfer',
+              () => monitorCall('*89', data?.extension),
             )}
             {monitoringAccessActions?.hangup && (
               <CustomTooltip text="Hangup" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+                <button
+                  type="button"
                   onClick={() => terminateCallSession(callInfo)}
+                  className="ma-action-btn ma-action-hangup flex min-h-8 min-w-8 max-h-8 max-w-8 h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-xs transition-all hover:scale-105"
                 >
-                  <ImPhoneHangUp className="w-5 h-5" />
-                </span>
+                  <ImPhoneHangUp className="h-4 w-4" />
+                </button>
               </CustomTooltip>
             )}
-            {/* <span className="cursor-pointer" onClick={() => _terminate(presenceData['Call-ID'])}>
-              <CustomTooltip text="Hangup">
-                <ImPhoneHangUp className="w-5 h-5" />
-              </CustomTooltip>
-            </span> */}
           </span>
         );
       },
@@ -468,27 +541,30 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
 
   return (
     <>
-      <section className="w-full overflow-x-auto overflow-y-hidden">
+      <section className="mcm-allext w-full overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         {!embedded && (
-          <div className="relative z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-            {/* "Monitoring ›" dropped — the section head above the rail says
-                it. The filters to the right of this bar are why the bar itself
-                stays. */}
-            <div className="text-gray-900 font-semibold text-lg flex items-center gap-1 min-w-0">
-              <span className="text-primary text-md truncate">All Extensions</span>
+          <MonitoringTopbarSlot>
+            <div className="relative z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+              <div className="text-gray-900 font-semibold text-lg flex items-center gap-1 min-w-0">
+                <span className="truncate">Monitoring</span>
+                <div className="-rotate-90 text-gray-800 shrink-0">
+                  <Icon name="ChevronIcon" className="w-5 h-5" />
+                </div>
+                <span className="text-primary text-md truncate">All Extensions</span>
+              </div>
+              <div className="relative z-30 flex gap-2 filters pointer-events-auto shrink-0">
+                <Button
+                  type="button"
+                  variant={'outline'}
+                  onClick={() => setIshowSummary((prev) => !prev)}
+                  className="min-h-9 w-full sm:w-auto"
+                >
+                  Summary
+                </Button>
+              </div>
             </div>
-            <div className="relative z-30 flex gap-2 filters pointer-events-auto shrink-0">
-              <Button
-                type="button"
-                variant={'outline'}
-                onClick={() => setIshowSummary((prev) => !prev)}
-                className="min-h-9 w-full sm:w-auto"
-              >
-                Summary
-              </Button>
-            </div>
-          </div>
+          </MonitoringTopbarSlot>
         )}
         <div
           className={
@@ -558,6 +634,25 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
               getRowClassName,
               emptyTablePlaceholder: 'No extension activity',
               descriptionEmptyTable: 'Calls for extensions will appear here once available.',
+              /* Only for the Performance ▸ Live embed (live-theme.css,
+                 `.perf-live`) — standalone Monitoring ▸ All Users keeps its
+                 own existing (non-split, paginated) behaviour, unrelated to
+                 the Directory-parity work done on the Performance side.
+                 `visibleRowCount` (same approach as Agents, agents-tab.tsx)
+                 is what actually bounds the card's height — in
+                 `splitStickyHeader` mode that height comes from
+                 `visibleRowCount * fixedRowHeight` regardless of
+                 `showPagination` (table-manager.tsx), so the pagination
+                 footer can render without the card losing its fixed
+                 6-row height or its internal scrollbar. `showPagination`
+                 was originally left `false` here on the assumption the
+                 two were linked; they aren't — the footer (page-size
+                 picker, record count, page numbers) is worth keeping for
+                 a live monitoring list that can hold more rows than fit
+                 on screen at once. */
+              ...(embedded
+                ? { splitStickyHeader: true, showPagination: true, visibleRowCount: 6 }
+                : {}),
             }}
           />
         </div>

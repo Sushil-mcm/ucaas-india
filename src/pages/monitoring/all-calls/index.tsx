@@ -4,7 +4,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import CustomAvatar from '@/components/custom/custom-avatar';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import GroupedAvatar from '@/components/custom/grouped-avatar';
-import TableManager from '@/components/custom/table-manager';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
@@ -20,6 +19,10 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ear, MicIcon, UsersIcon } from 'lucide-react';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
+import { MonitoringTopbarSlot } from '../topbar';
+import LiveCallList from '../live-call-list';
+import { useUsersDirectory } from '@/hooks/use-users-directory';
+import { getUserNameByExtension } from '@/lib/extension-utility';
 
 /* How long a caller may wait before the row escalates. Waiting is the only
    state where elapsed time is itself a problem, so these apply to it alone —
@@ -195,7 +198,33 @@ const ElapsedTimer = ({
 
 const AllCallMonitoring = () => {
   const { user } = useUser();
-  const { liveCalls, eventLiveCallsData, socketEventsManager } = useSocketEvents();
+  const { liveCalls, eventLiveCallsData, socketEventsManager, usersOnlineStatus } =
+    useSocketEvents();
+  const { users: extensionUsers = [] } = useUsersDirectory();
+
+  /* The console shows agents by name; the call feed only carries their
+     extension, so it is resolved against the directory the rest of
+     Monitoring already uses. An extension with no match keeps its number
+     rather than reading "Unknown User", which says less than the digits do. */
+  const getAgentName = useCallback(
+    (extension?: string) => {
+      if (!extension) return '';
+      return getUserNameByExtension(extensionUsers, extension, String(extension));
+    },
+    [extensionUsers],
+  );
+
+  const isAgentOnline = useCallback(
+    (extension?: string) =>
+      Boolean(
+        extension &&
+          usersOnlineStatus?.some(
+            (entry: any) =>
+              String(entry?.userId ?? '').trim() === String(extension).trim() && entry?.online,
+          ),
+      ),
+    [usersOnlineStatus],
+  );
   const liveCallsData = useMemo(() => {
     if (Array.isArray(liveCalls) && liveCalls.length > 0) return liveCalls;
     return Array.isArray(eventLiveCallsData) ? eventLiveCallsData : [];
@@ -286,17 +315,26 @@ const AllCallMonitoring = () => {
     };
   }, []);
 
-  const getRowClassName = (row: any) => {
-    const status = row?.original?.['State'];
-    switch (status) {
-      case 'ringing':
-      case 'early':
-        return 'bg-yellow-400';
-      case 'confirmed':
-        return 'bg-green-400';
-      default:
-        return '';
+  /**
+   * Marks each row with its call state, so the list can be read down the
+   * left edge instead of by scanning the Status column.
+   *
+   * This read `row.original['State']` and matched on 'confirmed' — neither
+   * exists in the live-calls payload, which carries lowercase `status` with
+   * values like 'answered' and 'waiting'. So every row fell through to '' and
+   * nothing was ever styled.
+   */
+  const getCallState = (call: any) => {
+    const status = String(call?.status || '').toLowerCase();
+
+    if (status === 'waiting') {
+      const startedAt = getCallDurationStartedAtMs(call);
+      const waitedMs = startedAt ? Date.now() - startedAt : 0;
+      return waitedMs >= WAIT_CRITICAL_MS ? 'critical' : 'waiting';
     }
+    if (status === 'on_hold') return 'hold';
+    if (status === 'ringing' || status === 'early' || status === 'trying') return 'ringing';
+    return 'connected';
   };
 
   const monitorCall = (code: string, callId: any) => {
@@ -351,7 +389,7 @@ const AllCallMonitoring = () => {
       accessorKey: 'did_number',
       cell: ({ row }) => {
         const data = row?.original;
-        return <>{data?.['did_number'] || '---'}</>;
+        return <>{data?.['did_number'] || ''}</>;
       },
     },
     {
@@ -388,11 +426,30 @@ const AllCallMonitoring = () => {
       accessorKey: 'State',
       cell: ({ row }) => {
         const data = row?.original;
-        const status = data?.status || 'waiting';
+        const status = String(data?.status || 'waiting').toLowerCase();
+        const label = STATE_TYPE_NAME[status as keyof typeof STATE_TYPE_NAME] || 'Unknown';
+
+        /* A chip rather than plain text, in the design system's own state
+           colours — the same treatment the task list uses for OVERDUE /
+           SCHEDULED. Waiting past the SLA turns red so a queue in trouble
+           is visible without reading every row. */
+        const timestamp = getCallDurationStartedAtMs(data);
+        const waitedMs = status === 'waiting' && timestamp ? Date.now() - timestamp : 0;
+        const tone =
+          status === 'waiting'
+            ? waitedMs >= WAIT_CRITICAL_MS
+              ? 'bg-mcm-crit-wash text-mcm-crit'
+              : 'bg-mcm-warn-wash text-mcm-warn'
+            : status === 'on_hold'
+              ? 'bg-mcm-hold-wash text-mcm-hold'
+              : 'bg-mcm-live-wash text-mcm-live';
+
         return (
-          <div>
-            <p>{status ? STATE_TYPE_NAME[status as keyof typeof STATE_TYPE_NAME] : '---'}</p>
-          </div>
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${tone}`}
+          >
+            {label}
+          </span>
         );
       },
     },
@@ -417,9 +474,11 @@ const AllCallMonitoring = () => {
 
         return (
           <>
-            {data?.status === 'waiting' ? (
-              <>Waiting for agent.</>
-            ) : data?.call_type === 'conference' ? (
+            {/* Nothing for a waiting call. "Waiting for agent." was a status
+                sentence sitting in the destination column, contradicting the
+                header and repeating the Status chip beside it — there is no
+                "to" yet, which an empty cell says accurately. */}
+            {data?.status === 'waiting' ? null : data?.call_type === 'conference' ? (
               <Popover>
                 <PopoverTrigger asChild>
                   <div className="cursor-pointer flex items-center">
@@ -573,7 +632,8 @@ const AllCallMonitoring = () => {
         //  &&
         //   isCurrentSystemOnCall
         // monitoringCallJoined;
-        if (isButtonDisabled) return '---';
+        // An empty cell reads as 'no action here'; '---' reads as a failed load.
+        if (isButtonDisabled) return null;
         return (
           <span className="flex gap-2 items-center">
             {monitoringAccessActions?.listen && (
@@ -637,28 +697,28 @@ const AllCallMonitoring = () => {
     <>
       <section className="w-full overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          {/* "Monitoring ›" dropped: the section head above the rail prints it
-              now, so this bar was repeating it before every screen name. */}
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            <span className="text-primary text-md">All Calls</span>
-          </p>
-          <div className="flex gap-2 "></div>
-        </div>
+        <MonitoringTopbarSlot>
+          <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
+            <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+              Monitoring
+              <div className="-rotate-90 text-gray-800">
+                <Icon name="ChevronIcon" className="w-5 h-5" />
+              </div>
+              <span className="text-primary text-md">All Calls</span>
+            </p>
+            <div className="flex gap-2 "></div>
+          </div>
+        </MonitoringTopbarSlot>
         <div className="w-full  p-3 flex flex-col gap-2 h-full">
           {/* <h6 className="text-gray-900 font-semibold text-lg">All Calls Monitoring</h6>
           <h5 className="font-semibold text-gray-900 text-md">Calls</h5> */}
-          <TableManager
-            {...{
-              columns,
-              staticData: filteredActiveCalls || [],
-              showPagination: false,
-              getRowClassName,
-              emptyTablePlaceholder: 'No active calls at the moment',
-              descriptionEmptyTable: 'Only ringing or answered calls are displayed here.',
-              // isHeightSet:true,
-              customClass: 'h-[calc(100%-4.2rem)]',
-            }}
+          <LiveCallList
+            calls={filteredActiveCalls || []}
+            columns={columns}
+            getState={getCallState}
+            getAgentName={getAgentName}
+            isAgentOnline={isAgentOnline}
+            startedAt={getCallDurationStartedAtMs}
           />
         </div>
       </section>
