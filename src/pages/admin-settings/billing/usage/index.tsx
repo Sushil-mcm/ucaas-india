@@ -105,7 +105,18 @@ const UsageBar = ({ row }: { row: UsageRow }) => {
 
 const AllowanceTable = ({ rows }: { rows: UsageRow[] }) => (
   <div className="scroller overflow-x-auto py-2">
-    <table className="w-full min-w-[38rem] border-collapse text-sm">
+    <table className="w-full min-w-[38rem] table-fixed border-collapse text-sm">
+      {/* Same reason as the breakdown tables below: five figures per row, each
+          kept under its own heading rather than drifting apart across columns
+          the browser sized from the header text. */}
+      <colgroup>
+        <col />
+        <col className="w-[96px]" />
+        <col className="w-[88px]" />
+        <col className="w-[80px]" />
+        <col className="w-[92px]" />
+        <col className="w-[96px]" />
+      </colgroup>
       <thead>
         <tr>
           {['Service', 'Included', 'Used', 'Over', 'Rate', 'Cost'].map((h, i) => (
@@ -189,7 +200,20 @@ const SpendTable = ({
 
   return (
     <div className="scroller overflow-x-auto py-2">
-      <table className="w-full min-w-[24rem] border-collapse text-sm">
+      <table className="w-full min-w-[24rem] table-fixed border-collapse text-sm">
+        {/* The figures were auto-sized: "Talk time" claimed 219px for values
+            like "6m", and the label column took 330px, so a number sat a long
+            way from the heading it belonged to with nothing joining them.
+            Fixed widths keep the four figures in a tight block on the right,
+            each directly under its own heading, and give the slack to the
+            label, which is the column that actually varies. */}
+        <colgroup>
+          <col />
+          <col className="w-[104px]" />
+          <col className="w-[84px]" />
+          <col className="w-[96px]" />
+          <col className="w-[76px]" />
+        </colgroup>
         <thead>
           <tr>
             {[unit, 'Spent', 'Calls', 'Talk time', 'Share'].map((h, i) => (
@@ -412,12 +436,17 @@ const Usage = () => {
       hideHead
       section="Billing"
       title="Usage"
+      /* The period picker sits beside Export CSV in the head rather than in a
+         filters bar of its own. That bar is a full-width strip with its own
+         surface, and it was spending a whole row on one dropdown. */
       actions={
-        <Button type="button" variant="outline" onClick={exportCsv} disabled={spendLoading}>
-          Export CSV
-        </Button>
+        <>
+          <DateDropdown dropdownVal={dropdownVal} setDropdownVal={setDropdownVal} />
+          <Button type="button" variant="outline" onClick={exportCsv} disabled={spendLoading}>
+            Export CSV
+          </Button>
+        </>
       }
-      filters={<DateDropdown dropdownVal={dropdownVal} setDropdownVal={setDropdownVal} />}
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
         {/* The period's one big number, split the way a customer thinks about it:
