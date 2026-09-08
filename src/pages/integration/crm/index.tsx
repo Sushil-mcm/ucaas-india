@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { Switch } from '@/components/ui/switch';
@@ -102,16 +103,17 @@ const CRMIntegration = () => {
     );
   };
 
+  useSetAdminPageMeta({
+    description:
+      'Connect the system your team already works in, so calls, contacts and activity flow both ways.',
+  });
+
+  /* The Admin head already prints this screen's name beside the sidebar's own
+     title, so the block below said it a second time under an "Integration"
+     eyebrow that repeats the section the nav has highlighted. The sentence is
+     the only part worth keeping; it goes to the info button by the title. */
   return (
     <section className="mcm-intpage">
-      <div className="mcm-intpage-head">
-        <div className="mcm-intpage-eyebrow">Integration</div>
-        <h1>CRM</h1>
-        <p>
-          Connect the system your team already works in, so calls, contacts and activity flow both
-          ways.
-        </p>
-      </div>
       <div className="mcm-intgrid">
         {crmList?.map((crm) => {
           const isConnected = getConnectionStatus(crm.id);
@@ -122,7 +124,7 @@ const CRMIntegration = () => {
               <div className="flex flex-col gap-5 w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-start w-full">
-                    <div className="flex shrink-0 items-center justify-center bg-gray-100 rounded-lg p-3 h-16 w-16">
+                    <div className="flex shrink-0 items-center justify-center bg-[#FBE2C8]/45 rounded-lg p-3 h-16 w-16">
                       <img src={crm?.image} alt={crm?.alt} className="w-10 h-10 object-contain" />
                     </div>
                     {isConnected && (

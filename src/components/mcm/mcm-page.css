@@ -3655,33 +3655,6 @@
   background: var(--ground);
 }
 
-.mcm-admin .mcm-intpage-head {
-  flex: none;
-  padding: 18px 22px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-.mcm-admin .mcm-intpage-eyebrow {
-  font-family: var(--mono, ui-monospace, monospace);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.mcm-admin .mcm-intpage-head h1 {
-  margin: 3px 0 0;
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.mcm-admin .mcm-intpage-head p {
-  margin: 4px 0 0;
-  max-width: 68ch;
-  font-size: 12.5px;
-  color: var(--ink-3);
-}
 
 .mcm-admin .mcm-intgrid {
   min-height: 0;
@@ -3745,14 +3718,6 @@
   margin-top: auto;
 }
 
-/* Integration heads that also carry actions. */
-.mcm-admin .mcm-intpage-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 14px;
-}
 
 /* ==================================================================
    Statement of account

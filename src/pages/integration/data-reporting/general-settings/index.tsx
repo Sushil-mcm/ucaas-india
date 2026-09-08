@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,13 +9,17 @@ import { handleAlert } from '@/lib/utils';
 const GeneralSettings = () => {
   const { user } = useUser();
 
+  useSetAdminPageMeta({
+    description:
+      'How call and message data is shared with the systems you have connected.',
+  });
+
+  /* The Admin head already prints this screen's name beside the sidebar's own
+     title, so the block below said it a second time under an "Integration"
+     eyebrow that repeats the section the nav has highlighted. The sentence is
+     the only part worth keeping; it goes to the info button by the title. */
   return (
     <div className="w-full min-w-0 flex flex-col overflow-hidden">
-      <div className="mcm-intpage-head">
-        <div className="mcm-intpage-eyebrow">Integration</div>
-        <h1>General Settings</h1>
-        <p>How call and message data is shared with the systems you have connected.</p>
-      </div>
       <div className="w-full p-3 overflow-y-auto xs:max-h-[62vh] md:max-h-full">
         <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-xl border border-[rgba(225,200,165,0.9)] space-y-6">
           <div className="flex flex-col gap-1">

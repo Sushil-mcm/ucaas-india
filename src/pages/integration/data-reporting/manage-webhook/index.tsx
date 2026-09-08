@@ -1,6 +1,9 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { SearchLine } from '@/assets/icons';
 import TableManager from '@/components/custom/table-manager';
-import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import AddPathModal from '../modal/AddPathModal';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -33,37 +36,40 @@ const ManageWebhook = () => {
     setEditForm({ isEdit: false, formData: {} });
     setModalState(true);
   };
+  useSetAdminPageMeta({
+    description: 'Endpoints the console posts to when calls, messages or contacts change.',
+  });
+
   return (
-    <div className="w-full min-w-0 bg-gray-200/15 flex flex-col overflow-hidden">
+    <div className="w-full min-w-0 flex flex-col overflow-hidden">
       {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-      <div className="mcm-intpage-head mcm-intpage-head-row">
-        <div>
-          <div className="mcm-intpage-eyebrow">Integration</div>
-          <h1>Manage Webhook</h1>
-          <p>Endpoints the console posts to when calls, messages or contacts change.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Search webhooks"
-            className="pl-10 min-h-9 rounded-lg"
-            IconPosition="left-0 pl-2 inset-y-0"
-            value={search}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.startsWith(' ')) return;
-              setSearch(value);
-            }}
-            Icon={<SearchLine className="text-gray-700" />}
-          />
-          <button type="button" className="btn primary" onClick={handleOpen}>
-            <Icon name="PlusIcon" className="w-3 h-3" />
-            New webhook
-          </button>
-        </div>
-      </div>
+      {/* Title and sentence belong to the Admin head; the button goes up beside
+          them, and search drops onto the row above the table as a chip, the way
+          every other Admin list carries it. */}
+      <AdminHeadActions>
+        <button type="button" className="btn primary" onClick={handleOpen}>
+          <Icon name="PlusIcon" className="w-3 h-3" />
+          New webhook
+        </button>
+      </AdminHeadActions>
 
       <>
         <div className="w-full p-3 flex flex-col gap-2">
+          <div className="mcm-listbar">
+            <label className="mcm-numsearch">
+              <SearchLine />
+              <input
+                type="search"
+                placeholder="Search webhooks"
+                value={search}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearch(value);
+                }}
+              />
+            </label>
+          </div>
           <TableManager
             {...{
               // fetcherKey: 'callListingLog',
