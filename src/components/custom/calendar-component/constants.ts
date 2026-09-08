@@ -32,6 +32,7 @@ export interface CalendarRef {
   openScheduleDetails: (schedule: any) => void;
   setCurrentDate: (date: Date) => void;
   refreshCalendar: () => void;
+  resetStuckHover: () => void;
 }
 
 export const SYNC_BUTTON_LABELS = {

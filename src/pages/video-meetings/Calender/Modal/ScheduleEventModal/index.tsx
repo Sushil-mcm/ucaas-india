@@ -159,7 +159,55 @@ const ScheduleEventModal = ({
 
   useEffect(() => {
     if (Object.keys(user)?.length > 0 && !isEdit) {
-      const { timezone, country_code, country } = user?.settings?.operational_hours?.regional || {};
+      const { timezone: rawTimezone, country_code: rawCountryCode } =
+        user?.settings?.operational_hours?.regional || {};
+
+      /* The user's saved regional settings are plain strings, but every
+         other consumer here (CustomSelect, the edit-mode loader above,
+         RegionalModal) reads/writes `{ label, value }` option objects.
+         Setting the raw string left `watchTimezone` looking "set" but
+         `.value` (read on submit, and by the Date/Start Time enablement
+         below) always undefined — Date and Start Time stayed disabled,
+         and submitting failed with "Timezone is required" even after
+         picking one. Resolving through countryList and falling back to
+         India/Asia-Kolkata when the user has no regional settings yet
+         fixes both: the fields enable immediately, and default to the
+         country most of this codebase's users are in. */
+      const matchedCountry =
+        (rawCountryCode &&
+          countryList?.find(
+            (country: any) =>
+              country?.isoCode?.toUpperCase() === String(rawCountryCode).toUpperCase(),
+          )) ||
+        (rawTimezone &&
+          countryList?.find((country: any) =>
+            country?.timezones?.some((tz: any) => tz.zoneName === rawTimezone),
+          )) ||
+        countryList?.find((country: any) => country?.isoCode === 'IN');
+
+      const isTimezoneValidForCountry = matchedCountry?.timezones?.some(
+        (tz: any) => tz.zoneName === rawTimezone,
+      );
+      const resolvedTimezone = isTimezoneValidForCountry
+        ? rawTimezone
+        : matchedCountry?.timezones?.[0]?.zoneName || 'Asia/Kolkata';
+
+      const countryCodeLabel = matchedCountry
+        ? `${matchedCountry.name} (${matchedCountry.phonecode?.startsWith('+') ? matchedCountry.phonecode : `+${matchedCountry.phonecode}`})`
+        : '';
+
+      const timezone = { label: resolvedTimezone, value: resolvedTimezone };
+      const country_code = {
+        label: countryCodeLabel,
+        value: matchedCountry?.isoCode || '',
+        name: matchedCountry?.name || '',
+      };
+      const country = {
+        label: matchedCountry?.name || '',
+        value: matchedCountry?.name || '',
+        name: matchedCountry?.name || '',
+      };
+
       setValue('settings.operational_hours.regional.timezone', timezone);
       setValue('settings.operational_hours.regional.country_code', country_code);
       setValue('settings.operational_hours.regional.country', country);
@@ -605,30 +653,18 @@ const ScheduleEventModal = ({
   useEffect(() => {
     if (isEdit || (eventAndTaskDetailInfo && eventAndTaskDetailInfo?.length > 0)) return;
 
-    let date;
-    if (startDate && typeof startDate.toDate === 'function') {
-      date = moment(startDate.toDate()).add(10, 'minutes');
-    } else {
-      // Fallback for Chat or other entry points where startDate is not provided
-      const timezone = watchTimezone?.value || Intl.DateTimeFormat().resolvedOptions().timeZone;
-      date = moment(new Date().toLocaleString('en-US', { timeZone: timezone })).add(10, 'minutes');
-    }
+    const date =
+      startDate && typeof startDate.toDate === 'function' ? moment(startDate.toDate()) : moment();
 
-    if (date) {
-      const formattedStartDate = date.format('YYYY-MM-DD');
-      const hour = date.format('HH');
-      const minute = date.format('mm');
-      setValue('meeting_date', formattedStartDate);
-      setValue('hr', {
-        value: hour.toString().padStart(2, '0'),
-        label: hour.toString().padStart(2, '0'),
-      });
-      setValue('mins', {
-        value: minute.toString().padStart(2, '0'),
-        label: minute.toString().padStart(2, '0'),
-      });
-    }
-  }, [startDate, isEdit, watchTimezone?.value, eventAndTaskDetailInfo?.length, setValue]);
+    /* Start Time always opens on 00:00 rather than "now + 10 min" — the
+       past-time guard below still disables/bumps it forward the moment
+       the date is today and 00:00 has already passed, so this only
+       changes what a future-dated schedule (or "today" before midnight
+       has meaningfully elapsed) opens showing. */
+    setValue('meeting_date', date.format('YYYY-MM-DD'));
+    setValue('hr', { value: '00', label: '00' });
+    setValue('mins', { value: '00', label: '00' });
+  }, [startDate, isEdit, eventAndTaskDetailInfo?.length, setValue]);
 
   useEffect(() => {
     const timezone = watchTimezone?.value;
@@ -805,6 +841,27 @@ const ScheduleEventModal = ({
     await submitSchedulePayload(data);
   };
 
+  /* react-hook-form silently refuses to call `onSubmit` when validation
+     fails — e.g. Reminder is switched on but no Reminder Mode is picked
+     yet. The field itself does show a small error icon, but nothing
+     happens when the button is clicked, which reads as the button being
+     broken rather than as "fix this field first". Surfacing the first
+     error as an alert, same as a failed API call would, makes the
+     click visibly do something either way. */
+  const onInvalidSubmit = (formErrors: any) => {
+    const firstMessage = (function findFirstMessage(node: any): string | undefined {
+      if (!node || typeof node !== 'object') return undefined;
+      if (typeof node.message === 'string' && node.message) return node.message;
+      for (const value of Object.values(node)) {
+        const found = findFirstMessage(value);
+        if (found) return found;
+      }
+      return undefined;
+    })(formErrors);
+
+    handleAlert({ text: firstMessage || 'Please fill in the required fields', type: 'error' });
+  };
+
   const handleTaskConfirmOpenChange = (open: boolean) => {
     setTaskConfirmOpen(open);
     if (!open) {
@@ -850,26 +907,21 @@ const ScheduleEventModal = ({
           <FormProvider {...formInstance}>
             <form
               className="flex h-full min-h-0 w-full flex-col gap-2"
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
             >
               <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-2 pr-1 sm:pr-2">
+                {/* Timezone always defaults to the user's regional settings
+                    (India/Asia-Kolkata when none are saved — see the effect
+                    above), so there's nothing here to change; the "Change"
+                    button and the Regional Settings modal it opened are
+                    gone, this is now a plain read-only line. */}
                 <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
-                    {/* <Icon className="w-4 h-4 text-slate-400" /> */}
                     <span className="text-sm font-medium text-slate-600">
                       {watchTimezone?.label || 'Select Timezone'}
                       {watchCountry?.label ? `, ${watchCountry?.label}` : ''}
                     </span>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-8 w-full border-slate-200 text-slate-600 hover:text-slate-600 hover:bg-slate-100 sm:w-auto"
-                    onClick={() => handleOpenModal('regionalModal')}
-                  >
-                    Change
-                  </Button>
                 </div>
                 <Input
                   {...register('name')}
@@ -903,6 +955,7 @@ const ScheduleEventModal = ({
                     <Label className="text-slate-700 font-semibold">Start Time</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <CustomSelect
+                        inputClass="mcm-time-select"
                         placeholder="Hours"
                         options={startMeetHourArr?.map((item) => {
                           const shouldDisable =
@@ -921,6 +974,7 @@ const ScheduleEventModal = ({
                         isDisabled={!watchTimezone}
                       />
                       <CustomSelect
+                        inputClass="mcm-time-select"
                         placeholder="Mins"
                         options={startMeetMinutesArr?.map((item) => {
                           const isToday = isTodayInTimezone(WatchDate, watchTimezone?.value);

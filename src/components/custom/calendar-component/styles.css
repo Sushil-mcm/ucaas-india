@@ -364,3 +364,787 @@ input::-moz-focus-inner {
 .tui-full-calendar-timegrid-todaymarker {
   background-color: var(--color-ucass-active) !important;
 }
+
+/* ==================================================================
+   Keep the weekday names in view while the dates scroll.
+
+   The month view lives inside an `overflow-y: auto` container, and the
+   day-name row sits inside it, so scrolling to a later week carried
+   "Sun Mon Tue…" off the top and left the dates unlabelled.
+
+   `.tui-view-7` is the static 31px block the calendar reserves for that
+   row in normal flow; the row itself is absolutely positioned inside it.
+   Pinning the wrapper rather than the row keeps the library's own layout
+   intact — the absolute child simply resolves against this box instead of
+   the month container, which occupies the same rectangle.
+
+   The background is required: without it the scrolling dates show
+   straight through the pinned row.
+   ================================================================== */
+.tui-full-calendar-month .tui-view-7 {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(13, 21, 38, 0.08);
+}
+
+/* ==================================================================
+   Calendar toolbar controls.
+
+   The view dropdown, Today and the month arrows are Bootstrap's stock
+   `.btn .btn-default .btn-sm`: #333 text on a #ccc hairline, 4px radius,
+   no weight and no depth. Beside this app's rounded, shadowed, orange
+   controls they read as unstyled markup rather than part of the page.
+
+   Restyled to the same vocabulary as the rest of the console — 34px tall,
+   10px radius, design-system ink and line colours, and an accent hover.
+   Scoped to `.mcm-calbar` so nothing else using `.btn` is touched.
+   ================================================================== */
+.mcm-calbar .btn,
+.mcm-calbar .btn-default,
+.mcm-calbar .btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mcm-line);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--mcm-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(13, 21, 38, 0.05);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+
+/* Tints are derived from `--primary`, not from `--mcm-accent-*`. Those
+   tokens are still blue (#2563eb) at `:root` — only `.mcm-page` remaps them
+   to the orange theme, and this toolbar sits outside one, so using them
+   here painted a blue hover onto an orange app. */
+.mcm-calbar .btn:hover,
+.mcm-calbar .btn-default:hover {
+  background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  border-color: color-mix(in srgb, var(--primary) 40%, #ffffff);
+  color: color-mix(in srgb, var(--primary) 75%, #2b1a08);
+  box-shadow: 0 2px 6px rgba(13, 21, 38, 0.08);
+}
+
+.mcm-calbar .btn:active {
+  transform: translateY(1px);
+}
+
+/* `:focus-visible`, not `:focus`. A plain `:focus` ring stuck to whichever
+   button was last clicked and sat there afterwards; this shows a ring only
+   for keyboard navigation, where it is the only cue available, and never
+   after a mouse click. */
+.mcm-calbar .btn:focus,
+.mcm-calbar .btn:focus:active {
+  outline: 0;
+  box-shadow: 0 1px 2px rgba(13, 21, 38, 0.05);
+}
+
+.mcm-calbar .btn:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* The ring belongs to the view dropdown alone, and only while its menu is
+   open — it says "this list is showing", so it goes away when the list
+   does. `.open` is toggled on the wrapper by the component. */
+/* The ring belongs to the view dropdown alone, and only while its menu is
+   showing. Keyed off `:focus` rather than the wrapper's `.open` class: the
+   menu opens on click and closes on the next click anywhere, which is the
+   same moment the button loses focus — so the two states coincide, and
+   `:focus` is the one that reliably wins the cascade here. */
+.mcm-calbar .dropdown.open .dropdown-toggle.btn-default,
+.mcm-calbar .dropdown-toggle:focus,
+.mcm-calbar .dropdown-toggle:focus:active {
+  background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  border-color: color-mix(in srgb, var(--primary) 45%, #ffffff);
+  color: color-mix(in srgb, var(--primary) 75%, #2b1a08);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* ---- where the colour goes ----
+   The surfaces stay white. Colouring four adjacent buttons would give the
+   row four competing blocks, which is the "over-filled" version. Instead
+   the icons carry the accent — a few pixels each — and only `Today`, the
+   one control that performs an action rather than setting a mode, gets a
+   tinted surface. Colour marks what things are, not that they exist. */
+.mcm-calbar .btn svg,
+.mcm-calbar .calendar-icon {
+  color: var(--primary);
+  opacity: 0.9;
+}
+
+.mcm-calbar .move-today {
+  background: color-mix(in srgb, var(--primary) 12%, #ffffff);
+  border-color: color-mix(in srgb, var(--primary) 32%, #ffffff);
+  color: color-mix(in srgb, var(--primary) 78%, #2b1a08);
+}
+.mcm-calbar .move-today:hover {
+  background: color-mix(in srgb, var(--primary) 20%, #ffffff);
+  border-color: color-mix(in srgb, var(--primary) 50%, #ffffff);
+}
+
+/* The two month arrows are icon-only, so they get a square footprint
+   rather than the text button's horizontal padding. */
+.mcm-calbar .btn.move-day {
+  width: 34px;
+  padding: 0;
+}
+
+/* Today and the arrows are one cluster; the view dropdown is its own
+   control. The stock 4px margins spaced all four apart identically. */
+.mcm-calbar .move-today {
+  margin-right: 8px !important;
+}
+.mcm-calbar .move-day {
+  margin-right: 6px !important;
+}
+
+/* ---- filter legend ----
+   Bare checkboxes with a coloured ring and a label floating beside them.
+   As chips they read as the toggles they are. */
+.mcm-calbar .lnb-calendars-d1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mcm-calbar .lnb-calendars-item {
+  margin: 0;
+}
+
+.mcm-calbar .lnb-calendars-item label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--mcm-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.mcm-calbar .lnb-calendars-item label:hover {
+  background: var(--mcm-surface-2);
+}
+
+/* The selected filter gets a surface and an edge, so which one is active
+   is legible from the chip and not only from the small filled ring. */
+.mcm-calbar .lnb-calendars-item:has(input:checked) label {
+  background: #ffffff;
+  border-color: var(--mcm-line);
+  color: var(--mcm-ink);
+  box-shadow: 0 1px 2px rgba(13, 21, 38, 0.05);
+}
+
+/* "All" is not a category — it is the absence of a filter — so its red
+   swatch pointed at nothing in the grid while adding a fourth accent hue to
+   a row already carrying orange, blue and green. Neutralised so only the
+   two real categories carry colour, and they keep the exact hues the month
+   grid and the mini calendar's dots use. The swatch colours come from the
+   calendar config as inline styles, hence `!important`. */
+.mcm-calbar .lnb-calendars-item input[value='ALL'] + span {
+  border-color: var(--mcm-ink-4) !important;
+  background-color: transparent !important;
+}
+.mcm-calbar .lnb-calendars-item input[value='ALL']:checked + span {
+  background-color: var(--mcm-ink-3) !important;
+  border-color: var(--mcm-ink-3) !important;
+}
+
+/* ==================================================================
+   Month grid.
+
+   Four things left it looking unfinished:
+   - the "today" marker was blue (#0f6ae7) on an orange app;
+   - Sundays were #ff4040, which reads as an error rather than a weekend;
+   - dates were plain 14px/400 #333, with no relation to the type scale;
+   - cell borders were flat #e5e5e5 rather than the console's line colour.
+   ================================================================== */
+
+/* Today, in the app's accent. `--color-ucass-active` is also blue, so the
+   existing rule for this marker did not fix the clash. */
+.tui-full-calendar-month-week-item
+  .tui-full-calendar-today
+  .tui-full-calendar-weekday-grid-date-decorator,
+.tui-full-calendar-weekday-grid-date-decorator {
+  background-color: var(--primary) !important;
+  font-weight: 700;
+}
+
+/* Sunday's colour is set further down, in the accent. This block only
+   needs to stop the library's #ff4040 from reaching it — that red reads as
+   an error rather than a weekend. */
+
+/* Days of the month on display: full-strength ink, so they are the thing
+   you read. Plus Jakarta Sans (the app's default) draws "1" with a serif
+   flag and foot that reads as a lowercase "l" at this weight — the same
+   glyph issue already fixed on the Schedule modal's Start Time dropdown
+   (see index.css's `.mcm-time-select`). Every date 10-19, 21, 31 in this
+   grid carries a "1", so it's worth the same fix here: the plain system
+   sans-serif stack draws "1" as a plain vertical stroke, and tabular
+   figures keep every date the same width as the month scrolls by. */
+.tui-full-calendar-weekday-grid-date {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--mcm-ink) !important;
+}
+
+/* Days belonging to the previous or next month: lighter and unweighted, so
+   the current month stands clear of its padding.
+
+   The class is `extra-date`. An earlier attempt keyed off `near-month-day`,
+   which sounds like it means "a day near this month" but is on every cell
+   in the view — so it greyed out all 42 dates and erased the distinction
+   entirely. */
+.tui-full-calendar-weekday-grid-line.tui-full-calendar-extra-date
+  .tui-full-calendar-weekday-grid-date {
+  color: var(--mcm-ink-4) !important;
+  font-weight: 500 !important;
+}
+
+/* Sunday in the accent, in both the header and the column. */
+.tui-full-calendar-month-dayname span[style*='#ff4040'],
+.tui-full-calendar-month-dayname span[style*='rgb(255, 64, 64)'],
+.tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sun
+  .tui-full-calendar-weekday-grid-date {
+  color: var(--primary) !important;
+}
+
+/* A Sunday outside the current month is still a padding day first, so it
+   takes a faded accent rather than the full one. */
+.tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sun.tui-full-calendar-extra-date
+  .tui-full-calendar-weekday-grid-date {
+  color: color-mix(in srgb, var(--primary) 45%, #ffffff) !important;
+  font-weight: 500 !important;
+}
+
+/* Today's number stays white on the accent disc. */
+.tui-full-calendar-today .tui-full-calendar-weekday-grid-date-decorator {
+  color: #ffffff !important;
+}
+
+/* Softer rules, and the day-name row picks up the same line colour. */
+.tui-full-calendar-month-dayname,
+.tui-full-calendar-weekday-grid-line,
+.tui-full-calendar-month-week-item > div {
+  border-color: var(--mcm-line) !important;
+}
+
+.tui-full-calendar-month-dayname span {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ==================================================================
+   Month grid — structure.
+
+   Recolouring did not fix the "raw" look, because the problem was shape,
+   not hue: the grid ran edge to edge with no container, cells were bare
+   boxes with 3px of padding so the date sat jammed in the corner, and
+   nothing responded to the pointer. It read as a table, not a surface.
+
+   So: put the grid on a card, give the cells room, and let today and
+   hover register.
+   ================================================================== */
+
+/* The grid becomes a panel with an edge, the way every other block in the
+   console is presented. `overflow: hidden` lets the corners clip the cell
+   borders, which removes the doubled-up outer rule as a side effect. */
+.mcm-calshell {
+  background: #ffffff;
+  border: 1px solid var(--mcm-line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(13, 21, 38, 0.04),
+    0 6px 20px rgba(13, 21, 38, 0.05);
+}
+.mcm-calshell.lg\:overflow-auto {
+  overflow: auto;
+}
+
+/* The library's own bundled stylesheet puts `min-height: 600px` on
+   `.tui-full-calendar-month` unconditionally. A 4- or 5-week month is
+   deliberately given an inner box shorter than a 6-week one so every
+   week row stays the same height (see `applyMonthRowHeight` in
+   CustomTuiCalendar.tsx) — that min-height fought that, silently
+   flooring the library's own row-height math back up to 600px's worth
+   whenever the target was smaller, which is exactly what stretched a
+   4-week month's rows taller instead of leaving blank space below them.
+   Scoped to this calendar only, not the library's stylesheet itself. */
+.mcm-calshell .tui-full-calendar-month {
+  min-height: 0 !important;
+}
+
+/* Room around the date. It had 3px, so the number sat against the corner
+   of its cell with no margin on any side. */
+.mcm-calshell .tui-full-calendar-weekday-grid-line {
+  padding: 7px 9px !important;
+  transition: background 0.12s;
+}
+
+/* Every cell carries inline `background-color: inherit` and its own
+   `border-right: 1px solid #e5e5e5`, written by the library onto the
+   element. Nothing below lands without `!important`. */
+.mcm-calshell .tui-full-calendar-weekday-grid-line {
+  border-right-color: var(--mcm-line) !important;
+}
+
+/* Cell backgrounds. The library writes `background-color: inherit` inline
+   on every grid cell, but inline styles without a `!important` of their own
+   still lose to an author stylesheet `!important` — so these DO land, they
+   just need it. Without them the grid was 42 identical white boxes with a
+   grid of lines between them; today read only from the small accent disc on
+   its number, no column told you it was a weekend, and nothing responded to
+   the pointer, so the whole thing looked more like a spreadsheet than a
+   surface in this console. */
+.mcm-calshell .tui-full-calendar-weekday-grid-line.tui-full-calendar-today {
+  background-color: color-mix(in srgb, var(--primary) 7%, #ffffff) !important;
+}
+
+/* Weekend columns, a shade off white — enough to read as "different day
+   rhythm" scanning down a week without competing with the today wash or an
+   event's own colour. Extra-month weekend days (padding into the next/prev
+   month) get a lighter version so the month boundary still reads first. */
+.mcm-calshell
+  .tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sun:not(
+    .tui-full-calendar-today
+  ),
+.mcm-calshell
+  .tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sat:not(
+    .tui-full-calendar-today
+  ) {
+  background-color: var(--mcm-surface-2) !important;
+}
+.mcm-calshell
+  .tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sun.tui-full-calendar-extra-date:not(
+    .tui-full-calendar-today
+  ),
+.mcm-calshell
+  .tui-full-calendar-weekday-grid-line.tui-full-calendar-holiday-sat.tui-full-calendar-extra-date:not(
+    .tui-full-calendar-today
+  ) {
+  background-color: color-mix(in srgb, var(--mcm-surface-2) 55%, #ffffff) !important;
+}
+
+/* This used to be a plain `:hover` rule. Clicking a cell (or a schedule
+   inside it) opens a popup right where the cursor already is; when that
+   popup closes again the mouse hasn't moved, so the browser never
+   re-runs hover matching and the cell is left shaded as if still under
+   the cursor -- indistinguishable, visually, from an empty floating
+   container still sitting on the grid. `:hover` itself is opaque to
+   JS -- `pointerEvents` toggles, `classList` churn, nothing forces a
+   browser to drop a hover match without an actual pointer move.
+   `mcm-cell-hover`, applied by real `mouseover`/`mouseout` listeners
+   below, is a plain class instead: it looks identical for genuine mouse
+   movement, but unlike `:hover` we can also remove it ourselves,
+   unconditionally, the moment a click is about to open a popup. */
+.mcm-calshell .tui-full-calendar-weekday-grid-line.mcm-cell-hover {
+  background-color: color-mix(in srgb, var(--mcm-ink) 4%, #ffffff) !important;
+  cursor: pointer;
+}
+
+/* Today's disc: sized to the number rather than to the row. */
+.mcm-calshell .tui-full-calendar-weekday-grid-date-decorator {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  font-size: 12.5px !important;
+}
+
+/* ---- day head: date number + busy pill ----
+   The cell's space below the number now carries a count instead of a stack
+   of clipped titles. */
+.mcm-calshell .mcm-dayhead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.mcm-calshell .mcm-daypill {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mcm-calshell .mcm-daypill.is-event {
+  background: rgba(0, 169, 255, 0.12);
+  color: #0b6ea8;
+}
+
+.mcm-calshell .mcm-daypill.is-task {
+  background: rgba(52, 195, 143, 0.14);
+  color: #1d7a58;
+}
+
+/* ==================================================================
+   Month cell previews.
+
+   One entry per day, shown as a dot, its title and the time beneath —
+   rather than the coloured bar the library draws by default. The bars
+   were hidden here while the cells carried a count pill instead; they are
+   back now, restyled as plain text so a cell reads as a small list.
+   ================================================================== */
+.mcm-calshell .tui-full-calendar-month .tui-full-calendar-weekday-schedule {
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 0 !important;
+  margin: 0 !important;
+  /* Clears the cell's left rule, so the dot has air on both sides rather
+     than sitting against the grid line. */
+  padding: 0 6px 0 8px !important;
+  height: auto !important;
+  line-height: 1.25 !important;
+  color: var(--mcm-ink-2) !important;
+}
+
+/* The library draws its own bullet as well as the one in the template, and
+   the two stacked read as a single stretched capsule rather than a dot.
+   Ours carries the category colour by class, so the library's inline-styled
+   one is the redundant half. */
+.mcm-calshell .tui-full-calendar-weekday-schedule-bullet {
+  display: none !important;
+}
+
+/* Centred in the space under the date rather than tucked directly beneath
+   it. Was 16px, tuned back when every month rendered a taller 6-row grid;
+   the fixed 5-row viewport (see `applyMonthRowHeight` in
+   CustomTuiCalendar.tsx) gives every row less height than that, and the
+   extra margin was what pushed the time line past the cell's own bottom
+   border on shorter rows. */
+.mcm-calshell .tui-full-calendar-month .tui-full-calendar-weekday-schedule-block {
+  margin-top: 10px !important;
+}
+
+/* The library sets the bar's own colour inline; the text below takes the
+   category colour from the dot instead. */
+.mcm-calshell .tui-full-calendar-weekday-schedule-title {
+  padding: 0 !important;
+  color: var(--mcm-ink-2) !important;
+}
+
+.mcm-calshell .mcm-evt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.15;
+  overflow: hidden;
+}
+
+.mcm-calshell .mcm-evt-line {
+  display: flex;
+  align-items: center;
+  /* Room on both sides of the dot rather than it sitting against the
+     title. */
+  gap: 8px;
+  padding-left: 2px;
+  min-width: 0;
+}
+
+/* One colour per category, matching the ids in `findColors`:
+   event blue (2), task green (3), meeting violet (4). The same three are
+   used by the legend and the mini calendar's dots, so a colour means the
+   same thing everywhere on the page. */
+/* `align-self: center` with a fixed box: as a flex child the dot was being
+   stretched to the line's height and rendering as a capsule rather than a
+   circle. */
+.mcm-calshell .mcm-evt-dot {
+  flex: 0 0 6px;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 999px;
+  background: #00a9ff;
+}
+.mcm-calshell .mcm-evt.is-task .mcm-evt-dot {
+  background: #34c38f;
+}
+.mcm-calshell .mcm-evt.is-meeting .mcm-evt-dot {
+  background: #a78bfa;
+}
+
+/* Lighter than the 600 it started on — at preview size the bolder weight
+   made a cell of entries read heavier than the dates above them. Sized
+   down a point from 12px so the title+time pair clears the cell's own
+   bottom border on the fixed 5-row viewport's shorter rows. */
+.mcm-calshell .mcm-evt-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mcm-ink-2);
+}
+
+/* The time sits under the title, indented to line up with it rather than
+   with the dot. Indent tracks the dot (6px) plus the gap (8px). Sized down
+   alongside the title for the same reason — this line is the one that was
+   actually getting clipped. */
+.mcm-calshell .mcm-evt-time {
+  padding-left: 16px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--mcm-ink-4);
+}
+
+/* "N more" when a day holds more than the one preview.
+
+   The library appends this as a plain sibling span right after the date
+   number inside `.tui-full-calendar-weekday-grid-header` — in normal
+   flow, on the same line as the number, which is what let it visually
+   collide with (or run past) a narrow cell. `-in-week` was also the wrong
+   class name for month view — this library renders it as
+   `-in-month` there, so that old rule never matched anything. Anchoring
+   the header as the positioning parent and pinning the badge to its own
+   top-right corner keeps it clear of the date number regardless of
+   column width, without touching the click handler the library already
+   attached to it (it still opens that day's full list). */
+.mcm-calshell .tui-full-calendar-weekday-grid-header {
+  position: relative;
+}
+
+.mcm-calshell .tui-full-calendar-weekday-exceed-in-month {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.mcm-calshell .tui-full-calendar-weekday-grid-more-schedules {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--mcm-surface-2);
+  color: var(--mcm-ink-3) !important;
+  font-size: 10px !important;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mcm-calshell .tui-full-calendar-weekday-grid-more-schedules:hover {
+  background: color-mix(in srgb, var(--primary) 12%, var(--mcm-surface-2));
+  color: color-mix(in srgb, var(--primary) 78%, #2b1a08) !important;
+}
+
+/* ==================================================================
+   Day / Week timed blocks.
+
+   The Day and Week views render the same `template.time` markup as the
+   month preview (`.mcm-evt` / `.mcm-evt-title` / `.mcm-evt-time`), but here
+   it sits on a solid category-colour block rather than a white card — and
+   both views share `.mcm-calshell` with the month grid, so the month
+   preview's colours (`--mcm-ink-2` title, `--mcm-ink-4` time — tuned for
+   dark text on white) were landing here too. `--mcm-ink-4` is a pale
+   grey-blue; on the task block's `#34c38f` green it was barely legible,
+   which is what read as "the time isn't visible". The dot had the same
+   problem one level worse: task events painted it the block's own green,
+   invisible against itself. Library-set corners were a hard 2px, blockier
+   than every other rounded surface in this console.
+
+   Scoped to `.tui-full-calendar-time-schedule` — the colour-block wrapper —
+   so the month view's white-card styling is untouched. */
+.mcm-calshell .tui-full-calendar-time-schedule {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(13, 21, 38, 0.14);
+}
+
+.mcm-calshell .tui-full-calendar-time-schedule .mcm-evt-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.mcm-calshell .tui-full-calendar-time-schedule .mcm-evt-time {
+  /* White at reduced opacity rather than a different, unrelated colour —
+     it stays legible on every category's block colour and still reads as
+     secondary to the title next to it. */
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500 !important;
+}
+
+.mcm-calshell .tui-full-calendar-time-schedule .mcm-evt-dot {
+  background: #ffffff !important;
+  opacity: 0.9;
+}
+
+/* ==================================================================
+   View switch.
+
+   Day / Week / Month as three buttons in one segmented control, replacing
+   the dropdown that hid two of the three options behind a click. The
+   current view is the filled segment, so what you are looking at is
+   readable without opening anything.
+   ================================================================== */
+.mcm-calbar .mcm-viewswitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--mcm-line);
+  border-radius: 10px;
+  background: var(--mcm-surface-2);
+}
+
+.mcm-calbar .mcm-viewswitch-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcm-ink-3);
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.mcm-calbar .mcm-viewswitch-btn:hover {
+  color: var(--mcm-ink);
+}
+
+/* The segment you are on: a raised white tile, the way a segmented
+   control shows its selection. */
+.mcm-calbar .mcm-viewswitch-btn.is-on {
+  background: #ffffff;
+  color: color-mix(in srgb, var(--primary) 78%, #2b1a08);
+  box-shadow: 0 1px 2px rgba(13, 21, 38, 0.08);
+}
+
+/* ---- weekends ----
+   A setting rather than a view, so it reads as a toggle rather than a
+   fourth segment of the switch beside it. */
+.mcm-calbar .mcm-weekendtoggle {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mcm-line);
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcm-ink-3);
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.mcm-calbar .mcm-weekendtoggle:hover {
+  color: var(--mcm-ink);
+}
+
+.mcm-calbar .mcm-weekendtoggle.is-on {
+  background: color-mix(in srgb, var(--primary) 12%, #ffffff);
+  border-color: color-mix(in srgb, var(--primary) 38%, #ffffff);
+  color: color-mix(in srgb, var(--primary) 78%, #2b1a08);
+}
+
+/* ==================================================================
+   Week/Day dayname header (Sun/Mon/Tue...). Scoped to `.mcm-calshell`
+   AND to `.tui-full-calendar-dayname-container` specifically — Month's
+   own header is a different element (`.tui-full-calendar-month-
+   dayname`), so this never touches it.
+
+   `applyDayWeekHeight` (CustomTuiCalendar.tsx) already gives this
+   header's own parent box a real, bounded height so the library's
+   internal timegrid scrolls on its own, below the header, without the
+   header needing any special positioning — that's how the library's
+   own dayname-container-plus-timegrid-container layout is built to
+   work. `position: sticky` here is the belt to that suspenders: this
+   header is always the first thing painted at the top of its own
+   scroll ancestor regardless of exactly which box ends up scrolling
+   (this one, an ancestor, or the library's internal one), so it can
+   only ever help, never fight, the height-based fix. The solid
+   background + z-index are what stop the library's own current-time
+   line (`.tui-full-calendar-timegrid-hourmarker`, absolutely
+   positioned within the scrolling timegrid) from visually showing
+   through the header at whatever scroll position happens to place it
+   directly underneath.
+
+   `.mcm-calshell` (the scroll container itself, in CustomTuiCalendar.tsx)
+   is `overflow-auto` but was left at its default `position: static` —
+   harmless for the scroll-container role itself (that only needs
+   `overflow`, not `position`), but every ancestor between this header
+   and it was confirmed live to be `overflow: visible` (including
+   `.tui-full-calendar-layout`, called out explicitly — it's `display:
+   block`, not `flex`, and never clips), so nothing in that chain was
+   found actually breaking sticky's containing-block resolution.
+   `position: relative` below is still added as a standing guarantee —
+   it costs nothing (no offsets are set, so it changes no layout) and
+   removes any ambiguity about which box sticky resolves against. */
+.mcm-calshell {
+  position: relative;
+}
+
+.mcm-calshell .tui-full-calendar-dayname-container {
+  /* The library writes `background-color: inherit` inline on this
+     element (confirmed live) — same as the month grid cells elsewhere
+     in this file, an inline value with no `!important` of its own
+     still beats an author-stylesheet rule that lacks one too, so this
+     needs it to actually land. */
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  background-color: #ffffff !important;
+  /* A clean hairline-shadow divider between the pinned header and
+     whatever schedule content scrolls up underneath it, rather than
+     the header just ending abruptly. */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* The library's own bundled CSS
+   (node_modules/tui-calendar/src/css/week/layout.styl) hardcodes
+   `.tui-full-calendar-week-container { min-height: 600px }` —
+   unconditionally, with no regard for how tall the container we
+   actually gave it is. `applyDayWeekHeight` (CustomTuiCalendar.tsx)
+   sizes the dayname header and the timegrid correctly, but neither of
+   those is this element — `week-container` is an *ancestor* of both,
+   and its own 600px floor was never touched by that fix. On any
+   viewport where the real available height for Day/Week drops below
+   600px (confirmed live down to a 394px case), this floor wins,
+   `.mcm-calshell` gains that leftover height as real scroll capacity
+   on top of the timegrid's own internal scroll, and scrolling past
+   the timegrid's true end lands on blank canvas below the last hour
+   row before hitting the shell's actual bottom border. Removing the
+   floor here lets the element size to its children (the header +
+   timegrid, both already correctly bounded) instead of a fixed
+   library default. */
+.mcm-calshell .tui-full-calendar-week-container {
+  min-height: 0 !important;
+}
