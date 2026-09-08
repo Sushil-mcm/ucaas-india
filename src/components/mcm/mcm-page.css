@@ -178,15 +178,29 @@
   min-height: 0;
   overflow: hidden;
 }
-/* Tab triggers are excluded from `color`/`border` below. This reset is
-   unlayered, so it beats every Tailwind utility regardless of specificity (see
-   the flex-direction note above) - including the
+/* Tab triggers and every shared Radix-based control that renders as a plain
+   `<button>` under the hood (`Button` → `data-slot="button"`, `Checkbox` →
+   `data-slot="checkbox"`, `RadioGroupItem` → `data-slot="radio-group-item"`)
+   are excluded from `color`/`border`/`background` below. This reset is
+   unlayered, so it beats every Tailwind utility regardless of specificity
+   (see the flex-direction note above) - including the
    `data-[state=active]:text-primary` and `data-[state=active]:border-b-primary`
-   that tab strips mark the open tab with. `border: 0` erased the underline and
-   `color: inherit` erased the accent, so every tab rendered identically and a
-   drawer gave no clue which tab you were on. The font, background and cursor
-   parts of the reset still apply; only the two the tabs own are left to them. */
-.mcm-page button:not([data-slot='tabs-trigger']) {
+   that tab strips mark the open tab with, and every `border`/`bg-*`/`text-*`
+   variant class those components apply. Without these exclusions, any of
+   them rendered as a plain (non-portaled) descendant of `.mcm-page` - e.g.
+   inside a `SideDrawer` or an inline (non-portaled) `Popover`, neither of
+   which renders through a portal - loses its border, background and text
+   color entirely, appearing unstyled/invisible regardless of its own
+   variant/checked/state classes. The exclusions are wrapped in `:where()` so
+   they add zero specificity: chained `:not()` clauses (without `:where()`)
+   pushed this rule's specificity above `.mcm-page .btn.primary`/`.btn.ghost`
+   (the hand-styled `.btn` buttons elsewhere in this file), which briefly
+   broke their border/color/background the same way. */
+.mcm-page button:where(
+    :not([data-slot='tabs-trigger']):not([data-slot='button']):not([data-slot='checkbox']):not(
+        [data-slot='radio-group-item']
+      )
+  ) {
   font: inherit;
   color: inherit;
   border: 0;
