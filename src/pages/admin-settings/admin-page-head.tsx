@@ -107,6 +107,14 @@ const useScreenTitles = () => {
     adminSettingArr(features, isAdmin)
       .filter((section: any) => canShowItem(section, isAdmin))
       .forEach((section: any) => {
+        /* A top-level entry can BE a screen rather than a folder of them —
+           Social Media Channels carries a path and has no children. Walking
+           only `children` meant the registry knew of no title for it, so the
+           head rendered nothing; the page happened to draw a title of its own,
+           which hid that until the duplicate was removed. */
+        if (section?.path && section?.title) {
+          rows.push({ path: section.path, title: section.title, section: section.title });
+        }
         (section?.children || [])
           .filter((child: any) => child && canShowItem(child, isAdmin))
           .forEach((child: any) => {
