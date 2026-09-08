@@ -8305,3 +8305,57 @@
   border: 1px solid rgba(225, 200, 165, 0.9);
   background: rgba(251, 249, 246, 0.88);
 }
+
+/* "Only show gaps" — a filter you switch on, so it reads as pressed when it is
+   on rather than staying a quiet checkbox the eye slides past. Same pill as the
+   view tabs beside it, so the row is one set of controls. */
+.mcm-admin .mcm-numtoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.mcm-admin .mcm-numtoggle:hover {
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
+}
+
+.mcm-admin .mcm-numtoggle.on {
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.mcm-admin .mcm-numtoggle input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* Call coverage prints a sentence per row explaining what a caller actually
+   hears. It is the point of the screen, so it gets room to wrap instead of
+   being squeezed by the columns either side of it. */
+.mcm-admin .mcm-adminpage .mcm-covwhat {
+  min-width: 260px;
+  max-width: 420px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+  white-space: normal;
+}

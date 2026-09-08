@@ -16,6 +16,7 @@ import SideDrawer from '@/components/custom/side-drawer';
 import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
 import { Ic } from '@/components/mcm/icons';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import {
   buildNumberStandard,
   buildVoicemailPatch,
@@ -236,32 +237,33 @@ const CallCoverage = () => {
         title="Call coverage"
         description="Which numbers and extensions would drop a call right now, and what it takes to close each gap."
         filters={
-          <>
-            <div className="ptabstrip">
-              <button
-                type="button"
-                className={tab === 'numbers' ? 'on' : ''}
-                onClick={() => setTab('numbers')}
-              >
-                Numbers
-              </button>
-              <button
-                type="button"
-                className={tab === 'extensions' ? 'on' : ''}
-                onClick={() => setTab('extensions')}
-              >
-                Extensions
-              </button>
-              <button
-                type="button"
-                className={tab === 'greetings' ? 'on' : ''}
-                onClick={() => setTab('greetings')}
-              >
-                Voicemail greetings
-              </button>
-            </div>
+          /* One bar rather than a row of loose controls. Every direct child of
+             `.mcm-adminpage-bar` is capped at 380px and stretched to fill it,
+             which is why the "Only show gaps" checkbox was drawn as a box half
+             the width of the page and the count was pushed onto a line of its
+             own. Wrapped, they lay out as one row. */
+          <div className="mcm-numbar">
+            <nav className="mcm-numtabs" aria-label="Coverage views">
+              {(
+                [
+                  ['numbers', 'Numbers'],
+                  ['extensions', 'Extensions'],
+                  ['greetings', 'Voicemail greetings'],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  type="button"
+                  key={key}
+                  aria-current={tab === key ? 'page' : undefined}
+                  className={`mcm-numtab ${tab === key ? 'on' : ''}`}
+                  onClick={() => setTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
             {tab === 'greetings' ? null : (
-              <label className="fchip">
+              <label className={`mcm-numtoggle ${onlyGaps ? 'on' : ''}`}>
                 <input
                   type="checkbox"
                   checked={onlyGaps}
@@ -313,7 +315,7 @@ const CallCoverage = () => {
                 <span className="num">{counts.gaps}</span> of {counts.total} would drop a call
               </span>
             )}
-          </>
+          </div>
         }
       >
         {isLoading ? (
@@ -336,7 +338,11 @@ const CallCoverage = () => {
                 visibleNumbers.map(({ did, coverage }) => (
                   <tr key={did?.uuid || did?.did_number}>
                     <td className="num">
-                      <span style={{ display: 'block', fontWeight: 700 }}>{did?.did_number}</span>
+                      {/* `+918037683128` reads `+91 80 3768 3128` with its flag
+                          on every other Numbers screen. */}
+                      <span style={{ display: 'block', fontWeight: 700 }}>
+                        <NumberWithFlag number={did?.did_number} />
+                      </span>
                       {did?.did_name ? (
                         <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>{did.did_name}</span>
                       ) : null}
@@ -356,12 +362,12 @@ const CallCoverage = () => {
                     <td>
                       <span className={STATE_CLASS[coverage.state]}>{coverage.headline}</span>
                     </td>
-                    <td style={{ maxWidth: 380 }}>{coverage.detail}</td>
+                    <td className="mcm-covwhat">{coverage.detail}</td>
                     <td>
                       {coverage.fixable ? (
                         <button
                           type="button"
-                          className="btn"
+                          className="btn ghost sm"
                           onClick={() => setConfirming({ did, coverage })}
                           disabled={applying}
                         >
@@ -411,9 +417,9 @@ const CallCoverage = () => {
                     <td>
                       <span className={STATE_CLASS[coverage.state]}>{coverage.headline}</span>
                     </td>
-                    <td style={{ maxWidth: 420 }}>{coverage.detail}</td>
+                    <td className="mcm-covwhat">{coverage.detail}</td>
                     <td>
-                      <button type="button" className="btn" onClick={() => setEditingUser(user)}>
+                      <button type="button" className="btn ghost sm" onClick={() => setEditingUser(user)}>
                         {coverage.state === 'covered' ? 'Call rules' : 'Set voicemail'}
                       </button>
                     </td>
@@ -467,14 +473,14 @@ const CallCoverage = () => {
                             <span className="tag warn">Just a tone</span>
                           )}
                         </td>
-                        <td style={{ maxWidth: 420, color: 'var(--ink-3)', fontSize: 12.5 }}>
+                        <td className="mcm-covwhat">
                           {failure ||
                             voicemailScriptFor(personName(person), spokenCompany || undefined)}
                         </td>
                         <td>
                           <button
                             type="button"
-                            className="btn"
+                            className="btn ghost sm"
                             disabled={Boolean(generating)}
                             onClick={() => runGeneration([person])}
                           >
