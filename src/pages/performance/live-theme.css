@@ -230,6 +230,28 @@ body.perf-warm-toolbar .mcm-page .perf-tbar .fchip:not(.live):not(.stale) .dot.a
   }
 }
 
+/* "Stale — updated ..." — the freshness badge once a feed has gone quiet
+   past the threshold. The global `.fchip.stale` (live-theme.css, further
+   down) only sets border-color/text, leaving `background` to fall back to
+   `.fchip`'s own flat `var(--surface)` — stark solid white against this
+   view's warm gradient, the same "near-white chip on a warm backdrop"
+   problem the "Waiting for data" state above was fixed for. Same warm
+   frosted treatment here, so neither pre-live state looks like a
+   different, mismatched component next to the other. */
+body.perf-warm-toolbar .mcm-page .perf-tbar .fchip.stale {
+  background: rgba(255, 247, 237, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(249, 115, 22, 0.22) !important;
+  color: #9a3412 !important;
+  font-size: 12px;
+  font-weight: 500;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar .fchip.stale .dot.amber {
+  background: #ea580c;
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.18);
+}
+
 /* Secondary action ("Wallboard") — `.btn.ghost`'s default styling
    (`var(--surface-2)` fill, `var(--line)` border) is a near-white on
    near-white against this toolbar's `#fffaf4` tint, reading as barely

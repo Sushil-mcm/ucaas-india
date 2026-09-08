@@ -191,6 +191,18 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   font-weight: inherit;
 }
 
+/* Leadership review: the gap between Row 1 (the shared 8-tile KPI band,
+   `.page-band`, rendered one level up by the Performance page shell) and
+   Row 2 (the 6-metric strip immediately below, `.kpi-strip`) read as an
+   awkward empty band pushing the Queues table too far down. That gap is
+   `.perf-queues`'s own top padding (Tailwind `py-4` in
+   queues-activity-tab.tsx, 16px) — tightened here rather than in the
+   component, so `py-4` can stay as one class covering every other edge
+   (bottom/left/right) without a one-off arbitrary value replacing it. */
+.mcm-page .perf-queues {
+  padding-top: 14px !important;
+}
+
 /* ------------------------------------------------------------
    3. Six-metric snapshot strip (Busiest queue / Longest waiting / Lowest
    SLA / Total members / Available now / Total interacting) — one frosted
@@ -207,33 +219,65 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   padding: 6px;
   gap: 4px;
 }
+/* Leadership review: each cell used to be a translucent
+   `rgba(255,255,255,0.55)` wash — mostly-transparent white sitting directly
+   over the warm gradient page, which read as a flat "stark white box"
+   rather than actual frosted glass. Opaque `#fffdfb` + its own blur/border/
+   shadow gives every cell (breach included, below) real depth instead of
+   just fading into the backdrop. */
 .mcm-page .perf-queues .kpi-strip-cell {
   border-left: none;
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.55);
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(249, 115, 22, 0.16) !important;
+  box-shadow: 0 4px 16px rgba(160, 95, 30, 0.08) !important;
   margin: 0 2px;
-  transition: background-color 0.16s ease;
+  transition: all 0.2s ease;
 }
 .dark .mcm-page .perf-queues .kpi-strip-cell {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.04) !important;
 }
+/* One hover treatment for every cell, breach included — a warm peach
+   lift, not a background-colour swap. Previously `.kpi-strip-cell:hover`
+   applied unconditionally (same class present on a breaching cell), so it
+   overrode the breach's own background on hover — Longest Waiting's pink
+   fill would flash to solid white the instant a cursor crossed it. Since
+   neither state has its own solid background any more (both use this same
+   glass card + a peach hover wash), there's nothing left to flash between. */
 .mcm-page .perf-queues .kpi-strip-cell:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(254, 215, 170, 0.25) !important;
 }
 .dark .mcm-page .perf-queues .kpi-strip-cell:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08) !important;
 }
+/* Longest Waiting, breaching — the card itself stays the same uniform
+   glass every other cell gets (above); the breach reads through the
+   number's own colour, a soft rose hairline and an ambient glow instead
+   of painting the whole card solid pink/red. */
 .mcm-page .perf-queues .kpi-strip-cell-breach {
-  background: var(--qa-crit-glow-soft);
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.12) !important;
 }
 .mcm-page .perf-queues .kpi-strip-label {
-  color: var(--qa-muted);
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .mcm-page .perf-queues .kpi-strip-value {
-  color: var(--qa-ink);
+  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 800;
+}
+.mcm-page .perf-queues .kpi-strip-value-danger {
+  color: #e11d48 !important;
 }
 .mcm-page .perf-queues .kpi-strip-sub {
-  color: var(--qa-muted);
+  color: #64748b;
+  font-size: 12px;
 }
 @media (max-width: 1180px) {
   .mcm-page .perf-queues .kpi-strip-cell {
