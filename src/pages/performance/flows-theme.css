@@ -137,7 +137,7 @@ body.perf-warm-backdrop.dark {
    gap beneath 4 rows" belongs at that data-table-height level, not CSS.
    ------------------------------------------------------------ */
 .perf-flows .table-scroll {
-  border-radius: 20px;
+  border-radius: 0 0 20px 20px;
   border: 1px solid var(--fl-glass-border);
   background: var(--fl-glass);
   backdrop-filter: var(--fl-glass-blur);
@@ -154,24 +154,32 @@ body.perf-warm-backdrop.dark {
   border-radius: 20px;
   overflow: hidden;
 }
-.perf-flows .table-scroll thead {
-  background: rgba(255, 250, 244, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 var(--fl-hairline);
+.perf-flows .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
-.dark .perf-flows .table-scroll thead {
+.perf-flows thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-flows thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-flows .table-scroll thead th {
-  color: var(--fl-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.perf-flows thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  border-bottom-color: var(--fl-hairline);
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   background: transparent;
+}
+.perf-flows thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-flows thead th:last-child {
+  border-top-right-radius: 20px;
 }
 
 .perf-flows .table-scroll tbody tr {

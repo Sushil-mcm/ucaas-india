@@ -152,6 +152,7 @@ const FlowsTab = () => {
         isHeightSet={false}
         emptyTablePlaceholder="No call flows configured"
         descriptionEmptyTable="IVR menus you create show up here."
+        splitStickyHeader
       />
     </div>
   );
