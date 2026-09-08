@@ -42,7 +42,9 @@
   backdrop-filter: var(--pc-glass-blur);
   -webkit-backdrop-filter: var(--pc-glass-blur);
   border: 1px solid var(--pc-glass-border);
-  border-radius: 18px;
+  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
+     use for their own KPI cards — this view's own 18px was the one gap. */
+  border-radius: 20px;
   box-shadow: var(--pc-glass-shadow);
 }
 .perf-callbacks .stat .k {
@@ -60,18 +62,29 @@
 
 /* ------------------------------------------------------------
    2. Sub-tab switcher ("Scheduled tasks" / "Queue voicemail")
+   Unified Segmented Frosted Capsule Track — the two triggers live inside
+   one pill-shaped glass track instead of floating as separate buttons, so
+   the active/inactive contrast reads correctly (elevated white pill vs.
+   transparent slate text) rather than inverted (solid white inactive pill
+   outshining a washed-out "active" peach pill).
    ------------------------------------------------------------ */
-/* The shadcn Tabs component now paints its own default off-white background
-   on the list container (`rgba(251,249,246,.85)`) at higher specificity
-   than a plain class rule beats — since the list is rectangular while the
-   pills inside it are pill-shaped, that background showed through as a
-   flat white block in the gap between them. `!important` clears it back
-   to transparent, the same fix used for the triggers just below. */
 .perf-callbacks [data-slot='tabs-list'] {
-  background: transparent !important;
-  gap: 6px;
-  padding: 0;
-  height: auto;
+  display: inline-flex !important;
+  width: fit-content !important;
+  align-items: center !important;
+  height: 34px !important;
+  gap: 2px;
+  background: rgba(255, 250, 244, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  border-radius: 9999px;
+  padding: 3px !important;
+  box-shadow: none;
+}
+.dark .perf-callbacks [data-slot='tabs-list'] {
+  background: rgba(17, 24, 39, 0.5) !important;
+  border-color: rgba(251, 146, 60, 0.22);
 }
 
 /* `.mcm-page button[data-slot='tabs-trigger']` (mcm-page.css) sets
@@ -82,47 +95,64 @@
    mcm-page button-reset fight. */
 .perf-callbacks [data-slot='tabs-trigger'] {
   flex: none;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
+  height: 28px !important;
+  padding: 0 14px !important;
+  border-radius: 9999px;
   font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(249, 115, 22, 0.28);
-  box-shadow: none;
+  line-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
   transition:
-    background-color 0.16s ease,
-    color 0.16s ease,
-    border-color 0.16s ease;
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .dark .perf-callbacks [data-slot='tabs-trigger'] {
-  color: #cbd5e1;
-  background: rgba(17, 24, 39, 0.5) !important;
-  border-color: rgba(251, 146, 60, 0.28);
+  color: #94a3b8;
 }
 .perf-callbacks [data-slot='tabs-trigger']:hover {
-  background: rgba(255, 241, 235, 0.9) !important;
-  border-color: rgba(249, 115, 22, 0.4);
-  color: var(--pc-accent-ink);
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: #1a1a1a;
 }
 .dark .perf-callbacks [data-slot='tabs-trigger']:hover {
   background: rgba(251, 146, 60, 0.14) !important;
+  color: #f1f5f9;
 }
 .perf-callbacks [data-slot='tabs-trigger'][data-state='active'],
 .perf-callbacks [data-slot='tabs-trigger'][data-state='active']:hover {
-  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%) !important;
-  border: 1px solid rgba(249, 115, 22, 0.4);
-  box-shadow: 0 2px 8px -3px rgba(249, 115, 22, 0.22);
-  color: var(--pc-accent-ink);
-  font-weight: 700;
+  /* Softened off-white pill (not stark #fff) — elevated but not glaring. */
+  background: rgba(255, 253, 250, 0.92) !important;
+  border: 1px solid rgba(249, 115, 22, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(160, 95, 30, 0.12) !important;
+  color: #ea580c;
+  font-weight: 600;
+}
+.dark .perf-callbacks [data-slot='tabs-trigger'][data-state='active'],
+.dark .perf-callbacks [data-slot='tabs-trigger'][data-state='active']:hover {
+  background: rgba(30, 27, 24, 0.9) !important;
+  border-color: rgba(251, 146, 60, 0.4) !important;
+  color: #fb923c;
 }
 
 /* ------------------------------------------------------------
    3. Main data container — table + pagination, and the empty state
    ------------------------------------------------------------ */
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls/Flows). */
 .perf-callbacks .table-scroll {
-  border-radius: 20px;
+  border-radius: 0 0 20px 20px;
   border: 1px solid var(--pc-glass-border);
   background: var(--pc-glass);
   backdrop-filter: var(--pc-glass-blur);
@@ -139,29 +169,52 @@
   border-radius: 20px;
   overflow: hidden;
 }
-.perf-callbacks .table-scroll thead {
-  background: rgba(255, 246, 238, 0.97);
-  backdrop-filter: var(--pc-glass-blur);
-  -webkit-backdrop-filter: var(--pc-glass-blur);
-  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+.perf-callbacks .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
-.dark .perf-callbacks .table-scroll thead {
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-callbacks thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (callbacks-tab.tsx), which
+   puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it. */
+.perf-callbacks thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-callbacks thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-callbacks .table-scroll thead th {
-  color: var(--pc-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.perf-callbacks thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   background: transparent;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.perf-callbacks thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-callbacks thead th:last-child {
+  border-top-right-radius: 20px;
 }
 .perf-callbacks .table-scroll tbody tr {
   background: transparent;
-  transition: background-color 0.16s ease;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
+/* Directory's signature left accent-bar row hover — every other
+   Performance table already carries this; Callbacks was the one gap. */
 .perf-callbacks .table-scroll tbody tr:hover {
-  background: rgba(255, 241, 235, 0.5);
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--pc-accent);
 }
 .perf-callbacks .table-scroll tbody td {
   color: #334155;
@@ -192,25 +245,24 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Task status ("Pending", "Completed", ...) renders as bare text via
-   `.capitalize` in callbacks-tab.tsx — the same soft rounded pill Live uses
-   for its Status/Direction columns, rather than plain text sitting loose in
-   the cell. */
-.perf-callbacks .table-scroll tbody td .capitalize {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--pc-wash);
-  color: var(--pc-accent-ink);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+/* Task status ("Pending", "Overdue", "Completed", ...) — Directory's own
+   `.tag` badge system (mcm-page.css: `.tag.pos`/`.tag.neg`/`.tag.warn`),
+   picked per-row in callbacks-tab.tsx rather than one flat pill style for
+   every status, so overdue reads as genuinely critical (red), not the same
+   soft orange as a task that's simply still pending. */
+.perf-callbacks .table-scroll tbody td .tag {
+  font-size: 10.5px;
+  padding: 2px 8px;
 }
-.dark .perf-callbacks .table-scroll tbody td .capitalize {
-  background: rgba(251, 146, 60, 0.16);
-  color: #fdba74;
+/* The Due column's own timestamp, when that task is overdue — a plain
+   colour cue right next to the Status badge, so an overdue row reads as
+   overdue from either column a supervisor's eye lands on first. */
+.perf-callbacks .table-scroll tbody td .pc-due-overdue {
+  color: var(--crit, #d32f2f);
+  font-weight: 700;
+}
+.dark .perf-callbacks .table-scroll tbody td .pc-due-overdue {
+  color: #f87171;
 }
 
 /* Voicemail row actions (Play, Call back) — the same warm circular button
@@ -220,9 +272,16 @@
    style instead of a flat tint. */
 .perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-ucass-active-bg'] {
   background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(249, 115, 22, 0.3);
   color: var(--pc-accent-ink);
   box-shadow: 0 1px 2px rgba(249, 115, 22, 0.06);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 .perf-callbacks
   .table-scroll
@@ -232,6 +291,8 @@
   background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-color: transparent;
   color: #fff;
+  box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
 }
 .perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-green-100'] {
   background: rgba(220, 252, 231, 0.9);
@@ -277,3 +338,95 @@
    (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
    page — per explicit request to match that look exactly rather than
    re-theming it warm like the rest of this page. */
+
+/* ------------------------------------------------------------
+   4. Voicemail Playback modal (audio-dialog.tsx)
+   `.vm-modal` is a stable marker class on the Dialog's own content, not a
+   `.perf-callbacks` descendant — Radix portals dialogs to `document.body`,
+   so a page-scoped selector could never reach it. The class only appears
+   when the caller passes `meta` into <AudioModal>, which today is only
+   Performance > Callbacks, so this is safe to leave unscoped globally.
+   ------------------------------------------------------------ */
+.vm-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.vm-play-btn {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(234, 88, 12, 0.28);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.vm-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.34);
+}
+.vm-player-track {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.vm-scrubber {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #f97316 var(--vm-progress, 0%),
+    rgba(249, 115, 22, 0.15) var(--vm-progress, 0%)
+  );
+  outline: none;
+  cursor: pointer;
+  accent-color: #f97316;
+}
+.vm-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ea580c;
+  box-shadow: 0 1px 4px rgba(160, 95, 30, 0.4);
+  cursor: pointer;
+}
+.vm-scrubber::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #ea580c;
+  box-shadow: 0 1px 4px rgba(160, 95, 30, 0.4);
+  cursor: pointer;
+}
+.vm-scrubber::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.15);
+}
+.vm-player-timers {
+  display: flex;
+  justify-content: space-between;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  font-size: 11px;
+  color: #64748b;
+}

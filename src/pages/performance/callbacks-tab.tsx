@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { CalendarCheck, AlertTriangle, Layers, Voicemail, Timer as TimerIcon } from 'lucide-react';
 import TableManager from '@/components/custom/table-manager';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AudioModal from '@/pages/phone/audio-dialog';
@@ -26,6 +27,9 @@ const CallbacksTab = () => {
   const callLogActionAccess = features?.plan_features?.reports?.action || {};
   const [modalState, setModalState] = useState<any>(false);
   const [recordingUrl, setRecordingUrl] = useState('');
+  const [voicemailMeta, setVoicemailMeta] = useState<
+    { fromNumber?: string; didNumber?: string; leftAt?: string; lengthLabel?: string } | undefined
+  >(undefined);
   const [view, setView] = useState<'tasks' | 'voicemail'>('tasks');
 
   const { data: tasks = [] } = useQuery({
@@ -64,6 +68,16 @@ const CallbacksTab = () => {
     0,
   );
 
+  // A task's own `status` field only ever says what was explicitly set
+  // (e.g. "pending") — it doesn't know the due date has since passed. This
+  // derives that third state so a still-"pending" task past its due time
+  // reads as overdue (critical) rather than merely pending (warn), the
+  // same distinction Vishal's team asked to see in the table.
+  const isTaskOverdue = (task: any) =>
+    String(task?.status || '').toLowerCase() !== 'completed' &&
+    Boolean(task?.startTime) &&
+    moment(task.startTime).isBefore(now);
+
   const taskColumns = [
     {
       header: 'Task',
@@ -73,21 +87,36 @@ const CallbacksTab = () => {
     {
       header: 'Created',
       accessorKey: 'createdAt',
+      meta: { textAlign: 'center' },
       cell: ({ row }: any) =>
         row.original?.createdAt ? moment(row.original.createdAt).format('MMM DD, hh:mm A') : '—',
     },
     {
       header: 'Due',
       accessorKey: 'startTime',
-      cell: ({ row }: any) =>
-        row.original?.startTime ? moment(row.original.startTime).format('MMM DD, hh:mm A') : '—',
+      meta: { textAlign: 'center' },
+      cell: ({ row }: any) => {
+        const due = row.original?.startTime;
+        if (!due) return '—';
+        return (
+          <span className={isTaskOverdue(row.original) ? 'pc-due-overdue' : undefined}>
+            {moment(due).format('MMM DD, hh:mm A')}
+          </span>
+        );
+      },
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: ({ row }: any) => (
-        <span className="capitalize">{String(row.original?.status || '—').toLowerCase()}</span>
-      ),
+      meta: { textAlign: 'center' },
+      cell: ({ row }: any) => {
+        const status = String(row.original?.status || '—').toLowerCase();
+        const isCompleted = status === 'completed';
+        const overdue = isTaskOverdue(row.original);
+        const tagClass = isCompleted ? 'tag pos' : overdue ? 'tag neg' : 'tag warn';
+        const label = overdue && !isCompleted ? 'Overdue' : status;
+        return <span className={`${tagClass} capitalize`}>{label}</span>;
+      },
     },
   ];
 
@@ -100,22 +129,26 @@ const CallbacksTab = () => {
     {
       header: 'From',
       accessorKey: 'caller_id_number',
+      meta: { textAlign: 'center' },
       cell: ({ row }: any) => <NumberWithFlag number={row.original?.caller_id_number} />,
     },
     {
       header: 'DID',
       accessorKey: 'via_did',
+      meta: { textAlign: 'center' },
       cell: ({ row }: any) => <NumberWithFlag number={row.original?.via_did} />,
     },
     {
       header: 'Length',
       accessorKey: 'billsectotal',
+      meta: { textAlign: 'right' },
       cell: ({ row }: any) =>
         row.original?.billsectotal ? formatSecondsToMMSS(Number(row.original.billsectotal)) : '—',
     },
     {
       header: 'Action',
       accessorKey: 'action',
+      meta: { textAlign: 'center' },
       cell: ({ row }: any) => {
         const data = row.original;
         const hasRecording = data?.recording_file || null;
@@ -136,6 +169,16 @@ const CallbacksTab = () => {
                   onClick={() => {
                     if (!hasRecording) return;
                     setRecordingUrl(recordingSrcUrl);
+                    setVoicemailMeta({
+                      fromNumber: data?.caller_id_number,
+                      didNumber: data?.via_did,
+                      leftAt: data?.start_stamp
+                        ? convertDateFormateApis(data.start_stamp, 'MMM DD, hh:mm A')
+                        : undefined,
+                      lengthLabel: data?.billsectotal
+                        ? formatSecondsToMMSS(Number(data.billsectotal))
+                        : undefined,
+                    });
                     setModalState(true);
                   }}
                 >
@@ -162,11 +205,12 @@ const CallbacksTab = () => {
   return (
     <div className="perf-callbacks flex w-full flex-col gap-4 px-[22px] py-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <PerfStatCard label="Scheduled tasks" value={String(tasks.length)} />
+        <PerfStatCard label="Scheduled tasks" value={String(tasks.length)} icon={CalendarCheck} />
         <PerfStatCard
           label="Overdue tasks"
           value={String(overdueCount)}
           tone={overdueCount > 0 ? 'danger' : 'default'}
+          icon={AlertTriangle}
         />
         <PerfStatCard
           label="Tasks by source"
@@ -176,11 +220,17 @@ const CallbacksTab = () => {
               ? bySource.map(([source, count]) => `${source}: ${count}`).join(' · ')
               : undefined
           }
+          icon={Layers}
         />
-        <PerfStatCard label="Voicemails today" value={String(todayVoicemails.length)} />
+        <PerfStatCard
+          label="Voicemails today"
+          value={String(todayVoicemails.length)}
+          icon={Voicemail}
+        />
         <PerfStatCard
           label="Voicemail time today"
           value={formatSecondsToMMSS(totalVoicemailDurationToday)}
+          icon={TimerIcon}
         />
       </div>
       <Tabs value={view} onValueChange={(value) => setView(value as 'tasks' | 'voicemail')}>
@@ -203,6 +253,11 @@ const CallbacksTab = () => {
           extraParams={{ filters: [{ key: 'category', value: 'TASK' }] }}
           emptyTablePlaceholder="No scheduled tasks"
           descriptionEmptyTable="Callback and follow-up tasks you schedule show up here."
+          splitStickyHeader
+          /* Without a bounded height, `.table-scroll` just grows to fit
+             every row — no internal scroll for the sticky header to stick
+             within, no scrollbar. Same fix as Performance ▸ Live/Agents. */
+          visibleRowCount={6}
         />
       )}
       {view === 'voicemail' && (
@@ -213,6 +268,15 @@ const CallbacksTab = () => {
           extraParams={{ type: 'voicemail' }}
           emptyTablePlaceholder="No voicemail records found"
           descriptionEmptyTable="Voicemails left on queues and extensions show up here."
+          // isHeightSet only governs the legacy non-split height calc
+          // (table-manager.tsx) — a no-op now that this table renders via
+          // splitStickyHeader, which sizes itself from visibleRowCount
+          // instead. Kept off rather than removed: turning it back on
+          // would do nothing here, but documents that this table
+          // deliberately doesn't want the old window-based auto-height.
+          isHeightSet={false}
+          splitStickyHeader
+          visibleRowCount={6}
         />
       )}
       <AudioModal
@@ -220,6 +284,7 @@ const CallbacksTab = () => {
         setModalState={setModalState}
         srcUrl={recordingUrl}
         serRecordingUrl={setRecordingUrl}
+        meta={voicemailMeta}
       />
     </div>
   );
