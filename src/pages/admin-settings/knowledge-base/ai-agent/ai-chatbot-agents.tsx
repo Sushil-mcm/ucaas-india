@@ -27,6 +27,10 @@ import { Plus, Search, ChevronDown, Loader2 } from 'lucide-react';
 import moment from 'moment';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import PromptModal from '../ai-receptionist/update-prompt';
 import AgentAnalytics from './agent-analytics';
 import ChatAgentConfigureModal from './chat-agent-configure-modal';
@@ -975,6 +979,11 @@ function AiChatbotAgents() {
     ],
   );
 
+  useSetAdminPageMeta({
+    description:
+      'Agents that answer chats on your behalf, the knowledge they draw on, and how each one is performing.',
+  });
+
   if (view === 'analytics') {
     return <AgentAnalytics onClose={() => setView('list')} agents={agentsWithMetrics} />;
   }
@@ -982,50 +991,35 @@ function AiChatbotAgents() {
   return (
     <>
       <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f4f5f7]">
-        <div className="flex min-h-[64px] flex-col gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-3 text-[18px] font-bold text-slate-950">
-              <button
-                type="button"
-                onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-                className="font-medium text-slate-500 transition-colors hover:text-primary"
-              >
-                AI Agents
-              </button>
-              <span className="text-slate-400">/</span>
-              <span>AI Chatbot Agents</span>
-            </div>
-            <p className="mt-1 text-[13px] text-slate-500">
-              Agents that answer chats on your behalf, the knowledge they draw on, and how each one
-              is performing.
-            </p>
-          </div>
-
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-            {agentAccess?.add && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setView('analytics')}
-                className="h-9 gap-2 rounded-lg border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300"
-              >
-                <span className="text-base leading-none">📊</span>
-                Analytics
-              </Button>
-            )}
-            {agentAccess?.add && (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => navigate('/admin-settings/knowledge/create-agent')}
-                className="h-9 gap-2 rounded-lg px-4 text-sm font-semibold shadow-lg shadow-primary/20"
-              >
-                <Plus className="h-4 w-4" />
-                Create New AI Chatbot Agent
-              </Button>
-            )}
-          </div>
-        </div>
+        {/* The Admin shell already prints "Chat Agents" beside the sidebar's
+            own title, so this screen printed its name a second time three
+            lines down, under a breadcrumb back to a page it IS. The buttons go
+            up to that head through the portal, and the description fills the
+            info button next to the title. */}
+        <AdminHeadActions>
+          {agentAccess?.add && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setView('analytics')}
+              className="h-9 gap-2 rounded-lg border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300"
+            >
+              <span className="text-base leading-none">📊</span>
+              Analytics
+            </Button>
+          )}
+          {agentAccess?.add && (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => navigate('/admin-settings/knowledge/create-agent')}
+              className="h-9 gap-2 rounded-lg px-4 text-sm font-semibold shadow-lg shadow-primary/20"
+            >
+              <Plus className="h-4 w-4" />
+              Create New AI Chatbot Agent
+            </Button>
+          )}
+        </AdminHeadActions>
 
         <div className="flex items-center gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-6 py-5">
           <div className="relative max-w-full flex-1 sm:max-w-[440px]">

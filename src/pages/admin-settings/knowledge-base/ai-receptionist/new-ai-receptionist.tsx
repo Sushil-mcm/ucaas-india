@@ -1,3 +1,7 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -2809,48 +2813,38 @@ function NewAiReceptionistPage() {
     );
   }
 
+  useSetAdminPageMeta({
+    description:
+      'An AI that answers calls, works out what the caller needs, and routes them or handles it outright.',
+  });
+
   return (
     <section className="flex h-full min-h-0 w-full flex-col overflow-hidden text-[#07142f]">
-      <div className="flex min-h-[72px] items-center justify-between border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-7">
-        <div>
-          <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
-            <button
-              type="button"
-              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-              className="transition-colors hover:text-primary"
-            >
-              AI Agents
-            </button>
-            <span>/</span>
-            <span className="text-[#2E2D35]">AI Receptionists</span>
-          </div>
-          <p className="mt-0.5 text-[13px] font-normal text-slate-500">
-            An AI that answers calls, works out what the caller needs, and routes them or handles it
-            outright.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={'outline'}
-            onClick={() => {
-              setView('analytics');
-            }}
-            className="gap-1 text-xs font-semibold text-slate-700 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)]"
-          >
-            <TrendingUp className="h-4 w-4" />
-            Analytics
-          </Button>
-          <Button
-            variant={'primary'}
-            onClick={() => {
-              openReceptionistForm(null, 'create');
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Create New Receptionist
-          </Button>
-        </div>
-      </div>
+      {/* The Admin shell prints "AI Receptionists" beside the sidebar's own
+          title, so this screen was naming itself a second time under a
+          breadcrumb back to a page it already is. The buttons go up to that
+          head, and the description fills the info button next to the title. */}
+      <AdminHeadActions>
+        <Button
+          variant={'outline'}
+          onClick={() => {
+            setView('analytics');
+          }}
+          className="gap-1 text-xs font-semibold text-slate-700 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)]"
+        >
+          <TrendingUp className="h-4 w-4" />
+          Analytics
+        </Button>
+        <Button
+          variant={'primary'}
+          onClick={() => {
+            openReceptionistForm(null, 'create');
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Create New Receptionist
+        </Button>
+      </AdminHeadActions>
 
       <div className="flex items-center gap-3 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-7 py-4">
         <div className="relative max-w-full flex-1 sm:max-w-[340px]">

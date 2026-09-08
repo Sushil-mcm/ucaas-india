@@ -5,7 +5,7 @@ import { getChatAgentList, getAIReceptionistList } from '@/services/api';
 import { MessageSquare, Phone, Search, Activity, Zap, Sparkles } from 'lucide-react';
 import Loader from '@/components/custom/loader';
 import CustomAvatar from '@/components/custom/custom-avatar';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { getAi360WidgetKey, getChatWidgetScriptSrc } from '../ai-agent/chat-agent-configure-modal';
 
 const EMBED_SCRIPT_ID = 'ai-agent-test-embed-script';
@@ -47,7 +47,6 @@ const unloadEmbedScript = () => {
 
 function Playground() {
   const location = useLocation();
-  const navigate = useNavigate();
   const initialState = location.state as any;
   const [activeTab, setActiveTab] = useState<'chat' | 'voice'>(
     initialState?.activeTab === 'chat' ? 'chat' : 'voice',
@@ -349,21 +348,9 @@ function Playground() {
         `}</style>
       )}
 
-      {/* Page Header (Matching other AI pages) */}
-      <div className="flex min-h-[64px] items-center justify-between border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 shrink-0">
-        <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
-          <button
-            type="button"
-            onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-            className="transition-colors hover:text-primary"
-          >
-            AI Agents
-          </button>
-          <span>/</span>
-          <span className="text-[#2E2D35]">Playground</span>
-        </div>
-      </div>
-
+      {/* The breadcrumb printed "Playground" a second time, a line under the
+          Admin head that already says it, and carried nothing else — no
+          description and no actions. Dropped rather than moved. */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4 pb-2">
         {/* Dynamic Stats Banner */}
         <div className="relative overflow-hidden bg-slate-900 border border-slate-800 text-white rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">

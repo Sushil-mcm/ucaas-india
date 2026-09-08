@@ -8394,3 +8394,55 @@
   min-width: 0;
   margin-right: auto;
 }
+
+/* ---------------------------------------------------------------------------
+   Admin nav — hovering a section lights the whole row, chevron included.
+
+   A section row is a <button> holding two things: the div with the icon and
+   the label, and the chevron after it. The hover tint was set on that div
+   (`.h-14`), which stops where the label stops — so pointing at a section lit
+   a pill two thirds of the way across and left the chevron sitting on bare
+   sidebar. The tint moves to the button, which is the row.
+
+   The lit state was never affected: `data-state=open` puts its classes on the
+   button already, which is why only hover looked wrong.
+   --------------------------------------------------------------------------- */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'] {
+  align-items: center;
+  width: 100%;
+  padding: 0 10px 0 0;
+  border-radius: 10px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger']:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* The inner div must not paint a second pill inside the first. */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'] .h-14,
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'] .h-14:hover {
+  background: transparent;
+  border-radius: 0;
+  padding-left: 10px;
+  padding-right: 0;
+}
+
+/* The current row, matched to the Activity/Directory rail: a soft wash in a
+   rounded pill with a short accent bar down its inner edge, rather than the
+   2px line the old treatment drew on the RIGHT, where it read as a scrollbar.
+   `.mcm-rail-item.is-lit` uses the same 3px bar and the same accent. */
+.mcm-admin .mcm-adminnav .border-r-primary,
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open'] {
+  border-right: 0 !important;
+  border-radius: 10px;
+  background: var(--accent-wash);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open']:hover {
+  background: var(--accent-wash);
+}

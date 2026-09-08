@@ -1,9 +1,12 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { getAgentList, getChatAgentList, getSessionList } from '@/services/api';
 import AiSessionDetailDrawer from '@/pages/admin-settings/knowledge-base/components/ai-session-detail-drawer';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, Download, Loader2, MessageSquare, Phone, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 type SessionChannel = 'all' | 'call' | 'chat';
 type SelectOption = { label: string; value: string };
@@ -323,8 +326,10 @@ const SentimentGraph = ({ session }: { session: any }) => {
 };
 
 const StatCard = ({ title, value, icon }: { title: string; value: string; icon?: string }) => (
-  <div className="rounded-[10px] border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-    <div className="text-[11px] font-medium text-slate-500">{title}</div>
+  <div className="min-w-0 rounded-[10px] border border-slate-200 bg-white px-3.5 py-3.5 shadow-sm">
+    {/* Wraps rather than forcing the column wider -- "Escalations / handoffs"
+        is the one label that does not fit a seventh of the row on one line. */}
+    <div className="text-[11px] font-medium leading-tight text-slate-500">{title}</div>
     <div className="mt-1 text-[22px] font-bold leading-tight text-slate-950">{value}</div>
     <div className="mt-0.5 min-h-[14px] text-[11px] leading-none text-emerald-600">
       {icon || '\u00a0'}
@@ -333,7 +338,6 @@ const StatCard = ({ title, value, icon }: { title: string; value: string; icon?:
 );
 
 const AiBotSession = () => {
-  const navigate = useNavigate();
   const [activeChannel, setActiveChannel] = useState<SessionChannel>('all');
   const [selectedAgent, setSelectedAgent] = useState(allAgentsOption);
   const [selectedOutcome, setSelectedOutcome] = useState(allOutcomesOption);
@@ -524,56 +528,51 @@ const AiBotSession = () => {
     downloadTextFile('ai-sessions.csv', [header.join(','), ...csvRows].join('\n'));
   };
 
+  useSetAdminPageMeta({
+    description:
+      'Every AI receptionist call and AI chatbot conversation — with transcripts, sentiment and outcomes.',
+  });
+
   return (
     <section className="relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-7 py-[18px]">
-        <div className="text-base font-semibold text-slate-950">
-          <button
-            type="button"
-            onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-            className="font-medium text-slate-500 transition-colors hover:text-primary"
+      {/* "Sessions" was printed three times over: once by the Admin head, once
+          in this breadcrumb, and once again as an <h1> below it. The head keeps
+          the title, the controls go up beside it, and the description fills the
+          info button there. */}
+      <AdminHeadActions>
+        <div className="relative">
+          <select
+            value={dateRange}
+            onChange={(event) => setDateRange(event.target.value)}
+            className="h-[34px] min-w-[140px] appearance-none rounded-[7px] border border-slate-200 bg-white px-3 pr-9 text-xs font-semibold text-slate-950 outline-none"
           >
-            AI Agents
-          </button>
-          <span className="mx-2 text-slate-400">/</span>
-          Sessions
+            {dateRangeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <select
-              value={dateRange}
-              onChange={(event) => setDateRange(event.target.value)}
-              className="h-[34px] min-w-[140px] appearance-none rounded-[7px] border border-slate-200 bg-white px-3 pr-9 text-xs font-semibold text-slate-950 outline-none"
-            >
-              {dateRangeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          </div>
-          <button
-            type="button"
-            onClick={exportCsv}
-            className="inline-flex h-[34px] items-center gap-1.5 rounded-[7px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export CSV
-          </button>
-        </div>
-      </div>
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex h-[34px] items-center gap-1.5 rounded-[7px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export CSV
+        </button>
+      </AdminHeadActions>
 
       <div className="flex-1 overflow-y-auto px-7 py-6">
-        <div>
-          <h1 className="text-[19px] font-extrabold leading-tight text-slate-950">Sessions</h1>
-          <p className="mt-1 text-[13px] text-slate-500">
-            Every AI receptionist call & AI chatbot conversation — with transcripts, sentiment &
-            outcomes.
-          </p>
-        </div>
 
-        <div className="my-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
+        {/* Seven across on a wide screen. `minmax(150px, 1fr)` needed
+            7x150 + 6 gaps = 1122px, which is more than the Admin content area
+            gives at 1366px — so the seventh card dropped to a row of its own
+            and left five card-widths of white beside it. The floor comes down
+            to what the cards actually need, and an explicit seven columns from
+            `xl` keeps them level rather than leaving it to auto-fit. */}
+        <div className="my-4 grid grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-3 xl:grid-cols-7">
           <StatCard title="Total sessions" value={String(stats.totalSessions)} />
           <StatCard title="Voice calls" value={String(stats.voiceCalls)} />
           <StatCard title="Chat sessions" value={String(stats.chatSessions)} />

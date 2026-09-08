@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Icon } from '@/assets/icons/icon';
 import { IconType } from '@/assets/icons/type';
 import CustomSelect from '@/components/custom/custom-select';
@@ -7,7 +8,6 @@ import { AISettingConfig, getAISettingConfig, getChatAgentList } from '@/service
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import { handleAlert } from '@/lib/utils';
 
 const socialMediaList = [
@@ -20,7 +20,6 @@ const socialMediaList = [
 ];
 
 function AISettings() {
-  const navigate = useNavigate();
   const [initialized, setInitialized] = useState(false);
 
   const {
@@ -127,29 +126,16 @@ function AISettings() {
     mutate(payload);
   };
 
+  useSetAdminPageMeta({
+    description: 'How your AI tools behave — models, limits and what they may act on.',
+  });
+
   return (
     <form className="w-full bg-gray-200/15 flex flex-col">
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div>
-          <div className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => navigate('/admin-settings/knowledge/ai-agent')}
-              className="text-slate-500 transition-colors hover:text-primary"
-            >
-              AI Agents
-            </button>
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">Settings</span>
-          </div>
-        </div>
-        <p className="text-gray-500 text-xs">
-          How your AI tools behave — models, limits and what they may act on.
-        </p>
-      </div>
-
+      {/* The Admin head already prints "Settings". This strip repeated it under
+          a breadcrumb and floated the description off to the right where it
+          read as an unrelated caption; it belongs on the info button beside the
+          title, which is where every other Admin screen keeps it. */}
       <div className="w-full h-full flex  flex-col sm:flex-row gap-4 justify-between p-3">
         <div className="h-full bg-white rounded-lg border p-4 w-full">
           <h3 className="font-semibold text-gray-800 mb-3">AI Bot</h3>
