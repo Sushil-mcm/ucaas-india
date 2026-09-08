@@ -1,4 +1,17 @@
 import { useContext, useEffect, useMemo } from 'react';
+import {
+  Info,
+  Sparkles,
+  PhoneCall,
+  Tag,
+  Bot,
+  MessageSquare,
+  PhoneForwarded,
+  CheckCircle2,
+  Clock,
+  Target,
+  Radio,
+} from 'lucide-react';
 import { SocketEvents } from '@/context/socket-events-context';
 import { useUser } from '@/hooks/use-user';
 import TableManager from '@/components/custom/table-manager';
@@ -6,9 +19,41 @@ import PerfStatCard from './stat-card';
 import { formatSecsToClock } from './format';
 import './speech-theme.css';
 
+const StatIconBadge = ({ icon: IconComp }: { icon: any }) => (
+  <span
+    className="stat-icon"
+    style={{
+      display: 'grid',
+      placeItems: 'center',
+      width: 22,
+      height: 22,
+      flex: 'none',
+      borderRadius: 99,
+      background: 'var(--accent-wash)',
+      color: 'var(--accent-ink)',
+    }}
+  >
+    <IconComp style={{ width: 13, height: 13 }} />
+  </span>
+);
+
 /** Sentiment tone, on the shared status tokens rather than raw colours. */
 const toneColor = (value: number) =>
   value > 15 ? 'var(--live)' : value < -15 ? 'var(--crit)' : 'var(--warn)';
+const toneClass = (value: number) => (value > 15 ? 'pos' : value < -15 ? 'neg' : 'neu');
+
+const SENTIMENT_COLORS: Record<'positive' | 'neutral' | 'negative', string> = {
+  positive: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
+  neutral: 'linear-gradient(90deg, #fde047 0%, #eab308 100%)',
+  negative: 'linear-gradient(90deg, #fb7185 0%, #e11d48 100%)',
+};
+
+const sentimentBucketKey = (label?: string): keyof typeof SENTIMENT_COLORS => {
+  const key = String(label || '').toLowerCase();
+  if (key.startsWith('pos')) return 'positive';
+  if (key.startsWith('neg')) return 'negative';
+  return 'neutral';
+};
 
 const SpeechTextTab = () => {
   const {
@@ -19,6 +64,11 @@ const SpeechTextTab = () => {
     isSocketConnected,
   } = useContext(SocketEvents);
   const { user } = useUser();
+
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
 
   const canRefresh = Boolean(
     user?.sip_credentials?.domain &&
@@ -119,7 +169,7 @@ const SpeechTextTab = () => {
       header: 'Avg sentiment',
       accessorKey: 'avgSentiment',
       cell: ({ row }: any) => (
-        <span style={{ fontWeight: 700, color: toneColor(row.original.avgSentiment) }}>
+        <span className={`sp-sentiment-badge ${toneClass(row.original.avgSentiment)}`}>
           {row.original.avgSentiment > 0 ? '+' : ''}
           {row.original.avgSentiment.toFixed(1)}
         </span>
@@ -134,14 +184,26 @@ const SpeechTextTab = () => {
 
   return (
     <div className="perf-speech flex w-full flex-col gap-4 px-[22px] pt-5 pb-6">
-      <p className="page-note">
-        Sentiment for AI receptionist / chatbot handled calls, sourced from the same live data as
-        the AI Wallboard. Human-agent call sentiment isn't aggregated yet — see individual calls'
-        "Call Intelligence" panel under Interactions for those.
-      </p>
+      <div className="st-notice">
+        <Info style={{ width: 14, height: 14 }} />
+        <span>
+          AI-handled call sentiment, from the AI Wallboard. For human-agent calls, see each call's
+          Call Intelligence panel under Interactions.
+        </span>
+      </div>
       <div className="grid3">
         <div className="stat">
-          <div className="k">Avg sentiment</div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <div className="k">Avg sentiment</div>
+            <StatIconBadge icon={Sparkles} />
+          </div>
           <div
             className="v num"
             style={{ color: avgSentiment === null ? undefined : toneColor(avgSentiment) }}
@@ -150,11 +212,31 @@ const SpeechTextTab = () => {
           </div>
         </div>
         <div className="stat">
-          <div className="k">AI calls today</div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <div className="k">AI calls today</div>
+            <StatIconBadge icon={PhoneCall} />
+          </div>
           <div className="v num">{totalAiCalls}</div>
         </div>
         <div className="stat">
-          <div className="k">Top topic</div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <div className="k">Top topic</div>
+            <StatIconBadge icon={Tag} />
+          </div>
           <div className="v" style={{ fontSize: 18 }}>
             {topTopic?.label || '—'}
           </div>
@@ -171,15 +253,25 @@ const SpeechTextTab = () => {
           label="AI containment"
           value={containmentPercent === null ? '—' : `${Math.round(containmentPercent)}%`}
           sub="resolved without a human"
+          icon={Bot}
         />
-        <PerfStatCard label="Total AI chats" value={String(totalAiChats)} />
-        <PerfStatCard label="Transferred to agent" value={String(transferredCalls)} />
-        <PerfStatCard label="Handled by AI only" value={String(handledAiOnly)} />
+        <PerfStatCard label="Total AI chats" value={String(totalAiChats)} icon={MessageSquare} />
+        <PerfStatCard
+          label="Transferred to agent"
+          value={String(transferredCalls)}
+          icon={PhoneForwarded}
+        />
+        <PerfStatCard
+          label="Handled by AI only"
+          value={String(handledAiOnly)}
+          icon={CheckCircle2}
+        />
         <PerfStatCard
           label="Avg AI call duration"
           value={avgAiDuration === null ? '—' : formatSecsToClock(avgAiDuration)}
+          icon={Clock}
         />
-        <PerfStatCard label="Leads captured by AI" value={String(leadsCaptured)} />
+        <PerfStatCard label="Leads captured by AI" value={String(leadsCaptured)} icon={Target} />
         <PerfStatCard
           label="Voice vs text"
           value={
@@ -188,27 +280,62 @@ const SpeechTextTab = () => {
               : `${Math.round(voicePercent)}% / ${Math.round(textPercent ?? 0)}%`
           }
           sub="voice / text"
+          icon={Radio}
         />
         <div className="stat">
           <div className="k">Sentiment distribution</div>
           {sentimentBuckets.length ? (
             <>
-              <div className="hbar-t" style={{ display: 'flex', gap: 2, marginTop: 9 }}>
+              <div
+                className="hbar-t sp-sentiment-bar"
+                style={{ display: 'flex', gap: 2, marginTop: 9 }}
+              >
                 {sentimentBuckets.map((bucket: any, index: number) => (
                   <i
                     key={bucket?.label || index}
                     style={{
                       borderRadius: 0,
-                      background: index % 2 === 0 ? 'var(--accent)' : 'var(--accent-edge)',
+                      background: SENTIMENT_COLORS[sentimentBucketKey(bucket?.label)],
                       width: `${Math.max(0, Number(bucket?.percent) || 0)}%`,
                     }}
                   />
                 ))}
               </div>
-              <div className="d" style={{ color: 'var(--ink-3)', fontWeight: 500 }}>
-                {sentimentBuckets
-                  .map((bucket: any) => `${bucket?.label}: ${bucket?.count}`)
-                  .join(' · ')}
+              <div
+                className="d"
+                style={{
+                  display: 'flex',
+                  flexWrap: 'nowrap',
+                  gap: '4px 10px',
+                  marginTop: 9,
+                  color: 'var(--ink-3)',
+                  fontWeight: 500,
+                }}
+              >
+                {sentimentBuckets.map((bucket: any, index: number) => (
+                  <span
+                    key={bucket?.label || index}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      flex: 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <i
+                      style={{
+                        display: 'inline-block',
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: SENTIMENT_COLORS[sentimentBucketKey(bucket?.label)],
+                        flex: 'none',
+                      }}
+                    />
+                    {bucket?.label}: {bucket?.count}
+                  </span>
+                ))}
               </div>
             </>
           ) : (
@@ -226,6 +353,7 @@ const SpeechTextTab = () => {
           staticData={topics}
           showPagination={false}
           emptyTablePlaceholder="No topics detected yet"
+          splitStickyHeader
         />
       </div>
 
@@ -238,6 +366,7 @@ const SpeechTextTab = () => {
           staticData={agentRows}
           showPagination={false}
           emptyTablePlaceholder="No agent sentiment data yet"
+          splitStickyHeader
         />
       </div>
     </div>

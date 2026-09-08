@@ -50,10 +50,35 @@ body.perf-warm-backdrop .perf-speech {
     #0a0f1a;
 }
 
-/* Page note ("Sentiment for AI receptionist...") — `var(--ink-4)` is a
-   light cool gray meant for a plain background; low contrast against the
-   warm gradient, same issue fixed on the live-queue KPI band. */
-.perf-speech .page-note {
+.perf-speech .st-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.perf-speech .st-notice svg {
+  flex: none;
+  color: var(--sp-accent-ink);
+}
+.perf-speech .st-notice span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dark .perf-speech .st-notice {
+  background: rgba(23, 15, 10, 0.6);
+  border-color: rgba(251, 146, 60, 0.2);
   color: var(--sp-muted);
 }
 
@@ -94,7 +119,7 @@ body.perf-warm-backdrop .perf-speech {
   backdrop-filter: var(--sp-glass-blur);
   -webkit-backdrop-filter: var(--sp-glass-blur);
   border: 1px solid var(--sp-glass-border);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--sp-glass-shadow);
   display: flex;
   flex-direction: column;
@@ -129,6 +154,10 @@ body.perf-warm-backdrop .perf-speech {
 .perf-speech .hbar-t i:only-child {
   background: linear-gradient(90deg, #fb923c 0%, #f97316 100%) !important;
 }
+.perf-speech .sp-sentiment-bar {
+  flex: none;
+  height: 9px;
+}
 
 /* ------------------------------------------------------------
    2. Topics & Agent sentiment ranking tables
@@ -138,47 +167,52 @@ body.perf-warm-backdrop .perf-speech {
 }
 
 .perf-speech .table-scroll {
-  border-radius: 20px;
+  border-radius: 0 0 20px 20px;
   border: 1px solid var(--sp-glass-border);
   background: var(--sp-glass);
   backdrop-filter: var(--sp-glass-blur);
   -webkit-backdrop-filter: var(--sp-glass-blur);
   box-shadow: var(--sp-glass-shadow);
 }
-/* TableManager's own outer wrapper div (`rounded-xl border ...
-   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
-   native scrollbar — a scrollbar isn't clipped by the scrolling
-   element's own border-radius, only by an ancestor's overflow:hidden.
-   That wrapper's default 12px Tailwind radius didn't match this 20px, so
-   the scrollbar rendered as a flat rectangle poking through the corner.
-   Applies to both tables on this page (Topics, Agent sentiment). */
 .perf-speech div:has(> .table-scroll) {
   border-radius: 20px;
   overflow: hidden;
 }
-.perf-speech .table-scroll thead {
-  background: rgba(255, 246, 238, 0.97);
-  backdrop-filter: var(--sp-glass-blur);
-  -webkit-backdrop-filter: var(--sp-glass-blur);
-  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+.perf-speech .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
 }
-.dark .perf-speech .table-scroll thead {
+.perf-speech thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-speech thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-speech .table-scroll thead th {
-  color: var(--sp-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.perf-speech thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   background: transparent;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.perf-speech thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-speech thead th:last-child {
+  border-top-right-radius: 20px;
 }
 .perf-speech .table-scroll tbody tr {
   background: transparent;
-  transition: background-color 0.16s ease;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 .perf-speech .table-scroll tbody tr:hover {
-  background: rgba(255, 241, 235, 0.5);
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--sp-accent);
 }
 .perf-speech .table-scroll tbody td {
   color: #334155;
@@ -217,4 +251,25 @@ body.perf-warm-backdrop .perf-speech {
 .perf-speech .sp-agents-table .table-scroll td:nth-child(n + 2) {
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+.perf-speech .sp-sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.perf-speech .sp-sentiment-badge.pos {
+  background: var(--live-wash);
+  color: var(--live);
+}
+.perf-speech .sp-sentiment-badge.neu {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.perf-speech .sp-sentiment-badge.neg {
+  background: var(--crit-wash);
+  color: var(--crit);
 }
