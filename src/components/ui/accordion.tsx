@@ -45,6 +45,13 @@ function AccordionTrigger({
     >
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
+        /* Whether this section holds the page you are on, which is NOT the same
+           as whether it happens to be expanded. `isActive` reached only the
+           chevron before; the row's own highlight came from `data-state=open`,
+           so collapsing a section while still inside it turned the highlight
+           off. Exposed as an attribute so a stylesheet can say "current"
+           without every consumer of this component changing shape. */
+        data-active={isActive ? 'true' : undefined}
         className={cn(
           isSidebar
             ? 'focus-visible:border-ring rounded-none focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium transition-all outline-none hover:underline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180'

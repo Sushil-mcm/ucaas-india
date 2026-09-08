@@ -8453,13 +8453,19 @@
    (`--color-ucass-active-bg` behind, `--color-ucass-active` on top) and the
    same 3px bar on the inner edge that `.mcm-rail-item.is-lit::before` uses.
 
+   Keyed on `data-active`, not `data-state=open`: a section is current because
+   the page you are on lives in it, not because its list happens to be showing.
+   Collapsing AI Tools while sitting on Playground used to turn the highlight
+   off and leave only an orange chevron behind, and expanding some other section
+   used to light that one instead.
+
    `border`, `outline` and `box-shadow` are all cleared. The row was carrying a
    ring right around itself, which no rail tile has: the trigger keeps focus
    after you click it, and the shared Accordion's class list turns that into a
    3px ring. A rail tile says which page you are on with fill and a bar, and
    nothing else. */
 .mcm-admin .mcm-adminnav .border-r-primary,
-.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open'] {
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-active='true'] {
   position: relative;
   border: 0 !important;
   outline: 0 !important;
@@ -8472,7 +8478,7 @@
 }
 
 .mcm-admin .mcm-adminnav .border-r-primary::before,
-.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open']::before {
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-active='true']::before {
   content: '';
   position: absolute;
   left: -6px;
@@ -8492,7 +8498,7 @@
   color: var(--color-ucass-active, #c96f1f);
 }
 
-.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-state='open']:hover {
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'][data-active='true']:hover {
   background: var(--color-ucass-active-bg, #fde9d2);
 }
 
