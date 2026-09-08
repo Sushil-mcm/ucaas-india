@@ -1,3 +1,7 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Link2, FileText, MoreVertical, BookOpenText, Sparkles, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -232,15 +236,24 @@ const CaptainDocuments = () => {
     }
   };
 
+  useSetAdminPageMeta({
+    description:
+      'The documents each assistant answers from. Pick an assistant to see and edit its own set.',
+  });
+
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} pageTitle="Documents" />
+      {/* The switcher stays -- choosing whose set you are looking at is real
+          work. Its `pageTitle` half does not: it printed "Documents" a line under
+          the Admin head that had just printed it. The button goes up beside
+          that head. */}
+      <AdminHeadActions>
         <Button type="button" variant="primary" onClick={() => setIsCreateOpen(true)} disabled={!selectedId}>
           <Plus className="size-4" />
           Create a new document
         </Button>
-      </div>
+      </AdminHeadActions>
+      <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
 
       {createdCount !== null && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-700">

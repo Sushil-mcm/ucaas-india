@@ -1,3 +1,7 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useState } from 'react';
 import { Pencil, Trash2, Plus, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -113,15 +117,24 @@ const CaptainFaqs = () => {
     }
   };
 
+  useSetAdminPageMeta({
+    description:
+      'Question-and-answer pairs an assistant replies from. Pick an assistant to see and edit its own set.',
+  });
+
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} pageTitle="FAQs" />
+      {/* The switcher stays -- choosing whose set you are looking at is real
+          work. Its `pageTitle` half does not: it printed "FAQs" a line under
+          the Admin head that had just printed it. The button goes up beside
+          that head. */}
+      <AdminHeadActions>
         <Button type="button" variant="primary" onClick={openCreateModal} disabled={!selectedId}>
           <Plus className="size-4" />
           Add FAQ
         </Button>
-      </div>
+      </AdminHeadActions>
+      <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
 
       <div className="relative w-full max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9A948F]" />

@@ -1,5 +1,6 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Play, Wrench, Search, Plug, RefreshCw, Zap, MessageSquare, Lock, LockOpen, Check } from 'lucide-react';
+import { Plus, Pencil, Trash2, Play, Wrench, Search, Plug, RefreshCw, Zap, Lock, LockOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -505,22 +506,16 @@ const CaptainActions = () => {
     }
   };
 
+  useSetAdminPageMeta({
+    description:
+      'Give Captain access to your business data — CRM, finance, HR, sales, e-commerce, file storage and issue tracking — so it can look up contacts, invoices, employees and orders in your connected apps.',
+  });
+
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-start gap-3 border-b border-gray-100 pb-5">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white">
-          <MessageSquare className="size-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-[#2E2D35]">Actions</h2>
-          <p className="text-sm text-[#9A948F]">
-            Integrate Actions to give Captain AI access to your business data across CRM, Finance &amp; Accounting,
-            HR &amp; Recruiting, Sales, E-commerce, File Storage, Issue Tracking, and more. Captain can look up
-            contacts, invoices, employees, orders, and more directly from your connected apps.
-          </p>
-        </div>
-      </div>
-
+      {/* The head names this screen; the paragraph under it was five lines of
+          the same explanation on every visit and now sits on the info button
+          beside that title. */}
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>}
 
       <div className="flex items-center gap-5 border-b border-[#EEE7DD]">

@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -319,16 +320,14 @@ const CaptainInboxes = () => {
     );
   }
 
+  useSetAdminPageMeta({
+    description:
+      'A channel is how a customer chooses to reach you; an inbox is where you manage one channel. Create as many as you need, independent of one another.',
+  });
+
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 p-6">
-      <div>
-        <h2 className="text-lg font-bold text-[#2E2D35]">Inboxes</h2>
-        <p className="text-sm text-[#9A948F]">
-          A channel is the mode of communication your customer chooses to interact with you. An inbox is where you
-          manage interactions for a specific channel — create as many as you need, independent of one another.
-        </p>
-      </div>
-
+      {/* "Inboxes" and its description are the Admin head's job. */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
       )}

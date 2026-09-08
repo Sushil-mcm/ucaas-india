@@ -1,3 +1,7 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useRef, useState } from 'react';
 import { Send, Bot, User, UserCheck, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,13 +64,14 @@ const CaptainPlayground = () => {
     }
   };
 
+  useSetAdminPageMeta({ description: 'Test your assistant live before deploying it.' });
+
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-bold text-[#2E2D35]">Playground</div>
-          <div className="text-sm text-[#9A948F]">Test your assistant live before deploying it.</div>
-        </div>
+      {/* The Admin head already prints "Playground" beside the sidebar's own
+          title. Only the assistant picker was doing real work here, so it goes
+          up beside that title and the sentence fills the info button. */}
+      <AdminHeadActions>
         <select
           value={assistantId}
           onChange={(e) => {
@@ -81,7 +86,7 @@ const CaptainPlayground = () => {
             </option>
           ))}
         </select>
-      </div>
+      </AdminHeadActions>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>

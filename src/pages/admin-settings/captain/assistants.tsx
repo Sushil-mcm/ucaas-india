@@ -1,3 +1,7 @@
+import {
+  AdminHeadActions,
+  useSetAdminPageMeta,
+} from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Plus, Sparkles, Wrench } from 'lucide-react';
@@ -192,20 +196,21 @@ const CaptainAssistants = () => {
     }
   };
 
+  useSetAdminPageMeta({
+    description:
+      'AI personas that power your Captain chatbot — instructions, guardrails, and behaviour.',
+  });
+
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-bold text-[#2E2D35]">Assistants</div>
-          <div className="text-sm text-[#9A948F]">
-            AI personas that power your Captain chatbot — instructions, guardrails, and behavior.
-          </div>
-        </div>
+      {/* Title and description are the Admin head's; only the button is this
+          screen's, and it belongs up there beside them. */}
+      <AdminHeadActions>
         <Button type="button" variant="primary" onClick={openCreateModal}>
           <Plus className="size-4" />
           Add Assistant
         </Button>
-      </div>
+      </AdminHeadActions>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
