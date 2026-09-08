@@ -296,7 +296,7 @@ const SentimentGraph = ({ session }: { session: any }) => {
       <div className="h-1.5 w-[70px] overflow-hidden rounded-full bg-slate-200">
         <div className="h-full rounded-full bg-emerald-500" style={{ width: `${score}%` }} />
       </div>
-      <div className="pointer-events-none absolute right-0 top-6 z-30 hidden w-[190px] rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl group-hover:block">
+      <div className="pointer-events-none absolute right-0 top-6 z-30 hidden w-[190px] rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-3 text-left shadow-xl group-hover:block">
         <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.04em] text-slate-500">
           Sentiment scores
         </div>
@@ -326,7 +326,7 @@ const SentimentGraph = ({ session }: { session: any }) => {
 };
 
 const StatCard = ({ title, value, icon }: { title: string; value: string; icon?: string }) => (
-  <div className="min-w-0 rounded-[10px] border border-slate-200 bg-white px-3.5 py-3.5 shadow-sm">
+  <div className="min-w-0 rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3.5 py-3.5 shadow-sm">
     {/* Wraps rather than forcing the column wider -- "Escalations / handoffs"
         is the one label that does not fit a seventh of the row on one line. */}
     <div className="text-[11px] font-medium leading-tight text-slate-500">{title}</div>
@@ -533,8 +533,11 @@ const AiBotSession = () => {
       'Every AI receptionist call and AI chatbot conversation — with transcripts, sentiment and outcomes.',
   });
 
+  /* No background of its own. `bg-slate-50` is a cool grey, and the Admin area
+     is a warm orange ground — this one screen painted over it and read as a
+     different product. */
   return (
-    <section className="relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
+    <section className="relative flex h-full w-full flex-col overflow-hidden">
       {/* "Sessions" was printed three times over: once by the Admin head, once
           in this breadcrumb, and once again as an <h1> below it. The head keeps
           the title, the controls go up beside it, and the description fills the
@@ -544,7 +547,7 @@ const AiBotSession = () => {
           <select
             value={dateRange}
             onChange={(event) => setDateRange(event.target.value)}
-            className="h-[34px] min-w-[140px] appearance-none rounded-[7px] border border-slate-200 bg-white px-3 pr-9 text-xs font-semibold text-slate-950 outline-none"
+            className="h-[34px] min-w-[140px] appearance-none rounded-[7px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 pr-9 text-xs font-semibold text-slate-950 outline-none"
           >
             {dateRangeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -557,7 +560,7 @@ const AiBotSession = () => {
         <button
           type="button"
           onClick={exportCsv}
-          className="inline-flex h-[34px] items-center gap-1.5 rounded-[7px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
+          className="inline-flex h-[34px] items-center gap-1.5 rounded-[7px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 text-xs font-semibold text-slate-700 hover:border-slate-400"
         >
           <Download className="h-3.5 w-3.5" />
           Export CSV
@@ -589,7 +592,7 @@ const AiBotSession = () => {
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
               placeholder="Search by contact, agent, intent or transcript..."
-              className="h-[38px] w-full rounded-[10px] border border-slate-200 bg-white pl-[38px] pr-3 text-[13.5px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+              className="h-[38px] w-full rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] pl-[38px] pr-3 text-[13.5px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
             />
           </div>
           {(['all', 'call', 'chat'] as SessionChannel[]).map((channel) => {
@@ -603,7 +606,7 @@ const AiBotSession = () => {
                 className={`inline-flex h-[34px] items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
                   isActive
                     ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    : 'border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] text-slate-600 hover:bg-[#FBE2C8]/45'
                 }`}
               >
                 {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
@@ -618,7 +621,7 @@ const AiBotSession = () => {
                 const option = agentOptions.find((item) => item.value === event.target.value);
                 setSelectedAgent(option || allAgentsOption);
               }}
-              className="h-[38px] w-full appearance-none rounded-[10px] border border-slate-200 bg-white px-3 pr-8 text-[13.5px] text-slate-900 outline-none"
+              className="h-[38px] w-full appearance-none rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 pr-8 text-[13.5px] text-slate-900 outline-none"
             >
               {agentOptions.map((option) => (
                 <option key={option.value || 'all-agents'} value={option.value}>
@@ -635,7 +638,7 @@ const AiBotSession = () => {
                 const option = outcomeOptions.find((item) => item.value === event.target.value);
                 setSelectedOutcome(option || allOutcomesOption);
               }}
-              className="h-[38px] w-full appearance-none rounded-[10px] border border-slate-200 bg-white px-3 pr-8 text-[13.5px] text-slate-900 outline-none"
+              className="h-[38px] w-full appearance-none rounded-[10px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 pr-8 text-[13.5px] text-slate-900 outline-none"
             >
               {outcomeOptions.map((option) => (
                 <option key={option.value || 'all-outcomes'} value={option.value}>
@@ -647,8 +650,8 @@ const AiBotSession = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="grid w-full min-w-0 grid-cols-[82px_1.3fr_1.4fr_0.95fr_0.7fr_0.72fr_0.95fr_1fr_96px] items-center gap-3 border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-[18px] py-3 text-[11px] font-bold uppercase tracking-[0.04em] text-slate-500">
+        <div className="overflow-hidden rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] shadow-sm">
+          <div className="grid w-full min-w-0 grid-cols-[82px_1.3fr_1.4fr_0.95fr_0.7fr_0.72fr_0.95fr_1fr_96px] items-center gap-3 border-b border-[rgba(225,200,165,0.9)] bg-gradient-to-b from-[rgba(251,249,246,0.95)] to-[rgba(251,249,246,0.7)] px-[18px] py-3 text-[11px] font-bold uppercase tracking-[0.04em] text-slate-500">
             <div>Channel</div>
             <div>Agent</div>
             <div>Contact</div>
@@ -674,7 +677,7 @@ const AiBotSession = () => {
               return (
                 <div
                   key={session?.sessionId}
-                  className="grid w-full min-w-0 cursor-pointer grid-cols-[82px_1.3fr_1.4fr_0.95fr_0.7fr_0.72fr_0.95fr_1fr_96px] items-center gap-3 border-b border-slate-100 px-[18px] py-3 last:border-b-0 hover:bg-slate-50"
+                  className="grid w-full min-w-0 cursor-pointer grid-cols-[82px_1.3fr_1.4fr_0.95fr_0.7fr_0.72fr_0.95fr_1fr_96px] items-center gap-3 border-b border-[#EEE7DD] px-[18px] py-3 last:border-b-0 hover:bg-[#FBE2C8]/45"
                   onClick={() => setSelectedSession(session)}
                 >
                   <div>
@@ -736,7 +739,7 @@ const AiBotSession = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedSession(session)}
-                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      className="grid h-[30px] w-[30px] place-items-center rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] text-slate-600 hover:bg-[#FBE2C8]/45"
                       aria-label="Open session"
                     >
                       <MessageSquare className="h-[15px] w-[15px]" />
@@ -754,7 +757,7 @@ const AiBotSession = () => {
           !isLoadingReceptionists &&
           !isLoadingChatAgents &&
           tableRows.length ? (
-            <div className="flex items-center justify-between border-t border-slate-200 px-[18px] py-3 text-xs text-slate-500">
+            <div className="flex items-center justify-between border-t border-[rgba(225,200,165,0.9)] px-[18px] py-3 text-xs text-slate-500">
               <div>
                 Showing {pageStart}-{pageEnd} of {tableRows.length}
               </div>
@@ -763,7 +766,7 @@ const AiBotSession = () => {
                   type="button"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Previous
                 </button>
@@ -774,7 +777,7 @@ const AiBotSession = () => {
                   type="button"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 py-1.5 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>

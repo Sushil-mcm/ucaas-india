@@ -860,7 +860,7 @@ function AiChatbotAgents() {
                 <div className="h-1.5 w-[108px] overflow-hidden rounded-full bg-slate-200" />
               )}
               {hasScores && (
-                <div className="pointer-events-none absolute right-0 top-10 z-30 hidden w-[190px] rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl group-hover:block">
+                <div className="pointer-events-none absolute right-0 top-10 z-30 hidden w-[190px] rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-3 text-left shadow-xl group-hover:block">
                   <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.04em] text-slate-500">
                     Sentiment scores
                   </div>
@@ -990,7 +990,10 @@ function AiChatbotAgents() {
 
   return (
     <>
-      <section className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f4f5f7]">
+      {/* No background of its own. `#f4f5f7` is a cool grey painted over the
+          Admin area's warm ground, which is why this screen and Sessions were
+          the two that looked like a different product. */}
+      <section className="flex h-full min-h-0 w-full flex-col overflow-hidden">
         {/* The Admin shell already prints "Chat Agents" beside the sidebar's
             own title, so this screen printed its name a second time three
             lines down, under a breadcrumb back to a page it IS. The buttons go
@@ -1002,7 +1005,7 @@ function AiChatbotAgents() {
               type="button"
               variant="outline"
               onClick={() => setView('analytics')}
-              className="h-9 gap-2 rounded-lg border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300"
+              className="h-9 gap-2 rounded-lg border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] px-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300"
             >
               <span className="text-base leading-none">📊</span>
               Analytics
