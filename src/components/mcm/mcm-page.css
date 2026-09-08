@@ -8372,3 +8372,25 @@
   min-height: 30px;
   border-radius: 20px;
 }
+
+/* The row above a list's table: what the screen is for on the left, the
+   controls for it on the right.
+
+   These used to go through `AdminPage`'s `filters` slot, which draws a
+   full-width white bar of its own across the top of the page — a whole line
+   and a surface spent holding one search box. On one row with the note, the
+   line is saved and the bar never renders. */
+.mcm-admin .mcm-listbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* The note takes the space the controls do not, and yields it first. */
+.mcm-admin .mcm-listbar > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: auto;
+}

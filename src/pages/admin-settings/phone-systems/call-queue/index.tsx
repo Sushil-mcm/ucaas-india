@@ -329,12 +329,26 @@ const CallQueues: FC = () => {
             </button>
           ) : null
         }
-        filters={
-          /* Each direct child of the bar is capped at 380px and stretched to
-             fill it, which is why the search box and an unlabelled "Select"
-             sat as two half-width fields. One row: search, then the site
-             filter, sized to what it holds. */
-          <div className="mcm-numbar">
+      >
+        <div className="flex flex-col gap-2">
+          {/* One line with the full wording behind it, rather than a
+              paragraph restating the screen above every row on every visit. */}
+          {/* Note, search and the site filter on one row. `filters` is not
+              used: it renders a full-width white bar of its own above the
+              content, which cost a line to hold two controls. */}
+          <div className="mcm-listbar">
+            <CustomTooltip
+              text={
+                'Queues can be company-wide or tied to one site, so incoming traffic for a branch is held until somebody from that branch is ready to answer.'
+              }
+              side="bottom"
+              className="max-w-sm"
+            >
+              <p className="mcm-numnote">
+                <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
+                Queues can be company-wide or tied to a single site.
+              </p>
+            </CustomTooltip>
             <label className="mcm-numsearch">
               <SearchLine />
               <input
@@ -364,17 +378,6 @@ const CallQueues: FC = () => {
               />
             </div>
           </div>
-        }
-      >
-        <div className="flex flex-col gap-2">
-          {/* One line with the full wording behind it, rather than a
-              paragraph restating the screen above every row on every visit. */}
-          <CustomTooltip text={"Queues can be company-wide or tied to one site, so incoming traffic for a branch is held until somebody from that branch is ready to answer."} side="bottom" className="max-w-sm">
-            <p className="mcm-numnote">
-              <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
-              Queues can be company-wide or tied to a single site.
-            </p>
-          </CustomTooltip>
           <TableManager
             {...{
               columns,

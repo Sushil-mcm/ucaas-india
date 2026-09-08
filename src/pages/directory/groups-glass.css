@@ -6,6 +6,14 @@
 .gp-groups {
   height: 100%;
   min-height: 0;
+  /* Fills the width of whatever column it is dropped into. Admin renders this
+     screen as Phone System ▸ Departments inside a flex row, where a plain block
+     child is sized by its own CONTENT — so the table, its card and this tint
+     all stopped about half way across and left bare page beside them.
+     `.gp-people` carries the same two lines for the same reason; every other
+     Directory list is wide enough to reach the edge on its own and hid it. */
+  width: 100%;
+  min-width: 0;
   /* `.mcm-page`'s own background is transparent (the site-wide orange
      gradient pass made it so, to show through by default) — this page
      paints its own copy of that same gradient rather than inheriting it,

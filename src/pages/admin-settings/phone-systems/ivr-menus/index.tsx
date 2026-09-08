@@ -150,11 +150,26 @@ const IvrMenus: FC = () => {
             </button>
           ) : null
         }
-        filters={
-          /* The bar caps and stretches each child to 380px, so a lone input was
-             drawn as a wide empty field. Wrapped, it is a search chip like the
-             one every other Admin list now uses. */
-          <div className="mcm-numbar">
+      >
+        <div className="flex flex-col gap-2">
+          {/* One line with the full wording behind it, rather than a
+              paragraph restating the screen above every row on every visit. */}
+          {/* Note and search share one row. `filters` is not used: it renders
+              a full-width white bar of its own above the content, which cost a
+              line to hold a single search box. */}
+          <div className="mcm-listbar">
+            <CustomTooltip
+              text={
+                "Build your automated menu here, then assign it to any phone number to control that number's greetings, routing and voicemail."
+              }
+              side="bottom"
+              className="max-w-sm"
+            >
+              <p className="mcm-numnote">
+                <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
+                Assign a menu to a number to control its greetings, routing and voicemail.
+              </p>
+            </CustomTooltip>
             <label className="mcm-numsearch">
               <SearchLine />
               <input
@@ -164,17 +179,6 @@ const IvrMenus: FC = () => {
               />
             </label>
           </div>
-        }
-      >
-        <div className="flex flex-col gap-2">
-          {/* One line with the full wording behind it, rather than a
-              paragraph restating the screen above every row on every visit. */}
-          <CustomTooltip text={"Build your automated menu here, then assign it to any phone number to control that number's greetings, routing and voicemail."} side="bottom" className="max-w-sm">
-            <p className="mcm-numnote">
-              <Icon name={'InfoIcon' as IconName} className="w-3.5 h-3.5" />
-              Assign a menu to a number to control its greetings, routing and voicemail.
-            </p>
-          </CustomTooltip>
           <TableManager
             {...{
               columns,
