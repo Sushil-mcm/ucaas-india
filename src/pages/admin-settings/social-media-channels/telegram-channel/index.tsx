@@ -163,7 +163,7 @@ const TelegramChannel = () => {
             setIsTelegramModalOpen(true);
           }
         }}
-        className="w-full bg-white rounded-xl p-4 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] hover:decoration flex flex-col gap-4 text-left "
+        className="w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-4 shadow-sm transition-colors hover:border-[var(--color-ucass-active,#c96f1f)] flex flex-col gap-4 text-left"
       >
         <div className="w-full flex flex-col gap-4">
           <div className="flex items-center justify-between gap-2">
