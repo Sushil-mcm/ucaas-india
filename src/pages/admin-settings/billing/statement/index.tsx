@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
@@ -155,6 +156,16 @@ const StatementOfAccount = () => {
   const periodEnd = plan?.plan_expiration_date ? moment(plan.plan_expiration_date) : null;
   const daysLeft = periodEnd ? periodEnd.diff(moment(), 'days') : null;
 
+  /* Said once, beside the title. The main render used to draw AdminPage's own
+     head under the Admin head that had already named this screen, and the
+     loading branch carried a flatter copy of the same sentence that `hideHead`
+     then threw away. This is the dated one, which is the useful one. */
+  useSetAdminPageMeta({
+    description: periodEnd
+      ? `Everything charged and consumed so far in this plan period, which ends ${periodEnd.format('D MMM YYYY')}.`
+      : 'Everything charged and consumed on this account so far.',
+  });
+
   const recent = useMemo(
     () =>
       [...(transactions as Txn[])]
@@ -181,7 +192,6 @@ const StatementOfAccount = () => {
       hideHead
         section="Billing"
         title="Statement of account"
-        description="Everything charged and consumed on this account so far."
       >
         <div className="mcm-soa">
           <section className="mcm-soa-card">
@@ -201,15 +211,7 @@ const StatementOfAccount = () => {
   }
 
   return (
-    <AdminPage
-      section="Billing"
-      title="Statement of account"
-      description={
-        periodEnd
-          ? `Everything charged and consumed so far in this plan period, which ends ${periodEnd.format('D MMM YYYY')}.`
-          : 'Everything charged and consumed on this account so far.'
-      }
-    >
+    <AdminPage hideHead section="Billing" title="Statement of account">
       <div className="mcm-soa">
         <div className="mcm-soa-figures">
           <div className="mcm-soa-fig">

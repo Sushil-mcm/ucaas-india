@@ -20,6 +20,7 @@
  * nobody got round to.
  */
 
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Icon } from '@/assets/icons/icon';
 import { handleAlert } from '@/lib/utils';
 import { getInvoice } from '@/services/api';
@@ -97,6 +98,14 @@ const TruncatedDescriptionCell = ({ value }: { value: string }) => {
  * setting a from/to date twice to see a whole year is a chore nobody should
  * have to repeat. Five years back covers anything the platform can hold. */
 const yearOptions = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'Every charge raised on the account, with its tax broken out. Open a row to see what it covered.',
+  });
+
   const now = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => now - i).map((y) => ({
     label: String(y),
@@ -264,9 +273,11 @@ const Invoice = () => {
   return (
     <AdminPage
       hideHead
+      /* TableManager draws its own bordered card, so AdminPage's would be a
+         second one around it — an empty band with nothing in it. */
+      bareBody
       section="Billing"
       title="Invoices"
-      description="Every charge raised on the account, with its tax broken out. Open a row to see what it covered."
       actions={
         <Button
           className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"

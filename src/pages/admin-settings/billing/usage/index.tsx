@@ -27,6 +27,7 @@
  * with the invoice by construction.
  */
 
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -245,6 +246,14 @@ const TableSkeleton = ({ rows = 5, cols = 6 }: { rows?: number; cols?: number })
 );
 
 const Usage = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'What your plan includes against what has been used, and where the charges went.',
+  });
+
   const [dropdownVal, setDropdownVal] = useState(dropdownCallInitialVal);
   const [showBreakdown, setShowBreakdown] = useState(true);
   const from = dropdownVal?.value?.from;
@@ -403,7 +412,6 @@ const Usage = () => {
       hideHead
       section="Billing"
       title="Usage"
-      description="What your plan includes against what has been used, and where the charges went."
       actions={
         <Button type="button" variant="outline" onClick={exportCsv} disabled={spendLoading}>
           Export CSV

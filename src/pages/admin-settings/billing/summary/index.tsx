@@ -23,6 +23,7 @@
  * customer will plan around, and then ask for a refund over.
  */
 
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -84,6 +85,14 @@ const Tile = ({
 );
 
 const BillingSummary = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'What you are paying for, what is due next, and what you have paid before.',
+  });
+
   const today = useMemo(() => isoDay(new Date()), []);
   const monthStart = useMemo(() => {
     const d = new Date();
@@ -180,7 +189,6 @@ const BillingSummary = () => {
       hideHead
       section="Billing"
       title="Billing summary"
-      description="What you are paying for, what is due next, and what you have paid before."
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
         {/* Only on screen when there is something to do. A banner that is always

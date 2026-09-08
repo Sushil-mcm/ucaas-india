@@ -1,3 +1,4 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMemo, useState } from 'react';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { Ic } from '@/components/mcm/icons';
@@ -63,6 +64,14 @@ type Row = {
 };
 
 const BillingModules = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'Which parts of the product this account can use, and why anything missing is missing.',
+  });
+
   const { companyPlanFeatures, planFeatures, IS_ADMIN } = useCompanyFeatures();
   const [onlyMissing, setOnlyMissing] = useState(false);
 
@@ -123,7 +132,6 @@ const BillingModules = () => {
       hideHead
       section="Billing"
       title="Modules & access"
-      description="Which parts of the product this account can use, and why anything missing is missing."
       filters={
         <>
           <label className="fchip">

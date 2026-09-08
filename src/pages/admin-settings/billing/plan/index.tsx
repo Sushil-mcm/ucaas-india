@@ -1,9 +1,9 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { useEffect, useRef, useState } from 'react';
 import { durationMap, RequestedPlanDurationMap, RequestedPlanStatusMap } from '../constants';
 import CustomTooltip from '@/components/custom/custom-tooltip';
-import { Icon } from '@/assets/icons/icon';
 import { formatDate, handleAlert } from '@/lib/utils';
 import { useGetMyPlanDetails, useGetPlans } from '@/hooks/common';
 import {
@@ -61,6 +61,15 @@ const normalizeRateCardId = (value: any) => {
 };
 
 const Plan = () => {
+  /* The screen's own 65px head repeated "Billing > Plan Summary" under the
+     Admin head that had already named it. The sentence moves to the info button
+     there; the plan's status and its actions stay on the page, where they are
+     controls rather than a heading. */
+  useSetAdminPageMeta({
+    description:
+      'What you are paying for today, what changes at the next renewal, and what the plan includes.',
+  });
+
   const { user: userInfoData, refetch } = useUser();
   const [isOpenChangePlan, setIsOpenChangePlan] = useState<boolean>(false);
   const [cancelRequestPlan, setCancelRequestPlan] = useState<boolean>(false);
@@ -312,21 +321,10 @@ const Plan = () => {
   };
   return (
     <>
-      <section className="w-full bg-gray-200/15 overflow-x-auto overflow-y-hidden">
-        <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-          <div>
-            <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-              Billing
-              <div className="-rotate-90 text-gray-800">
-                <Icon name="ChevronIcon" className="w-5 h-5" />
-              </div>
-              <span className="text-primary text-md">Plan Summary</span>
-            </p>
-            <p className="text-gray-500 text-xs">
-              What you are paying for today, what changes at the next renewal, and what the plan
-              includes.
-            </p>
-          </div>
+      <section className="w-full overflow-x-auto overflow-y-hidden">
+        {/* The name and the sentence move to the Admin head and its info
+            button; what stays is the plan's own status and its actions. */}
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 p-3 border-b border-[rgba(225,200,165,0.9)] min-h-[52px]">
           <div className="flex items-center gap-3">
             {requestedPlanInfo?.action_type === 'CANCEL' ? (
               <>

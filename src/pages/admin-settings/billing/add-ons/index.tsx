@@ -20,6 +20,7 @@
  * truth about this account rather than a guess.
  */
 
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useMemo, useState } from 'react';
 
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
@@ -115,6 +116,14 @@ const AddOnCard = ({ addOn, state }: { addOn: AddOn; state: AddOnState }) => {
 };
 
 const AddOns = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'Extras you can have on top of your plan, and which ones you already have.',
+  });
+
   /* The COMPANY's plan, deliberately - not `features`, which for a non-admin is
      narrowed to what their own role exposes. This page answers "what does this
      company have", and a role that hides a feature does not mean the company is
@@ -129,7 +138,6 @@ const AddOns = () => {
     <AdminPage
       hideHead
       title="Add-ons"
-      description="Extras you can have on top of your plan, and which ones you already have."
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
         <SettingCard

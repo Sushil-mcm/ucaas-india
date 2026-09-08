@@ -10,6 +10,7 @@
  * would find out at quarter end.
  */
 
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, Coins, Plus, RotateCcw } from 'lucide-react';
@@ -30,6 +31,14 @@ import { checkCentre, normaliseCode, type CostCentre } from '@/lib/cost-centres'
 const STORE_KEY = 'cost_centres';
 
 const CostCentres = () => {
+  /* `hideHead` drops AdminPage's own head, and the description went with
+     it -- written, passed, and rendered nowhere. It belongs on the info
+     button beside the title the Admin head draws. */
+  useSetAdminPageMeta({
+    description:
+      'Labels your finance team can report spending against — a department, a project, a client.',
+  });
+
   const queryClient: any = useQueryClient();
   const [centres, setCentres] = useState<CostCentre[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -91,7 +100,6 @@ const CostCentres = () => {
     <AdminPage
       hideHead
       title="Cost centres"
-      description="Labels your finance team can report spending against — a department, a project, a client."
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
         {isLoading ? (

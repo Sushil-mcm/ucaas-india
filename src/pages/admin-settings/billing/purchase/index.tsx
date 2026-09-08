@@ -1,9 +1,9 @@
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TopUp from './top-up';
 import ManageCards from './manage-cards';
 import { useState } from 'react';
 // import Breadcrumb from '@/components/custom/breadcrumb';
-import { Icon } from '@/assets/icons/icon';
 // const breadcrumbData = [{ label: 'Billing' }, { label: 'Purchase' }];
 
 const Purchase = () => {
@@ -24,25 +24,16 @@ const Purchase = () => {
     'top-up': <TopUp />,
     'manage-cards': <ManageCards />,
   };
+  /* Its own 65px head repeated "Billing > Credit & Payment" under the Admin
+     head that had already named this screen, and the sentence beneath it goes
+     to the info button there. The cool wash over the warm ground goes too. */
+  useSetAdminPageMeta({
+    description:
+      'Top up the balance that pays for usage beyond your plan — calls, SMS and AI — and manage the cards it is charged to.',
+  });
+
   return (
-    <section className="w-full bg-gray-200/15 overflow-x-auto overflow-y-hidden">
-      {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-        <div>
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
-            Billing
-            <div className="-rotate-90 text-gray-800">
-              <Icon name="ChevronIcon" className="w-5 h-5" />
-            </div>
-            <span className="text-primary text-md">Credit &amp; Payment</span>
-          </p>
-          <p className="text-gray-500 text-xs">
-            Top up the balance that pays for usage beyond your plan — calls, SMS and AI — and manage
-            the cards it is charged to.
-          </p>
-        </div>
-        <div className="flex gap-2"></div>
-      </div>
+    <section className="w-full overflow-x-auto overflow-y-hidden">
 
       <div className="w-full p-3 flex flex-col gap-3 ">
         <Tabs
