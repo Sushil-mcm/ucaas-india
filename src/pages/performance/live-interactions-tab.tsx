@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { PhoneCall, Radio, Timer as TimerIcon, PhoneForwarded } from 'lucide-react';
 import AllUserMonitoring from '@/pages/monitoring/all-users';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import {
@@ -13,6 +14,25 @@ import './live-theme.css';
 
 const LiveInteractionsTab = () => {
   const { liveCalls, eventLiveCallsData } = useSocketEvents();
+
+  /**
+   * The view's warm theme covers a thing this component does not render:
+   * the full-page ambient backdrop (the page shell above this tab).
+   * Flagging the document while the view is open lets `live-theme.css`
+   * reach it without the shell being edited — so no other area, and no
+   * other Performance view, is touched, and leaving this view restores it
+   * on the same frame. Shared with Campaigns, which opts in the same way.
+   *
+   * The toolbar itself (`perf-warm-toolbar`) is now toggled once in the
+   * parent `Performance` component (index.tsx), since the toolbar renders
+   * unconditionally there for every tab — adding it here too would race
+   * with the parent's own toggle on tab switches (this tab's cleanup would
+   * strip the class the parent still wants on).
+   */
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
 
   const activeCalls = useMemo(
     () => getMonitoringLiveCalls(liveCalls, eventLiveCallsData).filter(isActiveMonitoringCall),
@@ -51,7 +71,11 @@ const LiveInteractionsTab = () => {
   return (
     <div className="perf-live flex w-full flex-col gap-4 px-[22px] py-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <PerfStatCard label="Total live calls" value={String(activeCalls.length)} />
+        <PerfStatCard
+          label="Total live calls"
+          value={String(activeCalls.length)}
+          icon={PhoneCall}
+        />
         <PerfStatCard
           label="By state"
           value={Object.keys(byState).length ? String(Math.max(...Object.values(byState))) : '0'}
@@ -62,6 +86,7 @@ const LiveInteractionsTab = () => {
                   .join(' · ')
               : 'No live calls'
           }
+          icon={Radio}
         />
         <PerfStatCard
           label="Longest running"
@@ -72,11 +97,13 @@ const LiveInteractionsTab = () => {
               '00:00'
             )
           }
+          icon={TimerIcon}
         />
         <PerfStatCard
           label="By direction"
           value={`${byDirection.inbound} / ${byDirection.outbound}`}
           sub="inbound / outbound"
+          icon={PhoneForwarded}
         />
       </div>
       <AllUserMonitoring embedded />

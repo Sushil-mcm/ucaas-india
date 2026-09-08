@@ -94,7 +94,9 @@ body.perf-warm-backdrop .perf-campaigns {
   backdrop-filter: var(--ca-glass-blur);
   -webkit-backdrop-filter: var(--ca-glass-blur);
   border: 1px solid var(--ca-glass-border);
-  border-radius: 18px;
+  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
+     use for their own KPI cards — this view's own 18px was the one gap. */
+  border-radius: 20px;
   box-shadow: var(--ca-glass-shadow);
 }
 .perf-campaigns .stat .k {
@@ -158,10 +160,13 @@ body.perf-warm-backdrop .perf-campaigns {
   border-color: rgba(249, 115, 22, 0.25);
 }
 .perf-campaigns .fchip.on {
-  background: linear-gradient(135deg, #fff1eb 0%, #fed7aa 100%);
-  border: 1.5px solid rgba(249, 115, 22, 0.4);
-  box-shadow: 0 4px 14px -2px rgba(249, 115, 22, 0.25);
-  color: var(--ca-accent-ink);
+  /* Flat soft peach wash, not a gradient block — the same tone-down every
+     other "this is the active one" surface in Performance got (Reports'
+     catalog toggle, Callbacks' sub-tab). */
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  box-shadow: none;
+  color: #ea580c;
   font-weight: 700;
   border-radius: 999px;
 }
@@ -187,30 +192,44 @@ body.perf-warm-backdrop .perf-campaigns {
   border: none;
   box-shadow: none;
 }
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 2px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated. */
 .perf-campaigns .table-scroll thead {
-  background: rgba(255, 246, 238, 0.97);
-  backdrop-filter: blur(20px) saturate(190%);
-  -webkit-backdrop-filter: blur(20px) saturate(190%);
-  box-shadow: 0 1px 0 0 rgba(249, 115, 22, 0.08);
+  background: #fffdfb;
+  box-shadow: none;
 }
 .dark .perf-campaigns .table-scroll thead {
   background: rgba(23, 15, 10, 0.97);
 }
 .perf-campaigns .table-scroll thead th {
-  color: var(--ca-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   background: transparent;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.perf-campaigns .table-scroll thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-campaigns .table-scroll thead th:last-child {
+  border-top-right-radius: 20px;
 }
 .perf-campaigns .table-scroll tbody tr {
   background: transparent;
   transition: background-color 0.16s ease;
 }
+/* Directory's signature left accent-bar row hover — every other
+   Performance table already carries this; Campaigns was the one gap. */
 .perf-campaigns .table-scroll tbody tr:hover,
 .perf-campaigns .table-scroll tbody tr.rowlink:hover {
-  background: rgba(255, 241, 235, 0.5);
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--ca-accent);
 }
 .perf-campaigns .table-scroll tbody td {
   color: #334155;
@@ -235,6 +254,34 @@ body.perf-warm-backdrop .perf-campaigns {
 .perf-campaigns .table-scroll td:nth-child(7) {
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+/* Leads (4th) and Agents (7th) render as `.lnk` — a genuinely clickable
+   link (opens the filtered call log / the members list) — which inherits
+   that class's global orange link colour (mcm-page.css). Fine for a text
+   link, too loud for what reads at a glance as this row's headline count.
+   Crisp dark charcoal instead, high-contrast against the glass card,
+   without touching `.lnk` itself (Answered %, 6th column, keeps the
+   orange — it's a similar link but wasn't asked to change here). */
+.perf-campaigns .table-scroll td:nth-child(4) .lnk,
+.perf-campaigns .table-scroll td:nth-child(7) .lnk {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.perf-campaigns .table-scroll td:nth-child(4) .lnk:hover,
+.perf-campaigns .table-scroll td:nth-child(7) .lnk:hover {
+  color: var(--ca-accent-ink);
+}
+/* Window (3rd column) inherits `.num`'s monospace font-family for tabular
+   digit alignment — fine for a pure number, but a monospace face renders
+   every character (including the plain space either side of "–") at the
+   same fixed width, so "29 Aug – 12 Sep" read with noticeably wider gaps
+   around the dash than a normal proportional face would give it. Reset
+   back to the table's own font here only; the digits inside "29"/"12"
+   don't need tabular alignment against each other the way a column of
+   pure counts does. */
+.perf-campaigns .table-scroll td:nth-child(3) .num {
+  font-family: inherit;
+  letter-spacing: normal;
 }
 
 /* Empty state — dark charcoal title over the frosted panel. */

@@ -1717,7 +1717,7 @@ const CalendarPage = () => {
               <div
                 className={
                   taskViewMode === 'list'
-                    ? 'flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl'
+                    ? 'mcm-tasktable-shell flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl'
                     : 'hidden'
                 }
               >

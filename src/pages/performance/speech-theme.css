@@ -50,6 +50,11 @@ body.perf-warm-backdrop .perf-speech {
     #0a0f1a;
 }
 
+/* Page note ("Sentiment for AI receptionist...") — was a raw <p>, floating
+   directly on the ambient gradient with no surface of its own. Wrapped
+   into the same slim frosted notice pill Reports uses for its own SL%/
+   sampled-data caption (`.rp-notice`): one line, ellipsis if it runs long,
+   rather than a bare paragraph that could wrap to two. */
 .perf-speech .st-notice {
   display: flex;
   align-items: center;
@@ -119,6 +124,8 @@ body.perf-warm-backdrop .perf-speech {
   backdrop-filter: var(--sp-glass-blur);
   -webkit-backdrop-filter: var(--sp-glass-blur);
   border: 1px solid var(--sp-glass-border);
+  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
+     use for their own KPI cards — this view's own 18px was the one gap. */
   border-radius: 20px;
   box-shadow: var(--sp-glass-shadow);
   display: flex;
@@ -154,6 +161,14 @@ body.perf-warm-backdrop .perf-speech {
 .perf-speech .hbar-t i:only-child {
   background: linear-gradient(90deg, #fb923c 0%, #f97316 100%) !important;
 }
+/* Sentiment distribution's own bar — a touch slimmer than the shared 8px
+   default (mcm-page.css), scoped to just this bar rather than `.hbar-t`
+   generally so the Topics table's Volume bars keep their own height.
+   `.hbar-t`'s own `flex: 1` (mcm-page.css) sets flex-basis to 0%, which
+   inside `.stat`'s flex-column layout governs main-axis (height) sizing
+   ahead of a plain `height` — flex-grow then stretched this bar to fill
+   whatever vertical space was left in the card, six-pixel `height` and
+   all. `flex: none` is what actually lets the explicit height stick. */
 .perf-speech .sp-sentiment-bar {
   flex: none;
   height: 9px;
@@ -166,6 +181,14 @@ body.perf-warm-backdrop .perf-speech {
   color: var(--sp-muted);
 }
 
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls/Flows/Callbacks). Applies to both tables on
+   this page (Topics, Agent sentiment). */
 .perf-speech .table-scroll {
   border-radius: 0 0 20px 20px;
   border: 1px solid var(--sp-glass-border);
@@ -174,6 +197,13 @@ body.perf-warm-backdrop .perf-speech {
   -webkit-backdrop-filter: var(--sp-glass-blur);
   box-shadow: var(--sp-glass-shadow);
 }
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner.
+   Applies to both tables on this page (Topics, Agent sentiment). */
 .perf-speech div:has(> .table-scroll) {
   border-radius: 20px;
   overflow: hidden;
@@ -181,6 +211,16 @@ body.perf-warm-backdrop .perf-speech {
 .perf-speech .table-scroll::-webkit-scrollbar-track {
   margin-bottom: 8px;
 }
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated. Applies to both tables on this
+   page (Topics, Agent sentiment).
+   Scoped to `.perf-speech thead` directly, NOT `.table-scroll thead` —
+   these tables render with `splitStickyHeader` (speech-text-tab.tsx),
+   which puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it. */
 .perf-speech thead {
   background: #fffdfb;
   box-shadow: none;
@@ -210,6 +250,9 @@ body.perf-warm-backdrop .perf-speech {
     background-color 0.16s ease,
     box-shadow 0.16s ease;
 }
+/* Directory's signature left accent-bar row hover — every other
+   Performance table already carries this; Speech & Text was the one gap.
+   Applies to both tables on this page (Topics, Agent sentiment). */
 .perf-speech .table-scroll tbody tr:hover {
   background: rgba(254, 215, 170, 0.22);
   box-shadow: inset 3px 0 0 var(--sp-accent);
@@ -253,6 +296,12 @@ body.perf-warm-backdrop .perf-speech {
   font-variant-numeric: tabular-nums;
 }
 
+/* Avg sentiment — was plain coloured text (toneColor() in
+   speech-text-tab.tsx sets only `color`); a high-contrast wash pill reads
+   as a genuine status badge instead of just tinted numbers sitting loose
+   in the cell. Tone is still decided in the TSX (the same three-way split
+   `--live`/`--warn`/`--crit` already used), this only adds the badge
+   chrome around whichever tone class it's given. */
 .perf-speech .sp-sentiment-badge {
   display: inline-flex;
   align-items: center;

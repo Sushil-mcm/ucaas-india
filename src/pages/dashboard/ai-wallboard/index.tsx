@@ -571,6 +571,7 @@ const AiWallboard = () => {
     setAiLiveWallboardData,
     campaignAiLiveCallData,
     getAiLiveWallboardData,
+    getCampaignAiLiveCallData,
     isSocketConnected,
     liveCalls,
     usersOnlineStatus,
@@ -866,11 +867,24 @@ const AiWallboard = () => {
           }
         },
       );
+
+      /* The KPI row (Avg Sentiment, AI Containment, Total AI Calls/Chats)
+         and the AI Receptionist Performance panel read from
+         `campaignAiLiveCallData`, a completely separate piece of state that
+         `getAiLiveWallboardData` above never touches — without this call
+         those numbers stayed frozen at whatever seeded them on mount no
+         matter how many times Refresh was clicked. */
+      getCampaignAiLiveCallData({
+        domain: user?.sip_credentials?.domain,
+        company_uuid: user?.company_info?.uuid,
+        user_uuid: user?.user_info?.uuid,
+      });
     },
     [
       canRefreshAiWallboard,
       clearRefreshLoaderTimeout,
       getAiLiveWallboardData,
+      getCampaignAiLiveCallData,
       setAiLiveWallboardData,
       stopRefreshLoader,
       user?.company_info?.uuid,
@@ -924,7 +938,7 @@ const AiWallboard = () => {
             badge (the same one every card on this page uses), the LIVE tag
             gets a pulsing dot so "live" is shown rather than just asserted,
             and the whole bar picks up the frosted-glass treatment. */}
-        <div className="rounded-[20px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-4 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] backdrop-blur-[12px]">
+        <div className="rounded-[20px] border border-[rgba(225,200,165,0.9)] bg-[#fbf9f6] p-4 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] shadow-[0_2px_8px_rgba(194,98,46,0.18)]">
@@ -982,7 +996,7 @@ const AiWallboard = () => {
             return (
               <div
                 key={metric.label}
-                className="relative flex items-center justify-between gap-2 rounded-[20px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3.5 py-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] transition-transform hover:-translate-y-0.5"
+                className="relative flex items-center justify-between gap-2 rounded-[20px] border border-[rgba(225,200,165,0.9)] bg-[#fbf9f6] px-3.5 py-3 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] transition-transform hover:-translate-y-0.5"
               >
                 {showAlertDot && (
                   <div className="absolute right-2 top-2">
@@ -1020,7 +1034,7 @@ const AiWallboard = () => {
               reading the bar -- the same sentence structure three times
               reads as one system, not three unrelated widgets bolted
               together. */}
-          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
+          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
             <div className="flex items-center gap-2.5 border-b border-[rgba(225,200,165,0.4)] px-4 py-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
                 <TrendingUp className="h-4 w-4 text-[#4EAE6E]" />
@@ -1074,7 +1088,7 @@ const AiWallboard = () => {
             </div>
           </div>
 
-          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
+          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
             <div className="flex items-center gap-2.5 border-b border-[rgba(225,200,165,0.4)] px-4 py-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
                 <Headphones className="h-4 w-4 text-primary" />
@@ -1114,7 +1128,7 @@ const AiWallboard = () => {
                 </div>
               ) : (
                 <div className="flex h-40 items-center justify-center">
-                  <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white/90 backdrop-blur-sm px-4 py-1.5 shadow-xs">
+                  <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white px-4 py-1.5 shadow-xs">
                     <Headphones className="h-3.5 w-3.5 text-[#6b6459]" />
                     <span className="text-xs font-semibold text-[#6b6459]">No data found</span>
                   </div>
@@ -1123,7 +1137,7 @@ const AiWallboard = () => {
             </div>
           </div>
 
-          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
+          <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
             <div className="flex items-center gap-2.5 border-b border-[rgba(225,200,165,0.4)] px-4 py-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">
                 <Bot className="h-4 w-4 text-primary" />
@@ -1172,7 +1186,7 @@ const AiWallboard = () => {
                 </div>
               ) : (
                 <div className="flex h-40 items-center justify-center">
-                  <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white/90 backdrop-blur-sm px-4 py-1.5 shadow-xs">
+                  <div className="flex items-center gap-2 rounded-full border border-gray-100 bg-white px-4 py-1.5 shadow-xs">
                     <Bot className="h-3.5 w-3.5 text-[#6b6459]" />
                     <span className="text-xs font-semibold text-[#6b6459]">No data found</span>
                   </div>
@@ -1186,8 +1200,8 @@ const AiWallboard = () => {
             read as one run. It is a separate subject, so it gets space rather
             than a rule -- another hairline next to the card edges above would
             have been a fourth line in the same 20px. */}
-        <div className="mt-6 rounded-xl border border-[rgba(214,163,90,0.55)] shadow-xs">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3 rounded-t-xl">
+        <div className="mt-6 rounded-xl border border-[rgba(214,163,90,0.55)] bg-[#fffdfb] shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(225,200,165,0.9)] bg-[#fbf9f6] px-4 py-3 rounded-t-xl">
             <h4 className="flex items-center gap-2 text-lg font-semibold text-[#2E2D35]">
               <Bot className="h-4 w-4 text-primary" />
               AI Receptionist Performance
@@ -1220,7 +1234,7 @@ const AiWallboard = () => {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center justify-between gap-2 rounded-[16px] border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5"
+                className="flex items-center justify-between gap-2 rounded-[16px] border border-[rgba(225,200,165,0.9)] bg-[#fbf9f6] px-3 py-2.5"
               >
                 <div className="min-w-0">
                   <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-[#475569]">
@@ -1291,13 +1305,13 @@ const AiWallboard = () => {
               Matching the margins would have left 48px here against 36px
               there -- the measured gaps are what match, not the classes. */}
           <div className="mt-3 space-y-3 col-span-12">
-            <div className="rounded-xl border border-[rgba(214,163,90,0.55)]  shadow-xs">
-              <div className="flex flex-wrap items-center justify-between border-b border-[rgba(225,200,165,0.9)] px-4 py-3 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-t-xl">
+            <div className="rounded-xl border border-[rgba(214,163,90,0.55)] bg-[#fffdfb] shadow-xs">
+              <div className="flex flex-wrap items-center justify-between border-b border-[rgba(225,200,165,0.9)] px-4 py-3 bg-[#fbf9f6] rounded-t-xl">
                 <h4 className="flex items-center gap-2 text-lg font-semibold text-[#2E2D35]">
                   <Headphones className="h-4 w-4 text-primary" />
                   Agent Sentiment Status
                 </h4>
-                <div className="rounded-md border border-[#EEE7DD] bg-[#FBE2C8]/45 px-3 py-1">
+                <div className="rounded-md border border-[#EEE7DD] bg-[#FBE2C8] px-3 py-1">
                   <p className="text-[11px] font-medium text-[#6b6459]">
                     Top: {aiWallboardSummary?.agent_sentiment_top?.agent_name || 'N/A'} (
                     {aiWallboardSummary?.agent_sentiment_top?.avg_sentiment || '0'}) &nbsp; | &nbsp;
@@ -1318,7 +1332,7 @@ const AiWallboard = () => {
                   return (
                     <div
                       key={`${agent.name}-${index}`}
-                      className={`rounded-[20px] border bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] p-4 shadow-[0_10px_34px_rgba(160,95,30,0.14)] transition-transform hover:-translate-y-0.5 ${
+                      className={`rounded-[20px] border bg-[#fffdfb] p-4 shadow-[0_10px_34px_rgba(160,95,30,0.14)] transition-transform hover:-translate-y-0.5 ${
                         isHighRisk ? 'border-red-200' : 'border-[rgba(249,115,22,0.14)]'
                       }`}
                     >
@@ -1560,7 +1574,7 @@ const AiWallboard = () => {
                 styled here: it inherits from `.dash-legacy`, the same rule
                 Calls' own table is measured against. */}
             {highRiskCalls.length > 0 && (
-              <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[rgba(255,255,255,0.85)] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
+              <div className="rounded-[20px] border border-[rgba(249,115,22,0.14)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)] w-full">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(225,200,165,0.4)] px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1E0]">

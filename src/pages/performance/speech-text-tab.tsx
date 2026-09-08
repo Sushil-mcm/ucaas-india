@@ -19,6 +19,11 @@ import PerfStatCard from './stat-card';
 import { formatSecsToClock } from './format';
 import './speech-theme.css';
 
+/** Matches `PerfStatCard`'s own top-right icon badge exactly — used here
+ *  for the raw `.stat` cards (Avg sentiment, AI calls today, Top topic,
+ *  Sentiment distribution) whose custom bar/legend content doesn't fit
+ *  PerfStatCard's fixed label/value/sub layout, so they can't route
+ *  through that component the way the other 7 KPI cards on this page do. */
 const StatIconBadge = ({ icon: IconComp }: { icon: any }) => (
   <span
     className="stat-icon"
@@ -40,8 +45,23 @@ const StatIconBadge = ({ icon: IconComp }: { icon: any }) => (
 /** Sentiment tone, on the shared status tokens rather than raw colours. */
 const toneColor = (value: number) =>
   value > 15 ? 'var(--live)' : value < -15 ? 'var(--crit)' : 'var(--warn)';
+/** Same three-way split as `toneColor`, as the badge modifier class
+ *  `.sp-sentiment-badge` reads (speech-theme.css) instead of a raw colour. */
 const toneClass = (value: number) => (value > 15 ? 'pos' : value < -15 ? 'neg' : 'neu');
 
+/**
+ * Sentiment distribution bar segment colour, keyed by the bucket's own
+ * label rather than its position — an alternating even/odd-index scheme
+ * gave "Positive" and "Negative" the same colour (both even-indexed) and
+ * only "Neutral" a different one, which read as two segments blending into
+ * each other rather than three distinct sentiments. Gradients rather than
+ * the shared design system's flat `--live`/`--warn`/`--crit` tokens: `--warn`
+ * in particular is a dark amber-orange close enough to this view's own
+ * brand orange to look like a clashing, muddy repeat of it (the same issue
+ * fixed on Campaigns' "No answer" segment — a plain amber/gold reads as
+ * "more orange" here, not as its own colour, so this goes further and uses
+ * a true yellow instead).
+ */
 const SENTIMENT_COLORS: Record<'positive' | 'neutral' | 'negative', string> = {
   positive: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
   neutral: 'linear-gradient(90deg, #fde047 0%, #eab308 100%)',
@@ -65,17 +85,22 @@ const SpeechTextTab = () => {
   } = useContext(SocketEvents);
   const { user } = useUser();
 
-  useEffect(() => {
-    document.body.classList.add('perf-warm-backdrop');
-    return () => document.body.classList.remove('perf-warm-backdrop');
-  }, []);
-
   const canRefresh = Boolean(
     user?.sip_credentials?.domain &&
     user?.company_info?.uuid &&
     user?.user_info?.uuid &&
     isSocketConnected,
   );
+
+  /**
+   * `perf-warm-backdrop` flags the document so speech-theme.css can paint
+   * the full-page ambient gradient on `.perf-speech` itself, the same
+   * pattern Callbacks and Campaigns use.
+   */
+  useEffect(() => {
+    document.body.classList.add('perf-warm-backdrop');
+    return () => document.body.classList.remove('perf-warm-backdrop');
+  }, []);
 
   useEffect(() => {
     if (!canRefresh) return;
@@ -301,6 +326,10 @@ const SpeechTextTab = () => {
                   />
                 ))}
               </div>
+              {/* A colour dot per label — without one, "Positive: 31 · Neutral:
+                  18 · Negative: 7" gives no way to tell which bar segment is
+                  which; the dot repeats each segment's own colour next to its
+                  name. */}
               <div
                 className="d"
                 style={{

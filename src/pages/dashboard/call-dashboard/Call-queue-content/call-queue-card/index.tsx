@@ -8,6 +8,7 @@ import { safeJSONParse } from '@/components/activity-list/constants';
 import { useEffect, useRef, useState } from 'react';
 import { getInitials } from '@/lib/utils';
 import { useDialpad } from '@/hooks/use-dialpad';
+import { useSocketEvents } from '@/hooks/use-socket-events';
 import QueueMemberModal from '@/pages/auto-dialer/campaign/modal/new-queue-member-modal';
 
 interface IMember {
@@ -45,7 +46,6 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
     manager = {},
     uuid = '',
     members: membersProp,
-    agentDetail,
     agent = [],
   } = queue || {};
   const { activeQueueData, setActiveQueueData } = useDialpad();
@@ -55,6 +55,19 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
     data: [],
     type: null,
   });
+
+  const { liveQueueCalls } = useSocketEvents();
+  /* Extension first, name second: names are editable and can collide across
+     divisions, the extension is the queue's actual address. */
+  const live = (Array.isArray(liveQueueCalls) ? liveQueueCalls : []).find(
+    (row: any) =>
+      (row?.extension && String(row.extension) === String(extension)) ||
+      String(row?.name || '').toLowerCase() === String(name || '').toLowerCase(),
+  );
+  const waitingNow = Number(live?.waiting_count ?? live?.waiting ?? 0);
+  const avgWait = Number(live?.avg_wait_time_sec || 0);
+  const availableNow = Number(live?.available_count || 0);
+  const sla = Number(live?.sla_within_20_sec_percent || 0);
 
   const parsedManager = safeJSONParse(manager, {});
 
@@ -88,8 +101,6 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
       refetch();
     },
   });
-
-  console.log('agentDetail', agentDetail);
 
   const isAvailable = agent?.[0]?.status === 'Available';
 
@@ -127,19 +138,53 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
     };
   }, [activeQueueData?.uuid, uuid]);
 
+  /* Opaque surfaces, not glass. The card used to be a translucent blue-tinted
+     gradient (0.72 -> 0.5 alpha) over a 26px backdrop-blur, sitting on the
+     Performance page's warm radial gradients (`perf-warm-toolbar`). All three
+     cards shared identical CSS yet each rendered a different shade, because
+     glass samples whatever is behind it and each card sits over a different
+     part of the orange wash. The panels nested inside then stacked more alpha
+     on an already-translucent parent, so their edges melted into the card.
+     Glass cannot be position-independent; an opaque fill is what makes the
+     three cards agree wherever they land in the grid.
+
+     `bg-[var(--surface)]` rather than `bg-white` on purpose. mcm-page.css rewrites
+     any rounded `.bg-white` inside `.mcm-page` to `var(--glass-surface)` and
+     `var(--glass-border)`, which silently put this card back to 0.85-alpha
+     glass and dropped the border colour set here. The arbitrary-value class
+     is the same colour without matching that selector.
+
+     Colours are the page's own tokens: `--surface` (#ffffff) for the card,
+     `--surface-2` (#fbf3e8) for the panels inside it so they read as
+     contained, `--line` (#eee7dd) for every edge. The shadow is warm to match
+     `--pl-glass-shadow`; the blue one it carried before is what made the card
+     read as cold against the peach ground. */
   return (
-    <div className="flex flex-col border border-gray-200 bg-gray-100 rounded-xl w-full p-3 gap-3">
-      <div className="flex items-center justify-between">
-        <p className="capitalize text-md font-semibold truncate">{name}</p>
-        <div className="flex items-center gap-1">
+    <div className="flex w-full flex-col gap-2.5 rounded-[18px] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_10px_30px_-5px_rgba(234,88,12,0.10),0_4px_12px_-2px_rgba(60,40,30,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_35px_-5px_rgba(234,88,12,0.18)]">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-base font-bold capitalize text-[var(--ink)]">{name}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1">
+            <Icon name="Grid" className="w-3.5 h-3.5 text-[var(--ink-2)]" />
+            <span className="truncate text-xs font-semibold text-[var(--ink-2)]">
+              {extension || ''}
+            </span>
+          </div>
+          {/* `data-slot="button"` is not decorative: mcm-page.css resets every
+              bare <button> inside `.mcm-page` (background:none, color:inherit)
+              at a specificity that outranks Tailwind utilities, and exempts
+              this attribute. Without it the fill and text colour below are
+              silently dropped and the control renders as plain text. */}
           <button
             onClick={handleMakeAvailable}
             type="button"
+            data-slot="button"
             disabled={isPending}
-            className={`shrink-0 px-4 py-2 rounded-lg border text-sm font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+            aria-label={isAvailable ? `Leave ${name} queue` : `Join ${name} queue`}
+            className={`inline-flex h-8 min-w-[76px] shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
               isAvailable
-                ? 'bg-rose-50 text-rose-700 border-rose-200'
-                : 'bg-emerald-600 text-white border-emerald-600'
+                ? 'border border-rose-300 bg-white text-rose-600 shadow-[0_1px_3px_rgba(190,60,60,0.14)] hover:border-rose-400 hover:bg-rose-50'
+                : 'border border-transparent bg-primary text-white shadow-[0_3px_10px_rgba(194,98,46,0.32)] hover:brightness-95 hover:shadow-[0_4px_14px_rgba(194,98,46,0.4)]'
             }`}
           >
             {isPending ? (
@@ -150,38 +195,15 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
               'Join'
             )}
           </button>
-
-          <div className="flex gap-1 items-center">
-            <Icon name="Grid" className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-500 truncate text-xs">{extension || ''}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <span className="text-[11px] font-semibold text-gray-500 uppercase">Manager</span>
-        <div className="flex items-center gap-3 border rounded-lg p-2 bg-white">
-          <CustomAvatar
-            name={parsedManager?.name}
-            extension={extension}
-            image={parsedManager?.profile}
-          />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{parsedManager?.name}</span>
-            <small className="text-primary text-[10px]">{parsedManager?.role}</small>
-            <CustomTooltip text={parsedManager?.email}>
-              <small className="text-gray-500 truncate text-xs">
-                {parsedManager?.email || 'No email'}
-              </small>
-            </CustomTooltip>
-          </div>
         </div>
       </div>
 
       {/* Members Section */}
       {members && members?.length > 0 && (
-        <div className="flex flex-col gap-1 pt-2">
-          <span className="text-[11px] font-semibold text-gray-500 uppercase">Members</span>
+        <div className="flex items-center gap-2.5">
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-2)]">
+            Members
+          </span>
           <div className="flex -space-x-2">
             {members.slice(0, 5).map((member: IMember, memberIndex: number) => {
               const username = member?.name || 'Unknown';
@@ -192,11 +214,11 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
                     onClick={() => {
                       setModalState({ open: true, data: members || [], type: 'Total Members' });
                     }}
-                    className="w-10 h-10 flex items-center justify-center border-2 border-white rounded-full bg-gray-200 dark:border-gray-800 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-[var(--surface-2)] text-xs shadow-[0_2px_6px_rgba(120,90,60,0.16)] cursor-pointer transition-transform hover:z-10 hover:-translate-y-0.5"
                   >
                     {member?.profile ? (
                       <img
-                        className="w-10 h-10 rounded-full"
+                        className="h-full w-full rounded-full object-cover"
                         src={member.profile}
                         alt={username}
                         loading="lazy"
@@ -207,14 +229,14 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
                           if (parent && !parent.querySelector('.initials-fallback')) {
                             const fallback = document.createElement('div');
                             fallback.className =
-                              'initials-fallback w-full h-full flex items-center justify-center rounded-full border-2 border-gray-400 bg-gray-100 text-gray-600 capitalize text-sm font-medium';
+                              'initials-fallback w-full h-full flex items-center justify-center rounded-full text-primary capitalize text-sm font-semibold';
                             fallback.textContent = initials;
                             parent.appendChild(fallback);
                           }
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center rounded-full border-2 border-gray-400 bg-gray-100 text-gray-600 capitalize text-sm font-medium">
+                      <div className="flex h-full w-full items-center justify-center rounded-full text-sm font-semibold capitalize text-primary">
                         {initials}
                       </div>
                     )}
@@ -228,7 +250,7 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
                 onClick={() => {
                   setModalState({ open: true, data: members || [], type: 'Total Members' });
                 }}
-                className="w-10 h-10 flex items-center justify-center border-2 border-gray-500 rounded-full bg-gray-500 text-white text-xs font-medium cursor-pointer hover:bg-gray-600"
+                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--surface)] bg-primary text-[11px] font-semibold text-white shadow-[0_2px_6px_rgba(194,98,46,0.28)] cursor-pointer transition-transform hover:z-10 hover:-translate-y-0.5 hover:brightness-95"
               >
                 +{members.length - 5}
               </div>
@@ -236,6 +258,103 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
           </div>
         </div>
       )}
+
+      {/* Manager now leads the live-state grid below it: the queue's owner
+          is who this card names first, the numbers are the state of what
+          they own. No "MANAGER" caption - the avatar and the email already
+          say what this panel is, so the word would spend a row saying
+          nothing. */}
+      <div className="flex items-center gap-2.5 rounded-[12px] border border-[var(--line)] bg-[var(--surface-2)] px-2.5 py-1.5">
+        <CustomAvatar
+          size="30"
+          name={parsedManager?.name}
+          extension={extension}
+          image={parsedManager?.profile}
+        />
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-[13px] font-semibold leading-tight text-[var(--ink)]">
+            {parsedManager?.name}
+          </span>
+          <CustomTooltip text={parsedManager?.email}>
+            <small className="truncate text-[11px] leading-tight text-[var(--ink-2)]">
+              {parsedManager?.email || 'No email'}
+            </small>
+          </CustomTooltip>
+        </div>
+      </div>
+
+      {/* Live state. This page sits under Performance and carried none of it:
+          three cards naming a queue, its manager and some avatars, with no way
+          to tell which queue is in trouble. The figures come from the same
+          `liveQueueCalls` feed the Wallboard reads, matched on extension first
+          and name second, so a card and the Wallboard cannot disagree. */}
+      <div className="overflow-hidden rounded-[14px] border border-[var(--line)] bg-[var(--surface-2)]">
+        <div className="grid grid-cols-4 divide-x divide-[var(--line)]">
+          <div className="px-2 py-1.5 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-2)]">
+              Waiting
+            </p>
+            <p
+              className={`mt-1 text-lg font-bold leading-none ${
+                waitingNow > 4
+                  ? 'text-[#C0261F]'
+                  : waitingNow > 0
+                    ? 'text-[#C2670A]'
+                    : 'text-[var(--ink)]'
+              }`}
+            >
+              {live ? waitingNow : '--'}
+            </p>
+          </div>
+          <div className="px-2 py-1.5 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-2)]">
+              Avg wait
+            </p>
+            <p className="mt-1 text-lg font-bold leading-none text-[var(--ink)]">
+              {live ? `${avgWait}s` : '--'}
+            </p>
+          </div>
+          <div className="px-2 py-1.5 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-2)]">
+              Available
+            </p>
+            <p className="mt-1 text-lg font-bold leading-none text-[var(--ink)]">
+              {live ? (
+                <>
+                  {availableNow}
+                  <span className="text-[11px] font-medium text-[var(--ink-2)]">
+                    /{members?.length || 0}
+                  </span>
+                </>
+              ) : (
+                '--'
+              )}
+            </p>
+          </div>
+          <div className="px-2 py-1.5 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-2)]">SLA</p>
+            <p
+              className={`mt-1 text-lg font-bold leading-none ${
+                sla >= 80 ? 'text-[#0F766E]' : sla >= 70 ? 'text-[#C2670A]' : 'text-[#C0261F]'
+              }`}
+            >
+              {live ? `${sla}%` : '--'}
+            </p>
+          </div>
+        </div>
+        {/* The SLA number alone needs reading; the bar is comparable across
+            the three cards at a glance, which is how this page is scanned. */}
+        {live && (
+          <div className="h-1 w-full bg-[var(--line)]">
+            <div
+              className={`h-full transition-all duration-500 ${
+                sla >= 80 ? 'bg-[#0F766E]' : sla >= 70 ? 'bg-[#C2670A]' : 'bg-[#C0261F]'
+              }`}
+              style={{ width: `${Math.min(Math.max(sla, 0), 100)}%` }}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Members Modal */}
       {modalState?.open && (

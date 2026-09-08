@@ -32,14 +32,16 @@ const HeroStatCard = ({
 
   return (
     <div className={`stat hero-stat${breaching ? ' hero-stat-breach' : ''}`}>
-      {/* Sized up to actually use the card's width, and coloured with the
-          breach state rather than sitting there as neutral decoration. */}
-      {Icon && (
-        <span className={`hero-stat-icon${breaching ? ' hero-stat-icon-breach' : ''}`}>
-          <Icon style={{ width: 22, height: 22 }} />
-        </span>
-      )}
-      <div className="k">{label}</div>
+      <div
+        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}
+      >
+        <div className="k">{label}</div>
+        {Icon && (
+          <span className={`hero-stat-icon${breaching ? ' hero-stat-icon-breach' : ''}`}>
+            <Icon style={{ width: 13, height: 13 }} />
+          </span>
+        )}
+      </div>
       <div className="hero-stat-value-row">
         <span className="v num hero-stat-value">{value}</span>
         {trend && trend !== 'flat' && (

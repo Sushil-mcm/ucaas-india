@@ -136,6 +136,13 @@ body.perf-warm-backdrop.dark {
    350px height regardless of row count — the fix for the "massive blank
    gap beneath 4 rows" belongs at that data-table-height level, not CSS.
    ------------------------------------------------------------ */
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls). */
 .perf-flows .table-scroll {
   border-radius: 0 0 20px 20px;
   border: 1px solid var(--fl-glass-border);
@@ -157,6 +164,16 @@ body.perf-warm-backdrop.dark {
 .perf-flows .table-scroll::-webkit-scrollbar-track {
   margin-bottom: 8px;
 }
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-flows thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (flows-tab.tsx), which puts
+   the header in its own non-scrolling box, a *sibling* of `.table-scroll`,
+   not a descendant of it (same gotcha already hit and fixed in
+   agents-theme.css/interactions-theme.css/queues-theme.css). */
 .perf-flows thead {
   background: #fffdfb;
   box-shadow: none;

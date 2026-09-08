@@ -210,11 +210,109 @@ body.perf-warm-backdrop.dark {
 }
 
 /* ------------------------------------------------------------
+   3b. Advanced Filter panel (Call Type / Contact Name / Contact Phone
+   Number / Status + apply/reset) — rendered directly by call-history/
+   index.tsx (not TableManager's own internal CommonFilter, which only
+   renders when `!splitStickyHeader`; this table opts into
+   splitStickyHeader for its header/column-width fixes, so the filter
+   panel is rendered as its own block between the counter cards and the
+   table instead). CommonFilter itself is a plain, unstyled row of
+   Input/CustomSelect fields — every visual property below targets its
+   rendered output directly (`[data-slot="input"]`, `[data-slot="label"]`,
+   react-select's own `custom-react-select__*` class names) rather than
+   props CommonFilter doesn't expose.
+   ------------------------------------------------------------ */
+.perf-interactions .adv-filter-panel {
+  background: #fffdfb;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(160, 95, 30, 0.1);
+}
+.perf-interactions .adv-filter-panel [data-slot='label'] {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.perf-interactions .adv-filter-panel [data-slot='input'] {
+  height: 36px;
+  min-height: 36px;
+  border-radius: 9999px !important;
+  border-color: rgba(249, 115, 22, 0.2) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.perf-interactions .adv-filter-panel [data-slot='input']:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+/* Single clean line on focus, not border+ring together — the input's
+   own base component (ui/input.tsx) already paints its own focus
+   shadow/ring utilities underneath, and stacking a second glow ring on
+   top of that (and the already-visible rest-state border) read as a
+   double outline around the pill. `outline: none` also kills the
+   browser's own default focus ring, which otherwise showed as a third
+   line. */
+.perf-interactions .adv-filter-panel [data-slot='input']:focus {
+  border-color: var(--ic-accent) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.perf-interactions .adv-filter-panel .custom-react-select__control {
+  min-height: 36px !important;
+  height: 36px !important;
+  border-radius: 9999px !important;
+  border-color: rgba(249, 115, 22, 0.2) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+.perf-interactions .adv-filter-panel .custom-react-select__control:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+.perf-interactions .adv-filter-panel .custom-react-select__control--is-focused {
+  border-color: var(--ic-accent) !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+}
+.perf-interactions .adv-filter-panel .custom-react-select__value-container {
+  padding-left: 14px !important;
+}
+/* Apply (✓) / reset (✕) circles — same warm sunset gradient-on-hover
+   treatment as every other action circle in this theme, instead of the
+   plain green/red Tailwind washes CommonFilter paints them with
+   everywhere else it's used. */
+.perf-interactions .adv-filter-panel [class*='bg-green-100'] {
+  background: var(--live-wash) !important;
+  color: var(--live) !important;
+}
+.perf-interactions .adv-filter-panel [class*='bg-green-100']:hover {
+  background: linear-gradient(135deg, var(--ic-accent) 0%, var(--ic-accent-deep) 100%) !important;
+  color: #fff !important;
+}
+.perf-interactions .adv-filter-panel [class*='bg-red-100'] {
+  background: var(--crit-wash) !important;
+  color: var(--crit) !important;
+}
+
+/* ------------------------------------------------------------
    4. Calls table — 20px frosted glass card, sticky frosted header,
    Directory's signature left accent-bar row hover.
    ------------------------------------------------------------ */
+/* Only the BOTTOM corners round here, matching the outer card — under
+   `splitStickyHeader` this box sits directly below the header's own
+   separate, already-rounded-on-top box (a sibling, not a shared
+   container), so its own top edge has to be a flat, straight line to
+   meet the header's flat bottom edge. Rounding all four corners here
+   (the original bug) put a curve exactly where the two boxes meet: the
+   header's straight bottom-left/right corners sat right above this
+   box's rounded top-left/right ones, reading as an inward notch that
+   also clipped the first row's 3px left accent-bar hover short of the
+   divider line. */
 .perf-interactions .table-scroll {
-  border-radius: 20px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   border: 1px solid var(--ic-glass-border);
   background: var(--ic-glass);
   backdrop-filter: var(--ic-glass-blur);
@@ -231,25 +329,179 @@ body.perf-warm-backdrop.dark {
   border-radius: 20px;
   overflow: hidden;
 }
-.perf-interactions .table-scroll thead {
-  background: rgba(255, 250, 244, 0.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 var(--ic-hairline);
+/* `.table-scroll` here holds ONLY the body rows — `splitStickyHeader`
+   (table-manager.tsx) renders the header in its own separate, non-
+   scrolling box above it, a sibling, not a scrolling ancestor. A 40px
+   top margin (right, on the non-split path below, where the header
+   really does share this scroll box) pushed the vertical scrollbar's
+   track down into row 2 here instead of starting at row 1, since there
+   is no header inside this box to offset for.
+   No top margin at all now (a leftover 4px was still visibly floating
+   the thumb below the top edge) — `.table-scroll`'s own top corners are
+   flat (border-top-*-radius: 0, set above, fixing the header-seam notch
+   bug), so unlike the bottom edge there is no rounded corner here left
+   to clear. The bottom margin stays: the bottom corners are still
+   rounded 20px to match the outer card, and the thumb needs to stay
+   clear of that curve. */
+.perf-interactions .table-scroll::-webkit-scrollbar-track {
+  margin-top: 0;
+  margin-bottom: 8px;
 }
-.dark .perf-interactions .table-scroll thead {
+/* Belt-and-suspenders against a horizontal scrollbar: the real fix is
+   the <colgroup> percentages below actually summing to 100 (they
+   previously summed to 110, which is what caused it — table-layout:
+   fixed does not scale columns down to fit when they overrun the
+   table's own width, it just renders the table wider than its
+   container). Forcing both anyway keeps this table honest even if a
+   future column tweak drifts off 100 again. */
+.perf-interactions .table-scroll {
+  overflow-x: hidden !important;
+}
+.perf-interactions .table-scroll table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 2px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-interactions thead` directly, NOT `.table-scroll
+   thead` — this table renders via `<CallHistory splitStickyHeader />`
+   (interactions-tab.tsx), which (table-manager.tsx) puts the header in
+   its own non-scrolling box, a *sibling* of `.table-scroll`, not a
+   descendant of it. A `.table-scroll`-anchored selector silently never
+   matched this table's header at all, leaving it on TableManager's own
+   default `bg-[#faf5ee]` cream instead of this theme. */
+.perf-interactions thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-interactions thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-interactions .table-scroll thead th {
-  color: var(--ic-muted);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.perf-interactions thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  border-bottom-color: var(--ic-hairline);
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   background: transparent;
 }
+.perf-interactions thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-interactions thead th:last-child {
+  border-top-right-radius: 20px;
+}
+
+/* This table used to render with `hasSubRows` on, which made
+   TableManager inject its own leading toggle column (the expand/collapse
+   control for a multi-leg call) ahead of every real column. Almost every
+   row here is a single leg, so that column sat empty nearly always: full
+   th/td padding around nothing that read as a dead strip of whitespace
+   before Date no matter how far its own width was trimmed — an empty
+   column-shaped gap reads as dead space even at just a few px. Performance
+   has no use for that toggle, so `hasSubRows={false}` is now passed from
+   interactions-tab.tsx (a new opt-out prop on CallHistory, defaulting to
+   `true` so standalone Reports and the Home Wallboard — which do want
+   leg-expansion — are untouched). Date is genuinely column 1 now, so
+   every selector below counts from 1 with no toggle offset. */
+
+/* Uniform padding across every column — the previous per-column mix (16
+   left on Date, 20 right on the first four, 12 elsewhere) is what made
+   the gap between Status/Duration/Wait Time/Charge look inconsistent
+   with the gap on the left side. One consistent value everywhere, with
+   only Date's left edge (the card's own edge) and Action's right edge
+   (the card's own edge) getting a little extra breathing room. */
+.perf-interactions thead th,
+.perf-interactions .table-scroll td {
+  padding: 12px 10px !important;
+}
+.perf-interactions thead th:nth-child(1),
+.perf-interactions .table-scroll td:nth-child(1) {
+  padding-left: 16px !important;
+}
+/* Charge's own right padding is what actually separates ₹1.43 from the
+   Action column's Play button — the two columns sit directly adjacent in
+   the grid with no gutter of their own between them, so the visual gap
+   people read as "space between columns" has to come from inside one of
+   the two cells touching that boundary. 24px here is deliberately larger
+   than Duration/Wait Time's 14px: those two only ever face another
+   right-aligned figure on their right, but Charge faces Action's
+   left-aligned icon row, which needs more clearance to read as
+   breathing room rather than crowding. */
+.perf-interactions thead th:nth-child(6),
+.perf-interactions .table-scroll td:nth-child(6) {
+  padding-right: 14px !important;
+}
+.perf-interactions thead th:nth-child(7),
+.perf-interactions .table-scroll td:nth-child(7) {
+  padding-right: 14px !important;
+}
+.perf-interactions thead th:nth-child(8),
+.perf-interactions .table-scroll td:nth-child(8) {
+  padding-right: 24px !important;
+}
+.perf-interactions thead th:nth-child(9),
+.perf-interactions .table-scroll td:nth-child(9) {
+  padding-left: 12px !important;
+  padding-right: 16px !important;
+}
+
+/* `splitStickyHeader` (table-manager.tsx) measures every column's width
+   live off the currently-rendered row content and pins it via a
+   <colgroup>'s <col style="width: X%">. This table's data refreshes
+   every 2s ("Live — updates every 2s"), and every refresh re-measures —
+   so whichever row momentarily has the longest contact name in `To`
+   skews every other column's share for as long as that row is on
+   screen. That auto-measurement is what produced the crammed-left/
+   gappy-right layout: it isn't a fixed bug, it's live and visibly
+   reflows. Once `table-layout: fixed` is active, a <col>'s own specified
+   width — not any width on its th/td — is what the table layout
+   algorithm uses to size the column, so pinning it here (not on the
+   th/td) is what actually overrides TableManager's per-render inline
+   percentages and keeps every column's width constant regardless of
+   which row is currently rendered.
+   These sum to exactly 100 — an earlier set summed to 110, which is what
+   pushed the table 10% wider than its own container and produced both
+   the horizontal scrollbar and the clipped Action column (table-layout:
+   fixed renders a column's specified width as given; it does not scale
+   columns down to fit when they overrun). Status/Duration/Wait Time
+   moved a point narrower here so Charge and Action could both grow —
+   Charge needed the extra width to actually hold its own 24px right
+   padding above without squeezing ₹ figures against Duration/Wait Time,
+   and Action needed room for 3 circular buttons plus its own padding. */
+.perf-interactions colgroup col:nth-child(1) {
+  width: 14% !important;
+} /* Date */
+.perf-interactions colgroup col:nth-child(2) {
+  width: 15% !important;
+} /* From */
+.perf-interactions colgroup col:nth-child(3) {
+  width: 15% !important;
+} /* DID */
+.perf-interactions colgroup col:nth-child(4) {
+  width: 15% !important;
+} /* To */
+.perf-interactions colgroup col:nth-child(5) {
+  width: 8% !important;
+} /* Status */
+.perf-interactions colgroup col:nth-child(6) {
+  width: 7% !important;
+} /* Duration */
+.perf-interactions colgroup col:nth-child(7) {
+  width: 7% !important;
+} /* Wait Time */
+.perf-interactions colgroup col:nth-child(8) {
+  width: 8% !important;
+} /* Charge */
+.perf-interactions colgroup col:nth-child(9) {
+  width: 11% !important;
+} /* Action */
 
 .perf-interactions .table-scroll tbody tr {
   background: transparent;
@@ -272,44 +524,66 @@ body.perf-warm-backdrop.dark {
   color: var(--ic-muted);
 }
 
-/* Date, From, DID, To, Status read left to right like an identity, not a
-   count — explicitly left-aligned on both th and td rather than left
-   only by accident. A bare `<th>`'s own browser default is centered
-   while a bare `<td>` defaults left, so without this each of these five
-   silently disagreed with its own header. */
-.perf-interactions .table-scroll th:nth-child(1),
-.perf-interactions .table-scroll th:nth-child(2),
-.perf-interactions .table-scroll th:nth-child(3),
-.perf-interactions .table-scroll th:nth-child(4),
-.perf-interactions .table-scroll th:nth-child(5),
+/* Date, From, DID, To read left to right like an identity, not a count —
+   explicitly left-aligned on both th and td rather than left only by
+   accident. A bare `<th>`'s own browser default is centered while a bare
+   `<td>` defaults left, so without this each of these silently disagreed
+   with its own header. `th` selectors dropped their `.table-scroll`
+   ancestor requirement for the same reason as the header colour rules
+   above — `splitStickyHeader`'s `<th>`s live outside it. */
+.perf-interactions thead th:nth-child(1),
+.perf-interactions thead th:nth-child(2),
+.perf-interactions thead th:nth-child(3),
+.perf-interactions thead th:nth-child(4),
 .perf-interactions .table-scroll td:nth-child(1),
 .perf-interactions .table-scroll td:nth-child(2),
 .perf-interactions .table-scroll td:nth-child(3),
-.perf-interactions .table-scroll td:nth-child(4),
-.perf-interactions .table-scroll td:nth-child(5) {
+.perf-interactions .table-scroll td:nth-child(4) {
   text-align: left;
+}
+
+/* Status is a badge, not identity text — centered in its own column
+   rather than pinned to the left like the name/number columns beside it.
+   The header centers on plain `text-align`, but the body cell's badge is
+   wrapped in the shared component's own `w-full flex` div (call-history/
+   index.tsx), which — being a block-level flex container with the
+   browser's default `justify-content: flex-start` — ignores a `td`'s
+   `text-align` entirely, so that inner flex needs its own
+   `justify-content` to actually move. */
+.perf-interactions thead th:nth-child(5) {
+  text-align: center !important;
+}
+.perf-interactions .table-scroll td:nth-child(5) {
+  text-align: center;
+}
+.perf-interactions .table-scroll td:nth-child(5) > div {
+  justify-content: center;
 }
 
 /* Date, Duration, Wait Time, Charge — tabular figures, right-aligned so
    they line up column to column instead of jittering left-aligned. */
-.perf-interactions .table-scroll th:nth-child(1),
-.perf-interactions .table-scroll th:nth-child(6),
-.perf-interactions .table-scroll th:nth-child(7),
-.perf-interactions .table-scroll th:nth-child(8),
+.perf-interactions thead th:nth-child(1),
+.perf-interactions thead th:nth-child(6),
+.perf-interactions thead th:nth-child(7),
+.perf-interactions thead th:nth-child(8),
 .perf-interactions .table-scroll td:nth-child(1),
 .perf-interactions .table-scroll td:nth-child(6),
 .perf-interactions .table-scroll td:nth-child(7),
 .perf-interactions .table-scroll td:nth-child(8) {
   font-variant-numeric: tabular-nums;
 }
-.perf-interactions .table-scroll th:nth-child(6),
-.perf-interactions .table-scroll th:nth-child(7),
-.perf-interactions .table-scroll th:nth-child(8),
+.perf-interactions thead th:nth-child(6),
+.perf-interactions thead th:nth-child(7),
+.perf-interactions thead th:nth-child(8),
 .perf-interactions .table-scroll td:nth-child(6),
 .perf-interactions .table-scroll td:nth-child(7),
 .perf-interactions .table-scroll td:nth-child(8) {
   text-align: right;
 }
+/* Charge (8) is the row's final, most important figure — the only one
+   of the three right-aligned figure columns that gets the bolder ink
+   treatment. Duration (6) and Wait Time (7) share the table's plain
+   default styling so they read as equal in weight to each other. */
 .perf-interactions .table-scroll td:nth-child(8) {
   color: var(--ic-ink);
   font-weight: 600;
@@ -374,4 +648,251 @@ body.perf-warm-backdrop.dark {
   background: rgba(148, 163, 184, 0.16) !important;
   border-color: transparent;
   box-shadow: none;
+}
+
+/* ------------------------------------------------------------
+   7. Queue Detail Drawer — opened from a queue link (Billing, Onboarding,
+   Sales…) in the Calls table's "To" column. It's QueueDetailsView
+   (src/components/activity-list/side-drawers/queue-details-view.tsx),
+   rendered inside SideDrawer (src/components/custom/side-drawer.tsx) —
+   which calls `createPortal(..., document.body)`, so this content is
+   NEVER a DOM descendant of `.perf-interactions` no matter which page
+   opened it. A `.perf-interactions <x>` selector could not reach it even
+   in principle. Scoped instead through `body.perf-warm-backdrop` — the
+   same class interactions-tab.tsx already toggles on mount/unmount —
+   combined with `.qdv-root`, a class added directly on the drawer's own
+   content wrapper (queue-details-view.tsx). Both together are needed:
+   the body class alone would also catch the header's own permanently-
+   mounted notification drawer if it happened to share the DOM at the
+   same time (every SideDrawer instance shares the literal id
+   `#drawer-example`), and `.qdv-root` alone would reach this same
+   component's other call sites (standalone Reports, Voicemail, Outbound,
+   Inbound, Local Call List, Call Recording) which must stay untouched.
+   The red/green member-card border and the plain-text "Call Picked" /
+   "Call Not Picked" label were fixed directly in the TSX instead (a soft
+   pill badge, neutral card border) since that was a real bug — a jarring
+   full-card red outline duplicating a fact already stated in text — not
+   a theme choice, so it's fixed for every page that renders this drawer,
+   not just Performance. ------------------------------------------------------------ */
+body.perf-warm-backdrop .qdv-root {
+  gap: 14px;
+}
+/* The modal's own scroll container (`.qdv-modal`, `[data-slot="dialog-
+   content"]` with `overflow-y-auto` set directly on it in call-history/
+   index.tsx) is the same element that has the 20px rounded corners — so
+   without an explicit track inset, the native scrollbar track runs the
+   full height of the box and its straight vertical line visibly cuts
+   across both curved corners. Margins on the track (not the thumb) pull
+   it in from the top/bottom edges so it only ever runs along the
+   straight part of the right edge. 8px is enough to clear a 20px corner
+   here — the thumb itself is only 6px wide and sits inset from the true
+   edge, so it doesn't need a margin anywhere near the full corner
+   radius; an earlier 24px cleared the curve too but visibly floated the
+   thumb's start well below the top edge instead of reading as a clean
+   corner offset. Not scoped to `body.perf-warm-backdrop` like the rest
+   of this section — `.qdv-modal` only ever exists on the modal branch of
+   the Queue/IVR drawers (detailsAsModal), which itself only renders from
+   Performance, so there's no separate shared-component leakage risk to
+   guard against here. */
+.qdv-modal::-webkit-scrollbar {
+  width: 6px;
+}
+.qdv-modal::-webkit-scrollbar-track {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background: transparent;
+}
+.qdv-modal::-webkit-scrollbar-thumb {
+  background: rgba(160, 95, 30, 0.25);
+  border-radius: 999px;
+}
+/* Clean Directory-benchmark off-white, not a translucent white-over-
+   warm-gradient wash — an opaque #fffdfb reads as neutral cream; the
+   earlier translucent rgba(255,255,255,0.85)+blur let just enough of the
+   ambient warm-orange page backdrop bleed through to read as a pinkish
+   tint once layered over the equally-translucent inner boxes below. */
+body.perf-warm-backdrop .qdv-root .qdv-card {
+  background: #fffdfb;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(160, 95, 30, 0.1);
+}
+body.perf-warm-backdrop .qdv-root .qdv-card-title {
+  color: #1a1a1a;
+  font-weight: 700;
+}
+/* The inner info box (Queue Info's grid, the Manager row, each Member
+   card) — same clean #fffdfb as the outer card, not a peach/rose wash;
+   the warmth here comes entirely from the hairline border, not a tinted
+   fill, which is what was reading as "pinkish" rather than "warm sunset
+   orange". */
+body.perf-warm-backdrop .qdv-root .qdv-info-grid,
+body.perf-warm-backdrop .qdv-root .qdv-manager-row,
+body.perf-warm-backdrop .qdv-root .qdv-member-card {
+  background: #fffdfb !important;
+  border: 1px solid rgba(249, 115, 22, 0.14) !important;
+  border-radius: 14px;
+  transition: border-color 0.16s ease;
+}
+body.perf-warm-backdrop .qdv-root .qdv-manager-row:hover,
+body.perf-warm-backdrop .qdv-root .qdv-member-card:hover {
+  border-color: rgba(249, 115, 22, 0.3) !important;
+}
+body.perf-warm-backdrop .qdv-root .qdv-label {
+  color: #64748b !important;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+body.perf-warm-backdrop .qdv-root .qdv-value {
+  color: #1a1a1a !important;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+body.perf-warm-backdrop .qdv-root .qdv-role {
+  color: var(--ic-accent-deep) !important;
+}
+/* Extension pill — the Tailwind classes on the element itself
+   (bg-[#fff1eb] text-[#ea580c] font-mono) already give it a sensible
+   look on every page that renders this drawer; this only adds the
+   tabular-figure treatment used everywhere else in this theme. */
+body.perf-warm-backdrop .qdv-root .qdv-ext-pill {
+  font-variant-numeric: tabular-nums;
+}
+/* A subtle ring around each avatar — Directory-style presence framing
+   instead of a bare circle floating in the card. */
+body.perf-warm-backdrop .qdv-root .qdv-avatar-ring {
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.16);
+}
+/* Failover — a quiet inline strip, not another bordered card competing
+   for attention with Queue Info/Manager/Members above it. */
+body.perf-warm-backdrop .qdv-root .qdv-failover-pill {
+  background: rgba(249, 115, 22, 0.06);
+  border: 1px dashed rgba(249, 115, 22, 0.18);
+}
+/* The status pill's own Tailwind colours (bg-emerald-50/bg-rose-50) look
+   right everywhere already; only the border needs a touch more presence
+   here to read as a proper `.tag`-style badge rather than a flat wash. */
+body.perf-warm-backdrop .qdv-root .qdv-status-tag {
+  letter-spacing: 0.01em;
+}
+
+/* Queue Call History table (CallHistoryLogs → TableManager, default/
+   non-split header mode) — the exact same Directory ▸ People header
+   tokens as the main Calls table above, plus its signature 3px left
+   accent-bar row hover. TableManager's non-split path already wraps
+   `.table-scroll` in its own outer, non-scrolling clipping div (see the
+   `.perf-interactions div:has(> .table-scroll)` rule above, on the main
+   Calls table, for the same reasoning) — reusing that exact hook here
+   is what actually encloses the whole table in one card; `.table-scroll`
+   itself is only the scrolling viewport inside it. */
+body.perf-warm-backdrop .qdv-root div:has(> .table-scroll) {
+  border-radius: 20px;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  background: #fffdfb;
+  box-shadow: 0 10px 30px rgba(160, 95, 30, 0.1);
+  overflow: hidden;
+}
+body.perf-warm-backdrop .qdv-root thead {
+  background: #fffdfb !important;
+  box-shadow: none;
+}
+body.perf-warm-backdrop .qdv-root thead th:first-child {
+  border-top-left-radius: 20px;
+}
+body.perf-warm-backdrop .qdv-root thead th:last-child {
+  border-top-right-radius: 20px;
+}
+body.perf-warm-backdrop .qdv-root thead th {
+  background: transparent !important;
+  color: #8a6f57 !important;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  height: 40px;
+  border-bottom: 2px solid rgba(242, 153, 74, 0.25) !important;
+}
+/* The muddy, persistently-orange row background wasn't coming from the
+   rows themselves — nothing here ever set one — it was the ambient
+   page's warm gradient backdrop (live-theme.css, toggled on
+   `body.perf-warm-backdrop`) bleeding through TableManager's own
+   default `.table-scroll`/`tbody` background, which is translucent
+   (`bg-[rgba(251,249,246,0.88)]`) with a backdrop-blur. The header sits
+   on its own *opaque* `#fffdfb` right above it, so the two visibly
+   clashed: a clean solid header over a warm-tinted, blurred body. Once
+   the table's own enclosing card (above) is opaque, the fix is just
+   killing that translucency + blur here too, and rows are left with no
+   background of their own at rest — genuinely transparent, not a very
+   pale version of the hover tint. */
+body.perf-warm-backdrop .qdv-root .table-scroll,
+body.perf-warm-backdrop .qdv-root tbody {
+  background: #fffdfb !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.perf-warm-backdrop .qdv-root tbody tr {
+  background: transparent !important;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+body.perf-warm-backdrop .qdv-root tbody tr:hover {
+  background: rgba(254, 215, 170, 0.22) !important;
+  box-shadow: inset 3px 0 0 var(--ic-accent);
+}
+/* Date (1), Call Info (2) stay left — the table's own default. Duration
+   (3) is a tabular figure, right-aligned; Status (4) is a badge,
+   centered; Action (5) already centers itself via its own `meta`. */
+body.perf-warm-backdrop .qdv-root thead th:nth-child(3),
+body.perf-warm-backdrop .qdv-root .table-scroll td:nth-child(3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+body.perf-warm-backdrop .qdv-root thead th:nth-child(4),
+body.perf-warm-backdrop .qdv-root .table-scroll td:nth-child(4) {
+  text-align: center;
+}
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='bg-green-50'] {
+  background: var(--live-wash) !important;
+  color: var(--live) !important;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-weight: 600;
+}
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='bg-red-50'] {
+  background: var(--crit-wash) !important;
+  color: var(--crit) !important;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-weight: 600;
+}
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='bg-primary-100'] {
+  background: var(--warn-wash) !important;
+  color: var(--warn) !important;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-weight: 600;
+}
+/* Action buttons — same clean glass-circle-at-rest, sunset-on-hover
+   treatment as the main Calls table. */
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full'][class*='w-8'] {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  box-shadow: 0 1px 2px rgba(160, 95, 30, 0.08);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full'][class*='w-8']:hover {
+  background: linear-gradient(135deg, var(--ic-accent) 0%, var(--ic-accent-deep) 100%) !important;
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.26);
+}
+body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='cursor-not-allowed'] {
+  background: rgba(148, 163, 184, 0.16) !important;
+  border-color: transparent;
+  box-shadow: none;
+  color: inherit !important;
 }

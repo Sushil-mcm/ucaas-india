@@ -1290,7 +1290,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
               className={`relative flex items-start justify-between gap-3 overflow-hidden rounded-[20px] border px-5 py-3.5 shadow-[0_10px_34px_rgba(160,95,30,0.14)] ${
                 heroState
                   ? `${heroState.cell} border-[rgba(249,115,22,0.14)]`
-                  : 'border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%]'
+                  : 'border-[rgba(225,200,165,0.55)] bg-[#fffdfb] backdrop-blur-[20px] backdrop-saturate-[190%]'
               }`}
             >
               {heroState ? (
@@ -1321,7 +1321,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
             </div>
           );
         })}
-        <div className="relative flex items-start justify-between gap-3 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%] px-5 py-3.5 shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+        <div className="relative flex items-start justify-between gap-3 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#fffdfb] backdrop-blur-[20px] backdrop-saturate-[190%] px-5 py-3.5 shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
           <div>
             <p className="num text-[28px] font-bold leading-none tracking-tight text-[#1A1A1A]">
               {agentsAvailableNow}
@@ -1406,7 +1406,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                  (`--surface` housing `--surface-2` compartments), applied
                  here instead of literally cloning the floating-pill shape. */
               <div
-                className="grid w-full gap-1.5 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] p-1.5 backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]"
+                className="grid w-full gap-1.5 overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#fffdfb] p-1.5 backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]"
                 style={{
                   gridTemplateColumns: `repeat(${Math.max(1, Math.ceil(section.items.length / 2))}, minmax(140px, 1fr))`,
                 }}
@@ -1501,7 +1501,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                  object, the seven readings are its cells. Same fill, radius,
                  hairline and shadow as those panels, so the three groups now
                  look like one family instead of two plus a loose row. */
-              <div className="w-full overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+              <div className="w-full overflow-hidden rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
                   {section.items.map((item) => {
                     const IconComp = item.icon;
@@ -1600,7 +1600,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
               stacked cards each carrying its own border and shadow. Each band
               opens with a rule, an eyebrow and a sentence saying what it is
               for, so the panel reads before its numbers do. */}
-          <div className="w-full rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+          <div className="w-full rounded-[20px] border border-[rgba(225,200,165,0.55)] bg-[#fffdfb] backdrop-blur-[20px] backdrop-saturate-[190%] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
             <div className="grid grid-cols-1 divide-y divide-[rgba(225,200,165,0.4)] md:grid-cols-3 md:divide-x md:divide-y-0">
 
               <section className="p-5">
@@ -1619,14 +1619,15 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
 
                 <div className="mt-5 flex flex-col gap-4">
                   {funnelData.map((item, index) => (
-                    /* `-mx-2 px-2` cancel out visually (the connector below
+                    /* `-mx-5`/`px-5` cancel out visually (the connector below
                        is positioned off this box's padding edge, which lands
-                       in the same place either way) — they exist only to
-                       give the hover wash room to breathe past the numbered
-                       badge's own edge rather than hugging it. */
+                       in the same place either way) — matched to the parent
+                       `<section className="p-5">`'s own padding so the hover
+                       wash reaches the card's actual left/right edges instead
+                       of stopping a couple of pixels past the row's content. */
                     <div
                       key={item.label}
-                      className="group relative -mx-2 flex gap-3 rounded-xl px-2 py-1 transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
+                      className="group relative -mx-5 flex gap-3 rounded-xl px-5 py-1 transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
                     >
                       {index < funnelData.length - 1 && (
                         <span className="absolute left-[13px] top-7 h-[calc(100%+1rem-14px)] w-px bg-[rgba(225,200,165,0.6)]" />
@@ -1740,24 +1741,10 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                 ? 'bg-[#E8A33D]'
                                 : 'bg-[#0D9488]';
                           return (
-                            /* A soft background wash, not another accent bar:
-                               each row already carries a permanent colour
-                               identity of its own (`edge`, the pill beside
-                               the queue name), so a second bar arriving on
-                               hover only ever sat awkwardly beside the first
-                               — two lines doing the same job at the same
-                               edge. The wash gives the row the same "you are
-                               looking at this one" feedback without a second
-                               line to collide with the first. */
-                            <tr
-                              key={queue.queue}
-                              className="group transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
-                            >
+                            <tr key={queue.queue}>
                               <td className="py-3 text-left">
                                 <span className="flex items-center gap-2.5">
-                                  <span
-                                    className={`h-8 w-[3px] shrink-0 rounded-full transition-transform duration-150 group-hover:scale-x-150 ${edge}`}
-                                  />
+                                  <span className={`h-8 w-[3px] shrink-0 rounded-full ${edge}`} />
                                   <span className="truncate text-sm font-semibold text-[#1A1A1A]">
                                     {queue.queue}
                                   </span>
@@ -1824,7 +1811,12 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                 </p>
 
                 {activeCampaignsData.length > 0 ? (
-                  <div className="perf-thin-scroll mt-5 flex max-h-[300px] flex-col divide-y divide-[rgba(225,200,165,0.4)] overflow-y-auto">
+                  /* `mt-1.5`, not `mt-5`: the rows below now keep their full
+                     `py-3.5` on every row (see the note there), so the first
+                     row already contributes 14px of its own above the list.
+                     Trimming the container's margin by the same amount keeps
+                     the gap under the subtitle exactly where it was. */
+                  <div className="perf-thin-scroll mt-1.5 flex max-h-[300px] flex-col divide-y divide-[rgba(225,200,165,0.4)] overflow-y-auto">
                     {activeCampaignsData.map((campaign) => {
                       const reached =
                         campaign.dialed > 0
@@ -1833,11 +1825,37 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                       return (
                         <div
                           key={campaign.name}
-                          className="group -mx-2 rounded-xl px-2 py-3.5 transition-colors duration-150 first:pt-0 last:pb-0 hover:bg-[rgba(249,115,22,0.05)]"
+                          /* Uniform `py-3.5` on every row, with no `first:pt-0
+                             last:pb-0`. Those two trimmed the outer padding to
+                             tighten the list against the panel edge, but the
+                             hover wash paints the row box -- so the first row's
+                             highlight sat flush against its text with 14px of
+                             space only below it, and the last row's the other
+                             way up. Every row hovered a different shape. The
+                             list's outer spacing is handled on the container
+                             instead, where it does not distort the rows.
+
+                             `-mx-5`/`px-5`, not `-mx-2`/`px-2`: the wash was
+                             only reaching a couple of pixels past the row's
+                             own text, well short of the card's actual edges,
+                             because it was undoing its own small buffer
+                             rather than the parent `<section className="p-5">`'s
+                             20px padding. Matching that padding is what lets
+                             the highlight run the full width of the card. */
+                          className="group -mx-5 rounded-xl px-5 py-3.5 transition-colors duration-150 hover:bg-[rgba(249,115,22,0.05)]"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <span className="flex min-w-0 items-center gap-2.5">
-                              <span className="h-2 w-2 shrink-0 rounded-full bg-[#ea580c] transition-transform duration-150 group-hover:scale-125" />
+                              {/* `origin-left`: the dot's left edge sits exactly
+                                  on the scroll container's clip edge, and that
+                                  container clips horizontally whether it wants
+                                  to or not — `overflow-y: auto` forces
+                                  `overflow-x` to compute to `auto` rather than
+                                  stay visible. Scaling from the centre grew the
+                                  dot 1px past that edge and the browser sliced
+                                  it off, so it read as half a dot on hover.
+                                  Growing from the left keeps it inside. */}
+                              <span className="h-2 w-2 shrink-0 origin-left rounded-full bg-[#ea580c] transition-transform duration-150 group-hover:scale-125" />
                               <span className="truncate text-sm font-semibold text-[#1A1A1A]">
                                 {campaign.name}
                               </span>
@@ -1934,7 +1952,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   return (
                     <div
                       key={stat.label}
-                      className="group relative flex items-center gap-2.5 overflow-hidden rounded-[16px] border border-[rgba(225,200,165,0.55)] bg-[#FFF6EB] px-3 py-2.5 shadow-[0_6px_18px_rgba(160,95,30,0.1)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(214,163,90,0.7)] hover:shadow-[0_12px_26px_-6px_rgba(154,78,30,0.28)]"
+                      className="group relative flex items-center gap-2.5 overflow-hidden rounded-[16px] border border-[rgba(225,200,165,0.55)] bg-[#fffdfb] px-3 py-2.5 shadow-[0_6px_18px_rgba(160,95,30,0.1)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[rgba(214,163,90,0.7)] hover:shadow-[0_12px_26px_-6px_rgba(154,78,30,0.28)]"
                     >
                       {/* Icon badge (#FFF1E0/#ea580c) and card hairline
                           (rgba(249,115,22,.14)) are the design system's own

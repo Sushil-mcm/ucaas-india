@@ -259,12 +259,18 @@ body.perf-warm-toolbar .mcm-page .perf-tbar .btn.ghost.sm:hover {
    this view's warm glass toolbar, next to the slim ~34px "Waiting for
    data" pill beside it, that read as both too tall/chunky and too muddy a
    colour. Slimmed to match the pill's own height and given the same
-   sunset-orange gradient the rest of this view's warm accents use. */
+   sunset-orange gradient the rest of this view's warm accents use.
+   `border-radius: 12px` (not a full pill) — team lead review: matches the
+   Live/Waiting badge beside it (`rounded-xl`/12px), rather than two
+   different corner geometries sitting side by side. Gradient lightened a
+   step (was `#fb923c → #ea580c`) — team lead review called the darker end
+   too heavy; `#fb923c → #f97316` stays visibly a gradient without tipping
+   into the darker/muddier orange. */
 body.perf-warm-toolbar .mcm-page .perf-tbar .btn.primary {
   height: 36px;
   padding: 0 14px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #fb923c, #ea580c) !important;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fb923c, #f97316) !important;
   color: #ffffff !important;
   font-weight: 600 !important;
   font-size: 13px !important;
@@ -279,9 +285,9 @@ body.perf-warm-toolbar .mcm-page .perf-tbar .btn.primary {
    so the same "still clearly the same button, just lit up" feedback the
    rest of this view's hover states use fits better here too. */
 body.perf-warm-toolbar .mcm-page .perf-tbar .btn.primary:hover {
-  background: linear-gradient(135deg, #fb923c, #ea580c) !important;
+  background: linear-gradient(135deg, #fb923c, #f97316) !important;
   filter: brightness(1.05);
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.18);
 }
 
 /* The live queue KPI band (Waiting, Longest wait, Service level, ...) sits
@@ -470,8 +476,28 @@ body.perf-warm-backdrop .mcm-page .page-band .kpi .d {
 .dark .mcm-page .perf-live div:has(> .table-scroll) {
   background: rgba(23, 15, 10, 0.97);
 }
+/* Leadership review: the default browser-width thumb (8-10px) read as an
+   outdated scrollbar rather than a deliberate UI element, and the track's
+   old top margin (a leftover from when the header shared this scrolling
+   box — see the `splitStickyHeader` notes above, it no longer does) left
+   an empty white gap floating below the header divider before the thumb
+   could ever start. Slimmed to a 5px floating pill, flush under the
+   divider, with a transparent track so only the thumb itself is visible. */
+.mcm-page .perf-live .table-scroll::-webkit-scrollbar {
+  width: 5px !important;
+}
 .mcm-page .perf-live .table-scroll::-webkit-scrollbar-track {
-  margin-bottom: 8px;
+  background: transparent !important;
+  margin-top: 2px !important;
+  margin-bottom: 8px !important;
+}
+.mcm-page .perf-live .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(203, 145, 96, 0.45) !important;
+  border-radius: 9999px !important;
+  transition: background 0.2s ease !important;
+}
+.mcm-page .perf-live .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 145, 96, 0.75) !important;
 }
 
 /* Column widths — `splitStickyHeader`'s own measured `<colgroup>`

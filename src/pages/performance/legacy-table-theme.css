@@ -1,0 +1,192 @@
+/* ============================================================
+   Tables on the four legacy boards — Wallboard, AI Wall, Queue and Video.
+
+   These four are the only tabs Performance renders inside `.dash-legacy`
+   (index.tsx); every other tab is console-native and already themed. They
+   predate the console language and each hand-rolled its own table header:
+   the Wallboard's roster used a solid `#FBE2C8` band with bold black text,
+   the AI Wall's used Tailwind's cool `bg-gray-50` with grey text — a
+   slate-grey table sitting on a warm cream board. Neither matched Calls,
+   which is the table the rest of Performance is measured against.
+
+   So this restates Calls' table look (interactions-theme.css §4 — 20px
+   frosted card, sticky `#fffdfb` header in `#8a6f57` small caps, warm
+   hairlines, and Directory's signature left accent bar on row hover) for
+   whatever tables these boards render, present or future.
+
+   Scoped to `table[data-slot='table']` specifically — the marker the shared
+   `<Table>` component (components/ui/table) stamps on itself — rather than
+   every `<table>` under `.dash-legacy`. The Wallboard's own Queue Status
+   card sits on this same board and renders a *raw* `<table>` with its own
+   already-considered design (a permanent per-row colour bar identifying
+   each queue, no card enclosure, no sticky header); an earlier version of
+   this file targeted every table indiscriminately and landed its hover
+   accent bar directly beside that existing bar, reading as two lines stacked
+   at the row's edge. The marker is what tells the two apart. Covers the
+   Wallboard's agent roster and the AI Wall's high-risk breakdown (the two
+   actual `<Table>` usages on these boards); a raw `<table>` added later,
+   like Queue Status's, is deliberately left alone rather than pulled in.
+
+   NOT covered, deliberately: the Wallboard's two drill-in modals, which are
+   the only `TableManager` (`.table-scroll`) tables these boards open. Radix
+   portals a dialog to `document.body`, so their tables are not descendants
+   of `.dash-legacy` and no selector rooted here can reach them — a
+   `.table-scroll` block scoped this way would be dead CSS. Restyling those
+   means either theming the dialog itself or widening the scope beyond these
+   four boards, which would reach dialogs on every other page too.
+
+   Scoped to `.dash-legacy` rather than written per page: the four sit under
+   one wrapper, so a table added to any of them later inherits this instead
+   of starting another private header style. Deliberately NOT in a
+   `@layer` — the console's base sheet carries unlayered rules of its own
+   (`.mcm-page th`, `.mcm-page button`) that would otherwise outrank every
+   one of these regardless of specificity.
+   ============================================================ */
+
+.dash-legacy {
+  --lt-accent: #f97316;
+  --lt-hairline: rgba(249, 115, 22, 0.08);
+  --lt-row-hover: rgba(255, 241, 235, 0.55);
+  --lt-head-bg: #fffdfb;
+  --lt-head-ink: #8a6f57;
+  --lt-head-rule: rgba(242, 153, 74, 0.25);
+  --lt-body-ink: #334155;
+}
+
+.dark .dash-legacy {
+  --lt-accent: #fb923c;
+  --lt-hairline: rgba(251, 146, 60, 0.14);
+  --lt-row-hover: rgba(251, 146, 60, 0.1);
+  --lt-head-bg: rgba(23, 15, 10, 0.97);
+  --lt-head-ink: #c8a887;
+  --lt-head-rule: rgba(251, 146, 60, 0.28);
+  --lt-body-ink: #93a1ba;
+}
+
+/* ---- header ---------------------------------------------------------- */
+/* Pixel values are Calls', not approximations of it: 9.5px/800/0.09em in
+   `#8a6f57` on `#fffdfb`, 9px 12px padding, over a 2px warm hairline.
+   `!important` on the padding only, matching interactions-theme.css — the
+   shared `TableHead` ships its own `px-*`/`py-*` utilities and each of
+   these boards had added more on top. */
+.dash-legacy table[data-slot='table'] thead {
+  background: var(--lt-head-bg);
+}
+.dash-legacy table[data-slot='table'] thead tr {
+  background: transparent;
+  border: 0;
+}
+.dash-legacy table[data-slot='table'] thead th {
+  color: var(--lt-head-ink);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+  padding: 9px 12px !important;
+  /* Near-opaque, not transparent. The header row is `sticky top-0`
+     (live-dashboard), so with a see-through background the rows scrolling
+     underneath showed straight through the column labels — the same bleed
+     the Directory/Reports tables avoid with a solid sticky header. The
+     bottom hairline shadow keeps the header edge readable once a row is
+     tucked right under it. */
+  background: rgba(255, 250, 244, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 var(--lt-hairline);
+  border-bottom: 2px solid var(--lt-head-rule);
+}
+/* This file is deliberately unlayered (see the file banner), which is what
+   lets `text-align: left` above beat Tailwind's own `text-align` utilities
+   on every th/td regardless of which one was written more specifically or
+   later — Directory/Calls' own column alignment rule (numeric/badge columns
+   centered, duration/currency columns right) is exactly the kind of
+   per-column override that broke against it. `.lt-align-*` are the
+   opt-out: one extra class of specificity, so they win over the bare
+   `.dash-legacy thead th`/`tbody td` rules above while staying inside this
+   same unlayered sheet — a Tailwind `text-right`/`text-center` class alone
+   still cannot win here, use these instead. */
+.dash-legacy table[data-slot='table'] thead th.lt-align-center,
+.dash-legacy table[data-slot='table'] tbody td.lt-align-center {
+  text-align: center;
+}
+.dash-legacy table[data-slot='table'] thead th.lt-align-right,
+.dash-legacy table[data-slot='table'] tbody td.lt-align-right {
+  text-align: right;
+}
+
+/* ---- body ------------------------------------------------------------ */
+/* The left accent bar is an inset box-shadow rather than a border so the
+   row does not shift 3px sideways on hover. */
+.dash-legacy table[data-slot='table'] tbody tr {
+  background: transparent;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.dash-legacy table[data-slot='table'] tbody tr:hover {
+  background: var(--lt-row-hover);
+  box-shadow: inset 3px 0 0 var(--lt-accent);
+}
+.dash-legacy table[data-slot='table'] tbody td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  color: var(--lt-body-ink);
+  border-bottom: 1px solid var(--lt-hairline);
+}
+/* Nothing to separate from below, and the card's own radius clips it. */
+.dash-legacy table[data-slot='table'] tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---- Wallboard agent roster scrollbar --------------------------------- */
+/* The roster's own scroll container (agent-roster-scroll, live-dashboard's
+   index.tsx) never had any scrollbar styling of its own, so it fell back to
+   the browser's default chrome — on Windows a full-width track with its own
+   up/down arrow buttons, sitting flush against the card's rounded top-right
+   corner rather than clipped to it, and running the full height including
+   alongside the sticky header instead of starting below the data rows. Both
+   symptoms are the same two problems already solved for Calls' own table
+   (interactions-theme.css) and the dashboard drill-in modals
+   (`.dashboard-modal-horizontal-scroll`, index.css) — a thin custom
+   scrollbar, offset below the header. This is that same recipe for the one
+   scroll container on this page that never got it. */
+/* No `scrollbar-width` / `scrollbar-color` here, deliberately. From Chrome
+   121 onwards, setting either one opts the element into the STANDARD
+   scrollbar and Chrome then ignores every `::-webkit-scrollbar-*` rule on it
+   — including the `margin-top` below, which is the whole point of this block.
+   The symptom was silent: the bar still looked thin-ish, so nothing appeared
+   broken, but it rendered 10px instead of the 8px set below and ran the full
+   height alongside the sticky header. Dropping these two properties hands
+   Chrome back to the webkit pseudo-elements, where the track offset works.
+   Firefox loses the thin/tinted bar as a result; it has no equivalent of the
+   track margin anyway, so the offset could never have worked there. */
+.agent-roster-scroll {
+  overflow-y: auto;
+}
+.agent-roster-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+/* 40px is this roster header's real rendered height — same padding and font
+   size as Calls' own header (interactions-theme.css), which measures the
+   same. */
+.agent-roster-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-top: 40px;
+  margin-bottom: 8px;
+}
+.agent-roster-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(214, 163, 90, 0.55);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+.agent-roster-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(214, 163, 90, 0.8);
+  background-clip: padding-box;
+}
+/* The card's own `rounded-xl` + `overflow-hidden` (live-dashboard's index.tsx)
+   clips the scrollbar to that shape already — a scrollbar is only clipped by
+   an ancestor's `overflow: hidden`, never by the scrolling element's own
+   radius, which is why that ancestor rule matters here at all. */

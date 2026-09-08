@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Layers, Megaphone, Users, PhoneIncoming, Clock, Bot } from 'lucide-react';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { SocketEvents } from '@/context/socket-events-context';
+import { PERF_QUERY_KEYS } from '@/hooks/use-live-contact-centre';
 import { useUser } from '@/hooks/use-user';
 import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { callQueueList, campaignList } from '@/services/api';
@@ -49,8 +50,13 @@ const DashboardsTab = () => {
 
   const aiContainment = campaignAiLiveCallData?.data?.result?.ai_containment_percent;
 
+  /* Declared here as well as in the page hook, with the same key, function and
+     select but a different refetch interval. React Query deduplicated the
+     request, so this cost nothing — but two declarations of one resource is a
+     trap: change the limit or the select in one and whichever observer mounted
+     first silently wins. One declaration, one home. */
   const { data: queues = [] } = useQuery({
-    queryKey: ['performanceQueueList'],
+    queryKey: [PERF_QUERY_KEYS.queueList],
     queryFn: () => callQueueList({ page: 1, limit: 200, filters: [], search: '' }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
   });
