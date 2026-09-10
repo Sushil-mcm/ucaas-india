@@ -22,6 +22,7 @@ import { chatEvents } from '@/context/socket-events';
 import { isDemoMode } from '@/lib/demo-mode';
 import {
   demoAiLiveWallboardData,
+  demoCampaignAiLiveCallData,
   demoCampaignLiveCallsData,
 } from '@/lib/demo-contact-centre';
 import { v4 as uuidV4 } from 'uuid';
@@ -607,6 +608,7 @@ interface SocketEventsType {
   campaignAiLiveCallData: any;
   setCampaignAiLiveCallData: any;
   getAiLiveWallboardData: (payload: any, callback?: (response: any) => void) => void;
+  getCampaignAiLiveCallData: (payload: any, callback?: (response: any) => void) => void;
   contactsInfo: Record<string, any>;
   upsertContactInfoByNumber: (number: string, contactData: any) => void;
   aiChatRequests: any[];
@@ -776,6 +778,7 @@ export const SocketEvents = createContext<SocketEventsType>({
   campaignAiLiveCallData: null,
   setCampaignAiLiveCallData: () => void 0,
   getAiLiveWallboardData: () => void 0,
+  getCampaignAiLiveCallData: () => void 0,
   contactsInfo: {},
   upsertContactInfoByNumber: () => void 0,
   aiChatRequests: [],
@@ -3868,6 +3871,23 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
     [socketEventsManager, isDisconnecting],
   );
 
+  const getCampaignAiLiveCallData = useCallback((payload: any, callback?: (response: any) => void) => {
+    /* `campaignAiLiveCallData` — the AI Wall's KPI row and AI Receptionist
+       Performance panel — otherwise only ever changes from a server-pushed
+       `DASH_CAMPAIGN_AI_LIVE_CALL_RESPONSE` event. There is no matching
+       request event for it to emit even in production, so nothing ever
+       re-seeds it: in demo mode the Refresh button re-fetched the agent
+       roster (getAiLiveWallboardData) but left these numbers frozen at
+       whatever seeded them on mount, which read as the button doing nothing.
+       This re-seeds from the same generator that seeded it initially. */
+    void payload;
+    if (isDemoMode()) {
+      const res = demoCampaignAiLiveCallData();
+      setCampaignAiLiveCallData(res);
+      if (callback) callback(res);
+    }
+  }, []);
+
   const disconnectSocket = useCallback(() => {
     setIsDisconnecting(true);
     if (socketEventsManager) {
@@ -4855,6 +4875,7 @@ export const SocketEventsProvider = ({ children }: { children: ReactNode }) => {
         campaignAiLiveCallData,
         setCampaignAiLiveCallData,
         getAiLiveWallboardData,
+        getCampaignAiLiveCallData,
         contactsInfo,
         upsertContactInfoByNumber,
         aiChatRequests,
