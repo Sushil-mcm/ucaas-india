@@ -16,6 +16,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useUser } from '@/hooks/use-user';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useDialpad } from '@/hooks/use-dialpad';
+import { useInstantMeeting } from '@/hooks/use-instant-meeting';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -40,6 +41,7 @@ const DepartmentDetails = () => {
   const { user } = useUser();
   const { usersOnlineStatus, createNewChat, createPrivateChatId } = useSocketEvents();
   const { makeCall, sessions } = useDialpad();
+  const { startVideoCall, isStarting } = useInstantMeeting();
   const extension = user?.user_info?.extension;
   const isMeOnCall = usersOnlineStatus?.find((user) => user?.userId == extension)?.onCall;
 
@@ -536,6 +538,21 @@ const DepartmentDetails = () => {
                     >
                       <Icon name="MessageStrokIcon" className="w-4 h-4" />
                       <span>Message</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="group flex-1 flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm hover:bg-primary hover:border-primary hover:text-white active:scale-[0.98] transition-all duration-150 disabled:opacity-40"
+                      disabled={isStarting}
+                      onClick={() => {
+                        startVideoCall(
+                          { user_uuid: selectedMember?.user_uuid, name: selectedMember?.label, email: selectedMember?.email },
+                          `Call with ${selectedMember?.label}`,
+                        );
+                        setSelectedMember(null);
+                      }}
+                    >
+                      <Icon name="VideoIcon" className="w-4 h-4" />
+                      <span>Video</span>
                     </button>
                   </div>
                 )}
