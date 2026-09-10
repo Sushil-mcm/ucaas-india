@@ -184,16 +184,19 @@ export const PERFORMANCE_VIEWS: AreaView[] = [
   { key: 'agents', label: 'Agents', icon: 'ContactIcon' },
   { key: 'interactions', label: 'Calls', icon: 'PhoneIcon' },
   { key: 'flows', label: 'Flows', icon: 'IntegrationIcon' },
-  { key: 'dashboards', label: 'Boards', icon: 'AnalyticsIcon' },
+  { key: 'dashboards', label: 'Boards', icon: 'LayoutDashboardIcon' },
   // everything the platform has that the console does not
-  { key: 'live-interactions', label: 'Live', icon: 'PhoneIcon', sep: true },
+  { key: 'live-interactions', label: 'Live', icon: 'RadioIcon', sep: true },
   { key: 'callbacks', label: 'Callbacks', icon: 'PhoneForwardingIcon' },
-  { key: 'campaign-activity', label: 'Campaigns', icon: 'DialerIcon' },
+  /* `Megaphone` read as tilted/asymmetrical and too close to a consumer
+     advertising bullhorn — `Target` is the more enterprise, symmetrical fit
+     for outbound campaigns/lead targeting. */
+  { key: 'campaign-activity', label: 'Campaigns', icon: 'TargetIcon' },
   { key: 'speech-text', label: 'Speech', icon: 'MessageIcon' },
-  { key: 'reports', label: 'Reports', icon: 'ReportsLineIcon' },
-  { key: 'live-wallboard', label: 'Wallboard', icon: 'AnalyticsIcon' },
-  { key: 'ai-wallboard', label: 'AI Wall', icon: 'AnalyticsIcon', feature: 'ai' },
-  { key: 'call-queue', label: 'Queue', icon: 'PhoneIcon', feature: 'queue' },
+  { key: 'reports', label: 'Reports', icon: 'FileBarChartIcon' },
+  { key: 'live-wallboard', label: 'Wallboard', icon: 'MonitorLucideIcon' },
+  { key: 'ai-wallboard', label: 'AI Wall', icon: 'BotIcon', feature: 'ai' },
+  { key: 'call-queue', label: 'Queue', icon: 'ListOrderedIcon', feature: 'queue' },
   { key: 'video-dashboard', label: 'Video', icon: 'VideoIcon', feature: 'video' },
   // The top-bar shortcuts, moved down here so the bar itself stays lean.
   { key: 'ext-calendar', label: 'Calendar', icon: 'CalendarLine', href: '/calendar?view=calendar', sep: true },
@@ -204,8 +207,8 @@ export const PERFORMANCE_VIEWS: AreaView[] = [
   // Activity and Monitoring depend on the signed-in user (their uuid, their
   // role/plan access) so their real href is resolved in useAreaNav — this
   // placeholder just claims the slot and the icon.
-  { key: 'ext-activity', label: 'Activity', icon: 'PhoneIcon', match: '/activity' },
-  { key: 'ext-monitoring', label: 'Monitor', icon: 'AnalyticsIcon', match: '/monitoring' },
+  { key: 'ext-activity', label: 'Activity', icon: 'HistoryIcon', match: '/activity' },
+  { key: 'ext-monitoring', label: 'Monitor', icon: 'HeadsetIcon', match: '/monitoring' },
 ];
 
 /** The views an area carries in its rail, if it carries any. */

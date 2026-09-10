@@ -1,3 +1,18 @@
+import {
+  LayoutDashboard,
+  Radio,
+  Target,
+  FileBarChart,
+  ListOrdered,
+  History,
+  Headset,
+  // Aliased — this file already exports an unrelated (unregistered) custom
+  // `Monitor` SVG below; importing lucide's under the same name would
+  // collide with that existing `export const Monitor`.
+  Monitor as MonitorLucide,
+  Bot,
+} from 'lucide-react';
+
 export interface IconProps {
   className?: string;
 }
@@ -7843,3 +7858,32 @@ export const Disc = ({ className }: IconProps) => (
     <circle cx="12" cy="12" r="4" />
   </svg>
 );
+
+/* Lucide-backed rail icons — added to give Performance's left rail distinct,
+   semantically-accurate icons for the views that used to reuse one of three
+   duplicated glyphs (a phone handset four times, an equalizer-bars chart
+   four times, a 9-dot keypad twice) across unrelated tabs. Wrapped rather
+   than referenced directly so they slot into the existing `Icon`/`iconMap`
+   lookup (icon.tsx) the same way every hand-drawn SVG in this file does. */
+export const LayoutDashboardIcon = ({ className }: IconProps) => (
+  <LayoutDashboard className={className} />
+);
+export const RadioIcon = ({ className }: IconProps) => <Radio className={className} />;
+/* `Megaphone` (Campaigns) read as tilted/asymmetrical and too close to a
+   consumer advertising bullhorn — `Target` is the more enterprise,
+   symmetrical fit for outbound campaigns/lead targeting. */
+export const TargetIcon = ({ className }: IconProps) => <Target className={className} />;
+export const FileBarChartIcon = ({ className }: IconProps) => (
+  <FileBarChart className={className} />
+);
+export const ListOrderedIcon = ({ className }: IconProps) => <ListOrdered className={className} />;
+export const HistoryIcon = ({ className }: IconProps) => <History className={className} />;
+export const HeadsetIcon = ({ className }: IconProps) => <Headset className={className} />;
+/* `Tv`/`Sparkles` (Wallboard/AI Wall) read as a retro antenna-TV and a
+   consumer "magic star" respectively — swapped for a flat digital-display
+   `Monitor` and an AI-specific `Bot`, both a closer fit for an enterprise
+   contact-centre command display and a voicebot/AI receptionist. */
+export const MonitorLucideIcon = ({ className }: IconProps) => (
+  <MonitorLucide className={className} />
+);
+export const BotIcon = ({ className }: IconProps) => <Bot className={className} />;

@@ -772,6 +772,109 @@
     max-height: 200px !important;
   }
 
+  /* The Performance toolbar's date-preset select (Today, Yesterday, Last 7
+     Days, Last 30 Days, This Month, Last Month, Date Range) — scoped via
+     `inputClass="mcm-date-preset"` on that one CustomSelect
+     (date-dropdown/index.tsx) so this doesn't touch any other select's
+     menu. The shared 200px `max-height` above is sized for selects with
+     dozens of options; this fixed 7-item list needed a scrollbar it never
+     should have had. Has to stay inside this layer, right beside the
+     rules it overrides: for `!important` declarations the cascade
+     reverses layer order and treats unlayered styles (a plain override in
+     date-picker-theme.css) as the lowest priority, so nothing outside
+     `@layer base` can win this fight no matter how specific it is. */
+  /* The control itself is forced to `height: 2.5rem !important` (40px) by
+     the shared `.custom-react-select__control` rule below — 4px taller
+     than the 36px `.perf-filter-pill` it sits inside as the pill's first
+     segment, poking out past the pill's own top/bottom edge and reading
+     as a seam between the date select and Division/Media beside it.
+
+     Same rule also forces a solid white background at its own 0.8rem
+     (12.8px) corner radius — squarer than the fully-rounded (999px) pill
+     it sits inside. That mismatch was invisible while the pill clipped
+     its children with overflow:hidden, but the "Date Range" floating
+     panel (a descendant several levels down) needed overflow:visible on
+     that same pill to ever be able to render outside it — the moment
+     that changed, the control's own less-rounded white corner started
+     poking out past the pill's rounded left edge, covering its thin
+     border there. Fixed by never giving the control its own visible
+     surface in the first place: transparent background, and its own
+     corners rounded to match the pill's curve on the side that's a real
+     edge (left) and squared off on the side that meets Sep 4/Division/
+     Media (right), so there's nothing left to clip. */
+  .mcm-date-preset.custom-react-select__control {
+    height: 36px !important;
+    min-height: 36px !important;
+    background-color: transparent !important;
+    border-top-left-radius: 999px !important;
+    border-bottom-left-radius: 999px !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  .mcm-date-preset.custom-react-select__menu {
+    /* Pure opaque white, not a 96%-alpha + blur combo — the blur softened
+       whatever sat behind the menu instead of hiding it outright, and on
+       Performance's own busy backdrop (bold KPI figures right underneath)
+       that still read as visible ghosted text through the menu. */
+    background-color: #fff !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
+    border-color: rgba(242, 153, 74, 0.6) !important;
+    box-shadow: 0 12px 32px rgba(160, 95, 30, 0.18) !important;
+  }
+  .mcm-date-preset.custom-react-select__menu-list {
+    max-height: 360px !important;
+  }
+  .mcm-date-preset.custom-react-select__option {
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+  }
+  .mcm-date-preset.custom-react-select__option:hover,
+  .mcm-date-preset.custom-react-select__option--is-focused {
+    background-color: rgba(255, 241, 235, 0.65) !important;
+    color: #1a1a1a !important;
+  }
+  .mcm-date-preset.custom-react-select__option--is-selected {
+    background-color: rgba(249, 115, 22, 0.12) !important;
+    background-image: none !important;
+    color: #ea580c !important;
+    font-weight: 600;
+  }
+  .mcm-date-preset.custom-react-select__option--is-selected:hover,
+  .mcm-date-preset.custom-react-select__option--is-selected.custom-react-select__option--is-focused {
+    background-color: rgba(249, 115, 22, 0.16) !important;
+    color: #ea580c !important;
+  }
+
+  /* Standalone date-preset select (`.rp-date-standalone` — Reports ▸ Call
+     Analytics, and anywhere else this select renders alone rather than as
+     the first segment of Performance's fused Today+Division+Media pill).
+     Has to sit here, inside this same `@layer base` block, for the same
+     reason documented above the base `.mcm-date-preset.custom-react-
+     select__control` rule: for `!important` declarations the cascade
+     reverses layer order, so an unlayered override (in date-picker-
+     theme.css) can never beat a layered one no matter how specific —
+     restoring symmetric corners had to happen in the one place that can
+     actually outrank the fused-pill default. Directory's orange outline-
+     button treatment (border + text, no fill) instead of round-left/
+     square-right on a transparent background. */
+  .rp-date-standalone .mcm-date-preset.custom-react-select__control {
+    border-radius: 999px !important;
+    background-color: #fff !important;
+    border: 1px solid rgba(242, 153, 74, 0.6) !important;
+  }
+  .rp-date-standalone .mcm-date-preset.custom-react-select__control:hover {
+    border-color: #f2994a !important;
+  }
+  .rp-date-standalone .mcm-date-preset .custom-react-select__single-value,
+  .rp-date-standalone .mcm-date-preset .custom-react-select__placeholder {
+    color: #f2994a !important;
+    font-weight: 600;
+  }
+  .rp-date-standalone .mcm-date-preset .custom-react-select__dropdown-indicator svg {
+    color: #f2994a !important;
+  }
+
   .chart-container {
     position: relative;
     width: 100%;

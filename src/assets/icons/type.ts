@@ -374,4 +374,13 @@ export type IconType =
   | 'BoxBrandsIcon'
   | 'AIBrainIcon'
   | 'GlobeIcon'
-  | 'Disc';
+  | 'Disc'
+  | 'LayoutDashboardIcon'
+  | 'RadioIcon'
+  | 'TargetIcon'
+  | 'FileBarChartIcon'
+  | 'ListOrderedIcon'
+  | 'HistoryIcon'
+  | 'HeadsetIcon'
+  | 'MonitorLucideIcon'
+  | 'BotIcon';
