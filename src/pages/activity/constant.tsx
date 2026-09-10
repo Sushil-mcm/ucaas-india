@@ -41,8 +41,8 @@ export const USER_ACTIVITY_CONST = {
 };
 
 export const userActivityDateInitialVal = {
-  value: handleDate('Today'),
-  date_type: 'Today',
+  value: handleDate('Last 30 Days'),
+  date_type: 'Last 30 Days',
   dateOptions: DateFilterTypes,
 };
 export function roundToNextHour(date: Date) {
