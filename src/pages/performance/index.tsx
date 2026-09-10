@@ -11,6 +11,8 @@ import {
   Activity,
   TriangleAlert,
   RotateCw,
+  Search,
+  X,
 } from 'lucide-react';
 import moment from 'moment';
 import './live-theme.css';
@@ -128,6 +130,17 @@ const Performance = () => {
   useEffect(() => {
     if (viewParam && viewParam !== activeTab) navigate(`/performance/${activeTab}`, { replace: true });
   }, [viewParam, activeTab]);
+  /* Centralized global search — one box in the parent toolbar that every
+     sub-tab reads instead of each view growing its own. Kept as a single
+     string handed straight down to each tab's own TableManager `search`
+     prop (client-side via `clientSideSearch` for the two tabs backed by an
+     already-fetched in-memory array — Queues, Agents — server-side via the
+     generic `search` list param everywhere else), so the debounce and the
+     "no matches" empty state are the one TableManager already provides
+     rather than a second copy of either here. Existing per-page search
+     inputs (Campaigns, Call History) are left in place per Neel's review —
+     this box is additive, not a replacement, until that's reviewed. */
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [selectedQueueUuid, setSelectedQueueUuid] = useState<string | null>(null);
   const [dropdownVal, setDropdownVal] = useState(() => ({
     value: handleDate('Today'),
@@ -302,6 +315,31 @@ const Performance = () => {
               <span className="pf-seg">Division: All</span>
               <span className="pf-seg">Media: All</span>
             </div>
+          </div>
+
+          {/* Centralized global search — sits in the toolbar's own empty
+              middle space between the filter pill and the live-status/
+              dashboards controls. `perf-tbar-search` (live-theme.css) pins
+              its height to the same 36px every other toolbar control uses. */}
+          <div className="perf-tbar-search">
+            <Search className="perf-tbar-search-icon" />
+            <input
+              type="text"
+              value={globalSearchQuery}
+              onChange={(event) => setGlobalSearchQuery(event.target.value)}
+              placeholder="Search queues, agents, calls…"
+              aria-label="Search across the active Performance view"
+            />
+            {globalSearchQuery && (
+              <button
+                type="button"
+                className="perf-tbar-search-clear"
+                onClick={() => setGlobalSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X />
+              </button>
+            )}
           </div>
 
           <div className="perf-tbar-group perf-tbar-end">
@@ -510,9 +548,12 @@ const Performance = () => {
             isLoading={isQueuesLoading}
             selectedQueueUuid={selectedQueueUuid}
             setSelectedQueueUuid={setSelectedQueueUuid}
+            globalSearch={globalSearchQuery}
           />
         )}
-        {activeTab === 'campaign-activity' && <CampaignActivityTab />}
+        {activeTab === 'campaign-activity' && (
+          <CampaignActivityTab globalSearch={globalSearchQuery} />
+        )}
         {activeTab === 'agents' && (
           <AgentsTab
             agentRows={agentRows}
@@ -520,15 +561,22 @@ const Performance = () => {
             activeQueueCalls={activeQueueCalls}
             queues={queues}
             isLoading={isAgentsLoading}
+            globalSearch={globalSearchQuery}
           />
         )}
-        {activeTab === 'interactions' && <InteractionsTab selectedRange={selectedRange} />}
-        {activeTab === 'flows' && <FlowsTab />}
+        {activeTab === 'interactions' && (
+          <InteractionsTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />
+        )}
+        {activeTab === 'flows' && <FlowsTab globalSearch={globalSearchQuery} />}
         {activeTab === 'dashboards' && <DashboardsTab />}
-        {activeTab === 'live-interactions' && <LiveInteractionsTab />}
-        {activeTab === 'callbacks' && <CallbacksTab />}
+        {activeTab === 'live-interactions' && (
+          <LiveInteractionsTab globalSearch={globalSearchQuery} />
+        )}
+        {activeTab === 'callbacks' && <CallbacksTab globalSearch={globalSearchQuery} />}
         {activeTab === 'speech-text' && <SpeechTextTab />}
-        {activeTab === 'reports' && <ReportsTab selectedRange={selectedRange} />}
+        {activeTab === 'reports' && (
+          <ReportsTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />
+        )}
 
         {/* The wallboards predate the console language and bring their own
             layout, so they get a plain scroll container. */}

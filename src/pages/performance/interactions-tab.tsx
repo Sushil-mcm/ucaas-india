@@ -6,7 +6,13 @@ import { useCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import './interactions-theme.css';
 
-const InteractionsTab = ({ selectedRange }: { selectedRange: { from: string; to: string } }) => {
+const InteractionsTab = ({
+  selectedRange,
+  globalSearch,
+}: {
+  selectedRange: { from: string; to: string };
+  globalSearch?: string;
+}) => {
   const callStats = useCallStats(selectedRange);
 
   /* The warm ambient backdrop renders one level up, in the Performance page
@@ -53,6 +59,7 @@ const InteractionsTab = ({ selectedRange }: { selectedRange: { from: string; to:
         visibleRowCount={6}
         hasSubRows={false}
         detailsAsModal
+        externalSearch={globalSearch}
       />
     </div>
   );

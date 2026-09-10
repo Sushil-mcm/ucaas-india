@@ -135,6 +135,7 @@ const QueuesActivityTab = ({
   isLoading,
   selectedQueueUuid,
   setSelectedQueueUuid,
+  globalSearch,
 }: {
   queues: QueueRow[];
   activeQueueCalls: any[];
@@ -147,6 +148,14 @@ const QueuesActivityTab = ({
   isLoading: boolean;
   selectedQueueUuid: string | null;
   setSelectedQueueUuid: (uuid: string | null) => void;
+  /* The Performance toolbar's centralized global search (index.tsx). Fed
+     straight into TableManager's own `search` prop below with
+     `clientSideSearch` — this table's rows are already a fully-fetched
+     in-memory array (`buildQueueRows`), not a paginated server fetch, so
+     the same generic "match any column's value" filter TableManager
+     already gives server-backed tables (Flows, Callbacks, Campaigns)
+     applies here too rather than a bespoke filter written per tab. */
+  globalSearch?: string;
 }) => {
   /* The warm ambient backdrop and the KPI hero band (Waiting / Longest wait
      / Service / Volume / Coverage) both render one level up, in the
@@ -505,6 +514,8 @@ const QueuesActivityTab = ({
         emptyTablePlaceholder="No queues configured"
         descriptionEmptyTable="Call queues you create will show live activity here."
         splitStickyHeader
+        search={globalSearch}
+        clientSideSearch
       />
     </div>
   );

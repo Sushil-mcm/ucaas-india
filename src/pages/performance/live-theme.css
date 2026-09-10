@@ -159,6 +159,123 @@ body.perf-warm-toolbar .mcm-page .perf-tbar [role='combobox'] {
   border-radius: 11px;
 }
 
+/* Centralized global search box — sits between the filter pill group and
+   the live-status/dashboards group. `flex: 1 1 auto` with `min-width`/
+   `max-width` and its non-shrinking siblings is what actually centers it in
+   the remaining space — the same effect `margin: 0 auto` was reaching for,
+   but as a flexible member instead of a fixed-width one, so it's this box
+   that gives way first as the row runs out of room rather than forcing the
+   fixed-content groups on either side to wrap. `min-width` keeps it from
+   collapsing to nothing before `max-width` caps how wide it gets on a
+   spacious toolbar. 36px tall, to the same baseline every other toolbar
+   control already sits on (`.perf-tbar .fchip`/`.btn.sm` above). */
+body.perf-warm-toolbar .mcm-page .perf-tbar-search {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 200px;
+  max-width: 340px;
+  height: 36px;
+  margin: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search:focus-within {
+  border-color: rgba(249, 115, 22, 0.45);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+}
+.dark body.perf-warm-toolbar .mcm-page .perf-tbar-search {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(251, 146, 60, 0.22);
+}
+/* Absolutely positioned rather than a flex sibling with a `gap` — a gap-
+   based icon only guarantees clearance from the *icon's own box*, not from
+   wherever the placeholder text happens to start rendering inside the
+   input, which is what let the two visually collide. Pinning the icon and
+   giving the input a fixed `padding-left` past it (below) guarantees the
+   same clear gap in both states instead of two independently-sized boxes
+   that merely happened not to overlap. */
+body.perf-warm-toolbar .mcm-page .perf-tbar-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: #64748b;
+  pointer-events: none;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  /* 12px icon offset + 15px icon + 9px clearance = 36px (`pl-9`) before
+     the placeholder text starts. */
+  padding: 0 8px 0 36px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--pl-ink-2, #0f172a);
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 9px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(148, 163, 184, 0.18);
+  color: #64748b;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search-clear svg {
+  width: 11px;
+  height: 11px;
+}
+body.perf-warm-toolbar .mcm-page .perf-tbar-search-clear:hover {
+  background: rgba(249, 115, 22, 0.18);
+  color: #ea580c;
+}
+/* Below ~900px the two side groups no longer fit beside a search box at
+   its own `min-width` at all — rather than let `nowrap` force a
+   horizontal scrollbar on the toolbar, the search box drops to its own
+   full-width second line here and only here, same as the filter pill and
+   status/dashboards group already did below this width before the search
+   box existed. */
+@media (max-width: 900px) {
+  body.perf-warm-toolbar .mcm-page .perf-tbar {
+    flex-wrap: wrap;
+  }
+  body.perf-warm-toolbar .mcm-page .perf-tbar-search {
+    max-width: none;
+    min-width: 0;
+    margin: 0;
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
 /* "Live — updates every 2s" — pulsing emerald dot, otherwise left plain. */
 body.perf-warm-toolbar .mcm-page .perf-tbar .fchip.live .dot.green {
   width: 8px;

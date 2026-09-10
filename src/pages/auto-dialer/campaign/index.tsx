@@ -73,7 +73,18 @@ const MODE_FILTERS: Array<[string, string]> = [
  * second header and a second set of totals on the same screen, so both are
  * dropped and the frame stops claiming full height.
  */
-const Campaign = ({ embedded = false }: { embedded?: boolean }) => {
+const Campaign = ({
+  embedded = false,
+  globalSearch,
+}: {
+  embedded?: boolean;
+  /* Performance ▸ Campaigns' centralized toolbar search (index.tsx →
+     campaign-activity-tab.tsx). The page's own "Search campaigns" input
+     below stays exactly as it was — this only feeds the table when that
+     local box is empty, so typing locally still wins without either input
+     needing to know about the other. */
+  globalSearch?: string;
+}) => {
   const navigate = useNavigate();
   const queryClient: any = useQueryClient();
   const { features } = useCompanyFeatures();
@@ -82,7 +93,8 @@ const Campaign = ({ embedded = false }: { embedded?: boolean }) => {
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [modeFilter, setModeFilter] = useState<string>('ALL');
-  const debouncedSearch = useDebounce(search, 1000);
+  const effectiveSearch = search || globalSearch || '';
+  const debouncedSearch = useDebounce(effectiveSearch, 1000);
 
   const [modalState, setModalState] = useState<ModalState>({ open: false, type: null, data: [] });
   const [drawerState, setDrawerState] = useState<{ isModalOpen: boolean; selectedCampaign: any }>({

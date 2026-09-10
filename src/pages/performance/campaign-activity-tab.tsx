@@ -24,7 +24,7 @@ const parseMembers = (members: any) => {
   }
 };
 
-const CampaignActivityTab = () => {
+const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
   /**
    * `perf-warm-backdrop` flags the document so campaigns-theme.css can paint
    * the full-page ambient gradient and the live-queue KPI band — done on
@@ -157,7 +157,7 @@ const CampaignActivityTab = () => {
           icon={PhoneForwarded}
         />
       </div>
-      <Campaign embedded />
+      <Campaign embedded globalSearch={globalSearch} />
     </div>
   );
 };

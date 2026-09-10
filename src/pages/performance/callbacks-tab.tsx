@@ -17,7 +17,7 @@ import moment from 'moment';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 import './callbacks-theme.css';
 
-const CallbacksTab = () => {
+const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
   const { user } = useUser();
   /* Whether this person may play this particular recording, on top of the
      plan permission above. */
@@ -258,6 +258,15 @@ const CallbacksTab = () => {
              every row — no internal scroll for the sticky header to stick
              within, no scrollbar. Same fix as Performance ▸ Live/Agents. */
           visibleRowCount={6}
+          search={globalSearch}
+          /* `calendarMeetingList`'s generic `search` param isn't confirmed
+             to match against task name server-side — `clientSideSearch`
+             filters the fetched page itself instead, so this stays correct
+             either way. Scheduled tasks are a bounded, small list (unlike
+             voicemail below, which can run to real call-record volumes and
+             relies on `callList`'s own `search`, already proven via Call
+             History's identical wiring). */
+          clientSideSearch
         />
       )}
       {view === 'voicemail' && (
@@ -277,6 +286,7 @@ const CallbacksTab = () => {
           isHeightSet={false}
           splitStickyHeader
           visibleRowCount={6}
+          search={globalSearch}
         />
       )}
       <AudioModal

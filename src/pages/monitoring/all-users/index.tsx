@@ -75,7 +75,18 @@ type ActiveCallSortedUser = {
  * "Monitoring › All Extensions" bar and the viewport-height table box would
  * be a second header and a nested scroller inside its page.
  */
-const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) => {
+const AllUserMonitoring = ({
+  embedded = false,
+  globalSearch,
+}: {
+  embedded?: boolean;
+  /* Performance ▸ Live Interactions' centralized toolbar search
+     (index.tsx → live-interactions-tab.tsx). This view has no search
+     input of its own to preserve, so it's fed straight into
+     TableManager's own `search` prop below. Standalone Monitoring ▸ All
+     Extensions never passes it. */
+  globalSearch?: string;
+} = {}) => {
   // const breadcrumbData = [{ label: 'Monitoring' }, { label: 'All Users' }];
   const [isShowSummary, setIshowSummary] = useState(false);
   const tableRef = useRef<any>(null);
@@ -653,6 +664,14 @@ const AllUserMonitoring = ({ embedded = false }: { embedded?: boolean } = {}) =>
               ...(embedded
                 ? { splitStickyHeader: true, showPagination: true, visibleRowCount: 6 }
                 : {}),
+              /* `getUserList`'s generic `search` param isn't confirmed to
+                 match against agent name/extension/contact server-side —
+                 `clientSideSearch` filters the fetched page itself
+                 instead, so this stays correct either way (same reasoning
+                 as Performance ▸ Flows/Callbacks). Only for the Performance
+                 ▸ Live embed; standalone Monitoring ▸ All Users never
+                 passes `globalSearch`. */
+              ...(embedded ? { search: globalSearch, clientSideSearch: true } : {}),
             }}
           />
         </div>

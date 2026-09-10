@@ -80,6 +80,13 @@ type CallHistoryProps = {
      getting the new modal was the actual bug reported here. Defaults to
      false so nothing else changes. */
   detailsAsModal?: boolean;
+  /* Performance ▸ Calls' centralized toolbar search (index.tsx →
+     interactions-tab.tsx). Merges with this table's own local search box
+     the same way Campaigns does — local wins when it's not
+     empty, so typing locally still wins without either input needing to
+     know about the other. Every other caller (standalone Reports, the
+     Home Live Wallboard) simply never passes it. */
+  externalSearch?: string;
 };
 
 const EMPTY_CALL_HISTORY_FILTERS: { key: string; value: string }[] = [];
@@ -170,6 +177,7 @@ const CallHistory = ({
   showDateFilter = true,
   hasSubRows = true,
   detailsAsModal = false,
+  externalSearch,
 }: CallHistoryProps = {}) => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
@@ -1042,7 +1050,7 @@ const CallHistory = ({
           fetcherKey,
           fetcherFn: callList,
           columns,
-          search,
+          search: search || externalSearch || '',
           extraParams: tableExtraParams,
           emptyTablePlaceholder: 'No call records found',
           descriptionEmptyTable: 'Start making or receiving calls to generate call logs.',

@@ -12,7 +12,7 @@ import PerfStatCard from './stat-card';
 import Timer from '@/components/timer';
 import './live-theme.css';
 
-const LiveInteractionsTab = () => {
+const LiveInteractionsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
   const { liveCalls, eventLiveCallsData } = useSocketEvents();
 
   /**
@@ -106,7 +106,7 @@ const LiveInteractionsTab = () => {
           icon={PhoneForwarded}
         />
       </div>
-      <AllUserMonitoring embedded />
+      <AllUserMonitoring embedded globalSearch={globalSearch} />
     </div>
   );
 };

@@ -18,7 +18,7 @@ const getSiteLabel = (site: unknown) => {
   }
 };
 
-const FlowsTab = () => {
+const FlowsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
   /* The warm ambient backdrop renders one level up, in the Performance page
      shell (index.tsx) — flagging the document while this tab is open is
      what lets flows-theme.css reach it, the same convention Queues/Agents/
@@ -153,6 +153,14 @@ const FlowsTab = () => {
         emptyTablePlaceholder="No call flows configured"
         descriptionEmptyTable="IVR menus you create show up here."
         splitStickyHeader
+        search={globalSearch}
+        /* `ivrList`'s generic `search` param isn't guaranteed to match
+           against flow name/extension/site server-side (unconfirmed for
+           this endpoint) — `clientSideSearch` filters the fetched page
+           itself instead, so this stays correct either way. The flows
+           list is small (company-wide IVR menus, not per-call records), so
+           a single page comfortably holds the full set this filters over. */
+        clientSideSearch
       />
     </div>
   );

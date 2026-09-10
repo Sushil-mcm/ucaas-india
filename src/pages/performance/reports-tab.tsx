@@ -112,7 +112,16 @@ const alignForColumn = (heading: string, index: number): 'left' | 'center' | 'ri
   return 'center';
 };
 
-const ReportsTab = ({ selectedRange }: { selectedRange: { from: string; to: string } }) => {
+const ReportsTab = ({
+  selectedRange,
+  globalSearch,
+}: {
+  selectedRange: { from: string; to: string };
+  // The Performance toolbar's centralized global search (index.tsx) —
+  // filters the report catalog's cards by title and the active report's
+  // own rendered rows by any cell value.
+  globalSearch?: string;
+}) => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [selectedId, setSelectedId] = useState('queue-summary');
   const [openReport, setOpenReport] = useState<LinkedReport | null>(null);
@@ -258,6 +267,19 @@ const ReportsTab = ({ selectedRange }: { selectedRange: { from: string; to: stri
     smsRows,
     contactLists,
   ]);
+
+  // The active report renders as a plain `string[][]` (head + rows), not a
+  // TableManager instance, so the toolbar's global search filters it here
+  // directly — a row matches if any of its own cell values contains the
+  // query, the same "match any column" rule TableManager's own
+  // `clientSideSearch` uses for Queues/Agents.
+  const normalizedGlobalSearch = globalSearch?.trim().toLowerCase() || '';
+  const filteredReportRows = useMemo(() => {
+    if (!report || !normalizedGlobalSearch) return report?.rows || [];
+    return report.rows.filter((row) =>
+      row.some((cell) => String(cell ?? '').toLowerCase().includes(normalizedGlobalSearch)),
+    );
+  }, [report, normalizedGlobalSearch]);
 
   const isLoading =
     callStats.isPending ||
@@ -407,48 +429,59 @@ const ReportsTab = ({ selectedRange }: { selectedRange: { from: string; to: stri
             </span>
           </div>
           <div className="pc-body">
-            {REPORT_CATALOG.map((group) => (
-              <div key={group.group}>
-                <div className="sect-title" style={{ margin: '14px 0 8px' }}>
-                  {group.group}
+            {REPORT_CATALOG.map((group) => {
+              // The toolbar's global search filters catalog cards by title —
+              // a group with nothing left to show doesn't render its own
+              // now-empty heading.
+              const visibleReports = normalizedGlobalSearch
+                ? group.reports.filter((definition) =>
+                    definition.title.toLowerCase().includes(normalizedGlobalSearch),
+                  )
+                : group.reports;
+              if (!visibleReports.length) return null;
+              return (
+                <div key={group.group}>
+                  <div className="sect-title" style={{ margin: '14px 0 8px' }}>
+                    {group.group}
+                  </div>
+                  <div className="rp-catalog-grid">
+                    {visibleReports.map((definition) => {
+                      const isSelected = definition.id === selectedId;
+                      const isAvailable = Boolean(definition.build);
+                      return (
+                        <button
+                          type="button"
+                          key={definition.id}
+                          // Native `disabled` makes Chromium paint its own
+                          // form-control background under the locked card,
+                          // ignoring this file's CSS regardless of specificity
+                          // or `!important` — `aria-disabled` plus the guard
+                          // below keeps it un-clickable without that native
+                          // rendering taking over.
+                          aria-disabled={!isAvailable}
+                          title={definition.unavailableReason}
+                          onClick={() => {
+                            if (!isAvailable) return;
+                            selectReport(definition.id);
+                          }}
+                          className={`rp-catalog-card${isSelected ? ' is-selected' : ''}${
+                            !isAvailable ? ' is-locked' : ''
+                          }`}
+                        >
+                          <span className="rp-catalog-title">
+                            {!isAvailable && <Lock className="rp-catalog-lock" />}
+                            {definition.title}
+                          </span>
+                          <span className="rp-catalog-desc">
+                            {isAvailable ? definition.description : definition.unavailableReason}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="rp-catalog-grid">
-                  {group.reports.map((definition) => {
-                    const isSelected = definition.id === selectedId;
-                    const isAvailable = Boolean(definition.build);
-                    return (
-                      <button
-                        type="button"
-                        key={definition.id}
-                        // Native `disabled` makes Chromium paint its own
-                        // form-control background under the locked card,
-                        // ignoring this file's CSS regardless of specificity
-                        // or `!important` — `aria-disabled` plus the guard
-                        // below keeps it un-clickable without that native
-                        // rendering taking over.
-                        aria-disabled={!isAvailable}
-                        title={definition.unavailableReason}
-                        onClick={() => {
-                          if (!isAvailable) return;
-                          selectReport(definition.id);
-                        }}
-                        className={`rp-catalog-card${isSelected ? ' is-selected' : ''}${
-                          !isAvailable ? ' is-locked' : ''
-                        }`}
-                      >
-                        <span className="rp-catalog-title">
-                          {!isAvailable && <Lock className="rp-catalog-lock" />}
-                          {definition.title}
-                        </span>
-                        <span className="rp-catalog-desc">
-                          {isAvailable ? definition.description : definition.unavailableReason}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -459,7 +492,9 @@ const ReportsTab = ({ selectedRange }: { selectedRange: { from: string; to: stri
           <h3>{selected?.title}</h3>
           <span className="pc-right" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
             {selectedRange.from} – {selectedRange.to}
-            {report ? ` · ${report.rows.length} row${report.rows.length === 1 ? '' : 's'}` : ''}
+            {report
+              ? ` · ${filteredReportRows.length} row${filteredReportRows.length === 1 ? '' : 's'}`
+              : ''}
           </span>
         </div>
         <div className="pc-body tight">
@@ -547,8 +582,8 @@ const ReportsTab = ({ selectedRange }: { selectedRange: { from: string; to: stri
                   </tr>
                 </thead>
                 <tbody>
-                  {report?.rows.length ? (
-                    report.rows.map((row, rowIndex) => (
+                  {filteredReportRows.length ? (
+                    filteredReportRows.map((row, rowIndex) => (
                       <tr key={rowIndex} style={{ borderBottom: '1px solid var(--line-2)' }}>
                         {row.map((cell, cellIndex) => (
                           <td
