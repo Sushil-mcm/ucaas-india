@@ -44,6 +44,7 @@ import RegionalModal from '@/components/common-settings/regional-dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { v4 as uuidV4 } from 'uuid';
+import '../../../meetings-theme.css';
 
 const normalizeMemberValue = (value?: string | number) => String(value || '').trim();
 
@@ -888,11 +889,11 @@ const ScheduleEventModal = ({
     <div className="relative flex h-full min-h-0 w-full flex-col ">
       {isVideoCreateRestricted ? (
         <div className="flex h-full min-h-0 items-center justify-center px-4 py-6">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center">
-            <p className="text-base font-semibold text-slate-900">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-mcm-surface p-6 text-center">
+            <p className="text-base font-semibold text-slate-900 dark:text-mcm-ink">
               You do not have access to create events
             </p>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-slate-500 dark:text-mcm-ink-3">
               Please contact your administrator to enable this permission.
             </p>
           </div>
@@ -900,7 +901,7 @@ const ScheduleEventModal = ({
       ) : (
         <>
           {/* {isPendingEventTaskDetail && (
-        <div className="absolute -top-25 inset-0 flex items-center justify-center bg-white/60 z-50">
+        <div className="absolute -top-25 inset-0 flex items-center justify-center bg-white/60 dark:bg-mcm-surface/60 z-50">
           <Loader variant="blue" />
         </div>
       )} */}
@@ -915,9 +916,9 @@ const ScheduleEventModal = ({
                     above), so there's nothing here to change; the "Change"
                     button and the Regional Settings modal it opened are
                     gone, this is now a plain read-only line. */}
-                <div className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 rounded-xl border border-slate-100 dark:border-mcm-line bg-slate-50 dark:bg-mcm-surface-3 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-600">
+                    <span className="text-sm font-medium text-slate-600 dark:text-mcm-ink-2">
                       {watchTimezone?.label || 'Select Timezone'}
                       {watchCountry?.label ? `, ${watchCountry?.label}` : ''}
                     </span>
@@ -934,7 +935,7 @@ const ScheduleEventModal = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
-                    <Label className="text-slate-700 font-semibold">{`${isCategoryEvent ? 'Meeting' : 'Task'} Date`}</Label>
+                    <Label className="text-slate-700 dark:text-mcm-ink-2 font-semibold">{`${isCategoryEvent ? 'Meeting' : 'Task'} Date`}</Label>
                     <Controller
                       name="meeting_date"
                       control={control}
@@ -952,7 +953,7 @@ const ScheduleEventModal = ({
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label className="text-slate-700 font-semibold">Start Time</Label>
+                    <Label className="text-slate-700 dark:text-mcm-ink-2 font-semibold">Start Time</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <CustomSelect
                         inputClass="mcm-time-select"
@@ -1009,7 +1010,7 @@ const ScheduleEventModal = ({
                           <div
                             key={item.value}
                             onClick={() => setDuration(item.value)}
-                            className={`border rounded-lg px-4 py-2 cursor-pointer text-sm font-medium transition-all ${duration === item.value ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            className={`border rounded-lg px-4 py-2 cursor-pointer text-sm font-medium transition-all ${duration === item.value ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm' : 'bg-white dark:bg-mcm-surface border-slate-200 dark:border-mcm-line text-slate-600 dark:text-mcm-ink-2 hover:bg-slate-50 dark:hover:bg-mcm-surface-3'}`}
                           >
                             {item.label}
                           </div>
@@ -1054,12 +1055,12 @@ const ScheduleEventModal = ({
 
                       {videoAccess?.invite && (
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="ml-auto bg-white border border-[var(--primary)] rounded-xl py-2 px-4 text-[var(--primary)] font-semibold hover:bg-[var(--primary)] hover:text-white transition-all text-sm cursor-pointer shadow-sm active:scale-95">
+                          <DropdownMenuTrigger className="ml-auto bg-white dark:bg-mcm-surface border border-[var(--primary)] rounded-xl py-2 px-4 text-[var(--primary)] font-semibold hover:bg-[var(--primary)] hover:text-white transition-all text-sm cursor-pointer shadow-sm active:scale-95">
                             <div className="flex items-center gap-2">
                               <Icon name="Invite" className="w-4.5 h-4.5" /> Invite Participants
                             </div>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent>
+                          <DropdownMenuContent className="mtg-menu">
                             <DropdownMenuItem
                               onClick={() => setModalState({ inviteMembers: true })}
                             >
@@ -1099,7 +1100,7 @@ const ScheduleEventModal = ({
                                         name="CheckMarkIcon"
                                         className="text-green-500 w-4 h-4"
                                       />
-                                      <p className="text-gray-800">{getParticipantLabel(member)}</p>
+                                      <p className="text-gray-800 dark:text-mcm-ink-2">{getParticipantLabel(member)}</p>
                                     </div>
                                     <span
                                       className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-red-100   text-red-500 hover:bg-red-500 hover:text-white"
@@ -1122,7 +1123,7 @@ const ScheduleEventModal = ({
                     <>
                       <div
                         onClick={() => handleOpenModal('inviteMembers')}
-                        className="ml-auto bg-white border border-[var(--primary)] rounded-xl py-2 px-4 text-[var(--primary)] font-semibold hover:bg-[var(--primary)] hover:text-white transition-all text-sm cursor-pointer shadow-sm active:scale-95"
+                        className="ml-auto bg-white dark:bg-mcm-surface border border-[var(--primary)] rounded-xl py-2 px-4 text-[var(--primary)] font-semibold hover:bg-[var(--primary)] hover:text-white transition-all text-sm cursor-pointer shadow-sm active:scale-95"
                       >
                         <div className="flex items-center gap-2">
                           <Icon name="Invite" className="w-4.5 h-4.5" /> Assign users
@@ -1156,7 +1157,7 @@ const ScheduleEventModal = ({
                                         name="CheckMarkIcon"
                                         className="text-green-500 w-4 h-4"
                                       />
-                                      <p className="text-gray-800">{getParticipantLabel(member)}</p>
+                                      <p className="text-gray-800 dark:text-mcm-ink-2">{getParticipantLabel(member)}</p>
                                     </div>
                                     <span
                                       className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-red-100   text-red-500 hover:bg-red-500 hover:text-white"
@@ -1176,10 +1177,10 @@ const ScheduleEventModal = ({
                   <div className="space-y-4">
                     {isChatSource ? (
                       <div className="space-y-3">
-                        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-mcm-line bg-slate-50 dark:bg-mcm-surface-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex flex-col gap-0.5">
-                            <Label className="text-slate-800 font-bold">Notify Users</Label>
-                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                            <Label className="text-slate-800 dark:text-mcm-ink font-bold">Notify Users</Label>
+                            <p className="text-[10px] text-slate-500 dark:text-mcm-ink-3 font-medium uppercase tracking-wider">
                               Select recipients for this message
                             </p>
                           </div>
@@ -1191,12 +1192,12 @@ const ScheduleEventModal = ({
                         </div>
 
                         {notifyUsers ? (
-                          <div className="rounded-2xl border border-slate-200 bg-white p-3 space-y-2 max-h-52 overflow-y-auto">
-                            <div className="flex flex-col gap-2 border-b border-slate-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
-                              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                          <div className="rounded-2xl border border-slate-200 dark:border-mcm-line bg-white dark:bg-mcm-surface p-3 space-y-2 max-h-52 overflow-y-auto">
+                            <div className="flex flex-col gap-2 border-b border-slate-100 dark:border-mcm-line pb-2 sm:flex-row sm:items-center sm:justify-between">
+                              <span className="text-xs font-semibold text-slate-600 dark:text-mcm-ink-2 uppercase tracking-wider">
                                 {isPersonalChat ? 'Assigned Users' : 'Team Members'}
                               </span>
-                              <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-mcm-ink-2 cursor-pointer">
                                 <Checkbox
                                   checked={areAllNotifyUsersSelected}
                                   onCheckedChange={(checked: any) =>
@@ -1212,9 +1213,9 @@ const ScheduleEventModal = ({
                               return (
                                 <label
                                   key={chatUser?.uuid}
-                                  className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50 cursor-pointer"
+                                  className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-mcm-surface-3 cursor-pointer"
                                 >
-                                  <span className="text-sm text-slate-700 truncate pr-3">
+                                  <span className="text-sm text-slate-700 dark:text-mcm-ink-2 truncate pr-3">
                                     {chatUser?.name}
                                   </span>
                                   <Checkbox
@@ -1231,10 +1232,10 @@ const ScheduleEventModal = ({
                       </div>
                     ) : null}
 
-                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-mcm-line bg-slate-50 dark:bg-mcm-surface-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-col gap-0.5">
-                        <Label className="text-slate-800 font-bold">Reminder</Label>
-                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                        <Label className="text-slate-800 dark:text-mcm-ink font-bold">Reminder</Label>
+                        <p className="text-[10px] text-slate-500 dark:text-mcm-ink-3 font-medium uppercase tracking-wider">
                           Notify before 5 min
                         </p>
                       </div>
@@ -1266,11 +1267,11 @@ const ScheduleEventModal = ({
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label className="text-slate-700 font-semibold">Description</Label>
+                    <Label className="text-slate-700 dark:text-mcm-ink-2 font-semibold">Description</Label>
                     <textarea
                       rows={4}
                       maxLength={500}
-                      className="border border-slate-200 rounded-2xl text-sm resize-none p-4 bg-slate-50/50 hover:border-slate-300 focus:border-primary focus:bg-white transition-all focus-visible:outline-none placeholder:text-slate-400"
+                      className="border border-slate-200 dark:border-mcm-line rounded-2xl text-sm resize-none p-4 bg-slate-50/50 dark:bg-mcm-surface-3/50 hover:border-slate-300 dark:hover:border-mcm-line focus:border-primary focus:bg-white dark:focus:bg-mcm-surface transition-all focus-visible:outline-none placeholder:text-slate-400 dark:placeholder:text-mcm-ink-3"
                       placeholder="Add any additional details..."
                       value={watchDescription}
                       onChange={(e) => {
@@ -1281,13 +1282,13 @@ const ScheduleEventModal = ({
                 </>
               </div>
 
-              <div className="shrink-0 border-t border-slate-200 bg-white px-2 pt-4 ">
+              <div className="shrink-0 border-t border-slate-200 dark:border-mcm-line bg-white dark:bg-mcm-surface px-2 pt-4 ">
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleClose}
-                    className="w-full rounded-xl border-slate-200 px-6 text-slate-600 hover:bg-transparent hover:text-slate-600 sm:w-auto"
+                    className="w-full rounded-xl border-slate-200 dark:border-mcm-line px-6 text-slate-600 dark:text-mcm-ink-2 hover:bg-transparent hover:text-slate-600 dark:hover:text-mcm-ink-2 sm:w-auto"
                   >
                     Cancel
                   </Button>

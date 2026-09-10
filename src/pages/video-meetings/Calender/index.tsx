@@ -72,6 +72,7 @@ import { CountdownTimer } from '@/components/custom/callback-reminder/countdown-
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Button } from '@/components/ui/button.tsx';
 import { FilterIcon } from '@/assets/icons/index.tsx';
+import '../meetings-theme.css';
 
 const getInitials = (name: string) => {
   if (!name) return '';
@@ -1066,7 +1067,7 @@ const CalendarPage = () => {
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-48">
+                <DropdownMenuContent align="end" className="mtg-menu min-w-48">
                   <DropdownMenuItem
                     onClick={() => setDetailsModal(transformEventTaskToSchedule(schedule))}
                   >
@@ -1181,8 +1182,10 @@ const CalendarPage = () => {
       sessions,
     ],
   );
+  /* `pt-7` (was a flat `p-3`) so this page starts on the same 28px line as
+     the Performance tabs; the other edges keep their 12px. */
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overflow-x-hidden p-3 lg:overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto overflow-x-hidden px-3 pt-7 pb-3 lg:overflow-hidden">
       <div className="rounded-lg bg-white border border-slate-200 overflow-visible lg:overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-[calc(100vh-88px)] overflow-visible lg:overflow-hidden">
           {/* An explicit `h-[calc(100vh-88px)]` instead of `h-full`: the grid

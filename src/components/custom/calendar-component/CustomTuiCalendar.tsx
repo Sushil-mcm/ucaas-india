@@ -1381,13 +1381,13 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
                 {validAttendees?.length > 0 && (
                   <div className="flex items-start gap-1">
                     <div className="w-5">
-                      <Icon name="UsersGroup" className="w-5 h-5 text-gray-600" />
+                      <Icon name="UsersGroup" className="w-5 h-5 text-gray-600 dark:text-mcm-ink-3" />
                     </div>
                     <div className="flex flex-wrap gap-1 text-xs">
                       {validAttendees?.map((email: string, index: number) => (
                         <span
                           key={index}
-                          className="bg-gray-200 px-1.5 py-1 rounded text-foreground"
+                          className="bg-gray-200 dark:bg-mcm-surface-3 px-1.5 py-1 rounded text-foreground"
                         >
                           {email.trim()}
                         </span>
@@ -1419,7 +1419,7 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
                       <Button
                         variant={'ghost'}
                         size={'sm'}
-                        className="hover:text-black cursor-pointer"
+                        className="hover:text-black dark:hover:text-mcm-ink cursor-pointer"
                         onClick={handleCopy}
                       >
                         {copiedLink ? (
@@ -1462,7 +1462,7 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="rounded-sm hover:text-black cursor-pointer"
+                      className="rounded-sm hover:text-black dark:hover:text-mcm-ink cursor-pointer"
                       onClick={() => {
                         onBeforeUpdateSchedule({ schedule: selectedSchedule });
                         setSelectedSchedule(null);

@@ -1,0 +1,64 @@
+/* ============================================================
+   Meetings — dropdown menus.
+
+   The section's menus had drifted into three different treatments: the
+   meeting-card "..." menus used a `#e5e7eb` border, the recordings and
+   calendar ones `#d7dbe2`, and one had no border at all — all of them cool
+   greys with a `#f3f4f6` hover, in a section that is otherwise entirely
+   warm. This is the one treatment they now share, and it is the same one
+   Reports' own report picker (`.rp-report-menu`) and Directory ▸ People's
+   filter/action menus already use: `#f2994a` edge, white surface, and the
+   peach `#fff1e0`/`#c96f1f` hover.
+
+   Applied as a class on `DropdownMenuContent` itself rather than scoped
+   from a section ancestor, because Radix portals menu content to
+   document.body — an ancestor selector would never reach it.
+   ============================================================ */
+
+.mtg-menu {
+  border: 1px solid #f2994a;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+.dark .mtg-menu {
+  background: #171717;
+  border-color: #ffab5e;
+}
+
+/* The items carry their own layout utilities in the markup (height,
+   padding, size); only colour is set here, so a menu that needs a
+   different shape doesn't have to fight this rule to get one. */
+.mtg-menu [data-slot='dropdown-menu-item'] {
+  color: #1a1a1a;
+}
+.dark .mtg-menu [data-slot='dropdown-menu-item'] {
+  color: #f4f6fb;
+}
+.mtg-menu [data-slot='dropdown-menu-item']:hover:not([data-disabled]),
+.mtg-menu [data-slot='dropdown-menu-item']:focus:not([data-disabled]) {
+  background: #fff1e0;
+  color: #c96f1f;
+}
+.dark .mtg-menu [data-slot='dropdown-menu-item']:hover:not([data-disabled]),
+.dark .mtg-menu [data-slot='dropdown-menu-item']:focus:not([data-disabled]) {
+  background: rgba(251, 146, 60, 0.14);
+  color: #fdba74;
+}
+
+/* A destructive item (Delete) keeps its red — the colour is carrying
+   meaning there, not decoration, so it is deliberately exempt from the
+   peach hover above. */
+.mtg-menu [data-slot='dropdown-menu-item'].is-destructive,
+.mtg-menu [data-slot='dropdown-menu-item'][data-variant='destructive'] {
+  color: #ef4444;
+}
+.mtg-menu [data-slot='dropdown-menu-item'].is-destructive:hover,
+.mtg-menu [data-slot='dropdown-menu-item'].is-destructive:focus,
+.mtg-menu [data-slot='dropdown-menu-item'][data-variant='destructive']:hover,
+.mtg-menu [data-slot='dropdown-menu-item'][data-variant='destructive']:focus {
+  background: #fef2f2;
+  color: #dc2626;
+}
