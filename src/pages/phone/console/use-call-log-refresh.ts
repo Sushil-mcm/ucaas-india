@@ -4,12 +4,18 @@ import { useDialpad } from '@/hooks/use-dialpad';
 import { isTerminalSession } from './use-console-call';
 
 /**
- * Refreshes the call list when a call ends.
+ * Refreshes the call lists when a call ends.
  *
- * The list is an infinite query keyed on `console-call-list`, and nothing was
- * telling it a call had happened. It refetched on mount, on window refocus, or
- * when someone pressed the refresh button — so a call placed from this very
- * page did not appear afterwards, and looked like the log was simply slow.
+ * The lists are infinite queries and nothing was telling them a call had
+ * happened. They refetched on mount, on window refocus, or when someone
+ * pressed the refresh button — so a call placed from this very page did not
+ * appear afterwards, and looked like the log was simply slow.
+ *
+ * There are two of them and they are keyed differently: the console's own
+ * column is `console-call-list`, while Calls, Recordings and Voicemails all
+ * render `pages/phone/call-list` and key on `callListing`. Only the first was
+ * being invalidated, so a call placed from the console showed up there but the
+ * Calls tab still had to be left and re-entered before it appeared.
  *
  * The delays are the point. The CDR is written server-side *after* the switch
  * tears the call down, so invalidating the instant the session ends usually
@@ -21,6 +27,9 @@ import { isTerminalSession } from './use-console-call';
 /* First attempt is quick because most CDRs land almost immediately; the later
    ones cover a slow write without making the common case wait for them. */
 const RETRY_DELAYS_MS = [1200, 4000, 10000];
+
+/* Every cached call list, by the first segment of its query key. */
+const CALL_LIST_QUERY_KEYS = new Set(['console-call-list', 'callListing']);
 
 export const useCallLogRefresh = () => {
   const queryClient = useQueryClient();
@@ -50,12 +59,12 @@ export const useCallLogRefresh = () => {
 
       RETRY_DELAYS_MS.forEach((delay) => {
         const timer = window.setTimeout(() => {
-          /* Predicate rather than an exact key: the list is keyed by source,
+          /* Predicate rather than exact keys: each list is keyed by source,
              direction and date range, so the tab the person is looking at is
              only one of several cached variants. Refreshing the lot means the
-             call is there whichever filter they switch to next. */
+             call is there whichever filter or tab they switch to next. */
           queryClient.invalidateQueries({
-            predicate: (query) => query.queryKey?.[0] === 'console-call-list',
+            predicate: (query) => CALL_LIST_QUERY_KEYS.has(String(query.queryKey?.[0])),
           });
         }, delay);
         timersRef.current.push(timer);

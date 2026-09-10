@@ -14,6 +14,7 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 import NotFound from '@/assets/images/not-found-img.svg';
 import { fetchPhone } from '@/services/api';
 import { pickCounterpartNumber } from '@/lib/call-number';
+import { useCallLogRefresh } from './console/use-call-log-refresh';
 
 const getEntryNumber = (main: any = {}) =>
   pickCounterpartNumber(main).replace(/ /g, '');
@@ -76,6 +77,11 @@ const CallList = forwardRef(
     ref,
   ) => {
     const { user } = useUser();
+    /* Bring a just-finished call into this list without a manual refresh. The
+       hook lives with the console because that is where it was first needed,
+       but the Calls, Recordings and Voicemails tabs all render this component
+       with the console unmounted, so it has to be invoked here too. */
+    useCallLogRefresh();
     const { data: dataFetchContact } = useFetchContact();
     const [selectedId, setSelectedId] = useState<string | number | null>(null);
     const bottomRef = useRef<HTMLDivElement | null>(null);
