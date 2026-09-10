@@ -379,7 +379,7 @@
   /* More rows than fit (live data growing — more queues, more interactions,
      more agents) scrolls inside the card instead of pushing the card, and
      the whole page, taller. */
-  max-height: 340px;
+  max-height: 500px;
   overflow-y: auto;
 }
 /* This table shares its row with Agent status distribution, so it only
@@ -4867,6 +4867,50 @@
 .dark .mcm-page .mcm-topbar > * {
   background-color: #141a24 !important;
   border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Monitoring's category switcher — a horizontal tab strip below the page
+   bar, replacing the fixed-width left sidebar it used to be. See the
+   comment in monitoring/index.tsx for why: that sidebar cost every one of
+   these tables the same slice of width permanently, which is what pushed
+   the Actions column (always the widest, always last) past the fold. */
+.mcm-monitor-topnav-row {
+  flex: none;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(176, 122, 66, 0.18);
+  background: rgba(255, 252, 248, 0.6);
+}
+.mcm-monitor-topnav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2, #4b5565);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.mcm-monitor-topnav-tab:hover {
+  background: rgba(214, 163, 90, 0.12);
+}
+.mcm-monitor-topnav-tab.is-active {
+  background: color-mix(in srgb, var(--primary) 14%, #fff7ef);
+  border-color: rgba(214, 163, 90, 0.55);
+  color: var(--primary, #ea8a3f);
+}
+.mcm-monitor-topnav-tab.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.dark .mcm-monitor-topnav-row {
+  background: rgba(20, 26, 36, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 /* ==================================================================
