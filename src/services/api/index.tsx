@@ -3009,3 +3009,82 @@ export const changeOmniStatus = (data: { uuid: string; status: 0 | 1 }) => {
     data,
   });
 };
+
+/* Queue skills — see the SKILL_* block in routes.tsx. */
+export const getSkills = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_LIST.METHOD,
+    url: routes.SKILL_LIST.URL,
+    data,
+  });
+};
+export const upsertSkill = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_UPSERT.METHOD,
+    url: routes.SKILL_UPSERT.URL,
+    data,
+  });
+};
+export const deleteSkill = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_DELETE.METHOD,
+    url: routes.SKILL_DELETE.URL,
+    data,
+  });
+};
+export const getUserSkills = (data?: any) => {
+  return apiClient({
+    method: routes.USER_SKILLS_GET.METHOD,
+    url: routes.USER_SKILLS_GET.URL,
+    data,
+  });
+};
+export const setUserSkills = (data?: any) => {
+  return apiClient({
+    method: routes.USER_SKILLS_SET.METHOD,
+    url: routes.USER_SKILLS_SET.URL,
+    data,
+  });
+};
+export const getSkillPeople = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_PEOPLE_GET.METHOD,
+    url: routes.SKILL_PEOPLE_GET.URL,
+    data,
+  });
+};
+export const setSkillPeople = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_PEOPLE_SET.METHOD,
+    url: routes.SKILL_PEOPLE_SET.URL,
+    data,
+  });
+};
+export const getUsersSkills = (data?: any) => {
+  return apiClient({
+    method: routes.USERS_SKILLS_GET.METHOD,
+    url: routes.USERS_SKILLS_GET.URL,
+    data,
+  });
+};
+export const getSkillCategories = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_LIST.METHOD,
+    url: routes.SKILL_CATEGORY_LIST.URL,
+    data,
+  });
+};
+export const upsertSkillCategory = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_UPSERT.METHOD,
+    url: routes.SKILL_CATEGORY_UPSERT.URL,
+    data,
+  });
+};
+export const deleteSkillCategory = (data?: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_DELETE.METHOD,
+    url: routes.SKILL_CATEGORY_DELETE.URL,
+    data,
+  });
+};

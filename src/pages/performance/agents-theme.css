@@ -1,192 +1,204 @@
 /* ============================================================
-   Performance › Agents — warm sunset orange glassmorphism, brought to
-   Directory-benchmark parity (20px frosted cards, sticky frosted table
-   header, left accent-bar row hover). Same three-scope convention as
-   queues-theme.css (see that file for the fully annotated version):
+   Performance › Agents — warm sunset glassmorphism design system.
 
-     .perf-agents               this tab's own root element. Owns the 8 KPI
-                                 cards and the agent table.
-     body.perf-warm-backdrop    the full-page ambient gradient, defined once
-                                 in live-theme.css and reused here — toggled
-                                 on mount/unmount by agents-tab.tsx, the same
-                                 as Queues/Live/Campaigns.
-     body.perf-warm-toolbar     the Performance toolbar — already toggled
-                                 unconditionally by index.tsx, nothing to
-                                 wire here.
+   Three scopes, same convention as queues-theme.css:
 
-   Every selector is chained through `.mcm-page .perf-agents` (three
-   classes) so it outranks the plain `.mcm-page .stat` / `.mcm-page .hbar-t`
-   rules in mcm-page.css regardless of stylesheet order.
+     .perf-agents               the tab's root element — owns KPI cards and
+                                the agent table.
+     body.perf-warm-backdrop    full-page ambient gradient (toggled by the
+                                tab on mount/unmount).
+     body.perf-warm-toolbar     Performance toolbar (toggled unconditionally
+                                by index.tsx).
+
+   Every selector is chained through `.mcm-page .perf-agents` so it
+   outranks base `.mcm-page .stat` rules in mcm-page.css regardless of
+   stylesheet order.
    ============================================================ */
+
+/* ── 0. Design tokens ─────────────────────────────────────────────────────── */
 
 .perf-agents,
 body.perf-warm-backdrop {
-  --aa-accent: #f97316;
+  --aa-accent:     #f97316;
   --aa-accent-deep: #ea580c;
   --aa-accent-ink: #c2410c;
-  --aa-wash: #fff1eb;
-  --aa-ink: #1a1a1a;
-  --aa-muted: #666666;
-  --aa-hairline: rgba(249, 115, 22, 0.08);
-  --aa-row-hover: rgba(255, 241, 235, 0.55);
+  --aa-wash:       #fff1eb;
+  --aa-ink:        #1a1a1a;
+  --aa-muted:      #666666;
+  --aa-hairline:   rgba(249, 115, 22, 0.08);
+  --aa-row-hover:  rgba(255, 241, 235, 0.55);
 
-  --aa-glass: rgba(255, 255, 255, 0.85);
-  --aa-glass-border: rgba(255, 255, 255, 0.95);
-  --aa-glass-blur: blur(20px) saturate(190%);
+  --aa-glass:         rgba(255, 255, 255, 0.88);
+  --aa-glass-border:  rgba(255, 255, 255, 0.95);
+  --aa-glass-blur:    blur(20px) saturate(190%);
   --aa-glass-shadow:
     0 10px 34px rgba(160, 95, 30, 0.14),
     inset 0 1px 2px 0 rgba(255, 255, 255, 1);
-  --aa-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+  --aa-glass-shadow-hover:
+    0 14px 35px -5px rgba(234, 88, 12, 0.18);
+
+  --aa-r:     16px;
+  --aa-r-sm:  8px;
+  --aa-r-lg:  20px;
 }
+
 .dark .perf-agents,
 .dark body.perf-warm-backdrop,
 body.perf-warm-backdrop.dark {
-  --aa-accent: #fb923c;
+  --aa-accent:     #fb923c;
   --aa-accent-deep: #f97316;
   --aa-accent-ink: #fdba74;
-  --aa-wash: #2a1710;
-  --aa-ink: #f4f6fb;
-  --aa-muted: #93a1ba;
-  --aa-hairline: rgba(251, 146, 60, 0.14);
-  --aa-row-hover: rgba(251, 146, 60, 0.1);
+  --aa-wash:       #2a1710;
+  --aa-ink:        #f4f6fb;
+  --aa-muted:      #93a1ba;
+  --aa-hairline:   rgba(251, 146, 60, 0.14);
+  --aa-row-hover:  rgba(251, 146, 60, 0.1);
 
-  --aa-glass: rgba(17, 24, 39, 0.72);
-  --aa-glass-border: rgba(251, 146, 60, 0.18);
+  --aa-glass:         rgba(17, 24, 39, 0.72);
+  --aa-glass-border:  rgba(251, 146, 60, 0.18);
   --aa-glass-shadow:
     0 10px 30px -5px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
-  --aa-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+  --aa-glass-shadow-hover:
+    0 16px 38px -5px rgba(251, 146, 60, 0.22);
 }
 
-/* ------------------------------------------------------------
-   1. KPI cards — 8 frosted glass tiles.
-   ------------------------------------------------------------ */
+/* ── 1. KPI cards — 8 frosted glass tiles ────────────────────────────────── */
+
 .mcm-page .perf-agents .stat {
-  background: var(--aa-glass);
-  backdrop-filter: var(--aa-glass-blur);
-  -webkit-backdrop-filter: var(--aa-glass-blur);
-  border: 1px solid var(--aa-glass-border);
-  border-radius: 20px;
-  box-shadow: var(--aa-glass-shadow);
-  /* Tighter than the base `.mcm-page .stat` (14px 15px) — eight tiles now
-     share one row, and the roomier default padding left each one looking
-     mostly empty around a single number. */
-  padding: 10px 12px;
-  display: flex;
+  background:          var(--aa-glass) !important;
+  backdrop-filter:     var(--aa-glass-blur) !important;
+  -webkit-backdrop-filter: var(--aa-glass-blur) !important;
+  border:      1px solid var(--aa-glass-border) !important;
+  border-radius: var(--aa-r-lg) !important;
+  box-shadow:  var(--aa-glass-shadow) !important;
+  padding:     10px 12px;
+  display:     flex;
   flex-direction: column;
+  will-change: transform, box-shadow;
   transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 .mcm-page .perf-agents .stat:hover {
-  border-color: rgba(249, 115, 22, 0.3);
-  box-shadow: var(--aa-glass-shadow-hover);
-  transform: translateY(-2px);
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  box-shadow:   var(--aa-glass-shadow-hover) !important;
+  transform:    translateY(-3px) !important;
 }
-/* Every label carries a literal `\n` (agents-tab.tsx) so it always breaks
-   into two lines at that exact word, regardless of how wide this card ends
-   up — not left to chance the way plain word-wrap would (narrower card and
-   it wraps oddly or overflows to three lines; wider card and it collapses
-   to one), so every tile's icon/value/sub line up on the same rows. */
+
+/* Label always breaks to two lines at the literal \n in agents-tab.tsx,
+   so all cards' icons/values/subs land on the same rows. */
 .mcm-page .perf-agents .stat .k {
   color: var(--aa-muted);
   white-space: pre-line;
 }
-/* Fixed (not auto-centered) so heading-to-value spacing is the same 6px on
-   every card, now that every label above is forced to the same two-line
-   height — matches Performance ▸ Queues Activity's KPI strip. */
 .mcm-page .perf-agents .stat .v {
   color: var(--aa-ink);
   margin-top: 6px;
   white-space: nowrap;
 }
-/* Top performer's value is a person's name, not a number — at the base
-   25px it wrapped to two lines the moment a name ran longer than ~9
-   characters, in a card no wider than any of its neighbours. Smaller and
-   pinned to one line, trimmed with an ellipsis for the rare name that
-   still doesn't fit rather than reflowing the card. The 25px line-height
-   (not the base rule's 1) keeps its line box the same height as every
-   other card's 25px value despite the smaller font, so its own sub caption
-   below still lands on the same row as its neighbours' instead of riding
-   up with the shorter box. */
+
+/* Top performer: name, not a number. Smaller so it stays on one line and
+   the line-box height matches every other card's 25px value row. */
 .mcm-page .perf-agents .stat-hl-gold .v {
-  font-size: 16px;
+  font-size:   16px;
   line-height: 25px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.mcm-page .perf-agents .stat .d {
-  color: var(--aa-muted) !important;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
+  overflow:    hidden;
   text-overflow: ellipsis;
 }
 
-/* ------------------------------------------------------------
-   2. Agent table — 20px frosted glass card, sticky frosted header,
-   Directory's signature left accent-bar row hover.
-   ------------------------------------------------------------ */
-.mcm-page .perf-agents .table-scroll {
-  /* Bottom corners only — NOT a byte-for-byte copy of Calls
-     (`.perf-interactions .table-scroll`, all four corners), despite that
-     being requested: Calls' table body doesn't scroll far enough for its
-     own vertical scrollbar to reach the header seam, so its all-corner
-     radius never gets exercised. This table's does. With all four
-     corners rounded, `.table-scroll`'s own top-right corner sits in the
-     middle of the wrapper's right edge (below the separate header box),
-     carving a curved notch out of the body box exactly where the
-     scrollbar track starts — the scrollbar renders with a rounded,
-     malformed top instead of a flush one. Bottom-only removes that
-     corner entirely, so there's nothing for the scrollbar to collide
-     with. Confirmed live: this is what "the scroller on the right side"
-     was — same root cause as the header/body seam this rule was
-     originally written to prevent. */
-  border-radius: 0 0 20px 20px;
-  border: 1px solid var(--aa-glass-border);
-  background: var(--aa-glass);
+/* Gold card — left border accent + subtle warm wash. */
+.mcm-page .perf-agents .stat-hl-gold {
+  border-left: 3px solid #f59e0b;
+  background:  linear-gradient(
+    135deg,
+    rgba(254, 243, 199, 0.6) 0%,
+    var(--aa-glass) 50%
+  );
+}
+.dark .mcm-page .perf-agents .stat-hl-gold {
+  background: linear-gradient(
+    135deg,
+    rgba(120, 80, 10, 0.18) 0%,
+    var(--aa-glass) 50%
+  );
+}
+
+.mcm-page .perf-agents .stat .d {
+  color:      var(--aa-muted) !important;
+  display:    block;
+  white-space: nowrap;
+  overflow:   hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 2. Agent roster section ──────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .ag-table-section {
+  display:       flex;
+  flex-direction: column;
+  gap:           0;
+  border-radius: var(--aa-r-lg);
+  overflow:      hidden;
+  box-shadow:    var(--aa-glass-shadow);
+  border:        1px solid var(--aa-glass-border);
+  background:    var(--aa-glass);
   backdrop-filter: var(--aa-glass-blur);
   -webkit-backdrop-filter: var(--aa-glass-blur);
-  box-shadow: var(--aa-glass-shadow);
 }
-/* TableManager's own outer wrapper div (`rounded-xl border ...
-   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
-   native scrollbar — a scrollbar isn't clipped by the scrolling
-   element's own border-radius, only by an ancestor's overflow:hidden.
-   That wrapper's default 12px Tailwind radius didn't match this 20px, so
-   the scrollbar rendered as a flat rectangle poking through the corner. */
-.mcm-page .perf-agents div:has(> .table-scroll) {
-  border-radius: 20px;
-  overflow: hidden;
+
+.mcm-page .perf-agents .ag-table-head {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         14px 18px 12px;
+  border-bottom:   1px solid var(--aa-hairline);
 }
-/* The scrollbar track used to run the full height of the card, alongside
-   the sticky 40px header — pushing it down so it only travels next to the
-   actual data rows, not the header. Measured, not guessed: the header's
-   real rendered height on this table is 40px. */
-/* No margin-top here (unlike a leftover you'll still find on some other
-   Performance tables, e.g. Calls) — that 40px was compensating for the
-   header used to living *inside* `.table-scroll` before this table moved
-   to `splitStickyHeader`. The header is a separate sibling box now, so
-   `.table-scroll`'s own top edge already starts right at the first data
-   row; padding the scrollbar-track down further left a visible gap
-   between the header's bottom edge and the top of the scroll thumb. */
+.mcm-page .perf-agents .ag-table-head-left {
+  display:     flex;
+  align-items: baseline;
+  gap:         10px;
+}
+.mcm-page .perf-agents .ag-table-title {
+  font-size:      13px;
+  font-weight:    700;
+  letter-spacing: -0.01em;
+  color:          var(--aa-ink);
+  margin:         0;
+}
+.mcm-page .perf-agents .ag-table-count {
+  font-size:   11.5px;
+  font-weight: 500;
+  color:       var(--aa-muted);
+}
+
+/* ── 3. Table container ───────────────────────────────────────────────────── */
+
+/* The section wrapper is the glass card; TableManager's own wrapper inside
+   it needs no separate border or radius — it sits flush inside the section. */
+.mcm-page .perf-agents .ag-table-section div:has(> .table-scroll) {
+  border-radius: 0;
+  overflow:      hidden;
+  box-shadow:    none;
+  border:        none;
+  background:    transparent;
+}
+.mcm-page .perf-agents .table-scroll {
+  border-radius: 0;
+  border:        none;
+  background:    transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:    none;
+}
 .mcm-page .perf-agents .table-scroll::-webkit-scrollbar-track {
   margin-bottom: 8px;
 }
-/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
-   (people-glass.css) plus the `.mcm-page th` base it inherits from
-   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 10px/800/0.09em, 9px
-   12px padding, a 2px warm-orange hairline — read off Directory's own
-   computed styles rather than approximated.
-   Scoped to `.perf-agents thead` directly, NOT `.table-scroll thead` — this
-   table renders with `splitStickyHeader`, which (table-manager.tsx) puts
-   the header in its own non-scrolling box, a *sibling* of `.table-scroll`,
-   not a descendant of it. A `.table-scroll`-anchored selector silently
-   never matched this table's header at all, leaving it on TableManager's
-   own default `bg-[#faf5ee]` cream and base ink colour instead of this
-   theme (same gotcha already hit and fixed in interactions-theme.css). */
+
+/* ── 4. Table header ──────────────────────────────────────────────────────── */
+
 .mcm-page .perf-agents thead {
   background: #fffdfb;
   box-shadow: none;
@@ -195,40 +207,40 @@ body.perf-warm-backdrop.dark {
   background: rgba(23, 15, 10, 0.97);
 }
 .mcm-page .perf-agents thead th {
-  color: #8a6f57;
-  font-size: 9.5px;
-  font-weight: 800;
+  color:          #8a6f57;
+  font-size:      9.5px;
+  font-weight:    800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  white-space: nowrap;
-  padding: 9px 12px !important;
-  /* Matches Performance ▸ Calls (`.perf-interactions`) and Directory ▸
-     People exactly — this table previously used a weaker 2px/0.25-alpha
-     line. */
-  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
-  background: transparent;
+  white-space:    nowrap;
+  padding:        9px 14px !important;
+  background:     transparent;
+  border-bottom:  2px solid rgba(242, 153, 74, 0.3);
 }
-.mcm-page .perf-agents thead th:first-child {
-  border-top-left-radius: 20px;
-}
-.mcm-page .perf-agents thead th:last-child {
-  border-top-right-radius: 20px;
+.dark .mcm-page .perf-agents thead th {
+  color: rgba(251, 146, 60, 0.65);
+  border-bottom-color: rgba(251, 146, 60, 0.14);
 }
 
+/* ── 5. Table rows ────────────────────────────────────────────────────────── */
+
 .mcm-page .perf-agents .table-scroll tbody tr {
-  background: transparent;
+  background:   transparent !important;
   border-color: var(--aa-hairline);
+  will-change:  background-color;
   transition:
-    background-color 0.16s ease,
-    box-shadow 0.16s ease;
+    background-color 0.18s ease,
+    box-shadow 0.18s ease !important;
 }
 .mcm-page .perf-agents .table-scroll tbody tr:hover {
-  background: var(--aa-row-hover);
-  box-shadow: inset 3px 0 0 var(--aa-accent);
+  background: var(--aa-row-hover) !important;
+  box-shadow: inset 3px 0 0 var(--aa-accent) !important;
 }
 .mcm-page .perf-agents .table-scroll tbody td {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top:    11px;
+  padding-bottom: 11px;
+  padding-left:   14px;
+  padding-right:  14px;
   border-bottom-color: var(--aa-hairline);
   color: #334155;
 }
@@ -236,104 +248,282 @@ body.perf-warm-backdrop.dark {
   color: var(--aa-muted);
 }
 
-/* ------------------------------------------------------------
-   3. Agent Info — avatar ring + name typography.
-   ------------------------------------------------------------ */
+/* Columns 2-8 centred under their header. */
+.mcm-page .perf-agents .table-scroll thead th:nth-child(n + 2),
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(n + 2) {
+  text-align: center;
+}
+
+/* ── 6. Agent Info cell ───────────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .ag-agent-cell {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+}
+.mcm-page .perf-agents .ag-agent-info {
+  display:        flex;
+  flex-direction: column;
+  min-width:      0;
+}
+.mcm-page .perf-agents .ag-agent-name {
+  font-size:      13px;
+  font-weight:    600;
+  letter-spacing: -0.01em;
+  color:          var(--aa-ink);
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+.dark .mcm-page .perf-agents .ag-agent-name {
+  color: #f1f5f9;
+}
+.mcm-page .perf-agents .ag-agent-ext {
+  font-size:  11px;
+  color:      var(--aa-muted);
+  margin-top: 1px;
+}
+
+/* Avatar ring */
 .mcm-page .perf-agents .table-scroll tbody td [class*='rounded-full'][class*='border-white'] {
   border-color: #fff;
   box-shadow:
     0 0 0 2px var(--aa-wash),
     0 2px 6px rgba(15, 23, 42, 0.1);
 }
-.mcm-page .perf-agents .table-scroll tbody td:first-child span:first-of-type {
-  color: var(--aa-ink);
-}
-.dark .mcm-page .perf-agents .table-scroll tbody td:first-child span:first-of-type {
-  color: #f1f5f9;
-}
 
-/* ------------------------------------------------------------
-   4. Live Status pill — same `.state` tokens the rest of Performance
-   already uses (q/busy/acw/away/nr/hold map onto Available/On call/
-   Ringing/Offline/DND/On hold respectively, already the live-wash,
-   accent-wash, warn-wash, surface-3 and crit-wash tokens Directory's own
-   `.tag` badges are built from) — just a touch of glass polish here rather
-   than a class rename, since re-mapping 7 live states onto the 4-tone
-   `.tag` system would throw away the "On call" vs "Ringing" vs "On hold"
-   distinction the app currently gives a supervisor.
-   ------------------------------------------------------------ */
-.mcm-page .perf-agents .table-scroll tbody td .state {
-  letter-spacing: 0.02em;
+/* ── 7. Live Status pill ──────────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .table-scroll tbody td .ag-status-pill {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            5px;
+  border-radius:  6px;
+  padding:        3px 9px;
+  font-size:      10.5px;
+  font-weight:    600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* Glass inset ring */
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
-/* ------------------------------------------------------------
-   5. Time in State — dark charcoal tabular figures, not the plain link
-   colour a bare text node in a table cell otherwise inherits.
-   ------------------------------------------------------------ */
+/* Status indicator dot */
+.mcm-page .perf-agents .ag-status-dot {
+  display:       block;
+  width:         5px;
+  height:        5px;
+  border-radius: 50%;
+  flex-shrink:   0;
+  background:    currentColor;
+  opacity:       0.75;
+}
+
+/* Active call states pulse */
+.mcm-page .perf-agents .ag-status-pill.busy .ag-status-dot {
+  animation: aa-dot-pulse 1.8s ease-in-out infinite !important;
+}
+.mcm-page .perf-agents .ag-status-pill.acw .ag-status-dot {
+  animation: aa-dot-pulse 2.4s ease-in-out infinite !important;
+}
+
+@keyframes aa-dot-pulse {
+  0%, 100% { opacity: 0.6;  transform: scale(1);   }
+  50%       { opacity: 1;   transform: scale(1.55); }
+}
+
+/* ── 8. Time in State ─────────────────────────────────────────────────────── */
+
 .mcm-page .perf-agents .table-scroll tbody td:nth-child(3) {
-  color: var(--aa-ink);
-  font-weight: 600;
+  color:               var(--aa-ink);
+  font-weight:         600;
   font-variant-numeric: tabular-nums;
 }
 .dark .mcm-page .perf-agents .table-scroll tbody td:nth-child(3) {
   color: #e2e8f0;
 }
 
-/* ------------------------------------------------------------
-   6. Utilization — warm glass capsule track, sunset gradient fill.
-   ------------------------------------------------------------ */
-/* The cell's own content (agents-tab.tsx) is a fixed-width block `<div>`,
-   which `text-align:center` on the cell can't center — that only aligns
-   inline content. `margin:auto` centers the block itself within the now-
-   centered column. */
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(6) > div {
-  margin-left: auto;
-  margin-right: auto;
+/* ── 9. Utilization bar ───────────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .ag-util-cell {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  width:       110px;
+  margin:      auto;
 }
-.mcm-page .perf-agents .table-scroll tbody td .hbar-t {
-  height: 7px;
-  background: rgba(249, 115, 22, 0.12);
-  box-shadow: inset 0 1px 2px rgba(160, 95, 30, 0.12);
+.mcm-page .perf-agents .ag-util-bar {
+  flex:          1;
+  height:        6px;
+  border-radius: 3px;
+  background:    rgba(249, 115, 22, 0.12);
+  overflow:      hidden;
+  box-shadow:    inset 0 1px 2px rgba(160, 95, 30, 0.12);
 }
-.dark .mcm-page .perf-agents .table-scroll tbody td .hbar-t {
+.dark .mcm-page .perf-agents .ag-util-bar {
   background: rgba(251, 146, 60, 0.14);
 }
-.mcm-page .perf-agents .table-scroll tbody td .hbar-t i {
-  background: linear-gradient(90deg, var(--aa-accent) 0%, var(--aa-accent-deep) 100%) !important;
-  box-shadow: 0 0 6px rgba(234, 88, 12, 0.35);
-  transition: width 0.2s ease;
+.mcm-page .perf-agents .ag-util-bar i {
+  display:       block;
+  height:        100%;
+  border-radius: 3px;
+  background:    linear-gradient(90deg, var(--aa-accent) 0%, var(--aa-accent-deep) 100%);
+  box-shadow:    0 0 5px rgba(234, 88, 12, 0.4);
+  transition:    width 0.3s ease !important;
 }
-
-/* ------------------------------------------------------------
-   7. Daily stats / Queues — tabular figures so counts line up.
-   ------------------------------------------------------------ */
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(7),
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
+.mcm-page .perf-agents .ag-util-pct {
+  font-size:           11px;
+  font-weight:         500;
+  color:               var(--aa-muted);
+  width:               28px;
+  text-align:          right;
   font-variant-numeric: tabular-nums;
 }
-/* Same "block content, not inline" case as Utilization above — the two
-   stacked lines (Calls: n / AHT: n) are a flex column div, so it needs
-   both centering itself in the cell and its own lines centered against
-   each other (they're different lengths). */
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(7) > div {
-  align-items: center;
-  margin-left: auto;
-  margin-right: auto;
-  width: fit-content;
+
+/* ── 10. Daily Stats cell ─────────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .ag-daily-cell {
+  display:       flex;
+  flex-direction: column;
+  gap:           2px;
+  width:         fit-content;
+  margin:        auto;
+}
+.mcm-page .perf-agents .ag-daily-row {
+  display: flex;
+  gap:     6px;
+  align-items: baseline;
+}
+.mcm-page .perf-agents .ag-daily-k {
+  font-size:      10px;
+  font-weight:    600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color:          var(--aa-muted);
+  width:          28px;
+}
+.mcm-page .perf-agents .ag-daily-v {
+  font-size:           12px;
+  font-weight:         600;
+  color:               var(--aa-ink);
+  font-variant-numeric: tabular-nums;
+}
+.dark .mcm-page .perf-agents .ag-daily-v {
+  color: #e2e8f0;
 }
 
-/* ------------------------------------------------------------
-   8. Every column but Agent Info (1) — Live Status, Time in State,
-   Queue/Campaign, Caller ID, Utilization, Daily Stats, Queues —
-   centered under its header, both th and td. Most of these had no
-   alignment rule at all, which does not mean "left" — a bare `<th>`'s
-   own browser default is centered while a bare `<td>` defaults left, so
-   every one of them silently disagreed with its own header. One
-   consistent rule fixes the whole row at once, matching the policy
-   every other Performance table now follows (Queues, Flows, Campaigns,
-   Reports, ...). */
-.mcm-page .perf-agents .table-scroll thead th:nth-child(n + 2),
-.mcm-page .perf-agents .table-scroll tbody td:nth-child(n + 2) {
-  text-align: center;
+/* Queues count column — tabular figures. */
+.mcm-page .perf-agents .table-scroll tbody td:nth-child(8) {
+  font-variant-numeric: tabular-nums;
+  font-weight:          600;
+  font-size:            13px;
+}
+
+/* ── 11. Pagination ───────────────────────────────────────────────────────── */
+
+.mcm-page .perf-agents .ag-pagination {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         12px 18px;
+  border-top:      1px solid var(--aa-hairline);
+  background:      rgba(255, 255, 255, 0.4);
+  border-radius:   0 0 var(--aa-r-lg) var(--aa-r-lg);
+  gap:             12px;
+  flex-wrap:       wrap;
+}
+.dark .mcm-page .perf-agents .ag-pagination {
+  background: rgba(17, 24, 39, 0.35);
+}
+
+.mcm-page .perf-agents .ag-pagination-info {
+  font-size:   12px;
+  font-weight: 500;
+  color:       var(--aa-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcm-page .perf-agents .ag-pagination-controls {
+  display:     flex;
+  align-items: center;
+  gap:         2px;
+  flex-wrap:   wrap;
+}
+
+.mcm-page .perf-agents .ag-page-btn {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       30px;
+  height:          30px;
+  padding:         0 6px;
+  border-radius:   var(--aa-r-sm);
+  font-size:       12.5px;
+  font-weight:     500;
+  color:           var(--aa-muted);
+  background:      transparent;
+  border:          1px solid transparent;
+  cursor:          pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color     0.15s ease,
+    color            0.15s ease,
+    box-shadow       0.15s ease !important;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.mcm-page .perf-agents .ag-page-btn:hover:not(:disabled) {
+  background:   rgba(249, 115, 22, 0.08) !important;
+  border-color: rgba(249, 115, 22, 0.2) !important;
+  color:        var(--aa-accent-ink) !important;
+}
+.mcm-page .perf-agents .ag-page-btn:focus-visible {
+  outline:        2px solid var(--aa-accent);
+  outline-offset: 2px;
+}
+.mcm-page .perf-agents .ag-page-btn.is-active {
+  background:   var(--aa-accent);
+  border-color: var(--aa-accent);
+  color:        #fff;
+  font-weight:  700;
+  box-shadow:   0 2px 8px rgba(249, 115, 22, 0.35);
+}
+.dark .mcm-page .perf-agents .ag-page-btn.is-active {
+  background:  var(--aa-accent);
+  color:       #fff;
+  box-shadow:  0 2px 10px rgba(251, 146, 60, 0.4);
+}
+.mcm-page .perf-agents .ag-page-btn:disabled {
+  opacity: 0.35;
+  cursor:  not-allowed;
+}
+
+.mcm-page .perf-agents .ag-page-nav {
+  color: var(--aa-muted);
+}
+
+.mcm-page .perf-agents .ag-page-dots {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       30px;
+  height:          30px;
+  font-size:       13px;
+  color:           var(--aa-muted);
+  user-select:     none;
+  letter-spacing:  0.05em;
+}
+
+/* ── 12. Responsive ───────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .mcm-page .perf-agents .ag-pagination {
+    flex-direction: column;
+    align-items:    center;
+    gap:            10px;
+  }
+  .mcm-page .perf-agents .ag-util-cell {
+    width: 80px;
+  }
 }

@@ -70,18 +70,10 @@
 /* Ambient backdrop — see header note on why this paints here and not via
    the shared `body.perf-warm-backdrop .mcm-page` rule. */
 body.perf-warm-backdrop .perf-campaigns {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
-    #fdf6ee;
+  background-color: #fdf6ee;
 }
 .dark body.perf-warm-backdrop .perf-campaigns {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
-    #0a0f1a;
+  background-color: #0a0f1a;
 }
 
 /* ------------------------------------------------------------
@@ -196,29 +188,46 @@ body.perf-warm-backdrop .perf-campaigns {
    (people-glass.css) plus the `.mcm-page th` base it inherits from
    (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
    12px padding, a 2px warm-orange hairline — read off Directory's own
-   computed styles rather than approximated. */
-.perf-campaigns .table-scroll thead {
+   computed styles rather than approximated.
+   Scoped to `.perf-campaigns thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (index.tsx), which puts the
+   header in its own non-scrolling box, a *sibling* of `.table-scroll`, not
+   a descendant of it (the same gotcha already documented/fixed this way in
+   live-theme.css). The old `.table-scroll thead` selector silently never
+   matched, which is why the header still showed the plain default slate
+   colour instead of these tokens. `!important` on color/size/weight/
+   letter-spacing/border because `.cmp thead th` (campaign.css, the
+   standalone dialer's own header rule) shares this same selector
+   specificity and would otherwise win the cascade tie by import order. */
+.perf-campaigns thead {
   background: #fffdfb;
   box-shadow: none;
 }
-.dark .perf-campaigns .table-scroll thead {
+.dark .perf-campaigns thead {
   background: rgba(23, 15, 10, 0.97);
 }
-.perf-campaigns .table-scroll thead th {
-  color: #8a6f57;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+.perf-campaigns thead th {
+  color: #8a6f57 !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
   background: transparent;
   padding: 9px 12px !important;
-  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  border-bottom: 2px solid rgba(242, 153, 74, 0.25) !important;
 }
-.perf-campaigns .table-scroll thead th:first-child {
+.perf-campaigns thead th:first-child {
   border-top-left-radius: 20px;
+  background: #fffdfb;
 }
-.perf-campaigns .table-scroll thead th:last-child {
+.perf-campaigns thead th:last-child {
   border-top-right-radius: 20px;
+  background: #fffdfb;
+}
+.dark .perf-campaigns thead th:first-child,
+.dark .perf-campaigns thead th:last-child {
+  background: rgba(23, 15, 10, 0.97);
 }
 .perf-campaigns .table-scroll tbody tr {
   background: transparent;
@@ -255,19 +264,23 @@ body.perf-warm-backdrop .perf-campaigns {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-/* Leads (4th) and Agents (7th) render as `.lnk` — a genuinely clickable
-   link (opens the filtered call log / the members list) — which inherits
-   that class's global orange link colour (mcm-page.css). Fine for a text
-   link, too loud for what reads at a glance as this row's headline count.
-   Crisp dark charcoal instead, high-contrast against the glass card,
-   without touching `.lnk` itself (Answered %, 6th column, keeps the
-   orange — it's a similar link but wasn't asked to change here). */
+/* Leads (4th), Answered (6th) and Agents (7th) render as `.lnk` — a
+   genuinely clickable link (opens the filtered call log / the members
+   list) — which inherits that class's global orange link colour
+   (mcm-page.css). Fine for a text link, too loud for what reads at a
+   glance as this row's headline count/percentage. Crisp dark charcoal
+   instead, high-contrast against the glass card. Answered (6th) was left
+   orange in an earlier pass; leadership review asked for the same
+   high-contrast treatment as Leads/Agents here too. */
 .perf-campaigns .table-scroll td:nth-child(4) .lnk,
+.perf-campaigns .table-scroll td:nth-child(6) .lnk,
 .perf-campaigns .table-scroll td:nth-child(7) .lnk {
   color: #1a1a1a;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .perf-campaigns .table-scroll td:nth-child(4) .lnk:hover,
+.perf-campaigns .table-scroll td:nth-child(6) .lnk:hover,
 .perf-campaigns .table-scroll td:nth-child(7) .lnk:hover {
   color: var(--ca-accent-ink);
 }

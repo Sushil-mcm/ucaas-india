@@ -76,6 +76,17 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           enabled: true,
           visible: Boolean(features?.plan_features?.account_setting?.access?.SITE?.action?.view),
         },
+        {
+          /* The company's handsets and who each belongs to. Beside locations,
+             not under People: a room phone has no person, and the phone is a
+             thing in a place. Administrator-only — the screen hands out SIP
+             credentials. */
+          title: 'Desk phones',
+          path: '/admin-settings/desk-phones',
+          icon: 'PhoneIcon',
+          enabled: IS_ADMIN,
+          visible: IS_ADMIN,
+        },
       ].filter(Boolean),
     },
     {
@@ -210,6 +221,15 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           title: 'Call Queues',
           path: '/admin-settings/phone/queues',
           icon: 'CallQueue',
+          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.QUEUE),
+          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
+        },
+        {
+          /* Skills only matter to queue routing, so they sit beside queues and
+             share the queue permission. */
+          title: 'Skills',
+          path: '/admin-settings/phone/skills',
+          icon: 'Star',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.QUEUE),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },

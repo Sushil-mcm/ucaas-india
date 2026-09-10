@@ -220,6 +220,8 @@ const DLCBrands = lazy(() => import('@/pages/admin-settings/compliance/10DLC-bra
 const DNC = lazy(() => import('@/pages/auto-dialer/dnc'));
 const AdminHome = lazy(() => import('@/pages/admin-settings/admin-home'));
 const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
+const DeskPhones = lazy(() => import('@/pages/admin-settings/company/desk-phones'));
+const AdminSkills = lazy(() => import('@/pages/admin-settings/phone-systems/skills'));
 const StatementOfAccount = lazy(() => import('@/pages/admin-settings/billing/statement'));
 const BillingSummary = lazy(() => import('@/pages/admin-settings/billing/summary'));
 const CostCentres = lazy(() => import('@/pages/admin-settings/billing/cost-centres'));
@@ -1209,6 +1211,21 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                /* Skills only matter to queue routing, so they sit beside
+                   queues and share the queue permission. */
+                path: 'skills',
+                id: 'skills',
+                element: (
+                  <ProtectedRoute
+                    element={<AdminSkills />}
+                    guard={{
+                      feature: 'phone_system_action.access.QUEUE',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
                 path: 'queues/new',
                 element: (
                   <ProtectedRoute
@@ -1446,6 +1463,14 @@ export const router = createBrowserRouter([
                module's feature flag, which asked whether the company had bought
                phone features when the real question is whether this person is
                allowed to see the company's money. */
+            /* The company's handsets and who each belongs to. Administrator-only:
+               the screen hands out SIP credentials. Listed under Company in the
+               nav rather than People, because a room phone has no person. */
+            path: 'desk-phones',
+            id: 'desk-phones',
+            element: <ProtectedRoute element={<DeskPhones />} guard={{ adminOnly: true }} />,
+          },
+          {
             path: 'billing',
             id: 'billing',
             children: [

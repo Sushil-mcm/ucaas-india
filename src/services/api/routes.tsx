@@ -184,6 +184,21 @@ export const routes = {
     URL: '/api/tenant/report/call-list',
     METHOD: 'POST',
   },
+  /* Queue skills. These screens are ahead of this build's backend — every one
+     of these paths returns 404 on api.ucaas.in today — so the Skills screen
+     treats an absent endpoint as "not offered here yet" rather than a failure,
+     the same way Desk phones does. */
+  SKILL_LIST: { METHOD: 'POST', URL: '/api/campaign/skills/list' },
+  SKILL_UPSERT: { METHOD: 'POST', URL: '/api/campaign/skills/upsert' },
+  SKILL_DELETE: { METHOD: 'DELETE', URL: '/api/campaign/skills/delete' },
+  USER_SKILLS_GET: { METHOD: 'POST', URL: '/api/campaign/skills/user/get' },
+  USER_SKILLS_SET: { METHOD: 'POST', URL: '/api/campaign/skills/user/set' },
+  SKILL_PEOPLE_GET: { METHOD: 'POST', URL: '/api/campaign/skills/people/get' },
+  SKILL_PEOPLE_SET: { METHOD: 'POST', URL: '/api/campaign/skills/people/set' },
+  USERS_SKILLS_GET: { METHOD: 'POST', URL: '/api/campaign/skills/users/get' },
+  SKILL_CATEGORY_LIST: { METHOD: 'POST', URL: '/api/campaign/skills/categories/list' },
+  SKILL_CATEGORY_UPSERT: { METHOD: 'POST', URL: '/api/campaign/skills/categories/upsert' },
+  SKILL_CATEGORY_DELETE: { METHOD: 'DELETE', URL: '/api/campaign/skills/categories/delete' },
   FETCH_ALL_PHONE: {
     URL: '/api/tenant/report/phone-call-list',
     METHOD: 'POST',
