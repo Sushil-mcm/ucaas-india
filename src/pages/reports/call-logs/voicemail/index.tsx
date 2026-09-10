@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { useNavigate } from 'react-router-dom';
+import { USD_TO_INR_RATE } from '@/lib/billing-money';
 import { ReportsPageLayout } from '../../reports-content-layout';
-import { convertDateFormateApis, formatSecondsToMMSS, MEDIA_URL } from '@/lib/utils';
+import { convertDateFormateApis, formatSecondsToMMSS, handleAlert, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { FilterIcon, SearchLine } from '@/assets/icons';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,6 @@ import AudioModal from '@/pages/phone/audio-dialog';
 import { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal } from '@/components/custom/date-dropdown/constant';
-import { Loader2 } from 'lucide-react';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useQueries } from '@tanstack/react-query';
 import { ACTIVITYLIST } from '@/components/activity-list/constants';
@@ -27,10 +27,18 @@ import SideDrawer from '@/components/custom/side-drawer';
 import IVRDetailsView from '@/components/activity-list/side-drawers/ivr-details-view';
 import DepartmentDetailsView from '@/components/activity-list/side-drawers/department-details-view';
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
+import DetailsModal from '@/components/activity-list/side-drawers/details-modal';
 import TableManager from '@/components/custom/table-manager';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 
-const Voicemail = () => {
+const Voicemail = ({
+  // Only true when this report renders inside another already-open modal
+  // (the "Open a full report page" dialog, reports-tab.tsx) — a "To"
+  // queue/IVR link's `<SideDrawer>` there is a second portal stacking
+  // underneath that dialog's own Radix z-index, technically open but
+  // invisible.
+  detailsAsModal = false,
+}: { detailsAsModal?: boolean } = {}) => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
   const { makeCall } = useDialpad();
@@ -123,15 +131,13 @@ const Voicemail = () => {
     setSelectedFilters(data);
   };
 
-  const handleRefetchTableData = async () => {
-    if (tableRef?.current) {
-      setIsLoading(true);
-      try {
-        await tableRef.current.refetchTable();
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handleRefetchTableData = () => {
+    if (!tableRef?.current) return;
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 450);
+    tableRef.current.refetchTable().then(() => {
+      handleAlert({ text: 'Refreshed', type: 'success' });
+    });
   };
 
   const handleFilter = () => {
@@ -350,7 +356,8 @@ const Voicemail = () => {
       accessorKey: 'chargeTotal',
       cell: ({ row }: any) => {
         const data = row?.original;
-        return data?.chargeTotal ? data?.chargeTotal : data?.charge ? data?.charge : 0.0;
+        const value = Number(data?.chargeTotal ?? data?.charge ?? 0);
+        return `₹${(value * USD_TO_INR_RATE).toFixed(2)}`;
       },
     },
     {
@@ -430,7 +437,7 @@ const Voicemail = () => {
             setSearch(e.target.value);
           }}
           IconPosition="left-0 pl-2 inset-y-0"
-          Icon={<SearchLine className=" text-gray-700" />}
+          Icon={<SearchLine className=" text-gray-700 dark:text-mcm-ink-2" />}
         />
       </div>
       <DateDropdown
@@ -443,20 +450,16 @@ const Voicemail = () => {
         type="button"
         variant="outline"
         onClick={() => handleRefetchTableData()}
-        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
       >
-        {isLoading ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          <Icon name="Refresh" className="w-5 h-5" />
-        )}
+        <Icon name="Refresh" className={`w-5 h-5 ${isLoading ? 'animate-refresh-nudge' : ''}`} />
       </Button>
 
       <Button
         type="button"
         variant="outline"
         onClick={handleFilter}
-        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
       >
         <FilterIcon className="w-5 h-5" />
       </Button>
@@ -469,6 +472,8 @@ const Voicemail = () => {
         <TableManager
           {...{
             tableRef,
+            splitStickyHeader: true,
+            tableMaxHeight: '55vh',
             fetcherKey: 'callListingVoicemail',
             fetcherFn: callList,
             columns,
@@ -504,14 +509,22 @@ const Voicemail = () => {
           srcUrl={recordingUrl}
           serRecordingUrl={serRecordingUrl}
         />
-        {drawerState?.IVR && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.IVR}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
-            content={<IVRDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.IVR &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.IVR}
+              onClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+            >
+              <IVRDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.IVR}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+              content={<IVRDetailsView rowData={rowData} />}
+            />
+          ))}
         {drawerState?.department && (
           <SideDrawer
             isTab
@@ -526,14 +539,22 @@ const Voicemail = () => {
             }
           />
         )}
-        {drawerState?.QUEUE && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.QUEUE}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
-            content={<QueueDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.QUEUE &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.QUEUE}
+              onClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+            >
+              <QueueDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.QUEUE}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+              content={<QueueDetailsView rowData={rowData} />}
+            />
+          ))}
       </div>
     </ReportsPageLayout>
   );

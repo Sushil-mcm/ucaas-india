@@ -14,7 +14,18 @@ import { ExtensionListView } from '@/pages/admin-settings/people/update-forwardi
 // import { CloseIcon, Play } from '@/assets/icons';
 // import { useState } from 'react';
 
-const IVRDetailsView = ({ rowData }: any) => {
+const IVRDetailsView = ({
+  rowData,
+  variant = 'drawer',
+}: {
+  rowData: any;
+  /* Same reasoning as QueueDetailsView's identical prop: 'drawer' (the
+     default) manages its own fixed height + scrolling because
+     SideDrawer's own content box stops scrolling past the md breakpoint;
+     'modal' defers entirely to the Dialog's own `max-h-[88vh]
+     overflow-y-auto`. */
+  variant?: 'drawer' | 'modal';
+}) => {
   const { callID, forward_type } = rowData || {};
   // const { user } = useUser();
   // const { company_info } = user;
@@ -51,26 +62,34 @@ const IVRDetailsView = ({ rowData }: any) => {
           <Loader variant="blue" size="sm" />
         </div>
       ) : (
-        <div className="w-full flex pt-3 flex-col gap-3 h-[calc(100vh_-_6.5rem)] overflow-auto">
-          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
-            <div className="font-semibold text-[#2E2D35] truncate text-md mb-2">Basic Info</div>
-            <div className="grid grid-cols-3 gap-4 ">
-              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
-                <p className="font-medium text-[#2E2D35] text-sm">IVR Name</p>
-                <p className="text-sm text-[#9A948F]">{name}</p>
+        <div
+          className={`qdv-root w-full flex flex-col gap-3 ${
+            variant === 'modal' ? '' : 'pt-3 h-[calc(100vh_-_6.5rem)] overflow-auto'
+          }`}
+        >
+          <div className="qdv-card bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+            <div className="qdv-card-title font-semibold text-[#2E2D35] truncate text-md mb-2">
+              Basic Info
+            </div>
+            <div className="qdv-info-grid grid grid-cols-3 gap-4 border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
+              <div>
+                <p className="qdv-label font-medium text-[#2E2D35] text-sm">IVR Name</p>
+                <p className="qdv-value text-sm text-[#9A948F]">{name}</p>
               </div>
-              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
-                <p className="font-medium text-[#2E2D35] text-sm">Location</p>
-                <p className="text-sm text-[#9A948F]">{siteInfo?.label}</p>
+              <div>
+                <p className="qdv-label font-medium text-[#2E2D35] text-sm">Location</p>
+                <p className="qdv-value text-sm text-[#9A948F]">{siteInfo?.label}</p>
               </div>
-              <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
-                <p className="font-medium text-[#2E2D35] text-sm">IVR Extension</p>
-                <p className="text-sm text-[#9A948F]">{extension}</p>
+              <div>
+                <p className="qdv-label font-medium text-[#2E2D35] text-sm">IVR Extension</p>
+                <p className="qdv-value text-sm text-[#9A948F]">{extension}</p>
               </div>
             </div>
           </div>
-          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
-            <div className="font-semibold text-[#2E2D35] truncate text-md">Manage Key Press</div>
+          <div className="qdv-card bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
+            <div className="qdv-card-title font-semibold text-[#2E2D35] truncate text-md">
+              Manage Key Press
+            </div>
             <div className="grid grid-cols-3 gap-4 border-t border-[#EEE7DD] pt-2">
               <div className="w-full">
                 <p className="font-medium text-[#2E2D35] text-sm">Key Press</p>
@@ -91,14 +110,16 @@ const IVRDetailsView = ({ rowData }: any) => {
                     key={item?.key}
                   >
                     <div className="w-full">
-                      <p className="text-sm text-[#9A948F]">{item?.key}</p>
+                      <p className="qdv-value text-sm text-[#334155] font-medium">{item?.key}</p>
                     </div>
                     <div className="w-full">
-                      <p className="text-sm text-[#9A948F] uppercase">{item?.type}</p>
+                      <p className="qdv-value text-sm text-[#334155] font-medium uppercase">
+                        {item?.type}
+                      </p>
                     </div>
                     <div className="w-full">
                       {item?.type !== 'HANGUP' && (
-                        <div className="text-sm text-[#9A948F]">
+                        <div className="qdv-value text-sm text-[#334155] font-medium">
                           {item?.label || '--'}{' '}
                           {/* {isPlay ? (
                           <div className={`flex items-center gap-2`}>
@@ -133,7 +154,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                 );
               })}
           </div>
-          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
+          <div className="qdv-card bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl flex flex-col gap-2">
             {/* <div className="font-semibold text-[#2E2D35] truncate text-md">Generic Key Press</div> */}
             {/* <div className="flex gap-5">
               <RadioGroup
@@ -186,7 +207,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                     </div>
                   </div>
                 )} */}
-              <p className=" text-[#9A948F] truncate text-sm mt-4">
+              <p className=" text-[#64748b] truncate text-sm mt-4">
                 If caller enters no action after the prompt played 3 Times.
               </p>
               <div className="flex flex-col gap-2">
@@ -208,7 +229,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                 {genericKeys?.timeout_action?.type && (
                   <div className="grid grid-cols-3 gap-4">
                     <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
-                      <p className="text-sm text-[#9A948F]">
+                      <p className="qdv-value text-sm text-[#334155] font-medium">
                         {
                           FORWARD_TYPES_LABEL[
                             genericKeys?.timeout_action?.type as keyof typeof FORWARD_TYPES_LABEL
@@ -230,16 +251,15 @@ const IVRDetailsView = ({ rowData }: any) => {
                           <ExtensionListView option={genericKeys?.timeout_action} />
                         </>
                       ) : (
-                        <p className="text-sm text-[#9A948F]">
+                        <p className="qdv-value text-sm text-[#334155] font-medium">
                           {genericKeys?.timeout_action?.label}
                         </p>
                       )}
-                      {/* <p className="text-sm text-[#9A948F]">{genericKeys?.timeout_action?.status}</p> */}
                     </div>
                   </div>
                 )}
               </div>
-              <p className=" text-[#9A948F] truncate text-sm mt-4">
+              <p className=" text-[#64748b] truncate text-sm mt-4">
                 If caller enters invalid key after prompt plays 3 times.
               </p>
               <div className="flex flex-col gap-2">
@@ -261,7 +281,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                 {genericKeys?.failure_action?.type && (
                   <div className="grid grid-cols-3 gap-4">
                     <div className="w-full border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3">
-                      <p className="text-sm text-[#9A948F]">
+                      <p className="qdv-value text-sm text-[#334155] font-medium">
                         {
                           FORWARD_TYPES_LABEL[
                             genericKeys?.failure_action?.type as keyof typeof FORWARD_TYPES_LABEL
@@ -283,7 +303,7 @@ const IVRDetailsView = ({ rowData }: any) => {
                           <ExtensionListView option={genericKeys?.failure_action} />
                         </>
                       ) : (
-                        <p className="text-sm text-[#9A948F]">
+                        <p className="qdv-value text-sm text-[#334155] font-medium">
                           {genericKeys?.failure_action?.label}
                         </p>
                       )}

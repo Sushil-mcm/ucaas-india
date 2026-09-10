@@ -575,7 +575,12 @@ const Performance = () => {
         {activeTab === 'callbacks' && <CallbacksTab globalSearch={globalSearchQuery} />}
         {activeTab === 'speech-text' && <SpeechTextTab />}
         {activeTab === 'reports' && (
-          <ReportsTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />
+          <ReportsTab
+            selectedRange={selectedRange}
+            dropdownVal={dropdownVal}
+            setDropdownVal={setDropdownVal}
+            globalSearch={globalSearchQuery}
+          />
         )}
 
         {/* The wallboards predate the console language and bring their own

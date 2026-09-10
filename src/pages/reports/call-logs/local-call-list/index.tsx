@@ -1,8 +1,9 @@
 import TableManager from '@/components/custom/table-manager';
 import { useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
+import { USD_TO_INR_RATE } from '@/lib/billing-money';
 import { ReportsPageLayout } from '../../reports-content-layout';
-import { convertDateFormateApis, formatSecondsToMMSS, handleAlert } from '@/lib/utils';
+import { convertDateFormateApis, formatSecondsToMMSS, handleAlert, MEDIA_URL } from '@/lib/utils';
 import { SearchLine } from '@/assets/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,6 @@ import { CALL_DIRECTIONS, FORWARD_ICONS } from '@/pages/dashboard/constant';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import NumberWithFlag from '@/components/custom/number-with-flag';
 import AudioModal from '@/pages/phone/audio-dialog';
-import { Loader2 } from 'lucide-react';
 import { ACTIVITYLIST } from '@/components/activity-list/constants';
 
 import { handleStatus } from '../constant';
@@ -19,19 +19,31 @@ import SideDrawer from '@/components/custom/side-drawer';
 import IVRDetailsView from '@/components/activity-list/side-drawers/ivr-details-view';
 import DepartmentDetailsView from '@/components/activity-list/side-drawers/department-details-view';
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
+import DetailsModal from '@/components/activity-list/side-drawers/details-modal';
 import { getUserNameByExtension, findUserByExtension } from '@/lib/extension-utility';
 import { useUsersDirectory } from '@/hooks/use-users-directory';
 import { useUser } from '@/hooks/use-user';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useNavigate } from 'react-router-dom';
+import { useRecordingAccess } from '@/hooks/use-recording-access';
+import { useCompanyFeatures } from '@/hooks/rbac';
 
-const LocalCallList = () => {
+const LocalCallList = ({
+  // Only true when this report renders inside another already-open modal
+  // (the "Open a full report page" dialog, reports-tab.tsx) — a "To" queue/
+  // IVR link's `<SideDrawer>` there is a second portal stacking underneath
+  // that dialog's own Radix z-index, technically open but invisible.
+  detailsAsModal = false,
+}: { detailsAsModal?: boolean } = {}) => {
   const tableRef = useRef<any>(null);
   const navigate = useNavigate();
   const { user } = useUser();
   const { makeCall, sessions } = useDialpad();
   const { createNewChat, createPrivateChatId, usersOnlineStatus } = useSocketEvents();
+  const { canPlayRecording } = useRecordingAccess();
+  const { features } = useCompanyFeatures();
+  const callLogActionAccess = features?.plan_features?.reports?.action || {};
 
   const extension = user?.user_info?.extension;
   const isMeOnCall = usersOnlineStatus?.find((u) => u?.userId == extension)?.onCall;
@@ -68,6 +80,11 @@ const LocalCallList = () => {
     makeCall(String(resolvedNumber));
   };
 
+  const handleOpenAudio = (src: string) => {
+    serRecordingUrl(src);
+    setModalState(true);
+  };
+
   const handleChat = (data: any) => {
     const resolvedNumber = getDisplayDestinationNumber(data);
     const otherUser = findUserByExtension(extensionUsers, resolvedNumber);
@@ -100,15 +117,13 @@ const LocalCallList = () => {
   const { users: extensionUsers = [] } = useUsersDirectory();
   const departmentList: any[] = [];
 
-  const handleRefetchTableData = async () => {
-    if (tableRef?.current) {
-      setIsLoading(true);
-      try {
-        await tableRef.current.refetchTable();
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handleRefetchTableData = () => {
+    if (!tableRef?.current) return;
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 450);
+    tableRef.current.refetchTable().then(() => {
+      handleAlert({ text: 'Refreshed', type: 'success' });
+    });
   };
 
   const columns = [
@@ -299,6 +314,10 @@ const LocalCallList = () => {
     {
       header: 'Charge',
       accessorKey: 'charge',
+      cell: ({ row }: any) => {
+        const value = Number(row?.original?.charge ?? 0);
+        return `₹${(value * USD_TO_INR_RATE).toFixed(2)}`;
+      },
     },
     {
       header: 'Action',
@@ -326,14 +345,36 @@ const LocalCallList = () => {
           chatDisabled = true;
         }
 
+        const hasRecording = data?.recording_file || null;
+        const recordingSrcUrl = data?.recording_file
+          ? `${MEDIA_URL}/${user?.company_info?.uuid}/recording/${data.recording_file}`
+          : '';
+
         return (
           <span className="flex text-center gap-2 items-center">
+            {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
+              <CustomTooltip text={hasRecording ? 'Play' : 'No recording available'} side="top">
+                <div
+                  className={`${
+                    hasRecording
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
+                      : 'cursor-not-allowed bg-gray-100 text-gray-300'
+                  } flex items-center justify-center rounded-full w-8 h-8`}
+                  onClick={() => {
+                    if (!hasRecording) return;
+                    handleOpenAudio(recordingSrcUrl);
+                  }}
+                >
+                  <Icon name="PlayLine" className="w-4.5 h-4.5" />
+                </div>
+              </CustomTooltip>
+            )}
             <CustomTooltip text={callTooltipText} side="top">
               <span
                 className={`${
                   callDisabled
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-green-100 text-green-500 hover:bg-green-400 hover:text-white cursor-pointer'
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-300'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
                 } flex items-center justify-center rounded-full w-8 h-8`}
                 onClick={() => !callDisabled && handleMakeCall(data)}
               >
@@ -371,20 +412,16 @@ const LocalCallList = () => {
             setSearch(e.target.value);
           }}
           IconPosition="left-0 pl-2 inset-y-0"
-          Icon={<SearchLine className=" text-gray-700" />}
+          Icon={<SearchLine className=" text-gray-700 dark:text-mcm-ink-2" />}
         />
       </div>
       <Button
         type="button"
         variant="outline"
         onClick={() => handleRefetchTableData()}
-        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
       >
-        {isLoading ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          <Icon name="Refresh" className="w-5 h-5" />
-        )}
+        <Icon name="Refresh" className={`w-5 h-5 ${isLoading ? 'animate-refresh-nudge' : ''}`} />
       </Button>
     </div>
   );
@@ -399,7 +436,7 @@ const LocalCallList = () => {
               onClick={() => handleTabClick(tab.label)}
               className={`cursor-pointer flex min-h-10 min-w-[10.75rem] flex-col items-center justify-center gap-1 rounded-lg border p-3 py-2 text-center transition-all duration-200 sm:min-w-0  ${activeTab === tab.label
                 ? 'border-ucass-primary-200 bg-ucass-primary-200/40 '
-                : 'border-gray-200 hover:bg-gray-50 bg-white'
+                : 'border-gray-200 dark:border-mcm-line hover:bg-gray-50 dark:hover:bg-mcm-surface-3 bg-white dark:bg-mcm-surface'
                 }`}
             >
               <div
@@ -408,7 +445,7 @@ const LocalCallList = () => {
                 {tab.count}
               </div>
               <span
-                className={`mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 ${activeTab === tab.label ? 'text-primary' : 'text-gray-600'
+                className={`mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-mcm-ink-3 ${activeTab === tab.label ? 'text-primary' : 'text-gray-600 dark:text-mcm-ink-2'
                   }`}
               >
                 {tab.label}
@@ -419,6 +456,8 @@ const LocalCallList = () => {
         <TableManager
           {...{
             tableRef,
+            splitStickyHeader: true,
+            tableMaxHeight: '55vh',
             fetcherKey: 'localCallListingLog',
             fetcherFn: localCallList,
             // onSuccess: (data: any) => {
@@ -443,14 +482,22 @@ const LocalCallList = () => {
           srcUrl={recordingUrl}
           serRecordingUrl={serRecordingUrl}
         />
-        {drawerState?.IVR && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.IVR}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
-            content={<IVRDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.IVR &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.IVR}
+              onClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+            >
+              <IVRDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.IVR}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+              content={<IVRDetailsView rowData={rowData} />}
+            />
+          ))}
         {drawerState?.department && (
           <SideDrawer
             isTab
@@ -465,14 +512,22 @@ const LocalCallList = () => {
             }
           />
         )}
-        {drawerState?.QUEUE && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.QUEUE}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
-            content={<QueueDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.QUEUE &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.QUEUE}
+              onClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+            >
+              <QueueDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.QUEUE}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+              content={<QueueDetailsView rowData={rowData} />}
+            />
+          ))}
       </div>
     </ReportsPageLayout>
   );

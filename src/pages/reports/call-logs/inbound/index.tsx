@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { ReportsPageLayout } from '../../reports-content-layout';
+import { USD_TO_INR_RATE } from '@/lib/billing-money';
 
 import { useNavigate } from 'react-router-dom';
-import { convertDateFormateApis, formatSecondsToMMSS, MEDIA_URL } from '@/lib/utils';
+import { convertDateFormateApis, formatSecondsToMMSS, handleAlert, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import { FilterIcon, SearchLine } from '@/assets/icons';
 
@@ -17,7 +18,6 @@ import AudioModal from '@/pages/phone/audio-dialog';
 import { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal } from '@/components/custom/date-dropdown/constant';
-import { Loader2 } from 'lucide-react';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useQueries } from '@tanstack/react-query';
 import { ACTIVITYLIST } from '@/components/activity-list/constants';
@@ -28,6 +28,7 @@ import SideDrawer from '@/components/custom/side-drawer';
 import IVRDetailsView from '@/components/activity-list/side-drawers/ivr-details-view';
 import DepartmentDetailsView from '@/components/activity-list/side-drawers/department-details-view';
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
+import DetailsModal from '@/components/activity-list/side-drawers/details-modal';
 import TableManager from '@/components/custom/table-manager';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
@@ -62,7 +63,14 @@ const formatWaitTime = (row: any) => {
   return formatSecondsToMMSS(waitSeconds);
 };
 
-const Inbound = () => {
+const Inbound = ({
+  // Only true when this report renders inside another already-open modal
+  // (the "Open a full report page" dialog, reports-tab.tsx) — a "To"
+  // queue/IVR link's `<SideDrawer>` there is a second portal stacking
+  // underneath that dialog's own Radix z-index, technically open but
+  // invisible.
+  detailsAsModal = false,
+}: { detailsAsModal?: boolean } = {}) => {
   const tableRef = useRef<any>(null);
   const [callStats, setCallStats] = useState<any>(null);
   const { makeCall } = useDialpad();
@@ -150,15 +158,13 @@ const Inbound = () => {
     setSelectedFilters(data);
   };
 
-  const handleRefetchTableData = async () => {
-    if (tableRef?.current) {
-      setIsLoading(true);
-      try {
-        await tableRef.current.refetchTable();
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  const handleRefetchTableData = () => {
+    if (!tableRef?.current) return;
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 450);
+    tableRef.current.refetchTable().then(() => {
+      handleAlert({ text: 'Refreshed', type: 'success' });
+    });
   };
 
   const handleFilter = () => {
@@ -395,7 +401,8 @@ const Inbound = () => {
       accessorKey: 'chargeTotal',
       cell: ({ row }: any) => {
         const data = row?.original;
-        return data?.chargeTotal ? data?.chargeTotal : data?.charge ? data?.charge : 0.0;
+        const value = Number(data?.chargeTotal ?? data?.charge ?? 0);
+        return `₹${(value * USD_TO_INR_RATE).toFixed(2)}`;
       },
     },
     {
@@ -503,7 +510,7 @@ const Inbound = () => {
             setSearch(e.target.value);
           }}
           IconPosition="left-0 pl-2 inset-y-0"
-          Icon={<SearchLine className=" text-gray-700" />}
+          Icon={<SearchLine className=" text-gray-700 dark:text-mcm-ink-2" />}
         />
       </div>
       <DateDropdown
@@ -516,19 +523,15 @@ const Inbound = () => {
         type="button"
         variant="outline"
         onClick={() => handleRefetchTableData()}
-        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
       >
-        {isLoading ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          <Icon name="Refresh" className="w-5 h-5" />
-        )}
+        <Icon name="Refresh" className={`w-5 h-5 ${isLoading ? 'animate-refresh-nudge' : ''}`} />
       </Button>
       {/* <Button
                     type="button"
                     variant={'ghost'}
                     onClick={handleDownloadCSV}
-                    className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+                    className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
                 >
                     <Icon name="DownloadIcon" className="w-5 h-5" />
                 </Button> */}
@@ -536,7 +539,7 @@ const Inbound = () => {
         type="button"
         variant="outline"
         onClick={handleFilter}
-        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
+        className="cursor-pointer flex items-center justify-center min-h-9 min-w-9 max-w-9 max-h-9 rounded-lg w-9 h-9 bg-white dark:bg-mcm-surface border border-primary text-primary hover:bg-primary hover:text-white"
       >
         <FilterIcon className="w-5 h-5" />
       </Button>
@@ -556,7 +559,7 @@ const Inbound = () => {
               className={`flex min-h-10 min-w-[10.75rem] flex-col items-center justify-center gap-1 rounded-lg border p-3 py-2 text-center transition-all duration-200 sm:min-w-0 ${tab.label === 'Total Duration' ? 'cursor-default' : 'cursor-pointer'}  ${
                 activeTab === tab.label
                   ? 'border-ucass-primary-200 bg-ucass-primary-200/40 '
-                  : 'border-gray-200 hover:bg-gray-50 bg-white'
+                  : 'border-gray-200 dark:border-mcm-line hover:bg-gray-50 dark:hover:bg-mcm-surface-3 bg-white dark:bg-mcm-surface'
               }`}
             >
               <div
@@ -570,8 +573,8 @@ const Inbound = () => {
                 {tab.count}
               </div>
               <span
-                className={`mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 ${
-                  activeTab === tab.label ? 'text-primary' : 'text-gray-600'
+                className={`mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-mcm-ink-3 ${
+                  activeTab === tab.label ? 'text-primary' : 'text-gray-600 dark:text-mcm-ink-2'
                 }`}
               >
                 {tab.label}
@@ -582,6 +585,8 @@ const Inbound = () => {
         <TableManager
           {...{
             tableRef,
+            splitStickyHeader: true,
+            tableMaxHeight: '55vh',
             fetcherKey: 'inboundCallList',
             fetcherFn: callInboundList,
             select: (data: any) => data?.data?.data?.result?.data?.data,
@@ -616,14 +621,22 @@ const Inbound = () => {
           srcUrl={recordingUrl}
           serRecordingUrl={serRecordingUrl}
         />
-        {drawerState?.IVR && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.IVR}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
-            content={<IVRDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.IVR &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.IVR}
+              onClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+            >
+              <IVRDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.IVR}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, IVR: false }))}
+              content={<IVRDetailsView rowData={rowData} />}
+            />
+          ))}
         {drawerState?.department && (
           <SideDrawer
             isTab
@@ -638,14 +651,22 @@ const Inbound = () => {
             }
           />
         )}
-        {drawerState?.QUEUE && (
-          <SideDrawer
-            isTab
-            isOpen={drawerState?.QUEUE}
-            handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
-            content={<QueueDetailsView rowData={rowData} />}
-          />
-        )}
+        {drawerState?.QUEUE &&
+          (detailsAsModal ? (
+            <DetailsModal
+              isOpen={drawerState.QUEUE}
+              onClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+            >
+              <QueueDetailsView rowData={rowData} variant="modal" />
+            </DetailsModal>
+          ) : (
+            <SideDrawer
+              isTab
+              isOpen={drawerState?.QUEUE}
+              handleClose={() => setDrawerState((prev) => ({ ...prev, QUEUE: false }))}
+              content={<QueueDetailsView rowData={rowData} />}
+            />
+          ))}
       </div>
     </ReportsPageLayout>
   );

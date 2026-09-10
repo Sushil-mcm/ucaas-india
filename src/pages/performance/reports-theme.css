@@ -39,18 +39,10 @@
 /* Ambient backdrop, wired via the shared `perf-warm-backdrop` toggle —
    painted on `.perf-reports` itself, consistent with Campaigns/Speech. */
 body.perf-warm-backdrop .perf-reports {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
-    #fdf6ee;
+  background-color: #fdf6ee;
 }
 .dark body.perf-warm-backdrop .perf-reports {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
-    #0a0f1a;
+  background-color: #0a0f1a;
 }
 
 /* ------------------------------------------------------------
@@ -516,6 +508,14 @@ body.perf-warm-backdrop .perf-reports {
      pass was asked to close. */
   border-radius: 20px;
   overflow: hidden;
+  /* The table had a radius and a clip but no edge, so it read as rows
+     floating on the panel rather than as a bounded box — most obvious
+     down the left side and around the corner curve. `--glass-border` is
+     the app's own token for exactly this case (a visible tan edge on a
+     light surface over a light backdrop) and is what Directory ▸ People's
+     own roster card uses, for the same white-on-white reason its rule
+     spells out in people-glass.css. */
+  border: 1px solid var(--glass-border);
 }
 /* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
    (people-glass.css) plus the `.mcm-page th` base it inherits from
@@ -550,8 +550,22 @@ body.perf-warm-backdrop .perf-reports {
 }
 /* Directory's signature left accent-bar row hover — the one parity gap
    this table was missing versus every other Performance table. */
+/* Directory ▸ People's row divider hue (people-glass.css), rather than
+   the opaque cream `--line-2` the `.mcm-admin table tbody td` base rule
+   hands every table — but at more than Directory's own 0.1 alpha.
+   Directory's table sits on a solid surface; this one sits on
+   `.panel-card`'s frosted glass (`rgba(255,255,255,0.85)` +
+   `blur(20px) saturate(1.9)`), which washed a 10% hairline out to
+   nothing. Copying the literal alpha across surfaces lost the line;
+   keeping the hue and raising the alpha is what actually carries
+   Directory's *look* over to this one. */
+.perf-reports .rp-table-wrap table tbody td {
+  border-bottom: 1px solid rgba(150, 100, 50, 0.25);
+}
+/* Directory's exact hover tint, not a second warm-orange wash of its
+   own — the left accent bar was already shared, the background wasn't. */
 .perf-reports .rp-table-wrap table tbody tr:hover {
-  background: rgba(254, 215, 170, 0.22);
+  background: rgba(255, 241, 235, 0.55);
   box-shadow: inset 3px 0 0 var(--rp-accent);
 }
 .dark .perf-reports .rp-table-wrap table tbody tr:hover {
@@ -584,4 +598,185 @@ body.perf-warm-backdrop .perf-reports {
 }
 .dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
   color: var(--rp-ink) !important;
+}
+
+/* ------------------------------------------------------------
+   9. "Open a full report page" modal (the Dialog in reports-tab.tsx that
+   embeds Call History / Local Call List / Outbound / ... unmodified).
+   Scoped to `.rp-report-dialog`, not `.perf-reports` — Radix portals
+   DialogContent to document.body, outside `.perf-reports`'s own DOM
+   subtree, so an ancestor-based selector could never reach in. The class
+   lives on the dialog's own element instead, which survives the portal.
+   Every embedded report renders through TableManager's `splitStickyHeader`
+   (reports-tab.tsx pins it on per report), so the header is a separate
+   sibling box, not a `.table-scroll` descendant — same header-scoping
+   rule this session hit and fixed throughout Performance/Reports.
+   ------------------------------------------------------------ */
+/* The dialog's own "Call Volume"/"Call History"/... title (rp-report-dialog-
+   head, reports-tab.tsx) sits directly above `ReportsPageLayout`'s shared
+   header row (the "Performance" line every report opened from here shows) —
+   two titles, two independent top/bottom paddings, stacking into a gap
+   neither needed on its own. Trimming that shared row's own top padding
+   specifically inside this dialog (not the base rule other, non-dialog
+   report layouts still rely on) is the other half of shrinking it. */
+.rp-report-dialog .flex-1.overflow-auto .shrink-0.border-b {
+  padding-top: 2px !important;
+}
+/* `DialogTitle` ships with `leading-none` (line-height: 1), so a descender
+   — the g in "SMS Log", the y in "Call Analytics" — hangs below its own
+   line box. That was invisible while the header carried bottom padding;
+   once that padding went to zero (to close the gap to the "Performance"
+   heading below), the clipping wrapper around this header cut those
+   descenders off. A real line-height gives the glyphs their own room
+   rather than paying for it in padding that would reopen the gap. */
+.rp-report-dialog-head [data-slot='dialog-title'] {
+  line-height: 1.3;
+}
+/* The dialog's close button (`absolute top-4 right-4`, dialog.tsx) sits
+   directly above the report's own right-aligned toolbar icons (refresh /
+   export / filter), and once the two header rows above were tightened
+   there were only ~6px between the X and the first of those icons —
+   close enough to read as one crowded stack of controls. Lifting the X
+   alone opens that gap without pushing the toolbar row itself back down
+   and undoing the heading spacing. */
+.rp-report-dialog > [data-slot='dialog-close'] {
+  top: 6px;
+}
+.rp-report-dialog div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+.rp-report-dialog .table-scroll {
+  border-radius: 0 0 20px 20px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+.rp-report-dialog thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.rp-report-dialog thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  background: transparent;
+}
+.rp-report-dialog thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.rp-report-dialog thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.rp-report-dialog .table-scroll tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 #f2994a;
+}
+/* The last column (usually "Action", a row of icon buttons) sat flush
+   against the scrollbar the moment the table needed one to scroll — the
+   shared component's own default right padding wasn't enough once a
+   scrollbar occupied that same space (same bug found and fixed on
+   Performance ▸ Live, live-theme.css). */
+.rp-report-dialog .table-scroll thead th:last-child,
+.rp-report-dialog .table-scroll tbody td:last-child {
+  padding-right: 22px !important;
+}
+/* Status / Duration / Wait Time / Charge — the 2nd-through-5th-from-last
+   column on every one of these call-log reports (Call History, Inbound,
+   Outbound, Local Call List, Voicemail all end in this same run, with or
+   without a DID column earlier). table-manager.tsx's own column-width
+   measurement is proportional to each cell's real rendered footprint
+   (text + padding), so trimming this run's padding directly shrinks what
+   it measures as "needed" here — the freed-up percentage share doesn't
+   vanish, it flows to Date/From/DID/To on the next measure pass, which
+   is what actually had too little room. Counting from the right (not the
+   left) is what stays correct whether or not a given report has DID. */
+.rp-report-dialog thead th:nth-last-child(n + 2):nth-last-child(-n + 5),
+.rp-report-dialog .table-scroll tbody td:nth-last-child(n + 2):nth-last-child(-n + 5) {
+  /* 6px wasn't a big enough cut to visibly shift the balance — the column's
+     real floor is its own text (e.g. "WAIT TIME" at 9.5px/800/0.09em
+     letter-spacing), so padding is the only lever available and needs to
+     be pushed harder to matter. */
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+}
+/* Padding alone stopped moving the needle once it hit 3px — the actual
+   floor left is the header LABEL itself: "WAIT TIME"/"DURATION" at the
+   shared 0.09em tracking measure wider than any value ever shown under
+   them ("00:33"), so table-manager.tsx's `Math.max(headerWidth,
+   maxBodyWidth)` keeps the column pinned to the label's width regardless
+   of how tight the data cells get. Tightening tracking (and dropping a
+   touch of size) only for this run — not the base `.rp-report-dialog
+   thead th` rule everything else still uses — shrinks that floor without
+   touching Directory-matched header styling on Date/From/DID/To/Action. */
+.rp-report-dialog thead th:nth-last-child(n + 2):nth-last-child(-n + 5) {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+/* Date / From / DID / To (and any other identity column before the trailing
+   metric run) — the flip side of the rule above. `:not(:first-child)`
+   excludes the narrow leading icon-only column; `:not(:nth-last-child(-n +
+   5))` excludes the same trailing 5 targeted above. What's left is exactly
+   "every identity column in between", whether that's 3 of them (no DID) or
+   4 (with DID) — robust to column count the same way the trailing rule is,
+   just from the other direction. Extra padding here both reads as more
+   breathing room on its own and grows what this cell measures as needing,
+   pulling percentage share toward it on the next measure pass. */
+.rp-report-dialog thead th:not(:first-child):not(:first-child + *):not(:nth-last-child(-n + 5)),
+.rp-report-dialog .table-scroll tbody td:not(:first-child):not(:first-child + *):not(:nth-last-child(-n + 5)) {
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+/* Date — the leading visible column. Its content (a call-direction icon
+   plus a short timestamp) is the most compact of any column here, but with
+   no padding rule of its own it fell back to the shared default, which
+   measures wider than that content needs. Column widths are a percentage
+   of the table's own width (table-manager.tsx's fixed-layout colgroup), so
+   that unused margin scales up with viewport width — barely visible at a
+   laptop width, a very visible gap on a wide monitor. Trimming it to the
+   same tight padding as the metric run shrinks what it measures as
+   needing, which is what actually shrinks the rendered slack at any width.
+
+   `:first-child + *` (as well as plain `:first-child`) because reports with
+   `hasSubRows` (Call History, Outbound, Inbound, Voicemail) render a hidden,
+   text-free expand-arrow column before Date — making Date the *second*
+   column, not the first, in exactly those reports. Targeting only
+   `:first-child` tightened the empty expand column and left Date itself on
+   the wide 18px identity-column padding above, which is what the visible
+   gap actually was. */
+.rp-report-dialog thead th:first-child,
+.rp-report-dialog .table-scroll tbody td:first-child,
+.rp-report-dialog thead th:first-child + th,
+.rp-report-dialog .table-scroll tbody td:first-child + td {
+  padding-left: 10px !important;
+  padding-right: 6px !important;
+}
+/* The `hasSubRows` expand-toggle column itself (Call History, Outbound,
+   Inbound, Voicemail) — genuinely `:first-child`, unlike Date above. Its
+   rendered *width* is now fixed at the source (table-manager.tsx hardcodes
+   it rather than measuring — an empty column under `table-layout: fixed`
+   never overflows to reveal a smaller natural size, so scrollWidth just
+   echoed back whatever width it was last given); this just tightens the
+   padding around that fixed width to leave more of it to the icon. */
+.rp-report-dialog .table-scroll tbody td:first-child {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
 }

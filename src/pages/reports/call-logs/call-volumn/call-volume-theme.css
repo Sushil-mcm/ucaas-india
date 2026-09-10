@@ -1,0 +1,318 @@
+/* ============================================================
+   Reports ▸ Analytics ▸ Call Volume — a 7-day × 24-hour heatmap.
+
+   Replaces the old flat gray-scale grid (bg-gray-100/200/300/400, plain
+   1px borders, no radius) with the same warm-orange system every other
+   report table in this app already uses: `#f2994a` intensity steps
+   instead of gray, rounded cells with a real gap between them (the
+   GitHub-contribution-graph look), and the header/legend tokens lifted
+   straight from Directory ▸ People (`#fffdfb`, `#8a6f57`, 3px accent
+   underline) rather than the local one-off `#F0DFC5`/`#EEE7DD` the old
+   markup used.
+
+   Scoped to `.cv-report`, this component's own root — nothing outside
+   Call Volume is reachable from here.
+   ============================================================ */
+
+.cv-report {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+/* ------------------------------------------------------------
+   Busiest-slot callout — the one-line headline a raw grid can't give at a
+   glance, in the same "info pill" language Performance ▸ Reports already
+   uses for its own SL%/sampled-data notes.
+   ------------------------------------------------------------ */
+.cv-insight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(242, 153, 74, 0.25);
+  border-radius: 10px;
+  background: #fff7ee;
+  color: #6b5033;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.cv-insight strong {
+  color: #c96f1f;
+  font-weight: 700;
+}
+.cv-insight-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: #f2994a;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.2);
+}
+
+/* ------------------------------------------------------------
+   Grid — one CSS Grid, not the old flex-of-flex-rows, so the time
+   column and every day column line up exactly with no independent
+   per-row width drift. Wrapped in its own scroll box so the day header
+   can stay pinned (`position: sticky`) while 24 hourly rows scroll under
+   it, the same split-header pattern every other report table here uses.
+   ------------------------------------------------------------ */
+.cv-grid-scroll {
+  max-height: 50vh;
+  overflow: hidden auto;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(20, 20, 20, 0.05);
+}
+.cv-grid-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.cv-grid-scroll::-webkit-scrollbar-track {
+  margin: 52px 0 0;
+}
+.cv-grid-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.cv-grid-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+
+.cv-grid {
+  display: grid;
+  background: #fffdfb;
+}
+
+.cv-corner,
+.cv-day-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fffdfb;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  border-left: 1px solid rgba(225, 200, 165, 0.6);
+  padding: 8px 6px;
+}
+.cv-corner {
+  border-top-left-radius: 15px;
+}
+.cv-day-head:last-child {
+  border-top-right-radius: 15px;
+}
+.cv-corner {
+  border-left: none;
+  color: #8a6f57;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cv-day-name {
+  color: #2e2d35;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.cv-day-date {
+  color: #8a6f57;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+/* Saturday/Sunday — a faint wash, not a hard color change, so the two
+   rest-day columns read as "quieter" without competing with the actual
+   heat scale in the cells below them. A pre-mixed opaque color, not an
+   alpha `rgba()` on top of the header's own `#fffdfb` — these header
+   cells are `position: sticky`, so a translucent background let whatever
+   heat-scale cell had scrolled up underneath show straight through it
+   once the page was scrolled, instead of staying a solid bar. */
+.cv-day-head.is-weekend {
+  background: #fdf5ea;
+}
+/* Today's own column gets the same accent treatment the rest of the app
+   gives a "current/selected" state — a solid underline in the header,
+   not a colour swap that would fight the heat scale underneath it. */
+.cv-day-head.is-today {
+  border-bottom-color: #f2994a;
+}
+.cv-day-head.is-today .cv-day-name {
+  color: #c96f1f;
+}
+
+.cv-time-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  background: #fdf9f4;
+  border-left: 1px solid rgba(225, 200, 165, 0.6);
+  border-top: 1px solid rgba(225, 200, 165, 0.45);
+  color: #8a6f57;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cv-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border-left: 1px solid rgba(225, 200, 165, 0.6);
+  border-top: 1px solid rgba(225, 200, 165, 0.45);
+  color: #7a5a3a;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: box-shadow 0.12s ease;
+}
+.cv-cell:hover {
+  box-shadow: inset 0 0 0 2px rgba(242, 153, 74, 0.55);
+  cursor: default;
+}
+.cv-cell.is-empty {
+  color: #d8c9b8;
+  font-weight: 400;
+}
+/* The single busiest cell — called out in `.cv-insight` above, and again
+   here so it's easy to actually find in the grid rather than just named
+   in a sentence above it. */
+.cv-cell.is-peak {
+  box-shadow: inset 0 0 0 2px #c96f1f;
+  font-weight: 800;
+}
+
+/* Five-step intensity scale, all one hue — the same accent orange as
+   everywhere else, just deepening with volume instead of switching to an
+   unrelated gray scale. Text flips to white once the fill is dark enough
+   to need it (level 4). Shared with `.cv-legend-swatch` below so the key
+   is never one refactor away from drifting out of sync with the cells it
+   explains. */
+.cv-cell[data-level='0'],
+.cv-legend-swatch[data-level='0'] {
+  background: #fffdfb;
+}
+.cv-cell[data-level='1'],
+.cv-legend-swatch[data-level='1'] {
+  background: rgba(242, 153, 74, 0.16);
+}
+.cv-cell[data-level='2'],
+.cv-legend-swatch[data-level='2'] {
+  background: rgba(242, 153, 74, 0.34);
+}
+.cv-cell[data-level='3'],
+.cv-legend-swatch[data-level='3'] {
+  background: rgba(242, 153, 74, 0.55);
+}
+.cv-cell[data-level='3'] {
+  color: #5a3a1a;
+}
+.cv-cell[data-level='4'],
+.cv-legend-swatch[data-level='4'] {
+  background: rgba(228, 116, 27, 0.82);
+}
+.cv-cell[data-level='4'] {
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   Legend — each swatch carries its own threshold label ("< 1m", "20m+")
+   rather than just two end labels, since the scale has five real steps.
+   ------------------------------------------------------------ */
+.cv-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 12px;
+  background: #fffaf4;
+}
+.cv-legend-label {
+  color: #8a6f57;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cv-legend-step {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cv-legend-step-label {
+  color: #6b5033;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.cv-legend-swatch {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 4px;
+  border: 1px solid rgba(225, 200, 165, 0.6);
+}
+
+/* ---- dark mode ----
+   The rules above hardcode the warm light palette, so nothing here reacted to
+   the `.dark` class and the Call Volume report stayed light while the rest of
+   the app went dark. These overrides re-point the shells, text and hairlines
+   at the same dark token values `index.css` defines (--mcm-surface / -ink /
+   -line), and leave the orange heat levels alone: those encode the data, so
+   they must keep reading as one continuous ramp in both themes. Only level 0
+   ("no calls") changes, since a near-white cell is the one step that would
+   glare against a dark grid. */
+.dark .cv-insight {
+  border-color: var(--mcm-accent-edge, #4a341c);
+  background: var(--mcm-accent-wash, #2b1f12);
+  color: var(--mcm-ink-2, #c3cddf);
+}
+.dark .cv-insight strong { color: var(--mcm-accent-ink, #ffc98a); }
+.dark .cv-grid-scroll { border-color: var(--mcm-line, #26314a); }
+.dark .cv-grid-scroll::-webkit-scrollbar-thumb { background: rgba(255, 171, 94, 0.35); }
+.dark .cv-grid-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 171, 94, 0.55); }
+.dark .cv-grid { background: var(--mcm-surface, #111827); }
+.dark .cv-corner,
+.dark .cv-day-head {
+  background: var(--mcm-surface-2, #161f31);
+  border-bottom-color: rgba(255, 171, 94, 0.4);
+  border-left-color: var(--mcm-line, #26314a);
+}
+.dark .cv-corner { color: var(--mcm-ink-3, #93a1ba); }
+.dark .cv-day-name { color: var(--mcm-ink, #eef2f9); }
+.dark .cv-day-date { color: var(--mcm-ink-3, #93a1ba); }
+.dark .cv-day-head.is-weekend { background: var(--mcm-surface-3, #1e293e); }
+.dark .cv-day-head.is-today { border-bottom-color: var(--mcm-accent, #ffab5e); }
+.dark .cv-day-head.is-today .cv-day-name { color: var(--mcm-accent-ink, #ffc98a); }
+.dark .cv-time-cell {
+  background: var(--mcm-surface-2, #161f31);
+  border-left-color: var(--mcm-line, #26314a);
+  border-top-color: var(--mcm-line, #26314a);
+  color: var(--mcm-ink-3, #93a1ba);
+}
+.dark .cv-cell {
+  border-left-color: var(--mcm-line, #26314a);
+  border-top-color: var(--mcm-line, #26314a);
+  color: var(--mcm-ink-2, #c3cddf);
+}
+.dark .cv-cell.is-empty { color: var(--mcm-ink-4, #6b7a96); }
+.dark .cv-cell[data-level='0'],
+.dark .cv-legend-swatch[data-level='0'] { background: var(--mcm-surface, #111827); }
+.dark .cv-cell[data-level='3'] { color: var(--mcm-ink, #eef2f9); }
+.dark .cv-legend {
+  border-color: var(--mcm-line, #26314a);
+  background: var(--mcm-surface-2, #161f31);
+}
+.dark .cv-legend-label { color: var(--mcm-ink-3, #93a1ba); }
+.dark .cv-legend-step-label { color: var(--mcm-ink-2, #c3cddf); }
+.dark .cv-legend-swatch { border-color: var(--mcm-line, #26314a); }
