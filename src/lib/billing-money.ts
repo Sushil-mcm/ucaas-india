@@ -43,6 +43,15 @@ import { HOME_CURRENCY, HOME_CURRENCY_SYMBOL, formatRupees } from './india';
 /* Kept as a constant, not sprinkled through the screens, so there is one place
    to change and one place to test. */
 export const BILLING_CURRENCY = HOME_CURRENCY;
+
+/* The rate the Charge column converts at.
+   `call-history/index.tsx` has imported this since e727514, but the export
+   itself was only ever in that session's working tree, never committed — so
+   every commit from e727514 onward fails to build from a clean checkout. It
+   went unnoticed because the deploys were built from the working tree, which
+   still held the uncommitted file. Recovered verbatim from the imported tree
+   rather than guessed. */
+export const USD_TO_INR_RATE = 83;
 const CURRENCY_SYMBOL = HOME_CURRENCY_SYMBOL;
 
 /* A month, for billing purposes, is 30 days — the same rule the charge itself
