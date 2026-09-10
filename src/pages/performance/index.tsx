@@ -143,8 +143,8 @@ const Performance = () => {
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [selectedQueueUuid, setSelectedQueueUuid] = useState<string | null>(null);
   const [dropdownVal, setDropdownVal] = useState(() => ({
-    value: handleDate('Today'),
-    date_type: 'Today',
+    value: handleDate('Last 30 Days'),
+    date_type: 'Last 30 Days',
     dateOptions: DateFilterTypes,
   }));
   const dateDropdownRef = useRef<DateDropdownHandle>(null);
