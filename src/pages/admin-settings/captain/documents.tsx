@@ -1,9 +1,6 @@
-import {
-  AdminHeadActions,
-  useSetAdminPageMeta,
-} from '@/pages/admin-settings/admin-page-head';
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Link2, FileText, MoreVertical, BookOpenText, Sparkles, Trash2, Pencil, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Link2, FileText, MoreVertical, BookOpenText, Sparkles, Trash2, Pencil, Loader2, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,10 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
+import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
+import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
 
-const CAPTAIN_API_BASE = '/captain-api/api/captain';
 const textAreaClass =
-  'w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2.5 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all placeholder:text-[#9A948F] hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10';
+  'w-full resize-none rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card px-3 py-2.5 text-sm text-gray-700 dark:text-foreground shadow-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-muted-foreground hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10';
 
 type Document = {
   id: string;
@@ -31,7 +30,13 @@ type Document = {
 type GeneratedFaq = { question: string; answer: string; selected: boolean };
 
 function timeAgo(dateStr: string) {
-  const diffMs = Date.now() - new Date(`${dateStr}Z`).getTime();
+  if (!dateStr) return '';
+  // Backend sends a timezone-aware ISO string ("...+05:30" or "...Z"); only a
+  // naive string (no offset) needs a trailing Z to be read as UTC.
+  const hasTz = /([zZ]|[+-]\d{2}:?\d{2})$/.test(dateStr);
+  const parsed = new Date(hasTz ? dateStr : `${dateStr}Z`);
+  if (Number.isNaN(parsed.getTime())) return '';
+  const diffMs = Date.now() - parsed.getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
@@ -54,7 +59,6 @@ const CaptainDocuments = () => {
   const [createType, setCreateType] = useState<'url' | 'pdf'>('url');
   const [createName, setCreateName] = useState('');
   const [createUrl, setCreateUrl] = useState('');
-  const [createMaxPages, setCreateMaxPages] = useState(1);
   const [createFile, setCreateFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [createdCount, setCreatedCount] = useState<number | null>(null);
@@ -68,26 +72,45 @@ const CaptainDocuments = () => {
   const [generatedFaqs, setGeneratedFaqs] = useState<GeneratedFaq[] | null>(null);
   const [isSavingFaqs, setIsSavingFaqs] = useState(false);
   const [modalError, setModalError] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
-  const fetchDocuments = async (assistantId: string) => {
+  // `silent` re-fetches in place (used by the processing poll) without flashing
+  // the full-page loader or clearing an existing error.
+  const fetchDocuments = async (assistantId: string, opts?: { silent?: boolean }) => {
     if (!assistantId) return;
-    setIsLoading(true);
-    setError('');
+    if (!opts?.silent) {
+      setIsLoading(true);
+      setError('');
+    }
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents?assistant_id=${assistantId}`);
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents?assistant_id=${assistantId}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || 'Failed to load documents');
       setDocuments(json.data || []);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load documents');
+      if (!opts?.silent) setError(err?.message || 'Failed to load documents');
     } finally {
-      setIsLoading(false);
+      if (!opts?.silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (selectedId) fetchDocuments(selectedId);
+    else setIsLoading(false);
   }, [selectedId]);
+
+  // A URL document is crawled in the background after it's created, so it comes
+  // back as "processing". Poll until every document has settled — otherwise the
+  // row shows "processing" forever until the user reloads the page.
+  const hasProcessing = documents.some((d) => d.status === 'processing');
+  useEffect(() => {
+    if (!selectedId || !hasProcessing) return;
+    const timer = setInterval(() => fetchDocuments(selectedId, { silent: true }), 3000);
+    return () => clearInterval(timer);
+  }, [selectedId, hasProcessing]);
 
   useEffect(() => {
     if (createdCount === null) return;
@@ -99,7 +122,6 @@ const CaptainDocuments = () => {
     setCreateType('url');
     setCreateName('');
     setCreateUrl('');
-    setCreateMaxPages(1);
     setCreateFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -115,7 +137,6 @@ const CaptainDocuments = () => {
       const payload: any = { assistant_id: selectedId, name: createName.trim() || undefined, type: createType };
       if (createType === 'url') {
         payload.source_url = createUrl.trim();
-        payload.max_pages = createMaxPages;
       } else {
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -125,7 +146,7 @@ const CaptainDocuments = () => {
         });
         payload.file_base64 = base64;
       }
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents`, {
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -133,6 +154,13 @@ const CaptainDocuments = () => {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || 'Failed to create document');
       const created = json.data?.documents?.length || 0;
+      // Tell the FAQs page that FAQs are being generated for this assistant so it
+      // polls for them instead of showing a stale "No FAQs yet".
+      try {
+        localStorage.setItem(`captain_faq_pending_${selectedId}`, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
       setIsCreateOpen(false);
       resetCreateForm();
       fetchDocuments(selectedId);
@@ -147,11 +175,45 @@ const CaptainDocuments = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this document? This cannot be undone.')) return;
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents/${id}`, { method: 'DELETE' });
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents/${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete document');
       setDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (err: any) {
       setError(err?.message || 'Failed to delete document');
+    }
+  };
+
+  const handleCardSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleCardHover = (isHovered: boolean, id: string) => {
+    setHoveredCard(isHovered ? id : null);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      await Promise.all(
+        [...selectedIds].map((id) =>
+          captainFetch(`${CAPTAIN_API_BASE}/documents/${id}`, { method: 'DELETE' }),
+        ),
+      );
+      setDocuments((prev) => prev.filter((d) => !selectedIds.has(d.id)));
+      setSelectedIds(new Set());
+    } catch (err: any) {
+      setError(err?.message || 'Failed to delete documents');
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -162,7 +224,7 @@ const CaptainDocuments = () => {
     setEditName(doc.name);
     setEditContent('');
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents/${doc.id}`);
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents/${doc.id}`);
       const json = await res.json();
       if (res.ok) setEditContent(json.data.content || '');
     } catch {
@@ -175,7 +237,7 @@ const CaptainDocuments = () => {
     setIsSavingEdit(true);
     setModalError('');
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents/${editingDoc.id}`, {
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents/${editingDoc.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editName, content: editContent }),
@@ -196,7 +258,7 @@ const CaptainDocuments = () => {
     setModalError('');
     setGeneratedFaqs(null);
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/documents/${editingDoc.id}/generate-faqs`, { method: 'POST' });
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/documents/${editingDoc.id}/generate-faqs`, { method: 'POST' });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || 'Failed to generate FAQs');
       const faqs: GeneratedFaq[] = (json.data.faqs || []).map((f: any) => ({ ...f, selected: true }));
@@ -216,7 +278,7 @@ const CaptainDocuments = () => {
     setIsSavingFaqs(true);
     setModalError('');
     try {
-      const res = await fetch(`${CAPTAIN_API_BASE}/faqs/bulk`, {
+      const res = await captainFetch(`${CAPTAIN_API_BASE}/faqs/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,24 +298,43 @@ const CaptainDocuments = () => {
     }
   };
 
-  useSetAdminPageMeta({
-    description:
-      'The documents each assistant answers from. Pick an assistant to see and edit its own set.',
-  });
+  if (!selectedId && !isLoading) {
+    return (
+      <div className="flex h-full w-full flex-col gap-5 p-6">
+        <div className="flex items-center justify-between gap-3">
+          <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} pageTitle="Documents" />
+          <Button type="button" variant="primary" disabled>
+            <Plus className="size-4" />
+            Create a new document
+          </Button>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card p-8 text-center">
+          <Bot className="size-10 text-gray-300 dark:text-muted-foreground" />
+          <div className="text-base font-bold text-gray-950 dark:text-foreground">No AI Assistant Found</div>
+          <p className="max-w-sm text-xs text-gray-500 dark:text-muted-foreground">
+            You need to create an AI assistant before you can add documents for it to learn from.
+          </p>
+          <Link
+            to="/admin-settings/captain/assistants"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-3.5" />
+            Create Assistant
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      {/* The switcher stays -- choosing whose set you are looking at is real
-          work. Its `pageTitle` half does not: it printed "Documents" a line under
-          the Admin head that had just printed it. The button goes up beside
-          that head. */}
-      <AdminHeadActions>
+      <div className="flex items-center justify-between gap-3">
+        <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} pageTitle="Documents" />
         <Button type="button" variant="primary" onClick={() => setIsCreateOpen(true)} disabled={!selectedId}>
           <Plus className="size-4" />
           Create a new document
         </Button>
-      </AdminHeadActions>
-      <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
+      </div>
 
       {createdCount !== null && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-700">
@@ -261,27 +342,40 @@ const CaptainDocuments = () => {
         </div>
       )}
 
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-[#EEE7DD] bg-[#FBE2C8]/50 p-5">
+      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-5 dark:border-gray-700 dark:bg-gray-800/60">
         <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary/10">
           <BookOpenText className="size-7 text-primary" />
         </div>
-        <p className="text-sm text-[#9A948F]">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           A document in Captain serves as a knowledge resource for the assistant. By connecting your help center
           pages or guides, Captain can analyze the content and generate accurate FAQs for customer inquiries.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">{error}</div>
       )}
 
+      <BulkSelectBar
+        items={documents}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onSelectAllLabel={(count, allSelected) =>
+          allSelected ? `Unselect all (${count})` : `Select all (${count})`
+        }
+        selectedCountLabel={(count) => `${count} selected`}
+        deleteLabel="Delete"
+        onDelete={() => setIsBulkDeleteDialogOpen(true)}
+        isDeleting={isBulkDeleting}
+      />
+
       {isLoading ? (
-        <div className="flex h-40 items-center justify-center text-sm text-[#9A948F]">Loading...</div>
+        <div className="flex h-40 items-center justify-center text-sm text-gray-500 dark:text-gray-400">Loading...</div>
       ) : documents.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] py-16 text-center">
-          <FileText className="size-8 text-gray-300" />
-          <div className="text-lg font-semibold text-[#2E2D35]">No documents available</div>
-          <div className="max-w-sm text-sm text-[#9A948F]">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
+          <FileText className="size-8 text-gray-300 dark:text-gray-600" />
+          <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">No documents available</div>
+          <div className="max-w-sm text-sm text-gray-500 dark:text-gray-400">
             Documents are used by your assistant to generate FAQs. Import a document to provide context for your
             assistant.
           </div>
@@ -293,51 +387,67 @@ const CaptainDocuments = () => {
       ) : (
         <div className="flex flex-col gap-3 overflow-auto">
           {documents.map((doc) => (
-            <div key={doc.id} className="flex items-start justify-between gap-4 rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-5 py-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="truncate text-sm font-semibold text-[#2E2D35]">{doc.name}</div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      doc.status === 'ready'
-                        ? 'bg-green-100 text-green-700'
-                        : doc.status === 'failed'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-600'
+            <div
+              key={doc.id}
+              className="flex items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800"
+              onMouseEnter={() => handleCardHover(true, doc.id)}
+              onMouseLeave={() => handleCardHover(false, doc.id)}
+            >
+              <div className="flex flex-1 items-start gap-3">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedIds.has(doc.id)}
+                    onCheckedChange={() => handleCardSelect(doc.id)}
+                    className={`transition-opacity ${
+                      hoveredCard === doc.id || selectedIds.size > 0 ? 'opacity-100' : 'opacity-0'
                     }`}
-                  >
-                    {doc.status === 'processing' ? (
-                      <span className="inline-flex items-center gap-1">
-                        <Loader2 className="size-3 animate-spin" />
-                        processing
-                      </span>
-                    ) : (
-                      doc.status
-                    )}
-                  </span>
+                  />
                 </div>
-                <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#9A948F]">
-                  {doc.type === 'url' ? <Link2 className="size-3.5 shrink-0" /> : <FileText className="size-3.5 shrink-0" />}
-                  {doc.source_url ? (
-                    <a href={doc.source_url} target="_blank" rel="noreferrer" className="truncate text-primary hover:underline">
-                      {doc.source_url}
-                    </a>
-                  ) : (
-                    <span>PDF upload</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="truncate text-sm font-semibold text-gray-950 dark:text-gray-100">{doc.name}</div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        doc.status === 'ready'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300'
+                          : doc.status === 'failed'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300'
+                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {doc.status === 'processing' ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Loader2 className="size-3 animate-spin" />
+                          processing
+                        </span>
+                      ) : (
+                        doc.status
+                      )}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {doc.type === 'url' ? <Link2 className="size-3.5 shrink-0" /> : <FileText className="size-3.5 shrink-0" />}
+                    {doc.source_url ? (
+                      <a href={doc.source_url} target="_blank" rel="noreferrer" className="truncate text-primary hover:underline">
+                        {doc.source_url}
+                      </a>
+                    ) : (
+                      <span>PDF upload</span>
+                    )}
+                  </div>
+                  {doc.status === 'failed' && doc.error_message && (
+                    <div className="mt-1 text-xs text-red-600 dark:text-red-400">{doc.error_message}</div>
                   )}
                 </div>
-                {doc.status === 'failed' && doc.error_message && (
-                  <div className="mt-1 text-xs text-red-600">{doc.error_message}</div>
-                )}
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-[#9A948F]">{timeAgo(doc.created_at)}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(doc.created_at)}</span>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-[#9A948F] outline-none hover:bg-[#FBE2C8]/40 hover:text-[#9A948F]">
+                  <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200">
                     <MoreVertical className="size-4" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEdit(doc)}>
+                  <DropdownMenuContent align="end" className="dark:border-gray-700 dark:bg-gray-800">
+                    <DropdownMenuItem onClick={() => openEdit(doc)} className="dark:text-gray-200 dark:focus:bg-gray-700">
                       <Pencil className="size-3.5" />
                       Edit content
                     </DropdownMenuItem>
@@ -362,8 +472,8 @@ const CaptainDocuments = () => {
         }}
       >
         <DialogContent className="w-full max-w-md rounded-2xl p-6">
-          <DialogTitle className="text-base font-bold text-[#2E2D35]">Add a document</DialogTitle>
-          <p className="-mt-2 text-sm text-[#9A948F]">
+          <DialogTitle className="text-base font-bold text-gray-950 dark:text-gray-100">Add a document</DialogTitle>
+          <p className="-mt-2 text-sm text-gray-500 dark:text-gray-400">
             Enter the URL of the document to add it as a knowledge source, or upload a PDF.
           </p>
 
@@ -373,7 +483,7 @@ const CaptainDocuments = () => {
               <select
                 value={createType}
                 onChange={(e) => setCreateType(e.target.value as 'url' | 'pdf')}
-                className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
+                className="min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none transition-all hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               >
                 <option value="url">URL</option>
                 <option value="pdf">PDF File</option>
@@ -381,29 +491,14 @@ const CaptainDocuments = () => {
             </div>
 
             {createType === 'url' ? (
-              <>
-                <div className="flex flex-col gap-1.5">
-                  <Label>URL</Label>
-                  <Input type="text" value={createUrl} onChange={(e) => setCreateUrl(e.target.value)} placeholder="https://example.com/help-article" />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Pages to crawl</Label>
-                  <select
-                    value={createMaxPages}
-                    onChange={(e) => setCreateMaxPages(Number(e.target.value))}
-                    className="min-h-10 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10"
-                  >
-                    <option value={1}>Just this page</option>
-                    <option value={5}>Up to 5 pages</option>
-                    <option value={10}>Up to 10 pages</option>
-                    <option value={20}>Up to 20 pages</option>
-                  </select>
-                  <p className="text-xs text-[#9A948F]">
-                    Discovers linked pages on the same site (one level deep) and adds each as its own document —
-                    bigger sites need more pages, so pick a size that covers what you need.
-                  </p>
-                </div>
-              </>
+              <div className="flex flex-col gap-1.5">
+                <Label>URL</Label>
+                <Input type="text" value={createUrl} onChange={(e) => setCreateUrl(e.target.value)} placeholder="https://example.com/help-article" />
+                <p className="text-xs text-gray-500 dark:text-muted-foreground">
+                  Crawls this page and the pages it links to on the same site (up to 25), adding each as its
+                  own document and generating FAQs from it.
+                </p>
+              </div>
             ) : (
               <div className="flex flex-col gap-1.5">
                 <Label>PDF File</Label>
@@ -412,7 +507,7 @@ const CaptainDocuments = () => {
                   type="file"
                   accept="application/pdf"
                   onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
-                  className="w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-sm text-[#2E2D35] shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 file:dark:bg-primary/20 file:dark:text-primary-foreground"
                 />
               </div>
             )}
@@ -428,11 +523,11 @@ const CaptainDocuments = () => {
             </div>
 
             {modalError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{modalError}</div>
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">{modalError}</div>
             )}
-            {isCreating && createMaxPages > 1 && (
+            {isCreating && createType === 'url' && (
               <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm text-primary">
-                Crawling up to {createMaxPages} pages — this can take a minute...
+                Crawling the site and generating FAQs — this can take a minute...
               </div>
             )}
           </div>
@@ -456,7 +551,7 @@ const CaptainDocuments = () => {
       {/* Edit / generate FAQs modal */}
       <Dialog open={!!editingDoc} onOpenChange={(open) => !open && setEditingDoc(null)}>
         <DialogContent className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6">
-          <DialogTitle className="text-base font-bold text-[#2E2D35]">Edit document</DialogTitle>
+          <DialogTitle className="text-base font-bold text-gray-950 dark:text-gray-100">Edit document</DialogTitle>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
@@ -476,17 +571,17 @@ const CaptainDocuments = () => {
             </div>
 
             {modalError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{modalError}</div>
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">{modalError}</div>
             )}
 
             {generatedFaqs && (
-              <div className="flex flex-col gap-2 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/50 p-4">
-                <div className="text-sm font-semibold text-[#2E2D35]">
+              <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-4 dark:border-gray-700 dark:bg-gray-800/60">
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                   Suggested FAQs ({generatedFaqs.filter((f) => f.selected).length} selected)
                 </div>
                 <div className="flex flex-col gap-2">
                   {generatedFaqs.map((f, i) => (
-                    <div key={i} className="flex items-start gap-2.5 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
+                    <div key={i} className="flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
                       <Checkbox
                         checked={f.selected}
                         onCheckedChange={(checked) =>
@@ -497,8 +592,8 @@ const CaptainDocuments = () => {
                         className="mt-0.5"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-[#2E2D35]">{f.question}</div>
-                        <div className="mt-0.5 text-xs text-[#9A948F]">{f.answer}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{f.question}</div>
+                        <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{f.answer}</div>
                       </div>
                     </div>
                   ))}
@@ -533,6 +628,14 @@ const CaptainDocuments = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <BulkDeleteDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        selectedIds={selectedIds}
+        type="document"
+        onConfirm={handleBulkDelete}
+      />
     </div>
   );
 };

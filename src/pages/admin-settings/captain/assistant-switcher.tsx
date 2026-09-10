@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Pencil, Plus, Bot, Check } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
+import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 
-const CAPTAIN_API_BASE = '/captain-api/api/captain';
 export const SELECTED_ASSISTANT_KEY = 'captain_selected_assistant_id';
 
 export type Assistant = { id: string; name: string };
@@ -23,13 +23,16 @@ export function useSelectedAssistant() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${CAPTAIN_API_BASE}/assistants`)
+    captainFetch(`${CAPTAIN_API_BASE}/assistants`)
       .then((res) => res.json())
       .then((json) => {
-        const list: Assistant[] = json.data || [];
+        const list: Assistant[] = (json.data || []).map((a: any) => ({
+          ...a,
+          id: String(a.id),
+        }));
         setAssistants(list);
         setSelectedId((prev) => {
-          const next = prev && list.some((a) => a.id === prev) ? prev : list[0]?.id || '';
+          const next = prev && list.some((a) => a.id === String(prev)) ? String(prev) : list[0]?.id || '';
           if (next) localStorage.setItem(SELECTED_ASSISTANT_KEY, next);
           return next;
         });
@@ -51,38 +54,40 @@ export function AssistantSwitcher({
   selectedId,
   onSelect,
   pageTitle,
+  align = 'start',
 }: {
   assistants: Assistant[];
   selectedId: string;
   onSelect: (id: string) => void;
   pageTitle?: string;
+  align?: 'start' | 'end';
 }) {
-  const selected = assistants.find((a) => a.id === selectedId);
+  const selected = assistants.find((a) => String(a.id) === String(selectedId));
 
   return (
     <div className="flex items-center gap-3">
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-base font-semibold text-gray-950 outline-none hover:bg-gray-100">
+        <DropdownMenuTrigger className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-base font-semibold text-gray-950 outline-none hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800">
           {selected?.name || 'Select assistant'}
-          <ChevronDown className="size-4 text-gray-400" />
+          <ChevronDown className="size-4 text-gray-400 dark:text-gray-400" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-72 border-gray-200 p-0">
-          <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
+        <DropdownMenuContent align={align} className="w-72 border-gray-200 dark:border-border p-0">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-border px-3 py-2.5">
             <div>
-              <div className="text-sm font-semibold text-gray-950">Assistants</div>
-              <div className="text-xs text-gray-500">Switch between assistants</div>
+              <div className="text-sm font-semibold text-gray-950 dark:text-gray-100">Assistants</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Switch between assistants</div>
             </div>
             <div className="flex gap-1.5">
               <Link
                 to="/admin-settings/captain/assistants"
-                className="flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+                className="flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                 title="Manage assistants"
               >
                 <Pencil className="size-3.5" />
               </Link>
               <Link
                 to="/admin-settings/captain/assistants"
-                className="flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+                className="flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                 title="Add assistant"
               >
                 <Plus className="size-3.5" />
@@ -95,14 +100,14 @@ export function AssistantSwitcher({
                 key={a.id}
                 type="button"
                 onClick={() => onSelect(a.id)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/60"
               >
                 <span
                   className={`flex size-6 shrink-0 items-center justify-center rounded-full text-white ${colorFor(a.id)}`}
                 >
                   <Bot className="size-3.5" />
                 </span>
-                <span className="flex-1 truncate text-gray-800">{a.name}</span>
+                <span className="flex-1 truncate text-gray-800 dark:text-gray-200">{a.name}</span>
                 {a.id === selectedId && <Check className="size-4 text-primary" />}
               </button>
             ))}
@@ -111,8 +116,8 @@ export function AssistantSwitcher({
       </DropdownMenu>
       {pageTitle && (
         <>
-          <span className="text-gray-300">|</span>
-          <span className="text-base font-bold text-gray-950">{pageTitle}</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
+          <span className="text-base font-bold text-gray-950 dark:text-gray-100">{pageTitle}</span>
         </>
       )}
     </div>

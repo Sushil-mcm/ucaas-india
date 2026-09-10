@@ -59,6 +59,16 @@ const CaptainScenarios = lazy(() => import('@/pages/admin-settings/captain/scena
 const CaptainActions = lazy(() => import('@/pages/admin-settings/captain/actions'));
 const CaptainInboxes = lazy(() => import('@/pages/admin-settings/captain/inboxes'));
 const CaptainSettings = lazy(() => import('@/pages/admin-settings/captain/settings'));
+const CaptainToolkitDetail = lazy(() => import('@/pages/admin-settings/captain/toolkit-detail'));
+const CaptainToolWizard = lazy(() => import('@/pages/admin-settings/captain/tool-wizard'));
+const CaptainWidgets = lazy(() => import('@/pages/admin-settings/captain/widgets'));
+const CaptainWidgetBuilder = lazy(() => import('@/pages/admin-settings/captain/widget-builder'));
+const CaptainSubmissions = lazy(() => import('@/pages/admin-settings/captain/submissions'));
+const CaptainInboxConversations = lazy(() => import('@/pages/admin-settings/captain/inbox-conversations'));
+const CaptainConversations = lazy(() => import('@/pages/admin-settings/captain/conversations'));
+const CaptainGuardrails = lazy(() => import('@/pages/admin-settings/captain/guardrails'));
+const CaptainResponseGuidelines = lazy(() => import('@/pages/admin-settings/captain/response-guidelines'));
+const CaptainVoiceCalls = lazy(() => import('@/pages/admin-settings/captain/voice-calls'));
 const CompanyLayout = lazy(() => import('@/pages/admin-settings/company/company-layout'));
 const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page-phone-rules'));
 const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
@@ -824,9 +834,49 @@ export const router = createBrowserRouter([
             element: <CaptainActions />,
           },
           {
+            path: 'captain/actions/toolkit/:slug',
+            id: 'captain-toolkit-detail',
+            element: <CaptainToolkitDetail />,
+          },
+          {
+            path: 'captain/tools/new',
+            id: 'captain-tool-new',
+            element: <CaptainToolWizard />,
+          },
+          {
+            path: 'captain/tools/edit',
+            id: 'captain-tool-edit',
+            element: <CaptainToolWizard />,
+          },
+          {
+            path: 'captain/widgets',
+            id: 'captain-widgets',
+            element: <CaptainWidgets />,
+          },
+          {
+            path: 'captain/widgets/:widgetId',
+            id: 'captain-widget-builder',
+            element: <CaptainWidgetBuilder />,
+          },
+          {
+            path: 'captain/submissions',
+            id: 'captain-submissions',
+            element: <CaptainSubmissions />,
+          },
+          {
             path: 'captain/inboxes',
             id: 'captain-inboxes',
             element: <CaptainInboxes />,
+          },
+          {
+            path: 'captain/inboxes/:inboxId/conversations',
+            id: 'captain-inbox-conversations',
+            element: <CaptainInboxConversations />,
+          },
+          {
+            path: 'captain/inboxes/:inboxId/conversations/:conversationId',
+            id: 'captain-inbox-conversation-detail',
+            element: <CaptainInboxConversations />,
           },
           {
             path: 'captain/inboxes/:inboxId',
@@ -839,9 +889,39 @@ export const router = createBrowserRouter([
             element: <CaptainInboxes />,
           },
           {
+            path: 'captain/conversations',
+            id: 'captain-conversations',
+            element: <CaptainConversations />,
+          },
+          {
+            path: 'captain/conversations/:conversationId',
+            id: 'captain-conversation-detail',
+            element: <CaptainConversations />,
+          },
+          {
             path: 'captain/settings',
             id: 'captain-settings',
             element: <CaptainSettings />,
+          },
+          {
+            path: 'captain/settings/guardrails',
+            id: 'captain-guardrails',
+            element: <CaptainGuardrails />,
+          },
+          {
+            path: 'captain/settings/response-guidelines',
+            id: 'captain-response-guidelines',
+            element: <CaptainResponseGuidelines />,
+          },
+          {
+            path: 'captain/voice-calls',
+            id: 'captain-voice-calls',
+            element: <CaptainVoiceCalls />,
+          },
+          {
+            path: 'captain/voice-calls/:inboxId',
+            id: 'captain-voice-calls-detail',
+            element: <CaptainVoiceCalls />,
           },
           {
             /* People, not "users/extension". An extension is a number a person
