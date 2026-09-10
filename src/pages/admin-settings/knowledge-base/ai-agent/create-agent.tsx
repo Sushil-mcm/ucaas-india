@@ -418,13 +418,18 @@ function CreateAgent() {
         'Define support boundaries and escalation rules.',
         'Add factual business details and policies.',
       ];
+  /* This portal's own brand name, from the organisation record the app
+     already fetched (source_name, e.g. "UCaaS Private Limited") - not a
+     two-way guess between the two brands this sample content used to
+     hardcode, which defaulted every third deployment to "Acepeak". */
+  const brandName = mainSiteInfo?.source_name || mainSiteInfo?.domain || 'this platform';
   const faqItems = normalizedCustomContent
     ? [
         {
-          q: `What integrations does ${mainSiteInfo?.domain === 'mycountrymobile.com' ? 'MyCountryMobile' : 'Acepeak'} support?`,
+          q: `What integrations does ${brandName} support?`,
           a:
             highlightLines[0] ||
-            `${mainSiteInfo?.domain === 'mycountrymobile.com' ? 'MyCountryMobile' : 'Acepeak'} seamlessly integrates with popular CRM, Helpdesk, and communication tools including Salesforce, Zendesk, Slack, and WhatsApp.`,
+            `${brandName} seamlessly integrates with popular CRM, Helpdesk, and communication tools including Salesforce, Zendesk, Slack, and WhatsApp.`,
         },
         {
           q: ' Is there a free trial available?',
@@ -432,7 +437,7 @@ function CreateAgent() {
         },
         {
           q: 'Can I use my own phone numbers?',
-          a: `Absolutely. You can port your existing numbers or purchase new local and toll-free numbers directly through the ${mainSiteInfo?.domain === 'mycountrymobile.com' ? 'MyCountryMobile' : 'Acepeak'} dashboard..`,
+          a: `Absolutely. You can port your existing numbers or purchase new local and toll-free numbers directly through the ${brandName} dashboard..`,
         },
       ]
     : [
