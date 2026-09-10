@@ -196,8 +196,7 @@ export const PERFORMANCE_VIEWS: AreaView[] = [
   { key: 'call-queue', label: 'Queue', icon: 'PhoneIcon', feature: 'queue' },
   { key: 'video-dashboard', label: 'Video', icon: 'VideoIcon', feature: 'video' },
   // The top-bar shortcuts, moved down here so the bar itself stays lean.
-  { key: 'ext-tasks', label: 'Tasks', icon: 'ReportsLineIcon', href: '/calendar?view=task-list', sep: true },
-  { key: 'ext-calendar', label: 'Calendar', icon: 'CalendarLine', href: '/calendar?view=calendar' },
+  { key: 'ext-calendar', label: 'Calendar', icon: 'CalendarLine', href: '/calendar?view=calendar', sep: true },
   /* "Dialer" named the tool; this tile opens /my-campaigns, which is the
      agent's own campaign list. The rail label wraps to two lines, so the
      longer name costs nothing. */
