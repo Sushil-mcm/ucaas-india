@@ -26,7 +26,11 @@ const InteractionsTab = ({
 
   return (
     <div className="perf-interactions flex w-full flex-col gap-3 px-[22px] py-4">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {/* `py-3` to match Agents' own stat grid (agents-tab.tsx): both tabs
+          share the same `py-4` root, but that grid adds this and this one
+          didn't, so Calls' cards sat 12px higher than Agents' when
+          switching between the two. */}
+      <div className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-3">
         <PerfStatCard
           label="Avg wait time"
           value={callStats.avgWaitSec === null ? '—' : formatSecsToClock(callStats.avgWaitSec)}

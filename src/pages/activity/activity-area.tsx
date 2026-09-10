@@ -15,13 +15,13 @@ const StatCard = ({
   label: string;
   value: string | number;
 }) => (
-  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-shadow duration-150 hover:shadow-[0_4px_14px_rgba(194,98,15,0.08)] hover:border-orange-100">
+  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 dark:border-mcm-line bg-white dark:bg-mcm-surface p-3.5 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-shadow duration-150 hover:shadow-[0_4px_14px_rgba(194,98,15,0.08)] hover:border-orange-100">
     <div className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 bg-orange-50 text-primary">
       {icon}
     </div>
     <div className="min-w-0">
-      <div className="text-xl font-bold text-gray-900 leading-none">{value}</div>
-      <div className="text-[11px] font-medium text-gray-500 mt-1 truncate">{label}</div>
+      <div className="text-xl font-bold text-gray-900 dark:text-mcm-ink leading-none">{value}</div>
+      <div className="text-[11px] font-medium text-gray-500 dark:text-mcm-ink-3 mt-1 truncate">{label}</div>
     </div>
   </div>
 );
@@ -120,7 +120,7 @@ const ActivityArea = ({ range, duration, timings, activityType }: any) => {
         <StatCard icon={<Timer className="w-5 h-5" />} label="Talk time" value={`${summaryStats.talkTimeMin}m`} />
         <StatCard icon={<Wifi className="w-5 h-5" />} label="Sessions" value={summaryStats.onlineSessions} />
       </div>
-      <p className="text-gray-500 text-xs font-medium mb-3 px-1 flex items-center gap-1.5">
+      <p className="text-gray-500 dark:text-mcm-ink-3 text-xs font-medium mb-3 px-1 flex items-center gap-1.5">
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary" />
         Timezone — {timezone}
       </p>

@@ -57,6 +57,21 @@ const LiveInteractionsTab = ({ globalSearch }: { globalSearch?: string } = {}) =
     return map;
   }, [activeCalls]);
 
+  /* Distinct queues the live calls are spread across. Counted off
+     `current_context` — the same field the monitoring table's own "Call
+     Path" column reads — so the card and the table below it can't
+     disagree. Calls with no queue (a direct extension call) simply don't
+     add to the count rather than being lumped under an "Other" bucket. */
+  const liveQueueCount = useMemo(
+    () =>
+      new Set(
+        activeCalls
+          .map((call: any) => String(call?.current_context || '').trim())
+          .filter(Boolean),
+      ).size,
+    [activeCalls],
+  );
+
   const longestRunningCall = useMemo(
     () =>
       activeCalls.reduce((longest: any, call: any) => {
@@ -68,12 +83,25 @@ const LiveInteractionsTab = ({ globalSearch }: { globalSearch?: string } = {}) =
     [activeCalls],
   );
 
+  /* `pt-7` lands the first card on the same 28px as Agents/Calls (their
+     `py-4` root plus the 12px their stat grids add via `py-3`). Bottom stays
+     at this tab's own `py-5` — only the top was out of step. */
   return (
-    <div className="perf-live flex w-full flex-col gap-4 px-[22px] py-5">
+    <div className="perf-live flex w-full flex-col gap-4 px-[22px] pt-7 pb-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <PerfStatCard
           label="Total live calls"
           value={String(activeCalls.length)}
+          /* Queue *spread*, not another direction/state split — the two
+             cards beside this one already carry those, so counting the
+             distinct queues these calls are sitting in says something
+             neither of them does. `current_context` is the same field the
+             table's own "Call Path" column reads, so the two agree. */
+          sub={
+            liveQueueCount
+              ? `across ${liveQueueCount} queue${liveQueueCount === 1 ? '' : 's'}`
+              : undefined
+          }
           icon={PhoneCall}
         />
         <PerfStatCard
@@ -97,6 +125,11 @@ const LiveInteractionsTab = ({ globalSearch }: { globalSearch?: string } = {}) =
               '00:00'
             )
           }
+          /* Which call the timer is actually counting. A duration with
+             nothing attached to it is the one number on this row you
+             can't act on — naming its queue is what makes it a lead to
+             follow rather than a statistic. */
+          sub={longestRunningCall ? longestRunningCall?.current_context || undefined : undefined}
           icon={TimerIcon}
         />
         <PerfStatCard

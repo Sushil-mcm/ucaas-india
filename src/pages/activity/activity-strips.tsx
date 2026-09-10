@@ -53,12 +53,12 @@ const FeedRow = ({ item, agentName }: { item: FeedItem; agentName: string }) => 
       <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 border border-orange-100 shadow-[0_1px_4px_rgba(194,98,15,0.08)] shrink-0 transition-transform duration-150 group-hover:scale-105">
         <Icon className="w-4.5 h-4.5 text-primary" />
       </div>
-      <div className="flex-1 min-w-0 flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3.5 transition-all duration-150 group-hover:border-orange-100 group-hover:shadow-[0_4px_14px_rgba(194,98,15,0.06)]">
+      <div className="flex-1 min-w-0 flex items-center justify-between gap-3 rounded-xl border border-gray-100 dark:border-mcm-line bg-white dark:bg-mcm-surface px-4 py-3.5 transition-all duration-150 group-hover:border-orange-100 group-hover:shadow-[0_4px_14px_rgba(194,98,15,0.06)]">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-gray-800">{agentName}</span>
+            <span className="text-sm font-semibold text-gray-800 dark:text-mcm-ink-2">{agentName}</span>
             {!isSession && (
-              <span className="text-[11px] text-gray-500">{item.label}</span>
+              <span className="text-[11px] text-gray-500 dark:text-mcm-ink-3">{item.label}</span>
             )}
             {typeof item.durationMin === 'number' && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-primary">
@@ -67,7 +67,7 @@ const FeedRow = ({ item, agentName }: { item: FeedItem; agentName: string }) => 
             )}
           </div>
           {item.device?.device_type && (
-            <div className="text-[11px] text-gray-500 mt-0.5 truncate">
+            <div className="text-[11px] text-gray-500 dark:text-mcm-ink-3 mt-0.5 truncate">
               {item.device.device_type}
               {item.device.browser_version ? ` · ${item.device.browser_version}` : ''}
               {item.device.ip_address ? (
@@ -91,7 +91,7 @@ const FeedRow = ({ item, agentName }: { item: FeedItem; agentName: string }) => 
               {item.label}
             </span>
           )}
-          <span className="text-xs font-semibold text-gray-400 whitespace-nowrap">
+          <span className="text-xs font-semibold text-gray-400 dark:text-mcm-ink-3 whitespace-nowrap">
             {item.startedAt.format('hh:mm A')}
           </span>
         </div>
@@ -246,14 +246,14 @@ const ActivityTimeStrips = ({
     >
       <AccordionItem
         value={activityDetails?.id}
-        className="border border-gray-200 rounded-2xl bg-white mb-4 shadow-[0_2px_10px_rgba(15,23,42,0.04)] overflow-hidden"
+        className="border border-gray-200 dark:border-mcm-line rounded-2xl bg-white dark:bg-mcm-surface mb-4 shadow-[0_2px_10px_rgba(15,23,42,0.04)] overflow-hidden"
       >
         <AccordionTrigger className="flex items-center p-0 hover:no-underline">
           <div className="flex items-center justify-between w-full bg-orange-50/60 border-b border-orange-100 px-4 py-3.5">
             <span className="inline-flex items-center bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
               {activityDetails?.label}
             </span>
-            <span className="text-[11px] font-semibold text-primary bg-white px-2.5 py-1 rounded-full border border-orange-100">
+            <span className="text-[11px] font-semibold text-primary bg-white dark:bg-mcm-surface px-2.5 py-1 rounded-full border border-orange-100">
               {feedItems.length} {feedItems.length === 1 ? 'event' : 'events'}
             </span>
           </div>

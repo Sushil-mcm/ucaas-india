@@ -374,7 +374,7 @@ const QueuesActivityTab = ({
     ];
 
     return (
-      <div className="perf-queues flex flex-col gap-3 px-[22px] py-4">
+      <div className="perf-queues flex flex-col gap-3 px-[22px] pt-7 pb-4">
         <style>{QUEUE_TAB_STYLES}</style>
         <div
           className="qa-crumb flex items-center gap-1.5"
@@ -422,7 +422,7 @@ const QueuesActivityTab = ({
   }
 
   return (
-    <div className="perf-queues flex flex-col gap-3 px-[22px] py-4">
+    <div className="perf-queues flex flex-col gap-3 px-[22px] pt-7 pb-4">
       <KpiStrip
         items={[
           {

@@ -11,6 +11,7 @@ import {
   Clock,
   Target,
   Radio,
+  PieChart,
 } from 'lucide-react';
 import { SocketEvents } from '@/context/socket-events-context';
 import { useUser } from '@/hooks/use-user';
@@ -207,8 +208,11 @@ const SpeechTextTab = () => {
     },
   ];
 
+  /* `pt-7` lands the first card on the same 28px as every other Performance
+     tab (Agents/Calls reach it as a `py-4` root plus the 12px their stat
+     grids add via `py-3`). Bottom keeps this tab's own `pb-6`. */
   return (
-    <div className="perf-speech flex w-full flex-col gap-4 px-[22px] pt-5 pb-6">
+    <div className="perf-speech flex w-full flex-col gap-4 px-[22px] pt-7 pb-6">
       <div className="st-notice">
         <Info style={{ width: 14, height: 14 }} />
         <span>
@@ -235,6 +239,13 @@ const SpeechTextTab = () => {
           >
             {avgSentiment === null ? '—' : avgSentiment.toFixed(1)}
           </div>
+          {/* States the threshold that drives this number's own colour
+              (`toneColor`, above): the scale is signed and centred on zero,
+              so "19.9" means nothing without knowing which side of neutral
+              it falls on. */}
+          <div className="d" style={{ color: 'var(--ink-3)', fontWeight: 500 }}>
+            positive above +15
+          </div>
         </div>
         <div className="stat">
           <div
@@ -249,6 +260,12 @@ const SpeechTextTab = () => {
             <StatIconBadge icon={PhoneCall} />
           </div>
           <div className="v num">{totalAiCalls}</div>
+          {/* "voice" rather than a bare count — the "Total AI chats" card
+              below counts text sessions, and side by side the two numbers
+              are only readable if each says which channel it covers. */}
+          <div className="d" style={{ color: 'var(--ink-3)', fontWeight: 500 }}>
+            voice sessions
+          </div>
         </div>
         <div className="stat">
           <div
@@ -280,23 +297,44 @@ const SpeechTextTab = () => {
           sub="resolved without a human"
           icon={Bot}
         />
-        <PerfStatCard label="Total AI chats" value={String(totalAiChats)} icon={MessageSquare} />
+        {/* Captions here are descriptive, not cross-card ratios ("16 of 50
+            calls"): `transferred_calls`, `handled_ai_only` and
+            `total_ai_calls` are three independent figures from the API, and
+            the last three cards come from the `ai_receptionist_performance`
+            block — a narrower scope than the page's own totals. They aren't
+            guaranteed to reconcile with each other, so a caption implying
+            they do would be asserting a relationship the data doesn't
+            actually carry. */}
+        <PerfStatCard
+          label="Total AI chats"
+          value={String(totalAiChats)}
+          sub="text sessions"
+          icon={MessageSquare}
+        />
         <PerfStatCard
           label="Transferred to agent"
           value={String(transferredCalls)}
+          sub="escalated to a human"
           icon={PhoneForwarded}
         />
         <PerfStatCard
           label="Handled by AI only"
           value={String(handledAiOnly)}
+          sub="no agent involved"
           icon={CheckCircle2}
         />
         <PerfStatCard
           label="Avg AI call duration"
           value={avgAiDuration === null ? '—' : formatSecsToClock(avgAiDuration)}
+          sub="AI receptionist calls"
           icon={Clock}
         />
-        <PerfStatCard label="Leads captured by AI" value={String(leadsCaptured)} icon={Target} />
+        <PerfStatCard
+          label="Leads captured by AI"
+          value={String(leadsCaptured)}
+          sub="by the AI receptionist"
+          icon={Target}
+        />
         <PerfStatCard
           label="Voice vs text"
           value={
@@ -308,7 +346,22 @@ const SpeechTextTab = () => {
           icon={Radio}
         />
         <div className="stat">
-          <div className="k">Sentiment distribution</div>
+          {/* Same label-plus-icon header row the other raw `.stat` cards on
+              this page use (Avg sentiment, AI calls today, Top topic). This
+              one had a bare label, so its title sat alone with no badge
+              opposite and its bar started higher than the neighbouring
+              cards' values — the odd one out in the row. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <div className="k">Sentiment distribution</div>
+            <StatIconBadge icon={PieChart} />
+          </div>
           {sentimentBuckets.length ? (
             <>
               <div
@@ -336,7 +389,13 @@ const SpeechTextTab = () => {
                   display: 'flex',
                   flexWrap: 'nowrap',
                   gap: '4px 10px',
-                  marginTop: 9,
+                  /* `auto`, not a fixed 9px: this card's content (a thin bar)
+                     is shorter than the neighbouring cards' big value line,
+                     so a fixed gap left this legend sitting ~9px above their
+                     caption line even though every card in the row is the
+                     same height. Absorbing the slack above it drops the
+                     legend onto the same baseline as the rest of the row. */
+                  marginTop: 'auto',
                   color: 'var(--ink-3)',
                   fontWeight: 500,
                 }}

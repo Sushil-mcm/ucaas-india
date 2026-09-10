@@ -86,8 +86,11 @@ const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) =
   const statusEntries = Object.entries(totals.byStatus).sort((a, b) => b[1] - a[1]);
   const dialMethodEntries = Object.entries(totals.byDialMethod).sort((a, b) => b[1] - a[1]);
 
+  /* `pt-7` lands the first card on the same 28px as every other Performance
+     tab (Agents/Calls reach it as a `py-4` root plus the 12px their stat
+     grids add via `py-3`). Bottom keeps this tab's own `py-5`. */
   return (
-    <div className="perf-campaigns flex w-full flex-col gap-4 px-[22px] py-5">
+    <div className="perf-campaigns flex w-full flex-col gap-4 px-[22px] pt-7 pb-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
         <PerfStatCard
           label="Total leads"
@@ -98,6 +101,10 @@ const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) =
         <PerfStatCard
           label="Answered leads"
           value={String(totals.answeredLeads)}
+          /* The denominator the number beside it is a share of — 1,476 on
+             its own doesn't say whether that's most of the book or a
+             fraction of it. */
+          sub={totals.assignedLeads ? `of ${totals.assignedLeads} assigned` : undefined}
           icon={PhoneIncoming}
         />
         <PerfStatCard
@@ -110,12 +117,38 @@ const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) =
           label="No-answer rate"
           value={noAnswerRate === null ? '—' : `${Math.round(noAnswerRate)}%`}
           tone={noAnswerRate !== null && noAnswerRate > 50 ? 'warning' : 'default'}
+          /* Spelled out the same way Connect rate states its own formula
+             next door, so the pair reads as two shares of one denominator
+             rather than two unrelated percentages that happen not to add
+             up to 100 (they don't — a lead can be neither yet). */
+          sub="unanswered ÷ assigned"
           icon={PhoneOff}
         />
-        <PerfStatCard label="DNC skips" value={String(totals.totalDnc)} icon={ShieldAlert} />
+        <PerfStatCard
+          label="DNC skips"
+          value={String(totals.totalDnc)}
+          /* A count of skips means little without the book it was skipped
+             from — 141 is either a rounding error or a real dent depending
+             on whether the list is 3,000 or 300. */
+          sub={
+            totals.assignedLeads
+              ? `${Math.round((totals.totalDnc / totals.assignedLeads) * 100)}% of assigned`
+              : undefined
+          }
+          icon={ShieldAlert}
+        />
         <PerfStatCard
           label="Members assigned"
           value={String(totals.members)}
+          /* This total sums each campaign's own member list, so someone on
+             two campaigns is counted twice — it's assignments, not people.
+             Framing it per-campaign is what that number actually supports,
+             and avoids implying a headcount it isn't. */
+          sub={
+            campaigns.length
+              ? `≈${Math.round(totals.members / campaigns.length)} per campaign`
+              : undefined
+          }
           icon={UserCheck}
         />
         <PerfStatCard

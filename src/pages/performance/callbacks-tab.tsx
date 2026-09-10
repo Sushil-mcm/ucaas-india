@@ -202,8 +202,11 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
     },
   ];
 
+  /* `pt-7` lands the first card on the same 28px as every other Performance
+     tab (Agents/Calls reach it as a `py-4` root plus the 12px their stat
+     grids add via `py-3`). Bottom keeps this tab's own `py-5`. */
   return (
-    <div className="perf-callbacks flex w-full flex-col gap-4 px-[22px] py-5">
+    <div className="perf-callbacks flex w-full flex-col gap-4 px-[22px] pt-7 pb-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <PerfStatCard label="Scheduled tasks" value={String(tasks.length)} icon={CalendarCheck} />
         <PerfStatCard
@@ -215,11 +218,6 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
         <PerfStatCard
           label="Tasks by source"
           value={bySource.length ? bySource[0][0] : '—'}
-          sub={
-            bySource.length
-              ? bySource.map(([source, count]) => `${source}: ${count}`).join(' · ')
-              : undefined
-          }
           icon={Layers}
         />
         <PerfStatCard
@@ -251,13 +249,6 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
           fetcherFn={calendarMeetingList}
           select={(data: any) => data?.data?.data?.result?.rows || []}
           extraParams={{ filters: [{ key: 'category', value: 'TASK' }] }}
-          emptyTablePlaceholder="No scheduled tasks"
-          descriptionEmptyTable="Callback and follow-up tasks you schedule show up here."
-          splitStickyHeader
-          /* Without a bounded height, `.table-scroll` just grows to fit
-             every row — no internal scroll for the sticky header to stick
-             within, no scrollbar. Same fix as Performance ▸ Live/Agents. */
-          visibleRowCount={6}
           search={globalSearch}
           /* `calendarMeetingList`'s generic `search` param isn't confirmed
              to match against task name server-side — `clientSideSearch`
@@ -267,6 +258,13 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
              relies on `callList`'s own `search`, already proven via Call
              History's identical wiring). */
           clientSideSearch
+          emptyTablePlaceholder="No scheduled tasks"
+          descriptionEmptyTable="Callback and follow-up tasks you schedule show up here."
+          splitStickyHeader
+          /* Without a bounded height, `.table-scroll` just grows to fit
+             every row — no internal scroll for the sticky header to stick
+             within, no scrollbar. Same fix as Performance ▸ Live/Agents. */
+          visibleRowCount={6}
         />
       )}
       {view === 'voicemail' && (
@@ -275,6 +273,7 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
           fetcherKey="performanceVoicemailList"
           fetcherFn={callList}
           extraParams={{ type: 'voicemail' }}
+          search={globalSearch}
           emptyTablePlaceholder="No voicemail records found"
           descriptionEmptyTable="Voicemails left on queues and extensions show up here."
           // isHeightSet only governs the legacy non-split height calc
@@ -286,7 +285,6 @@ const CallbacksTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
           isHeightSet={false}
           splitStickyHeader
           visibleRowCount={6}
-          search={globalSearch}
         />
       )}
       <AudioModal

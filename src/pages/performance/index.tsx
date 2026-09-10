@@ -597,7 +597,11 @@ const Performance = () => {
         )}
         {activeTab === 'call-queue' && (
           <div className="dash-legacy">
-            <div className="p-3">
+            {/* Was `pt-7`, matching the other boards' 28px line — but this
+                tab no longer opens on a full toolbar row (search/refresh are
+                gone), just the queue-count pill, so that same offset now
+                reads as too much air above it. */}
+            <div className="px-3 pt-3 pb-3">
               <CallQueueContent />
             </div>
           </div>

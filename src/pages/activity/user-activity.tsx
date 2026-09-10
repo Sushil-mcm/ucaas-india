@@ -94,8 +94,8 @@ const UserActivity = () => {
   return (
     <section className="mcm-page mcm-admin">
       <div className="w-full h-full overflow-x-auto overflow-y-hidden">
-        <div className="flex-col sm:flex-row flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-          <p className="text-gray-900 font-semibold text-lg flex items-center gap-2">
+        <div className="flex-col sm:flex-row flex items-center justify-between p-3 border-b border-gray-200 dark:border-mcm-line min-h-[65px] bg-white dark:bg-mcm-surface shadow-[0_1px_0_rgba(15,23,42,0.03)]">
+          <p className="text-gray-900 dark:text-mcm-ink font-semibold text-lg flex items-center gap-2">
             <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-ucass-primary-200 text-primary">
               <Clock3 className="w-4 h-4" />
             </span>
@@ -151,7 +151,7 @@ const UserActivity = () => {
           </div>
         </div>
 
-        <div className="sm:p-4 xs:p-0 overflow-auto max-h-[calc(100vh-130px)] pb-0 bg-gray-50/40">
+        <div className="sm:p-4 xs:p-0 overflow-auto max-h-[calc(100vh-130px)] pb-0 bg-gray-50/40 dark:bg-mcm-surface-3/40">
           {activityLoader ? (
             <div className="flex justify-center">
               <Loader variant="blue" size="sm" />
@@ -181,12 +181,12 @@ export default UserActivity;
 //     <div
 //       className={`fixed bottom-0 ${
 //         isExpanded ? 'left-[164px]' : 'left-[80px]'
-//       } w-full h-[50px] bg-gray-100 border-t border-gray-400 px-[20px] flex items-center gap-[20px]`}
+//       } w-full h-[50px] bg-gray-100 dark:bg-mcm-surface-3 border-t border-gray-400 px-[20px] flex items-center gap-[20px]`}
 //     >
 //       {activitySummaryArray.map((activity) => (
 //         <div key={activity.id} className="flex items-center gap-[5px]">
 //           {activity.icon}
-//           <span className="text-sm font-medium text-gray-900">
+//           <span className="text-sm font-medium text-gray-900 dark:text-mcm-ink">
 //             {activity.value} {activity.label}
 //           </span>
 //         </div>
@@ -215,7 +215,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           timeIntervals={60}
           timeCaption="Time"
           dateFormat="h:mm aa"
-          className="w-full px-2 py-2 min-h-10 border border-gray-200 rounded-xl hover:border-primary focus:outline-none focus:ring-1 focus:ring-ucass-active focus:border-transparent text-sm"
+          className="w-full px-2 py-2 min-h-10 border border-gray-200 dark:border-mcm-line rounded-xl hover:border-primary focus:outline-none focus:ring-1 focus:ring-ucass-active focus:border-transparent text-sm"
         />
       </div>
       <span className="">-</span>
@@ -230,7 +230,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           dateFormat="h:mm aa"
           minTime={startTime}
           maxTime={maxTime}
-          className="w-full px-2 py-2  min-h-10 border border-gray-200 rounded-xl hover:border-primary focus:outline-none focus:ring-1 focus:ring-ucass-active focus:border-transparent text-sm"
+          className="w-full px-2 py-2  min-h-10 border border-gray-200 dark:border-mcm-line rounded-xl hover:border-primary focus:outline-none focus:ring-1 focus:ring-ucass-active focus:border-transparent text-sm"
         />
       </div>
     </div>

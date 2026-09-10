@@ -111,8 +111,12 @@ const FlowsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
     },
   ];
 
+  /* `pt-7` = the `py-4` root Agents/Calls also use, plus the extra 12px
+     their stat grids add via `py-3`. Flows leads with the notice rather than
+     a grid, so the offset has to live on the root to land on the same 28px
+     as the other tabs. */
   return (
-    <div className="perf-flows flex w-full flex-col gap-3 px-[22px] py-4">
+    <div className="perf-flows flex w-full flex-col gap-3 px-[22px] pt-7 pb-4">
       <div className="fl-notice">
         <Info className="fl-notice-icon" />
         <p className="page-note">
@@ -121,7 +125,23 @@ const FlowsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <PerfStatCard label="Total flows" value={String(flows.length)} icon={Workflow} />
+        <PerfStatCard
+          label="Total flows"
+          value={String(flows.length)}
+          /* The only card of the four without a caption, which left it
+             short against its neighbours. Site *count* rather than a
+             repeat of the per-site split next door: it says something the
+             "Flows by site" card doesn't, and it's read off the same
+             derived `siteEntries` rather than a second count that could
+             disagree with it. Dropped entirely at zero flows, where
+             "across 0 sites" would be noise. */
+          sub={
+            siteEntries.length
+              ? `across ${siteEntries.length} site${siteEntries.length === 1 ? '' : 's'}`
+              : undefined
+          }
+          icon={Workflow}
+        />
         <PerfStatCard
           label="Flows by site"
           value={siteEntries.length ? siteEntries[0][0] : '—'}

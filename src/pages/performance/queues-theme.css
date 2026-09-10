@@ -191,17 +191,11 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   font-weight: inherit;
 }
 
-/* Leadership review: the gap between Row 1 (the shared 8-tile KPI band,
-   `.page-band`, rendered one level up by the Performance page shell) and
-   Row 2 (the 6-metric strip immediately below, `.kpi-strip`) read as an
-   awkward empty band pushing the Queues table too far down. That gap is
-   `.perf-queues`'s own top padding (Tailwind `py-4` in
-   queues-activity-tab.tsx, 16px) — tightened here rather than in the
-   component, so `py-4` can stay as one class covering every other edge
-   (bottom/left/right) without a one-off arbitrary value replacing it. */
-.mcm-page .perf-queues {
-  padding-top: 14px !important;
-}
+/* The top padding this tab used to override down to 14px now lives on the
+   component itself (`pt-7` in queues-activity-tab.tsx), so Queues starts its
+   content on the same 28px line as Agents/Calls/Flows/Boards/Live rather
+   than sitting higher than every tab beside it. Dropping the rule rather
+   than retuning its value also drops an `!important` from this file. */
 
 /* ------------------------------------------------------------
    3. Six-metric snapshot strip (Busiest queue / Longest waiting / Lowest

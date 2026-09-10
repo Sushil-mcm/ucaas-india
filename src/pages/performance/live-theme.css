@@ -108,11 +108,7 @@ body.perf-warm-toolbar.dark {
    ------------------------------------------------------------ */
 .mcm-page .perf-live,
 body.perf-warm-backdrop .mcm-page {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
-    #fdf6ee;
+  background-color: #fdf6ee;
   /* `.mcm-page` already sits in a flex slot sized to exactly the viewport
      minus the fixed top nav (`height: 100%` in mcm-page.css, correctly
      resolved by its flex ancestors) — `100vh` here ignored that offset and
@@ -126,11 +122,7 @@ body.perf-warm-backdrop .mcm-page {
 }
 .dark .mcm-page .perf-live,
 .dark body.perf-warm-backdrop .mcm-page {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
-    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
-    #0a0f1a;
+  background-color: #0a0f1a;
   min-height: 100%;
 }
 /* ------------------------------------------------------------
@@ -147,6 +139,15 @@ body.perf-warm-toolbar .mcm-page .page-bar {
   border-bottom-color: var(--pl-hairline);
 }
 
+/* The warm tint above is a flat light colour, so in dark mode the toolbar
+   stayed a bright band across the top of every Performance tab. Dark mode
+   takes the same surface the rail beside it uses, keeping the two reading
+   as one continuous chrome rather than a lit strip over a dark page. */
+body.perf-warm-toolbar.dark .mcm-page .page-bar,
+.dark body.perf-warm-toolbar .mcm-page .page-bar {
+  background: var(--mcm-surface, #111827);
+}
+
 body.perf-warm-toolbar .mcm-page .perf-tbar .fchip,
 body.perf-warm-toolbar .mcm-page .perf-tbar .btn.sm {
   height: 36px;
@@ -159,12 +160,27 @@ body.perf-warm-toolbar .mcm-page .perf-tbar [role='combobox'] {
   border-radius: 11px;
 }
 
-/* Centralized global search box — sits between the filter pill group and
-   the live-status/dashboards group. `flex: 1 1 auto` with `min-width`/
-   `max-width` and its non-shrinking siblings is what actually centers it in
-   the remaining space — the same effect `margin: 0 auto` was reaching for,
-   but as a flexible member instead of a fixed-width one, so it's this box
-   that gives way first as the row runs out of room rather than forcing the
+/* The toolbar used to wrap onto a second line below ~900px (the filter
+   pill and the status/dashboards group stacking), which is what let it
+   quietly absorb a third child. Adding the search box between those two
+   groups pushed the wrap point far higher — three flex children summed to
+   more than the row's own width well above 900px, so live-status/"My
+   dashboards" dropped to their own second line under the search box even
+   on an ordinary desktop viewport. `nowrap` here forces one strict row;
+   the search box itself is the one flexible member (min/max-width below)
+   that absorbs whatever width the row does or doesn't have left, so the
+   two fixed-content groups on either side of it never have to move. */
+body.perf-warm-toolbar .mcm-page .perf-tbar {
+  flex-wrap: nowrap;
+}
+/* Centralized global search — sits in the toolbar's own empty middle
+   space, between the filter pill (left, `flex: none` — its own content
+   never shrinks) and the live-status/"My dashboards" group (right, `margin-
+   left: auto` already, same). `flex: 1 1 auto` between two non-growing,
+   non-shrinking siblings is what actually centers it in the remaining
+   space — the same effect `margin: 0 auto` was reaching for, but as a
+   flexible member instead of a fixed-width one, so it's this box that
+   gives way first as the row runs out of room rather than forcing the
    fixed-content groups on either side to wrap. `min-width` keeps it from
    collapsing to nothing before `max-width` caps how wide it gets on a
    spacious toolbar. 36px tall, to the same baseline every other toolbar
