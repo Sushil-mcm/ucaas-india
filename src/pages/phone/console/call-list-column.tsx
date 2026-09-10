@@ -303,7 +303,6 @@ const CallListColumn = ({
               dropdownVal={dropdownVal}
               setDropdownVal={setDropdownVal}
               customPickerPlacement="bottom"
-              shortenSelectedLabel
               inputClass=""
             />
           </div>
