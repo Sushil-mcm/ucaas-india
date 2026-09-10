@@ -261,9 +261,31 @@ const Sidebar = () => {
                 const onLinkPath =
                   Boolean(pathname === linkPath || pathname?.startsWith(`${linkPath}/`)) ||
                   onAltPath;
+                /* Does another rail entry claim the `?view=` we are on?
+                   Comparing `linkView` against the current view is there to
+                   separate two entries that share a path — but only when a
+                   second entry actually exists. Calendar is alone on
+                   `/calendar`, so opening its own Tasks list view
+                   (`?view=task-list`) matched no entry at all and the rail went
+                   dark. Path alone decides when nobody else is claiming the
+                   view. */
+                const currentQueryView = new URLSearchParams(search).get('view');
+                const viewClaimedElsewhere = Boolean(
+                  currentQueryView &&
+                    (visibleNavList as any[])?.some((other: any) => {
+                      if (other === navItem) return false;
+                      const [otherPath, otherQuery = ''] = String(other?.link ?? '').split('?');
+                      if (otherPath !== linkPath) return false;
+                      return (
+                        other?.viewKey === currentQueryView ||
+                        new URLSearchParams(otherQuery).get('view') === currentQueryView
+                      );
+                    }),
+                );
                 const activeLink = viewKey
                   ? onLinkPath && currentView === viewKey
-                  : onLinkPath && (!linkView || new URLSearchParams(search).get('view') === linkView);
+                  : onLinkPath &&
+                    (!linkView || currentQueryView === linkView || !viewClaimedElsewhere);
                 const isEnabled = enabled !== false;
 
                 return (
