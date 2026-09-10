@@ -375,7 +375,7 @@ const DepartmentMonitoring = () => {
             <div className="flex gap-2 "></div>
           </div>
         </MonitoringTopbarSlot>
-        <div className="w-full h-full   p-3 flex flex-col gap-2">
+        <div className="w-full h-full px-3 pt-7 pb-3 flex flex-col gap-2">
           {/* <h6 className="text-gray-900 font-semibold text-lg">Department Monitoring</h6> */}
           <div className="flex flex-col gap-2 h-[calc(100vh_-_10rem)] overflow-auto">
             {isPending ? (

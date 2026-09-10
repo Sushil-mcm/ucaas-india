@@ -66,45 +66,34 @@ const Sidebar = () => {
     });
 
   return (
-    <div className="flex md:flex-col w-full sm:h-full overflow-auto">
-      {/* `mcm-adminnav` is the console's shared side-nav treatment: no rules
-          between rows, 38px rows, and emphasis only on the page you are on.
-          Without it these rows were 56px bands separated by dividers — the
-          same shape as the "Monitoring" heading above them, so the heading
-          read as the first item of the list rather than its label. */}
-      <ul
-        role="list"
-        className="mcm-adminnav mcm-subnav divide-y divide-gray-200 h-full flex flex-row md:flex-col"
-      >
-        {tabsList?.map((item: any) => {
-          const isEnabled = item?.enabled !== false;
+    <nav
+      role="tablist"
+      aria-label="Monitoring category"
+      className="mcm-monitor-topnav flex w-full items-center gap-1.5 overflow-x-auto"
+    >
+      {tabsList?.map((item: any) => {
+        const isEnabled = item?.enabled !== false;
+        const isActive = pathname.includes(item?.path);
 
-          return (
-            <li
-              key={item?.id}
-              onClick={() => {
-                if (!isEnabled || !item?.path) return;
-                navigate(item.path);
-              }}
-            >
-              <div
-                className={`flex relative items-center w-full px-3 min-h-14 h-14 gap-2 cursor-pointer ${pathname.includes(item?.path) ? 'text-primary bg-ucass-primary-200/50 border-r-primary border-r-2' : 'text-gray-900/80'}  ${!isEnabled ? 'opacity-60' : ''}`}
-              >
-                {item?.icon}
-                <p className="font-medium truncate text-sm">{item?.name}</p>
-                {!isEnabled && (
-                  <span
-                    className={`absolute top-1 right-1 text-xs ${!isEnabled ? 'opacity-60' : ''}`}
-                  >
-                    🔒
-                  </span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+        return (
+          <button
+            key={item?.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => {
+              if (!isEnabled || !item?.path) return;
+              navigate(item.path);
+            }}
+            className={`mcm-monitor-topnav-tab${isActive ? ' is-active' : ''}${!isEnabled ? ' is-disabled' : ''}`}
+          >
+            {item?.icon}
+            <span className="truncate">{item?.name}</span>
+            {!isEnabled && <span className="text-xs">🔒</span>}
+          </button>
+        );
+      })}
+    </nav>
   );
 };
 

@@ -1,0 +1,42 @@
+/* ==============================================================
+   Video (Performance ▸ Video) — page-scoped theme.
+
+   Everything here is nested under `.perf-video`, the class the page's own
+   root carries, so nothing leaks to the other Performance boards.
+
+   DELIBERATELY UNLAYERED, same reasoning as queue-theme.css: the rule this
+   file exists to override, `.mcm-page :focus-visible`, is itself unlayered,
+   and a Tailwind utility (which lives in a layer) can never outrank it
+   however specific it looks in the markup. Same-sheet, same-precedence,
+   higher specificity is what wins.
+   ============================================================== */
+
+/* The console's global focus ring is `outline: 2px solid var(--accent)` with
+   `outline-offset: 2px` and `border-radius: 4px` — a hard rectangle 2px off
+   a `rounded-full` search pill, the one browser-default shape on a page that
+   has none of those anywhere else. `focus:outline-none` in the component's
+   own className only ever targeted `:focus`, not `:focus-visible` — the
+   pseudo-class the global rule actually uses — so it never touched this.
+
+   The soft warm glow below is the same treatment the rest of the app already
+   uses for a focused field (`.mcm-date-input:focus`, `.filters
+   input:focus-visible`, `.queue-search:focus` in the Queue board): the
+   accent on the border, and a 3px wash of the same colour at 15% instead of
+   a hard line. Specificity is (0,3,0) against the global rule's (0,2,0), so
+   it wins without `!important`. */
+.mcm-page .perf-video .video-search:focus-visible,
+.mcm-page .perf-video .video-search:focus {
+  outline: none;
+  border-radius: 9999px;
+  border-color: #f2994a;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 3px rgba(242, 153, 74, 0.15),
+    0 2px 10px rgba(160, 95, 30, 0.08);
+}
+
+/* Hover is a quieter version of the same idea, so moving onto the field and
+   then focusing it is one continuous gesture rather than two unrelated looks. */
+.mcm-page .perf-video .video-search:hover:not(:focus) {
+  border-color: rgba(242, 153, 74, 0.45);
+}

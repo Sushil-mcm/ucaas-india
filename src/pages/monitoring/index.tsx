@@ -1,14 +1,20 @@
 import { useState } from 'react';
-import PageSidebarLayout from '@/layout/page-sidebar-layout';
 import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import Sidebar from './sidebar';
 import { MonitoringTopbarProvider } from './topbar';
 import '@/components/mcm/mcm-page.css';
 
 /**
- * Monitoring stacks in three bands: the app navbar, then the page's own bar
- * spanning left to right, then the split between the category list and the
- * screen itself.
+ * Monitoring stacks in three bands: the app navbar, then the page's own bar,
+ * then the category switcher — a horizontal tab strip, not a left column.
+ *
+ * It used to be a fixed-width sidebar down the left edge. On the tables this
+ * section is built around (Actions is the widest column and always the last
+ * one) that sidebar was real width taken away from the table permanently, on
+ * every screen, whether or not you were even looking at the category list —
+ * the Actions column sat past the fold and needed a horizontal scroll to
+ * reach on anything but a very wide window. A tab strip spends that width
+ * only on its own row, so the table gets the full width back.
  *
  * The page bar used to live inside the content column, so it started at the
  * sidebar's edge and sat level with the sidebar's "Monitoring" heading. It is
@@ -30,16 +36,10 @@ const Monitoring = () => {
     <div className="mcm-page mcm-admin mcm-monitoring">
       <div className="flex h-full min-h-0 w-full flex-col">
         <div ref={setTopbar} className="mcm-topbar" />
-        <div className="sm:flex flex-col md:flex-row xs:gap-1 md:gap-0 w-full flex-1 min-h-0">
-          {/* No `title`. The bar above already reads "Monitoring › All Calls",
-              so a "MONITORING" heading here repeated the word ~40px below
-              itself and spent a 62px band to do it. PageSidebarLayout skips
-              its header block when there is no title, so the category list
-              starts at the top of the column. */}
-          {/* Not collapsible: this list is the only way to move between the
-              Monitoring screens, so hiding it strands you on whichever one
-              you are looking at. */}
-          <PageSidebarLayout content={<Sidebar />} isTab={false} collapsible={false} />
+        <div className="mcm-monitor-topnav-row">
+          <Sidebar />
+        </div>
+        <div className="flex w-full flex-1 min-h-0 flex-col">
           <MonitoringTopbarProvider value={topbar}>
             <SuspenseOutlet />
           </MonitoringTopbarProvider>

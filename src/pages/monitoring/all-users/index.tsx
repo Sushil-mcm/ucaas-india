@@ -278,33 +278,34 @@ const AllUserMonitoring = ({
                 activeCallTone={embedded ? getActiveCallTone(callInfo?.status) : undefined}
               />
             </div>
-            <div className="flex flex-col w-full min-w-0">
-              <div className="flex items-center justify-between  gap-2">
-                {/* `min-w-0` lets this block actually shrink below its own
-                    text's natural width inside a fixed-width column — without
-                    it, a flex child defaults to `min-width: auto` (its
-                    content's full width), so a longer name pushed the
-                    extension badge past the cell's own right edge and, with
-                    no overflow clipping on the cell, straight into the next
-                    column's text (`1005Pooja Bansal`). `truncate` below is
-                    then what actually uses that shrunk space to ellipsize
-                    instead of overflowing. */}
-                <div className="flex flex-col items-start min-w-0">
-                  <p className="capitalize w-full">{fullName}</p>
-                  <small className="text-primary text-[10px]">
-                    {data?.custom_role_data?.name || data?.role_data?.name || data?.role}
-                  </small>
+            <div className="flex flex-col min-w-0">
+              {/* `justify-between` used to stretch the extension badge to the
+                  far edge of this cell's *assigned* column width — since the
+                  table has no fixed layout, that full-width flex row is what
+                  told the browser this column needed to be that wide in the
+                  first place, which is exactly the gap this row used to have
+                  between the name and the extension. A tight, non-stretching
+                  row lets the column shrink back to what its content
+                  actually needs. `min-w-0` still does the same job it did
+                  before: letting the name truncate instead of overflowing
+                  into the next column. */}
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 shrink items-center gap-1.5">
+                  <p className="capitalize truncate">{fullName}</p>
+                  {(data?.custom_role_data?.name || data?.role_data?.name || data?.role) && (
+                    <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                      {data?.custom_role_data?.name || data?.role_data?.name || data?.role}
+                    </span>
+                  )}
                 </div>
                 {/* `flex-shrink-0` — the extension badge is short and fixed,
                     the name is what should give way when space is tight. */}
-                <div className="flex shrink-0 items-center gap-1 text-gray-500">
+                <div className="flex shrink-0 items-center gap-1 text-gray-500 dark:text-mcm-ink-3">
                   <Icon name="Grid" className="w-4 h-4 " />
                   <div>{data?.extension}</div>
                 </div>
               </div>
-              <p className="text-gray-500 flex justify-between">
-                <div className="truncate">{data?.email}</div>
-              </p>
+              <p className="text-gray-500 dark:text-mcm-ink-3 truncate">{data?.email}</p>
             </div>
           </div>
         );
@@ -556,10 +557,10 @@ const AllUserMonitoring = ({
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         {!embedded && (
           <MonitoringTopbarSlot>
-            <div className="relative z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-              <div className="text-gray-900 font-semibold text-lg flex items-center gap-1 min-w-0">
+            <div className="relative z-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200 dark:border-mcm-line min-h-[65px] bg-white dark:bg-mcm-surface">
+              <div className="text-gray-900 dark:text-mcm-ink font-semibold text-lg flex items-center gap-1 min-w-0">
                 <span className="truncate">Monitoring</span>
-                <div className="-rotate-90 text-gray-800 shrink-0">
+                <div className="-rotate-90 text-gray-800 dark:text-mcm-ink-2 shrink-0">
                   <Icon name="ChevronIcon" className="w-5 h-5" />
                 </div>
                 <span className="text-primary text-md truncate">All Extensions</span>
@@ -581,60 +582,60 @@ const AllUserMonitoring = ({
           className={
             embedded
               ? 'w-full flex flex-col gap-2'
-              : 'w-full h-[calc(100vh_-_8rem)]   p-3 flex flex-col gap-2 overflow-y-auto'
+              : 'w-full h-[calc(100vh_-_8rem)] px-3 pt-7 pb-3 flex flex-col gap-2 overflow-y-auto'
           }
         >
           {isShowSummary && (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 ">
-              <div className="flex justify-between border border-gray-200 rounded-lg w-full p-3 gap-1 bg-white">
+              <div className="flex justify-between border border-gray-200 dark:border-mcm-line rounded-lg w-full p-3 gap-1 bg-white dark:bg-mcm-surface">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-sm">Calls Waiting</p>
-                  <h2 className="text-gray-700 truncate text-2xl font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-mcm-ink truncate text-sm">Calls Waiting</p>
+                  <h2 className="text-gray-700 dark:text-mcm-ink-2 truncate text-2xl font-semibold">
                     {callOnWaiting || 0}
                   </h2>
                 </div>
-                <div className="cursor-pointer   bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
+                <div className="cursor-pointer   bg-gray-100 dark:bg-mcm-surface-3 text-gray-900/80 dark:text-mcm-ink/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
                   <Clock className="w-5 h-5" />
                 </div>
               </div>
-              <div className="flex justify-between border border-gray-200 rounded-lg w-full p-3 gap-1 bg-white">
+              <div className="flex justify-between border border-gray-200 dark:border-mcm-line rounded-lg w-full p-3 gap-1 bg-white dark:bg-mcm-surface">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-sm">Online Users</p>
-                  <h2 className="text-gray-700 truncate text-2xl font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-mcm-ink truncate text-sm">Online Users</p>
+                  <h2 className="text-gray-700 dark:text-mcm-ink-2 truncate text-2xl font-semibold">
                     {onlineUser?.length || 0}
                     {/* {usersOnlineStatus?.length ? usersOnlineStatus?.filter((item) => item?.online)?.length : 0} */}
                   </h2>
                 </div>
-                <div className="cursor-pointer   bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
+                <div className="cursor-pointer   bg-gray-100 dark:bg-mcm-surface-3 text-gray-900/80 dark:text-mcm-ink/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
                   <UsersGroup className="w-5 h-5" />
                 </div>
               </div>
-              <div className="flex justify-between border border-gray-200 rounded-lg w-full p-3 gap-1 bg-white">
+              <div className="flex justify-between border border-gray-200 dark:border-mcm-line rounded-lg w-full p-3 gap-1 bg-white dark:bg-mcm-surface">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-sm">Offline Users</p>
-                  <h2 className="text-gray-700 truncate text-2xl font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-mcm-ink truncate text-sm">Offline Users</p>
+                  <h2 className="text-gray-700 dark:text-mcm-ink-2 truncate text-2xl font-semibold">
                     {Math.max(Number(totalUsers) - Object.keys(onlineUser || {}).length, 0)}
                     {/* {usersOnlineStatus?.length ? usersOnlineStatus?.filter((item) => item?.online)?.length : 0} */}
                   </h2>
                 </div>
-                <div className="cursor-pointer   bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
+                <div className="cursor-pointer   bg-gray-100 dark:bg-mcm-surface-3 text-gray-900/80 dark:text-mcm-ink/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
                   <Warning className="w-5 h-5" />
                 </div>
               </div>
-              <div className="flex justify-between border border-gray-200 rounded-lg w-full p-3 gap-1 bg-white">
+              <div className="flex justify-between border border-gray-200 dark:border-mcm-line rounded-lg w-full p-3 gap-1 bg-white dark:bg-mcm-surface">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-gray-900 truncate text-sm">Users On Call</p>
-                  <h2 className="text-gray-700 truncate text-2xl font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-mcm-ink truncate text-sm">Users On Call</p>
+                  <h2 className="text-gray-700 dark:text-mcm-ink-2 truncate text-2xl font-semibold">
                     {agentsOnCall || 0}
                   </h2>
                 </div>
-                <div className="cursor-pointer   bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
+                <div className="cursor-pointer   bg-gray-100 dark:bg-mcm-surface-3 text-gray-900/80 dark:text-mcm-ink/80 hover:bg-primary hover:text-white  flex items-center justify-center rounded-full w-8 h-8 ">
                   <PhoneCalling className="w-6 h-6" />
                 </div>
               </div>
             </div>
           )}
-          {/* <h5 className="font-semibold text-gray-900 text-md">Users</h5> */}
+          {/* <h5 className="font-semibold text-gray-900 dark:text-mcm-ink text-md">Users</h5> */}
           <TableManager
             {...{
               fetcherKey: 'getAllUserListForMonitor',
@@ -645,6 +646,14 @@ const AllUserMonitoring = ({
               getRowClassName,
               emptyTablePlaceholder: 'No extension activity',
               descriptionEmptyTable: 'Calls for extensions will appear here once available.',
+              /* `getUserList`'s generic `search` param isn't confirmed to
+                 match against agent name/extension/contact server-side —
+                 `clientSideSearch` filters the fetched page itself
+                 instead, so this stays correct either way (same reasoning
+                 as Performance ▸ Flows/Callbacks). Only for the Performance
+                 ▸ Live embed; standalone Monitoring ▸ All Users never
+                 passes `globalSearch`. */
+              ...(embedded ? { search: globalSearch, clientSideSearch: true } : {}),
               /* Only for the Performance ▸ Live embed (live-theme.css,
                  `.perf-live`) — standalone Monitoring ▸ All Users keeps its
                  own existing (non-split, paginated) behaviour, unrelated to
@@ -664,14 +673,6 @@ const AllUserMonitoring = ({
               ...(embedded
                 ? { splitStickyHeader: true, showPagination: true, visibleRowCount: 6 }
                 : {}),
-              /* `getUserList`'s generic `search` param isn't confirmed to
-                 match against agent name/extension/contact server-side —
-                 `clientSideSearch` filters the fetched page itself
-                 instead, so this stays correct either way (same reasoning
-                 as Performance ▸ Flows/Callbacks). Only for the Performance
-                 ▸ Live embed; standalone Monitoring ▸ All Users never
-                 passes `globalSearch`. */
-              ...(embedded ? { search: globalSearch, clientSideSearch: true } : {}),
             }}
           />
         </div>

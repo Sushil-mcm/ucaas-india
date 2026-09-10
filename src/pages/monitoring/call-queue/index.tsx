@@ -56,7 +56,7 @@ const QUEUE_STATUS_TONE: Record<string, { bg: string; color: string }> = {
 
 const QueueStatusPill = ({ label }: { label: string }) => {
   const tone = QUEUE_STATUS_TONE[label];
-  if (!tone) return <p className="text-gray-400">{label}</p>;
+  if (!tone) return <p className="text-gray-400 dark:text-mcm-ink-3">{label}</p>;
   return (
     <span
       className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold"
@@ -288,16 +288,22 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
             </div>
             <div className="flex flex-col w-full">
               <div className="flex items-center justify-between  gap-2">
-                <div className="flex flex-col items-start ">
-                  <p className="capitalize text-sm">{memberDetails.name}</p>
-                  <small className="text-primary text-[10px]">{memberDetails.role}</small>
+                <div className="flex flex-col items-start min-w-0">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <p className="capitalize text-sm truncate">{memberDetails.name}</p>
+                    {memberDetails.role && (
+                      <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                        {memberDetails.role}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-gray-500">
+                <div className="flex items-center gap-1 text-gray-500 dark:text-mcm-ink-3">
                   <Icon name="Grid" className="w-4 h-4 " />
                   <div className="text-xs">{memberDetails.extension}</div>
                 </div>
               </div>
-              <p className="text-gray-500 flex justify-between text-sm">
+              <p className="text-gray-500 dark:text-mcm-ink-3 flex justify-between text-sm">
                 <div>{memberDetails.email}</div>
               </p>
             </div>
@@ -413,44 +419,52 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
         //   isCurrentSystemOnCall) ||
         // monitoringCallJoined;
         if (isButtonDisabled) return '---';
+        /* Same five-colour ladder Wallboard's action buttons use (see
+           dashboard/live-dashboard `actionButtonBase`/`*ButtonClass`) —
+           these five rendered as bare, uncoloured icons with no visual cue
+           that Hangup is destructive and Listen is not. Also fixes three
+           tooltips that all read "Whisper" regardless of which button they
+           were on (Barge and Hangup included). */
+        const actionButtonBase =
+          'cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-full w-8 h-8 border shadow-sm transition-colors';
+        const listenButtonClass = `${actionButtonBase} bg-[#EAF2F9] border-[#CBDDEC] text-[#2E6FA7] hover:bg-[#2E6FA7] hover:border-[#2E6FA7] hover:text-white`;
+        const whisperButtonClass = `${actionButtonBase} bg-[#EEEDFB] border-[#D5D2F3] text-[#5A54C9] hover:bg-[#5A54C9] hover:border-[#5A54C9] hover:text-white`;
+        const bargeButtonClass = `${actionButtonBase} bg-[#FDF3E1] border-[#F0DCB8] text-[#B8791B] hover:bg-[#B8791B] hover:border-[#B8791B] hover:text-white`;
+        const interceptButtonClass = `${actionButtonBase} bg-[#FBE2C8]/50 border-[#EEE7DD] text-[#C96F1F] hover:bg-[#C96F1F] hover:border-[#C96F1F] hover:text-white`;
+        const hangupButtonClass = `${actionButtonBase} bg-[#FDECEA] border-[#F5C6C2] text-[#DC5049] hover:bg-[#DC5049] hover:border-[#DC5049] hover:text-white`;
         return (
           <span className="flex gap-2 items-center">
-            {monitoringAccessActions?.barge && (
-              <span className="cursor-pointer" onClick={() => monitorCall('*88', callId)}>
-                <CustomTooltip text="Barge">
-                  <CallBarge />
-                </CustomTooltip>
-              </span>
-            )}
             {monitoringAccessActions?.listen && (
-              <span className="cursor-pointer" onClick={() => monitorCall('*87', callId)}>
-                <CustomTooltip text="Listen">
-                  <CallListen />
-                </CustomTooltip>
-              </span>
+              <CustomTooltip text="Listen">
+                <span className={listenButtonClass} onClick={() => monitorCall('*87', callId)}>
+                  <CallListen className="w-4 h-4" />
+                </span>
+              </CustomTooltip>
             )}
             {monitoringAccessActions?.whisper && (
-              <span className="cursor-pointer" onClick={() => monitorCall('*86', callId)}>
-                <CustomTooltip text="Whisper">
-                  <CallWhisper />
-                </CustomTooltip>
-              </span>
+              <CustomTooltip text="Whisper">
+                <span className={whisperButtonClass} onClick={() => monitorCall('*86', callId)}>
+                  <CallWhisper className="w-4 h-4" />
+                </span>
+              </CustomTooltip>
             )}
-            <span className="cursor-pointer" onClick={() => monitorCall('*89', callId)}>
-              <CustomTooltip text="Whisper">
-                <CallIntersection />
+            {monitoringAccessActions?.barge && (
+              <CustomTooltip text="Barge">
+                <span className={bargeButtonClass} onClick={() => monitorCall('*88', callId)}>
+                  <CallBarge className="w-4 h-4" />
+                </span>
               </CustomTooltip>
-            </span>
-            <span className="cursor-pointer" onClick={() => terminateCallSession(callInfo)}>
-              <CustomTooltip text="Whisper">
-                <ImPhoneHangUp />
-              </CustomTooltip>
-            </span>
-            {/* {monitoringAccessActions?.hangup && <span className="cursor-pointer" onClick={() => _terminate(presenceData['Call-ID'])}>
-              <CustomTooltip text="Hangup">
+            )}
+            <CustomTooltip text="Intercept">
+              <span className={interceptButtonClass} onClick={() => monitorCall('*89', callId)}>
+                <CallIntersection className="w-5 h-5" />
+              </span>
+            </CustomTooltip>
+            <CustomTooltip text="Hangup">
+              <span className={hangupButtonClass} onClick={() => terminateCallSession(callInfo)}>
                 <ImPhoneHangUp className="w-5 h-5" />
-              </CustomTooltip>
-            </span>} */}
+              </span>
+            </CustomTooltip>
           </span>
         );
       },
@@ -512,10 +526,10 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
     <>
       <section className="mcm-callqueue w-full min-w-0  ">
         <MonitoringTopbarSlot>
-          <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-            <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-b border-gray-200 dark:border-mcm-line min-h-[65px] bg-white dark:bg-mcm-surface">
+            <p className="text-gray-900 dark:text-mcm-ink font-semibold text-lg flex items-center gap-1">
               Monitoring
-              <div className="-rotate-90 text-gray-800">
+              <div className="-rotate-90 text-gray-800 dark:text-mcm-ink-2">
                 <Icon name="ChevronIcon" className="w-5 h-5" />
               </div>
               <span className="text-primary text-md">
@@ -523,7 +537,7 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
               </span>
               {activeQueueId && (
                 <>
-                  <div className="-rotate-90 text-gray-800">
+                  <div className="-rotate-90 text-gray-800 dark:text-mcm-ink-2">
                     <Icon name="ChevronIcon" className="w-5 h-5" />
                   </div>
                   <span className="text-primary text-md font-medium">
@@ -549,7 +563,7 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
             </div>
           </div>
         </MonitoringTopbarSlot>
-        <div className="w-full min-w-0 p-3 flex flex-col gap-2 overflow-y-auto h-[calc(100vh-8rem)]">
+        <div className="w-full min-w-0 px-3 pt-7 pb-3 flex flex-col gap-2 overflow-y-auto h-[calc(100vh-8rem)]">
           {isPending ? (
             <div>Loading...</div>
           ) : (
@@ -564,11 +578,11 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
 
                     return (
                       <div key={queueId} className="flex min-w-0 flex-col gap-4">
-                        {/* <div className="flex items-center justify-between bg-white p-4 rounded-lg border ">
-                        <h2 className="text-xl text-gray-900">{item?.name}</h2>
+                        {/* <div className="flex items-center justify-between bg-white dark:bg-mcm-surface p-4 rounded-lg border ">
+                        <h2 className="text-xl text-gray-900 dark:text-mcm-ink">{item?.name}</h2>
                       </div> */}
                         <div className="min-w-0">
-                          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-800">
+                          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-mcm-ink-2">
                             <Users className="h-4 w-4 text-primary" />
                             Agents
                             <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
@@ -589,7 +603,7 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
                         </div>
 
                         <div className="min-w-0">
-                          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-800">
+                          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-mcm-ink-2">
                             <Clock3 className="h-4 w-4 text-[#D97706]" />
                             Waiting Callers
                             <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-600">
@@ -614,11 +628,11 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
               ) : (
                 <div className="flex flex-col justify-center items-center gap-1 py-5 h-full w-full mx-auto">
                   <img src={NotFound} alt="BusyImage" className="min-w-36 w-36" />
-                  <p className="text-md font-medium text-gray-900">
+                  <p className="text-md font-medium text-gray-900 dark:text-mcm-ink">
                     {' '}
                     No {queueType === QUEUE_TYPE.campaign ? 'campaign' : 'queue'} calls available
                   </p>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-mcm-ink-2">
                     Calls routed through{' '}
                     {queueType === QUEUE_TYPE.campaign ? 'campaigns' : 'queues'} will appear here.
                   </p>

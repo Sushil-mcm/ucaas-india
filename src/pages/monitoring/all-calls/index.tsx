@@ -485,17 +485,17 @@ const AllCallMonitoring = () => {
                     <GroupedAvatar userArray={activeConferenceMembers} />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0 overflow-hidden rounded-xl border border-gray-100 shadow-xl">
-                  <div className="bg-gray-50/50 px-4 py-3 border-b border-gray-100">
+                <PopoverContent className="w-80 p-0 overflow-hidden rounded-xl border border-gray-100 dark:border-mcm-line dark:bg-mcm-surface shadow-xl">
+                  <div className="bg-gray-50/50 dark:bg-mcm-surface-3 px-4 py-3 border-b border-gray-100 dark:border-mcm-line">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 bg-primary/10 rounded-lg">
                         <Icon name="UsersIcon" className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-900 leading-tight">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-mcm-ink leading-tight">
                           Conference Members
                         </h4>
-                        <p className="text-[11px] text-gray-500 font-medium">
+                        <p className="text-[11px] text-gray-500 dark:text-mcm-ink-3 font-medium">
                           {activeConferenceMembers.length} Participants active
                         </p>
                       </div>
@@ -512,7 +512,7 @@ const AllCallMonitoring = () => {
                           return (
                             <div
                               key={`${memberNumber}-${idx}`}
-                              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group"
+                              className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-mcm-surface-3 rounded-lg transition-colors group"
                             >
                               <div className="relative">
                                 <CustomAvatar
@@ -520,17 +520,17 @@ const AllCallMonitoring = () => {
                                   image={String(member?.profile || member?.avatar || '').trim()}
                                   size="36"
                                 />
-                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-mcm-surface rounded-full"></div>
                               </div>
                               <div className="flex flex-col min-w-0 flex-1">
-                                <span className="text-sm font-semibold text-gray-700 truncate group-hover:text-primary transition-colors">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-mcm-ink-2 truncate group-hover:text-primary transition-colors">
                                   {memberName}
                                 </span>
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="min-w-0 truncate text-[11px] text-gray-400 font-medium tabular-nums">
+                                  <span className="min-w-0 truncate text-[11px] text-gray-400 dark:text-mcm-ink-3 font-medium tabular-nums">
                                     {memberNumber}
                                   </span>
-                                  <span className="shrink-0 text-[11px] font-semibold text-gray-500 tabular-nums">
+                                  <span className="shrink-0 text-[11px] font-semibold text-gray-500 dark:text-mcm-ink-3 tabular-nums">
                                     <ElapsedTimer
                                       startTime={joinedAtMs}
                                       fallback="--:--"
@@ -543,7 +543,7 @@ const AllCallMonitoring = () => {
                           );
                         })
                       ) : (
-                        <div className="px-3 py-4 text-center text-xs text-gray-500">
+                        <div className="px-3 py-4 text-center text-xs text-gray-500 dark:text-mcm-ink-3">
                           No conference members found
                         </div>
                       )}
@@ -634,44 +634,44 @@ const AllCallMonitoring = () => {
         // monitoringCallJoined;
         // An empty cell reads as 'no action here'; '---' reads as a failed load.
         if (isButtonDisabled) return null;
+        /* Same five-colour ladder Wallboard's action buttons use (see
+           dashboard/live-dashboard `actionButtonBase`/`*ButtonClass`) —
+           this table used one flat primary-orange for all five, which gave
+           no visual cue that Hangup is destructive and Listen is not. */
+        const actionButtonBase =
+          'cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-full w-8 h-8 border shadow-sm transition-colors';
+        const listenButtonClass = `${actionButtonBase} bg-[#EAF2F9] border-[#CBDDEC] text-[#2E6FA7] hover:bg-[#2E6FA7] hover:border-[#2E6FA7] hover:text-white`;
+        const whisperButtonClass = `${actionButtonBase} bg-[#EEEDFB] border-[#D5D2F3] text-[#5A54C9] hover:bg-[#5A54C9] hover:border-[#5A54C9] hover:text-white`;
+        const bargeButtonClass = `${actionButtonBase} bg-[#FDF3E1] border-[#F0DCB8] text-[#B8791B] hover:bg-[#B8791B] hover:border-[#B8791B] hover:text-white`;
+        const interceptButtonClass = `${actionButtonBase} bg-[#FBE2C8]/50 border-[#EEE7DD] text-[#C96F1F] hover:bg-[#C96F1F] hover:border-[#C96F1F] hover:text-white`;
+        const hangupButtonClass = `${actionButtonBase} bg-[#FDECEA] border-[#F5C6C2] text-[#DC5049] hover:bg-[#DC5049] hover:border-[#DC5049] hover:text-white`;
+
         return (
           <span className="flex gap-2 items-center">
             {monitoringAccessActions?.listen && (
               <CustomTooltip text="Listen" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*87', callId)}
-                >
+                <span className={listenButtonClass} onClick={() => monitorCall('*87', callId)}>
                   <Ear className="w-4 h-4" />
                 </span>
               </CustomTooltip>
             )}
             {monitoringAccessActions?.whisper && (
               <CustomTooltip text="Whisper" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*86', callId)}
-                >
+                <span className={whisperButtonClass} onClick={() => monitorCall('*86', callId)}>
                   <MicIcon className="w-4 h-4" />
                 </span>
               </CustomTooltip>
             )}
             {monitoringAccessActions?.barge && (
               <CustomTooltip text="Barge" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*88', callId)}
-                >
+                <span className={bargeButtonClass} onClick={() => monitorCall('*88', callId)}>
                   <UsersIcon className="w-4 h-4" />
                 </span>
               </CustomTooltip>
             )}
             {monitoringAccessActions?.intercept && (
               <CustomTooltip text="Intercept" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => monitorCall('*89', callId)}
-                >
+                <span className={interceptButtonClass} onClick={() => monitorCall('*89', callId)}>
                   <CallIntersection className="w-5 h-5" />
                 </span>
               </CustomTooltip>
@@ -679,10 +679,7 @@ const AllCallMonitoring = () => {
 
             {monitoringAccessActions?.hangup && (
               <CustomTooltip text="Hangup" side="top">
-                <span
-                  className="cursor-pointer flex items-center justify-center min-h-8 min-w-8 max-w-8 max-h-8 rounded-lg w-8 h-8 bg-white border border-primary text-primary hover:bg-primary hover:text-white"
-                  onClick={() => terminateCallSession(call)}
-                >
+                <span className={hangupButtonClass} onClick={() => terminateCallSession(call)}>
                   <ImPhoneHangUp className="w-5 h-5" />
                 </span>
               </CustomTooltip>
@@ -698,10 +695,10 @@ const AllCallMonitoring = () => {
       <section className="w-full overflow-x-auto overflow-y-hidden">
         {/* <Breadcrumb breadcrumbs={breadcrumbData} /> */}
         <MonitoringTopbarSlot>
-          <div className="flex items-center justify-between p-3 border-b border-gray-200 min-h-[65px] bg-white">
-            <p className="text-gray-900 font-semibold text-lg flex items-center gap-1">
+          <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-mcm-line min-h-[65px] bg-white dark:bg-mcm-surface">
+            <p className="text-gray-900 dark:text-mcm-ink font-semibold text-lg flex items-center gap-1">
               Monitoring
-              <div className="-rotate-90 text-gray-800">
+              <div className="-rotate-90 text-gray-800 dark:text-mcm-ink-2">
                 <Icon name="ChevronIcon" className="w-5 h-5" />
               </div>
               <span className="text-primary text-md">All Calls</span>
@@ -709,7 +706,7 @@ const AllCallMonitoring = () => {
             <div className="flex gap-2 "></div>
           </div>
         </MonitoringTopbarSlot>
-        <div className="w-full  p-3 flex flex-col gap-2 h-full">
+        <div className="w-full px-3 pt-7 pb-3 flex flex-col gap-2 h-full">
           {/* <h6 className="text-gray-900 font-semibold text-lg">All Calls Monitoring</h6>
           <h5 className="font-semibold text-gray-900 text-md">Calls</h5> */}
           <LiveCallList

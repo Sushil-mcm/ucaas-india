@@ -92,6 +92,7 @@ const LiveCallList = ({
 }: LiveCallListProps) => {
   const [query, setQuery] = useState('');
   const [route, setRoute] = useState('all');
+  const [viewFilter, setViewFilter] = useState<'all' | 'waiting' | 'connected'>('all');
 
   /* TanStack cell renderers here only read `row.original`, so a shim with
      that one field is enough to reuse them outside their table. The action
@@ -172,6 +173,9 @@ const LiveCallList = ({
     () => visible.filter((call) => !['waiting', 'critical'].includes(getState(call))),
     [visible, getState],
   );
+  /** What the "All / Waiting / Connected" tabs above the table actually show. */
+  const displayedRows =
+    viewFilter === 'waiting' ? waitingRows : viewFilter === 'connected' ? activeRows : visible;
 
   const renderRow = (call: any) => {
     const state = getState(call);
@@ -311,6 +315,38 @@ const LiveCallList = ({
           </div>
 
           <div className="mcm-console-tools">
+            <div className="mcm-console-viewtabs" role="tablist" aria-label="Filter calls">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewFilter === 'all'}
+                className={`mcm-console-viewtab${viewFilter === 'all' ? ' is-active' : ''}`}
+                onClick={() => setViewFilter('all')}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewFilter === 'waiting'}
+                className={`mcm-console-viewtab${viewFilter === 'waiting' ? ' is-active' : ''}`}
+                onClick={() => setViewFilter('waiting')}
+              >
+                Waiting
+                <span className="mcm-console-viewtab-count">{waitingRows.length}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewFilter === 'connected'}
+                className={`mcm-console-viewtab${viewFilter === 'connected' ? ' is-active' : ''}`}
+                onClick={() => setViewFilter('connected')}
+              >
+                Connected
+                <span className="mcm-console-viewtab-count">{activeRows.length}</span>
+              </button>
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -384,44 +420,58 @@ const LiveCallList = ({
           </thead>
 
           <tbody>
-            {waitingRows.length > 0 && activeRows.length > 0 && (
-              <tr className="mcm-console-groupline">
-                <td colSpan={7}>
-                  <span className="mcm-console-group is-warn">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Waiting — needs an agent ({waitingRows.length})
-                  </span>
-                </td>
-              </tr>
+            {viewFilter !== 'connected' && (
+              <>
+                {viewFilter === 'all' && waitingRows.length > 0 && activeRows.length > 0 && (
+                  <tr className="mcm-console-groupline">
+                    <td colSpan={7}>
+                      <span className="mcm-console-group is-warn">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        Waiting — needs an agent ({waitingRows.length})
+                      </span>
+                    </td>
+                  </tr>
+                )}
+                {waitingRows.map((call) => renderRow(call))}
+              </>
             )}
-            {waitingRows.map((call) => renderRow(call))}
 
-            {waitingRows.length > 0 && activeRows.length > 0 && (
-              <tr className="mcm-console-groupline">
-                <td colSpan={7}>
-                  <span className="mcm-console-group is-live">
-                    <PhoneCall className="h-3.5 w-3.5" />
-                    Connected ({activeRows.length})
-                  </span>
-                </td>
-              </tr>
+            {viewFilter !== 'waiting' && (
+              <>
+                {viewFilter === 'all' && waitingRows.length > 0 && activeRows.length > 0 && (
+                  <tr className="mcm-console-groupline">
+                    <td colSpan={7}>
+                      <span className="mcm-console-group is-live">
+                        <PhoneCall className="h-3.5 w-3.5" />
+                        Connected ({activeRows.length})
+                      </span>
+                    </td>
+                  </tr>
+                )}
+                {activeRows.map((call) => renderRow(call))}
+              </>
             )}
-            {activeRows.map((call) => renderRow(call))}
           </tbody>
         </table>
 
-        {visible.length === 0 && (
+        {displayedRows.length === 0 && (
           <div className="mcm-console-empty">
             <span className="mcm-console-empty-icon">
               <PhoneCall className="h-5 w-5" />
             </span>
             <p className="mcm-console-empty-title">
-              {calls.length === 0 ? 'No active calls at the moment' : 'No calls match this filter'}
+              {calls.length === 0
+                ? 'No active calls at the moment'
+                : viewFilter === 'waiting'
+                  ? 'No calls waiting right now'
+                  : viewFilter === 'connected'
+                    ? 'No connected calls right now'
+                    : 'No calls match this filter'}
             </p>
             <p className="mcm-console-empty-note">
               {calls.length === 0
                 ? 'Only ringing or answered calls are displayed here.'
-                : 'Try a different route or clear the search.'}
+                : 'Try a different route, tab or clear the search.'}
             </p>
           </div>
         )}

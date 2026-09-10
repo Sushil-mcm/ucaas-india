@@ -148,26 +148,26 @@ export const CallPathDialog = ({ call, onClose }: CallPathDialogProps) => {
       }}
     >
       <DialogContent
-        className="cpd-modal max-w-sm w-full rounded-[20px] p-4.5 gap-0 bg-[#fffdfb] border border-[rgba(249,115,22,0.18)] shadow-[0_20px_45px_rgba(160,95,30,0.20)] backdrop-blur-[20px]"
+        className="cpd-modal max-w-sm w-full rounded-[20px] p-4.5 gap-0 bg-[#fffdfb] dark:bg-mcm-surface border border-[rgba(249,115,22,0.18)] shadow-[0_20px_45px_rgba(160,95,30,0.20)] backdrop-blur-[20px]"
         overlayClassName="bg-black/35 backdrop-blur-sm"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Call Routing Path</DialogTitle>
         <div className="mb-1 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-base font-bold text-[#1a1a1a]">
+          <div className="flex items-center gap-2 text-base font-bold text-[#1a1a1a] dark:text-mcm-ink">
             <Workflow className="h-4.5 w-4.5 text-[#ea580c]" />
             Call Routing Path
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[rgba(249,115,22,0.2)] bg-[#fff7ed] text-[#8a6f57] transition-all hover:bg-[#ffedd5] hover:text-[#1a1a1a]"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[rgba(249,115,22,0.2)] bg-[#fff7ed] text-[#8a6f57] transition-all hover:bg-[#ffedd5] hover:text-[#1a1a1a] dark:hover:text-mcm-ink"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="mb-3 text-sm text-[#64748b]">
-          Queue: <span className="font-medium capitalize text-[#1a1a1a]">{call?.current_context || '---'}</span>
+        <p className="mb-3 text-sm text-[#64748b] dark:text-mcm-ink-3">
+          Queue: <span className="font-medium capitalize text-[#1a1a1a] dark:text-mcm-ink">{call?.current_context || '---'}</span>
         </p>
 
         {steps.length ? (
@@ -202,7 +202,7 @@ export const CallPathDialog = ({ call, onClose }: CallPathDialogProps) => {
                           {step.kind}
                         </span>
                       )}
-                      <span className="truncate text-xs font-semibold text-[#1a1a1a] capitalize">
+                      <span className="truncate text-xs font-semibold text-[#1a1a1a] dark:text-mcm-ink capitalize">
                         {step.value}
                       </span>
                     </div>
@@ -220,7 +220,7 @@ export const CallPathDialog = ({ call, onClose }: CallPathDialogProps) => {
             })}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-[rgba(249,115,22,0.25)] p-4 text-center text-sm text-[#64748b]">
+          <div className="rounded-xl border border-dashed border-[rgba(249,115,22,0.25)] p-4 text-center text-sm text-[#64748b] dark:text-mcm-ink-3">
             No context path available
           </div>
         )}
