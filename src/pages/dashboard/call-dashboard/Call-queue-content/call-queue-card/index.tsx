@@ -148,8 +148,8 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
      Glass cannot be position-independent; an opaque fill is what makes the
      three cards agree wherever they land in the grid.
 
-     `bg-[var(--surface)]` rather than `bg-white` on purpose. mcm-page.css rewrites
-     any rounded `.bg-white` inside `.mcm-page` to `var(--glass-surface)` and
+     `bg-[var(--surface)]` rather than `bg-white dark:bg-mcm-surface` on purpose. mcm-page.css rewrites
+     any rounded `.bg-white dark:bg-mcm-surface` inside `.mcm-page` to `var(--glass-surface)` and
      `var(--glass-border)`, which silently put this card back to 0.85-alpha
      glass and dropped the border colour set here. The arbitrary-value class
      is the same colour without matching that selector.
@@ -183,7 +183,7 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
             aria-label={isAvailable ? `Leave ${name} queue` : `Join ${name} queue`}
             className={`inline-flex h-8 min-w-[76px] shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold cursor-pointer transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
               isAvailable
-                ? 'border border-rose-300 bg-white text-rose-600 shadow-[0_1px_3px_rgba(190,60,60,0.14)] hover:border-rose-400 hover:bg-rose-50'
+                ? 'border border-rose-300 bg-white dark:bg-mcm-surface text-rose-600 shadow-[0_1px_3px_rgba(190,60,60,0.14)] hover:border-rose-400 hover:bg-rose-50'
                 : 'border border-transparent bg-primary text-white shadow-[0_3px_10px_rgba(194,98,46,0.32)] hover:brightness-95 hover:shadow-[0_4px_14px_rgba(194,98,46,0.4)]'
             }`}
           >
