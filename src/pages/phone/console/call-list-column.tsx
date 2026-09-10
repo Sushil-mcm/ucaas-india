@@ -188,8 +188,8 @@ const CallListColumn = ({
   const [search, setSearch] = useState('');
   const [dropdownVal, setDropdownVal] = useState(() => ({
     ...dropdownCallInitialVal,
-    date_type: 'Today',
-    value: handleDate('Today'),
+    date_type: 'Last 30 Days',
+    value: handleDate('Last 30 Days'),
   }));
   const { data: contactsByNumber } = useFetchContact();
   const { features } = useCompanyFeatures();
