@@ -7,7 +7,14 @@ import { useUser } from './use-user';
 import type { CallerIdOption } from '@/components/dialpad/types';
 import { updateUserDID } from '@/services/api';
 import { TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
-import { INDIA_CALLER_ID_OPTIONS } from '@/lib/india-caller-ids';
+/* india-caller-ids.ts's INDIA_CALLER_ID_OPTIONS (a hardcoded stand-in list of
+   5 numbers, +918037683127..131) used to be merged in here, by that file's
+   own design, "until these are assigned as DIDs [and] arrive from the API on
+   their own". They now do - 127/128/131 are real assigned DIDs, 129/130 sit
+   in the unclaimed inventory (see [[ucaas-in-calling-outage-11sep]]) - so the
+   hardcoded list was just duplicating real entries and leaking unassigned
+   inventory numbers into every person's caller-ID picker. Removed 11 Sep
+   2026; the source file is left in place (unused) rather than deleted. */
 
 type AssignedDid = {
   uuid?: string;
@@ -110,14 +117,9 @@ export const useDialpadCallerIdOptions = () => {
       ...EMPTY_CALLER_ID_OPTION,
       country: user?.countryInfo?.alpha2code || 'US',
     };
-    /* The Indian numbers are selectable the same way an assigned DID is, so a
-       stored caller_id has to be matched against them too. Without this the
-       account could hold one of them and the dialpad would still fall through
-       to the first assigned DID, showing a number nobody picked. */
-    const selectableOptions = [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS];
     const userCallerId = user?.user_info?.caller_id;
     const matchedCallerIdOption = userCallerId
-      ? selectableOptions.find((option) => sameNumber(option.number, userCallerId)) || null
+      ? assignedOptions.find((option) => sameNumber(option.number, userCallerId)) || null
       : null;
 
     /* Falling through to the first assigned number is a real behaviour change
@@ -136,26 +138,17 @@ export const useDialpadCallerIdOptions = () => {
 
     if (matchedCallerIdOption) {
       return {
-        callerIdOptions: [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS],
+        callerIdOptions: assignedOptions,
         defaultCallerIdOption: matchedCallerIdOption,
         isCallerIdFallback: false,
       };
     }
 
     if (assignedOptions.length === 0) {
-      /* Every assigned DID on this account is a US number, so filtering them
-         left nothing. Falling back to "No caller id" here would have the
-         dialpad offer ten Indian numbers while defaulting to none of them, so
-         the first Indian number stands in — flagged as a fallback, because
-         nobody chose it and what the far end sees is still decided server-side. */
-      const [firstIndiaOption] = INDIA_CALLER_ID_OPTIONS;
-      if (firstIndiaOption) {
-        return {
-          callerIdOptions: INDIA_CALLER_ID_OPTIONS,
-          defaultCallerIdOption: firstIndiaOption,
-          isCallerIdFallback: true,
-        };
-      }
+      /* No number assigned (or every one was a filtered-out US number) - the
+         account genuinely has nothing to call from yet. Get one from Admin >
+         Numbers > Add Number rather than silently defaulting to a shared
+         placeholder number. */
       return {
         callerIdOptions: [noCallerIdOption],
         defaultCallerIdOption: noCallerIdOption,
@@ -164,7 +157,7 @@ export const useDialpadCallerIdOptions = () => {
     }
 
     return {
-      callerIdOptions: [...assignedOptions, ...INDIA_CALLER_ID_OPTIONS],
+      callerIdOptions: assignedOptions,
       defaultCallerIdOption: assignedOptions[0],
       /* Nothing on this account chose this number — it is simply first in the
          list. Surfaces in the UI so a wrong outbound number is visible before

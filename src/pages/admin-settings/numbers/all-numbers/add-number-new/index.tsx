@@ -33,7 +33,15 @@ const AddNumber = ({ handleClose }: any) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['india-number-inventory'],
     queryFn: () => listIndiaInventory({ limit: 100, page: 1 }),
-    select: (response: any) => response?.data?.data?.rows || response?.data?.rows || [],
+    /* apiClient's interceptor returns the full axios response (unlike other
+       repos in this project that unwrap to response.data), so the real
+       envelope sits one level deeper: response.data.data.result.rows. This
+       originally read .data.data.rows - missing .result entirely - so it
+       never found real data and always fell back to the empty-inventory
+       message, even though the API was correctly returning rows (confirmed
+       via nginx access log: 200, 1679 bytes). Fixed 11 Sep 2026. */
+    select: (response: any) =>
+      response?.data?.data?.result?.rows ?? response?.data?.result?.rows ?? [],
   });
 
   const rows: InventoryRow[] = useMemo(() => data || [], [data]);
