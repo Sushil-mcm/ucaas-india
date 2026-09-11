@@ -501,6 +501,20 @@ export const getAvailableDid = (data: any, config?: CustomAxiosRequestConfig) =>
     data,
   });
 };
+export const listIndiaInventory = (data: any = {}) => {
+  return apiClient({
+    method: routes.DID_INVENTORY_INDIA.METHOD,
+    url: routes.DID_INVENTORY_INDIA.URL,
+    data,
+  });
+};
+export const claimIndiaInventoryNumber = (data: { did_number: string }) => {
+  return apiClient({
+    method: routes.DID_INVENTORY_INDIA_CLAIM.METHOD,
+    url: routes.DID_INVENTORY_INDIA_CLAIM.URL,
+    data,
+  });
+};
 export const getFaxDidCountryList = (data: any) => {
   return apiClient({
     method: routes.FAX_DID_COUNTRY_LIST.METHOD,

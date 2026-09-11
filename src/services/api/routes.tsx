@@ -349,6 +349,16 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/didw/available',
   },
+  // ucaas.in has no DIDWW numbers at all (India isn't a DIDWW country) -
+  // these read from the local Tata-sourced inventory instead. Added 11 Sep.
+  DID_INVENTORY_INDIA: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/india',
+  },
+  DID_INVENTORY_INDIA_CLAIM: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/india/claim',
+  },
   FAX_DID_COUNTRY_LIST: {
     METHOD: 'POST',
     URL: '/api/fax/did/country/list',
