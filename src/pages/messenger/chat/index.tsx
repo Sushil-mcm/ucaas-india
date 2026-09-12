@@ -1573,7 +1573,12 @@ export const ChatHeader = ({
           }}
         />
       )}
-      <div className="w-full min-h-16 shrink-0 border-b border-[rgba(225,200,165,0.9)] px-3 sm:px-4 flex items-center justify-between bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] gap-2 sm:gap-3">
+      {/* `relative z-20`: the backdrop blur makes this header its own stacking
+          layer, and without a z-index the message pane rendered after it
+          painted over the Start Call menu (only a faint box was visible).
+          The menu's own z-50 only counts inside this layer, so the layer
+          itself has to sit above the pane. */}
+      <div className="relative z-20 w-full min-h-16 shrink-0 border-b border-[rgba(225,200,165,0.9)] px-3 sm:px-4 flex items-center justify-between bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] gap-2 sm:gap-3">
         <div className="flex items-center gap-3 min-w-0 ">
           {onBackToList ? (
             <button

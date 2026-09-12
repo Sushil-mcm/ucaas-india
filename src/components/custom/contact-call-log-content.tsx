@@ -29,9 +29,15 @@ const ContactCallLogContent = ({
   onHeaderBack,
   state,
 }: ContactCallLogContentProps) => {
-  console.log(state, 'statestate+++');
-
-  const fetchPayload = state ? { page: 1, limit: 100, filter: [state] } : undefined;
+  /* The contact service only accepts `filters` (an array of {key, value}) and
+     rejects any other top-level key outright. This used to send `filter`, and
+     the console's Call History tab passes an empty state object, so every
+     call showed a red '"filter" is not allowed' and the contact never
+     resolved. Send a filter only when there is a real one. */
+  const fetchPayload =
+    state && typeof state === 'object' && state.key
+      ? { page: 1, limit: 100, filters: [state] }
+      : undefined;
   const { data: dataFetchContact, isPending: isContactLoading } = useFetchContact(fetchPayload);
   const { features } = useCompanyFeatures();
   const callAccess = features?.plan_features?.advance_call_management?.access;
