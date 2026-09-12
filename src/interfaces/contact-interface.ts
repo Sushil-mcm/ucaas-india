@@ -46,6 +46,11 @@ export interface CreateNewContactProps {
   /** Extra fields to pre-fill when creating a contact, e.g. captured by the browser extension. */
   prefill?: ContactPrefill;
   hideCancelButton?: boolean;
+  /* Opt-in, every other caller unaffected (Leads, Phone console's contact
+     pane, ...). Bigger avatar circle, and the edit/remove actions sit
+     beside it as always-visible buttons instead of small badges
+     overlapping its corners (remove was hover-only there too). */
+  largeAvatar?: boolean;
 }
 
 export type ContactPrefill = Partial<

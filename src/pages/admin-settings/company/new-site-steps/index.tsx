@@ -31,7 +31,17 @@ const createSiteFormInitialState = {
   caller_id_name: '',
 };
 
-const NewSiteSteps = ({ data = {}, handleClose }: any) => {
+const NewSiteSteps = ({
+  data = {},
+  handleClose,
+  /* Optional, undefined at this wizard's other caller (Admin ▸ Company ▸
+     Locations), where the page's own title already sits above the form --
+     only Directory's "New location" dialog passes these, to show a left
+     step rail instead of the horizontal banner+stepper (same pattern
+     NewDepartment's own railTitle/railSubtitle uses for Create group). */
+  railTitle,
+  railSubtitle,
+}: any) => {
   const [currentStep, setCurrentStep] = useState(1);
   const queryClient = useQueryClient();
   const isEdit = Boolean(data?.uuid);
@@ -41,6 +51,10 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       label: 'Step 1',
       number: 1,
       title: 'Company Info',
+      /* Only rendered by `Stepper` when a caller's own steps carry one
+         (stepper.tsx) -- every existing caller of this wizard is
+         unaffected, only the rail-mode branch below uses it. */
+      description: 'Name, address, and caller ID',
     },
     // {
     //   label: 'Step 2',
@@ -51,6 +65,7 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
       label: 'Step 2',
       number: 2,
       title: 'Summary',
+      description: 'Review before you save',
     },
   ];
 
@@ -140,6 +155,77 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
     });
   }, [data]);
 
+  const footerButtons = (
+    <>
+      <Button
+        onClick={() => {
+          if (currentStep === 1) {
+            handleClose();
+          } else {
+            setCurrentStep((prev) => prev - 1);
+          }
+        }}
+        variant={'transparent'}
+        type="button"
+        className="w-full sm:w-auto"
+      >
+        {currentStep === 1 ? 'Cancel' : 'Back'}
+      </Button>
+
+      <Button variant={'primary'} disabled={isPending} type="submit" className="w-full sm:w-auto">
+        {isPending ? (
+          <Loader variant="blue" size="sm" />
+        ) : currentStep === 2 ? (
+          isEdit ? (
+            'Update Site'
+          ) : (
+            'Submit Site'
+          )
+        ) : (
+          'Save & Continue'
+        )}
+      </Button>
+    </>
+  );
+
+  if (railTitle) {
+    /* Rail on the left -- the same numbered-circle `Stepper` this wizard
+       already uses for its horizontal banner below, just handed
+       `panelTitle`/`panelSubtitle` and no `mobileHorizontal` so it falls
+       back to its own vertical column layout -- exactly the shape Invite
+       people's own rail uses (add-users/index.tsx: `<Stepper ...
+       panelTitle={railTitle} panelSubtitle={railSubtitle} />`). Form
+       content + footer on the right. `gp-department-rail` (in place of
+       Invite people's own `mcm-invite-rail`) is styled by the Directory
+       Create-group dialog's own CSS (`.gp-create-group-body
+       .gp-department-rail`, groups-glass.css) purely by ancestor scope, not
+       by which component renders it -- so this reuses that box/width
+       styling for free instead of needing a second copy of it. */
+    return (
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex h-full min-h-0 w-full flex-1 flex-col"
+      >
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+          <Stepper
+            steps={StepContent}
+            currentStep={currentStep}
+            customClass="gp-department-rail gp-location-rail shrink-0"
+            panelTitle={railTitle}
+            panelSubtitle={railSubtitle}
+            stickyPanel
+          />
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">{stepLookUp[currentStep]}</div>
+            <div className="flex flex-col-reverse gap-2 border-t border-[#EEE7DD] pt-3 sm:flex-row sm:justify-end sm:pt-4">
+              {footerButtons}
+            </div>
+          </div>
+        </div>
+      </form>
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -165,34 +251,7 @@ const NewSiteSteps = ({ data = {}, handleClose }: any) => {
         <div className="mx-auto w-full max-w-[940px]">{stepLookUp[currentStep]}</div>
       </div>
       <div className="flex flex-col-reverse gap-2 border-t border-[#EEE7DD] pt-3 sm:flex-row sm:justify-end sm:pt-4">
-        <Button
-          onClick={() => {
-            if (currentStep === 1) {
-              handleClose();
-            } else {
-              setCurrentStep((prev) => prev - 1);
-            }
-          }}
-          variant={'transparent'}
-          type="button"
-          className="w-full sm:w-auto"
-        >
-          {currentStep === 1 ? 'Cancel' : 'Back'}
-        </Button>
-
-        <Button variant={'primary'} disabled={isPending} type="submit" className="w-full sm:w-auto">
-          {isPending ? (
-            <Loader variant="blue" size="sm" />
-          ) : currentStep === 2 ? (
-            isEdit ? (
-              'Update Site'
-            ) : (
-              'Submit Site'
-            )
-          ) : (
-            'Save & Continue'
-          )}
-        </Button>
+        {footerButtons}
       </div>
     </form>
   );

@@ -3,22 +3,41 @@
    so no other `.mcm-page` screen is affected. */
 
 .gp-blocked {
+  /* `.page` inside relies on being a flex item of a column flex container
+     (`flex: 1; min-height: 0; overflow-y: auto`, in mcm-page.css) to be
+     bounded to the available height and scroll internally — that's what
+     every other Directory page gets for free by having `.page` as a direct
+     child of `.mcm-page` (itself `display: flex; flex-direction: column`).
+     This wrapper (added only for the gradient background) sits between the
+     two, and as a plain block it broke that chain: `.page` fell back to its
+     natural content height, silently overflowing past `.mcm-page`'s
+     `overflow: hidden` with nothing left to scroll it — the page just
+     stopped scrolling once the "Block a number" form pushed the content
+     taller than the viewport. Repeating the same flex-column treatment here
+     passes the bounded height through instead of absorbing it. */
+  display: flex;
+  flex-direction: column;
   position: relative;
   isolation: isolate;
-  min-height: 100%;
-  background:
-    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
-    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
-    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
-    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
-    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
-  /* No negative margin here. This pair -- `margin: -22px -26px -40px` with a
-     matching padding -- was written for a version where this element sat
-     INSIDE `.page` and had to cancel that padding. It wraps `.page` now, so the
-     margin pulled the whole panel outside its container: 22px above it, which
-     in Admin is straight over the page head, covering the title and buttons.
-     Wrapping `.page` already reaches the edges, and `.page` still supplies the
-     inset. */
+  /* Matches People's own `calc(100% + 22px)` (people-glass.css) -- a plain
+     `100%` falls 22px short of the true bottom edge for the same reason
+     documented there. */
+  min-height: calc(100% + 22px);
+  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+     layered orange radial-gradient — every Directory tab now shares one
+     page background instead of each carrying its own gradient. */
+  background: #fdf1e2;
+  margin: -22px -26px -40px;
+  /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
+     (people-glass.css) so the gap below the table reads the same as the
+     22px this page opens with above the header. */
+  padding: 22px 26px 8px;
+}
+
+/* The real scroll container is this `.page` div sitting *inside*
+   `.gp-blocked`, same as People's own (people-glass.css). */
+.gp-blocked .page {
+  padding-bottom: 8px;
 }
 
 .gp-blocked .page-head,
@@ -46,16 +65,18 @@
   color: #6b5c4d;
 }
 
+/* Same bar as People's own `.tbar` (people-glass.css): the 16px/22px
+   padding is what actually sets its height, not the chips inside it. */
 .gp-blocked .tbar {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 251, 246, 0.85);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(242, 153, 74, 0.18);
   box-shadow:
     0 6px 22px rgba(160, 95, 30, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   border-radius: 16px;
-  padding: 8px 10px;
+  padding: 16px 22px;
   margin-bottom: 16px;
 }
 .gp-blocked .tbar .fchip {
@@ -67,14 +88,502 @@
   background: #fff;
   border-color: var(--accent-edge);
 }
+/* Match People's search pill: taller, roomier padding, no drop shadow (the
+   shared `.fchip` card shadow read as a smudge at this height), and a wider
+   field so the bar isn't mostly empty next to the count chip. */
+.gp-blocked .tbar .fchip {
+  height: 33px;
+  padding-left: 18px;
+  padding-right: 18px;
+  font-size: 13.5px;
+  box-shadow: none;
+}
+.gp-blocked .tbar .fchip input {
+  font-size: 13.5px;
+}
+.gp-blocked .tbar .fchip:has(input) {
+  flex: 1 1 320px !important;
+  max-width: 460px !important;
+}
 .gp-blocked .fchip.live {
   background: rgba(220, 245, 241, 0.75) !important;
   border-color: transparent !important;
 }
 
+/* No internal scroller, matching People's own `.panel-card`
+   (people-glass.css): with the table now paged at a fixed 10 rows (below),
+   the card's height is bounded by the page size itself, so it no longer
+   needs to cap its own height and scroll — the page scrolls as a whole
+   instead. */
 .gp-blocked .panel-card {
   background: #fffdfb;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  /* A near-white border is invisible against this card's own near-white
+     fill and the page's light peach backdrop — --glass-border (the app's
+     own token for a visible edge on a light glass card) instead, same fix
+     as People's panel-card (people-glass.css). */
+  border: 1px solid var(--glass-border);
   box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
   border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- the blocked list: a table, matching Directory ▸ People's own table
+   styling exactly (same header/row/hover treatment) rather than this page
+   reading as a different product. Header/body are split into independent
+   scroll boxes, same technique and reason as People's own table
+   (people-glass.css): a sticky `<thead>` doesn't stop its scrolling
+   ancestor's native scrollbar from spanning the full box, header band
+   included. */
+.gp-blocked .tbl-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  /* Same fallback as People/Groups/Roles/Locations/Favourites: below the
+     row's own min-width this scrolls sideways instead of squeezing every
+     column past readable width. */
+  overflow-x: auto;
+}
+.gp-blocked table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: transparent;
+}
+.gp-blocked thead {
+  display: block;
+  flex: none;
+  width: 100%;
+}
+.gp-blocked tbody {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding-bottom: 14px;
+}
+.gp-blocked thead tr,
+.gp-blocked tbody tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  /* Same idea as People/Groups/Roles/Locations/Favourites' own row floor,
+     scaled to this table's five columns. */
+  min-width: 600px;
+}
+/* Percentages of the table, not px -- see People's own table (people-glass.css)
+   for why: together they sum to 100%, so the row fills its container at any
+   zoom or width instead of leaving a blank strip or overflowing it. */
+.gp-blocked th:nth-child(1),
+.gp-blocked td:nth-child(1) {
+  width: 28%;
+}
+.gp-blocked th:nth-child(2),
+.gp-blocked td:nth-child(2) {
+  width: 18%;
+}
+.gp-blocked th:nth-child(3),
+.gp-blocked td:nth-child(3) {
+  width: 26%;
+}
+.gp-blocked th:nth-child(4),
+.gp-blocked td:nth-child(4) {
+  width: 14%;
+}
+.gp-blocked th:nth-child(5),
+.gp-blocked td:nth-child(5) {
+  width: 14%;
+  min-width: 110px;
+}
+.gp-blocked th {
+  background: #fffdfb;
+  color: #8a6f57;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  height: 40px;
+  font-size: 9.5px;
+}
+.gp-blocked td {
+  border-bottom-color: rgba(150, 100, 50, 0.1);
+}
+/* Same wash Performance ▸ Calls uses for its own row hover
+   (--ic-row-hover in interactions-theme.css). */
+.gp-blocked tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.gp-blocked td:last-child .mini {
+  gap: 4px;
+}
+
+/* ---- "Block a number" dialog. Portaled to `document.body` (outside
+   `.mcm-page`), so — same reason every other Directory dialog uses literal
+   hex rather than this design system's `.mcm-page`-scoped CSS custom
+   properties — colours here are hard-coded instead of `var(--ink)` etc.,
+   which would resolve to nothing outside `.mcm-page`. */
+.gp-block-dialog {
+  background: #ffffff !important;
+}
+/* The `.ic` icon sprite's own fill/stroke rule is scoped to `.mcm-page`
+   (mcm-page.css) — this dialog is portaled to `document.body`, outside it,
+   so without this the sprite's line-based icons (the close "x", the shield
+   on the submit button) render with SVG's default black fill on an open
+   path, which has effectively zero area and shows nothing. */
+.gp-block-dialog .ic {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+/* White, not the cream/orange wash -- matches New location/New role/Add
+   Contact's own dialog headers (locations-glass.css, external-glass.css). */
+.gp-block-dialog .gp-create-group-head {
+  background: #ffffff;
+  border-bottom: none;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.gp-block-dialog .gp-create-group-head h2 {
+  font-size: 18px;
+}
+/* 2 columns, matching the New location form's own field pairing
+   (locations-glass.css) -- the four fields (Number, What to stop, What
+   the caller gets, Whose line) pair up two per row instead of stacking
+   one to a line. Everything that isn't a paired field (`.gp-block-field`)
+   -- the intro line, the summary card, the note -- spans both columns via
+   the `grid-column` rule below, so only the fields themselves actually
+   split into two columns. */
+.gp-block-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+.gp-block-intro,
+.gp-block-summary,
+.gp-block-note {
+  grid-column: 1 / -1;
+}
+.gp-block-intro {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6b5c4d;
+}
+.gp-block-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.gp-block-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2a2733;
+}
+.gp-block-hint {
+  font-size: 12.5px;
+  color: #8a7a67;
+  line-height: 1.4;
+}
+.gp-block-input {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: #fff;
+  font-size: 14.5px;
+  color: #2a2733;
+  outline: none;
+}
+.gp-block-input:focus {
+  border-color: #f2994a;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
+}
+.gp-block-select .custom-react-select__control {
+  border-color: rgba(225, 200, 165, 0.9) !important;
+  border-radius: 10px !important;
+  min-height: 38px !important;
+  font-size: 14.5px !important;
+}
+.gp-block-summary {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff6e9;
+  border: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-block-summary p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b5c4d;
+}
+.gp-block-summary p:last-child {
+  margin-bottom: 0;
+}
+.gp-block-summary p.is-blocking {
+  color: #c0392b;
+  font-weight: 600;
+}
+.gp-block-summary p.is-warning {
+  color: #b06a1a;
+}
+.gp-block-summary p.is-muted {
+  color: #9a948f;
+}
+.gp-block-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(150, 100, 50, 0.06);
+  color: #8a7a67;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.gp-block-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-block-cancel,
+.gp-block-secondary {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid #f2994a;
+  background: #fff;
+  color: #f2994a;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.gp-block-cancel:hover,
+.gp-block-secondary:hover {
+  background: #f2994a;
+  color: #fff;
+}
+.gp-block-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid #f2994a;
+  background: #f2994a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.gp-block-submit:hover:not(:disabled) {
+  background: #e0863a;
+}
+.gp-block-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Pager — same shape as People/Roles/Groups' own (`.gp-roles-pager` etc.). */
+.gp-blocked-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid rgba(150, 100, 50, 0.12);
+}
+.gp-blocked-pager-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a6f57;
+}
+.dark .gp-blocked-pager {
+  border-top-color: rgba(255, 171, 94, 0.12);
+}
+.dark .gp-blocked-pager-count {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+
+/* ---- Dark theme — same treatment as people-glass.css's own .dark block. ---- */
+/* Same warm ground as the other Directory pages. */
+.dark .gp-blocked {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 138, 46, 0.1), transparent 60%),
+    radial-gradient(900px 700px at 100% -2%, rgba(255, 120, 40, 0.07), transparent 55%),
+    radial-gradient(900px 640px at 50% 118%, rgba(255, 160, 80, 0.06), transparent 60%),
+    var(--mcm-ground, #080d12);
+}
+.dark .gp-blocked .page-head,
+.dark .gp-blocked .tbar .fchip {
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-blocked .page-head {
+  background: linear-gradient(180deg, #17212d 0%, #111a24 100%);
+}
+.dark .gp-blocked .tbar .fchip {
+  background: var(--mcm-accent-wash, #1a2733);
+}
+.dark .gp-blocked .page-head h1 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-blocked .page-head p {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.dark .gp-blocked .tbar {
+  background: rgba(14, 24, 33, 0.75);
+  border: 1px solid #1b2934;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-blocked .tbar .fchip {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+}
+.dark .gp-blocked .tbar .fchip:hover {
+  background: var(--mcm-surface-3, #1a2733);
+  border-color: var(--mcm-accent-edge);
+}
+.dark .gp-blocked .panel-card {
+  background: linear-gradient(180deg, #141d28 0%, #101922 100%);
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+/* The "N blocked" result-count chip's light rule above (`.gp-blocked
+   .fchip.live`) hardcodes a light mint fill with `!important` — the same
+   gap already found and fixed on Roles/Locations/External Contacts/
+   Favourites. */
+.dark .gp-blocked .fchip.live {
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  border-color: transparent !important;
+  color: #f3f6f9;
+}
+/* This page's whole layout (`.blocked-compact`) lives in mcm-page.css as
+   an opt-in class — its own `thead th` rule (needed for the sticky
+   header) sets `background: var(--surface)`, the same tier as this page's
+   own `.blocked-table-card`, so the header blended into the body instead
+   of standing apart the way every other Directory table's header does.
+   Scoped here (extra `.gp-blocked` ancestor out-specifies the plain
+   `.mcm-page .blocked-compact thead th` rule) rather than editing the
+   shared file, which also defines this same layout for no other page. */
+/* Orange labels on the orange underline, as People's table. */
+.dark .gp-blocked .blocked-compact thead th {
+  background: #1a232f;
+  color: var(--mcm-accent, #ffab5e) !important;
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35);
+}
+.dark .gp-blocked tbody tr:hover {
+  background: rgba(255, 171, 94, 0.08);
+}
+.dark .gp-blocked td {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+/* "Unblock" was a slate chip; same orange outline-until-filled idiom every
+   other action in Directory uses. */
+.dark .gp-blocked td:last-child .mini {
+  background: transparent !important;
+  border: 1px solid #f2994a !important;
+  color: #f2994a !important;
+}
+.dark .gp-blocked td:last-child .mini:hover:not(:disabled) {
+  background: #f2994a !important;
+  color: #fff !important;
+}
+/* `.blocked-note-text` (the "Coming soon..." explanation paragraph) sets
+   `color: var(--warn)` — in dark mode that is the same amber used for the
+   "COMING SOON" label badge next to the form heading above it, so the
+   entire multi-sentence paragraph read as one large block of warning-
+   colored text instead of body copy. The badge already carries the
+   warning signal on its own; this text is elaboration, not the warning
+   itself, so it takes the same muted ink tone every other Directory
+   page's explanatory text uses. */
+.dark .gp-blocked .blocked-compact .blocked-note-text {
+  color: var(--mcm-ink-3, #8b98a6);
+}
+
+/* Typed text in the search field on the same white People and Favourites
+   use -- these three sat on `--mcm-ink-2`, which read dimmer than the
+   others for no reason. Placeholder stays muted on all five. `!important`
+   because index.css's compat net matches the raw
+   `placeholder:text-[#8a6f57]/70` class string and repaints the real ink. */
+.dark .gp-blocked .tbar .fchip input {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+
+/* White placeholder, matching the other Directory toolbars. `!important`
+   because index.css's compat net matches the raw
+   `placeholder:text-[#8a6f57]/70` class string and repaints it otherwise. */
+.dark .gp-blocked .tbar .fchip input::placeholder {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+
+/* ---- "Block a number" dialog, dark ------------------------------------
+   The dialog hardcodes `background: #ffffff !important` with a cream head
+   (both above), because it portals to `document.body` and can't reach the
+   `.mcm-page`-scoped tokens. Neither had a dark counterpart, so it opened
+   as a white sheet with an invisible title.
+   ------------------------------------------------------------------- */
+.dark .gp-block-dialog {
+  background: var(--mcm-surface, #111c26) !important;
+}
+.dark .gp-block-dialog .gp-create-group-head {
+  background: #17212d;
+  border-bottom: 1px solid rgba(255, 171, 94, 0.18);
+}
+.dark .gp-block-dialog .gp-create-group-head h2,
+.dark .gp-block-dialog .gp-create-group-head [data-slot='dialog-title'] {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+.dark .gp-block-dialog .gp-block-intro,
+.dark .gp-block-dialog .gp-block-hint,
+.dark .gp-block-dialog small,
+.dark .gp-block-dialog p {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+/* The field captions are `.gp-block-label`, not `<label>` elements, which
+   is what my first pass missed -- they sat on the light `#2a2733`. */
+.dark .gp-block-dialog label,
+.dark .gp-block-dialog .gp-field-l,
+.dark .gp-block-dialog .gp-block-label {
+  color: var(--mcm-ink, #eef2f9);
+}
+/* Cancel: outline at rest, filled on hover -- it carried a solid white fill
+   in its resting state, which read as the primary action. */
+.dark .gp-block-dialog .gp-block-cancel,
+.dark .gp-block-dialog .gp-block-secondary {
+  background: transparent;
+  border-color: #f2994a;
+  color: #f2994a;
+}
+.dark .gp-block-dialog .gp-block-cancel:hover,
+.dark .gp-block-dialog .gp-block-secondary:hover {
+  background: #f2994a;
+  color: #fff;
+}
+.dark .gp-block-dialog input,
+.dark .gp-block-dialog textarea,
+.dark .gp-block-dialog select {
+  background: var(--mcm-surface-2, #161f31) !important;
+  border-color: rgba(255, 171, 94, 0.18) !important;
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+.dark .gp-block-dialog input::placeholder {
+  color: var(--mcm-ink-3, #93a1ba) !important;
 }

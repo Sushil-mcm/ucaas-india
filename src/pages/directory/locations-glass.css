@@ -5,20 +5,26 @@
 .gp-locations {
   position: relative;
   isolation: isolate;
-  min-height: 100%;
-  background:
-    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
-    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
-    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
-    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
-    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
-  /* No negative margin here. This pair -- `margin: -22px -26px -40px` with a
-     matching padding -- was written for a version where this element sat
-     INSIDE `.page` and had to cancel that padding. It wraps `.page` now, so the
-     margin pulled the whole panel outside its container: 22px above it, which
-     in Admin is straight over the page head, covering the title and buttons.
-     Wrapping `.page` already reaches the edges, and `.page` still supplies the
-     inset. */
+  /* Matches People's own `calc(100% + 22px)` (people-glass.css) -- a plain
+     `100%` falls 22px short of the true bottom edge for the same reason
+     documented there. */
+  min-height: calc(100% + 22px);
+  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+     layered orange radial-gradient this used to carry — the two pages sit
+     one click apart in the same nav and read as different products next
+     to each other with it. */
+  background: #fdf1e2;
+  margin: -22px -26px -40px;
+  /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
+     (people-glass.css) so the gap below the table reads the same as the
+     22px this page opens with above the header. */
+  padding: 22px 26px 8px;
+}
+
+/* The real scroll container is this `.page` div sitting *inside*
+   `.gp-locations`, same as People's own (people-glass.css). */
+.gp-locations .page {
+  padding-bottom: 8px;
 }
 
 .gp-locations .page-head,
@@ -46,16 +52,18 @@
   color: #6b5c4d;
 }
 
+/* Same bar as People's own `.tbar` (people-glass.css): the 16px/22px
+   padding is what actually sets its height, not the chips inside it. */
 .gp-locations .tbar {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 251, 246, 0.85);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(242, 153, 74, 0.18);
   box-shadow:
     0 6px 22px rgba(160, 95, 30, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   border-radius: 16px;
-  padding: 8px 10px;
+  padding: 16px 22px;
   margin-bottom: 16px;
 }
 .gp-locations .tbar .fchip {
@@ -67,6 +75,23 @@
   background: #fff;
   border-color: var(--accent-edge);
 }
+/* Match People's search pill: taller, roomier padding, no drop shadow (the
+   shared `.fchip` card shadow read as a smudge at this height), and a wider
+   field so the bar isn't mostly empty next to the count chip. */
+.gp-locations .tbar .fchip {
+  height: 33px;
+  padding-left: 18px;
+  padding-right: 18px;
+  font-size: 13.5px;
+  box-shadow: none;
+}
+.gp-locations .tbar .fchip input {
+  font-size: 13.5px;
+}
+.gp-locations .tbar .fchip:has(input) {
+  flex: 1 1 320px !important;
+  max-width: 460px !important;
+}
 .gp-locations .fchip.live {
   background: rgba(220, 245, 241, 0.75) !important;
   border-color: transparent !important;
@@ -74,27 +99,120 @@
 
 .gp-locations .panel-card {
   background: #fffdfb;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  /* A near-white border is invisible against this card's own near-white
+     fill and the page's light peach backdrop — --glass-border (the app's
+     own token for a visible edge on a light glass card) instead, same fix
+     as People's panel-card (people-glass.css). */
+  border: 1px solid var(--glass-border);
   box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 320px);
 }
+/* Header/body split into independent scroll boxes, same technique and same
+   reason as People's own table (people-glass.css): a sticky `<thead>`
+   doesn't stop its scrolling ancestor's native scrollbar from spanning the
+   full box, header band included. */
 .gp-locations .tbl-wrap {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
+  /* Same fallback as People/Groups/Roles: below the row's own min-width
+     (a narrow window or high browser zoom, not ordinary use) this scrolls
+     sideways instead of wrapping the Actions column's icon buttons onto a
+     second line. */
+  overflow-x: auto;
 }
 .gp-locations table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   background: transparent;
 }
+.gp-locations thead {
+  display: block;
+  flex: none;
+  width: 100%;
+}
+.gp-locations tbody {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  /* About 5-6 rows before scrolling, regardless of viewport height. */
+  max-height: 420px;
+  overflow-y: auto;
+  width: 100%;
+  padding-bottom: 14px;
+  padding-right: 4px;
+}
+.gp-locations thead tr,
+.gp-locations tbody tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  /* Actions' two 36px icon buttons + gap + cell padding measure ~110px --
+     below that they wrap onto a second line. Same idea as People/Groups/
+     Roles' own row floor, scaled to this table's six columns. */
+  min-width: 680px;
+}
+/* Percentages of the table, not px -- see People's own table (people-glass.css)
+   for why: together they sum to 100%, so the row fills its container at any
+   zoom or width instead of leaving a blank strip or overflowing it. */
+.gp-locations th:nth-child(1),
+.gp-locations td:nth-child(1) {
+  width: 24%;
+}
+.gp-locations th:nth-child(2),
+.gp-locations td:nth-child(2) {
+  width: 22%;
+}
+.gp-locations th:nth-child(3),
+.gp-locations td:nth-child(3) {
+  width: 18%;
+}
+.gp-locations th:nth-child(4),
+.gp-locations td:nth-child(4) {
+  width: 14%;
+}
+.gp-locations th:nth-child(5),
+.gp-locations td:nth-child(5) {
+  width: 10%;
+}
+.gp-locations th:nth-child(6),
+.gp-locations td:nth-child(6) {
+  width: 12%;
+  min-width: 110px;
+}
+.gp-locations tbody::-webkit-scrollbar {
+  width: 8px;
+}
+.gp-locations tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-locations tbody::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.gp-locations tbody::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+/* Matching People's own header treatment: near-black instead of the washed
+   brown, bolder and a size up — at 9.5px/normal-weight the uppercase,
+   wide-tracking labels read as a texture rather than column names. */
 .gp-locations th {
   background: #fffdfb;
-  color: #8a6f57;
-  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  color: #1a1a1a;
+  font-weight: 800;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  height: 40px;
+  font-size: 11.5px;
 }
 .gp-locations td {
   border-bottom-color: rgba(150, 100, 50, 0.1);
@@ -102,8 +220,10 @@
 .gp-locations tbody tr {
   cursor: pointer;
 }
+/* Same wash Performance ▸ Calls uses for its own row hover
+   (--ic-row-hover in interactions-theme.css). */
 .gp-locations tbody tr:hover {
-  background: rgba(255, 205, 155, 0.14);
+  background: rgba(255, 241, 235, 0.55);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
@@ -124,37 +244,150 @@
 .gp-locations .gp-loc-actions-head {
   text-align: center;
 }
-.gp-locations .gp-loc-actions-cell {
-  min-width: 110px;
-}
 .gp-locations .gp-loc-actions {
   justify-content: center;
 }
+/* No chrome at rest, pale rounded-square wash on hover — matching People's
+   own action buttons (people-glass.css) rather than the outlined circle
+   this used to carry at rest, which read as five identical discs
+   competing with the row's own content. */
 .gp-locations .gp-loc-actions .mini {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border-radius: 11px;
+  border-radius: 9999px;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
 }
-.gp-locations .gp-loc-actions .mini:hover {
-  background: var(--accent-wash);
-  border-color: var(--accent-edge);
-  color: var(--accent-ink);
+.gp-locations .gp-loc-actions .mini:hover:not(:disabled) {
+  background: #fdf1e2;
+  border: 1px solid rgba(242, 153, 74, 0.35);
+  border-radius: 14px;
+  color: #c96f1f;
+  box-shadow: none;
+}
+
+/* Mobile: the table has 6 columns (Location/Address/City-State/Timezone/
+   People/Actions) and no longer fits `.tbl-wrap`'s width below ~640px, so
+   the row scrolls horizontally — but that left Actions (edit/delete) at
+   the far end, unreachable without scrolling the whole row past first.
+   Pinning just that column to the right edge keeps it in reach regardless
+   of scroll position, the same way its header is already pinned
+   vertically (`position: sticky; top: 0` above). Needs its own opaque
+   background — the cell would otherwise be transparent and show the
+   scrolling columns underneath it through the "gap" the sticky position
+   leaves in the row's own background. */
+@media (max-width: 640px) {
+  .gp-locations .gp-loc-actions-head,
+  .gp-locations .gp-loc-actions-cell {
+    position: sticky;
+    right: 0;
+    background: #fffdfb;
+    box-shadow: -8px 0 8px -8px rgba(160, 95, 30, 0.2);
+  }
+  .gp-locations .gp-loc-actions-head {
+    z-index: 2;
+  }
 }
 
 /* ---- "New location" popup ----
    `DialogContent` renders through a portal to `document.body`, so it reuses
    the same `.gp-create-group-*` shell Groups/Roles already styled, rather
-   than a copy scoped to a class this page never sits inside. */
+   than a copy scoped to a class this page never sits inside. The shell's
+   own cream background (`#fffaf3`) read as an unwanted orange gradient wash
+   behind this form — same fix as Invite people / Edit person / New role. */
+.gp-location-form-dialog {
+  background: #ffffff !important;
+}
+.gp-location-form-dialog .gp-create-group-head {
+  background: #ffffff;
+}
+.gp-location-form-dialog .gp-create-group-body {
+  padding-top: 0 !important;
+}
+
+/* ---- fields forced to one column regardless of viewport width. The
+   platform's own `md:flex-row`/`md:w-1/2` pairs key off the *browser*
+   width, not this dialog's — so at this dialog's narrower 620px they kept
+   packing two fields per row, cramming or overflowing it. Same fix as the
+   Invite people dialog's invitee cards. ---- */
+.gp-location-form-dialog .mcm-site-form [class*='md:flex-row'] {
+  flex-direction: column !important;
+}
+.gp-location-form-dialog .mcm-site-form [class*='md:w-1/2'],
+.gp-location-form-dialog .mcm-site-form [class*='md:w-full'] {
+  width: 100% !important;
+}
+
+/* ---- intro card + stepper ---- */
+.gp-location-form-dialog .mcm-site-summary {
+  background: #fff6e9 !important;
+  border-color: rgba(242, 153, 74, 0.25) !important;
+}
+
+/* ---- fields ---- */
+.gp-location-form-dialog .mcm-site-form [data-slot='input'],
+.gp-location-form-dialog .mcm-site-form textarea {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-location-form-dialog .mcm-site-form [data-slot='input']:hover,
+.gp-location-form-dialog .mcm-site-form [data-slot='input']:focus,
+.gp-location-form-dialog .mcm-site-form textarea:hover,
+.gp-location-form-dialog .mcm-site-form textarea:focus {
+  border-color: #f2994a !important;
+}
+.gp-location-form-dialog .mcm-site-form .custom-react-select__control {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background-color: #fffdfb !important;
+}
+.gp-location-form-dialog .mcm-site-form .custom-react-select__control:hover,
+.gp-location-form-dialog .mcm-site-form .custom-react-select__control--is-focused {
+  border-color: #f2994a !important;
+}
+.gp-location-form-dialog .mcm-site-form .border-gray-200 {
+  border-color: rgba(242, 153, 74, 0.2) !important;
+}
+.gp-location-form-dialog .mcm-site-form .bg-gray-50 {
+  background: #fff1e0 !important;
+}
+
+/* ---- footer ---- */
+.gp-location-form-dialog .mcm-site-foot {
+  border-top-color: rgba(242, 153, 74, 0.2) !important;
+}
+.gp-location-form-dialog .mcm-site-cancel {
+  color: #f2994a !important;
+  /* Outlined rather than bare text: beside a solid "Save & Continue" the
+     unbordered label read as a link rather than the other half of a pair
+     of buttons. Same orange the submit button borders itself with, so the
+     two read as one set — outline vs solid carrying the difference in
+     weight instead of button vs text. */
+  border: 1px solid #f2994a !important;
+}
+.gp-location-form-dialog .mcm-site-cancel:hover {
+  background: #f2994a !important;
+  color: #ffffff !important;
+}
+.gp-location-form-dialog .mcm-site-submit {
+  background: #f2994a !important;
+  border-color: #f2994a !important;
+}
+.gp-location-form-dialog .mcm-site-submit:hover:not(:disabled) {
+  background: #c96f1f !important;
+}
 
 /* ---- Location detail popup — same portal caveat as above, so it is scoped
    off its own class rather than `.gp-locations`, which it is never a DOM
    descendant of. */
 .gp-loc-dialog {
-  background: #fffaf3;
+  background: #ffffff;
   border-color: rgba(242, 153, 74, 0.3);
 }
 .gp-loc-fields {
@@ -193,6 +426,9 @@
   padding: 12px 20px 20px;
 }
 .gp-loc-dialog-close {
+  /* Same solid orange-outline-until-filled-on-hover treatment as every
+     other Close/Cancel in Directory — not the fainter grey-text-until-hover
+     look this had. */
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -202,13 +438,13 @@
   font-size: 13px;
   font-weight: 700;
   background: transparent;
-  border: 1px solid rgba(242, 153, 74, 0.3);
-  color: #6b5c4d;
+  border: 1px solid #f2994a;
+  color: #f2994a;
   cursor: pointer;
 }
 .gp-loc-dialog-close:hover {
-  border-color: #f2994a;
-  color: #c96f1f;
+  background: #f2994a;
+  color: #ffffff;
 }
 .gp-loc-dialog-edit {
   display: inline-flex;
@@ -226,4 +462,348 @@
 }
 .gp-loc-dialog-edit:hover {
   background: #c96f1f;
+}
+
+/* ---- Dark theme — same treatment as people-glass.css's own .dark block,
+   extended to this file's own portaled location-detail dialog. ---- */
+/* Same warm ground as People/Groups/Roles -- the light theme's own corner
+   glow at a fifth of its alpha. */
+.dark .gp-locations {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 138, 46, 0.1), transparent 60%),
+    radial-gradient(900px 700px at 100% -2%, rgba(255, 120, 40, 0.07), transparent 55%),
+    radial-gradient(900px 640px at 50% 118%, rgba(255, 160, 80, 0.06), transparent 60%),
+    var(--mcm-ground, #080d12);
+}
+.dark .gp-locations .page-head,
+.dark .gp-locations .tbar .fchip {
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-locations .page-head {
+  background: linear-gradient(180deg, #17212d 0%, #111a24 100%);
+}
+.dark .gp-locations .tbar .fchip {
+  background: var(--mcm-accent-wash, #1a2733);
+}
+.dark .gp-locations .page-head h1 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-locations .page-head p {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-locations .tbar {
+  background: rgba(20, 29, 40, 0.75);
+  border: 1px solid rgba(255, 171, 94, 0.12);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-locations .tbar .fchip {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+}
+.dark .gp-locations .tbar .fchip:hover {
+  background: var(--mcm-surface-3, #1a2733);
+  border-color: var(--mcm-accent-edge);
+}
+.dark .gp-locations .tbar .fchip {
+  box-shadow: none;
+}
+.dark .gp-locations .panel-card {
+  background: linear-gradient(180deg, #141d28 0%, #101922 100%);
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+/* Orange labels over the light theme's own 3px orange underline. */
+.dark .gp-locations th {
+  background: #1a232f;
+  color: var(--mcm-accent, #ffab5e);
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35);
+}
+@media (max-width: 640px) {
+  .dark .gp-locations .gp-loc-actions-head {
+    background: #16222c;
+    box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.4);
+  }
+  .dark .gp-locations .gp-loc-actions-cell {
+    background: #111c26;
+    box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.4);
+  }
+}
+.dark .gp-locations td {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-locations tbody tr:hover {
+  background: rgba(255, 171, 94, 0.06);
+}
+/* No chrome at rest, filled rounded-square on hover -- matching People's
+   own dark action buttons exactly (people-glass.css). */
+.dark .gp-locations .gp-loc-actions .mini {
+  background: transparent;
+  border-color: transparent;
+  color: #fff;
+}
+.dark .gp-locations .gp-loc-actions .mini:hover:not(:disabled) {
+  background: #f2994a;
+  border-color: #f2994a;
+  border-radius: 14px;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(242, 153, 74, 0.28);
+}
+.dark .gp-locations .gp-loc-actions .mini:disabled,
+.dark .gp-locations .gp-loc-actions .mini:disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+}
+/* The "x of y" result-count chip's light rule above (`.gp-locations
+   .fchip.live`) hardcodes a light mint fill with `!important` — every
+   other Directory list (Roles, Groups, People) already carries this same
+   override for its own `.fchip.live`; this page was the one missing it,
+   so the chip stayed a bright light-mode mint patch in Dark Mode. Matches
+   the Roles page's exact treatment: a solid muted-teal fill instead of
+   the faint `--live-wash` tint, so it reads with real weight against the
+   dark toolbar instead of nearly disappearing into it. */
+.dark .gp-locations .fchip.live {
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  border-color: transparent !important;
+  color: #f3f6f9;
+}
+.dark .gp-loc-dialog {
+  background: #111c26;
+  border-color: #1b2934;
+}
+.dark .gp-loc-field-l {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-loc-field-v {
+  background: var(--mcm-accent-wash, #1a2733);
+  border: 1px solid var(--mcm-accent-edge, rgba(249, 115, 22, 0.4));
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-loc-dialog-close {
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-loc-dialog-close:hover {
+  border-color: var(--mcm-accent, #f97316);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.dark .gp-loc-dialog-edit {
+  background: var(--mcm-accent, #f97316);
+  border: 1px solid var(--mcm-accent, #f97316);
+  color: #f8fafc;
+}
+.dark .gp-loc-dialog-edit:hover {
+  background: var(--mcm-accent-ink, #ff8a2a);
+  color: #111c26;
+}
+
+/* ---- Location form dialog, dark ---------------------------------------
+   `.gp-location-form-dialog` had no dark layer at all, so Create/Update
+   location opened as a white sheet with a cream summary card inside a dark
+   app -- the same gap Favourites and External Contacts had. Values follow
+   the Roles form dialog (roles-glass.css), which already solved this.
+   ------------------------------------------------------------------- */
+.dark .gp-location-form-dialog {
+  background: var(--mcm-surface, #111c26) !important;
+}
+.dark .gp-location-form-dialog .gp-create-group-head {
+  background: var(--mcm-surface, #111c26);
+}
+/* The intro card carries a cream `#fff6e9` fill in the markup. Warm wash
+   over the dialog's own surface instead, so it still reads as a raised
+   panel rather than a light patch. */
+.dark .gp-location-form-dialog .mcm-site-summary {
+  background: rgba(255, 171, 94, 0.07) !important;
+  border-color: rgba(255, 171, 94, 0.18) !important;
+}
+/* Inputs and the note blocks inside them hardcode near-white fills
+   (#fffdfb, #fff1e0) with no dark counterpart. */
+/* Matching the light rule's own shape (`.gp-location-form-dialog
+   .mcm-site-form [data-slot='input']`, three classes): it is `!important`
+   too, so a shorter selector loses on specificity no matter the flag --
+   which is why `.dark … input` alone left these fields white. */
+.dark .gp-location-form-dialog .mcm-site-form [data-slot='input'],
+.dark .gp-location-form-dialog .mcm-site-form textarea,
+.dark .gp-location-form-dialog .mcm-site-form .custom-react-select__control,
+.dark .gp-location-form-dialog input,
+.dark .gp-location-form-dialog textarea,
+.dark .gp-location-form-dialog select,
+.dark .gp-location-form-dialog [class*='rounded-md'][class*='border-gray-200'] {
+  background: var(--mcm-surface-2, #161f31) !important;
+  background-color: var(--mcm-surface-2, #161f31) !important;
+  background-image: none !important;
+  color: var(--mcm-ink, #eef2f9) !important;
+  border-color: rgba(255, 171, 94, 0.18) !important;
+}
+/* The card's own heading is `text-[#2E2D35]`, a near-black with no dark
+   counterpart -- invisible on the wash behind it. Same class-attribute
+   idiom index.css already uses for #8a6f57. */
+.dark .gp-location-form-dialog [class*='#2E2D35'] {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+.dark .gp-location-form-dialog input::placeholder,
+.dark .gp-location-form-dialog textarea::placeholder {
+  color: var(--mcm-ink-3, #93a1ba) !important;
+}
+/* Country is rendered disabled (it is fixed per account), and shadcn's
+   `disabled:bg-muted` is a near-white in dark -- the one field in this form
+   still reading as a light chip. */
+.dark .gp-location-form-dialog input:disabled,
+.dark .gp-location-form-dialog .mcm-site-form [data-slot='input']:disabled {
+  background: var(--mcm-surface-3, #1e293e) !important;
+  color: var(--mcm-ink-2, #c3cddf) !important;
+  border-color: rgba(255, 171, 94, 0.12) !important;
+  opacity: 1;
+}
+
+/* Typed text in the search field on the same white People and Favourites
+   use -- these three sat on `--mcm-ink-2`, which read dimmer than the
+   others for no reason. Placeholder stays muted on all five. `!important`
+   because index.css's compat net matches the raw
+   `placeholder:text-[#8a6f57]/70` class string and repaints the real ink. */
+.dark .gp-locations .tbar .fchip input {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+
+/* White placeholder, matching the other Directory toolbars. `!important`
+   because index.css's compat net matches the raw
+   `placeholder:text-[#8a6f57]/70` class string and repaints it otherwise. */
+.dark .gp-locations .tbar .fchip input::placeholder {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+
+/* ====================================================================
+   "New location" dialog's step rail -- `Stepper` (stepper.tsx), same
+   numbered-circle/connecting-line component Invite people's own rail
+   uses (`.mcm-invite-rail`, invite-glass.css), handed both
+   `gp-department-rail` (for that rail's box sizing -- width/height,
+   groups-glass.css) and this page's own `gp-location-rail` for
+   everything visual. Kept separate from `gp-department-rail`'s own
+   styling: that class is shared with Create group's plain-tab rail
+   (new-department/index.tsx), which keeps its bordered white card look
+   on purpose -- this rail is plain, no card, so the override has to sit
+   on a class only this page uses. */
+/* The row wrapper (rail + form column, new-site-steps/index.tsx) carries
+   `overflow-hidden` -- harmless for the plain-tab rail (Create group),
+   but it makes that row itself the nearest ancestor `position: sticky`
+   measures against for the rail's own sticky content below, instead of
+   the real scrolling container (`.gp-create-group-body`). Since the row
+   never scrolls on its own (only the body around it does), the "stuck"
+   element just travelled with the row's own static position instead of
+   staying pinned to the visible viewport -- what looked like sticky doing
+   nothing. `visible` restores `.gp-create-group-body` as the actual
+   scrolling ancestor sticky resolves against. */
+.gp-create-group-body div:has(> .gp-location-rail) {
+  overflow: visible !important;
+}
+.gp-create-group-body .gp-location-rail {
+  /* Explicit white, not transparent -- transparent let whatever sits
+     behind it (the dialog's own off-white `#fffdfb`-family background)
+     show through as a faint cream tint against the form column's own
+     pure white. */
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  /* Stretched, not `gp-department-rail`'s own default `align-self:
+     flex-start` (groups-glass.css, Create group's plain-tab rail) --
+     this box (and the border-right drawn on it) needs to span the whole
+     scrollable column, not just its own content's height, so the divider
+     reaches the dialog's true bottom edge instead of stopping partway
+     down. The box itself is NOT the sticky element, though: a stretched
+     box is already exactly as tall as the scrollable range, leaving no
+     slack for it to lag behind and catch, so `position: sticky` on it
+     would be a no-op. Stepper's own `stickyPanel` prop (stepper.tsx)
+     handles the actual pinning instead, on just the heading+step list
+     inside -- see `new-site-steps/index.tsx`. */
+  align-self: stretch !important;
+  height: auto !important;
+  /* `.gp-create-group-body`'s own content box sits inset from the
+     dialog's real top edge by its own padding (34px -- room for the
+     floating close button, `.gp-create-group-head--bare` above,
+     groups-glass.css). Bleeding the box up by that same amount and adding
+     it back as padding brings the rail's own white fill and border-right
+     flush with the dialog's real top edge, while the heading inside lands
+     back where it was. */
+  margin-top: -34px;
+  padding-top: 34px;
+  padding-bottom: 18px;
+  /* The one visual boundary left between rail and form, matching Invite
+     people's own `mcm-invite-rail` divider (invite-glass.css) now that
+     there's no card border doing that job instead. */
+  border-right: 1px solid rgba(242, 153, 74, 0.16) !important;
+  padding-right: 20px;
+}
+/* Belt-and-braces: if any descendant of the rail carries its own
+   background (none currently do, by inspection of stepper.tsx and this
+   file's own `.mcm-stepper-panel-head`/`ol`/`li` rules), it would sit
+   between this box's own white fill and the text, showing through as a
+   patch. Nothing to lose by pinning it here too. */
+.gp-create-group-body .gp-location-rail .mcm-stepper-panel-head {
+  background: #ffffff !important;
+}
+.dark .gp-create-group-body .gp-location-rail {
+  background: var(--mcm-surface, #111c26) !important;
+  border-right-color: #1b2934 !important;
+}
+/* Stepper's own un-horizontal `<ol>` only goes vertical BELOW the `sm`
+   (640px) breakpoint -- `sm:flex-row`, the opposite of what a narrow rail
+   column needs at ordinary desktop widths -- so left alone it renders
+   steps side by side, squeezed into ~230px and clipped. Forced vertical
+   here regardless of viewport width. */
+.gp-create-group-body .gp-location-rail ol {
+  position: relative;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 26px !important;
+  overflow: visible !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+/* One continuous line for the whole list, not a segment per step (which
+   left visible gaps between them) -- runs from the centre of the first
+   circle to the centre of the last, behind every step; each circle's own
+   opaque fill paints over it where they overlap, same as a real
+   connected-timeline stepper. Stepper's own horizontal-mode underline
+   (`li::after`, a border-bottom) is switched off below since it draws on
+   the wrong axis for a vertical rail. */
+.gp-create-group-body .gp-location-rail ol::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  width: 2px;
+  background: rgba(242, 153, 74, 0.35);
+}
+.dark .gp-create-group-body .gp-location-rail ol::before {
+  background: #1b2934;
+}
+.gp-create-group-body .gp-location-rail li {
+  width: 100% !important;
+  padding-right: 0 !important;
+}
+.gp-create-group-body .gp-location-rail li::after {
+  display: none !important;
+}
+.gp-create-group-body .gp-location-rail li > div {
+  min-height: 0 !important;
+}
+.gp-create-group-body .gp-location-rail li p {
+  white-space: normal !important;
+}
+.gp-create-group-body .gp-location-rail li > div > div:first-child {
+  position: relative;
+  width: 40px !important;
+  height: 40px !important;
+}
+.gp-create-group-body .gp-location-rail li > div > div:first-child p {
+  font-size: 16px !important;
+  font-weight: 800 !important;
 }

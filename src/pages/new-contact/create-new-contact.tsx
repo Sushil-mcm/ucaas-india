@@ -50,6 +50,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
   prefillPhone = '',
   prefill,
   hideCancelButton = false,
+  largeAvatar = false,
 }) => {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -581,9 +582,14 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
           symmetric — it used to have 4px on the right and none on the left. */}
       <div className="flex flex-col flex-1 min-h-0 overflow-auto gap-4 px-1.5 pt-2 pb-4">
         {!isDisable && (
+          <div className={largeAvatar ? 'flex items-center gap-4' : undefined}>
           <label
             htmlFor="file-upload"
-            className="rounded-full border border-gray-200 relative w-14 h-14 cursor-pointer"
+            className={
+              largeAvatar
+                ? 'rounded-full border border-gray-200 relative w-20 h-20 cursor-pointer shrink-0'
+                : 'rounded-full border border-gray-200 relative w-14 h-14 cursor-pointer'
+            }
           >
             {watch('avatar') || imagePreview || avatar ? (
               <div className="h-full w-full rounded-full relative group">
@@ -591,7 +597,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                   <CustomAvatar
                     name={`${watch('first_name') || ''} ${watch('last_name') || ''}`.trim()}
                     image={existingProfilePic}
-                    size="56"
+                    size={largeAvatar ? '80' : '56'}
                     type="contact"
                     isActivityInfo={false}
                   />
@@ -606,37 +612,54 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                           : '')
                     }
                     alt="Preview"
-                    className="rounded-full object-cover h-14 w-14"
+                    className={
+                      largeAvatar
+                        ? 'rounded-full object-cover h-20 w-20'
+                        : 'rounded-full object-cover h-14 w-14'
+                    }
                     loading="lazy"
                   />
                 )}
-                <span
-                  title="Edit image"
-                  className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-full p-1"
-                >
-                  <Icon name="EditIcon" className="text-white w-full h-full" />
-                </span>
+                {/* Beside-layout (largeAvatar) skips these corner badges
+                    entirely -- Edit/Remove render as their own visible
+                    buttons next to the circle instead, below. */}
+                {!largeAvatar && (
+                  <>
+                    <span
+                      title="Edit image"
+                      className="absolute bottom-0 right-0 w-4 h-4 bg-primary rounded-full p-1"
+                    >
+                      <Icon name="EditIcon" className="text-white w-full h-full" />
+                    </span>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setImagePreview(null);
-                    setValue('avatar', null);
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = '';
-                    }
-                  }}
-                  className="absolute cursor-pointer top-0 right-0 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove image"
-                >
-                  <X className="text-white size-3" />
-                </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setImagePreview(null);
+                        setValue('avatar', null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="absolute cursor-pointer top-0 right-0 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove image"
+                    >
+                      <X className="text-white size-3" />
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
-              <div className="h-14 w-14 bg-gray-500 rounded-full flex items-center justify-center">
-                <Icon name="User" className="text-white w-10 h-10" />
+              <div
+                className={
+                  largeAvatar
+                    ? 'h-20 w-20 bg-gray-500 rounded-full flex items-center justify-center'
+                    : 'h-14 w-14 bg-gray-500 rounded-full flex items-center justify-center'
+                }
+              >
+                <Icon name="User" className={largeAvatar ? 'text-white w-12 h-12' : 'text-white w-10 h-10'} />
               </div>
             )}
 
@@ -658,6 +681,37 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               disabled={isDisable}
             />
           </label>
+          {largeAvatar && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-9"
+              >
+                <Icon name="EditIcon" className="w-4 h-4" />
+                Edit
+              </Button>
+              {(watch('avatar') || imagePreview || avatar) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setValue('avatar', null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }}
+                  className="h-9 text-red-600 hover:bg-red-500 hover:text-black"
+                >
+                  <X className="w-4 h-4" />
+                  Remove
+                </Button>
+              )}
+            </div>
+          )}
+          </div>
         )}
 
         <div className="flex gap-4 flex-col">

@@ -1,634 +1,527 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import moment from 'moment';
-import { getContactList } from '@/services/api';
-import CustomAvatar from '@/components/custom/custom-avatar';
-import SideDrawer from '@/components/custom/side-drawer';
-import SendWhatsappMessage from '@/pages/messenger/drawers/send-whatsapp-message';
-import ContactActivity from '@/pages/new-contact/contact-activity';
-import { useConsoleDialer } from '@/pages/phone/console/dial-number';
-import { Ic } from '@/components/mcm/icons';
-import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
-import './list-page-glass.css';
-import { useDirectoryFavourites } from './use-directory-favourites';
-import { useContactLabels } from './use-contact-labels';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteContact, deleteLeadGroup, getContactList, syncContacts } from '@/services/api';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
+import {
+  describeSyncPlan,
+  planContactSync,
+  syncPayload,
+  syncWouldChangeAnything,
+} from '@/lib/contact-sync';
+import { useGoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import '@/styles/warm-glass.css';
+import './groups-glass.css';
 import './external-glass.css';
+import SendWhatsappMessage from '@/pages/messenger/drawers/send-whatsapp-message';
+import { Icon } from '@/assets/icons/icon';
+import { SearchLine } from '@/assets/icons';
+import { DirectoryPage } from './page-shell';
+import AllNewContactsList from '@/pages/new-contact/all-contacts-list';
+import CreateContactNew from '@/pages/new-contact/create-new-contact';
+import NotesWidget from '@/components/notes';
+import AlertConfirm from '@/components/custom/alert-confirm';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CustomSelect from '@/components/custom/custom-select';
+import LeadsGroupList from '@/pages/leads/lead-group-list';
+import CreateNewLeadGroup from '@/pages/leads/add-group-lead-modal';
+import LeadContactLogs from '@/pages/leads/lead-contact-logs';
+import { CONTACT_TABS_CONST, LEAD_CREATE_TYPE } from '@/pages/leads/const';
+import { handleAlert } from '@/lib/utils';
+import { useCompanyFeatures } from '@/hooks/rbac';
+import { useGetGroupList } from '@/hooks/common';
+import useDebounce from '@/hooks/use-debounce';
+import { useUser } from '@/hooks/use-user';
 
 /**
  * Directory ▸ External — people outside the organisation.
  *
- * The console's External view; the platform calls these Contacts. It reads the
- * existing `getContactList`, and carries the same actions the Contacts page
- * offered — call, SMS, WhatsApp, activity and edit — because a directory you
- * cannot act from is only half a directory.
- *
- * Record shape is nested and easy to get wrong: `name.first` / `name.last`,
- * `contact.phone` / `contact.email`, `profile.contactPic`, and the record id is
- * `_id`, not `uuid`.
- *
- * Labels are the one thing on this screen the platform does not store. A
- * contact carries a single tag from a fixed list of four, and the endpoint that
- * saves a contact refuses any field it does not already know, so your own words
- * for a contact are kept in this browser — see `use-contact-labels`. The drawer
- * says so where somebody adds one, rather than letting them assume otherwise.
+ * The header (title, description, "New contact") is this page's own; the
+ * toolbar and list below it are the platform's own Contacts screen
+ * (`new-contact`) — Contact view/Contact Group tabs, Google Sync, and the
+ * real contacts table with bulk delete, group assignment and tag toggles —
+ * reused wholesale rather than rebuilt a second time. The trade-off: the
+ * free-text "Labels" this page used to keep in the browser lived entirely
+ * in the custom detail popup that came with the old table, and has no
+ * equivalent here.
  */
 
-type Contact = {
-  _id?: string;
-  name?: { first?: string; last?: string };
-  contact?: { phone?: string; email?: string; webpage?: string };
-  profile?: { contactPic?: string; company?: string };
-  company?: string;
-  title?: string;
-  /** Extensible on the server: the form writes whatever keys it is given. */
-  social?: Record<string, string>;
-  groupMeta?: any[];
-  is_vip?: boolean;
-  is_dnc?: boolean;
-  is_blocked?: boolean;
-  updatedAt?: string;
-  createdAt?: string;
+const TAG_FILTER_VALUE: Record<string, string> = {
+  VIP: 'VIP',
+  DNC: 'DNC',
+  BLOCK: 'Blocked',
+  STANDARD: 'Standard',
 };
 
-const fullName = (row: Contact) =>
-  `${row?.name?.first || ''} ${row?.name?.last || ''}`.trim() || 'Unknown';
+const ExternalInner = () => {
+  const queryClient = useQueryClient();
+  const { features } = useCompanyFeatures();
+  const contactFeature = features?.plan_features?.contact || {};
+  const contactActions = contactFeature?.action || {};
+  const canViewContact = Boolean(contactFeature?.IS_SHOW && contactActions?.view);
+  const canEditContact = Boolean(contactActions?.edit);
+  const canDeleteContact = Boolean(contactActions?.delete);
 
-/** VIP / DNC / Blocked are exclusive states in the UI, most restrictive first. */
-const tagOf = (row: Contact) => {
-  if (row?.is_blocked) return { label: 'Blocked', cls: 'tag neg' };
-  if (row?.is_dnc) return { label: 'DNC', cls: 'tag warn' };
-  if (row?.is_vip) return { label: 'VIP', cls: 'tag acc' };
-  return { label: 'Standard', cls: 'tag neu' };
-};
-
-const External = () => {
-  const navigate = useNavigate();
-  const { dial } = useConsoleDialer();
-  const { isFavourite, toggleFavourite } = useDirectoryFavourites();
+  const [tabName, setTabName] = useState<string>(CONTACT_TABS_CONST.CONTACT_LIST);
   const [search, setSearch] = useState('');
-  const [tag, setTag] = useState('All');
-  const [label, setLabel] = useState('All');
-  const [open, setOpen] = useState<Contact | null>(null);
-  const [whatsappTo, setWhatsappTo] = useState<string>('');
-  const [activityFor, setActivityFor] = useState<Contact | null>(null);
-  const [newLabel, setNewLabel] = useState('');
-  const labels = useContactLabels();
-
-  const { data: rows = [], isPending } = useQuery({
-    /* create-new-contact invalidates ['getContactList']; sharing that prefix is
-       what makes a new or edited contact show up here. */
-    queryKey: ['getContactList', 'directoryExternal'],
-    queryFn: () => getContactList({ page: 1, limit: 200 }),
-    select: (res: any) => res?.data?.data?.result?.rows || [],
+  const debouncedSearch = useDebounce(search, 500);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupLabel, setSelectedGroupLabel] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedGroupForContactLogs, setSelectedGroupForContactLogs] = useState<any>(null);
+  const { data: groupList = [] } = useGetGroupList({
+    type: 'CONTACT',
+    generatedBy: null,
+    displayType: 'dropdown',
   });
 
-  /* Labels live in this browser, so a contact deleted on another device would
-     otherwise leave its labels in the filter list for ever. Cleared against
-     whatever the page has just loaded. */
-  useEffect(() => {
-    if (!rows.length) return;
-    labels.pruneTo(rows.map((row: Contact) => String(row?._id || '')).filter(Boolean));
-  }, [rows, labels]);
+  const [drawerState, setDrawerState] = useState<{
+    addContact: boolean;
+    selectedContact: any;
+    addLead: boolean;
+    selectedGroup: any;
+  }>({
+    addContact: false,
+    selectedContact: null,
+    addLead: false,
+    selectedGroup: null,
+  });
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<any>(null);
+  const [notesContact, setNotesContact] = useState<any>(null);
+  const [whatsappTo, setWhatsappTo] = useState<string>('');
+  const [confirmModelState, setConfirmState] = useState<{
+    isModal: boolean;
+    selectedGroupId: string;
+  }>({ isModal: false, selectedGroupId: '' });
 
-  const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return rows.filter((row: Contact) => {
-      if (tag !== 'All' && tagOf(row).label !== tag) return false;
-      if (label !== 'All' && !labels.matches(row?._id, label)) return false;
-      if (!needle) return true;
-      /* Search covers labels as well as the record, because a label is only
-         worth applying if it is a way of finding the contact again. */
-      if (labels.matches(row?._id, needle) && labels.labelsOf(row?._id).length) return true;
-      return [
-        fullName(row),
-        row?.contact?.phone,
-        row?.contact?.email,
-        row?.profile?.company || row?.company,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle));
-    });
-  }, [rows, search, tag, label, labels]);
+  const { mutate: mutateDeleteContact, isPending: isPendingDeleteContact } = useMutation({
+    mutationFn: deleteContact,
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        handleAlert({
+          text: data?.data?.data?.message || 'Contact deleted successfully!',
+          type: 'success',
+        });
+        setShowDeleteConfirmation(null);
+        queryClient.invalidateQueries({ queryKey: ['getContactList'] });
+      }
+    },
+  });
 
-  /**
-   * WhatsApp routes off the number, so it can be initiated outbound from here.
-   * Instagram and Telegram cannot: the messenger lists only inbound threads and
-   * matches them by `chatId`, never by handle, so a link into the channel would
-   * land on whichever conversation happens to be first — someone else's. Their
-   * handles therefore open the profile instead, which always resolves.
-   */
-  const whatsappNumberOf = (row: Contact) => row?.social?.whatsapp || row?.contact?.phone || '';
+  const { mutate: mutateDeleteGroup, isPending: isPendingDeleteGroup } = useMutation({
+    mutationFn: deleteLeadGroup,
+    onSuccess: (data) => {
+      if (data?.data?.success) {
+        handleAlert({
+          text: data?.data?.data?.message || 'Contact group deleted successfully!',
+          type: 'success',
+        });
+        setConfirmState({ isModal: false, selectedGroupId: '' });
+        queryClient.invalidateQueries({ queryKey: ['getGroupListQuery'] });
+      }
+    },
+  });
 
-  /** Public profile URL for a stored handle, or '' when the key isn't one we map. */
-  const profileUrl = (key: string, value: string) => {
-    const handle = String(value || '')
-      .trim()
-      .replace(/^@/, '');
-    if (!handle) return '';
-    if (/^https?:\/\//i.test(handle)) return handle;
-    const host: Record<string, string> = {
-      instagram: 'https://instagram.com/',
-      telegram: 'https://t.me/',
-      twitter: 'https://x.com/',
-      facebook: 'https://facebook.com/',
-      linkedin: 'https://linkedin.com/in/',
-    };
-    return host[key] ? `${host[key]}${handle}` : '';
+  const login = useGoogleLogin({
+    scope: 'https://www.googleapis.com/auth/contacts.readonly',
+    onSuccess: async (tokenResponse) => {
+      try {
+        let connections: any[] = [];
+        let nextPageToken = '';
+        let hasNextPage = true;
+
+        while (hasNextPage) {
+          const url = `https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses,phoneNumbers&pageSize=2000&requestSyncToken=false${
+            nextPageToken ? `&pageToken=${nextPageToken}` : ''
+          }`;
+          const res = await fetch(url, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          });
+          if (!res.ok) throw new Error(`Google API responded with status ${res.status}`);
+          const pageData = await res.json();
+          if (pageData.connections) connections = [...connections, ...pageData.connections];
+          nextPageToken = pageData.nextPageToken || '';
+          hasNextPage = !!nextPageToken;
+        }
+
+        const fromGoogle = connections.map((conn: any) => {
+          const nameObj = conn.names?.[0] || {};
+          return {
+            name:
+              `${nameObj.givenName || nameObj.displayName || ''} ${nameObj.familyName || ''}`.trim(),
+            phone: conn.phoneNumbers?.[0]?.canonicalForm || conn.phoneNumbers?.[0]?.value || '',
+            email: conn.emailAddresses?.[0]?.value || '',
+            externalId: conn.resourceName || '',
+          };
+        });
+
+        const stored = await fetchAllPages(getContactList);
+        const plan = planContactSync(fromGoogle, stored);
+
+        if (!syncWouldChangeAnything(plan)) {
+          handleAlert({ text: describeSyncPlan(plan), type: 'info' });
+          return;
+        }
+
+        await syncContacts(syncPayload(plan));
+        handleAlert({ text: describeSyncPlan(plan), type: 'success' });
+        queryClient.invalidateQueries({ queryKey: ['getContactList'] });
+      } catch (err) {
+        handleAlert({
+          text: `Failed to import contacts: ${err instanceof Error ? err.message : String(err)}`,
+          type: 'error',
+        });
+      }
+    },
+    onError: (errorResponse) => {
+      handleAlert({
+        text: `Google Login Failed! Error: ${JSON.stringify(errorResponse)}`,
+        type: 'error',
+      });
+    },
+  });
+
+  const payloadExtraParams: any = {
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(selectedGroupId ? { groupId: selectedGroupId } : {}),
+    ...(selectedTag ? { filters: [{ key: 'tag', value: selectedTag }] } : {}),
   };
 
-  /** SMS goes to the inbox composer, the same route the Contacts page used. */
-  const sendSms = (phone?: string) =>
-    navigate(`/inbox?formState=contact&number=${encodeURIComponent(phone || '')}`);
+  const handleTabChange = (value: string) => {
+    setTabName(value);
+    setSelectedGroupId(null);
+    setSelectedTag(null);
+    if (value !== CONTACT_TABS_CONST.CONTACT_GROUP_LIST) {
+      setSelectedGroupForContactLogs(null);
+    }
+  };
+
+  const addActionLabel =
+    tabName === CONTACT_TABS_CONST.CONTACT_GROUP_LIST ? 'Add Group' : 'Add Contact';
 
   return (
     <>
-      <div className="gp-dirlist">
-        <DirectoryPage
-          title="External Contacts"
-          description="People outside the organisation — who they work for, how to reach them, and every channel you can use."
-          actions={
-            <button type="button" className="btn primary" onClick={() => navigate('/contact')}>
-              <Ic n="plus" />
-              New contact
-            </button>
-          }
-          filters={
-            <>
-              <FilterChip
-                label="Tag"
-                value={tag}
-                options={['All', 'VIP', 'DNC', 'Blocked', 'Standard']}
-                onChange={setTag}
-              />
-              {/* Labels are created per-contact from the detail drawer below — with
-                  none added yet there is nothing to filter by, so the chip stays
-                  hidden rather than open on an empty list. */}
-              {labels.index.length > 0 ? (
-                <FilterChip
-                  label="Label"
-                  value={label}
-                  options={['All', ...labels.index.map((entry) => entry.label)]}
-                  onChange={setLabel}
-                />
-              ) : null}
-              <SearchChip
-                value={search}
-                onChange={setSearch}
-                placeholder="Search contacts and labels"
-              />
-              <span className="fchip live" style={{ marginLeft: 'auto' }}>
-                <span className="num">{rows.length}</span> contacts
-              </span>
-            </>
-          }
-        >
-          <table>
-            <thead>
-              <tr>
-                <th>Contact</th>
-                <th>Organisation</th>
-                <th>Role</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Groups</th>
-                <th>Labels</th>
-                <th>Tag</th>
-                <th>Updated</th>
-                <th>Contact via</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isPending ? (
-                <EmptyRow span={10} message="Loading contacts…" />
-              ) : visible.length ? (
-                visible.map((row: Contact) => {
-                  const name = fullName(row);
-                  const phone = row?.contact?.phone || '';
-                  /* The platform stores the label as `groupName`, sometimes nested
-                     under `id`. Reading `name` returned nothing, so every contact
-                     showed no groups. De-duplicated by `_id` the same way the
-                     Contacts table does. */
-                  const groups = Array.isArray(row?.groupMeta)
-                    ? Array.from(
-                        new Map(row.groupMeta.map((group: any) => [group?._id, group])).values(),
-                      )
-                        .map((group: any) => group?.groupName || group?.id?.groupName)
-                        .filter(Boolean)
-                    : [];
-                  const updated = row?.updatedAt || row?.createdAt;
-                  const badge = tagOf(row);
-
-                  return (
-                    <tr
-                      key={row?._id || phone}
-                      onClick={() => setOpen(row)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td>
-                        <span className="flex items-center gap-2.5">
-                          <CustomAvatar
-                            name={name}
-                            image={row?.profile?.contactPic}
-                            type="contact"
-                            size="30"
-                          />
-                          <span style={{ minWidth: 0 }}>
-                            <span style={{ fontWeight: 700, display: 'block' }}>{name}</span>
-                            {row?.contact?.webpage ? (
-                              <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>
-                                {row.contact.webpage}
-                              </span>
-                            ) : null}
-                          </span>
-                        </span>
-                      </td>
-                      {/* The contact form writes company into `profile`; the
-                          top-level key is only a fallback on some responses. */}
-                      <td>
-                        {row?.profile?.company || row?.company || (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        )}
-                      </td>
-                      <td>{row?.title || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
-                      <td className="num">{phone || '—'}</td>
-                      <td>
-                        {row?.contact?.email || <span style={{ color: 'var(--ink-4)' }}>—</span>}
-                      </td>
-                      <td>
-                        {groups.length ? (
-                          groups.join(', ')
-                        ) : (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        )}
-                      </td>
-                      {/* The label matching the search leads, so a contact found
-                          by one of six labels shows the reason it was found. */}
-                      <td>
-                        {labels.labelsOf(row?._id).length ? (
-                          <span className="flex flex-wrap items-center gap-1">
-                            {labels
-                              .ranked(row?._id, label !== 'All' ? label : search)
-                              .slice(0, 3)
-                              .map((entry) => (
-                                <span className="tag neu" key={entry}>
-                                  {entry}
-                                </span>
-                              ))}
-                            {labels.labelsOf(row?._id).length > 3 ? (
-                              <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>
-                                +{labels.labelsOf(row?._id).length - 3}
-                              </span>
-                            ) : null}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className={badge.cls}>{badge.label}</span>
-                      </td>
-                      <td className="num">
-                        {updated && moment(updated).isValid() ? (
-                          moment(updated).format('DD MMM YYYY')
-                        ) : (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        )}
-                      </td>
-                      {/* Bubble phase, not capture: stopping the click during
-                          capture prevented it ever reaching these buttons, so
-                          none of the actions fired. Here the button handles the
-                          click first, then the row is stopped from opening. */}
-                      <td onClick={(event) => event.stopPropagation()}>
-                        <span className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`Call ${name}`}
-                            aria-label={`Call ${name}`}
-                            disabled={!phone}
-                            onClick={() => phone && dial(phone)}
-                          >
-                            <Ic n="phone" size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`Send an SMS to ${name}`}
-                            aria-label={`Send an SMS to ${name}`}
-                            disabled={!phone}
-                            onClick={() => sendSms(phone)}
-                          >
-                            <Ic n="chat" size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className="mini"
-                            title={
-                              whatsappNumberOf(row)
-                                ? `WhatsApp ${name}`
-                                : `${name} has no WhatsApp number`
-                            }
-                            aria-label={`WhatsApp ${name}`}
-                            disabled={!whatsappNumberOf(row)}
-                            onClick={() => setWhatsappTo(whatsappNumberOf(row))}
-                          >
-                            <Ic n="send" size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`${name}'s activity`}
-                            aria-label={`${name}'s activity`}
-                            onClick={() => setActivityFor(row)}
-                          >
-                            <Ic n="clock" size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className={`mini${isFavourite('contact', row?._id) ? ' mcm-fav-on' : ''}`}
-                            title={
-                              isFavourite('contact', row?._id)
-                                ? `Remove ${name} from favourites`
-                                : `Add ${name} to favourites`
-                            }
-                            aria-label={
-                              isFavourite('contact', row?._id)
-                                ? `Remove ${name} from favourites`
-                                : `Add ${name} to favourites`
-                            }
-                            aria-pressed={isFavourite('contact', row?._id)}
-                            onClick={() => toggleFavourite('contact', row?._id)}
-                          >
-                            <Ic n="star" size={12} fill={isFavourite('contact', row?._id)} />
-                          </button>
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <EmptyRow
-                  span={10}
-                  message={rows.length ? 'No contacts match those filters.' : 'No contacts yet.'}
-                />
-              )}
-            </tbody>
-          </table>
-
-          {rows.length ? (
-            <div className="mcm-tblfoot">
-              Showing {visible.length} of {rows.length} contact{rows.length === 1 ? '' : 's'}
-            </div>
-          ) : null}
-
-          {open ? (
-            <DirectoryDrawer
-              title={fullName(open)}
-              onClose={() => setOpen(null)}
-              footer={
-                <>
-                  <button type="button" className="btn ghost" onClick={() => setOpen(null)}>
-                    Close
-                  </button>
-                  <button type="button" className="btn primary" onClick={() => navigate('/contact')}>
-                    <Ic n="user" />
-                    Edit contact
-                  </button>
-                </>
-              }
-            >
-              <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
-                <CustomAvatar
-                  name={fullName(open)}
-                  image={open?.profile?.contactPic}
-                  type="contact"
-                  size="44"
-                />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: 15 }}>{fullName(open)}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-                    {open?.title || open?.profile?.company || open?.company || 'Contact'}
-                  </div>
-                </div>
-                <span className={tagOf(open).cls} style={{ marginLeft: 'auto' }}>
-                  {tagOf(open).label}
-                </span>
-              </div>
-
-              <div className="kv">
-                <span className="k">Phone</span>
-                <span className="v num">{open?.contact?.phone || '—'}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Email</span>
-                <span className="v">{open?.contact?.email || '—'}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Company</span>
-                <span className="v">{open?.profile?.company || open?.company || '—'}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Website</span>
-                <span className="v">{open?.contact?.webpage || '—'}</span>
-              </div>
-
-              {/* `social` is an open map on the server — the contact form already
-                  writes back whatever keys it receives — so every handle stored
-                  against this contact is listed, not just the three the form
-                  happens to render inputs for. */}
-              {Object.entries(open?.social || {})
-                .filter(([, value]) => Boolean(value))
-                .map(([key, value]) => {
-                  const url = profileUrl(key, String(value));
-                  return (
-                    <div className="kv" key={key}>
-                      <span className="k" style={{ textTransform: 'capitalize' }}>
-                        {key}
-                      </span>
-                      <span className="v">
-                        {url ? (
-                          <a href={url} target="_blank" rel="noopener noreferrer">
-                            {String(value)}
-                          </a>
-                        ) : (
-                          String(value)
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
-              {Object.values(open?.social || {}).every((value) => !value) ? (
-                <div className="kv">
-                  <span className="k">Social</span>
-                  <span className="v">—</span>
-                </div>
-              ) : null}
-
-              {/* Labels sit above the actions because they are the part of this
-                  panel somebody edits, and the actions are the part they press
-                  once and leave. */}
-              <div style={{ marginTop: 14 }}>
-                <div
-                  style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', marginBottom: 6 }}
+      <div className="gp-external">
+      <DirectoryPage
+        title="External Contacts"
+        description="People outside the organisation — who they work for, how to reach them, and every channel you can use."
+        actions={
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() =>
+              tabName === CONTACT_TABS_CONST.CONTACT_GROUP_LIST
+                ? setDrawerState((prev) => ({ ...prev, addLead: true, selectedGroup: null }))
+                : setDrawerState((prev) => ({ ...prev, addContact: true, selectedContact: null }))
+            }
+          >
+            <Icon name="Plus" className="h-3 w-3" />
+            {addActionLabel}
+          </button>
+        }
+        beforeTable={
+          <div className="gp-contact-toolbar border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
+            <div className="flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="w-full shrink-0 overflow-x-auto lg:w-auto lg:min-w-0 lg:shrink lg:flex-1">
+                <Tabs
+                  value={tabName}
+                  onValueChange={handleTabChange}
+                  className="flex w-max min-w-full lg:min-w-0"
                 >
-                  Labels
-                </div>
-                <div className="flex flex-wrap items-center gap-1" style={{ marginBottom: 8 }}>
-                  {labels.labelsOf(open?._id).length ? (
-                    labels.labelsOf(open?._id).map((entry) => (
-                      <span className="tag neu" key={entry}>
-                        {entry}
-                        <button
-                          type="button"
-                          onClick={() => labels.remove(String(open?._id), entry)}
-                          title={`Remove the label “${entry}”`}
-                          aria-label={`Remove the label ${entry}`}
-                          style={{ marginLeft: 4, lineHeight: 1 }}
-                        >
-                          <Ic n="x" size={10} />
-                        </button>
-                      </span>
-                    ))
-                  ) : (
-                    <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>None yet.</span>
+                  <div className="h-full min-w-max">
+                    <TabsList
+                      className="gap-1 rounded-lg border border-[rgba(225,200,165,0.7)] bg-[rgba(255,255,255,0.55)] p-1"
+                      style={{ margin: 0 }}
+                    >
+                      <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_LIST}>
+                        <span className="whitespace-nowrap">{CONTACT_TABS_CONST.CONTACT_LIST}</span>
+                      </TabsTrigger>
+                      <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_GROUP_LIST}>
+                        <span className="whitespace-nowrap">
+                          {CONTACT_TABS_CONST.CONTACT_GROUP_LIST}
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                </Tabs>
+              </div>
+
+              <div className="flex w-full flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-end sm:pb-0 lg:w-auto lg:min-w-0 lg:flex-none lg:pb-0">
+                <Button
+                  onClick={() => login()}
+                  variant="outline"
+                  className="gp-sync-btn h-9 min-h-9 w-full rounded-lg border-primary bg-white font-medium text-primary shadow-sm sm:w-auto"
+                >
+                  Sync With Google
+                </Button>
+
+                <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center lg:w-auto lg:min-w-0 lg:flex-nowrap">
+                  <div className="gp-contact-search-wrap">
+                    <Input
+                      placeholder="Search"
+                      className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow sm:min-w-[6rem] lg:min-w-[18rem] xl:min-w-[24rem]"
+                      IconPosition="left-0 pl-3 inset-y-0"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      Icon={<SearchLine className="gp-contact-search-icon text-[#8a7a67] w-4 h-4" />}
+                    />
+                  </div>
+                  {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
+                    <>
+                      <div className="w-full sm:w-44">
+                        <CustomSelect
+                          isClearable
+                          placeholder="Group"
+                          options={groupList?.map((group: any) => ({
+                            label: group.groupName || group.name || '',
+                            value: group._id,
+                          }))}
+                          handleChange={(e: any) => {
+                            setSelectedGroupId(e ? e.value : null);
+                            setSelectedGroupLabel(e ? e.label : null);
+                          }}
+                          value={
+                            selectedGroupId
+                              ? { label: selectedGroupLabel || '', value: selectedGroupId }
+                              : null
+                          }
+                          inputClass="contact-toolbar-select"
+                        />
+                      </div>
+                      <div className="w-full sm:w-40">
+                        <CustomSelect
+                          isClearable
+                          placeholder="Tag"
+                          options={[
+                            { label: 'Standard', value: 'STANDARD' },
+                            { label: 'VIP', value: 'VIP' },
+                            { label: 'Blocked', value: 'BLOCK' },
+                            { label: 'DNC', value: 'DNC' },
+                          ]}
+                          handleChange={(e: any) => setSelectedTag(e ? e.value : null)}
+                          value={
+                            selectedTag
+                              ? { label: TAG_FILTER_VALUE[selectedTag] || selectedTag, value: selectedTag }
+                              : null
+                          }
+                          inputClass="contact-toolbar-select"
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
-
-                <form
-                  className="flex items-center gap-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    labels.add(String(open?._id), newLabel);
-                    setNewLabel('');
-                  }}
-                >
-                  <input
-                    className="mcm-field"
-                    value={newLabel}
-                    onChange={(event) => setNewLabel(event.target.value)}
-                    placeholder="Add a label"
-                    aria-label="Add a label"
-                    list="mcm-label-suggestions"
-                  />
-                  {/* Suggests labels already in use, so the same idea does not end
-                      up spelled three ways and split across three filters. */}
-                  <datalist id="mcm-label-suggestions">
-                    {labels.index.map((entry) => (
-                      <option key={entry.label} value={entry.label} />
-                    ))}
-                  </datalist>
-                  <button type="submit" className="mini solid" disabled={!newLabel.trim()}>
-                    <Ic n="plus" size={12} />
-                    Add
-                  </button>
-                </form>
-
-                {labels
-                  .check(String(open?._id), newLabel)
-                  .filter(() => newLabel.trim().length > 0)
-                  .map((problem) => (
-                    <p
-                      key={problem.message}
-                      style={{
-                        fontSize: 11,
-                        margin: '6px 0 0',
-                        color: problem.blocking ? 'var(--crit)' : 'var(--ink-4)',
-                      }}
-                    >
-                      {problem.message}
-                    </p>
-                  ))}
-
-                <p style={{ fontSize: 11, color: 'var(--ink-4)', margin: '8px 0 0' }}>
-                  Labels are yours and are kept in this browser. They do not reach the contact
-                  record, so they will not follow you to another device or appear for anyone
-                  else on your team.
-                </p>
               </div>
-
-              <div className="ac-acts" style={{ marginTop: 14 }}>
-                <button
-                  type="button"
-                  className="mini solid"
-                  disabled={!open?.contact?.phone}
-                  onClick={() => open?.contact?.phone && dial(open.contact.phone)}
-                >
-                  <Ic n="phone" size={12} />
-                  Call
-                </button>
-                <button
-                  type="button"
-                  className="mini"
-                  disabled={!open?.contact?.phone}
-                  onClick={() => sendSms(open?.contact?.phone)}
-                >
-                  <Ic n="chat" size={12} />
-                  SMS
-                </button>
-                <button
-                  type="button"
-                  className="mini"
-                  disabled={!open?.contact?.phone}
-                  onClick={() => setWhatsappTo(open?.contact?.phone || '')}
-                >
-                  <Ic n="send" size={12} />
-                  WhatsApp
-                </button>
-                <button
-                  type="button"
-                  className="mini"
-                  onClick={() => setActivityFor(open)}
-                >
-                  <Ic n="clock" size={12} />
-                  Activity
-                </button>
-              </div>
-            </DirectoryDrawer>
-          ) : null}
-        </DirectoryPage>
+            </div>
+          </div>
+        }
+      >
+        {selectedGroupForContactLogs ? (
+          <LeadContactLogs
+            groupData={selectedGroupForContactLogs}
+            onBack={() => setSelectedGroupForContactLogs(null)}
+            setDrawerState={setDrawerState}
+            setShowDeleteConfirmation={canDeleteContact ? setShowDeleteConfirmation : () => void 0}
+            contextType="new-contact"
+          />
+        ) : tabName === CONTACT_TABS_CONST.CONTACT_GROUP_LIST ? (
+          <LeadsGroupList
+            setConfirmState={setConfirmState}
+            setDrawerState={setDrawerState}
+            isLead={false}
+            permissionAccess={{ canEdit: canEditContact, canDelete: canDeleteContact }}
+            onOpenContactLogs={(group: any) => setSelectedGroupForContactLogs(group)}
+            search={debouncedSearch}
+            tableWrapperClassName="gp-contact-table"
+            splitStickyHeader
+            fixedPageRows={10}
+            showRecordRange
+          />
+        ) : (
+          <AllNewContactsList
+            setDrawerState={setDrawerState}
+            setShowDeleteConfirmation={canDeleteContact ? setShowDeleteConfirmation : () => void 0}
+            payloadExtraParams={payloadExtraParams}
+            tableWrapperClassName="gp-contact-table"
+            splitStickyHeader
+            fixedPageRows={10}
+            showRecordRange
+            permissionAccess={{
+              canView: canViewContact,
+              canEdit: canEditContact,
+              canDelete: canDeleteContact,
+            }}
+            handleNotesOpen={(contact: any) => setNotesContact(contact)}
+            handleWhatsappOpen={(contact: any) =>
+              setWhatsappTo(contact?.social?.whatsapp || contact?.contact?.phone || '')
+            }
+          />
+        )}
+      </DirectoryPage>
       </div>
 
-      {whatsappTo ? (
-        <SideDrawer
-          isOpen={Boolean(whatsappTo)}
-          handleClose={() => setWhatsappTo('')}
-          isHeader
-          width="500px"
-          enableResponsive
-          responsiveWidth="96vw"
-          responsiveBreakpoint={1024}
-          content={
-            <SendWhatsappMessage handleClose={() => setWhatsappTo('')} initialNumber={whatsappTo} />
+      <AlertConfirm
+        apiLoading={isPendingDeleteGroup}
+        onConfirm={() =>
+          mutateDeleteGroup({ groupId: confirmModelState?.selectedGroupId, type: 'CONTACT' })
+        }
+        open={confirmModelState?.isModal}
+        setOpen={() => setConfirmState({ isModal: false, selectedGroupId: '' })}
+      />
+
+      <Dialog
+        open={drawerState.addContact}
+        onOpenChange={(next) =>
+          !next && setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
+        }
+      >
+        <DialogContent
+          className="gp-create-group-dialog gp-contact-form-dialog sm:max-w-[820px]"
+          showCloseButton={false}
+        >
+          <div className="gp-create-group-head">
+            <h2>
+              {drawerState.selectedContact
+                ? `Update Contact (${drawerState.selectedContact?.name?.first || ''} ${drawerState.selectedContact?.name?.last || ''})`
+                : 'Add Contact'}
+            </h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={() =>
+                setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
+              }
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
+            <CreateContactNew
+              contactData={drawerState.selectedContact}
+              isDisable={false}
+              setIsDisable={() => void 0}
+              setDrawerState={() => void 0}
+              keepFormDataAfterSave
+              isLead={false}
+              largeAvatar
+              handleClose={() =>
+                setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
+              }
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {drawerState.addLead ? (
+        <CreateNewLeadGroup
+          group={drawerState?.selectedGroup}
+          selectedCreateType={LEAD_CREATE_TYPE.ADD_NEW}
+          onAddInExistingGroup={() => void 0}
+          selectedLeads={[]}
+          modalState={drawerState.addLead}
+          setModalState={() =>
+            setDrawerState((prev) => ({ ...prev, addLead: false, selectedGroup: null }))
           }
         />
       ) : null}
 
-      {/* Activity opens over this list rather than routing to
-          /contact-activity. Navigating there replaced the whole screen with a
-          standalone page — the contacts you were reading and the filters you
-          had set both gone, and getting back meant the browser's Back. Wider
-          than the WhatsApp composer because it holds a call log, not a form. */}
-      {activityFor ? (
-        <SideDrawer
-          isOpen={Boolean(activityFor)}
-          handleClose={() => setActivityFor(null)}
-          width="min(880px, 82vw)"
-          enableResponsive
-          responsiveWidth="96vw"
-          responsiveBreakpoint={1024}
-          isCloseIcon={false}
-          content={
-            <ContactActivity
-              contactId={String(activityFor?._id || '')}
-              activityState={{ key: 'phone', value: activityFor?.contact?.phone || '' }}
-              onClose={() => setActivityFor(null)}
+      <Dialog open={Boolean(notesContact)} onOpenChange={(next) => !next && setNotesContact(null)}>
+        <DialogContent
+          className="gp-create-group-dialog gp-notes-dialog sm:max-w-[520px]"
+          showCloseButton={false}
+        >
+          <div className="gp-create-group-head">
+            <h2>
+              Contact Notes
+              {notesContact
+                ? ` (${notesContact?.name?.first || ''} ${notesContact?.name?.last || ''})`
+                : ''}
+            </h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={() => setNotesContact(null)}
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
+            <NotesWidget
+              customClass="h-[60vh]"
+              extraPayload={{ phone: notesContact?.contact?.phone }}
+              contactId={notesContact?._id || ''}
             />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(whatsappTo)} onOpenChange={(next) => !next && setWhatsappTo('')}>
+        <DialogContent
+          className="gp-create-group-dialog gp-whatsapp-dialog sm:max-w-[480px]"
+          showCloseButton={false}
+        >
+          <div className="gp-create-group-head">
+            <h2>Send WhatsApp Message</h2>
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={() => setWhatsappTo('')}
+            >
+              <Icon name="CloseIcon" className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
+            <div className="mcm-warm-glass whatsapp-drawer-glass flex w-full flex-col">
+              <SendWhatsappMessage
+                handleClose={() => setWhatsappTo('')}
+                initialNumber={whatsappTo}
+                selectClassName="whatsapp-drawer-select"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {canDeleteContact && showDeleteConfirmation ? (
+        <AlertConfirm
+          apiLoading={isPendingDeleteContact}
+          open={Boolean(showDeleteConfirmation)}
+          setOpen={() => setShowDeleteConfirmation(null)}
+          onConfirm={() => mutateDeleteContact({ contact_uuid: [showDeleteConfirmation?._id] })}
+          descriptionTextComp={
+            <div className="flex flex-col items-center justify-center gap-4 py-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <Icon name="TrashBin" className="h-8 w-8 text-red-600" />
+              </div>
+              <p className="text-center text-[#9A948F]">
+                Delete{' '}
+                {`${showDeleteConfirmation?.name?.first || ''} ${showDeleteConfirmation?.name?.last || ''}`.trim() ||
+                  'this contact'}
+                ? This action cannot be undone.
+              </p>
+            </div>
           }
         />
       ) : null}
     </>
+  );
+};
+
+const External = () => {
+  const { user } = useUser();
+  const DEFAULT_CLIENT_ID =
+    '285675733526-2rrr5cskrljog7f9s6ndm85198d5es29.apps.googleusercontent.com';
+  const googleClientId = user?.google_client_id || DEFAULT_CLIENT_ID;
+
+  return (
+    <GoogleOAuthProvider key={googleClientId} clientId={googleClientId}>
+      <ExternalInner />
+    </GoogleOAuthProvider>
   );
 };
 
