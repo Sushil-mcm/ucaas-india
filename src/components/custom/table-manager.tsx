@@ -99,6 +99,7 @@ function TableManager({
   visibleRowCount,
   defaultPageSize,
   perPageOptions = perPagesArr,
+  showRecordRange = false,
 }: Readonly<{
   columns: any;
   loading?: boolean;
@@ -198,6 +199,12 @@ function TableManager({
      away from it and back again is still possible through the picker
      itself rather than only being reachable at first mount. */
   perPageOptions?: number[];
+  /* Opt-in, every other caller unaffected. Swaps the pager's own
+     "N record(s)" label (a bare total) for People/Roles/Groups' own
+     "start–end of total" range (people-glass.css's `.gp-people-pager-count`),
+     so a caller styled to match those Directory tables can show the same
+     "which rows am I looking at" text instead of just a count. */
+  showRecordRange?: boolean;
 }>) {
   const [rowSelection, setRowSelection] = useState(initiallySelectedRows);
   /* A demo/cached refetch can resolve in well under 100ms - too fast for the
@@ -914,14 +921,21 @@ function TableManager({
                   </div>
                 )}
                 <Label className="text-[#2E2D35]/80 sm:pl-3">
-                  {/* Static mode has no fetch response to read a total off of —
-                      tableData is already the caller's full (filtered) list in
-                      that case, so its length IS the total. */}
-                  {tbldata?.data?.data?.result?.totalItems ||
-                    tbldata?.data?.data?.result?.total ||
-                    (usesStaticData ? tableData?.length : 0) ||
-                    0}{' '}
-                  record(s)
+                  {(() => {
+                    /* Static mode has no fetch response to read a total off of —
+                       tableData is already the caller's full (filtered) list in
+                       that case, so its length IS the total. */
+                    const total =
+                      tbldata?.data?.data?.result?.totalItems ||
+                      tbldata?.data?.data?.result?.total ||
+                      (usesStaticData ? tableData?.length : 0) ||
+                      0;
+                    if (!showRecordRange) return `${total} record(s)`;
+                    if (!total) return '0 of 0';
+                    const start = pageIndex * pageSize + 1;
+                    const end = Math.min((pageIndex + 1) * pageSize, total);
+                    return `${start}–${end} of ${total}`;
+                  })()}
                 </Label>
               </div>
               <Button

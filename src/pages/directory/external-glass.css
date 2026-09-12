@@ -411,12 +411,16 @@
    carries its own `border-radius: 18px` on every corner, same as any other
    TableManager instance. Sitting flush under the header with no gap, its
    rounded top corners show up as a visible curve right below the column
-   headings. The outer `.gp-contact-table` box already owns the card's
-   overall rounding; the body only needs to keep its bottom corners, to
-   match that outer box's own bottom radius. */
+   headings. Bottom corners get the same treatment now that the pager below
+   (external-glass.css's own pager override, further down) is a plain flush
+   bar rather than TableManager's default opaque card -- that used to sit
+   directly against this box with no gap and hid the mismatch; stripped
+   down, the leftover 18px bottom curve poked out past `.gp-contact-table`'s
+   own flattened (0px) corner, showing `.panel-card`'s paler fill through
+   the sliver. `.panel-card` owns the whole card's real rounding (20px,
+   above), this box just needs to sit flush inside it. */
 .gp-contact-table .table-scroll {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
+  border-radius: 0 !important;
 }
 /* Near-black instead of the washed brown, bolder and a size up -- same
    correction as People's own header (people-glass.css `.gp-people th`):
@@ -908,6 +912,15 @@
   box-shadow: none !important;
   border-radius: 0 !important;
   padding: 12px 22px 14px !important;
+}
+/* TableManager's own root wraps the table and this pager in a `gap-2` flex
+   column -- with the pager's card background stripped above, that 8px gap
+   opened a bare sliver of `.panel-card`'s own (slightly paler) fill between
+   the two. Closing it sits the pager flush under the table, matching every
+   other Directory pager (`.gp-people-pager` etc., which has no such gap to
+   begin with). */
+.gp-external div:has(> .gp-contact-table) {
+  gap: 0 !important;
 }
 .dark .gp-external div:has(> div > .mcm-pager) {
   border-top-color: rgba(255, 171, 94, 0.12) !important;
