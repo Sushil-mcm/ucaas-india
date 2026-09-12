@@ -698,6 +698,17 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  /* Pinned to the top of whichever ancestor actually ends up scrolling --
+     `.gp-create-group-body` still carries its own `overflow-y: auto`
+     (groups-glass.css) as a fallback for genuinely tall content, so a long
+     form (validation errors expanding a field, a long state/city list)
+     can still scroll the whole body rather than just the form column's
+     own inner scroll. Without this the rail -- a normal in-flow sibling --
+     would scroll away with it instead of staying in view beside whichever
+     step is showing. Inert (no visible effect) whenever only the form
+     column's own inner scroll is in use, which is the common case. */
+  position: sticky;
+  top: 0;
   /* `gp-department-rail`'s own `align-self: flex-start` (groups-glass.css)
      is a deliberate choice for Create group's plain-tab rail -- it sizes
      to its own short content rather than stretching to match whatever
