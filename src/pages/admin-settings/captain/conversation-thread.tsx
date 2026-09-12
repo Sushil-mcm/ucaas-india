@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { getInitials } from '@/lib/utils';
+import { FormattedMessage } from '@/components/captain/FormattedMessage';
 import { Conversation, ThreadMessage, messageTime, isOutgoing, isOnline } from './conversation-helpers';
 
 type Props = {
@@ -58,13 +59,13 @@ const Bubble = ({ m }: { m: ThreadMessage }) => {
       )}
       <div className="max-w-[70%]">
         <div
-          className={`whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+          className={`rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
             !out
               ? 'rounded-bl-md border border-gray-200 bg-gray-100 text-foreground dark:border-gray-600 dark:bg-gray-700'
               : 'rounded-br-md bg-violet-600 text-white'
           }`}
         >
-          {m.content}
+          <FormattedMessage content={m.content} isUser={!out} />
           <div className={`mt-1 flex items-center gap-1 text-[10px] ${out ? 'text-white/70' : 'text-muted-foreground'}`}>
             <span>{messageTime(m.created_at)}</span>
             {out && !m.pending && <CheckCheck className="size-3" />}

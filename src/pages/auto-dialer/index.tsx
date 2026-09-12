@@ -32,7 +32,15 @@ const AutoDialer = () => {
             content={<CampaignSidebar />}
             collapsible={false}
           />
-          <div className="min-h-0 flex-1">
+          {/* `min-w-0` is the whole fix for the page running off the right of the
+              screen. A flex item defaults to min-width:auto, so this column
+              refused to be narrower than the campaign table inside it - the
+              column grew, the page grew with it, and the KPI strip, the "New
+              campaign" button and the Actions column were all cut off at 100%
+              zoom. With this the column takes the room it is given and the table
+              scrolls inside its own frame, which is what it was already built to
+              do. */}
+          <div className="min-h-0 min-w-0 flex-1">
             <SuspenseOutlet />
           </div>
         </div>

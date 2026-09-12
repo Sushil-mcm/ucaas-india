@@ -20,7 +20,7 @@ import { SectionActions } from './section-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { handleAlert } from '@/lib/utils';
+import { getEnv, handleAlert } from '@/lib/utils';
 import { getUserList } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import {
@@ -46,43 +46,67 @@ import {
  * own password, your own signed-in devices. There was no place to write down a
  * rule that applies to the whole company. This page is that place.
  *
- * Storage follows the same route as the rest of Company info: the reserved
- * user_template row called "Company Default", whose `settings` column is a
- * free-form JSON blob. Everything written from here is namespaced under
- * `settings.company_security`, and the rest of the blob is spread through
+ * Storage follows the same route as the rest of Company info: one row per
+ * section in the company's `company_settings` table (section
+ * `company_security`; older tenants still fall back to the "Company Default"
+ * user_template row). Everything written from here is namespaced under
+ * `settings.company_security`, and the rest of the record is spread through
  * untouched on save.
  *
  * ---------------------------------------------------------------------------
- * READ THIS BEFORE YOU TRUST THIS PAGE
+ * WHAT READS EACH KEY (re-checked against the LIVE api2 build, 9 Sep 2026)
  * ---------------------------------------------------------------------------
- * Four of the five controls here write a value into a JSON blob and stop.
- * Grepped when this file was written, and again on 30 August 2026:
- *
- *   grep -rni "mfa|two_factor|2fa"                 --include=*.ts(x) src/  -> 0 hits
- *   grep -rni "cidr|allowlist|ip_whitelist"        --include=*.ts(x) src/  -> 0 hits
- *   grep -rni "saml|idp|entity_id"                 --include=*.ts(x) src/  -> 0 hits
- *   grep -rn  "company_security"  on the API       -> 0 hits, both services
- *
- * There is no MFA challenge in the sign-in flow, no request-time IP check and
- * no SAML handler. Those four need auth-layer work before they do anything, so
- * they are marked "Coming soon".
- *
- * The exception is the idle timeout. src/hooks/use-idle-timeout.ts reads
- * `idle_timeout` and does sign an idle person out — but it is this browser
- * doing it, and the API never checks a session's age, so the card says "In this
- * app only" rather than claiming a lock it cannot deliver.
+ *   ip_allowlist   default-api AuthController.login + AuthMiddleware, enforced
+ *                  since 2 Sep 2026 (IP_ALLOWLIST_ENFORCEMENT_ENABLED=true).
+ *   idle_timeout   src/hooks/use-idle-timeout.ts — this browser signs the idle
+ *                  person out; the API never checks a session's age, so the
+ *                  card says "In this app only".
+ *   sso            default-api AuthController samlLogin / samlAcs / samlMetadata
+ *                  / ssoResolve read `company_settings` section company_security
+ *                  key `sso` (enabled, idp_sso_url, idp_certificate) straight
+ *                  from the company's own database. LIVE: the sign-in page's
+ *                  "Continue with SSO" resolves the work email to the company
+ *                  and redirects to the recorded IdP URL. idp_entity_id and
+ *                  single_logout_uri are stored but not read.
+ *   mfa            default-api AuthController.login (the "recognised device"
+ *                  token shortcut) and sendOtp (the 30-day skip) — the anchored
+ *                  dist patch backend-patches/default-api/
+ *                  patch_auth_mfa_required_signin.py. The badge is driven by
+ *                  MFA_ENFORCEMENT_LIVE below; flip it only once the patch is
+ *                  applied on the box that takes sign-ins.
  *
  * A security page that looks live but is not is worse than no page at all,
  * because an admin reads it and believes they are covered. Every card below
- * carries a `status` saying which of those it is, in words a customer can act
- * on: "Coming soon" where we have not built it, "In this app only" where the
- * browser does the work and nothing behind it checks again. If the backend ever
- * starts honouring one of these keys, change that card's status and rewrite its
- * note — do not leave a stale reassurance in place.
+ * carries a `status` saying which it is: "Coming soon" where the server does
+ * not act on the key yet, "In this app only" where the browser does the work.
+ * If a key's reader changes, change that card's status and rewrite its note —
+ * do not leave a stale reassurance in place.
  */
 
 const SECURITY_KEY = 'company_security';
 const SECURITY_SCHEMA_VERSION = 1;
+
+/* Whether the sign-in server honours `mfa.required` / `mfa.exempt_user_uuids`.
+   True only once backend-patches/default-api/patch_auth_mfa_required_signin.py
+   has been applied to the default-api that serves this portal. Applied and
+   proven on api2 (unified) 9 Sep 2026 18:33 UTC. A build for a portal whose
+   API does not carry it (unified2-5 -> api3/api4, 695, ucaas.in) must set this
+   back to false: the two MFA cards then keep their "Coming soon" badge and say
+   so; nothing else changes. */
+const MFA_ENFORCEMENT_LIVE = true;
+
+/* What the sign-in server actually does, read from the live code on 9 Sep
+   2026 (default-api AuthController + security-api AlertRules). Shown in the
+   "fixed by the platform" block at the bottom so an admin reads real values,
+   not a description of some other product. */
+const SESSION_TOKEN_DAYS = 30; // JWT_VALIDITY=30d on api2
+const TRUSTED_DEVICE_DAYS = 30; // TRUSTED_DEVICE_DAYS default in sendOtp
+const OTP_CODE_MINUTES = 10; // OTP_EXPIRY_MS
+const OTP_MAX_WRONG_CODES = 5; // OTP_MAX_ATTEMPTS
+const OTP_WAIT_MINUTES = 10; // OTP_COOLDOWN_MS
+const LOGIN_FAILURES_PER_IP = 10; // user_login_failure_velocity.actionThreshold.value
+const LOGIN_FAILURE_WINDOW_MINUTES = 15; // ...intervalMinutes
+const LOGIN_BLOCK_MINUTES = 15; // ...blockDurationMinutes
 
 /* other established systems: minimum 300 seconds (5 minutes), maximum 28800 seconds (8 hours).
    Expressed in minutes here because that is how an admin thinks about it; the
@@ -130,11 +154,12 @@ interface SecurityForm {
 }
 
 const DEFAULT_FORM: SecurityForm = {
-  /* On by default, following the safer posture: the safer approach makes MFA mandatory for
-     every user who is not signing in through SSO. established systems treat it as optional
-     and only ever applies it to native logins. Recording the stricter of the
-     two as the company's intent is the safer default to write down. */
-  mfa_required: true,
+  /* Off until the company saves it on. The server treats "nothing saved" as
+     "not required", so the switch must show that — showing it On for a
+     company that never saved would tell an admin they are covered when they
+     are not. (Earlier this defaulted to On as a written-down intent, back when
+     nothing read the key.) */
+  mfa_required: false,
   mfa_exempt_user_uuids: [],
   idle_timeout_enabled: false,
   idle_timeout_minutes: '30',
@@ -315,6 +340,17 @@ const CompanySecurity = () => {
   const actorName =
     `${user?.user_info?.first_name || ''} ${user?.user_info?.last_name || ''}`.trim() ||
     String(user?.user_info?.email || 'An admin');
+  /* The SAML service-provider addresses are per company: the sign-in server
+     mounts them at /api/auth/sso/saml/<company uuid>/{metadata,acs,login}
+     (SAML_SP_BASE_URL on the box; the same host this portal's API calls go
+     to). An identity provider needs these three when the platform is added
+     as an application. */
+  const companyUuid = String(
+    user?.company_info?.uuid || (user as any)?.company_uuid || user?.user_info?.company_uuid || '',
+  );
+  const samlSpBase = companyUuid
+    ? `${String(getEnv().VITE_API_BASE_URL || '').replace(/\/+$/, '')}/api/auth/sso/saml/${companyUuid}`
+    : '';
 
   const [form, setForm] = useState<SecurityForm>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -635,7 +671,9 @@ const CompanySecurity = () => {
     // company defaults blob, and other screens write into it.
     const nextSettings = {
       ...savedSettings,
-      [SECURITY_KEY]: buildSecurityPayload(form),
+      /* Keys this page does not edit (allowed_domains, provisioning - written
+         by Admin › People › Authentication) ride along instead of being dropped. */
+      [SECURITY_KEY]: { ...(savedSettings?.[SECURITY_KEY] || {}), ...buildSecurityPayload(form) },
     };
 
     saveSecurity({
@@ -666,20 +704,29 @@ const CompanySecurity = () => {
 
       <div className="w-full">
         <div className="flex w-full flex-col gap-4">
-          {/* Loud, once, at the top — then specifically again on every card. */}
-          <div className="rounded-lg border border-red-300 bg-red-50 p-4">
-            <p className="text-sm font-semibold text-red-900">
-              Signing people out when idle is active. The rest is recorded as your policy and is not
-              switched on yet.
+          {/* Once, at the top — then specifically again on every card. */}
+          <div
+            className={`rounded-lg border p-4 ${
+              MFA_ENFORCEMENT_LIVE
+                ? 'border-gray-200 bg-gray-50'
+                : 'border-amber-300 bg-amber-50'
+            }`}
+          >
+            <p className="text-sm font-semibold text-gray-900">
+              {MFA_ENFORCEMENT_LIVE
+                ? 'Everything on this page is enforced, apart from the idle timeout, which works in this app only.'
+                : 'The IP lists and single sign-on are enforced by the sign-in server. The MFA rule is built and waiting to be switched on there.'}
             </p>
-            <p className="mt-1 text-xs text-red-800">
-              Every setting below is written into a stored record and nothing else reads it. There
-              is no MFA prompt in the sign-in flow, no inactivity timer, no IP check on requests and
-              no SAML handler anywhere in this product. Recording &ldquo;MFA required&rdquo; here
-              does not make anyone get an MFA challenge. All five settings need work in the backend
-              and the sign-in layer before they take effect. Until then this page is a written-down
-              intention — useful for agreeing the policy and for handing the values to whoever
-              builds the enforcement, and useless as a defence.
+            <p className="mt-1 text-xs text-gray-700">
+              Every password sign-in already asks for a code sent by email, and a person may choose
+              to skip that code on one device for {TRUSTED_DEVICE_DAYS} days. The MFA rule below
+              takes that choice away for everyone except the people you list.
+              {MFA_ENFORCEMENT_LIVE
+                ? ' It is live: what you save here is what the sign-in server checks.'
+                : ' Until the sign-in server has the update, what you save here is recorded and not yet checked — the card says so.'}{' '}
+              The IP allow and block lists are checked at sign-in and on every request. Single
+              sign-on hands sign-in to your identity provider as soon as it is switched on and
+              saved.
             </p>
           </div>
 
@@ -707,13 +754,17 @@ const CompanySecurity = () => {
           <SettingCard
             icon={<ShieldCheck className="h-5 w-5" />}
             title="Require multi-factor authentication"
-            description="Whether everyone signing in with a password must also pass a second check."
-            status="coming-soon"
-            note="Coming soon. Signing in does not ask for a second step yet, so this does not protect anything today. What you choose is saved and ready for the day it does."
+            description="Whether everyone signing in with a password must enter the emailed code every time."
+            status={MFA_ENFORCEMENT_LIVE ? 'active' : 'coming-soon'}
+            note={
+              MFA_ENFORCEMENT_LIVE
+                ? `Enforced at sign-in. With this on, the "skip the code on this device for ${TRUSTED_DEVICE_DAYS} days" choice is refused for everyone in the company except the people on the exception list below, so every password sign-in completes the emailed code. Sign-ins through your identity provider (SSO) are never asked — the provider has already checked. If the rule cannot be read, the code is asked for: the safe failure is one extra email.`
+                : 'Coming soon on this server. The sign-in server does not check this rule yet, so switching it on records your policy and changes nothing at sign-in today. The check is built (it refuses the 30-day device skip for everyone but the exception list) and turns on the moment the sign-in update is applied.'
+            }
           >
             <SettingRow
               label="Require MFA for password sign-in"
-              description="On by default, which is established systems's posture: there MFA is mandatory for every user who is not signing in through SSO, and cannot be switched off. established systems treat it as optional and applies it to native logins only — an SSO user is never prompted, because the identity provider has already done the checking. Recording the stricter of the two is the safer intent to write down."
+              description={`Off until you switch it on and save. Today a person can tick "Skip the code on this device for ${TRUSTED_DEVICE_DAYS} days" at sign-in. With this on, that tick is ignored for everyone except the exception list, and the code is required on every password sign-in. People who sign in through SSO are never prompted, because the identity provider has already done the checking.`}
               control={
                 <Switch
                   checked={form.mfa_required}
@@ -726,9 +777,13 @@ const CompanySecurity = () => {
           <SettingCard
             icon={<UserMinus className="h-5 w-5" />}
             title="MFA exception list"
-            description="The named people who would be allowed to sign in without the second check."
-            status="coming-soon"
-            note="Coming soon, along with the requirement above. Nobody is being asked for a second step yet, so nobody is being let off one."
+            description={`The named people who may still skip the emailed code on a device they have chosen to trust for ${TRUSTED_DEVICE_DAYS} days.`}
+            status={MFA_ENFORCEMENT_LIVE ? 'active' : 'coming-soon'}
+            note={
+              MFA_ENFORCEMENT_LIVE
+                ? 'Enforced with the rule above. Only the people ticked here keep the 30-day device skip while MFA is required. The admin rule is checked on the server too: an Admin, Sub-Admin or anyone whose role name contains "admin" is ignored if their name is somehow on this list, and the refusal is written to the sign-in log.'
+                : 'Coming soon on this server, together with the rule above. Names saved here are recorded and will be honoured the moment the sign-in update is applied. The server will also ignore any admin on the list, so the rule below cannot be worked around.'
+            }
           >
             {!form.mfa_required && (
               <p className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-xs text-[#9A948F]">
@@ -739,11 +794,10 @@ const CompanySecurity = () => {
             )}
 
             <p className="text-xs text-[#9A948F]">
-              established systems&rsquo;s hard rule: Company, Office and Regional Admins can never
-              be added to the exception list — the accounts with the most power are the ones that
-              must not skip the second factor. This account&rsquo;s equivalents are the Admin and
-              Sub-Admin roles, plus any custom role with &ldquo;admin&rdquo; in its name. Those rows
-              are locked below.
+              Admins can never be added to the exception list — the accounts with the most power
+              are the ones that must not skip the second factor. That means the Admin and Sub-Admin
+              roles, plus any custom role with &ldquo;admin&rdquo; in its name. Those rows are
+              locked below, and the sign-in server applies the same rule again on its side.
             </p>
 
             {Boolean(exemptAdmins.length) && (
@@ -848,7 +902,7 @@ const CompanySecurity = () => {
                 </div>
                 <div className="flex flex-col justify-center">
                   <p className="rounded-lg border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-xs text-[#9A948F]">
-                    other established systems forces HIPAA-enabled organisations down to{' '}
+                    Some phone systems force HIPAA-enabled organisations down to{' '}
                     {IDLE_HIPAA_MINUTES} minutes and does not let them choose. This platform has no
                     HIPAA flag, so nothing is forced here. If you are handling health data, set{' '}
                     {IDLE_HIPAA_MINUTES} yourself — and remember this signs somebody out of this app
@@ -1017,11 +1071,11 @@ const CompanySecurity = () => {
             icon={<KeyRound className="h-5 w-5" />}
             title="Single sign-on (SAML)"
             description="Where your identity provider lives, so sign-in can be handed over to it."
-            status="coming-soon"
-            note="Coming soon. Everyone still signs in with their email address and password. These details are saved and waiting for the day sign-in can be handed over."
+            status="active"
+            note="Live. Once this is on and saved, anyone who picks “Continue with SSO” on the sign-in page and enters a work email from this company is sent to the sign-in URL below, and comes back signed in when your provider vouches for them. A first-time person from your provider is added to the company automatically. Password sign-in keeps working alongside it. The Entity ID and Single Logout URI are recorded but not used yet — the server checks the signature on the assertion against the certificate, and signing out here does not yet sign out at the provider."
           >
             <SettingRow
-              label="Record SAML SSO details"
+              label="Use SAML single sign-on"
               description="Your identity provider gives you these when you add this platform as an application. The certificate is a public key, not a secret — but this record is ordinary account data, not a secrets store, so do not paste anything private into it."
               control={
                 <Switch
@@ -1098,10 +1152,58 @@ const CompanySecurity = () => {
                       }
                     />
                     <p className="text-xs text-[#9A948F]">
-                      Optional. Signing out here would also end the session at the provider. Leave
-                      blank if your provider does not offer one.
+                      Optional, and recorded only for now: signing out here does not yet end the
+                      session at the provider. Leave blank if your provider does not offer one.
                     </p>
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-xs font-semibold text-gray-900">
+                    What to give your identity provider
+                  </p>
+                  <p className="mt-1 text-xs text-gray-600">
+                    Add this platform as a SAML application at your provider using these addresses.
+                    They are fixed for your company; the metadata address returns the full
+                    service-provider XML.
+                  </p>
+                  {samlSpBase ? (
+                    <dl className="mt-2 grid gap-1 text-xs sm:grid-cols-[9rem_1fr]">
+                      <dt className="font-medium text-gray-700">SP Entity ID</dt>
+                      <dd className="break-all font-mono text-gray-800">{samlSpBase}/metadata</dd>
+                      <dt className="font-medium text-gray-700">ACS (reply) URL</dt>
+                      <dd className="break-all font-mono text-gray-800">{samlSpBase}/acs</dd>
+                      <dt className="font-medium text-gray-700">SP metadata</dt>
+                      <dd className="break-all font-mono text-gray-800">
+                        <a
+                          className="text-primary underline"
+                          href={`${samlSpBase}/metadata`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {samlSpBase}/metadata
+                        </a>
+                      </dd>
+                      <dt className="font-medium text-gray-700">Name ID / attribute</dt>
+                      <dd className="text-gray-800">
+                        Send the person&rsquo;s work email as the Name ID (or an{' '}
+                        <span className="font-mono">email</span> attribute). It is matched to the
+                        account&rsquo;s email address.
+                      </dd>
+                    </dl>
+                  ) : (
+                    <p className="mt-2 text-xs text-gray-500">
+                      Your company reference is not loaded yet; reload the page to see the
+                      addresses.
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-600">
+                    Test it after saving: open the sign-in page in a private window, choose
+                    &ldquo;Continue with SSO&rdquo;, enter a work email from this company, and you
+                    should land on your provider&rsquo;s sign-in page. If you see &ldquo;SSO
+                    sign-in failed&rdquo; instead, the details above did not match what the
+                    provider sent.
+                  </p>
                 </div>
               </>
             )}
@@ -1114,49 +1216,47 @@ const CompanySecurity = () => {
               </div>
               <div className="flex min-w-[220px] flex-1 flex-col gap-1">
                 <p className="text-base font-semibold text-[#2E2D35]">
-                  Things you cannot change, on the platforms this page follows
+                  Fixed by the platform — no setting to change
                 </p>
                 <p className="text-xs text-[#9A948F]">
-                  These are handled for you and there is no setting to change.
+                  What the sign-in server does for every company, read from its code on 9
+                  September 2026. These are facts about this platform, not a description of
+                  another one.
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
               <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
-                <p className="text-sm font-semibold text-[#2E2D35]">
-                  Password reuse — other established systems
-                </p>
+                <p className="text-sm font-semibold text-[#2E2D35]">Passwords</p>
                 <p className="text-xs text-[#9A948F]">
-                  other established systems blocks reuse of the last 10 passwords. It is fixed: an
-                  admin cannot raise, lower or switch off that history.
+                  A new password must differ from the current one and must not appear in the public
+                  list of passwords found in data breaches (checked without sending the password
+                  itself). There is no history beyond that: a password used two changes ago can be
+                  used again. Changing a password signs the person out of every device.
                 </p>
               </div>
               <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
-                <p className="text-sm font-semibold text-[#2E2D35]">
-                  Failed sign-ins — other established systems
-                </p>
+                <p className="text-sm font-semibold text-[#2E2D35]">Failed sign-ins</p>
                 <p className="text-xs text-[#9A948F]">
-                  After 6 failed logins other established systems locks the account for 5 minutes.
-                  Also fixed — there is no threshold or duration to set.
+                  {LOGIN_FAILURES_PER_IP} failed password sign-ins from the same network address
+                  within {LOGIN_FAILURE_WINDOW_MINUTES} minutes block sign-in from that address for{' '}
+                  {LOGIN_BLOCK_MINUTES} minutes, and the platform team is alerted from the third
+                  failure. The block is by address, not by account. The emailed code expires after{' '}
+                  {OTP_CODE_MINUTES} minutes; {OTP_MAX_WRONG_CODES} wrong codes mean a{' '}
+                  {OTP_WAIT_MINUTES}-minute wait before a new one can be requested.
                 </p>
               </div>
               <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
-                <p className="text-sm font-semibold text-[#2E2D35]">
-                  Session length — established systems
-                </p>
+                <p className="text-sm font-semibold text-[#2E2D35]">Session length</p>
                 <p className="text-xs text-[#9A948F]">
-                  established systems fixes its session at 30 days and gives admins no way to
-                  shorten it. That is why the idle timeout above is modelled on other established
-                  systems, which does let you choose.
+                  A sign-in lasts {SESSION_TOKEN_DAYS} days unless the person signs out, changes
+                  their password, or an admin removes the device — the server checks the session
+                  record on every request, so a removed session stops at once. The
+                  &ldquo;skip the code on this device&rdquo; choice also lasts{' '}
+                  {TRUSTED_DEVICE_DAYS} days, and the idle timeout above ends a session sooner in
+                  this app only.
                 </p>
               </div>
-              <p className="rounded-lg border border-gray-300 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-3 py-2 text-xs text-gray-700">
-                These three describe established business phone systems, not this platform. What
-                this platform does about password history, failed sign-ins and session length has
-                not been confirmed from the code — the sign-in behaviour lives in the backend, which
-                is not visible from here. Do not read them as descriptions of what is protecting you
-                now.
-              </p>
             </div>
           </div>
 

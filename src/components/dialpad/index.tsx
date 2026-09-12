@@ -9,6 +9,7 @@ import {
   useGroupCallerIdOptions,
   isGroupCallerIdOption,
 } from '@/hooks/use-group-caller-id-options';
+import { isCompanyCallerIdOption } from '@/hooks/use-company-caller-id-options';
 import { AppWindow as AppWindowIcon, Minus, Tablet, X } from 'lucide-react';
 import DialpadGuideModal from './components/dialpad-guide-modal';
 import DialpadMaxiSidePanel, { type DialpadMaxiTab } from './components/dialpad-maxi-side-panel';
@@ -83,6 +84,8 @@ const Dialpad = ({
     isRegistered,
     uaStatus,
   } = useDialpad();
+  /* Own numbers, or the company's spare ones for a person who has none - the
+     hook decides, so this list matches what the console shows. */
   const { callerIdOptions, defaultCallerIdOption, updateCallerIdSelection } =
     useDialpadCallerIdOptions();
 
@@ -91,9 +94,38 @@ const Dialpad = ({
      switched that on, so this is purely additive: a tenant that has not enabled
      it sees exactly the list it saw before. */
   const { groupCallerIdOptions } = useGroupCallerIdOptions();
+  /* The number of the campaign this person has joined, offered alongside their
+     own. A campaign member does not need a personal DID to work its leads, and
+     without this an agent who has none saw "No number assigned" on a campaign
+     that plainly has one, and could not dial at all.
+     It has to live in THIS list rather than just being selected: the effect
+     below resets any selection that is not one of these options, so a
+     synthetic pick made elsewhere was silently thrown away on the next render.
+     Only while joined, and only when it is not already one of their own. */
+  const joinedCampaignCallerId = useMemo<CallerIdOption | null>(() => {
+    if (!String(joinedCampaignId || '').trim()) return null;
+    const raw = String((activeCampaign?.callerId || [])[0] || '').trim();
+    const digits = raw.replace(/\D/g, '');
+    if (!digits) return null;
+    const owned = [...callerIdOptions, ...groupCallerIdOptions].some(
+      (option) => String((option as any)?.number || '').replace(/\D/g, '') === digits,
+    );
+    if (owned) return null;
+    return {
+      id: `campaign-${digits}`,
+      label: String(activeCampaign?.name || '').trim() || 'Campaign number',
+      country: String((activeCampaign as any)?.country || 'US').toUpperCase(),
+      number: raw,
+    };
+  }, [activeCampaign, joinedCampaignId, callerIdOptions, groupCallerIdOptions]);
+
   const allCallerIdOptions = useMemo(
-    () => [...callerIdOptions, ...groupCallerIdOptions],
-    [callerIdOptions, groupCallerIdOptions],
+    () => [
+      ...callerIdOptions,
+      ...groupCallerIdOptions,
+      ...(joinedCampaignCallerId ? [joinedCampaignCallerId] : []),
+    ],
+    [callerIdOptions, groupCallerIdOptions, joinedCampaignCallerId],
   );
   const [typedNumber, setTypedNumber] = useState('');
   const [selectedCallerId, setSelectedCallerId] = useState<CallerIdOption>(defaultCallerIdOption);
@@ -158,6 +190,9 @@ const Dialpad = ({
       ? 'mini'
       : baseResolvedModalSize;
   const isMaxiMode = resolvedModalSize === 'maxi';
+  /* Matches the rule the overlay uses to size itself, so the header and the
+     frame cannot disagree about which dialer this is. */
+  const isFullPageCampaign = mode === 'overlay' && isMaxiMode && isCampaignInProgress;
   const isHold = Boolean(activeSession?.isOnHold);
   const isMuted = Boolean(activeSession?.isMuted);
   const isSpeakerOn = activeSession?.isSpeakerOn ?? true;
@@ -266,7 +301,7 @@ const Dialpad = ({
          not assigned to them anyway — which would surface as an error on a
          choice the screen had already applied, leaving the two disagreeing.
          The call itself reads the selection from state, so nothing is lost. */
-      if (isGroupCallerIdOption(option)) return;
+      if (isGroupCallerIdOption(option) || isCompanyCallerIdOption(option)) return;
 
       void updateCallerIdSelection(option);
     },
@@ -316,6 +351,36 @@ const Dialpad = ({
       return defaultCallerIdOption;
     });
   }, [allCallerIdOptions, defaultCallerIdOption]);
+
+  /* Joined to a campaign: present its number. A customer who was rung from the
+     campaign number, or who rang it, then sees the same number when someone on
+     the team calls them back from the dialpad. Only applied when that number
+     is one this person may present; leaving the campaign puts the usual
+     default back (unless they picked something else meanwhile). */
+  const campaignNumberRef = useRef<string>('');
+  useEffect(() => {
+    const digits = (value: any) => String(value || '').replace(/\D/g, '');
+    const rawCampaignNumber = String((activeCampaign?.callerId || [])[0] || '').trim();
+    const campaignNumber = digits(rawCampaignNumber);
+    const joined = Boolean(String(joinedCampaignId || '').trim()) && campaignNumber;
+    if (joined) {
+      const match = allCallerIdOptions.find((option) => digits((option as any)?.number) === campaignNumber);
+      /* The campaign's own entry is in allCallerIdOptions while joined (see
+         joinedCampaignCallerId above), so `match` finds it whether the number
+         belongs to this person or to the campaign. */
+      const campaignOption = match;
+      if (campaignOption && campaignNumberRef.current !== campaignNumber) {
+        campaignNumberRef.current = campaignNumber;
+        setSelectedCallerId(campaignOption);
+      }
+      return;
+    }
+    if (campaignNumberRef.current) {
+      const leaving = campaignNumberRef.current;
+      campaignNumberRef.current = '';
+      setSelectedCallerId((prev) => (digits((prev as any)?.number) === leaving ? defaultCallerIdOption : prev));
+    }
+  }, [activeCampaign, joinedCampaignId, allCallerIdOptions, defaultCallerIdOption]);
 
   useEffect(() => {
     if (mode === 'overlay' && !isDialpadOpen) return;
@@ -664,9 +729,25 @@ const Dialpad = ({
         >
           <div
             className={cn(
-              'dialpad-overlay-drag-handle flex cursor-grab touch-none select-none items-center justify-between bg-white px-1.5 py-1 active:cursor-grabbing',
+              'flex touch-none select-none items-center justify-between bg-white',
+              /* The full-page campaign dialer is not draggable, so the header
+                 must not offer a grab cursor it cannot honour - and it gets
+                 room to say what the agent is looking at. */
+              isFullPageCampaign
+                ? 'gap-3 border-b border-ucass-active-bg px-4 py-2'
+                : 'dialpad-overlay-drag-handle cursor-grab px-1.5 py-1 active:cursor-grabbing',
             )}
           >
+            {isFullPageCampaign ? (
+              <div className="min-w-0">
+                <p className="truncate text-[14px] font-semibold text-[#17385e]">
+                  {String(activeCampaign?.campaignName || activeCampaign?.name || '').trim() ||
+                    'Campaign dialer'}
+                </p>
+                <p className="text-[11px] text-[#6c809e]">Campaign dialer</p>
+              </div>
+            ) : null}
+
             {hasAnySession && !isMiniOnlyForActiveSession ? (
               <div className="inline-flex items-center gap-1 rounded-xl bg-[#f5f8ff] p-1">
                 {!isMaxiRestrictedForActiveSession ? (
@@ -720,9 +801,18 @@ const Dialpad = ({
               type="button"
               onClick={handleCloseDialpadFromHeader}
               aria-label="Close dialpad"
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#2f4d75] transition hover:bg-[#edf3ff] hover:text-primary"
+              title="Close"
+              className={cn(
+                'ml-auto inline-flex items-center justify-center rounded-lg text-[#2f4d75] transition hover:bg-[#edf3ff] hover:text-primary',
+                /* Filling the screen, the way out has to be obvious - a 32px
+                   icon in an empty corner reads as decoration. */
+                isFullPageCampaign
+                  ? 'h-10 gap-1.5 border border-ucass-active-bg px-3 text-[13px] font-medium'
+                  : 'h-8 w-8',
+              )}
             >
-              <X className="h-4 w-4" />
+              <X className={isFullPageCampaign ? 'h-5 w-5' : 'h-4 w-4'} />
+              {isFullPageCampaign ? <span>Close</span> : null}
             </button>
           </div>
 
@@ -764,7 +854,14 @@ const Dialpad = ({
                   'relative h-full min-h-0 w-full items-start ',
                   contentViewportClass,
                   isMaxiMode
-                    ? 'grid grid-cols-1 md:grid-cols-[minmax(0,35%)_minmax(0,65%)] xxl:grid-cols-[minmax(0,30%)_minmax(0,70%)] gap-1'
+                    ? (isFullPageCampaign
+                      /* A percentage column is right inside a box and wrong across a
+                         whole screen: 35% of a wide monitor is a 700px keypad. Pin the
+                         dialer to a comfortable width and give every remaining pixel to
+                         the lead, the script and the notes, which is the part an agent
+                         actually reads. */
+                      ? 'grid grid-cols-1 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-3 px-3 pb-3'
+                      : 'grid grid-cols-1 md:grid-cols-[minmax(0,35%)_minmax(0,65%)] xxl:grid-cols-[minmax(0,30%)_minmax(0,70%)] gap-1')
                     : 'mx-auto flex w-full max-w-[min(100vw-1rem,360px)] justify-center max-[380px]:max-w-[min(100vw-0.5rem,320px)] sm:max-w-[min(100vw-2rem,400px)] md:max-w-[min(100%,300px)] lg:max-w-[min(100%,300px)] xl:max-w-[min(100%,430px)]',
                 )}
               >
@@ -812,6 +909,7 @@ const Dialpad = ({
                     onSpeakerToggle={handleSpeakerToggle}
                     onEndCall={handleHangup}
                     onOpenMaxiTab={handleOpenMaxiTab}
+                    fullPage={isFullPageCampaign}
                     className={
                       isMaxiMode
                         ? 'h-full w-full max-w-none px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-3'
@@ -830,6 +928,7 @@ const Dialpad = ({
                       activeTabOverride={maxiTabOverride}
                       onActiveTabOverrideApplied={handleMaxiTabOverrideApplied}
                       onActiveTabChange={handleMaxiTabChange}
+                      fullPage={isFullPageCampaign}
                       className="h-full w-full max-w-none"
                     />
                   </div>
@@ -852,7 +951,14 @@ const Dialpad = ({
                 'relative h-full min-h-0 w-full items-start ',
                 contentViewportClass,
                 isMaxiMode
-                  ? 'grid grid-cols-1 md:grid-cols-[minmax(0,35%)_minmax(0,65%)] xxl:grid-cols-[minmax(0,30%)_minmax(0,70%)] gap-1'
+                  ? (isFullPageCampaign
+                      /* A percentage column is right inside a box and wrong across a
+                         whole screen: 35% of a wide monitor is a 700px keypad. Pin the
+                         dialer to a comfortable width and give every remaining pixel to
+                         the lead, the script and the notes, which is the part an agent
+                         actually reads. */
+                      ? 'grid grid-cols-1 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-3 px-3 pb-3'
+                      : 'grid grid-cols-1 md:grid-cols-[minmax(0,35%)_minmax(0,65%)] xxl:grid-cols-[minmax(0,30%)_minmax(0,70%)] gap-1')
                   : 'mx-auto flex w-full max-w-[min(100vw-1rem,360px)] justify-center max-[380px]:max-w-[min(100vw-0.5rem,320px)] sm:max-w-[min(100vw-2rem,400px)] md:max-w-[min(100%,300px)] lg:max-w-[min(100%,300px)] xl:max-w-[min(100%,430px)]',
               )}
             >

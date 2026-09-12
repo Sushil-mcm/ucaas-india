@@ -89,19 +89,21 @@ export function getEnv() {
   const aiBaseUrl = getAiBaseUrl();
 
   return {
-    ...import.meta.env,
+    // Only the keys the app reads. Spreading the whole env object here used to
+    // put EVERY VITE_ variable from the env files into the public bundle,
+    // including a WhatsApp token nothing used (found 5 Sep 2026).
     VITE_PAYPAL_CLIENT_ID: import.meta.env.VITE_PAYPAL_CLIENT_ID,
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_NOTIFICATION_SOCKET_URL: import.meta.env.VITE_NOTIFICATION_SOCKET_URL,
     VITE_AI_SOCKET_URL: import.meta.env.VITE_AI_SOCKET_URL,
+    VITE_COPILOT_BACKEND_ENABLED: import.meta.env.VITE_COPILOT_BACKEND_ENABLED,
     VITE_AGENTIC_API_URL: import.meta.env.VITE_AGENTIC_API_URL,
     VITE_TEXT_TO_SPEECH_CHAR_LENGTH: import.meta.env.VITE_TEXT_TO_SPEECH_CHAR_LENGTH,
-    VITE_STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
     VITE_HUBSPOT_CLIENT_ID: import.meta.env.VITE_HUBSPOT_CLIENT_ID,
+    VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
     VITE_HUBSPOT_SCOPE: import.meta.env.VITE_HUBSPOT_SCOPE,
     VITE_HUBSPOT_REDIRECT_URL: import.meta.env.VITE_HUBSPOT_REDIRECT_URL,
     VITE_TEMPLATE_BASE_URL: import.meta.env.VITE_TEMPLATE_BASE_URL,
-    VITE_WHATSAPP_CHAT_TOKEN: import.meta.env.VITE_WHATSAPP_CHAT_TOKEN,
     VITE_AI_URL: aiBaseUrl,
     VITE_APP_DOMAIN: import.meta.env.VITE_APP_DOMAIN,
     VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
@@ -491,7 +493,6 @@ export const isJsonString = (str: string, type = 'object') => {
   try {
     return JSON.parse(str);
   } catch (_) {
-    console.log('isJsonString:', _);
     if (type === 'array') {
       return [];
     }
@@ -508,15 +509,20 @@ export function parseJSON(jsonString: any) {
   }
 }
 export const makeSipSocketConnection = (token: string, company_uuid?: string) => {
-  console.log(token, 'tokentokentoken');
-
   if (!token) return;
 
+  // The session token travels in the handshake `auth` payload, which is sent
+  // in the request body and never appears in a URL. The `query` copy is kept
+  // only until every socket server has been updated to read `auth`: the
+  // production one (socket2) accepts both since 5 Sep 2026; the sibling
+  // portals' servers still read `query` only. Drop `query` once they do.
+  const credentials = {
+    token: token,
+    ...(company_uuid ? { company_uuid } : {}),
+  };
   const socket = io(getEnv().VITE_NOTIFICATION_SOCKET_URL, {
-    query: {
-      token: token,
-      ...(company_uuid ? { company_uuid } : {}),
-    },
+    auth: credentials,
+    query: credentials,
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
@@ -1076,11 +1082,90 @@ export function formatRecordingDate(createdAt: any) {
   return date.toLocaleString('en-US', options);
 }
 
+/* Recordings the platform ships, rather than ones a company made.
+ *
+ * They live in the media store under `default/recording/<file>` instead of
+ * `<company>/greeting/<file>`, so anything playing one has to build a
+ * different URL — see `greeting-select.tsx` and the recordings library. The
+ * row exists in every tenant with the same uuid, which is what makes matching
+ * on the uuid work at all.
+ *
+ * The last two were added on 3 Sep 2026 to give the Welcome message and
+ * On-hold music rows something to offer on a brand-new account: without them
+ * both dropdowns opened empty, with nothing to pick and no hint that the
+ * answer was to go and record something first. */
 export const DEFAULT_RECORDING_UUIDS = [
   '5b6ecf4c-4df2-43fe-b2c7-dd12f457824d',
   '5b6ecf4c-4df2-43fe-b2c7-dd12f457824c',
   '5b6ecf4c-4df2-43fe-b2c7-dd12f457824b',
   '5b6ecf4c-4df2-43fe-b2c7-dd12f457824a',
+  // Default welcome message  (type welcome_greeting) — see HIDDEN_RECORDING_UUIDS
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578250',
+  // Default hold music       (type on_hold_music)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578251',
+  /* Four proper voicemail greetings, added 3 Sep 2026. The stock rows this
+     slot used to offer were recording announcements wearing a `voicemail`
+     type — see HIDDEN_RECORDING_UUIDS. */
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578260', // Default voicemail
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578261', // After-hours voicemail
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578262', // Busy - all lines voicemail
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578263', // Holiday voicemail
+  /* Welcome message, in a choice of voice and accent, added 3 Sep 2026. All
+     three say the same line; only the voice differs, which is the whole point
+     of offering more than one. Deliberately NOT in HIDDEN_RECORDING_UUIDS -
+     the single generic default was hidden because one stock voice was worse
+     than none, and a choice of three is the answer to that, not more of the
+     same problem. */
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578270', // Jenny (Female - American)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578271', // Guy (Male - American)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578272', // Ryan (Male - British)
+  /* The stock set the account owner curated, promoted from their own library
+     to every tenant on 3 Sep 2026. These replace the three synthesised voices
+     above, which are hidden below - keeping both would have listed two
+     recordings called "Jenny (Female - American)". */
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578280', // Jenny (Female - American)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578281', // Andrew (Male - American)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578282', // Davis (Male - British)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578283', // Victoria (Female - British)
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578284', // Hold music - Arabesque
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578285', // Hold music - Bach Prelude
+];
+
+/* Stock recordings the pickers do not offer.
+ *
+ * These rows stay in every tenant and keep playing wherever they are already
+ * chosen — this only takes them out of the lists, so nothing anybody has
+ * already saved stops working.
+ *
+ * The default welcome message is hidden at the customer's request: they want
+ * their own voices offered there instead of a generic one. Note the cost, which
+ * is the reason it was added on 3 Sep 2026 in the first place — a brand-new
+ * account now opens the Welcome message dropdown with nothing in it again until
+ * somebody records something. The default hold music is deliberately NOT in
+ * this list: an account with no hold music of its own is better off with the
+ * stock loop than with silence. */
+export const HIDDEN_RECORDING_UUIDS = [
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578250',
+  /* The four stock rows that were filed as `voicemail` but are not voicemail
+     greetings. Three of them announce that a call is being RECORDED, and the
+     fourth is a four-second stub; all four were offered as the thing a caller
+     hears before leaving a message, which is simply the wrong recording in
+     that slot. Hidden rather than deleted, for the reason above: any company
+     that already picked one keeps hearing it. The four proper voicemail
+     greetings added on 3 Sep 2026 take their place in the list. */
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f457824a', // Default VM
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f457824b', // Default Recording On
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f457824c', // Default Recording Off
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f457824d', // Default Recording
+  /* The three synthesised welcome voices, replaced on 3 Sep 2026 by the set
+     the account owner curated (uuids ...8280-8283 above). Hidden rather than
+     deleted, as ever: a company that already chose one keeps hearing it.
+     Note what changed since the earlier note here - hiding these used to
+     leave the Welcome slot empty, which is why they were put back; there are
+     now four better recordings in their place, so the slot stays full. */
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578270', // Jenny (Female - American), synthesised
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578271', // Guy (Male - American), synthesised
+  '5b6ecf4c-4df2-43fe-b2c7-dd12f4578272', // Ryan (Male - British), synthesised
 ];
 
 export const formatSize = (size: number): string => {
@@ -1176,6 +1261,16 @@ export const notificationIconColorLookup: any = {
   did_purchase: 'text-success-500',
   change_plan_request: 'text-success-500',
 };
+/** Below this many digits it is an extension, not a phone number — no country. */
+export const EXTENSION_MAX_DIGITS = 6;
+
+/** True when a value is an internal extension rather than a dialable number. */
+export const isExtensionNumber = (value: unknown) => {
+  const raw = String(value ?? '').trim();
+  if (!raw || /[a-z]/i.test(raw)) return false;
+  return raw.replace(/\D/g, '').length > 0 && raw.replace(/\D/g, '').length <= EXTENSION_MAX_DIGITS;
+};
+
 /**
  * The country to read a number as when it carries no country code of its own.
  *
@@ -1371,6 +1466,43 @@ export const getTodayInTimeZone = (timezone: any) => {
     // Standardize formatted output to "YYYY-MM-DD, HH:mm:ss" across all browsers (Chrome uses comma, Firefox does not)
     const cleaned = formatted.replace(/,/g, '').replace(/\s+/g, ' ').trim();
     return cleaned.replace(' ', ', ');
+  }
+};
+
+/**
+ * Given a UTC instant (ISO string / Date / ms) and an IANA timezone, return the
+ * wall-clock parts *in that zone* as numbers. Uses Intl.formatToParts so it does
+ * not depend on Date being able to re-parse a locale string (which is not
+ * spec-guaranteed and varies by engine).
+ */
+export const getZonedDateParts = (
+  utcValue: string | number | Date,
+  timezone?: string,
+): { year: number; month: number; day: number; hours: number; minutes: number } | null => {
+  const date = new Date(utcValue);
+  if (Number.isNaN(date.getTime())) return null;
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone || undefined,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+    let hours = get('hour');
+    if (hours === 24) hours = 0; // some engines emit "24" for midnight
+    return {
+      year: get('year'),
+      month: get('month'),
+      day: get('day'),
+      hours,
+      minutes: get('minute'),
+    };
+  } catch {
+    return null;
   }
 };
 
@@ -1720,14 +1852,15 @@ export const isMeetingActive = (startTime: string, endTime: string, status: stri
   return now.isBetween(start, end, null, '[]');
 };
 
-/** True when meeting has not started yet and current time is within 5 minutes before start. Uses startUtc (ISO) for reliable parsing. */
+/** True when the meeting has not started yet and is still at least 5 minutes
+ * away — i.e. there is time to cancel or reschedule it. Uses startUtc (ISO) for
+ * reliable parsing. */
 export const canEndMeetingBeforeStart = (startUtc: string) => {
   if (!startUtc) return false;
   const start = new Date(startUtc).getTime();
   const now = Date.now();
   const diffInMinutes = (start - now) / 1000 / 60;
-  console.log('diffInMinutes', diffInMinutes);
-  return diffInMinutes > 0 && diffInMinutes >= 5;
+  return diffInMinutes >= 5;
 };
 export const getInitials = (fullName: string) => {
   if (!fullName) return '';
@@ -1745,12 +1878,29 @@ export const getArrayLength = (arr: any) => {
   return Array.isArray(arr) && arr?.length;
 };
 
+/**
+ * What the composer tells you about balance before you send.
+ *
+ * A cost of zero means the price is NOT KNOWN — the rate card comes back
+ * without a `rate` on plenty of destinations. It used to be read as
+ * "unaffordable": `Math.floor(balance / 0)` is Infinity, but the guard above it
+ * returned 0 sendable messages, so a fully funded wallet was told it had no
+ * balance and could not send at all. Only report insufficient balance when the
+ * price is actually known and the wallet genuinely cannot cover it.
+ */
 export function getSmsAlert({ freeSmsLeft, smsCount, balanceAmount, totalSmsCharges }: any) {
   if (smsCount <= 0) {
     return 'No SMS to send.';
   }
 
-  const costPerSms = smsCount > 0 && totalSmsCharges > 0 ? totalSmsCharges / smsCount : 0;
+  const charges = Number(totalSmsCharges);
+  const balance = Number(balanceAmount);
+  const costPerSms =
+    smsCount > 0 && Number.isFinite(charges) && charges > 0 ? charges / smsCount : 0;
+  // No price to check against — say nothing about balance rather than blocking.
+  const priceKnown = costPerSms > 0;
+  const safeBalance = Number.isFinite(balance) ? balance : 0;
+  const affordable = priceKnown ? Math.floor(safeBalance / costPerSms) : Number.POSITIVE_INFINITY;
 
   // Case 1: Free SMS available
   if (freeSmsLeft > 0) {
@@ -1760,25 +1910,23 @@ export function getSmsAlert({ freeSmsLeft, smsCount, balanceAmount, totalSmsChar
     }
 
     const paidMessagesNeeded = smsCount - freeSmsLeft;
-    const msgCanSendPaid =
-      balanceAmount > 0 && costPerSms > 0 ? Math.floor(balanceAmount / costPerSms) : 0;
-
-    const totalSendable = freeSmsLeft + Math.min(msgCanSendPaid, paidMessagesNeeded);
-    if (msgCanSendPaid >= paidMessagesNeeded) {
+    if (!priceKnown || affordable >= paidMessagesNeeded) {
       return `${freeSmsLeft} messages are FREE. The remaining ${paidMessagesNeeded} will be charged to your balance.`;
     }
-    return `Only ${totalSendable} messages will be sent (${freeSmsLeft} FREE + ${msgCanSendPaid} paid). Insufficient balance for the rest.`;
+
+    const totalSendable = freeSmsLeft + Math.min(affordable, paidMessagesNeeded);
+    return `Only ${totalSendable} messages will be sent (${freeSmsLeft} FREE + ${affordable} paid). Insufficient balance for the rest.`;
   }
 
   // Case 2: No free SMS
-  const msgCanSend =
-    balanceAmount > 0 && costPerSms > 0 ? Math.floor(balanceAmount / costPerSms) : 0;
-
-  if (msgCanSend <= 0) {
+  if (!priceKnown) {
+    return `All ${smsCount} messages will be sent and charged to your balance.`;
+  }
+  if (affordable <= 0) {
     return 'You do not have enough balance to send any messages.';
   }
-  if (msgCanSend < smsCount) {
-    return `You can send only ${msgCanSend} out of ${smsCount} messages with your current balance ($${balanceAmount}).`;
+  if (affordable < smsCount) {
+    return `You can send only ${affordable} out of ${smsCount} messages with your current balance ($${balanceAmount}).`;
   }
 
   return `All ${smsCount} messages will be sent and charged to your balance.`;
@@ -1806,7 +1954,6 @@ export const connectMetaChannel = async (
     const response = await facebookAuthStart(channel, tenantId);
 
     const redirectUrl = response?.data?.data?.result?.url;
-    console.log(redirectUrl, 'redirectUrl');
 
     if (redirectUrl) {
       // Calculate center position

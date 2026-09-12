@@ -5,17 +5,16 @@ import { KeyRound, LogOut, User, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { setMyPresenceOverride, useMyPresence } from '@/hooks/use-my-presence';
+import { useMyPresence, presenceQualifier } from '@/hooks/use-my-presence';
+import { useMyPresenceControl } from '@/hooks/use-presence-control';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { presenceStatusArray, statusImageLookup } from '../constants';
 import CustomAvatar from '../../custom-avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import packageJson from '../../../../../package.json';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { logout, updateMemberForwading, userUpdateStatus } from '@/services/api';
-import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
+import { useMutation } from '@tanstack/react-query';
+import { logout } from '@/services/api';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
-import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 
 const AvatarContent = ({ setProfileState }: any) => {
   const { user, handleRemoveUser } = useUser();
@@ -24,85 +23,27 @@ const AvatarContent = ({ setProfileState }: any) => {
   const lastName = user?.user_info?.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim();
   const phone = user?.user_info?.phone ? String(user.user_info.phone) : '';
-  const queryClient: any = useQueryClient();
 
-  const { socketEventsManager, disconnectSocket } = useSocketEvents();
+  const { disconnectSocket } = useSocketEvents();
   const navigate = useNavigate();
   const { features } = useCompanyFeatures();
   // Resolved in one place so the header chip and this menu always agree.
-  const { status: effectiveSocketStatus } = useMyPresence();
+  const { status: effectiveSocketStatus, label: presenceLabel } = useMyPresence();
 
-  const { mutate: mutateUpdateMember } = useMutation({
-    mutationFn: updateMemberForwading,
-    onSuccess: () => {
-      invalidateGlobalUsersDirectory(queryClient);
-    },
-  });
-
-  function statusChangeEvent(status: string, timeObj: any = undefined) {
-    socketEventsManager?.emit(
-      'user-presence-update',
-      {
-        doc: {
-          userId: user?.user_info?.extension,
-          domain: user?.sip_credentials?.domain,
-          uuid: user?.uuid,
-          status: status,
-          onCall: false,
-          timeObj,
-        },
-      },
-      (response: any) => {
-        console.log('User-presence-update:', response);
-      },
-    );
-  }
-
-  const { mutate: mutateUserUpdateStatus } = useMutation({
-    mutationFn: userUpdateStatus,
-    onSuccess: (data, variables) => {
-      console.log('data', data, variables);
-      queryClient.invalidateQueries(['getUsersDetails']);
-      statusChangeEvent(variables?.socket_status, {
-        holiday_start_date: null,
-        holiday_end_date: null,
-      });
-    },
-  });
-
-  const handleUserCallRules = (status: string) => {
-    const userInfo = user?.user_info || {};
-    /* Presence is the only key this menu owns. The rest of the record — the
-       forwarding rules and the do-not-disturb flag — is carried through, so
-       changing your availability does not delete it. */
-    const callRuleRequest = mergeCallForwarding(user?.call_forwarding, { status });
-    const rolePayloadKey = userInfo?.custom_role_uuid ? 'custom_role_uuid' : 'role_uuid';
-    const payload = {
-      first_name: userInfo?.first_name || '',
-      last_name: userInfo?.last_name || '',
-      job_title: userInfo?.job_title || '',
-      caller_id: userInfo?.caller_id || '',
-      site_uuid: userInfo?.site_uuid || '',
-      profile: userInfo?.profile || '',
-      [rolePayloadKey]: userInfo?.custom_role_uuid || userInfo?.role_uuid || null,
-      call_forwarding: callRuleRequest,
-      uuid: user?.uuid,
-      userID: user?.uuid,
-    };
-    mutateUpdateMember(payload);
-  };
-
-  // const myStatus =
-  //   usersOnlineStatus?.find((item: any) => item?.userId === user?.user_info?.extension)?.status ||
-  //   'online';
+  /* Presence writes go through the shared control rather than a second copy of
+     the same logic. The copy that used to live here carried neither `greetings`
+     nor `settings`, and `/api/user/update` treats a missing field as a cleared
+     one - so every status change from this menu, which is the most used
+     presence control in the product, silently erased the person's voicemail
+     greeting and their personal settings. The shared hook carries both, sends
+     the real on-call flag instead of a hard-coded false, and declines to write
+     while a call is up. */
+  const { setMyPresence, isOnCall } = useMyPresenceControl();
+  const presenceNote = presenceQualifier(effectiveSocketStatus, { onCall: isOnCall });
 
   const handleStatusChange = async (status: string) => {
-    if (effectiveSocketStatus === status) return;
-    // Shows the pick immediately instead of waiting on a socket presence
-    // frame that, without a live socket connection, never arrives.
-    setMyPresenceOverride(queryClient, status as 'online' | 'busy' | 'dnd');
-    handleUserCallRules(status);
-    mutateUserUpdateStatus({ socket_status: status });
+    if (effectiveSocketStatus === status || isOnCall) return;
+    setMyPresence(status);
     setShowPresence(false);
     setProfileState(false);
   };
@@ -159,9 +100,16 @@ const AvatarContent = ({ setProfileState }: any) => {
               <div className="w-3.5 h-3.5">
                 {statusImageLookup[effectiveSocketStatus] ?? statusImageLookup['online']}
               </div>
-              <div className="capitalize text-xs font-medium text-gray-700 dark:text-mcm-ink-2">
-                {effectiveSocketStatus === 'dnd' ? 'DND' : effectiveSocketStatus}
-              </div>
+              {/* The label, not the stored value. This printed the raw
+                  "online"/"busy" with a capitalize class, so the chip and the
+                  menu directly below it named the same state differently.
+                  On a call is shown alongside it rather than instead of it:
+                  the declared state has not changed and comes back when the
+                  call ends, so hiding it would misreport what is stored. */}
+              <div className="text-xs font-medium text-gray-700 dark:text-mcm-ink-2">{presenceLabel}</div>
+              {presenceNote && presenceNote !== presenceLabel ? (
+                <span className="text-xs text-gray-500 dark:text-mcm-ink-3">· {presenceNote}</span>
+              ) : null}
             </span>
           </PopoverTrigger>
           <PopoverContent className="p-1 flex flex-col gap-1" side="left" align="start">
@@ -169,7 +117,14 @@ const AvatarContent = ({ setProfileState }: any) => {
               const isActive = effectiveSocketStatus === status?.value;
               return (
                 <div
-                  className={`flex items-center gap-2 w-full cursor-pointer px-2 rounded-md ${isActive ? 'bg-ucass-active-bg' : 'hover:bg-gray-200 dark:hover:bg-mcm-surface-3'}`}
+                  key={status.value}
+                  title={isOnCall ? 'You cannot change this during a call' : status.description}
+                  aria-disabled={isOnCall}
+                  className={`flex items-center gap-2 w-full px-2 rounded-md ${
+                    isOnCall
+                      ? 'opacity-50 cursor-not-allowed'
+                      : `cursor-pointer ${isActive ? 'bg-ucass-active-bg' : 'hover:bg-gray-200 dark:hover:bg-mcm-surface-3'}`
+                  }`}
                   onClick={() => handleStatusChange(status.value)}
                 >
                   <div className="w-4 h-4">{statusImageLookup[status.value]}</div>

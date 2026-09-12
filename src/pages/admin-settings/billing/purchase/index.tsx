@@ -48,7 +48,13 @@ const Purchase = () => {
               {tabArr?.map((v: any) => {
                 return (
                   <TabsTrigger
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:bg-transparent data-[state=active]:text-primary border-b-2 px-6  text-gray-700 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs"
+                    key={v.value}
+                    /* Active used `--primary`, which falls back to near-black for any tenant
+   that has not set a brand colour - so the selected tab was near-black
+   text beside near-black inactive tabs and nothing looked selected. The
+   console accent is a real colour whoever the tenant is, with the literal
+   as a fallback for screens rendered outside the themed scope. */
+                    className="data-[state=active]:border-b-2 data-[state=active]:!border-b-[var(--accent,#2563eb)] data-[state=active]:bg-transparent data-[state=active]:!text-[var(--accent,#2563eb)] border-b-2 border-b-transparent px-6 text-gray-700 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs"
                     value={v.value}
                   >
                     {v.label}

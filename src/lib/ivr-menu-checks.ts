@@ -1,3 +1,4 @@
+import { splitMenuTarget } from '@/lib/menu-target';
 /* Checks a phone menu makes sense before it is saved.
  *
  * The form already refuses an empty key or a missing action. What it never
@@ -85,7 +86,7 @@ export const readKeyActions = (menu: IvrMenuLike | null | undefined): KeyAction[
     .map((row) => ({
       key: String(row?.key?.value ?? row?.key ?? '').trim(),
       type: String(row?.forwardType?.value ?? row?.type ?? '').trim(),
-      value: String(row?.forwardValue?.value ?? row?.value ?? '').trim(),
+      value: splitMenuTarget(row?.forwardValue?.value ?? row?.value ?? '').target,
       label: String(row?.forwardValue?.label ?? row?.label ?? '').trim(),
     }))
     .filter((row) => row.key !== '');

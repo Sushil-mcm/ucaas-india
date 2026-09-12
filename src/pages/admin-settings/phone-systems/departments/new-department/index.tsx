@@ -36,6 +36,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { requiredString } from '@/lib/schema';
 import { useGetSite } from '@/hooks/common';
+import { dedupeMembers } from '@/lib/queue-members';
 
 const baseValueSchema = yup.object({
   label: yup.string(),
@@ -59,10 +60,10 @@ const validationSchema: Record<string, yup.AnyObjectSchema> = {
     name: requiredString('Name', 2, 50),
     extension: requiredExtension(),
     timeout: yup.object().shape({
-      value: yup.string().required('Member Ring Timeout is required'),
+      value: yup.string().required('Ring time is required'),
     }),
     site: yup.object().shape({
-      value: yup.string().required('Site is required'),
+      value: yup.string().required('Location is required'),
     }),
     description: yup
       .string()
@@ -101,15 +102,18 @@ const validationSchema: Record<string, yup.AnyObjectSchema> = {
       .array()
       .of(
         yup.object({
-          value: yup.string().trim().required('Member is required'),
+          value: yup.string().trim().required('Person is required'),
         }),
       )
-      .min(1, 'At least one member is required'),
+      .min(1, 'Add at least one person'),
   }),
   [DEPARTMENT_TAB_CONSTANT.RING_STRETEGY]: yup.object().shape({
     ring_strategy: yup.object().shape({
       value: yup.string().required('Ring Strategy is required'),
     }),
+    /* Call waiting for members: on (default) rings a member even while they
+       are on a call; off leaves busy members out of the ring. */
+    call_waiting: yup.boolean().optional(),
   }),
   [DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION]: yup.object().shape({
     media: yup.object({
@@ -174,6 +178,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
       label: 'Ring All',
       value: 'ring_all',
     },
+    call_waiting: true,
     failover: {
       type: { label: 'Send to Voicemail', value: 'VOICEMAIL' },
       value: { label: 'Select', value: user_info?.extension },
@@ -334,11 +339,21 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
   };
 
   const onSubmit = (data: any) => {
-    const { site, timeout, failover, settings, media, ring_strategy, members, ...rest } =
-      data || {};
-    const uniqueMembers = members?.length
-      ? Array.from(new Map(members.map((m: any) => [m.user_uuid, m])).values())
-      : [];
+    const {
+      site,
+      timeout,
+      failover,
+      settings,
+      media,
+      ring_strategy,
+      members,
+      call_waiting,
+      ...rest
+    } = data || {};
+    /* Keyed on the id, falling back to the extension. Keying on user_uuid alone
+       collapsed the whole group to one person whenever the people list came
+       back under the other id spelling and every member's was blank. */
+    const uniqueMembers = dedupeMembers(members);
     const payload = {
       site: JSON.stringify(site),
       forward_call_actions: {
@@ -375,6 +390,9 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
             label: failover?.value?.label,
             name: failover?.value?.name,
           },
+          /* Read by the router's group branch: false leaves members already
+             on a call out of the ring. Anything else rings everybody. */
+          call_waiting: call_waiting !== false,
         },
         media: {
           welcome: {
@@ -425,9 +443,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
         ai_call_monitoring = false,
       } = forward_call_actions || {};
       const parsedMembers = typeof members === 'string' ? parseJSON(members) : members;
-      const uniqueMembers = Array.isArray(parsedMembers)
-        ? Array.from(new Map(parsedMembers.map((m: any) => [m.user_uuid, m])).values())
-        : [];
+      const uniqueMembers = dedupeMembers(parsedMembers);
       reset({
         name,
         extension,
@@ -500,6 +516,7 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
         //   ...parseJSON(caller_id),
         // },
         ring_strategy: MEMBER_RING_STRATEGY_OPTIONS.find(({ value }) => value === ring_strategy),
+        call_waiting: call_handling?.call_waiting !== false,
       });
     } else {
       const obj = {

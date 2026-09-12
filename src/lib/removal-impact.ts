@@ -1,3 +1,4 @@
+import { splitMenuTarget } from '@/lib/menu-target';
 /* What actually breaks when you remove somebody.
  *
  * Removing a person is the single most destructive thing an admin does here,
@@ -133,7 +134,7 @@ const keysOf = (ivr: IvrLike): IvrKeyLike[] => {
     type: String(row?.forwardType?.value ?? row?.type ?? '')
       .trim()
       .toUpperCase(),
-    value: String(row?.forwardValue?.value ?? row?.value ?? '').trim(),
+    value: splitMenuTarget(row?.forwardValue?.value ?? row?.value ?? '').target,
   }));
 };
 

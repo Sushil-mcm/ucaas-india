@@ -1,0 +1,5 @@
+firstName,lastName,email,phone,skill,consent,consentDate,consentSource
+Naveen,Kumar,naveen.kumar@example.com,17589219833,Spanish,yes,2026-08-15,web form
+Raghav,Sharma,raghav.sharma@example.com,919876543210,,no,,
+Xyz,Abc,xyz.abc@example.com,918565632565,Billing,,,
+Zeeshan,Huzefa,zeeshan.huzefa@example.com,917867867865,,,,

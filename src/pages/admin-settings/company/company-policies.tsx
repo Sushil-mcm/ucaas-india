@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, Flag, Globe, Headphones, Mic, PhoneOutgoing, ScrollText, Voicemail } from 'lucide-react';
@@ -12,6 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { handleAlert } from '@/lib/utils';
 import { COUNTRY_OPTIONS } from '@/lib/company-default-country';
+import { describeRecording } from '@/lib/recording-description';
+import { useUser } from '@/hooks/use-user';
+import { COMPANY_ROOT } from './company-sections';
+import { makeAnnouncementAudio } from './company-policies-announcement';
 import {
   COMPLIANT_RECORDING_ANNOUNCEMENTS,
   validateRecordingAnnouncement,
@@ -30,13 +35,23 @@ import {
  * key written from here is namespaced under `settings.company_policies` and
  * nothing else in that blob is touched on save.
  *
- * IMPORTANT — the call switch, the recording pipeline and the API all ignore
- * `settings.company_policies.*` entirely. Some of it is read by this app, which
- * is a real thing but a smaller one, and the rest is a stored preference that
- * nothing acts on at all. Each card carries a `status` saying which it is:
- * 'active' where it does exactly what the card claims, 'app-only' where this
- * app is the only thing doing the work, 'coming-soon' where we have not built
- * it. Keep those accurate if a key starts being honoured.
+ * Who reads what (9 Sep 2026) - keep this list true when a card's badge changes:
+ *   default_language / default_country     this app (new greeting language, number search)
+ *   recording_access.own / admins_all      tenant-api RecordingAccessFilter withholds the
+ *                                          recording file name from anyone the rule excludes
+ *                                          (reads company_settings first, template row second)
+ *   voicemail.min_pin_length               default-api VoicemailPinPolicy on POST /api/user/update
+ *   voicemail.max_message_minutes          the switch: vm_max_seconds on every way into voicemail,
+ *                                          read by save-voicemail.lua
+ *   voicemail.transcription_default        NOTHING - transcription follows Phone rules > Transcription;
+ *                                          the stored value is carried through untouched, not shown
+ *   call_recording.mode                    NOTHING - the switch records from the Phone rules
+ *                                          `recording` section; this card mirrors it, read-only
+ *   call_recording.announcement_to_caller  the switch: false skips the recording notice
+ *   call_recording.announcement_file       the switch: the company's own notice audio (made here
+ *                                          from the wording, see company-policies-announcement.ts)
+ *   data_retention.*                       default-api nightly sweep (RetentionSweepService)
+ *   international_calling.new_user_default default-api CompanyPolicyService.seedNewUserSettings
  */
 
 const POLICIES_KEY = 'company_policies';
@@ -63,16 +78,10 @@ const LANGUAGE_OPTIONS = [
   { label: 'Arabic (Gulf)', value: 'ar-AE' },
 ];
 
-const RECORDING_MODE_OPTIONS = [
-  { label: 'Off — no calls are recorded', value: 'off' },
-  { label: 'Record everything', value: 'all' },
-  { label: 'On demand — agents start recording themselves', value: 'on_demand' },
-];
-
 const RETENTION_MODE_OPTIONS = [
   { label: 'Keep indefinitely', value: 'indefinite' },
   { label: 'Keep for a set number of days', value: 'days' },
-  { label: 'Delete immediately', value: 'immediate' },
+  { label: 'Delete on the next nightly sweep', value: 'immediate' },
 ];
 
 const INTERNATIONAL_OPTIONS = [
@@ -98,10 +107,13 @@ interface PoliciesForm {
   default_language: string;
   voicemail_min_pin_length: string;
   voicemail_max_message_minutes: string;
-  voicemail_transcription_default: boolean;
-  recording_mode: string;
   recording_announcement: boolean;
   recording_announcement_text: string;
+  /* The audio made from the wording, and the wording it was made from. When the
+     two drift apart the file is dropped on save, so callers never hear wording
+     an admin has since changed. */
+  recording_announcement_file: string;
+  recording_announcement_file_text: string;
   default_country: string;
   recording_access_own: boolean;
   recording_access_admins_all: boolean;
@@ -114,11 +126,11 @@ const DEFAULT_FORM: PoliciesForm = {
   default_language: 'en-US',
   voicemail_min_pin_length: '4',
   voicemail_max_message_minutes: '3',
-  voicemail_transcription_default: false,
-  recording_mode: 'off',
   // Announcement defaults on: in most places it is the caller's legal notice.
   recording_announcement: true,
   recording_announcement_text: '',
+  recording_announcement_file: '',
+  recording_announcement_file_text: '',
   /* Both true, matching how the product behaves today, so switching this on
      changes nothing until an admin decides otherwise. */
   /* Empty means not chosen, which is exactly today's behaviour. */
@@ -181,15 +193,13 @@ const buildFormFromSettings = (settings: Record<string, any>): PoliciesForm => {
       voicemail?.max_message_minutes,
       DEFAULT_FORM.voicemail_max_message_minutes,
     ),
-    voicemail_transcription_default: Boolean(voicemail?.transcription_default),
-    recording_mode:
-      RECORDING_MODE_OPTIONS.find((option) => option.value === recording?.mode)?.value ||
-      DEFAULT_FORM.recording_mode,
     recording_announcement:
       typeof recording?.announcement_to_caller === 'boolean'
         ? recording.announcement_to_caller
         : DEFAULT_FORM.recording_announcement,
     recording_announcement_text: `${recording?.announcement_text || ''}`,
+    recording_announcement_file: `${recording?.announcement_file || ''}`,
+    recording_announcement_file_text: `${recording?.announcement_file_text || ''}`,
     /* Only a stored boolean counts as a decision. A tenant that never opened
        this page has no value here, and reading that as "no" would take away
        everyone's own recordings the day this ships. */
@@ -223,19 +233,34 @@ const buildRetentionPayload = (form: RetentionForm) => ({
   days: form.mode === 'days' ? Number(form.days) : null,
 });
 
-const buildPoliciesPayload = (form: PoliciesForm) => ({
+/* True when the audio on file was made from exactly this wording. */
+const announcementAudioCurrent = (form: PoliciesForm): boolean =>
+  Boolean(form.recording_announcement_file) &&
+  form.recording_announcement_file_text.trim() === form.recording_announcement_text.trim();
+
+/* `stored` is the section as last saved. Two keys are carried through rather than
+   edited here: `voicemail.transcription_default` (nothing reads it - transcription
+   is a Phone rule) and `call_recording.mode` (the switch records from the Phone
+   rules `recording` section; this screen only mirrors it). Dropping them would
+   read as a change to anyone diffing the history; rewriting them from this form
+   would be inventing a value. */
+const buildPoliciesPayload = (form: PoliciesForm, stored: any) => ({
   version: POLICIES_SCHEMA_VERSION,
   updated_at: new Date().toISOString(),
   default_language: form.default_language,
   voicemail: {
     min_pin_length: Number(form.voicemail_min_pin_length),
     max_message_minutes: Number(form.voicemail_max_message_minutes),
-    transcription_default: form.voicemail_transcription_default,
+    transcription_default: stored?.voicemail?.transcription_default === true,
   },
   call_recording: {
-    mode: form.recording_mode,
+    mode: typeof stored?.call_recording?.mode === 'string' ? stored.call_recording.mode : 'off',
     announcement_to_caller: form.recording_announcement,
     announcement_text: form.recording_announcement_text.trim(),
+    announcement_file: announcementAudioCurrent(form) ? form.recording_announcement_file : null,
+    announcement_file_text: announcementAudioCurrent(form)
+      ? form.recording_announcement_file_text.trim()
+      : null,
   },
   default_country: form.default_country || null,
   recording_access: {
@@ -306,8 +331,10 @@ const selectedOption = (options: { label: string; value: string }[], value: stri
  */
 const CompanyPolicies = () => {
   const queryClient = useQueryClient();
+  const { user } = useUser();
   const [form, setForm] = useState<PoliciesForm>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [makingAudio, setMakingAudio] = useState(false);
 
   const {
     data: companyDefaultTemplate = null,
@@ -324,6 +351,19 @@ const CompanyPolicies = () => {
   );
 
   const savedForm = useMemo(() => buildFormFromSettings(savedSettings), [savedSettings]);
+
+  /* What the switch actually records from: the Phone rules `recording` section.
+     Read here so the card can say it, never written from here. */
+  const recordingRule = useMemo(() => {
+    const rule = toSettingsObject(savedSettings?.recording);
+    const automatic = toSettingsObject(rule?.automatic);
+    const onDemand = toSettingsObject(rule?.on_demand);
+    return describeRecording({
+      automaticEnabled: automatic?.enabled === true,
+      direction: typeof automatic?.value === 'string' ? automatic.value : null,
+      onDemandEnabled: onDemand?.enabled === true,
+    });
+  }, [savedSettings]);
 
   useEffect(() => {
     setForm(savedForm);
@@ -361,7 +401,7 @@ const CompanyPolicies = () => {
     // company defaults blob, and other screens write into it.
     const nextSettings = {
       ...savedSettings,
-      [POLICIES_KEY]: buildPoliciesPayload(form),
+      [POLICIES_KEY]: buildPoliciesPayload(form, toSettingsObject(savedSettings?.[POLICIES_KEY])),
     };
 
     savePolicies({
@@ -370,6 +410,39 @@ const CompanyPolicies = () => {
       greetings: toGreetingsObject(companyDefaultTemplate?.greetings),
       only: [POLICIES_KEY],
     });
+  };
+
+  const handleMakeAudio = async () => {
+    const text = form.recording_announcement_text.trim();
+    const check = validateRecordingAnnouncement(text);
+    if (!text || !check.valid) {
+      setErrors((prev) => ({ ...prev, recording_announcement_text: check.reason }));
+      handleAlert({ text: 'Fix the wording first.', type: 'error' });
+      return;
+    }
+    setMakingAudio(true);
+    try {
+      const made = await makeAnnouncementAudio({
+        text,
+        locale: form.default_language,
+        companyUuid: user?.company_info?.uuid,
+      });
+      updateForm({
+        recording_announcement_file: made.file_name,
+        recording_announcement_file_text: text,
+      });
+      handleAlert({ text: 'Audio made. Save the page and callers will hear it.', type: 'success' });
+    } catch (error: any) {
+      handleAlert({
+        text:
+          error?.response?.data?.message ||
+          error?.message ||
+          'The audio could not be made. Try again in a moment.',
+        type: 'error',
+      });
+    } finally {
+      setMakingAudio(false);
+    }
   };
 
   const renderRetention = (
@@ -509,8 +582,8 @@ const CompanyPolicies = () => {
             icon={<Headphones className="h-5 w-5" />}
             title="Who may listen to call recordings"
             description="Whether people can play their own calls back, and whether admins can play anyone's."
-            status="app-only"
-            note="Works in this app. Turning one off hides the play button for those recordings here. It does not stop somebody who already has a direct link to the file."
+            status="active"
+            note="Active. The server leaves the recording out of the call log for anyone the rule excludes, so there is nothing for them to play, and playing any recording needs a signed-in account with the listen permission."
           >
             <SettingRow
               label="People can play their own calls"
@@ -539,9 +612,9 @@ const CompanyPolicies = () => {
           <SettingCard
             icon={<Voicemail className="h-5 w-5" />}
             title="Voicemail policy"
-            description="PIN strength, how long a caller may talk, and whether messages are transcribed for new users."
-            status="coming-soon"
-            note="Coming soon: the PIN length rule and the message length limit are saved but nothing checks them yet. The transcription switch below is the exception — it already applies to each new person you add."
+            description="PIN strength and how long a caller may talk."
+            status="active"
+            note="Active. A new or changed voicemail PIN shorter than the rule is refused wherever it is set, admins included; a PIN set before the rule keeps working until it is changed. The phone system stops a caller's message at the limit on every way into voicemail: a person's mailbox, a number pointed at voicemail, and a queue that gives up. Voicemail transcription is not set here — it follows Phone rules › Transcription."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
@@ -577,42 +650,31 @@ const CompanyPolicies = () => {
                 </p>
               </div>
             </div>
-            <SettingRow
-              label="Transcribe voicemail by default"
-              description="New users would get voicemail-to-text switched on. Existing users keep whatever they have now — changing this never edits anyone's current setting."
-              control={
-                <Switch
-                  checked={form.voicemail_transcription_default}
-                  onCheckedChange={(checked) =>
-                    updateForm({ voicemail_transcription_default: checked })
-                  }
-                />
-              }
-            />
           </SettingCard>
 
           <SettingCard
             icon={<Mic className="h-5 w-5" />}
-            title="Call recording policy"
-            description="Whether calls are recorded across the company, and whether callers are told."
-            status="coming-soon"
-            note="Coming soon. Nothing here starts or stops recording yet — which matters, because it means this cannot switch recording off. Recording is turned on for each person under their own settings."
+            title="Call recording notice"
+            description="Whether callers are told a call is recorded, and what they hear. Whether calls are recorded at all is a Phone rule."
+            status="active"
+            note="Active. The notice plays at the start of every recorded call — before an incoming call connects, and as soon as an outgoing call is answered. Off means no notice plays. Make the audio from your wording and callers hear that; otherwise they hear the stock notice."
           >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <CustomSelect
-                  label="Recording mode"
-                  options={RECORDING_MODE_OPTIONS}
-                  value={selectedOption(RECORDING_MODE_OPTIONS, form.recording_mode)}
-                  handleChange={(option: any) =>
-                    updateForm({ recording_mode: option?.value || DEFAULT_FORM.recording_mode })
-                  }
-                />
-                <p className="text-xs text-[#9A948F]">
-                  Off, record everything, or let agents start a recording themselves during a call.
-                  Per-user exceptions are not part of this record yet.
-                </p>
-              </div>
+            {/* Read-only on purpose. There used to be a "Recording mode" box here
+                that the switch never read, next to the Phone rule it does read -
+                two answers to one question. One source of truth: the Phone rule. */}
+            <div className="mb-3 rounded-lg border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/40 p-3">
+              <p className="text-xs font-semibold text-[#2E2D35]">What is recorded today</p>
+              <p className="mt-0.5 text-xs text-[#2E2D35]">{recordingRule}</p>
+              <p className="mt-1 text-xs text-[#9A948F]">
+                Change this under{' '}
+                <Link
+                  to={`${COMPANY_ROOT}/phone-rules`}
+                  className="font-semibold text-ucass-active underline-offset-2 hover:underline"
+                >
+                  Phone rules › Call recording
+                </Link>
+                . The phone system records from that rule; this card only controls the notice.
+              </p>
             </div>
             <SettingRow
               label="Announce recording to callers"
@@ -664,6 +726,43 @@ const CompanyPolicies = () => {
                   </p>
                 )}
 
+                {/* The wording only reaches a caller as audio. The switch plays the
+                    file named here; wording without a file plays the stock notice. */}
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 p-2">
+                  <p className="text-xs text-gray-700">
+                    {!form.recording_announcement_text.trim() ? (
+                      'No wording: callers hear the stock notice.'
+                    ) : announcementAudioCurrent(form) ? (
+                      <>
+                        <span className="font-semibold text-green-700">Audio ready.</span> Callers
+                        hear this wording ({form.recording_announcement_file}).
+                      </>
+                    ) : form.recording_announcement_file ? (
+                      <>
+                        <span className="font-semibold text-amber-700">Wording changed.</span> The
+                        audio on file says the old wording; make it again, or callers get the stock
+                        notice after you save.
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-semibold text-amber-700">No audio yet.</span> Callers
+                        hear the stock notice until you make the audio from this wording.
+                      </>
+                    )}
+                  </p>
+                  {form.recording_announcement_text.trim() && !announcementAudioCurrent(form) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={makingAudio || isSaving}
+                      onClick={handleMakeAudio}
+                    >
+                      {makingAudio ? 'Making the audio…' : 'Make the audio'}
+                    </Button>
+                  )}
+                </div>
+
                 <div className="flex flex-col gap-1">
                   <p className="text-[11px] font-semibold text-[#9A948F]">Wording you can use</p>
                   {COMPLIANT_RECORDING_ANNOUNCEMENTS.map((example) => (
@@ -685,8 +784,8 @@ const CompanyPolicies = () => {
             icon={<Archive className="h-5 w-5" />}
             title="Data retention"
             description="How long call recordings and voicemail messages are kept before deletion."
-            status="coming-soon"
-            note="Coming soon. Nothing is deleted automatically yet — recordings and messages are kept until somebody removes them by hand."
+            status="active"
+            note="Active. A sweep runs on the server every night (03:40 UTC) and removes recordings and messages older than the limit — the audio and any transcript go, the call stays in the log without them. Until your server's sweep is switched to live mode it only reports what it would remove. Nothing is removed while a legal hold is set."
           >
             {renderRetention(
               'retention_recordings',
@@ -704,8 +803,8 @@ const CompanyPolicies = () => {
             icon={<PhoneOutgoing className="h-5 w-5" />}
             title="International calling"
             description="Whether a newly created user may dial abroad before an admin says otherwise."
-            status="app-only"
-            note="Works in this app when you add somebody: a new person starts on this setting. It does not change anyone already added."
+            status="active"
+            note="Active. The server gives every newly added person this setting, whichever screen adds them, unless the admin chose for that person on the add form. It does not change anyone already added."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">

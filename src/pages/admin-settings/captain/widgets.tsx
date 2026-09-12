@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { handleAlert } from '@/lib/utils';
 import WidgetCard from './widget/WidgetCard';
 import WidgetCreatedDialog from './widget/dialogs/WidgetCreatedDialog';
-import ConfirmDialog from './widget/dialogs/ConfirmDialog';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 import { createWidget, deleteWidget, listWidgets } from './widget/helpers/api';
 import { buildStarterWidgetConfig, NEW_WIDGET_DEFAULT_TITLE } from './widget/helpers/templates';
 import { draftStore } from './widget/helpers/draft-store';
@@ -285,13 +285,11 @@ export default function CaptainWidgets() {
 
       <WidgetCreatedDialog open={createdOpen} onOpenChange={setCreatedOpen} onAddToAction={handleAddToAction} />
 
-      <ConfirmDialog
+      <DeleteConfirmDialog
         open={!!pendingDelete}
         onOpenChange={(open) => !open && setPendingDelete(null)}
-        title="Delete this widget?"
-        description={pendingDelete ? `"${pendingDelete.title}" will be permanently removed.` : ''}
-        confirmLabel="Delete"
-        destructive
+        itemLabel="widget"
+        itemName={pendingDelete?.title}
         onConfirm={confirmDelete}
       />
     </div>

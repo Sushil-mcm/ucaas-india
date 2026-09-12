@@ -30,6 +30,7 @@ import QueueDetailsView from '@/components/activity-list/side-drawers/queue-deta
 import DetailsModal from '@/components/activity-list/side-drawers/details-modal';
 import TableManager from '@/components/custom/table-manager';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
+import { formatCallWaitTime } from '@/hooks/use-call-stats';
 
 const timeStringToSeconds = (value: string | null | undefined) => {
   const trimmedValue = String(value || '').trim();
@@ -53,13 +54,6 @@ const timeStringToSeconds = (value: string | null | undefined) => {
   return Math.max(0, Math.floor(seconds));
 };
 
-const formatWaitTime = (row: any) => {
-  const durationSeconds = timeStringToSeconds(row?.duration) ?? 0;
-  const billsecSeconds = timeStringToSeconds(row?.billsec) ?? 0;
-  const waitSeconds = Math.max(0, durationSeconds - billsecSeconds);
-
-  return formatSecondsToMMSS(waitSeconds);
-};
 
 const Outbound = ({
   // Only true when this report renders inside another already-open modal
@@ -226,7 +220,7 @@ const Outbound = ({
           displayDirection = ACTIVITYLIST?.Announcement;
         } else if (
           data?.direction === ACTIVITYLIST?.Inbound &&
-          data?.billsec === 0 &&
+          (timeStringToSeconds(data?.billsec) ?? 0) === 0 &&
           data?.is_voicemail === 0
         ) {
           displayDirection = ACTIVITYLIST?.Missed;
@@ -396,7 +390,7 @@ const Outbound = ({
       header: 'Wait Time',
       accessorKey: 'wait_time',
       cell: ({ row }: any) => {
-        return <span>{formatWaitTime(row?.original)}</span>;
+        return <span>{formatCallWaitTime(row?.original)}</span>;
       },
     },
     {
@@ -531,6 +525,7 @@ const Outbound = ({
               filter_date: {
                 from: dropdownVal?.value?.from,
                 to: dropdownVal?.value?.to,
+                timezone: dropdownVal?.value?.timezone,
               },
             },
             emptyTablePlaceholder: 'No call records found',

@@ -1,3 +1,5 @@
+import { timeStringToSeconds } from '@/pages/performance/format';
+import { describeCallRouting, parseCallRoutingRecord } from '@/lib/call-routing-record';
 import TableManager from '@/components/custom/table-manager';
 import { useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
@@ -25,6 +27,7 @@ import { useUsersDirectory } from '@/hooks/use-users-directory';
 import { useUser } from '@/hooks/use-user';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
+import { formatCallWaitTime } from '@/hooks/use-call-stats';
 import { useNavigate } from 'react-router-dom';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -141,7 +144,7 @@ const LocalCallList = ({
           displayDirection = ACTIVITYLIST?.Announcement;
         } else if (
           data?.direction === ACTIVITYLIST?.Inbound &&
-          data?.billsec === 0 &&
+          (timeStringToSeconds(data?.billsec) ?? 0) === 0 &&
           data?.is_voicemail === 0
         ) {
           displayDirection = ACTIVITYLIST?.Missed;
@@ -303,10 +306,16 @@ const LocalCallList = ({
       accessorKey: 'waitsec',
       cell: ({ row }: any) => {
         const data = row?.original;
-        return data?.waitsec ? (
-          formatSecondsToMMSS(Number(data?.waitsec || 0))
-        ) : (
-          <span>{data?.billsec?.slice(3)}</span>
+        const routed = describeCallRouting(parseCallRoutingRecord(data?.call_flow));
+        return (
+          <div className="flex flex-col">
+            <span>{formatCallWaitTime(data)}</span>
+            {routed && (
+              <small className="text-gray-500 italic" title={routed}>
+                {routed}
+              </small>
+            )}
+          </div>
         );
       },
     },

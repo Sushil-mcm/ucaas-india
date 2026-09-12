@@ -16,6 +16,13 @@ export interface NavItem {
   icon?: string;
   enabled?: boolean;
   visible?: boolean;
+  /**
+   * Set only when `link` carries a `?view=` query of its own (Tasks and
+   * Calendar both point at `/calendar`, distinguished only by this). It
+   * tells the rail's active-item check to compare the query instead of
+   * just the path, the same way an area's own AREA_VIEWS items do.
+   */
+  viewKey?: string;
 }
 
 export const navList = (features: any, IS_ADMIN: boolean): NavItem[] =>
@@ -104,6 +111,23 @@ export const navList = (features: any, IS_ADMIN: boolean): NavItem[] =>
       enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
       visible: Boolean(features?.plan_features?.campaign?.action?.view),
     },
+    /* Tasks and Calendar used to live behind the header's "+" quick menu.
+       Both belong to the agent's own work the same way Phone/Chat/Campaign
+       do, so they move here rather than getting an area of their own. */
+    {
+      id: 15,
+      name: 'Tasks',
+      link: '/calendar?view=task-list',
+      icon: 'TaskIcon',
+      viewKey: 'task-list',
+    },
+    {
+      id: 16,
+      name: 'Calendar',
+      link: '/calendar?view=calendar',
+      icon: 'CalendarIcon',
+      viewKey: 'calendar',
+    },
     {
       id: 10,
       name: 'Reports',
@@ -144,7 +168,8 @@ export const navListBottom = (features: any, IS_ADMIN: boolean): NavItem[] => {
 const Sidebar = () => {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const { groupChatUnreadCount, directMessageUnreadCount, aiChatRequests } = useSocketEvents();
+  const { groupChatUnreadCount, directMessageUnreadCount, aiChatRequests, unreadTaskCount = 0 } =
+    useSocketEvents();
   const totalUnreadCount = (groupChatUnreadCount || 0) + (directMessageUnreadCount || 0);
   const pendingAiChatCount = Array.isArray(aiChatRequests)
     ? aiChatRequests.filter((r: any) => r?.status === 'pending').length
@@ -282,7 +307,11 @@ const Sidebar = () => {
                       );
                     }),
                 );
-                const activeLink = viewKey
+                /* A `hrefKind` item (Monitoring, Agent Activity) carries a
+                   `viewKey` too, for the URL query it can't read - one look at
+                   `link` tells them apart, and it goes back to a plain path
+                   match, since nothing else shares that path with it. */
+                const activeLink = viewKey && String(link).includes('?')
                   ? onLinkPath && currentView === viewKey
                   : onLinkPath &&
                     (!linkView || currentQueryView === linkView || !viewClaimedElsewhere);
@@ -318,11 +347,12 @@ const Sidebar = () => {
                            rail is styled in one stylesheet rather than through
                            a growing utility string. */
                         return `mcm-rail-item ${lit ? 'is-lit' : ''} min-h-13 w-16 flex items-center justify-center rounded-lg relative py-1.5 ${
-                          lit ? 'bg-ucass-active-bg text-ucass-active' : 'bg-transparent'
-                        } hover:bg-ucass-active-bg hover:text-ucass-active ${
-                          !isEnabled ? 'text-gray-400' : 'text-gray-700'
-                        } ${!isEnabled ? 'cursor-not-allowed' : ''}`;
+                          lit ? 'bg-ucass-active-bg' : 'bg-transparent'
+                        } hover:bg-ucass-active-bg ${
+                          !isEnabled ? 'cursor-not-allowed' : ''
+                        }`;
                       }}
+                      style={{ color: !isEnabled ? '#9ca3af' : '#000' }}
                       // className={({ isActive }) =>
                       //   `h-14 w-17 flex items-center justify-center rounded-lg hover:bg-ucass-primary-200 relative ${
                       //     activeLink || isActive
@@ -358,6 +388,11 @@ const Sidebar = () => {
                           {pendingAiChatCount > 9 ? '9+' : pendingAiChatCount}
                         </span>
                       )}
+                      {isEnabled && navItem?.name === 'Tasks' && unreadTaskCount > 0 && (
+                        <span className="bg-primary absolute text-white font-normal me-2  rounded-full -top-[2px] left-[20px] px-1  border-white border-2 text-xs  min-w-5 min-h-5 flex items-center justify-center ">
+                          {unreadTaskCount > 9 ? '9+' : unreadTaskCount}
+                        </span>
+                      )}
                       {!isEnabled && (
                         <span
                           className={`absolute top-1 right-1 text-xs ${!isEnabled ? 'opacity-60' : ''}`}
@@ -384,10 +419,11 @@ const Sidebar = () => {
                     className={({ isActive }) =>
                       `h-14 w-17 flex items-center justify-center rounded-lg hover:bg-ucass-primary-200  ${
                         link && isActive
-                          ? 'bg-ucass-primary-200 text-primary hover:text-primary'
-                          : 'bg-white text-gray-700'
-                      } hover:${link && isActive ? 'text-gray-700 bg-primary' : 'text-primary'}`
+                          ? 'bg-ucass-primary-200'
+                          : 'bg-white'
+                      }`
                     }
+                    style={{ color: '#000' }}
                   >
                     <div className="flex flex-col items-center justify-center gap-1">
                       <Icon

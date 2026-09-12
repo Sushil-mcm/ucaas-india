@@ -57,7 +57,7 @@ const Hours: FC<IHoursProps> = ({ type: hourType, isUser, result = [], features 
   const { data: queueList = [] } = useGetQueueList();
   const { data: aiAgentList = [] } = useQuery({
     queryKey: ['getAIReceptionistList'],
-    queryFn: () => getAIReceptionistList({ page: 1, limit: 1000, filters: [], search: '' }),
+    queryFn: () => getAIReceptionistList({ page: 1, limit: 200, filters: [], search: '' }),
     select: (data) => data?.data?.data?.result?.rows || [],
   });
 
@@ -276,6 +276,21 @@ const Hours: FC<IHoursProps> = ({ type: hourType, isUser, result = [], features 
                   <Label htmlFor={forwardKey} className="cursor-pointer">
                     {FORWARD_TYPES_LABEL?.[forwardKey as keyof typeof FORWARD_TYPES_LABEL]}
                   </Label>
+                  {/* The numbers LIST already marks a line pointed at an AI
+                      receptionist as not carried out. This is the screen where
+                      somebody chooses it, and it said nothing - so the warning
+                      arrived only after the number had been saved that way. The
+                      call switch refuses this destination by name and drops the
+                      call, so saying it here is the difference between a warning
+                      and a post-mortem. */}
+                  {forwardKey === FORWARD_TYPES.AI ? (
+                    <span
+                      title="The call switch cannot hand a call to an AI receptionist yet. A number saved this way drops its callers."
+                      className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-amber-700"
+                    >
+                      Not carried out
+                    </span>
+                  ) : null}
                 </div>
                 {selectedForwardTypeIndex === index && (
                   <>

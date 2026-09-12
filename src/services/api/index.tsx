@@ -26,6 +26,13 @@ export const login = (data: any) => {
     data,
   });
 };
+export const googleLogin = (data: any) => {
+  return apiClient({
+    method: routes.GOOGLE_LOGIN.METHOD,
+    url: routes.GOOGLE_LOGIN.URL,
+    data,
+  });
+};
 
 export const forgetPassword = (data: any) => {
   return apiClient({
@@ -41,6 +48,42 @@ export const newPassword = (data: any) => {
     url: routes.NEW_PASSWORD.URL,
     data,
   });
+};
+
+/* Invite links for new people. inspect/accept are public (the link is the
+   secret); resend/pending are administrators only. */
+export const inspectInvite = (data: { token: string }) => {
+  return apiClient({
+    method: routes.INVITE_INSPECT.METHOD,
+    url: routes.INVITE_INSPECT.URL,
+    data,
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
+};
+
+export const acceptInvite = (data: { token: string; password: string }) => {
+  return apiClient({
+    method: routes.INVITE_ACCEPT.METHOD,
+    url: routes.INVITE_ACCEPT.URL,
+    data,
+  });
+};
+
+export const resendInvite = (data: { user_uuid: string }) => {
+  return apiClient({
+    method: routes.INVITE_RESEND.METHOD,
+    url: routes.INVITE_RESEND.URL,
+    data,
+  });
+};
+
+export const pendingInvites = () => {
+  return apiClient({
+    method: routes.INVITE_PENDING.METHOD,
+    url: routes.INVITE_PENDING.URL,
+    data: {},
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
 };
 
 //Billing
@@ -118,6 +161,21 @@ export const upsertContact = (data: any) => {
   });
 };
 
+/* One more number on a saved contact, and taking one off again. */
+export const addContactPhone = (data: { contact_id: string; phone: string; label?: string }) => {
+  return apiClient({
+    method: routes.CONTACT_PHONE_ADD.METHOD,
+    url: routes.CONTACT_PHONE_ADD.URL,
+    data,
+  });
+};
+export const removeContactPhone = (data: { contact_id: string; phone: string }) => {
+  return apiClient({
+    method: routes.CONTACT_PHONE_REMOVE.METHOD,
+    url: routes.CONTACT_PHONE_REMOVE.URL,
+    data,
+  });
+};
 export const bulkUpsertContact = (data: any) => {
   return apiClient({
     method: routes.BULK_UPSERT_CONTACT.METHOD,
@@ -198,6 +256,49 @@ export const updateContactTag = (data: { contact_uuid: string[]; tag: string }) 
     data,
   });
 };
+
+/* The block list: numbers, prefixes and anonymous callers a company or a
+   person has stopped hearing from. See src/lib/contact-blocking.ts. */
+export const listBlockedNumbers = (data: { search?: string; line?: 'company' | 'personal' | 'all'; page?: number; limit?: number }) =>
+  apiClient({ method: routes.BLOCKED_LIST.METHOD, url: routes.BLOCKED_LIST.URL, data });
+
+export const addBlockedNumbers = (data: {
+  numbers?: string[];
+  kind?: 'number' | 'prefix' | 'anonymous';
+  scope?: 'calls' | 'messages' | 'both';
+  treatment?: 'reject' | 'voicemail' | 'spam';
+  line?: 'company' | 'personal' | 'shared';
+  dids?: string[];
+  label?: string;
+  reason?: string;
+  note?: string;
+  source?: string;
+  country?: string;
+}) => apiClient({ method: routes.BLOCKED_ADD.METHOD, url: routes.BLOCKED_ADD.URL, data });
+
+/* Sign-up provisioning, read with the token the sign-up handed back. */
+/* Both are shown in-card by the get-started screen, so the client's own error
+   toast is off; a 401 here is the sign-up token, not a session. */
+export const getSignupStatus = (token: string) =>
+  apiClient({ method: routes.SIGNUP_STATUS.METHOD, url: routes.SIGNUP_STATUS.URL, headers: { Authorization: `Bearer ${token}` }, hideToastOnError: true, allowUnauthorized: true } as CustomAxiosRequestConfig);
+export const retrySignupProvision = (token: string) =>
+  apiClient({ method: routes.SIGNUP_PROVISION_RETRY.METHOD, url: routes.SIGNUP_PROVISION_RETRY.URL, data: {}, headers: { Authorization: `Bearer ${token}` }, hideToastOnError: true, allowUnauthorized: true } as CustomAxiosRequestConfig);
+
+/* Which numbers the signed-in person may block a caller on. */
+export const getBlockReach = () =>
+  apiClient({ method: routes.BLOCKED_REACH.METHOD, url: routes.BLOCKED_REACH.URL, data: {} });
+
+export const updateBlockedNumber = (data: {
+  id: string;
+  scope?: 'calls' | 'messages' | 'both';
+  treatment?: 'reject' | 'voicemail' | 'spam';
+  label?: string;
+  reason?: string;
+  note?: string;
+}) => apiClient({ method: routes.BLOCKED_UPDATE.METHOD, url: routes.BLOCKED_UPDATE.URL, data });
+
+export const removeBlockedNumbers = (data: { ids: string[] }) =>
+  apiClient({ method: routes.BLOCKED_REMOVE.METHOD, url: routes.BLOCKED_REMOVE.URL, data });
 
 export const mediaUploadUrl = (data: any) => {
   return apiClient({
@@ -424,6 +525,14 @@ export const callLogQueueList = (data: any) => {
   });
 };
 
+export const callQueueSeries = (data: any) => {
+  return apiClient({
+    method: routes.CALL_QUEUE_SERIES.METHOD,
+    url: routes.CALL_QUEUE_SERIES.URL,
+    data,
+  });
+};
+
 export const callLogQueueReportList = (data: any) => {
   return apiClient({
     method: routes.CALL_LOG_QUEUE_REPORT_DETAIL.METHOD,
@@ -541,6 +650,24 @@ export const claimIndiaInventoryNumber = (data: { did_number: string }) => {
     data,
   });
 };
+/* Numbers from our own stock. `source` comes back "inventory" or "empty"; an
+   empty shelf is not an error, it is the signal to fall back to the carrier. */
+export const getInventoryAvailable = (data: any, config?: CustomAxiosRequestConfig) =>
+  apiClient({ ...config, method: routes.DID_INVENTORY_AVAILABLE.METHOD, url: routes.DID_INVENTORY_AVAILABLE.URL, data });
+
+export const getInventoryOptions = (params: any, config?: CustomAxiosRequestConfig) =>
+  apiClient({ ...config, method: routes.DID_INVENTORY_OPTIONS.METHOD, url: routes.DID_INVENTORY_OPTIONS.URL, params });
+
+/* Reserve the one number the customer picked, for the length of the checkout. */
+export const holdInventoryNumber = (data: any) =>
+  apiClient({ method: routes.DID_INVENTORY_HOLD.METHOD, url: routes.DID_INVENTORY_HOLD.URL, data });
+
+export const releaseInventoryHold = (data: any) =>
+  apiClient({ method: routes.DID_INVENTORY_RELEASE.METHOD, url: routes.DID_INVENTORY_RELEASE.URL, data });
+
+export const claimInventoryNumber = (data: any) =>
+  apiClient({ method: routes.DID_INVENTORY_CLAIM.METHOD, url: routes.DID_INVENTORY_CLAIM.URL, data });
+
 export const getFaxDidCountryList = (data: any) => {
   return apiClient({
     method: routes.FAX_DID_COUNTRY_LIST.METHOD,
@@ -1222,7 +1349,10 @@ export const uploadContactInLead = (data: any) => {
     method: routes.UPLOAD_CONTACT.METHOD,
     url: routes.UPLOAD_CONTACT.URL,
     data: formData,
-  });
+    /* The upload dialog shows the server's answer itself, row by row; a toast
+       on top of that would say the same thing twice, in less detail. */
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
 };
 
 export const exportContact = (data: {
@@ -1327,6 +1457,45 @@ export const callForwarding = (data: any) => {
   return apiClient({
     method: routes.CALL_FORWARDING.METHOD,
     url: routes.CALL_FORWARDING.URL,
+    data,
+  });
+};
+
+/* Write a durable label into the number's did_name column. Returns a 404 until
+   the PATCH /api/did/:uuid route is bound on the API; the caller falls back to
+   the call-handling-blob write (callForwarding) in that case, so a label is
+   never lost while the backend catches up. */
+export const updateDidLabel = ({ uuid, did_name }: { uuid: string; did_name: string }) => {
+  return apiClient({
+    method: routes.UPDATE_DID_LABEL.METHOD,
+    url: `${routes.UPDATE_DID_LABEL.URL}/${uuid}`,
+    data: { did_name },
+  });
+};
+
+/* Voicemail workflow — who owns a message, whether it is resolved, and its note.
+   Keyed by the call's uuid. */
+export const getVoicemailAction = (callUuid: string) => {
+  return apiClient({
+    method: routes.VOICEMAIL_ACTION_GET.METHOD,
+    url: `${routes.VOICEMAIL_ACTION_GET.URL}/${callUuid}`,
+    /* One of these fires per voicemail row, so on a tenant where the route
+       isn't live yet a call list becomes a wall of toasts. The caller already
+       treats a failed read as "no state yet", not an error - see
+       voicemail-workflow.tsx. */
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
+};
+
+export const updateVoicemailAction = (data: {
+  call_uuid: string;
+  assigned_to?: string | null;
+  resolved?: boolean;
+  note?: string | null;
+}) => {
+  return apiClient({
+    method: routes.VOICEMAIL_ACTION_SET.METHOD,
+    url: routes.VOICEMAIL_ACTION_SET.URL,
     data,
   });
 };
@@ -1453,6 +1622,67 @@ export const deleteMember = (id: any) => {
   return apiClient({
     method: routes.DELETE_MEMBER.METHOD,
     url: `${routes.DELETE_MEMBER.URL}/${id}`,
+  });
+};
+
+/* Person states. See routes.tsx beside PERSON_SUSPEND for what each one is. */
+export const suspendMember = (id: string) => {
+  return apiClient({
+    method: routes.PERSON_SUSPEND.METHOD,
+    url: `${routes.PERSON_SUSPEND.URL}/${id}`,
+  });
+};
+
+export const signOutEverywhere = (id: string) => {
+  return apiClient({
+    method: routes.PERSON_SIGN_OUT.METHOD,
+    url: `${routes.PERSON_SIGN_OUT.URL}/${id}`,
+  });
+};
+export const reactivateMember = (id: string) => {
+  return apiClient({
+    method: routes.PERSON_REACTIVATE.METHOD,
+    url: `${routes.PERSON_REACTIVATE.URL}/${id}`,
+  });
+};
+
+export const getPersonStates = () => {
+  return apiClient({
+    method: routes.PERSON_STATES.METHOD,
+    url: routes.PERSON_STATES.URL,
+  });
+};
+
+/* Admin scope. See routes.tsx beside PERSON_SCOPE_SET. */
+export const setPersonScope = (
+  id: string,
+  scope: { level: string; location_uuids: string[]; group_uuids: string[] },
+) => {
+  return apiClient({
+    method: routes.PERSON_SCOPE_SET.METHOD,
+    url: `${routes.PERSON_SCOPE_SET.URL}/${id}`,
+    data: scope,
+  });
+};
+
+export const getPersonScopes = () => {
+  return apiClient({
+    method: routes.PERSON_SCOPES.METHOD,
+    url: routes.PERSON_SCOPES.URL,
+  });
+};
+
+export const listDeletedMembers = () => {
+  return apiClient({
+    method: routes.LIST_DELETED_MEMBERS.METHOD,
+    url: routes.LIST_DELETED_MEMBERS.URL,
+  });
+};
+
+export const restoreMember = (id: string) => {
+  return apiClient({
+    method: routes.RESTORE_MEMBER.METHOD,
+    url: `${routes.RESTORE_MEMBER.URL}/${id}`,
   });
 };
 
@@ -1583,6 +1813,78 @@ export const templateList = (data: any) => {
     data,
   });
 };
+
+// Company settings, per section. The toast is left to src/lib/company-defaults.ts:
+// a 404 from `list` is how it learns the server has not got this API yet, and
+// that must be silent; a real failure it reports itself, in the same words the
+// interceptor would have used.
+export const listCompanySettings = () => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SETTINGS_LIST.METHOD,
+    url: routes.COMPANY_SETTINGS_LIST.URL,
+    data: {},
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+/* Scheduled reports. The list is read on a screen that may be opened by someone
+   whose plan or role has never had the API, so `list` and `types` stay quiet on
+   error and the page shows its own empty state; a save must speak up. */
+const scheduleCall = (route: { METHOD: string; URL: string }, data: any, quiet = false) => {
+  const config: CustomAxiosRequestConfig = {
+    method: route.METHOD,
+    url: route.URL,
+    data,
+    ...(quiet ? { hideToastOnError: true } : {}),
+  };
+  return apiClient(config);
+};
+
+export const listReportScheduleTypes = () => scheduleCall(routes.REPORT_SCHEDULE_TYPES, {}, true);
+export const listReportSchedules = () => scheduleCall(routes.REPORT_SCHEDULE_LIST, {}, true);
+export const createReportSchedule = (data: any) => scheduleCall(routes.REPORT_SCHEDULE_CREATE, data);
+export const updateReportSchedule = (data: any) => scheduleCall(routes.REPORT_SCHEDULE_UPDATE, data);
+export const toggleReportSchedule = (data: { uuid: string; enabled: boolean }) =>
+  scheduleCall(routes.REPORT_SCHEDULE_TOGGLE, data);
+export const deleteReportSchedule = (data: { uuid: string }) =>
+  scheduleCall(routes.REPORT_SCHEDULE_DELETE, data);
+export const runReportScheduleNow = (data: { uuid: string }) =>
+  scheduleCall(routes.REPORT_SCHEDULE_RUN_NOW, data);
+
+export const getCompanySettingsSection = (data: { section: string }) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SETTINGS_GET.METHOD,
+    url: routes.COMPANY_SETTINGS_GET.URL,
+    data,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+export const saveCompanySettingsSection = (data: {
+  section: string;
+  settings: any;
+  version?: number;
+}) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SETTINGS_SAVE.METHOD,
+    url: routes.COMPANY_SETTINGS_SAVE.URL,
+    data,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+export const getCompanySettingsHistory = (data: { section: string; limit?: number }) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SETTINGS_HISTORY.METHOD,
+    url: routes.COMPANY_SETTINGS_HISTORY.URL,
+    data,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
 export const templateDelete = (id: any) => {
   return apiClient({
     method: routes.TEMPLATE_DELETE.METHOD,
@@ -1639,6 +1941,38 @@ export const upsertCompany = (data: {
   } as any);
 };
 
+/* The company's own record through the tenant-scoped endpoint. Both calls are
+   quiet on error because lib/company-self.ts decides what the user is told: a
+   404 from the read means the server has not got this endpoint yet and must be
+   silent, while a real failure must say so. A 401 here is a genuine session
+   problem and is left to the interceptor. */
+export const fetchCompanySelf = () => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SELF.METHOD,
+    url: routes.COMPANY_SELF.URL,
+    data: {},
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+export const updateCompanySelf = (data: {
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+}) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.COMPANY_SELF_UPDATE.METHOD,
+    url: routes.COMPANY_SELF_UPDATE.URL,
+    data,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
 export const changePassword = (data: any) => {
   return apiClient({
     method: routes.CHANGE_PASSWORD.METHOD,
@@ -1659,18 +1993,20 @@ export const assignNumberUser = (params: any) => {
 
 //sign up
 
-export const signup = (data: any) => {
+export const signup = (data: any, config: any = {}) => {
   return apiClient({
     method: routes.SIGNUP.METHOD,
     url: routes.SIGNUP.URL,
     data,
+    ...config,
   });
 };
-export const signupOnTrial = (data: any) => {
+export const signupOnTrial = (data: any, config: any = {}) => {
   return apiClient({
     method: routes.SIGNUP_ON_TRIAL.METHOD,
     url: routes.SIGNUP_ON_TRIAL.URL,
     data,
+    ...config,
   });
 };
 export const sendOtp = (data: any) => {
@@ -1711,6 +2047,16 @@ export const validateAccount = (data: any) => {
     data,
   });
 };
+
+/* The get-started flow shows every failure inside its card, so these ask the
+   client not to toast. The plain versions above keep their one-argument shape
+   because react-query hands them a context as a second argument. */
+const quiet = (call: { METHOD: string; URL: string }) => (data: any) =>
+  apiClient({ method: call.METHOD, url: call.URL, data, hideToastOnError: true } as CustomAxiosRequestConfig);
+export const validateAccountQuiet = quiet(routes.ACCOUNT);
+export const sendOtpForSignUPQuiet = quiet(routes.SEND_OTP_FOR_SIGNUP);
+export const verifyOtpQuiet = quiet(routes.VERIFY_OTP);
+export const getTaxesAndFeesQuiet = quiet(routes.GET_TAXES_AND_FEES);
 
 export const callRateDetail = (params: any) => {
   return apiClient({
@@ -1801,6 +2147,25 @@ export const CRMDisconnect = (data: any) => {
     data,
   });
 };
+export const connectEspoCrm = (data: { instance_url: string; api_key: string }) => {
+  return apiClient({
+    method: routes.CRM_ESPOCRM_CONNECT.METHOD,
+    url: routes.CRM_ESPOCRM_CONNECT.URL,
+    data,
+  });
+};
+export const connectOdoo = (data: {
+  instance_url: string;
+  database: string;
+  username: string;
+  api_key: string;
+}) => {
+  return apiClient({
+    method: routes.CRM_ODOO_CONNECT.METHOD,
+    url: routes.CRM_ODOO_CONNECT.URL,
+    data,
+  });
+};
 export const saveCRMSettings = (data: any) => {
   return apiClient({
     method: routes.SAVE_CRM_SETTINGS.METHOD,
@@ -1848,6 +2213,21 @@ export const upsertCallScript = (data: any) => {
   });
 };
 
+export const getScriptAnswersReport = (data: {
+  scriptId: string;
+  from?: string;
+  to?: string;
+  campaignId?: string;
+  queueUuid?: string;
+  text_limit?: number;
+}) => {
+  return apiClient({
+    method: routes.SCRIPT_ANSWERS_REPORT.METHOD,
+    url: routes.SCRIPT_ANSWERS_REPORT.URL,
+    data,
+  });
+};
+
 export const deleteCallScript = (data: any) => {
   return apiClient({
     method: routes.CALL_SCRIPT_DELETE.METHOD,
@@ -1857,6 +2237,47 @@ export const deleteCallScript = (data: any) => {
 };
 
 // Dispositions
+/* The calling hours and abandoned-call limit for one country, read from the
+   same module the dialer enforces. The screen must never keep its own copy of
+   these numbers, or it could tell somebody they are safe when they are not. */
+export const getCallingRules = (country: string) => {
+  return apiClient({
+    method: routes.CAMPAIGN_CALLING_RULES.METHOD,
+    url: `${routes.CAMPAIGN_CALLING_RULES.URL}?country=${encodeURIComponent(country || '')}`,
+  });
+};
+
+/**
+ * The live dialer board for one campaign.
+ *
+ * A 404 is an ANSWER here, not a failure: either the campaign is not running,
+ * or this deployment's campaign-api predates the route. Both mean "there is no
+ * board", which the page already handles by showing the stored record — so the
+ * global error toast is suppressed rather than shouting on every page load.
+ */
+export const getCampaignLiveSnapshot = (data: { campaignId: string }) => {
+  return apiClient({
+    method: routes.CAMPAIGN_LIVE_SNAPSHOT.METHOD,
+    url: routes.CAMPAIGN_LIVE_SNAPSHOT.URL,
+    data,
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
+};
+
+/**
+ * Skill coverage for one campaign: leads grouped by the skill they name, how
+ * many people on the team hold each, and how many leads nobody can take.
+ * A 404 is an answer (the server predates the route), not a failure; the
+ * card says so instead of toasting.
+ */
+export const getCampaignSkillCoverage = (data: { campaignId: string }) => {
+  return apiClient({
+    method: routes.CAMPAIGN_SKILL_COVERAGE.METHOD,
+    url: `${routes.CAMPAIGN_SKILL_COVERAGE.URL}/${encodeURIComponent(data.campaignId)}/skill-coverage`,
+    hideToastOnError: true,
+  } as CustomAxiosRequestConfig);
+};
+
 export const getDispositions = (data: any) => {
   return apiClient({
     method: routes.DISPOSITION_LIST.METHOD,
@@ -1876,6 +2297,183 @@ export const deleteReposition = (data: any) => {
   return apiClient({
     method: routes.DISPOSITION_DELETE.METHOD,
     url: routes.DISPOSITION_DELETE.URL,
+    data,
+  });
+};
+/* Agent screen recordings */
+export const saveScreenRecording = (data: any) => {
+  return apiClient({
+    method: routes.SCREEN_RECORDING_SAVE.METHOD,
+    url: routes.SCREEN_RECORDING_SAVE.URL,
+    data,
+  });
+};
+export const listScreenRecordings = (data: { call_uuids: string[]; extension?: string; from?: string; to?: string }) => {
+  return apiClient({
+    method: routes.SCREEN_RECORDING_LIST.METHOD,
+    url: routes.SCREEN_RECORDING_LIST.URL,
+    data,
+  });
+};
+/* Coaching teams */
+export const listCoachingTeams = (data: { search?: string; page?: number; limit?: number }) => {
+  return apiClient({
+    method: routes.COACHING_TEAM_LIST.METHOD,
+    url: routes.COACHING_TEAM_LIST.URL,
+    data,
+  });
+};
+export const myCoachingTeams = () => {
+  return apiClient({
+    method: routes.COACHING_TEAM_MINE.METHOD,
+    url: routes.COACHING_TEAM_MINE.URL,
+  });
+};
+export const saveCoachingTeam = (data: any) => {
+  return apiClient({
+    method: routes.COACHING_TEAM_SAVE.METHOD,
+    url: routes.COACHING_TEAM_SAVE.URL,
+    data,
+  });
+};
+export const deleteCoachingTeam = (uuid: string) => {
+  return apiClient({
+    method: routes.COACHING_TEAM_DELETE.METHOD,
+    url: `${routes.COACHING_TEAM_DELETE.URL}/${uuid}`,
+  });
+};
+export const getSkills = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_LIST.METHOD,
+    url: routes.SKILL_LIST.URL,
+    data,
+  });
+};
+export const upsertSkill = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_UPSERT.METHOD,
+    url: routes.SKILL_UPSERT.URL,
+    data,
+  });
+};
+export const deleteSkill = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_DELETE.METHOD,
+    url: routes.SKILL_DELETE.URL,
+    data,
+  });
+};
+export const getUserSkills = (data: any) => {
+  return apiClient({
+    method: routes.USER_SKILLS_GET.METHOD,
+    url: routes.USER_SKILLS_GET.URL,
+    data,
+  });
+};
+export const setUserSkills = (data: any) => {
+  return apiClient({
+    method: routes.USER_SKILLS_SET.METHOD,
+    url: routes.USER_SKILLS_SET.URL,
+    data,
+  });
+};
+/* One skill's roster: who holds it and at how many stars. The same rows the
+   profile tab writes, read and written from the skill's side. */
+export const getSkillPeople = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_PEOPLE_GET.METHOD,
+    url: routes.SKILL_PEOPLE_GET.URL,
+    data,
+  });
+};
+
+export const setSkillPeople = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_PEOPLE_SET.METHOD,
+    url: routes.SKILL_PEOPLE_SET.URL,
+    data,
+  });
+};
+
+export const getUsersSkills = (data: any) => {
+  return apiClient({
+    method: routes.USERS_SKILLS_GET.METHOD,
+    url: routes.USERS_SKILLS_GET.URL,
+    data,
+  });
+};
+
+/* Skill categories: the headings skills sit under (Language, Sales...). */
+/* The duty axis: start / break / end shift, or ready again, for oneself or
+   (managers) for somebody else; and everyone's duty on the company's queues. */
+export const setAgentDuty = (data: {
+  action: 'start' | 'break' | 'end' | 'ready';
+  user_uuid?: string;
+  reason_id?: string;
+  reason?: string;
+}) => {
+  return apiClient({
+    method: routes.AGENT_DUTY.METHOD,
+    url: routes.AGENT_DUTY.URL,
+    data,
+  });
+};
+
+export const listAgentDuty = (data: { user_uuids?: string[] }) => {
+  return apiClient({
+    method: routes.AGENT_DUTY_LIST.METHOD,
+    url: routes.AGENT_DUTY_LIST.URL,
+    data,
+  });
+};
+
+/* Agent-day reports, read from the duty history. Dates are calendar days in
+   `timezone`; an agent gets their own day only, whatever they ask for. */
+export interface AgentDayParams {
+  date_from: string;
+  date_to: string;
+  timezone: string;
+  user_uuids?: string[];
+  queue_uuid?: string;
+  campaign_id?: string;
+  allowances?: Record<string, number>;
+}
+const agentDayCall = (route: { METHOD: string; URL: string }, data: AgentDayParams) =>
+  apiClient({ method: route.METHOD, url: route.URL, data });
+export const getAgentDaySummary = (data: AgentDayParams) => agentDayCall(routes.AGENT_DAY_SUMMARY, data);
+export const getAgentDayIntervals = (data: AgentDayParams) => agentDayCall(routes.AGENT_DAY_INTERVALS, data);
+export const getAgentDayBreaks = (data: AgentDayParams) => agentDayCall(routes.AGENT_DAY_BREAKS, data);
+export const getAgentDayPreview = (data: AgentDayParams) => agentDayCall(routes.AGENT_DAY_PREVIEW, data);
+/* Workforce: schedules, time off and coverage (campaign-api behind the gateway). */
+const workforceCall = (route: { METHOD: string; URL: string }, data: Record<string, unknown>) => apiClient({ method: route.METHOD, url: route.URL, data });
+export const listSchedules = (data: { date_from: string; date_to: string; user_uuids?: string[] }) => workforceCall(routes.WORKFORCE_SCHEDULE_LIST, data);
+export const saveSchedules = (data: { timezone: string; publish?: boolean; rows: Array<{ user_uuid: string; date: string; blocks: Array<{ start: string; end: string; code: string; label?: string }> }> }) => workforceCall(routes.WORKFORCE_SCHEDULE_SAVE, data);
+export const publishSchedules = (data: { date_from: string; date_to: string; user_uuids?: string[] }) => workforceCall(routes.WORKFORCE_SCHEDULE_PUBLISH, data);
+export const listTimeOff = (data: { status?: string; user_uuid?: string }) => workforceCall(routes.WORKFORCE_TIMEOFF_LIST, data);
+export const requestTimeOff = (data: { code: string; date_from: string; date_to: string; note?: string; user_uuid?: string }) => workforceCall(routes.WORKFORCE_TIMEOFF_REQUEST, data);
+export const decideTimeOff = (data: { id: string; decision: 'approved' | 'declined'; note?: string; timezone?: string }) => workforceCall(routes.WORKFORCE_TIMEOFF_DECIDE, data);
+export const getCoverage = (data: { date: string; timezone: string; handle_seconds?: number; occupancy?: number }) => workforceCall(routes.WORKFORCE_COVERAGE, data);
+
+export const getSkillCategories = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_LIST.METHOD,
+    url: routes.SKILL_CATEGORY_LIST.URL,
+    data,
+  });
+};
+
+export const upsertSkillCategory = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_UPSERT.METHOD,
+    url: routes.SKILL_CATEGORY_UPSERT.URL,
+    data,
+  });
+};
+
+export const deleteSkillCategory = (data: any) => {
+  return apiClient({
+    method: routes.SKILL_CATEGORY_DELETE.METHOD,
+    url: routes.SKILL_CATEGORY_DELETE.URL,
     data,
   });
 };
@@ -1917,6 +2515,21 @@ export const saveNoteInLeadContact = (data: any) => {
   return apiClient({
     method: routes.ADD_NOTE_DISPOSITION_FOR_LEAD.METHOD,
     url: routes.ADD_NOTE_DISPOSITION_FOR_LEAD.URL,
+    data,
+  });
+};
+
+/** Abandon rate per campaign per day and calls per number per day, for the regulator. */
+export const getCampaignComplianceReport = (data: {
+  from?: string;
+  to?: string;
+  timezone?: string;
+  campaignId?: string;
+  abandonCapPercent?: number;
+}) => {
+  return apiClient({
+    method: routes.CAMPAIGN_COMPLIANCE_REPORT.METHOD,
+    url: routes.CAMPAIGN_COMPLIANCE_REPORT.URL,
     data,
   });
 };
@@ -1991,6 +2604,22 @@ export const getCallQueueInvolvements = (payload?: any) => {
   return apiClient({
     method: routes.CALLQUEUE_INVOLVEMENT.METHOD,
     url: routes.CALLQUEUE_INVOLVEMENT.URL,
+    data: payload,
+  });
+};
+/* In-queue callbacks: everyone holding a place to be called back (optionally
+   one queue), and a supervisor withdrawing one by id. */
+export const callQueueCallbacksList = (payload?: { queue_uuid?: string }) => {
+  return apiClient({
+    method: routes.CALL_QUEUE_CALLBACKS_LIST.METHOD,
+    url: routes.CALL_QUEUE_CALLBACKS_LIST.URL,
+    data: payload || {},
+  });
+};
+export const callQueueCallbackCancel = (payload: { id: string }) => {
+  return apiClient({
+    method: routes.CALL_QUEUE_CALLBACKS_CANCEL.METHOD,
+    url: routes.CALL_QUEUE_CALLBACKS_CANCEL.URL,
     data: payload,
   });
 };
@@ -2555,6 +3184,124 @@ export const getAISettingConfig = () => {
     url: routes.GET_AI_SETTINGS.URL,
   });
 };
+
+/* Ask for a rewritten version of a draft message.
+ *
+ * `mode` is one of polish | formalize | elaborate | shorten | custom, and
+ * `instruction` is only read for `custom`. The reply is text and nothing else
+ * happens: the server never sends a message, so the caller decides whether the
+ * suggestion is used at all. The company is taken from the session server-side
+ * rather than sent from here - it selects which brand's AI key is spent. */
+/* Fire-and-forget: a rating must never interrupt what someone was doing, so
+   the caller does not await it and the server always answers 200. */
+export const rateMessageRewrite = (data: { rating: 'up' | 'down'; mode: string }) => {
+  return apiClient({
+    method: routes.AI_MESSAGE_REWRITE_FEEDBACK.METHOD,
+    url: routes.AI_MESSAGE_REWRITE_FEEDBACK.URL,
+    data,
+  });
+};
+
+export const rewriteMessageDraft = (data: {
+  text: string;
+  mode: 'polish' | 'formalize' | 'elaborate' | 'shorten' | 'custom';
+  instruction?: string;
+}) => {
+  return apiClient({
+    method: routes.AI_MESSAGE_REWRITE.METHOD,
+    url: routes.AI_MESSAGE_REWRITE.URL,
+    data,
+  });
+};
+
+/* Both send the messages already loaded in the open conversation - nothing
+   is fetched server-side and nothing is stored once the response returns. */
+export const summarizeConversation = (data: { messages: { sender: string; text: string }[] }) => {
+  return apiClient({
+    method: routes.AI_CONVERSATION_SUMMARIZE.METHOD,
+    url: routes.AI_CONVERSATION_SUMMARIZE.URL,
+    data,
+  });
+};
+
+export const askAboutConversation = (data: {
+  messages: { sender: string; text: string }[];
+  question: string;
+}) => {
+  return apiClient({
+    method: routes.AI_CONVERSATION_ASK.METHOD,
+    url: routes.AI_CONVERSATION_ASK.URL,
+    data,
+  });
+};
+
+/* `draft` is what the person has typed so far. Sent, every suggestion comes
+   back continuing it rather than replacing it. */
+export const suggestReplies = (data: {
+  messages: { sender: string; text: string }[];
+  draft?: string;
+}) => {
+  return apiClient({
+    method: routes.AI_CONVERSATION_SUGGEST_REPLIES.METHOD,
+    url: routes.AI_CONVERSATION_SUGGEST_REPLIES.URL,
+    data,
+  });
+};
+
+export interface CallRecap {
+  call_uuid: string;
+  summary: string;
+  action_items: string[];
+  purpose: string;
+  outcome: string;
+  keywords: string[];
+  intent: string;
+  /* Model's read of overall tone, computed once from the full transcript -
+     not a live, per-second measurement. Null until a recap exists. */
+  sentiment: { positive: number; neutral: number; negative: number } | null;
+  edited: boolean;
+  generated_at: string | null;
+  unavailable_reason?: string | null;
+}
+
+/* Generates (or returns an already-generated) recap. `force` regenerates even
+   when one is stored - the only way to overwrite an edited recap. */
+export const generateCallRecap = (data: {
+  call_uuid: string;
+  transcript_file?: string | null;
+  force?: boolean;
+}) => {
+  return apiClient({
+    method: routes.AI_CALL_RECAP.METHOD,
+    url: routes.AI_CALL_RECAP.URL,
+    data,
+  });
+};
+
+/* Reads a stored recap without calling the model, so a list can show what
+   exists at no cost. */
+export const getCallRecap = (data: { call_uuid: string }) => {
+  return apiClient({
+    method: routes.AI_CALL_RECAP_GET.METHOD,
+    url: routes.AI_CALL_RECAP_GET.URL,
+    data,
+  });
+};
+
+export const updateCallRecap = (data: {
+  call_uuid: string;
+  summary?: string;
+  action_items?: string[];
+  purpose?: string;
+  outcome?: string;
+}) => {
+  return apiClient({
+    method: routes.AI_CALL_RECAP_UPDATE.METHOD,
+    url: routes.AI_CALL_RECAP_UPDATE.URL,
+    data,
+  });
+};
+
 export const getUploadPdfUrl = (data?: object) => {
   return apiClient({
     baseURL: getAIPortalBaseURL(),
@@ -3050,81 +3797,33 @@ export const changeOmniStatus = (data: { uuid: string; status: 0 | 1 }) => {
   });
 };
 
-/* Queue skills — see the SKILL_* block in routes.tsx. */
-export const getSkills = (data?: any) => {
+/* Queue alerts. `rules` and `history` are read on a screen a supervisor may
+   open before the server has this API, so they stay quiet on error and the
+   page shows its own empty state; a save must speak up. */
+export const listQueueAlertRules = () => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.QUEUE_ALERT_RULES.METHOD,
+    url: routes.QUEUE_ALERT_RULES.URL,
+    data: {},
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+export const saveQueueAlertRules = (data: { rules: any[]; version?: number }) => {
   return apiClient({
-    method: routes.SKILL_LIST.METHOD,
-    url: routes.SKILL_LIST.URL,
+    method: routes.QUEUE_ALERT_SAVE.METHOD,
+    url: routes.QUEUE_ALERT_SAVE.URL,
     data,
   });
 };
-export const upsertSkill = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_UPSERT.METHOD,
-    url: routes.SKILL_UPSERT.URL,
+
+export const listQueueAlertHistory = (data: { limit?: number; rule_id?: string } = {}) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.QUEUE_ALERT_HISTORY.METHOD,
+    url: routes.QUEUE_ALERT_HISTORY.URL,
     data,
-  });
-};
-export const deleteSkill = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_DELETE.METHOD,
-    url: routes.SKILL_DELETE.URL,
-    data,
-  });
-};
-export const getUserSkills = (data?: any) => {
-  return apiClient({
-    method: routes.USER_SKILLS_GET.METHOD,
-    url: routes.USER_SKILLS_GET.URL,
-    data,
-  });
-};
-export const setUserSkills = (data?: any) => {
-  return apiClient({
-    method: routes.USER_SKILLS_SET.METHOD,
-    url: routes.USER_SKILLS_SET.URL,
-    data,
-  });
-};
-export const getSkillPeople = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_PEOPLE_GET.METHOD,
-    url: routes.SKILL_PEOPLE_GET.URL,
-    data,
-  });
-};
-export const setSkillPeople = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_PEOPLE_SET.METHOD,
-    url: routes.SKILL_PEOPLE_SET.URL,
-    data,
-  });
-};
-export const getUsersSkills = (data?: any) => {
-  return apiClient({
-    method: routes.USERS_SKILLS_GET.METHOD,
-    url: routes.USERS_SKILLS_GET.URL,
-    data,
-  });
-};
-export const getSkillCategories = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_CATEGORY_LIST.METHOD,
-    url: routes.SKILL_CATEGORY_LIST.URL,
-    data,
-  });
-};
-export const upsertSkillCategory = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_CATEGORY_UPSERT.METHOD,
-    url: routes.SKILL_CATEGORY_UPSERT.URL,
-    data,
-  });
-};
-export const deleteSkillCategory = (data?: any) => {
-  return apiClient({
-    method: routes.SKILL_CATEGORY_DELETE.METHOD,
-    url: routes.SKILL_CATEGORY_DELETE.URL,
-    data,
-  });
+    hideToastOnError: true,
+  };
+  return apiClient(config);
 };

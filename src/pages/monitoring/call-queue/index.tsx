@@ -10,7 +10,8 @@ import { Users, Clock3 } from 'lucide-react';
 import NotFound from '@/assets/images/not-found-img.svg';
 import { QUEUE_TYPE, STATE_TYPE_NAME } from '../constants';
 import Timer from '@/components/timer';
-import { capitalizeFirstLetter } from '@/lib/utils';
+import { capitalizeFirstLetter, handleAlert } from '@/lib/utils';
+import { requestMonitorSession } from '@/lib/monitoring-actions';
 import { useUser } from '@/hooks/use-user';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import {
@@ -21,7 +22,6 @@ import {
   ImPhoneHangUp,
 } from '@/assets/icons';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { useDialpad } from '@/hooks/use-dialpad';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
 import { MonitoringTopbarSlot } from '../topbar';
 import {
@@ -85,7 +85,6 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
   //   agents: [],
   //   members: [],
   // });
-  const { makeCall } = useDialpad();
   const { user } = useUser();
   // const { user_info } = user;
   const { features } = useCompanyFeatures();
@@ -261,7 +260,11 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
   };
 
   const monitorCall = (code: string, callId: any) => {
-    makeCall(`${code}${callId}`);
+    // Ask the call manager to listen / whisper / barge / take over. The old
+    // `*87<uuid>` dial went out as an ordinary call and never reached the agent.
+    requestMonitorSession(socketEventsManager, code, callId, (ok, error) => {
+      if (!ok) handleAlert({ text: error || 'Could not start monitoring.', type: 'error' });
+    });
   };
 
   const terminateCallSession = (call: any) => {

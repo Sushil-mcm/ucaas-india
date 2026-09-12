@@ -1292,8 +1292,9 @@
 
 .global-search-root {
   position: relative;
-  /* width: 430px; */
-  flex-shrink: 0;
+  flex: 1 1 0%;
+  min-width: 120px;
+  max-width: 420px;
 }
 
 .global-search-input-wrapper {
@@ -1953,7 +1954,8 @@
    the top bar, with the area rail below it rather than beside it.
    ============================================================ */
 .mcm-brandbar {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   height: 100%;
   /* No divider here. AreaNav renders inside this block, so the border landed
      after the last area tab rather than between the logo and the tabs, which
@@ -1966,7 +1968,6 @@
 .mcm-brand {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
   text-decoration: none;
   color: inherit;
   white-space: nowrap;
@@ -2144,9 +2145,6 @@
    A checklist that reports the person's real configuration, so an unfinished
    step is visible here rather than discovered by a caller hearing silence. */
 .mcm-setupguide {
-  margin-top: 26px;
-  padding-top: 22px;
-  border-top: 1px solid #e6e9f0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2194,8 +2192,8 @@
 }
 .mcm-setupguide li {
   display: grid;
-  grid-template-columns: 26px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 26px 1fr;
+  gap: 4px 12px;
   align-items: start;
   padding: 14px 0;
   border-bottom: 1px solid #f0f2f6;
@@ -2770,4 +2768,88 @@
   background: linear-gradient(135deg, #f2794f, #ea5c34);
   color: #fff;
   border-color: transparent;
+}
+
+/* ==================================================================
+   Rules ported from the unified frontend (new selectors that this
+   stylesheet did not have). Appended so later-wins keeps their intent.
+   ================================================================== */
+/* Below the widest breakpoint the labels go and the icons carry it. */
+@media (max-width: 1279px) {
+  .mcm-areanav-btn span {
+    display: none;
+  }
+  /* icon-only at this width, so the tint needs to sit evenly around it */
+  .mcm-areanav-btn {
+    padding: 9px 11px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ucaas.in brand lock.
+
+   organization-context.tsx:126-138 writes --primary, --color-ucass-primary-200,
+   --color-ucass-active, --color-ucass-active-bg and --color-ucass-login-bg onto
+   documentElement.style from the organisation row in the database. Those inline
+   values would otherwise repaint the console in whatever colour that row holds
+   — which, on a database copied from another brand, is blue.
+
+   An inline style set through setProperty() carries no !important, so a rule
+   marked !important here outranks it. That is what pins the brand regardless of
+   what the organisation row says.
+   --------------------------------------------------------------------------- */
+/* Scoped to the ucaas build. Unscoped, these !important rules also repainted
+   My Country Mobile, whose own organisation row is blue (#0f6ae7) and should
+   win. main.tsx stamps data-brand from VITE_APP_SLUG, so each portal keeps its
+   own colours from one source tree. */
+:root[data-brand='ucaas'] {
+  --primary: #f2994a !important;
+  --color-ucass-primary-100: #fff1e0 !important;
+  --color-ucass-primary-200: #fde9d2 !important;
+  --color-ucass-active: #c96f1f !important;
+  --color-ucass-active-bg: #fde9d2 !important;
+  --color-ucass-login-bg: #fff1e0 !important;
+  --mcm-accent: #f2994a;
+  --mcm-accent-ink: #c96f1f;
+  --mcm-accent-wash: #fff1e0;
+  --mcm-accent-edge: #ffd9ad;
+}
+
+.dark[data-brand='ucaas'],
+[data-brand='ucaas'] .dark {
+  --primary: #ffab5e !important;
+  --color-ucass-primary-100: #2b1f12 !important;
+  --color-ucass-primary-200: #ffab5e !important;
+  --color-ucass-active: #ffc98a !important;
+  --color-ucass-active-bg: #2b1f12 !important;
+  --color-ucass-login-bg: #2b1f12 !important;
+  --mcm-accent: #ffab5e;
+  --mcm-accent-ink: #ffc98a;
+  --mcm-accent-wash: #2b1f12;
+  --mcm-accent-edge: #4a341c;
+}
+
+/* The "MCM Unified Console" pages (mcm-page.css, console.css, video.css) carry
+   their own --accent/--accent-ink token block, independent of --primary above
+   and unaware ucaas.in exists — they shipped after the brand lock and every
+   .bg-primary/.text-primary utility those pages use resolves to --accent, not
+   --primary, so without this the console read as My Country Mobile's blue on
+   every ucaas.in page built from this component set. Same lock, same reason,
+   just a second token namespace. */
+[data-brand='ucaas'] .mcm-page,
+[data-brand='ucaas'] .mcm-console,
+[data-brand='ucaas'] .mcm-video {
+  --accent: #f2994a !important;
+  --accent-ink: #c96f1f !important;
+  --accent-wash: #fff1e0 !important;
+  --accent-edge: #ffd9ad !important;
+}
+
+[data-brand='ucaas'] .dark .mcm-page,
+[data-brand='ucaas'] .dark .mcm-console,
+[data-brand='ucaas'] .dark .mcm-video {
+  --accent: #ffab5e !important;
+  --accent-ink: #ffc98a !important;
+  --accent-wash: #2b1f12 !important;
+  --accent-edge: #4a341c !important;
 }

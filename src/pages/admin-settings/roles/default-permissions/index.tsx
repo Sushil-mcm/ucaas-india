@@ -46,6 +46,8 @@ import {
   saveCompanyDefaults,
 } from '@/lib/company-defaults';
 import { upsertCustomRole, userRolesList } from '@/services/api';
+import { invalidateRoleLists } from '@/lib/role-list-cache';
+import { withWorkdayGroup } from '@/lib/workday-permissions';
 import {
   NEW_PERSON_ROLE_KEY,
   PER_PERSON_GAPS,
@@ -108,7 +110,10 @@ const DefaultPermissionsPage = () => {
   /* Every default is measured against the company's own plan, so a company that
      has not bought a feature never sees a recommendation that claims to grant
      it. */
-  const plan = useMemo(() => extractPlanFeatures(companyPlanFeatures), [companyPlanFeatures]);
+  const plan = useMemo(
+    () => withWorkdayGroup(extractPlanFeatures(companyPlanFeatures)),
+    [companyPlanFeatures],
+  );
 
   const defaults = useMemo(
     () =>
@@ -168,9 +173,7 @@ const DefaultPermissionsPage = () => {
     mutationFn: upsertCustomRole,
     onSuccess: () => {
       handleAlert({ text: 'Role saved. It can now be picked when adding people.', type: 'success' });
-      queryClient.invalidateQueries({ queryKey: ['useRolesListQueryFn'] });
-      queryClient.invalidateQueries(['rolesList']);
-      queryClient.invalidateQueries(['useRolesList', false]);
+      invalidateRoleLists(queryClient);
     },
   });
 
@@ -215,7 +218,7 @@ const DefaultPermissionsPage = () => {
       hideHead
       section="People"
       title="Default permissions"
-      description="Step 4 of four. What each kind of person should be able to do on their first day, and why. Write a recommendation down as a role, then pick it when adding people."
+      description="Step 3 of three. What each kind of person should be able to do on their first day, and why. Write a recommendation down as a role, then pick it when adding people."
       actions={<AreaNav current="/admin-settings/default-permissions" />}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
@@ -259,11 +262,9 @@ const DefaultPermissionsPage = () => {
               status="app-only"
               note={
                 <>
-                  Works in this app. Permissions decide what this app puts on screen, and nothing
-                  behind it checks them again — so a tighter role makes the product simpler for the
-                  person using it rather than locking anything away. Reach is coming soon: there is
-                  no setting yet for which office or team somebody looks after, so a manager&rsquo;s
-                  permissions reach every team. Admin scope, next door, records that missing half.
+                  There is no setting yet for which office or team somebody looks after, so a
+                  manager&rsquo;s permissions reach every team. Admin scope, next door, is where
+                  that will live.
                 </>
               }
             >

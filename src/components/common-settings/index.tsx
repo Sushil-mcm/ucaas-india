@@ -4,7 +4,7 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { Button } from '@/components/ui/button';
 import RoleModal from './role-dialog';
 import RegionalModal from './regional-dialog';
-import { useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
+import { COMPANY_LOCK_WORDING, useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
 import VoiceMailConfigureModal from './voicemail-dialog';
 import AutomaticCallRecordingModal from './automatic-call-recording';
 import DisplayNumberModal from './display-number-dialog';
@@ -68,7 +68,7 @@ const fromInternationalChoice = (
 /* The switch does not read this yet, and saying otherwise would be telling an
    admin a fraud control is protecting them when it is not. */
 const INTERNATIONAL_NOT_ACTIVE_NOTE =
-  'Not active yet. This is recorded on this person\'s record, and it is what the call switch will read — but the switch does not check it today, so it does not stop any call yet.';
+  "Not active yet. This is recorded on this person's record, and it is what the call switch will read — but the switch does not check it today, so it does not stop any call yet.";
 
 interface DaySchedule {
   open: boolean;
@@ -85,9 +85,7 @@ export const getWeeklyScheduleName = (obj: WeeklySchedule = {}): string =>
    control it is on. Without it a greyed-out button is indistinguishable from a broken
    one, and the person has no way to tell which of the two they are looking at. */
 const CompanyLockNote: FC<{ show: boolean }> = ({ show }) =>
-  show ? (
-    <p className="text-xs text-gray-500">Set by your company, so you cannot change it here.</p>
-  ) : null;
+  show ? <p className="text-xs text-gray-500">{COMPANY_LOCK_WORDING}</p> : null;
 
 const CommonSettingPermission: FC<any> = ({
   data,
@@ -105,11 +103,42 @@ const CommonSettingPermission: FC<any> = ({
      department, a phone menu and a queue, and "may this person call abroad"
      is a question only a person can answer. */
   isShowInternationalCalling = false,
+  /* 'cards': each row is its own bordered, shadowed box - the original look,
+     kept as the default so the five other screens this editor is shared with
+     (numbers, IVR menus, call queues, departments, admin's own People editor)
+     are untouched. 'panel': one bordered group with a divider between rows,
+     the same `.mcm-setcard`/`.mcm-setrow` pattern `SettingCard` already
+     renders further down this file - opted into for now only by the
+     Preferences page, which asked for it. */
+  variant = 'cards',
+}: {
+  variant?: 'cards' | 'panel';
+  [key: string]: any;
 }) => {
+  const isPanelVariant = variant === 'panel';
+  const rowClass = isPanelVariant
+    ? 'mcm-setrow'
+    : 'flex bg-white justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl';
+  const rowClassStack = isPanelVariant
+    ? /* Not `.mcm-setrow-stack` - that class (from SettingRow) means "always
+         column, this row carries a full-width child," which is a different
+         case from this one. This row just wants the control below the text
+         on a narrow screen and beside it once there is room, same as the
+         "cards" variant already did with these exact two Tailwind classes -
+         only the divider/border/padding differ between the two variants. */
+      'mcm-setrow flex-col sm:flex-row'
+    : 'flex flex-col sm:flex-row bg-white justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl';
   /* Company rules govern a person editing their own phone, and nothing else. The
      other screens using this editor are an admin configuring a number, department,
      IVR or queue, where a lock meant for staff would make no sense. */
   const isOwnSettingsPage = origin === 'general_settings';
+  /* This editor is shared by a person, a number, a department, a menu and a
+     queue, and three of its controls reach nothing on a queue: automatic
+     transcription, AI call monitoring and the display number. They were shown
+     with a "coming soon" flag; a queue now simply does not offer them, because
+     a switch that cannot do anything is worse than no switch at all. They are
+     untouched for every other owner of this editor. */
+  const hideOnQueue = origin === 'queue';
   const companyPolicy = useCompanyPolicy({ enabled: isOwnSettingsPage });
 
   /* `isEditable` stays in charge everywhere the company rule does not reach —
@@ -180,13 +209,12 @@ const CommonSettingPermission: FC<any> = ({
   /* The company's own answer, so this person's row can say what "follow the
      company" actually means for them rather than making them go and look. Only
      fetched on the screens that show the control. */
-  const { data: companyDefaultTemplate = null, isPending: loadingCompanyRule } = useQuery<
-    CompanyDefaultTemplate | null
-  >({
-    queryKey: COMPANY_DEFAULTS_QUERY_KEY,
-    queryFn: fetchCompanyDefaults,
-    enabled: isShowInternationalCalling,
-  });
+  const { data: companyDefaultTemplate = null, isPending: loadingCompanyRule } =
+    useQuery<CompanyDefaultTemplate | null>({
+      queryKey: COMPANY_DEFAULTS_QUERY_KEY,
+      queryFn: fetchCompanyDefaults,
+      enabled: isShowInternationalCalling,
+    });
 
   const {
     watch,
@@ -257,274 +285,286 @@ const CommonSettingPermission: FC<any> = ({
         {isOwnSettingsPage && companyPolicy.isActive && hasCompanyLockedFields && (
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
             Some settings below are greyed out because they are set for everyone by your company. An
-            administrator can change them under <strong>Phone System → Preferences</strong>.
+            administrator can change them under <strong>Company → Company Rules</strong>.
           </div>
         )}
-        <div className="grid grid-cols-1 gap-3">
-          {/* {IS_ADMIN ? ( */}
-          {isShowRole && (
-            <div className="flex bg-white justify-between gap-3.5 w-full border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
+        {/* 'panel': one bordered `.mcm-setcard` group instead of a grid of
+            separately-boxed, separately-shadowed rows - the outer element
+            below only carries that class in this mode, otherwise it is a
+            plain unstyled wrapper and the grid layout is exactly what it
+            was. Same rows either way; only the container changes. */}
+        <div className={isPanelVariant ? 'mcm-setcard' : ''}>
+          <div className={isPanelVariant ? 'mcm-setcard-body' : 'grid grid-cols-1 gap-3'}>
+            {/* {IS_ADMIN ? ( */}
+            {isShowRole && (
+              <div className={rowClass}>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <p
+                      className={`font-semibold truncate text-md text-gray-900 ${(errors.settings as any)?.role?.value?.message ? 'text-red' : 'text-gray-900'}`}
+                    >
+                      Role
+                    </p>
+                    {(errors.settings as any)?.role?.value?.message && (
+                      <ErrorTooltip text={(errors.settings as any)?.role?.value?.message} />
+                    )}
+                  </div>
+                  <p className="text-gray-800 truncate text-sm">
+                    {isUpdatingAdmin
+                      ? data?.role_data?.name || data?.role
+                      : watch('settings.role.label')}
+                  </p>
+                </div>
+                {!isUpdatingAdmin && IS_ADMIN && !isAdminAccount ? (
+                  <Button
+                    type="button"
+                    variant={'outline'}
+                    className="w-16"
+                    onClick={() => openModal('roleModal')}
+                  >
+                    Select
+                  </Button>
+                ) : null}
+              </div>
+            )}
+            <div className={rowClass}>
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-1">
                   <p
-                    className={`font-semibold truncate text-md text-gray-900 ${(errors.settings as any)?.role?.value?.message ? 'text-red' : 'text-gray-900'}`}
+                    className={`font-semibold truncate text-md ${(errors.settings as any)?.operational_hours?.regional ? 'text-red' : 'text-gray-900'}`}
                   >
-                    Role
+                    Regional Settings
                   </p>
-                  {(errors.settings as any)?.role?.value?.message && (
-                    <ErrorTooltip text={(errors.settings as any)?.role?.value?.message} />
+                  {(errors.settings as any)?.operational_hours?.regional && (
+                    <ErrorTooltip text="Regional settings are required" />
                   )}
                 </div>
                 <p className="text-gray-800 truncate text-sm">
-                  {isUpdatingAdmin
-                    ? data?.role_data?.name || data?.role
-                    : watch('settings.role.label')}
+                  {' '}
+                  {operational_hours?.regional?.country?.value &&
+                  operational_hours?.regional?.timezone?.value
+                    ? `${operational_hours?.regional?.timezone?.value}, ${operational_hours?.regional?.country?.value}`
+                    : ''}
+                  {/* : 'Regional settings are not configured.'} */}
                 </p>
-              </div>
-              {!isUpdatingAdmin && IS_ADMIN && !isAdminAccount ? (
-                <Button
-                  type="button"
-                  variant={'outline'}
-                  className="w-16"
-                  onClick={() => openModal('roleModal')}
-                >
-                  Select
-                </Button>
-              ) : null}
-            </div>
-          )}
-          <div className="flex bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1">
-                <p
-                  className={`font-semibold truncate text-md ${(errors.settings as any)?.operational_hours?.regional ? 'text-red' : 'text-gray-900'}`}
-                >
-                  Regional Settings
-                </p>
-                {(errors.settings as any)?.operational_hours?.regional && (
-                  <ErrorTooltip text="Regional settings are required" />
-                )}
-              </div>
-              <p className="text-gray-800 truncate text-sm">
-                {' '}
-                {operational_hours?.regional?.country?.value &&
-                operational_hours?.regional?.timezone?.value
-                  ? `${operational_hours?.regional?.timezone?.value}, ${operational_hours?.regional?.country?.value}`
-                  : ''}
-                {/* : 'Regional settings are not configured.'} */}
-              </p>
-              <CompanyLockNote show={isCompanyLocked('regional')} />
-            </div>
-            <Button
-              type="button"
-              className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
-              variant={'outline'}
-              disabled={!canEditField('regional')}
-              onClick={() => {
-                if (!canEditField('regional')) return;
-                const currentValues = JSON.parse(
-                  JSON.stringify(watch('settings.operational_hours.regional')),
-                );
-                setInitialRegionalSettings(currentValues);
-                openModal('regionalModal');
-              }}
-            >
-              Select
-            </Button>
-          </div>
-          {isShowVoicemail && (
-            <div className="flex bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
-              <div className="flex flex-col gap-1.5">
-                <p className="font-semibold truncate text-md">Voicemail Settings</p>
-                <p className="text-gray-800 truncate text-sm">
-                  {voicemail_pin?.users?.length
-                    ? voicemail_pin.users
-                        .map((item: ISELECTVALUE) => {
-                          const label = item?.label || '';
-                          return label.includes('/') ? label.split('/')[0] : label;
-                        })
-                        .join(', ')
-                    : 'Voicemail settings are not configured.'}
-                </p>
-                <CompanyLockNote show={isCompanyLocked('voicemail')} />
+                <CompanyLockNote show={isCompanyLocked('regional')} />
               </div>
               <Button
                 type="button"
                 className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
                 variant={'outline'}
+                disabled={!canEditField('regional')}
                 onClick={() => {
-                  if (!canEditField('voicemail')) return;
-                  openModal('voicemailModal');
+                  if (!canEditField('regional')) return;
+                  const currentValues = JSON.parse(
+                    JSON.stringify(watch('settings.operational_hours.regional')),
+                  );
+                  setInitialRegionalSettings(currentValues);
+                  openModal('regionalModal');
                 }}
-                disabled={!canEditField('voicemail')}
               >
                 Select
               </Button>
             </div>
-          )}
-          {isBussinessHours ? (
-            <div className="flex bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-1">
-                  <p className="font-semibold truncate text-md">
-                    {isCampaignHours ? 'Campaign Hours' : 'Business Hours'}
-                  </p>
-                  {(errors?.settings as any)?.operational_hours?.closed_hour_action?.value
-                    ?.value && (
-                    <ErrorTooltip
-                      text={
-                        (errors?.settings as any)?.operational_hours?.closed_hour_action?.value
-                          ?.value?.message
-                      }
-                    />
-                  )}
-                </div>
-                {isCampaignHours ? (
-                  <p className="text-primary truncate text-sm">
-                    {' '}
-                    {bussinessHourError
-                      ? bussinessHourError
-                      : getCampampaignDays() || 'No days selected'}
-                  </p>
-                ) : (
-                  <p className="text-primary truncate text-sm">
-                    {' '}
-                    {bussinessHourError
-                      ? bussinessHourError
-                      : operational_hours?.type == '24_hours'
-                        ? '24 Hours, all times'
-                        : getWeeklyScheduleName(operational_hours?.value)}
-                  </p>
-                )}
-                <CompanyLockNote show={isCompanyLocked('business_hours')} />
-              </div>
-              <Button
-                type="button"
-                className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
-                variant={'outline'}
-                onClick={() => {
-                  if (!canEditField('business_hours')) return;
-                  openModal('bussinessHoursModal');
-                }}
-                disabled={!canEditField('business_hours')}
-              >
-                Select
-              </Button>
-            </div>
-          ) : null}
-
-          {features?.plan_features?.advance_call_management?.access?.RECORDING &&
-            !isCampaignHours && (
-              <div className="flex flex-col sm:flex-row bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
+            {isShowVoicemail && (
+              <div className={rowClass}>
                 <div className="flex flex-col gap-1.5">
-                  <p className="font-semibold truncate text-md">
-                    Automatic & On Demand Call Recording
-                  </p>
+                  <p className="font-semibold truncate text-md">Voicemail Settings</p>
                   <p className="text-gray-800 truncate text-sm">
-                    {recording?.automatic?.enabled || recording?.on_demand?.enabled
-                      ? `${recording?.automatic?.enabled ? 'Automatic' : ''} ${recording?.automatic?.enabled && recording?.on_demand?.enabled ? '&' : ''} ${recording?.on_demand?.enabled ? 'On Demand' : ''} call recording is enabled.`
-                      : 'Automatic & on demand call recording is disabled.'}
+                    {voicemail_pin?.users?.length
+                      ? voicemail_pin.users
+                          .map((item: ISELECTVALUE) => {
+                            const label = item?.label || '';
+                            return label.includes('/') ? label.split('/')[0] : label;
+                          })
+                          .join(', ')
+                      : 'Voicemail settings are not configured.'}
                   </p>
-                  <CompanyLockNote show={isCompanyLocked('recording')} />
+                  <CompanyLockNote show={isCompanyLocked('voicemail')} />
                 </div>
                 <Button
                   type="button"
-                  className="w-16"
+                  className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
                   variant={'outline'}
                   onClick={() => {
-                    if (!canEditField('recording')) return;
-                    openModal('automaticRecordingModal');
+                    if (!canEditField('voicemail')) return;
+                    openModal('voicemailModal');
                   }}
-                  disabled={!canEditField('recording')}
+                  disabled={!canEditField('voicemail')}
                 >
                   Select
                 </Button>
               </div>
             )}
-          {features?.plan_features?.advance_call_management?.access?.TRANSCRIPTION && (
-            <>
-              <div className="flex bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
+            {isBussinessHours ? (
+              <div className={rowClass}>
                 <div className="flex flex-col gap-1.5">
-                  <p className="font-semibold truncate text-md">Automatic Transcription</p>
-                  <p className="text-gray-800 truncate text-sm">
-                    Automatic transcription is{' '}
-                    {readToggle('settings.transcription') ? 'enabled' : 'disabled'}.
-                  </p>
-                  <CompanyLockNote show={isCompanyLocked('transcription')} />
-                </div>
-                <Switch
-                  checked={readToggle('settings.transcription')}
-                  disabled={!canEditField('transcription')}
-                  onCheckedChange={(checked) => {
-                    if (!canEditField('transcription')) return;
-                    writeToggle('settings.transcription', checked);
-                    /* AI monitoring reads the transcript, so it cannot stay on
-                       once transcription is off. */
-                    if (!checked) {
-                      writeToggle('settings.ai_call_monitoring', false);
-                    }
-                  }}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
-                <div className="flex flex-col gap-1.5">
-                  <p className="font-semibold truncate text-md">AI Call Monitoring</p>
-                  <p className="text-gray-800 truncate text-sm">
-                    When enabled transcripts will be automatically triggered.
-                    {/* AI Call Monitoring is{' '}
-                    {watch('settings.ai_call_monitoring') ? 'enabled' : 'disabled'}. */}
-                  </p>
-                  <CompanyLockNote show={isCompanyLocked('ai_call_monitoring')} />
-                </div>
-                <Switch
-                  checked={readToggle('settings.ai_call_monitoring')}
-                  disabled={!canEditField('ai_call_monitoring')}
-                  onCheckedChange={(checked) => {
-                    if (!canEditField('ai_call_monitoring')) return;
-                    writeToggle('settings.ai_call_monitoring', checked);
-                    /* Monitoring has nothing to read without a transcript, so
-                       switching it on switches transcription on with it. */
-                    if (checked) {
-                      writeToggle('settings.transcription', true);
-                    }
-                  }}
-                />
-              </div>
-            </>
-          )}
-          {!isCampaignHours && (
-            <div className="flex bg-white justify-between gap-3.5 w-full  border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] p-4 rounded-xl">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-1">
-                  <p className="font-semibold truncate text-md">Display Number</p>
-                  {(errors?.settings as any)?.display_number?.masking?.value?.message && (
-                    <ErrorTooltip
-                      text={(errors?.settings as any)?.display_number?.masking?.value?.message}
-                    />
+                  <div className="flex items-center gap-1">
+                    <p className="font-semibold truncate text-md">
+                      {isCampaignHours ? 'Campaign Hours' : 'Business Hours'}
+                    </p>
+                    {(errors?.settings as any)?.operational_hours?.closed_hour_action?.value
+                      ?.value && (
+                      <ErrorTooltip
+                        text={
+                          (errors?.settings as any)?.operational_hours?.closed_hour_action?.value
+                            ?.value?.message
+                        }
+                      />
+                    )}
+                  </div>
+                  {isCampaignHours ? (
+                    <p className="text-primary truncate text-sm">
+                      {' '}
+                      {bussinessHourError
+                        ? bussinessHourError
+                        : getCampampaignDays() || 'No days selected'}
+                    </p>
+                  ) : (
+                    <p className="text-primary truncate text-sm">
+                      {' '}
+                      {bussinessHourError
+                        ? bussinessHourError
+                        : operational_hours?.type == '24_hours'
+                          ? '24 Hours, all times'
+                          : getWeeklyScheduleName(operational_hours?.value)}
+                    </p>
                   )}
+                  <CompanyLockNote show={isCompanyLocked('business_hours')} />
                 </div>
-
-                <p className="text-gray-800 truncate text-sm">
-                  {display_number?.masking?.type?.value === 'N'
-                    ? 'Display number is not configured'
-                    : `Masking is ${display_number?.masking?.type?.label?.toLowerCase()} with ${display_number?.masking?.value} `}
-                </p>
-                <CompanyLockNote show={isCompanyLocked('display_number')} />
+                <Button
+                  type="button"
+                  className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
+                  variant={'outline'}
+                  onClick={() => {
+                    if (!canEditField('business_hours')) return;
+                    openModal('bussinessHoursModal');
+                  }}
+                  disabled={!canEditField('business_hours')}
+                >
+                  Select
+                </Button>
               </div>
-              <Button
-                type="button"
-                className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
-                variant={'outline'}
-                onClick={() => {
-                  if (!canEditField('display_number')) return;
-                  openModal('displayNumberModal');
-                }}
-                disabled={!canEditField('display_number')}
-              >
-                Select
-              </Button>
-            </div>
-          )}
+            ) : null}
+
+            {features?.plan_features?.advance_call_management?.access?.RECORDING &&
+              !isCampaignHours && (
+                <div className={rowClassStack}>
+                  <div className="flex flex-col gap-1.5">
+                    <p className="font-semibold truncate text-md">
+                      Automatic & On Demand Call Recording
+                    </p>
+                    <p className="text-gray-800 truncate text-sm">
+                      {recording?.automatic?.enabled || recording?.on_demand?.enabled
+                        ? `${recording?.automatic?.enabled ? 'Automatic' : ''} ${recording?.automatic?.enabled && recording?.on_demand?.enabled ? '&' : ''} ${recording?.on_demand?.enabled ? 'On Demand' : ''} call recording is enabled.`
+                        : 'Automatic & on demand call recording is disabled.'}
+                    </p>
+                    <CompanyLockNote show={isCompanyLocked('recording')} />
+                  </div>
+                  <Button
+                    type="button"
+                    className="w-16"
+                    variant={'outline'}
+                    onClick={() => {
+                      if (!canEditField('recording')) return;
+                      openModal('automaticRecordingModal');
+                    }}
+                    disabled={!canEditField('recording')}
+                  >
+                    Select
+                  </Button>
+                </div>
+              )}
+            {features?.plan_features?.advance_call_management?.access?.TRANSCRIPTION &&
+              !hideOnQueue && (
+                <>
+                  <div className={rowClass}>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold truncate text-md">Automatic Transcription</p>
+                      </div>
+                      <p className="text-gray-800 truncate text-sm">
+                        Automatic transcription is{' '}
+                        {readToggle('settings.transcription') ? 'enabled' : 'disabled'}.
+                      </p>
+                      <CompanyLockNote show={isCompanyLocked('transcription')} />
+                    </div>
+                    <Switch
+                      checked={readToggle('settings.transcription')}
+                      disabled={!canEditField('transcription')}
+                      onCheckedChange={(checked) => {
+                        if (!canEditField('transcription')) return;
+                        writeToggle('settings.transcription', checked);
+                        /* AI monitoring reads the transcript, so it cannot stay on
+                       once transcription is off. */
+                        if (!checked) {
+                          writeToggle('settings.ai_call_monitoring', false);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className={rowClassStack}>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold truncate text-md">AI Call Monitoring</p>
+                      </div>
+                      <p className="text-gray-800 truncate text-sm">
+                        When enabled transcripts will be automatically triggered.
+                        {/* AI Call Monitoring is{' '}
+                    {watch('settings.ai_call_monitoring') ? 'enabled' : 'disabled'}. */}
+                      </p>
+                      <CompanyLockNote show={isCompanyLocked('ai_call_monitoring')} />
+                    </div>
+                    <Switch
+                      checked={readToggle('settings.ai_call_monitoring')}
+                      disabled={!canEditField('ai_call_monitoring')}
+                      onCheckedChange={(checked) => {
+                        if (!canEditField('ai_call_monitoring')) return;
+                        writeToggle('settings.ai_call_monitoring', checked);
+                        /* Monitoring has nothing to read without a transcript, so
+                       switching it on switches transcription on with it. */
+                        if (checked) {
+                          writeToggle('settings.transcription', true);
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            {!isCampaignHours && !hideOnQueue && (
+              <div className={rowClass}>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <p className="font-semibold truncate text-md">Display Number</p>
+                    {(errors?.settings as any)?.display_number?.masking?.value?.message && (
+                      <ErrorTooltip
+                        text={(errors?.settings as any)?.display_number?.masking?.value?.message}
+                      />
+                    )}
+                  </div>
+
+                  <p className="text-gray-800 truncate text-sm">
+                    {display_number?.masking?.type?.value === 'N'
+                      ? 'Display number is not configured'
+                      : `Masking is ${display_number?.masking?.type?.label?.toLowerCase()} with ${display_number?.masking?.value} `}
+                  </p>
+                  <CompanyLockNote show={isCompanyLocked('display_number')} />
+                </div>
+                <Button
+                  type="button"
+                  className="!bg-white !border !border-primary !text-primary hover:!bg-primary hover:!text-white shrink-0 min-w-16"
+                  variant={'outline'}
+                  onClick={() => {
+                    if (!canEditField('display_number')) return;
+                    openModal('displayNumberModal');
+                  }}
+                  disabled={!canEditField('display_number')}
+                >
+                  Select
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {isShowInternationalCalling ? (
@@ -564,8 +604,8 @@ const CommonSettingPermission: FC<any> = ({
             <p className="mcm-setrow-note">
               Refusing somebody here always works. Allowing them does not reach past the company:
               they still cannot phone a country your company has not allowed, which is set under
-              Company → Calling. Extensions, calls inside your own country and emergency numbers
-              are never affected by this.
+              Company → Calling. Extensions, calls inside your own country and emergency numbers are
+              never affected by this.
             </p>
           </SettingCard>
         ) : null}

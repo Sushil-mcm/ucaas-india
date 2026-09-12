@@ -3,6 +3,7 @@ import { updateMemberForwading, userUpdateStatus } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
+import { useIsOnCall } from '@/hooks/use-my-presence';
 
 /**
  * Availability — Available / Busy / DND.
@@ -19,17 +20,15 @@ import { mergeCallForwarding } from '@/lib/call-forwarding-record';
  * change other people's status, which is exactly why it was rejected.
  */
 
-export const PRESENCE_LABELS: Record<string, string> = {
-  online: 'Available',
-  busy: 'Busy',
-  dnd: 'DND',
-};
-
-export const PRESENCE_OPTIONS = [
-  { value: 'online', label: 'Available' },
-  { value: 'busy', label: 'Busy' },
-  { value: 'dnd', label: 'DND' },
-] as const;
+/* The three states are named in one place - `use-my-presence` - so a person
+   cannot set themselves Busy on one screen and read a different word for it on
+   another. These re-exports keep the existing import sites working. */
+export {
+  PRESENCE_LABEL as PRESENCE_LABELS,
+  PRESENCE_DESCRIPTION,
+  PRESENCE_STATES as PRESENCE_OPTIONS,
+} from '@/hooks/use-my-presence';
+import { PRESENCE_LABEL, PRESENCE_DESCRIPTION } from '@/hooks/use-my-presence';
 
 /** Whatever the record reports, expressed as one of the three. */
 export const presenceValueOf = (status?: string) => {
@@ -41,7 +40,10 @@ export const presenceValueOf = (status?: string) => {
   return 'online';
 };
 
-export const presenceLabelOf = (status?: string) => PRESENCE_LABELS[presenceValueOf(status)];
+export const presenceLabelOf = (status?: string) => PRESENCE_LABEL[presenceValueOf(status)];
+
+/** What that state does to an incoming call, for a tooltip next to the control. */
+export const presenceDescriptionOf = (status?: string) => PRESENCE_DESCRIPTION[presenceValueOf(status)];
 
 /**
  * Sets *your* availability, doing the same two things the header's avatar menu
@@ -52,6 +54,7 @@ export const useMyPresenceControl = () => {
   const queryClient = useQueryClient();
   const { user } = useUser();
   const { socketEventsManager } = useSocketEvents();
+  const isOnCall = useIsOnCall();
 
   const { mutate: updateMember } = useMutation({ mutationFn: updateMemberForwading });
 
@@ -68,7 +71,7 @@ export const useMyPresenceControl = () => {
             domain: user?.sip_credentials?.domain,
             uuid: user?.uuid,
             status: variables?.socket_status,
-            onCall: false,
+            onCall: isOnCall,
             timeObj: { holiday_start_date: null, holiday_end_date: null },
           },
         },
@@ -78,6 +81,12 @@ export const useMyPresenceControl = () => {
   });
 
   const setMyPresence = (status: string) => {
+    /* Availability is frozen while a call is up. The state would be a lie the
+       moment it was written - the switch has already decided where this call
+       goes - and the reference products freeze it for the same reason. The
+       control is disabled too, so this guard is the backstop, not the message. */
+    if (isOnCall) return;
+
     const userInfo: any = user?.user_info || {};
     const roleKey = userInfo?.custom_role_uuid ? 'custom_role_uuid' : 'role_uuid';
 
@@ -122,5 +131,5 @@ export const useMyPresenceControl = () => {
     updateStatus({ socket_status: status });
   };
 
-  return { setMyPresence, isPending, myUuid: user?.uuid };
+  return { setMyPresence, isPending, myUuid: user?.uuid, isOnCall };
 };

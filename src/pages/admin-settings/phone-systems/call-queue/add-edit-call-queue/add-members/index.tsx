@@ -1,17 +1,27 @@
 import { Icon } from '@/assets/icons/icon';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import TableManager from '@/components/custom/table-manager';
-import { SettingCard, SettingFlag } from '@/components/mcm/setting-card';
+import { SettingCard } from '@/components/mcm/setting-card';
 import { chooseManager, isOnQueue, memberKey, toggleMember } from '@/lib/queue-members';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
+import StarRating from '@/components/custom/star-rating';
+import {
+  holdsQueueSkills,
+  readRouting,
+  useMembersSkills,
+  type QueueRouting,
+  type RatedSkill,
+} from '@/hooks/use-queue-skills';
+import { effectiveRows, failingRows } from '@/lib/queue-requirements';
 import { forwardActionType } from '@/services/api';
 import { ColumnDef } from '@tanstack/react-table';
 import { FC, useState, useMemo, memo, useCallback } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import useDebounce from '@/hooks/use-debounce';
 import { SearchLine } from '@/assets/icons';
+import GroupPicker from './group-picker';
 
 interface IMEMBER {
   first_name: string;
@@ -49,55 +59,65 @@ const MANAGER_ROLES = ['MANAGER', 'ADMIN', 'SUB-ADMIN', 'SUPER-ADMIN'];
 const canManage = (member: IMEMBER): boolean =>
   MANAGER_ROLES.includes(roleOf(member).toUpperCase());
 
-/* How well somebody handles this queue's work, 0 to 100.
- *
- * Per queue, not per person: somebody can be the strongest on billing and the
- * weakest on support, and one number per person could not say that.
- *
- * Everybody starts at 100, so a queue that rates nobody behaves exactly as it
- * does today. That default is deliberate - starting at 0 would mean rating one
- * person silently sidelined everybody else, and the first admin to try the
- * feature would break their own queue.
- *
- * Only editable for somebody already in the queue. Rating a person you have not
- * added is a setting with nowhere to live. */
-const MemberRatingCell = ({ memberData }: { memberData: IMEMBER }) => {
-  const { control, setValue, getValues } = useFormContext();
-  const members = useWatch({ control, name: 'members', defaultValue: [] });
-  const index = Array.isArray(members)
-    ? members.findIndex((m: any) => m?.value === memberData?.extension)
-    : -1;
-
-  if (index < 0) {
-    return <span className="text-xs text-gray-400">&mdash;</span>;
+/* How this person rates on the skills the queue asks for. Rated per person,
+   on their profile; shown here so an admin building the queue can see who
+   will actually be offered its calls. With no skills required, the person's
+   own top skills are shown instead. */
+const MemberSkillsCell = ({
+  memberData,
+  rated,
+  routing,
+}: {
+  memberData: IMEMBER;
+  rated?: RatedSkill[];
+  routing: QueueRouting;
+}) => {
+  const rows = effectiveRows(routing);
+  const required = rows.flatMap((row) => row.skill_ids);
+  const list = (rated || []).filter((r) => !required.length || required.includes(String(r.skill_id)));
+  if (!memberData?.uuid) return <span className="text-xs text-gray-400">&mdash;</span>;
+  if (rows.length) {
+    const ok = holdsQueueSkills(rated, routing);
+    const failing = new Set(failingRows(rated, rows).map((row) => rows.indexOf(row)));
+    return (
+      <div className="flex flex-col gap-1">
+        {rows.map((row, index) => (
+          <div key={`${row.category_id}-${index}`} className="flex flex-col gap-0.5">
+            {rows.length > 1 && (
+              <span className={`text-[10px] uppercase tracking-wide ${failing.has(index) ? 'text-amber-700' : 'text-gray-500'}`}>
+                {row.category_name || 'Skills'}
+                {failing.has(index) ? ' · below the bar' : ''}
+              </span>
+            )}
+            {row.skill_ids.map((id) => {
+              const hit = (rated || []).find((r) => String(r.skill_id) === String(id));
+              return (
+                <span key={id} className="flex items-center gap-1.5 text-xs">
+                  <StarRating value={hit?.stars || 0} readOnly label={hit?.name || 'Skill'} />
+                  <span className={hit ? 'text-gray-700' : 'text-gray-400'}>
+                    {hit?.name || 'Not rated'}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        ))}
+        <span className={`text-[11px] ${ok ? 'text-green-700' : 'text-amber-700'}`}>
+          {ok ? 'Will be offered calls' : 'Not offered: does not meet the requirement'}
+        </span>
+      </div>
+    );
   }
-
-  const rating = members[index]?.rating ?? 100;
-
+  if (!list.length) return <span className="text-xs text-gray-400">No skills rated</span>;
   return (
-    <div className="flex items-center gap-2">
-      <Input
-        type="number"
-        min={0}
-        max={100}
-        value={rating}
-        className="h-9 w-20"
-        onChange={(event) => {
-          const raw = event.target.value;
-          /* Clamped rather than refused: an admin typing 150 means "as high as
-             it goes", and an error message for that would be pedantic. */
-          const next = raw === '' ? 100 : Math.min(100, Math.max(0, Number(raw) || 0));
-          /* Read at the moment of the edit, like every other write on this
-             screen. Building from a remembered list here would drop anybody
-             ticked since this input last rendered. */
-          const live = getValues('members') || [];
-          const at = live.findIndex((m: any) => m?.value === memberData?.extension);
-          if (at < 0) return;
-          const copy = [...live];
-          copy[at] = { ...copy[at], rating: next };
-          setValue('members', copy, { shouldValidate: false });
-        }}
-      />
+    <div className="flex flex-col gap-0.5">
+      {list.slice(0, 3).map((r) => (
+        <span key={r.skill_id} className="flex items-center gap-1.5 text-xs text-gray-700">
+          <StarRating value={r.stars} readOnly label={r.name} />
+          {r.name}
+        </span>
+      ))}
+      {list.length > 3 && <span className="text-[11px] text-gray-400">and {list.length - 3} more</span>}
     </div>
   );
 };
@@ -401,6 +421,62 @@ const ChosenStrip = () => {
   );
 };
 
+/**
+ * Where the people you are adding come from.
+ *
+ * One at a time from the list is how this screen has always worked, and it
+ * stays the default because it is what most queues need. Groups are the other
+ * way an admin already keeps a team written down, so a queue that rings Support
+ * no longer means finding the same six people again by hand.
+ *
+ * A pair of panes rather than two lists stacked on one page: both need a search
+ * of their own and both are long, and side by side they read as one confusing
+ * list of ticks that do different things. Who is on the queue stays above both,
+ * so whichever pane you are in you can see the result.
+ */
+type MemberSource = 'people' | 'groups';
+
+const SourceTabs = ({
+  value,
+  onChange,
+}: {
+  value: MemberSource;
+  onChange: (next: MemberSource) => void;
+}) => {
+  const tabs: { id: MemberSource; label: string }[] = [
+    { id: 'people', label: 'People' },
+    { id: 'groups', label: 'Groups' },
+  ];
+
+  return (
+    <div
+      role="tablist"
+      aria-label="Add people to this queue from"
+      className="inline-flex w-fit items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1"
+    >
+      {tabs.map((tab) => {
+        const isActive = value === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(tab.id)}
+            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              isActive
+                ? 'bg-white font-semibold text-primary shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const AddMembers: FC = () => {
   const {
     watch,
@@ -408,12 +484,20 @@ const AddMembers: FC = () => {
   } = useFormContext();
 
   const selectedSite = watch('site_uuid')?.value;
+  const [source, setSource] = useState<MemberSource>('people');
   /* How many are actually on the queue, not how many rows are listed. Read from
      the form rather than the table so it counts people the search has hidden. */
   const selectedCount = (watch('members') || []).length;
   const [searchKey, setSearchKey] = useState('');
   const debouncedSearchKey = useDebounce(searchKey, 500);
   const [currentMembers, setCurrentMembers] = useState<IMEMBER[]>([]);
+
+  /* The skills the queue asks for (Routing tab) and how the listed people rate
+     on them, so the roster shows who will actually be offered calls. */
+  const routingRaw = watch('settings.routing') || {};
+  const routingKey = JSON.stringify(routingRaw);
+  const routing: QueueRouting = useMemo(() => readRouting(routingRaw), [routingKey]);
+  const { byUser: peopleSkills } = useMembersSkills(currentMembers.map((m) => m?.uuid));
 
   const handleSuccess = useCallback((tbldata: any) => {
     const rows = tbldata?.data?.data?.result?.rows || [];
@@ -450,46 +534,52 @@ const AddMembers: FC = () => {
         cell: ({ row }: any) => <MemberNameCell data={row?.original} />,
       },
       {
-        /* Saved on the member and read by nothing - not by the switch, not by
-           the lookup service, and not used to decide who rings first. Said on
-           the column rather than left for somebody to set carefully and wonder
-           why it never changed anything. */
-        header: () => (
-          <span className="flex items-center gap-1.5">
-            Rating
-            <SettingFlag status="coming-soon" />
-          </span>
+        header: 'Skills',
+        id: 'skills',
+        accessorKey: 'skills',
+        cell: ({ row }: any) => (
+          <MemberSkillsCell
+            memberData={row?.original}
+            rated={peopleSkills[String(row?.original?.uuid || '')]}
+            routing={routing}
+          />
         ),
-        id: 'rating',
-        accessorKey: 'rating',
-        cell: ({ row }: any) => <MemberRatingCell memberData={row?.original} />,
       },
     ],
-    [currentMembers],
+    [currentMembers, peopleSkills, routing],
   );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pr-1">
       <SettingCard
         title="Who this queue rings"
-        description="Tick somebody to put them on this queue, untick to take them off - that is all there is to it, there is nothing separate to save or delete. Only people at the location chosen on Basic info are listed."
+        description={
+          source === 'people'
+            ? 'Tick somebody to put them on this queue, untick to take them off. The change is kept when you press Submit on the last step; closing this drawer discards it. Only people at the location chosen on Basic info are listed.'
+            : 'Add a whole team at once. The people in the group are put on this queue exactly as if you had ticked each of them, so you can still take any of them off again individually.'
+        }
         note="Whoever runs the queue is chosen for you as soon as somebody eligible joins. Click a different Manager circle to change it."
         aside={
-          <div className="relative w-full min-w-[15rem] max-w-sm">
-            <Input
-              type="text"
-              placeholder="Search by name, email or extension"
-              IconPosition="left-0 pl-2 inset-y-0"
-              value={searchKey}
-              Icon={<SearchLine className="text-gray-700" />}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value.startsWith(' ')) return;
-                setSearchKey(e.target.value);
-              }}
-              className="w-full pl-10"
-            />
-          </div>
+          /* The groups pane searches groups, not people, and has a box of its
+             own - two search boxes meaning different things in one header is
+             how somebody ends up typing a name into the wrong one. */
+          source === 'people' ? (
+            <div className="relative w-full min-w-[15rem] max-w-sm">
+              <Input
+                type="text"
+                placeholder="Search by name, email or extension"
+                IconPosition="left-0 pl-2 inset-y-0"
+                value={searchKey}
+                Icon={<SearchLine className="text-gray-700" />}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.startsWith(' ')) return;
+                  setSearchKey(e.target.value);
+                }}
+                className="w-full pl-10"
+              />
+            </div>
+          ) : null
         }
       >
         {/* Errors sit inside the card rather than floating above the tab, so it is
@@ -506,25 +596,33 @@ const AddMembers: FC = () => {
         )}
 
         <div className="flex flex-col gap-3 py-3">
+          {/* Who is on the queue sits above both panes, so adding a group shows
+              its effect in the same place ticking a person does. */}
           <ChosenStrip />
 
-          <TableManager
-            {...{
-              emptyTablePlaceholder: 'Nobody at this location',
-              descriptionEmptyTable:
-                'Only people at the location chosen on Basic info are listed. Change the location, or add people first.',
-              columns,
-              fetcherKey: 'forwardActionType',
-              fetcherFn: forwardActionType,
-              onSuccess: handleSuccess,
-              extraParams: {
-                site_uuid: selectedSite,
-                type: 'EXTENSION',
-                search: debouncedSearchKey,
-              },
-              customClass: 'min-h-[18rem]',
-            }}
-          />
+          <SourceTabs value={source} onChange={setSource} />
+
+          {source === 'people' ? (
+            <TableManager
+              {...{
+                emptyTablePlaceholder: 'Nobody at this location',
+                descriptionEmptyTable:
+                  'Only people at the location chosen on Basic info are listed. Change the location, or add people first.',
+                columns,
+                fetcherKey: 'forwardActionType',
+                fetcherFn: forwardActionType,
+                onSuccess: handleSuccess,
+                extraParams: {
+                  site_uuid: selectedSite,
+                  type: 'EXTENSION',
+                  search: debouncedSearchKey,
+                },
+                customClass: 'min-h-[18rem]',
+              }}
+            />
+          ) : (
+            <GroupPicker queueSite={selectedSite} />
+          )}
         </div>
       </SettingCard>
     </div>

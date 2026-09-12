@@ -3,6 +3,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useFormContext } from 'react-hook-form';
 import { FC } from 'react';
 import Hours from './hours';
+import GeoRoutes from '../geo-routes';
 import { useUser } from '@/hooks/use-user';
 
 const FORWARD_TYPES = ['EXTENSION', 'DEPARTMENT', 'IVR', 'QUEUE'];
@@ -47,6 +48,8 @@ const CallHandling: FC<ICallHandlingProps> = ({ isUser = false, features = null 
               {...{ type: 'businessHours', isUser, result: forwardActionTypeData, features }}
             />
           }
+          {/* Numbers only: a person's own forwarding has no caller-location rules. */}
+          {!isUser && <GeoRoutes />}
         </div>
       </div>
     </div>

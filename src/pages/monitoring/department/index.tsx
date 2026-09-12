@@ -1,6 +1,8 @@
 // import Breadcrumb from '@/components/custom/breadcrumb';
 import TableManager from '@/components/custom/table-manager';
 import { useSocketEvents } from '@/hooks/use-socket-events';
+import { requestMonitorSession } from '@/lib/monitoring-actions';
+import { handleAlert } from '@/lib/utils';
 import { getMonitorDepartmentList } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -20,7 +22,6 @@ import { Icon } from '@/assets/icons/icon';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import NotFound from '@/assets/images/not-found-img.svg';
 import { capitalizeFirstLetter } from '@/lib/utils';
-import { useDialpad } from '@/hooks/use-dialpad';
 import { CallPathCell, CallPathDialog } from '../call-path-cell';
 import { MonitoringTopbarSlot } from '../topbar';
 import {
@@ -48,7 +49,6 @@ const DepartmentMonitoring = () => {
   const { liveCalls, socketEventsManager, eventLiveCallsData } = useSocketEvents();
   const { features } = useCompanyFeatures();
   const monitoringAccessActions = features?.plan_features?.monitoring_features?.action;
-  const { makeCall } = useDialpad();
   const liveCallsData = getMonitoringLiveCalls(liveCalls, eventLiveCallsData);
   const allDepartmentCalls =
     liveCallsData?.filter((call: any) => {
@@ -85,7 +85,9 @@ const DepartmentMonitoring = () => {
   };
 
   const monitorCall = (code: string, callId: any) => {
-    makeCall(`${code}${callId}`);
+    requestMonitorSession(socketEventsManager, code, callId, (ok, error) => {
+      if (!ok) handleAlert({ text: error || 'Could not start monitoring.', type: 'error' });
+    });
   };
 
   const toggleCollapse = (key: any) => {

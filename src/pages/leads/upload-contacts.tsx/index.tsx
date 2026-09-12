@@ -1,10 +1,10 @@
 import { useGetGroupList } from '@/hooks/common';
 import { DrowerProps } from '@/interfaces/common-interface';
 import { handleAlert } from '@/lib/utils';
-import { uploadContactInLead } from '@/services/api';
+import { createLeadGroup, uploadContactInLead } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { CloseIcon, Download } from '@/assets/icons';
@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/custom/custom-select';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import sampleCSVFIle from '@/assets/json/sampleCSVFIle.csv?raw';
+import sampleLeadCSVFile from '@/assets/json/sampleLeadCSVFile.csv?raw';
+import { UploadRowError, readUploadMessage, readUploadRowErrors } from '@/lib/upload-row-errors';
 import { UploadIcon } from 'lucide-react';
 import { LeadsTableRow } from '../lead-group-list';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -21,6 +23,10 @@ import { Label } from '@/components/ui/label';
 
 interface IUploadContactProps extends DrowerProps {
   selectedGroupId?: string;
+  /** LEAD or CONTACT; defaults to what the page path says. */
+  contactType?: 'LEAD' | 'CONTACT';
+  /** Called once the upload is accepted, with the list it went into. */
+  onUploaded?: (group: { value: string; label: string } | null) => void;
 }
 
 const ALLOWED_FILE_TYPES = [
@@ -31,6 +37,8 @@ const ALLOWED_FILE_TYPES = [
 
 const UploadContacts: FC<IUploadContactProps> = ({
   selectedGroupId,
+  contactType,
+  onUploaded,
   setDrawerState,
   drawerState,
 }) => {
@@ -59,32 +67,83 @@ const UploadContacts: FC<IUploadContactProps> = ({
     mode: 'all',
   });
 
+  const [newListName, setNewListName] = useState('');
+  const [uploadedInto, setUploadedInto] = useState<{ value: string; label: string } | null>(null);
+  /* What the server refused, row by row ("Unknown skill "Spanich" in row 4"),
+     shown in the dialog beside the file so the list can be fixed and sent
+     again. A toast cannot hold a list, and the request no longer toasts. */
+  const [uploadErrors, setUploadErrors] = useState<UploadRowError[]>([]);
+  const [uploadMessage, setUploadMessage] = useState('');
   const { mutate: mutateAddGroup, isPending } = useMutation({
-    mutationFn: uploadContactInLead,
+    /* "New list" typed in the box: make the list first, then upload into it.
+       One dialog, one step, no trip to the lists page. */
+    mutationFn: async (payload: any) => {
+      let belongsTo = payload.belongsTo;
+      let into = payload.belongsTo ? { value: payload.belongsTo, label: payload.groupLabel || '' } : null;
+      if (!belongsTo && newListName.trim()) {
+        const created = await createLeadGroup({ groupName: newListName.trim() });
+        const group = created?.data?.data?.result || created?.data?.data || {};
+        belongsTo = group?._id || group?.id || group?.uuid;
+        into = belongsTo ? { value: String(belongsTo), label: newListName.trim() } : null;
+        if (!belongsTo) throw new Error('The list could not be created');
+      }
+      setUploadedInto(into);
+      /* The label is for the screen only; the request takes the id. */
+      const { groupLabel: _groupLabel, ...rest } = payload;
+      return uploadContactInLead({ ...rest, belongsTo });
+    },
     onSuccess: (data) => {
       if (data?.data?.success) {
+        onUploaded?.(uploadedInto);
+        setNewListName('');
+        queryClient.invalidateQueries({ queryKey: ['getGroupList'] });
+        queryClient.invalidateQueries({ queryKey: ['getGroupListQuery'] });
+        queryClient.invalidateQueries({ queryKey: ['getGroupContactsById'] });
+        /* Rows the server took the file but would not import stay on screen;
+           the rest of the list is in, and the person can fix these and send
+           them again. */
+        const rowErrors = readUploadRowErrors(data);
+        if (rowErrors.length) {
+          setUploadErrors(rowErrors);
+          setUploadMessage(
+            `${rowErrors.length} ${rowErrors.length === 1 ? 'row was' : 'rows were'} not imported. The rest of the file is in.`,
+          );
+          return;
+        }
         handleAlert({
           text: data?.data?.message || 'Upload started. Waiting for processing summary...',
           type: 'success',
         });
         reset();
-        queryClient.invalidateQueries({ queryKey: ['getGroupList'] });
-        queryClient.invalidateQueries({ queryKey: ['getGroupListQuery'] });
-        queryClient.invalidateQueries({ queryKey: ['getGroupContactsById'] });
         setDrawerState(false);
       }
+    },
+    onError: (error: any) => {
+      const rowErrors = readUploadRowErrors(error);
+      const message = readUploadMessage(error) || error?.message || 'The file could not be uploaded.';
+      setUploadErrors(rowErrors);
+      setUploadMessage(message);
+      if (!rowErrors.length) handleAlert({ text: message, type: 'error' });
     },
   });
 
   const handleUploadModalClose = () => {
+    setUploadErrors([]);
+    setUploadMessage('');
     setDrawerState(false);
   };
 
   const onSubmit = (data: any) => {
+    setUploadErrors([]);
+    setUploadMessage('');
     const countryPrefix = data?.countryCode?.prefix?.split('-')?.[0] || '';
+    if (!data?.groupId?.value && !newListName.trim() && !selectedGroupId) {
+      handleAlert({ text: 'Choose a list, or type a name for a new one.', type: 'warning' });
+      return;
+    }
     const payload = {
-      ...(data?.groupId?.value && { belongsTo: data.groupId.value }),
-      type: window.location.pathname.includes('leads') ? 'LEAD' : 'CONTACT',
+      ...(data?.groupId?.value && { belongsTo: data.groupId.value, groupLabel: data?.groupId?.label }),
+      type: contactType || (window.location.pathname.includes('leads') ? 'LEAD' : 'CONTACT'),
       file: data.file,
       ...(countryPrefix && {
         countryPrefix: countryPrefix?.startsWith('+') ? countryPrefix : `+${countryPrefix}`,
@@ -122,11 +181,12 @@ const UploadContacts: FC<IUploadContactProps> = ({
     }
   }, [drawerState, refetchGroupList]);
 
+  /* Leads get the sample with the Skill column; contacts keep the plain one. */
   const handleDownload = () => {
-    const blob = new Blob([sampleCSVFIle], { type: 'text/csv' });
+    const blob = new Blob([isLead ? sampleLeadCSVFile : sampleCSVFIle], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'sampleCSVFIle.csv';
+    link.download = isLead ? 'sample-leads.csv' : 'sampleCSVFIle.csv';
     link.click();
   };
   const watchCountry = watch('countryCode');
@@ -178,10 +238,34 @@ const UploadContacts: FC<IUploadContactProps> = ({
                       handleChange={(e: ISELECTVALUE | null) => {
                         setValue('groupId', e);
                       }}
-                      label={'Group'}
+                      label={'List'}
+                      placeholder="Choose an existing list"
+                      isClearable
                       value={watch('groupId')}
                       error={errors?.groupId?.message}
                     />
+                    {!watch('groupId')?.value ? (
+                      <div className="mt-2 flex flex-col gap-1">
+                        <Label className="text-xs text-gray-600">or start a new list</Label>
+                        <input
+                          className="h-9 w-full rounded-md border border-gray-200 px-2 text-sm"
+                          placeholder="New list name, e.g. October leads"
+                          value={newListName}
+                          onChange={(e) => setNewListName(e.target.value)}
+                        />
+                      </div>
+                    ) : null}
+                    <p className="mt-2 text-xs text-gray-500">
+                      Any CSV or Excel file with a phone column works. Names, email and consent columns are optional;
+                      common headings such as "Mobile" or "Phone Number" are understood.
+                    </p>
+                    {isLead ? (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Columns: firstName, lastName, email, phone, skill. A Skill column names the skill or
+                        language a lead needs, as it is spelt under Skills; that lead is then only offered to
+                        people rated on it. Leave the cell empty for a lead anyone can take.
+                      </p>
+                    ) : null}
                   </div>
                 )}
                 <CustomSelect
@@ -260,6 +344,25 @@ const UploadContacts: FC<IUploadContactProps> = ({
                   />
                 </label>
               </div>
+              {uploadMessage || uploadErrors.length ? (
+                <div
+                  className="w-full rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-700 flex flex-col gap-1"
+                  role="alert"
+                >
+                  {uploadMessage ? <p className="font-medium">{uploadMessage}</p> : null}
+                  {uploadErrors.length ? (
+                    <ul className="list-disc pl-4 max-h-32 overflow-y-auto">
+                      {uploadErrors.slice(0, 50).map((item, index) => (
+                        <li key={`${item.row ?? 'x'}-${index}`}>
+                          {item.row ? `Row ${item.row}: ` : ''}
+                          {item.message}
+                        </li>
+                      ))}
+                      {uploadErrors.length > 50 ? <li>and {uploadErrors.length - 50} more</li> : null}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
               <a
                 className="w-full text-right text-primary hover:text-primary/90 flex items-center justify-end"
                 href="javascript:void(0);"

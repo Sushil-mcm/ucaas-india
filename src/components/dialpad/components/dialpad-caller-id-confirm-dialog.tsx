@@ -56,8 +56,8 @@ const DialpadCallerIdConfirmDialog = ({
               like a lasting change, which it is for their own numbers. */}
           {isOneCallOnly && (
             <p className="text-xs font-medium text-[#5e7394]">
-              This is a shared number, so it applies to this call only. Your own number stays
-              your default.
+              This is a shared number, so it applies to this call only.
+              {currentOption?.id !== 'no-caller-id' && ' Your own number stays your default.'}
             </p>
           )}
           <div className="flex justify-end gap-2">

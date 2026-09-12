@@ -160,11 +160,11 @@ interface SettingRowProps {
   /* The older flag, still honoured. It meant "stored and nothing acts on it",
      which is what 'coming-soon' now says out loud. */
   notActive?: boolean;
-  /* Marks the field mandatory. Worth stating on the row rather than at each
-     call site: an admin filling a long form should be able to see what they
-     have to answer without submitting it to find out. Only set this where the
-     field is *always* required - a rule that only applies once some other
-     option is on is not something to mark unconditionally. */
+  /* This row must be filled in before the form will save. Marked here rather
+     than by hand in each screen so every mandatory field on the platform wears
+     the same mark - and only ever set from the form's own validation schema,
+     because an asterisk on an optional field tells somebody to do work that is
+     not required, which is worse than no mark at all. */
   required?: boolean;
 }
 

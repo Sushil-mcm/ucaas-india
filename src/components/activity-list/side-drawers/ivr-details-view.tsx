@@ -120,7 +120,8 @@ const IVRDetailsView = ({
                     <div className="w-full">
                       {item?.type !== 'HANGUP' && (
                         <div className="qdv-value text-sm text-[#334155] font-medium">
-                          {item?.label || '--'}{' '}
+                          {item?.label || '--'}
+                          {item?.skill_label ? ` (caller needs ${item.skill_label})` : ''}{' '}
                           {/* {isPlay ? (
                           <div className={`flex items-center gap-2`}>
                             <audio

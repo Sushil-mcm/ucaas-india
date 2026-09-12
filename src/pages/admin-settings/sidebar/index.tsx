@@ -23,7 +23,9 @@ export const canShowItem = (item: any, isAdmin: boolean) => {
   return true;
 };
 
-export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
+/* IS_ACCOUNT_ADMIN: the person holds the account-admin role (the one shown as
+   "Location admin"), which may set admin scopes alongside the owner. */
+export const adminSettingArr = (features: any, IS_ADMIN: boolean, IS_ACCOUNT_ADMIN = false) =>
   [
     {
       title: 'Captain',
@@ -78,12 +80,11 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         },
         {
           /* The company's handsets and who each belongs to. Beside locations,
-             not under People: a room phone has no person, and the phone is a
-             thing in a place. Administrator-only — the screen hands out SIP
-             credentials. */
+             not under People: a room phone has no person, and the reference
+             products keep phones with the office for the same reason. */
           title: 'Desk phones',
-          path: '/admin-settings/desk-phones',
           icon: 'PhoneIcon',
+          path: '/admin-settings/desk-phones',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
@@ -101,11 +102,19 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       enabled: true,
       children: [
         { title: 'Profile', icon: 'ExtensionIcon', path: '/admin-settings/account/profile' },
-        { title: 'Preferences', icon: 'SettingsIcon', path: '/admin-settings/account/preferences' },
+        /* These three named icons that were never registered anywhere in
+           @/assets/icons - `Icon` renders nothing at all for a name it does
+           not recognise, so the tab just showed no icon. Swapped for real,
+           already-registered icons with the closest matching shape. */
+        {
+          title: 'Preferences',
+          icon: 'SettingsIcon',
+          path: '/admin-settings/account/preferences',
+        },
         { title: 'My Phone', icon: 'PhoneIcon', path: '/admin-settings/account/phone' },
         {
           title: 'Notifications',
-          icon: 'NotificationLine',
+          icon: 'NotificationLine2',
           path: '/admin-settings/account/notifications',
         },
         {
@@ -113,7 +122,10 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'GreetingIcon',
           path: '/admin-settings/account/greetings',
         },
-        { title: 'Media Files', icon: 'MediaFilesIcon', path: '/admin-settings/account/media' },
+        /* Media Files used to sit here. The library holds the whole company's
+           audio — IVR prompts, queue greetings, voicemail — not one person's,
+           so it now lives under Phone System beside IVR Menus. The old path
+           still redirects there. */
         {
           title: 'Security & Privacy',
           icon: 'SecurityCheckLine',
@@ -145,17 +157,24 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
         },
         {
           /* Who a role reaches: the whole company, chosen locations or chosen
-             groups.
-
-             Listed on request, to match the reference console. Worth knowing
-             what it does here: the form saves, and `canActOn` in
-             src/lib/admin-scope.ts -- the function that would enforce it -- is
-             called nowhere in this product, so a scope narrows nothing yet. The
-             screen says that on itself, which is what makes listing it honest
-             rather than a claim the feature is live. */
+             groups. Saved on the person's record and read by the server on
+             every request that acts on a person (report mode until switched
+             on). The account owner and account admins set it; the entry is
+             shown to both. */
           title: 'Admin scope',
           icon: 'RoleIcon',
           path: '/admin-settings/admin-scope',
+          enabled: IS_ADMIN || IS_ACCOUNT_ADMIN,
+          visible: IS_ADMIN || IS_ACCOUNT_ADMIN,
+        },
+        {
+          /* How people sign in and how they are provisioned: single sign-on
+             status, the inactivity timeout (enforced on the server since 11 Sep
+             2026), allowed e-mail domains, and the SCIM provisioning token.
+             Owner only: every one of these is a company-wide rule. */
+          title: 'Authentication',
+          icon: 'RoleIcon',
+          path: '/admin-settings/authentication',
           enabled: IS_ADMIN,
           visible: IS_ADMIN,
         },
@@ -225,8 +244,8 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
         {
-          /* Skills only matter to queue routing, so they sit beside queues and
-             share the queue permission. */
+          /* Skills only matter to queue routing, so they sit beside queues
+             and share the queue permission. */
           title: 'Skills',
           path: '/admin-settings/phone/skills',
           icon: 'Star',
@@ -234,11 +253,21 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
         {
-          /* A department is a group calls route to, so it belongs beside the
-             other routing groups rather than under People. */
-          title: 'Departments',
+          /* A group is a team calls route to, so it belongs beside the other
+             routing targets rather than under People. The path keeps the
+             platform's own word; only the label changes. */
+          title: 'Groups',
           path: '/admin-settings/phone/departments',
           icon: 'DepartmentIcon1',
+          enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
+          visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
+        },
+        {
+          /* The third kind of team: coaches and trainees. Routes nothing, so
+             it sits beside Groups and shares their permission. */
+          title: 'Coaching Teams',
+          path: '/admin-settings/phone/coaching-teams',
+          icon: 'UsersIcon',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.DEPARTMENT),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
         },
@@ -248,6 +277,17 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
           icon: 'PhoneCallingLine',
           enabled: Boolean(features?.plan_features?.phone_system_action?.access?.IVR),
           visible: Boolean(features?.plan_features?.phone_system_action?.action?.view),
+        },
+        {
+          /* The company's audio library: the prompts IVR menus play, the
+             greetings queues and groups use, and voicemail messages. It was
+             under My Account, where it read as one person's files and an admin
+             building a menu could not find it. The screen's own permission
+             (settings.action.greeting) still decides who may add or delete. */
+          title: 'Media Files',
+          path: '/admin-settings/phone/media',
+          icon: 'MediaIcon',
+          extraActiveTab: ['phone/media/'],
         },
       ].filter(Boolean),
     },
@@ -316,26 +356,14 @@ export const adminSettingArr = (features: any, IS_ADMIN: boolean) =>
       icon: 'IntegrationIcon',
       visible: Boolean(features?.plan_features?.integration?.action?.view),
       enabled: Boolean(features?.plan_features?.integration?.IS_SHOW),
-      /* All four screens listed flat. The original nav nested Zapier, General
-         Settings and Manage Webhook one level deeper under "Data & Reporting",
-         but this nav is two levels only — collapsing them to a single link left
-         Zapier and Manage Webhook with no way in. */
+      /* Listed flat: this nav is two levels deep only, so nesting General
+         Settings under "Data & Reporting" would leave it with no way in. */
       children: [
         { title: 'CRM', icon: 'IntegrationIcon', path: '/admin-settings/integration/crm' },
         {
           title: 'General Settings',
           icon: 'SettingsIcon',
           path: '/admin-settings/integration/data-reporting/general-settings',
-        },
-        {
-          title: 'Zapier',
-          icon: 'IntegrationIcon',
-          path: '/admin-settings/integration/data-reporting/zapier',
-        },
-        {
-          title: 'Manage Webhook',
-          icon: 'AnalyticsIcon',
-          path: '/admin-settings/integration/data-reporting/manage-webhook',
         },
       ],
     },
@@ -432,7 +460,11 @@ const Sidebar = () => {
   const { user = {} } = useUser();
   const { features } = useCompanyFeatures();
   const IS_ADMIN = user?.user_info?.role === 'ADMIN';
-  const settingsItems = useMemo(() => adminSettingArr(features, IS_ADMIN), [features, IS_ADMIN]);
+  const IS_ACCOUNT_ADMIN = String(user?.user_info?.role || '').toUpperCase() === 'MANAGER';
+  const settingsItems = useMemo(
+    () => adminSettingArr(features, IS_ADMIN, IS_ACCOUNT_ADMIN),
+    [features, IS_ADMIN, IS_ACCOUNT_ADMIN],
+  );
 
   /* Admin has ~35 screens; typing beats opening sections one by one. A section
      matches if its own name matches, or any screen inside it does — and when it

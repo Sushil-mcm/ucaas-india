@@ -1,16 +1,24 @@
-import ActivityList from '@/components/activity-list/activity-list';
+import CampaignCallLogList from './call-log-list';
 import { ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 function CampaignCallLogs() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { data } = state || {};
+  const { data, type } = state || {};
 
   const campaignUuid = data?._id || data?.campaign_uuid || '';
+  /* The Answered count on the campaign list opens this page, and it must land
+     on the leads it counted rather than on the whole list. "connected" is the
+     server's own name for systemDisposition === ANSWERED, the same test the
+     count is made with. */
+  const answeredOnly = String(type || '').toUpperCase() === 'ANSWERED';
 
   const payloadExtraParams = {
-    filters: [...(campaignUuid ? [{ key: 'campaign_uuid', value: campaignUuid }] : [])],
+    filters: [
+      ...(campaignUuid ? [{ key: 'campaign_uuid', value: campaignUuid }] : []),
+      ...(answeredOnly ? [{ key: 'connected', value: true }] : []),
+    ],
   };
 
   return (
@@ -19,20 +27,16 @@ function CampaignCallLogs() {
         <div className="cursor-pointer" onClick={() => navigate(-1)}>
           <div className="flex gap-2 items-center">
             <ArrowLeft className="w-6 h-5" />
-            <h3 className="font-semibold text-gray-900">Leads - ({data?.name || ''})</h3>
+            <h3 className="font-semibold text-gray-900">
+            {answeredOnly ? 'Answered leads' : 'Leads'} - ({data?.name || ''})
+          </h3>
           </div>
         </div>
       </div>
 
-      <ActivityList
-        payloadExtraParams={payloadExtraParams}
-        activityType="campaignLogs"
-        contactId=""
-        notesOnlyAction
-        showActions={true}
-        emptyPlaceholder="No campaign logs found"
-        description="Campaign activity will appear here once campaigns start running."
-      />
+      {/* The list and its Skill match filter; the filters above go through
+          as they are. */}
+      <CampaignCallLogList payloadExtraParams={payloadExtraParams} />
     </div>
   );
 }

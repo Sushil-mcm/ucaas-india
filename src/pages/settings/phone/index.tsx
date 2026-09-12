@@ -1,21 +1,25 @@
 import CallRules from '@/pages/admin-settings/people/update-forwarding/call-rules';
-import { getUserDetails, updateUserSettings, userUpdateStatus } from '@/services/api';
+import { buildBusyActionPayload, readBusyActionForm } from '@/lib/busy-action';
+import { updateUserSettings } from '@/services/api';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useUserDetails, invalidateUserDetails } from '@/hooks/use-user-details';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { phoneSettingsSchema } from './schema';
 import { handleAlert } from '@/lib/utils';
 import { RING_TYPE_LABELS, RINGING_OPTIONS } from '@/constants/forwarding-consts';
 import { Button } from '@/components/ui/button';
-import { useSocketEvents } from '@/hooks/use-socket-events';
-import { useUser } from '@/hooks/use-user';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
 import { Hash, PhoneIncoming, PhoneOutgoing } from 'lucide-react';
 import { isUnchanged } from '@/lib/form-baseline';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import '@/components/mcm/mcm-page.css';
+import MyDeskPhones from './my-desk-phones';
+import { useUser } from '@/hooks/use-user';
+import { listMyDeskPhones, MY_DESK_PHONES_QUERY_KEY } from '@/pages/admin-settings/people/desk-phones/desk-phones-api';
+import { deskRowPayload, isDeskRowKey, mergeDeskPhoneRows, outsideNumberDigits, storedRowKey } from '@/lib/desk-phone-device-rows';
 
 /* What the save bar compares, which is not the raw form values.
  *
@@ -60,6 +64,8 @@ const comparable = (rules: any) => {
 const IncomingCalls = () => {
   useSetAdminPageMeta({ description: 'How calls reach you: your devices, forwarding rules and what happens when you do not answer.' });
 
+  const { user: me } = useUser();
+  const isAdmin = me?.user_info?.role === 'ADMIN';
   const [schemaContext, setSchemaContext] = useState(null);
   /* Serialised copy of the call rules as they arrived, so "has anything
      changed" is a comparison rather than a flag something else has to set.
@@ -69,13 +75,7 @@ const IncomingCalls = () => {
      This snapshot is also what Discard restores. */
   const [baselineRules, setBaselineRules] = useState<string | null>(null);
   const queryClient: any = useQueryClient();
-  const { socketEventsManager } = useSocketEvents();
-  const { user } = useUser();
-  const { data: userDetails } = useQuery({
-    queryKey: ['userInfoForPhoneSettings'],
-    queryFn: getUserDetails,
-    select: (data) => data?.data?.data?.result || [],
-  });
+  const { data: userDetails } = useUserDetails();
   const methods = useForm<any>({
     mode: 'all',
     defaultValues: { CallRules },
@@ -114,9 +114,7 @@ const IncomingCalls = () => {
   const { mutate: mutateUpdateMember, isPending: isPendingUpdateMember } = useMutation({
     mutationFn: updateUserSettings,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['userInfoForPhoneSettings', 'getUsersDetails'], {
-        exact: true,
-      });
+      invalidateUserDetails(queryClient);
       invalidateGlobalUsersDirectory(queryClient);
       handleAlert({
         text: data?.data?.message || 'Settings updated successfully!',
@@ -157,7 +155,11 @@ const IncomingCalls = () => {
             : callRules?.forwardCall?.value?.name || selectedUser?.name,
         personal: callRules?.forwardCall?.personal,
       },
-      status: callRules?.status,
+      /* No `status` here. Presence is not edited on this screen, and it used to
+         be posted anyway - to the record and to update-status, which moves the
+         person's queue rows to On Break whenever the stored status is not
+         "online". Saving a ring time could log an agent out of their queues.
+         The stored presence is carried through untouched by the merge below. */
       incoming_calls: {
         enabled: callRules?.incomingCall?.enabled,
         device_options: transformPayloadNew(deviceOptionsSorted),
@@ -199,6 +201,9 @@ const IncomingCalls = () => {
           },
         }),
       },
+      /* When already on a call: call waiting (off) or send it somewhere (on).
+         Same shape as failure_action; the router reads it as rule 3.5. */
+      busy_action: buildBusyActionPayload(callRules?.busyAction, selectedUser),
       outgoing_calls: {
         enabled: callRules?.outgoingCall?.enabled,
         default_caller_id: callRules?.outgoingCall?.defaultCallerId?.value || '',
@@ -216,29 +221,13 @@ const IncomingCalls = () => {
       key: 'call_forwarding',
     };
 
-    const status = callRules?.status;
-
-    socketEventsManager?.emit('user-presence-update', {
-      doc: {
-        userId: user?.user_info?.extension,
-        domain: user?.sip_credentials?.domain,
-        uuid: user?.uuid,
-        status,
-        onCall: false,
-        timeObj: {
-          holiday_start_date: null,
-          holiday_end_date: null,
-        },
-      },
-    });
-
-    handleStatusChange(status);
     mutateUpdateMember(payload);
   };
 
   function transformPayloadNew(res: any) {
-    return res.map((item: any) => ({
+    return res.map((item: any) => isDeskRowKey(item?.key) ? deskRowPayload(item.key, item, userDetails?.user_info?.extension || '') : ({
       type: item?.type || 'web',
+      ...(item?.type === 'pstn' ? { number: outsideNumberDigits(item?.number) } : {}),
       status: item.status ?? false,
       label: item.value.label || '',
       value:
@@ -252,39 +241,14 @@ const IncomingCalls = () => {
     }));
   }
 
-  function statusChangeEvent(status: string, timeObj: any = undefined) {
-    socketEventsManager?.emit(
-      'user-presence-update',
-      {
-        doc: {
-          userId: user?.user_info?.extension,
-          domain: user?.sip_credentials?.domain,
-          uuid: user?.uuid,
-          status: status,
-          onCall: false,
-          timeObj,
-        },
-      },
-      () => {},
-    );
-  }
+  /* The person's real desk phones, one row each. Waited for before the form is
+     seeded so a late answer cannot wipe an edit in progress. */
+  const myPhones = useQuery({ queryKey: MY_DESK_PHONES_QUERY_KEY, queryFn: listMyDeskPhones, retry: false });
+  const phonesSettled = myPhones.isFetched || myPhones.isError;
+  const phoneRows = myPhones.data?.kind === 'ok' ? myPhones.data.phones : [];
 
-  const { mutate: mutateUserUpdateStatus } = useMutation({
-    mutationFn: userUpdateStatus,
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries(['getUsersDetails']);
-      statusChangeEvent(variables?.socket_status, {
-        holiday_start_date: null,
-        holiday_end_date: null,
-      });
-    },
-  });
-
-  const handleStatusChange = async (status: string) => {
-    if (user?.socket_status === status) return;
-    mutateUserUpdateStatus({ socket_status: status });
-  };
   useEffect(() => {
+    if (!phonesSettled) return;
     if (userDetails?.call_forwarding) {
       const callHandlingData =
         typeof userDetails?.call_forwarding === 'string'
@@ -299,13 +263,15 @@ const IncomingCalls = () => {
       if (deviceOptionsArray.length > 0) {
         deviceOptionsArray.forEach((item: any) => {
           const type = item?.type || 'web';
-          const typeKey =
-            userDetails?.user_info?.extension !== item?.value ? item?.name || 'web' : type;
+          const typeKey = storedRowKey(item, userDetails?.user_info?.extension || '');
 
           deviceOptionsObject[typeKey] = {
             status: item?.status,
             isDefault: item?.isDefault,
             type,
+            device: item?.device,
+            number: item?.number || '',
+            suggested: type === 'pstn' ? userDetails?.user_info?.phone || '' : undefined,
             value: {
               label: item?.label,
               value: item?.timeout,
@@ -334,6 +300,7 @@ const IncomingCalls = () => {
             status: true,
             value: RINGING_OPTIONS?.[0],
             type: 'pstn',
+            suggested: userDetails?.user_info?.phone || '',
             option: {
               label: `${userDetails?.user_info?.first_name}${userDetails?.user_info?.last_name ? ` ${userDetails?.user_info?.last_name}` : ''}`,
               value: userDetails?.user_info?.extension || '',
@@ -365,6 +332,7 @@ const IncomingCalls = () => {
           status: true,
           value: RINGING_OPTIONS?.[0],
           type: 'pstn',
+          suggested: userDetails?.user_info?.phone || '',
           option: {
             label: `${userDetails?.user_info?.first_name}${userDetails?.user_info?.last_name ? ` ${userDetails?.user_info?.last_name}` : ''}`,
             value: userDetails?.user_info?.extension || '',
@@ -385,9 +353,16 @@ const IncomingCalls = () => {
         personal: forward_calls?.personal ?? true,
       });
 
+      const deviceOptionsWithPhones = mergeDeskPhoneRows(
+        deviceOptionsObject,
+        phoneRows,
+        userDetails?.user_info?.extension || '',
+        RINGING_OPTIONS?.[0],
+      );
+
       setValue('callRules.incomingCall', {
         enabled: true,
-        deviceOptions: deviceOptionsObject,
+        deviceOptions: deviceOptionsWithPhones,
         deviceOptionValue: {
           label: RING_TYPE_LABELS[incoming_calls?.type as keyof typeof RING_TYPE_LABELS],
           value: incoming_calls?.type || 'sequential',
@@ -405,8 +380,6 @@ const IncomingCalls = () => {
             value: deviceOptionsObject?.[key]?.option?.value || '',
           })),
       });
-
-      setValue('callRules.status', callHandlingData?.status ?? 'online');
 
       setValue('basic.extension', userDetails?.user_info?.extension);
       setValue('callRules.outgoingCall', {
@@ -437,6 +410,11 @@ const IncomingCalls = () => {
         },
         personal: incoming_calls?.failure_action?.personal ?? true,
       });
+
+      setValue(
+        'callRules.busyAction',
+        readBusyActionForm(callHandlingData?.busy_action, userDetails?.user_info?.extension || ''),
+      );
 
       setValue('callRules.closedHoursAction', {
         enabled: incoming_calls?.closed_hour_action?.enabled || false,
@@ -493,19 +471,12 @@ const IncomingCalls = () => {
          snapshot below disagree with the form the moment somebody switched
          forwarding on and straight back off again. */
       setValue('callRules.forwardCall.enabled', false);
-
-      /* Presence is not edited on this screen, but it is part of the payload it
-         saves. With no stored rules there is nothing to hydrate it from, so it
-         stayed undefined and Submit broadcast an undefined status and posted one
-         to update-status. The person's current availability is the truthful
-         value for a record that has never stored one. */
-      setValue('callRules.status', user?.socket_status || 'online');
     }
     /* Taken after the branch above has finished writing, so it is the record as
        it arrived rather than a half-populated form. Everything below compares
        against this to decide whether there is anything to save. */
     setBaselineRules(JSON.stringify(methods.getValues('callRules')));
-  }, [userDetails]);
+  }, [userDetails, phonesSettled]);
 
   /* The three facts that identify this line on the network. None of them are
      edited on this page — extension and direct number are set by an admin, and
@@ -579,6 +550,39 @@ const IncomingCalls = () => {
 
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+              {/* What the switch reads from this page, as of the patch of 3 Sep
+                  2026 (proven by offline tests and by reading the running switch,
+                  not yet by a real call), for a call dialled straight to the
+                  person's extension:
+                    - Forward All Calls (`call_forwarding.forward_calls`).
+                    - Do not disturb (`call_forwarding.dnd`). This page has no
+                      switch for it - an admin sets it in the person's call rules
+                      under People, and the summary below reports it.
+                    - Presence, set from the avatar menu, which writes `status` on
+                      this same record. Live since 7 Sep 2026: Do not disturb sends
+                      every caller to voicemail, Busy sends colleagues to voicemail
+                      and still lets outside callers ring.
+                    - Ring time: the person's own device timeout, and the shorter
+                      of theirs and the company's wins.
+                    - What happens after ringing (`incoming_calls.failure_action`),
+                      but only for a voicemail, extension or hang-up destination.
+                      An outside number, a queue or a menu is saved and not
+                      followed after the ring - though the same destination does
+                      work for forward-all, DND and closed hours.
+                    - Default Caller ID, under Outgoing Calls: it becomes
+                      `users.caller_id`, which the dialplan puts on every outbound
+                      call.
+                  Still stored and not read: which devices are on and their ring
+                  order. The shared editor below carries no badge of its own, so
+                  the split is stated here, first. */}
+              <div className="mcm-callsummary" role="status">
+                <span className="mcm-callsummary-l">What works today</span>
+                <p>
+                  Live for direct calls: Forward All, Do Not Disturb, presence, ring time, device order,
+                  Caller ID, and after-ring voicemail/extension/hangup.
+                </p>
+              </div>
+
               {!fallbackSaved ? (
                 <div className="mcm-notsaved" role="status">
                   <strong>Voicemail is not saved yet.</strong>
@@ -589,6 +593,8 @@ const IncomingCalls = () => {
                   </span>
                 </div>
               ) : null}
+
+              <MyDeskPhones isAdmin={isAdmin} />
 
               {/* The page scrolls as one column now, so the rules no longer need
                   to be their own inner scroller with a hand-computed height. */}

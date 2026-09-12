@@ -26,6 +26,10 @@ export const handleStatus = (status: any) => {
     unavailable: 'text-red-500 bg-red-50',
     voicemail: 'text-primary bg-primary-100',
     transfer: 'text-primary bg-primary-100',
+    /* Stopped by the block list: red like a refusal, grey when it was
+       merely filed as spam. */
+    blocked: 'text-red-600 bg-red-50',
+    spam: 'text-[#9A948F] bg-[#FBE2C8]/40',
   };
   return statusClasses[status] || '';
 };
@@ -102,11 +106,15 @@ export const FORWARD_TYPES: any = {
 export const STATUS_TYPE = [
   { label: 'Answered', value: 'SUCCESS' },
   { label: 'Cancel', value: 'CANCEL' },
-  { label: 'No answer', value: 'NO ANSWER' },
+  /* The stored value is NO_ANSWER, with an underscore - the backend matches
+     `status` exactly, so the spaced version here found nothing, ever. */
+  { label: 'No answer', value: 'NO_ANSWER' },
   { label: 'Unavailable', value: 'UNAVAILABLE' },
   { label: 'Voicemail', value: 'VOICEMAIL' },
   { label: 'User invalid destination', value: 'USER_INVALID_DESTINATION' },
   { label: 'Transfer', value: 'TRANSFER' },
+  { label: 'Blocked', value: 'BLOCKED' },
+  { label: 'Spam', value: 'SPAM' },
   // { label: 'OTHER', value: 'OTHER' },
 ];
 

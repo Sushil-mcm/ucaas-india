@@ -1,4 +1,5 @@
 import { RemoveIcon } from '@/assets/icons';
+import { useSkillsCatalogue } from '@/hooks/use-queue-skills';
 import CustomSelect from '@/components/custom/custom-select';
 import ForwardActionAll from '@/components/custom/forward-action-all';
 
@@ -47,6 +48,8 @@ const IvrKeyPresses = ({ initialData = {} }) => {
 
   const watchIVRActions = watch('ivrActions');
   const selectedKeys = watchIVRActions?.map((option: any) => option?.key?.value);
+  /* "Press 2 for Spanish": a queue key can also say what the caller needs. */
+  const { options: skillOptions, isLoading: skillsLoading } = useSkillsCatalogue();
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-3 pr-1">
@@ -119,6 +122,26 @@ const IvrKeyPresses = ({ initialData = {} }) => {
                   selectCustomClassSecond="w-full"
                   notInclude={hiddenForwardTypes}
                 />
+                {watch(`ivrActions.[${index}].forwardType`)?.value === 'QUEUE' && (
+                  <div className="w-full lg:w-1/4">
+                    <CustomSelect
+                      label={index === 0 ? 'Caller needs (optional)' : ''}
+                      placeholder={skillOptions.length ? 'Any skill' : 'No skills yet'}
+                      isClearable
+                      isLoading={skillsLoading}
+                      /* "Language · Spanish": on the queue, the choice narrows
+                         that category's row to this one skill. */
+                      options={skillOptions.map((o) => ({
+                        value: o.value,
+                        label: o.category_name ? `${o.category_name} · ${o.label}` : o.label,
+                      }))}
+                      value={watch(`ivrActions.[${index}].skill`) || null}
+                      handleChange={(picked: ISELECTVALUE | null) =>
+                        setValue(`ivrActions.[${index}].skill`, picked || null, { shouldDirty: true })
+                      }
+                    />
+                  </div>
+                )}
                 <div className="flex w-full justify-end lg:w-16">
                   {fields?.length > 1 ? (
                     <Button

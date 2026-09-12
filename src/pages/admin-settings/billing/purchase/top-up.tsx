@@ -2,17 +2,28 @@ import PaymentScreen from '@/components/payment';
 import { handleAlert } from '@/lib/utils';
 import { addFund } from '@/services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
-import AutoPurchase, { LowBalanceAlert } from './auto-purchase';
-import AmountSection from './amount-section';
+import { useRef, useState } from 'react';
+import AmountSection, { customAmountError } from './amount-section';
+import BalanceBar, { money } from './balance-bar';
+import LowBalanceSettings from './low-balance-settings';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/use-user';
-import { formatMoney } from '@/lib/billing-money';
+import { formatMoney, knownNumber } from '@/lib/billing-money';
+import { invalidateUserDetails } from '@/hooks/use-user-details';
 
 const TopUp = () => {
   const navigate = useNavigate();
-  const [selectedAmount, setSelectedAmount] = useState(20);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(20);
+  const [customAmount, setCustomAmount] = useState('');
+
+  /* The one number the Pay button charges. A typed amount always wins, because
+     typing is the more deliberate act - and because the two can never both be
+     set (see amount-section). Everything downstream reads THIS, so the label and
+     the charge cannot disagree about what is being paid. */
+  const amountToCharge = customAmount ? Number(customAmount) : selectedAmount;
+  const amountError = customAmountError(customAmount);
+  const canPay = Boolean(amountToCharge) && !amountError;
 
   const paymentRef = useRef<any>(null);
   const { user } = useUser();
@@ -21,30 +32,14 @@ const TopUp = () => {
   const { features } = useCompanyFeatures();
   const isAutoRechargeEnabled = features?.plan_features?.billing?.action?.view || false;
 
-  const [hasAutoPurchase, setHasAutoPurchase] = useState(false);
-  const [isLowBalanceAlertEnabled, setIsLowBalanceAlertEnabled] = useState(false);
-
-  useEffect(() => {
-    if (userInfo?.auto_recharge_setting) {
-      setHasAutoPurchase(userInfo.auto_recharge_setting.enabled || false);
-    }
-  }, [userInfo]);
-
-  useEffect(() => {
-    const lowBalanceObj = userInfo?.low_balance_settings || userInfo?.low_balance_setting;
-    if (lowBalanceObj) {
-      setIsLowBalanceAlertEnabled(lowBalanceObj.enabled || false);
-    } else if (user || userInfo) {
-      const lowBalanceSettingRaw = user?.low_balance_alert || userInfo?.low_balance_alert;
-      const lowBalanceSetting =
-        typeof lowBalanceSettingRaw === 'string'
-          ? JSON.parse(lowBalanceSettingRaw)
-          : lowBalanceSettingRaw;
-      if (lowBalanceSetting) {
-        setIsLowBalanceAlertEnabled(lowBalanceSetting?.enabled || false);
-      }
-    }
-  }, [user, userInfo]);
+  /* The two saved records, read straight off the account.
+     They used to be copied into local state by a pair of effects so two cards
+     could each own a switch; the settings panel below now owns its own draft,
+     so the only thing left to read them for is the balance bar's status line -
+     and reading them directly means the bar cannot lag behind a save. */
+  const lowBalanceSettings =
+    userInfo?.low_balance_settings || userInfo?.low_balance_setting || null;
+  const autoRecharge = userInfo?.auto_recharge_setting || null;
 
   const { mutate: mutateAddFund, isPending: isPendingAddFund } = useMutation({
     mutationFn: addFund,
@@ -57,7 +52,7 @@ const TopUp = () => {
     mutateAddFund(
       {
         type: isNewCardRequest ? 'new-card' : 'saved-card',
-        charge_amount: selectedAmount,
+        charge_amount: amountToCharge,
         ...(isNewCardRequest ? { payment_method_id: data?.id } : { card_id: data?.uuid }),
         save: data?.isSavedCard,
       },
@@ -79,8 +74,14 @@ const TopUp = () => {
   const handleSuccess = (message = 'Fund added successfully') => {
     paymentRef.current?.resetPaymentState();
     setSelectedAmount(20);
+    setCustomAmount('');
     handleAlert({ text: message, type: 'success' });
     queryClient.invalidateQueries({ queryKey: ['useGetSavedCards'] });
+    /* The balance lives on the USER record, and only the card list was being
+       refreshed - so paying left the balance bar and the header showing the old
+       figure until somebody reloaded the page. Refreshing the user is what makes
+       the money appear where it was just added. */
+    invalidateUserDetails(queryClient);
     navigate('/admin-settings/billing/invoices');
   };
 
@@ -108,6 +109,16 @@ const TopUp = () => {
         </span>
       </div>
 
+      <BalanceBar
+        settings={{
+          alertEnabled: Boolean(lowBalanceSettings?.enabled),
+          alertAt: Number(lowBalanceSettings?.on_amount ?? 0),
+          rechargeEnabled: Boolean(autoRecharge?.enabled),
+          rechargeAt: Number(autoRecharge?.threshold_amount ?? 0),
+          rechargeAmount: Number(autoRecharge?.refill_amount ?? 0),
+        }}
+      />
+
       <div className="flex sm:flex-row flex-col justify-between  w-full gap-3">
         <div className="border border-gray-200 rounded-xl p-3 gap-1 flex flex-col w-full bg-white">
           <h5 className="text-gray-900 flex items-center gap-1.5 font-semibold">Top-up Now</h5>
@@ -115,8 +126,26 @@ const TopUp = () => {
             Add to your balance. Anything unused stays on the account.
           </p>
           <div className="w-full mt-2">
-            <AmountSection selectedAmount={selectedAmount} setSelectedAmount={setSelectedAmount} />
+            <AmountSection
+              selectedAmount={selectedAmount}
+              setSelectedAmount={setSelectedAmount}
+              customAmount={customAmount}
+              setCustomAmount={setCustomAmount}
+            />
           </div>
+          {/* The number the top-up is actually for. An amount on its own does not
+              answer "will that be enough?" - the balance it produces does. */}
+          <div className="mt-3 flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+            <span className="text-[13px] text-gray-600">New balance after top-up</span>
+            <span className="text-[13px] font-semibold text-gray-900">
+              {(() => {
+                const current = knownNumber((user as any)?.company_info?.amount);
+                if (current === null || !canPay || !amountToCharge) return '—';
+                return money(current + Number(amountToCharge)) ?? '—';
+              })()}
+            </span>
+          </div>
+
           <div className="w-full mt-4">
             <PaymentScreen
               ref={paymentRef}
@@ -130,26 +159,17 @@ const TopUp = () => {
                  formatted through the same function as every other figure so
                  "Pay $20.00" reads like the rest of billing. */
               submitButtonText={
-                formatMoney(selectedAmount) ? `Pay ${formatMoney(selectedAmount)}` : 'Pay'
+                canPay && formatMoney(amountToCharge) ? `Pay ${formatMoney(amountToCharge)}` : 'Pay'
               }
             />
           </div>
         </div>
 
         {isAutoRechargeEnabled && (
-          <AutoPurchase
-            hasAutoPurchase={hasAutoPurchase}
-            setHasAutoPurchase={setHasAutoPurchase}
-            isLowBalanceAlertEnabled={isLowBalanceAlertEnabled}
-          />
+          <div className="w-full">
+            <LowBalanceSettings />
+          </div>
         )}
-      </div>
-      <div className="w-full sm:w-[calc(50%_-_6px)] mt-3">
-        <LowBalanceAlert
-          isLowBalanceAlertEnabled={isLowBalanceAlertEnabled}
-          setIsLowBalanceAlertEnabled={setIsLowBalanceAlertEnabled}
-          hasAutoPurchase={hasAutoPurchase}
-        />
       </div>
     </>
   );

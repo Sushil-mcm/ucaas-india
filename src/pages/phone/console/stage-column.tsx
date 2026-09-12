@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import NumberWithFlag, { formatDialNumber } from '@/components/custom/number-with-flag';
+import { formatDialNumber } from '@/components/custom/number-with-flag';
+import { toast } from 'react-toastify';
 import DialpadMaxiTabDispositions from '@/components/dialpad/components/dialpad-maxi-tab-dispositions';
 import DialpadEndedScreen from '@/components/dialpad/components/dialpad-ended-screen';
 import DialpadAddUserList from '@/components/dialpad/components/dialpad-add-user-list';
@@ -8,11 +9,17 @@ import DialpadConferenceMembersList from '@/components/dialpad/components/dialpa
 import DialpadMaxiScriptSidebar from '@/components/dialpad/components/dialpad-maxi-script-sidebar';
 import { useDialpadCallerIdOptions } from '@/hooks/use-dialpad-caller-id-options';
 import { useUsersDirectory } from '@/hooks/use-users-directory';
-import Flag from '@/components/flag';
+import { useContactSuggestions } from '@/hooks/use-contact-suggestions';
+import { useSocketEvents } from '@/hooks/use-socket-events';
+import { useUser } from '@/hooks/use-user';
+import { getHeaderFirstValue } from '@/components/dialpad/session-display';
+import { getDialpadSessionState } from '@/components/dialpad/session-status';
+import NumberWithFlag from '@/components/custom/number-with-flag';
 import type { DialpadSession } from '@/context/dialpad-context';
 import type { ConsoleCallRow } from './call-list-column';
 import { Ic } from './icons';
 import { useConsoleDialer } from './dial-number';
+import { useCallerName } from './use-caller-name';
 import CallRecord from './call-record';
 import { isTerminalSession, mmss, type ConsoleCallState } from './use-console-call';
 import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
@@ -23,12 +30,46 @@ import type { CallerIdOption } from '@/components/dialpad/types';
 import {
   buildEnrichment,
   CHECKLIST,
-  contactDisplayName,
   initialsOf,
   isNumberLike,
   lineHealth,
   type ConsoleTurn,
 } from './copilot-adapter';
+
+/* Mirrors dialpad-transcript-manager.tsx's own helper of the same name - the
+   Park control needs the same call id the transcript path uses to name the
+   call to the switch, and it isn't exported from that file. */
+const getSessionSipCallId = (session: DialpadSession | null | undefined): string => {
+  if (!session) return '';
+  return String(
+    session?.liveCallData?.sip_call_id ||
+      getHeaderFirstValue(session?.headers, 'x-cid') ||
+      getHeaderFirstValue(session?.headers, 'call-id') ||
+      '',
+  ).trim();
+};
+
+/* ------------------------------------------------------------- dial guard ---
+ * The dialler field doubles as a directory search, so it holds whatever was
+ * typed — including a name like "Helo". That string used to be handed straight
+ * to the SIP stack, which tried to place a call to it. One rule, used by both
+ * the Call button and the Enter key.
+ * -------------------------------------------------------------------------- */
+
+/** null when `target` is dialable, otherwise why it is not. */
+export const dialTargetIssue = (raw: unknown): string | null => {
+  const target = String(raw ?? '').trim();
+  if (!target) return 'Type a number to call.';
+  if (/[a-z]/i.test(target)) {
+    return 'That looks like a name. Pick someone from the suggestions, or type a number.';
+  }
+  // *67, #31 and friends are feature codes, not short numbers.
+  if (/^[*#]\d+$/.test(target)) return null;
+  if (target.replace(/\D/g, '').length < 3) {
+    return 'That is too short to dial — extensions are at least 3 digits.';
+  }
+  return null;
+};
 
 const KEYS: [string, string][] = [
   ['1', ''],
@@ -57,6 +98,7 @@ type StageProps = {
   selectedCall: ConsoleCallRow | null;
   onBackToDialer: () => void;
   onOpenTranscript: (leg: any) => void;
+  onSelectLeg?: (leg: any) => void;
 };
 
 /* ---------------------------------------------------------------- caller ---- */
@@ -70,12 +112,24 @@ const CallerBlock = ({
   state: ConsoleCallState;
   secs: number;
 }) => {
-  const name = contactDisplayName(session);
+  const { callerName } = useCallerName();
+  const name = callerName(session);
+  /* The label comes from the shared reader, not from the console's own idea of
+     the state. `state` collapses every outgoing call to 'dialing' the moment it
+     is created (use-console-call: `direction === 'outgoing'` is enough), so
+     labelling that "Ringing" told the agent the far end was alerting before we
+     had heard anything back from it — often before the call had left the switch.
+
+     getDialpadSessionState only says "Ringing" once a real 180 has arrived
+     (session.hasAlerting), and says "Calling" until then. Keeping the console on
+     the same reader as the dialpad means the two surfaces cannot drift apart
+     again, which is how this diverged in the first place. */
+  const shared = getDialpadSessionState(session);
   const pill =
     state === 'incoming'
-      ? { cls: 'ringing', label: 'Incoming' }
+      ? { cls: 'ringing', label: shared.label }
       : state === 'dialing'
-        ? { cls: 'ringing', label: 'Ringing' }
+        ? { cls: 'ringing', label: shared.label }
         : state === 'wrapup'
           ? { cls: 'wrap', label: 'Wrap-up' }
           : session?.isOnHold
@@ -84,6 +138,27 @@ const CallerBlock = ({
 
   const contact = session?.contactInfo;
   const queue = session?.queueMetaData?.response;
+  /* The number the other side sees. On a campaign call it is the campaign's
+     number (sent as X-CallerId), which used to be invisible here while the
+     idle screen kept showing the agent's own default. */
+  const { user } = useUser();
+  /* Same source as the idle chip, so a person calling from a company number
+     (no number of their own) sees that number here rather than a blank. */
+  const { defaultCallerIdOption } = useDialpadCallerIdOptions();
+  const shownAs =
+    session?.direction === 'incoming'
+      ? ''
+      : getHeaderFirstValue(session?.headers, 'x-callerid') ||
+        String(
+          (session?.extraHeaders || [])
+            .find((header) => String(header || '').trim().toLowerCase().startsWith('x-callerid:'))
+            ?.split(':')
+            .slice(1)
+            .join(':') || '',
+        ).trim() ||
+        String(session?.campaignMetaData?.response?.callerId?.[0] || '') ||
+        String(user?.user_info?.caller_id || '') ||
+        String(defaultCallerIdOption?.number || '');
 
   const isInbound = session?.direction === 'incoming';
   const initials = initialsOf(name);
@@ -144,6 +219,14 @@ const CallerBlock = ({
           </div>
           <div className="v">{isInbound ? 'Inbound' : 'Outbound'}</div>
         </div>
+        {shownAs ? (
+          <div className="popcell">
+            <div className="k">Shown as</div>
+            <div className="v">
+              <NumberWithFlag number={shownAs} />
+            </div>
+          </div>
+        ) : null}
         <div className="popcell">
           <div className="k">
             <Ic n="rec" size={11} /> Recording
@@ -174,6 +257,8 @@ const SessionStrip = ({
   activeId: string | null;
   onSwitch: (id: string) => void;
 }) => {
+  // Before the early return — hooks cannot sit behind a condition.
+  const { callerName } = useCallerName();
   if (sessions.length < 2) return null;
   return (
     <div
@@ -195,7 +280,7 @@ const SessionStrip = ({
             <span
               className={`dot ${ringing ? 'amber' : s.isOnHold ? 'red' : 'green'} ${ringing ? 'pulsing' : ''}`}
             />
-            {contactDisplayName(s)}
+            {callerName(s)}
             <span className="num" style={{ opacity: 0.7 }}>
               {ringing
                 ? s.direction === 'incoming'
@@ -221,7 +306,8 @@ const EnrichmentTicker = ({
   title: string;
   session: DialpadSession | null;
 }) => {
-  const rows = buildEnrichment(session);
+  const { resolveName } = useCallerName();
+  const rows = buildEnrichment(session, resolveName);
   return (
     <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="sect-title">
@@ -284,6 +370,10 @@ const TransferPanel = ({
 
   const target = query.trim();
   const isRawNumber = /^[+0-9*#]{2,}$/.test(target);
+  /* A plain 3-5 digit extension can be sent straight to that person's mailbox
+     with the *99 feature code, instead of ringing them first. Only offered for
+     an internal extension and never in conference mode. */
+  const isExtension = /^\d{3,5}$/.test(target);
 
   return (
     <div className="card card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -351,6 +441,17 @@ const TransferPanel = ({
           Ask first
         </button>
       </div>
+      {!conference && isExtension ? (
+        <button
+          type="button"
+          className="btn ghost"
+          style={{ width: '100%' }}
+          onClick={() => onTransfer('*99' + target, 'transfer_now')}
+        >
+          <Ic n="transfer" />
+          To voicemail
+        </button>
+      ) : null}
     </div>
   );
 };
@@ -368,15 +469,23 @@ const StageColumn = ({
   selectedCall,
   onBackToDialer,
   onOpenTranscript,
+  onSelectLeg,
 }: StageProps) => {
   const [dial, setDial] = useState('');
   const [transfer, setTransfer] = useState<null | { conference: boolean }>(null);
   const [dtmfOpen, setDtmfOpen] = useState(false);
   const [panel, setPanel] = useState<null | 'add-user' | 'merge' | 'members' | 'script'>(null);
+  /* Add (for a merge) and "Ask first" (for a transfer) share the same consult
+     mechanism underneath; only the transfer wants the Complete / Cancel bar. */
+  const [consultOrigin, setConsultOrigin] = useState<null | 'transfer' | 'add'>(null);
+  useEffect(() => {
+    if (!dialpad.activeSpeakFirstTarget) setConsultOrigin(null);
+  }, [dialpad.activeSpeakFirstTarget]);
   const {
     callerIdOptions,
     defaultCallerIdOption,
     isCallerIdFallback,
+    hasAssignedNumber,
     isCallerIdUpdating,
     updateCallerIdSelection,
   } = useDialpadCallerIdOptions();
@@ -390,6 +499,8 @@ const StageColumn = ({
   const effectiveCallerId = callerIdOverride ?? defaultCallerIdOption;
   const { users } = useUsersDirectory();
   const { dial: dial2 } = useConsoleDialer();
+  const { socketEventsManager } = useSocketEvents();
+  const { user } = useUser();
 
   /* Demo call — this console has no live SIP/WebRTC registration in this
      environment (no telephony backend behind the demo account), so a real
@@ -457,6 +568,10 @@ const StageColumn = ({
     />
   );
 
+  /* Saved contacts, from the contact book — not the call log. The two groups
+     share one scroller below so a long list cannot push the keypad off-card. */
+  const { matches: contactHits } = useContactSuggestions(dial);
+
   const directoryHits = useMemo(() => {
     const q = dial.trim().toLowerCase();
     if (!q) return [];
@@ -470,9 +585,26 @@ const StageColumn = ({
       .slice(0, 6);
   }, [users, dial]);
 
+  const dialIssue = dialTargetIssue(dial);
+
+  /* A suggestion goes INTO the field so it can be checked, edited or added to
+     before anything is dialled. */
+  const pickSuggestion = (target: string) => {
+    const value = String(target || '').trim();
+    if (!value) return;
+    setDial(value);
+  };
+
   const placeCall = (target: string) => {
     const value = String(target || '').trim();
     if (!value) return;
+
+    const issue = dialTargetIssue(value);
+    if (issue) {
+      // Failing silently here just looked like a broken button.
+      toast.error(issue);
+      return;
+    }
 
     if (effectiveCallerId?.number === TWILIO_CALLER_ID) {
       setDial('');
@@ -590,6 +722,7 @@ const StageColumn = ({
             row={selectedCall}
             onBack={onBackToDialer}
             onOpenTranscript={onOpenTranscript}
+            onSelectLeg={onSelectLeg}
           />
         </div>
       </div>
@@ -738,7 +871,11 @@ const StageColumn = ({
               {isCallerIdFallback ? (
                 <span
                   className="chip"
-                  title="No caller ID is saved for you, so the first assigned number is being used. Pick one to save it."
+                  title={
+                    hasAssignedNumber
+                      ? 'No caller ID is saved for you, so the first assigned number is being used. Pick one to save it.'
+                      : 'You have no number of your own, so a company number is being used for this call. An admin can assign you one under Admin › Numbers.'
+                  }
                   style={{ height: 26, fontSize: 11, color: 'var(--warn, #c2670a)' }}
                 >
                   default
@@ -747,61 +884,134 @@ const StageColumn = ({
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span className="dial-flag-slot">
-                {dial && <Flag phoneNumber={dial.startsWith('+') ? dial : `+${dial}`} />}
+                {dial ? <NumberWithFlag number={dial} isFlagOnly /> : null}
               </span>
               <input
                 className="dial-display num"
-                placeholder="Type a name or number"
+                placeholder="Search contacts or dial a number"
                 value={dial}
                 onChange={(e) => setDial(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') placeCall(dial);
                 }}
-                aria-label="Number or name to dial"
+                aria-label="Search contacts or dial a number"
                 autoComplete="off"
                 style={{ flex: 1 }}
               />
               <span className="dial-flag-slot" aria-hidden="true" />
             </div>
-            {directoryHits.length ? (
-              <div className="dres">
-                <div className="eyebrow" style={{ padding: '0 10px 4px' }}>
-                  {directoryHits.length} match{directoryHits.length > 1 ? 'es' : ''} · directory
-                </div>
-                {directoryHits.map((d: any) => (
-                  <button
-                    type="button"
-                    className="dres-row"
-                    key={d.extension}
-                    onClick={() => placeCall(d.extension)}
-                  >
-                    <span className="dres-av">{initialsOf(d.name)}</span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span className="dres-n" style={{ display: 'block' }}>
-                        {d.name}
-                      </span>
-                      <span className="dres-m">
-                        {d.role} · <span className="num">ext {d.extension}</span>
-                      </span>
-                    </span>
-                  </button>
-                ))}
+            {/* Suggestions sit ABOVE the keypad, never instead of it. They used
+                to replace it, so typing "9" — which matches ext 9088 — made the
+                dialler vanish with no way to finish the number.
+
+                Both groups share one scroller: capping each list separately let
+                two full lists stack past the card and push the keypad out of
+                view. */}
+            {dial.trim() && (contactHits.length || directoryHits.length || /[a-z]/i.test(dial)) ? (
+              <div className="dres-scroll">
+                {contactHits.length ? (
+                  <div className="dres">
+                    <div className="dres-group">
+                      {contactHits.length} match{contactHits.length > 1 ? 'es' : ''} · contacts
+                    </div>
+                    {contactHits.map((c) => (
+                      <div className="dres-row" key={c.id || c.phone}>
+                        {/* Picking a suggestion FILLS the field — it does not
+                            dial. Brushing a name while scanning used to place a
+                            real call; the phone button is now the only thing
+                            that starts one. */}
+                        <button
+                          type="button"
+                          className="dres-pick"
+                          disabled={!c.phone}
+                          title={c.phone ? `Put ${c.phone} in the dialler` : 'No number saved'}
+                          onClick={() => pickSuggestion(c.phone)}
+                        >
+                          <span className="dres-av">{initialsOf(c.name)}</span>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span className="dres-n" style={{ display: 'block' }}>
+                              {c.name || c.phone}
+                            </span>
+                            <span className="dres-m">
+                              {c.company ? `${c.company} · ` : ''}
+                              <NumberWithFlag number={c.phone} className="num" />
+                            </span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="dres-call"
+                          disabled={!c.phone}
+                          aria-label={`Call ${c.name || c.phone}`}
+                          title={c.phone ? `Call ${c.name || c.phone}` : 'No number saved'}
+                          onClick={() => placeCall(c.phone)}
+                        >
+                          <Ic n="phone" size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {directoryHits.length ? (
+                  <div className="dres">
+                    <div className="dres-group">
+                      {directoryHits.length} match{directoryHits.length > 1 ? 'es' : ''} · directory
+                    </div>
+                    {directoryHits.map((d: any) => (
+                      <div className="dres-row" key={d.extension}>
+                        <button
+                          type="button"
+                          className="dres-pick"
+                          title={`Put ext ${d.extension} in the dialler`}
+                          onClick={() => pickSuggestion(d.extension)}
+                        >
+                          <span className="dres-av">{initialsOf(d.name)}</span>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span className="dres-n" style={{ display: 'block' }}>
+                              {d.name}
+                            </span>
+                            <span className="dres-m">
+                              {d.role} · <span className="num">ext {d.extension}</span>
+                            </span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="dres-call"
+                          aria-label={`Call ${d.name}`}
+                          title={`Call ${d.name}`}
+                          onClick={() => placeCall(d.extension)}
+                        >
+                          <Ic n="phone" size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {/* Empty space reads as "still searching". Say it found nothing. */}
+                {!contactHits.length && !directoryHits.length && /[a-z]/i.test(dial) ? (
+                  <div className="dres-none">No contact or extension matches “{dial.trim()}”.</div>
+                ) : null}
               </div>
-            ) : (
-              <div className="keypad">
-                {KEYS.map(([d, l]) => (
-                  <button type="button" className="key" key={d} onClick={() => pressKey(d)}>
-                    <b>{d}</b>
-                    <i>{l}</i>
-                  </button>
-                ))}
-              </div>
-            )}
+            ) : null}
+
+            <div className="keypad">
+              {KEYS.map(([d, l]) => (
+                <button type="button" className="key" key={d} onClick={() => pressKey(d)}>
+                  <b>{d}</b>
+                  <i>{l}</i>
+                </button>
+              ))}
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 type="button"
                 className="btn primary"
                 style={{ flex: 1 }}
+                disabled={Boolean(dialIssue)}
+                title={dialIssue || `Call ${dial}`}
                 onClick={() => placeCall(dial)}
               >
                 <Ic n="phone" />
@@ -840,7 +1050,13 @@ const StageColumn = ({
             </div>
             <div className="kv">
               <span className="k">Caller ID</span>
-              <span className="v num">{defaultCallerIdOption?.number || '—'}</span>
+              <span className="v num">
+                {defaultCallerIdOption?.number ? (
+                  <NumberWithFlag number={defaultCallerIdOption.number} />
+                ) : (
+                  '—'
+                )}
+              </span>
             </div>
             {dialpad.lastError ? (
               <div className="kv">
@@ -1012,7 +1228,10 @@ const StageColumn = ({
             <button
               type="button"
               className={`ctl ${panel === 'add-user' ? 'on' : ''}`}
-              onClick={() => setPanel(panel === 'add-user' ? null : 'add-user')}
+              onClick={() => {
+                if (panel !== 'add-user') setConsultOrigin('add');
+                setPanel(panel === 'add-user' ? null : 'add-user');
+              }}
             >
               <Ic n="plus" />
               Add
@@ -1047,27 +1266,46 @@ const StageColumn = ({
               <Ic n="rec" />
               {session?.isRecording ? 'Recording' : 'Record'}
             </button>
+            {/* Park: the switch puts the other party on hold in the company's
+                lot, reads the slot number to you (71-79) and releases your leg.
+                Anyone picks it up by dialling *7 and that number. Built 5 Sep
+                2026 in place of the Transcribe control, which duplicated the Transcript tab on the right. */}
             <button
               type="button"
               className="ctl"
-              onClick={() =>
-                session &&
-                dialpad.handleTranscription(
-                  session,
-                  session.transcriptionHasStarted === 'start' ? 'stop' : 'start',
-                )
-              }
+              disabled={!session || state !== 'active' || !socketEventsManager}
+              title="Put the other party in a parking slot for a colleague to pick up"
+              onClick={() => {
+                if (!session || !socketEventsManager) return;
+                socketEventsManager.emit('park-call', {
+                  data: {
+                    type: 'park-call',
+                    sipCallId: getSessionSipCallId(session),
+                    conferenceOwner: String(user?.user_info?.extension || '').trim(),
+                  },
+                });
+                toast.info(
+                  'Parking. Listen for the slot number, then a colleague dials *7 and that number to pick up.',
+                );
+              }}
             >
-              <Ic n="book" />
-              {session?.transcriptionHasStarted === 'start' ? 'Stop ASR' : 'Transcribe'}
+              <Ic n="pause" />
+              Park
             </button>
+            {/* a computer is always "on speaker": lit means the other side can
+                be heard, which is the normal state; pressing it silences them */}
             <button
               type="button"
-              className={`ctl ${!session?.isSpeakerOn ? 'on' : ''}`}
+              className={`ctl ${session?.isSpeakerOn !== false ? 'on' : ''}`}
               onClick={() => session && dialpad.toggleSpeakerCall(session.id)}
+              title={
+                session?.isSpeakerOn !== false
+                  ? 'Speaker on. Press to silence the other side.'
+                  : 'Speaker off. Press to hear the other side again.'
+              }
             >
               <Ic n="mega" />
-              Speaker
+              {session?.isSpeakerOn !== false ? 'Speaker' : 'Speaker off'}
             </button>
             {scriptId ? (
               <button
@@ -1099,6 +1337,51 @@ const StageColumn = ({
                   <i>{l}</i>
                 </button>
               ))}
+            </div>
+          ) : null}
+
+          {dialpad.activeSpeakFirstTarget && consultOrigin !== 'add' ? (
+            /* "Ask first" in progress: the caller is on hold while this consult
+               call runs. Until 5 Sep 2026 the only way to finish was to reopen
+               Transfer, retype the target and press "Transfer now". */
+            <div
+              className="card card-pad"
+              style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+            >
+              <span style={{ flex: 1, minWidth: 160, fontSize: 13 }}>
+                Asking <b className="num">{dialpad.activeSpeakFirstTarget}</b> first. The caller
+                is on hold.
+              </span>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() =>
+                  dialpad.activeSpeakFirstTarget &&
+                  dialpad.handleTransfer('transfer_now', dialpad.activeSpeakFirstTarget)
+                }
+              >
+                <Ic n="transfer" />
+                Complete transfer
+              </button>
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={() => {
+                  const target = dialpad.activeSpeakFirstTarget || '';
+                  const live = Object.values(dialpad.sessions || {}).filter(
+                    (s) => !isTerminalSession(s),
+                  );
+                  const consult = live.find(
+                    (s) => s.remoteNumber === target || (s.extension || '') === target,
+                  );
+                  const held = live.find((s) => s !== consult && s.isOnHold);
+                  if (consult) dialpad.endCall(consult.id);
+                  if (held) dialpad.unholdCall(held.id);
+                }}
+              >
+                <Ic n="x" />
+                Cancel, back to caller
+              </button>
             </div>
           ) : null}
 
@@ -1172,6 +1455,7 @@ const StageColumn = ({
             conference={transfer.conference}
             onClose={() => setTransfer(null)}
             onTransfer={(target, type) => {
+              if (type === 'speak_first') setConsultOrigin('transfer');
               dialpad.handleTransfer(type, target);
               setTransfer(null);
             }}

@@ -286,6 +286,35 @@ export const useCopilotAsk = (session: DialpadSession | null) => {
     sessionToken,
   );
 
+  /**
+   * Why the box is disabled, in the order the checks actually fail.
+   *
+   * Every reason but two used to fall through to "Available once a call is
+   * connected", so a live call whose agent had no AI token read as "no call".
+   * That is a misleading thing to show mid-call: an empty Copilot was
+   * investigated from the call state outwards, when the actual cause was a
+   * token the platform never issues — `getAISettingToken` is a stub that
+   * resolves `tokenId: ''` and calls nothing, so `canAsk` cannot become true
+   * until a token service exists. Naming the real blocker costs nothing and
+   * saves the next person that detour.
+   */
+  const askDisabledReason = useMemo(() => {
+    if (socketOffline) return 'Copilot is offline — the AI socket is not connected';
+    if (agentsLoading) return 'Loading AI agents…';
+    if (noAgent) return 'No AI agent available';
+    if (!session?.id) return 'Available once a call is connected';
+    if (!String(session?.AiInfo?.AiAgentId || '').trim()) return 'Select an AI agent above';
+    if (!sessionToken) return 'Copilot has no AI token for this agent';
+    return null;
+  }, [
+    socketOffline,
+    agentsLoading,
+    noAgent,
+    session?.id,
+    session?.AiInfo?.AiAgentId,
+    sessionToken,
+  ]);
+
   const ask = useCallback(
     (question: string) => {
       const text = question.trim();
@@ -350,6 +379,7 @@ export const useCopilotAsk = (session: DialpadSession | null) => {
 
   return {
     ask,
+    askDisabledReason,
     socketOffline,
     contextSummary,
     messages,

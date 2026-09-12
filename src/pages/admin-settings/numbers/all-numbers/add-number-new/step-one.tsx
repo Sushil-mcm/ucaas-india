@@ -1,7 +1,5 @@
 import CustomSelect from '@/components/custom/custom-select';
-import Loader from '@/components/custom/loader';
 import TableManager from '@/components/custom/table-manager';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGetSite } from '@/hooks/common';
@@ -15,12 +13,15 @@ import {
   getFaxDidCountryList,
   getDidGroup,
   getDidPrefixes,
+  getInventoryOptions
 } from '@/services/api';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getCompanyDefaultCountryOption } from '@/lib/company-default-country';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { featuresLookUp, featuresObj } from '../constants';
+import { isSellableNumberType, lookupInventory } from '@/lib/did-inventory';
+import NumberPicker from '@/components/numbers/number-picker';
 import { useUser } from '@/hooks/use-user';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { useWatch } from 'react-hook-form';
@@ -107,7 +108,9 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
           isFaxNumber
             ? getFaxDidCountryList({ limit: 200, page: 1 })
             : getDidCountryList({
-                limit: 100,
+                /* 200 is the API's max page size (the request layer clamps
+                   anything higher); 100 dropped countries past the first page. */
+                limit: 200,
                 page: 1,
                 filter: [
                   {
@@ -146,6 +149,10 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
           getDidPrefixes({
             country_iso: watchLocation?.value,
             region_id: watchStateProvince?.value,
+            /* Explicit max page size — the list was relying on an unknown
+               server default and area codes past it were unreachable. */
+            limit: 200,
+            page: 1,
           }),
         select: (data: any) => data?.data?.data?.result?.rows || [],
         enabled: !isFaxNumber && !!(watchLocation?.value && watchStateProvince?.value),
@@ -156,22 +163,57 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
           'getAvailableDid',
           watchLocation?.value,
           watchNumberType?.value,
+          watchStateProvince?.label,
           watchGroupId?.value,
           isFaxNumber,
         ],
-        queryFn: () =>
-          isFaxNumber
-            ? getFaxAvailableDid({
-                country_code: watchLocation?.value,
-                number_type: watchNumberType?.value,
-                did_filter_type: 'fax',
-              })
-            : getAvailableDid({
-                country_iso: watchLocation?.value,
-                region_id: watchStateProvince?.value,
-                group_type_id: [watchNumberType?.value],
-                group_id: watchGroupId?.value,
-              }),
+        /* Our own stock first, the carrier only when a state has run dry.
+           Numbers we already own can be handed over instantly; asking DIDWW
+           means a search now and an order inside the customer's checkout, which
+           is where purchases used to fail because the number had gone by the
+           time they confirmed. The fallback keeps every state buyable. */
+        queryFn: async () => {
+          if (isFaxNumber) {
+            return getFaxAvailableDid({
+              country_code: watchLocation?.value,
+              number_type: watchNumberType?.value,
+              did_filter_type: 'fax',
+            });
+          }
+
+          /* Country and number type is the whole question now. We stock a
+             handful of states, so asking somebody to choose one from a list of
+             fifty - most of which we hold nothing for - was asking a question
+             we already know the answer to. The five come back spread across
+             the states we do hold. A state is still honoured if one was
+             picked, which is what the carrier fallback below needs. */
+          const stock = await lookupInventory({
+            countryIso: watchLocation?.value,
+            numberType: watchNumberType,
+            /* No state. Scoping to whatever happened to be selected - often
+               a state we hold nothing for - is what sent these lookups to
+               the carrier. The five come back spread across our states. */
+            regionName: null,
+          });
+          if (stock.source === 'inventory') {
+            /* Shaped like a carrier response so `select` below, the table and
+               the selection handlers need no branch of their own. */
+            return { data: { data: { result: { rows: stock.rows } } } };
+          }
+
+          /* Nothing on the shelf. The carrier search needs an area code, so if
+             one has not been chosen yet there is nothing to ask for - the
+             screen keeps its existing prompt instead of erroring. */
+          if (!watchGroupId?.value) {
+            return { data: { data: { result: { rows: [] } } } };
+          }
+          return getAvailableDid({
+            country_iso: watchLocation?.value,
+            region_id: watchStateProvince?.value,
+            group_type_id: [watchNumberType?.value],
+            group_id: watchGroupId?.value,
+          });
+        },
         select: (data: any) => {
           const result = data?.data?.data?.result ?? data?.data?.result ?? data?.result;
 
@@ -181,9 +223,13 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
 
           return result?.rows || [];
         },
+        /* Stock is held per state, not per area code, so this may now answer
+           before an area code has been chosen. Toll-free has no state at all. */
+        /* Country + type is enough to ask the shelf. Only the carrier fallback
+           needs a state and an area code. */
         enabled: isFaxNumber
           ? !!(watchLocation?.value && watchNumberType?.value)
-          : !!watchGroupId?.value,
+          : !!(watchLocation?.value && watchNumberType?.value),
       },
     ],
   });
@@ -294,17 +340,12 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
   //   }
   // };
 
-  const handleCheckboxChange = useCallback(
-    (e: any) => {
-      const value = JSON.parse(e.target.value);
-      if (e.target.checked) {
-        setValue('virtualNumbers', [value], { shouldValidate: true });
-      } else {
-        setValue('virtualNumbers', [], { shouldValidate: true });
-      }
-    },
-    [setValue],
-  );
+
+  /* True once the numbers on screen came from our own stock. The state and
+     area-code pickers exist only to narrow a carrier search; with stock there
+     is nothing to narrow, so they are hidden and the table shows immediately. */
+  const servedFromStock = Boolean((didAvailableData || [])[0]?.from_inventory);
+  const hideLocationPickers = hideStateAreaCode || servedFromStock;
 
   const availableDidSignature = useMemo(
     () =>
@@ -314,6 +355,7 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
     [didAvailableData],
   );
   const prevAvailableDidSignatureRef = useRef('');
+
 
   useEffect(() => {
     if (prevAvailableDidSignatureRef.current !== availableDidSignature) {
@@ -349,7 +391,7 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
 
   const isShowTable = isFaxNumber
     ? false
-    : hideStateAreaCode
+    : hideStateAreaCode || servedFromStock
       ? true
       : watchLocation?.region_available
         ? watchStateProvince?.value && watchAreaCode?.value
@@ -428,6 +470,37 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
       }));
   }, [isFaxNumber, locationData]);
 
+  /* We stock the United States and nothing else, so the country picker is a
+     question with one answer. Ask the shelf once on mount: if we hold anything,
+     United States is selected for the customer and the picker is not shown. An
+     empty shelf brings it straight back, because then the carrier - which does
+     sell other countries - is doing the work. */
+  const { data: inventoryOptions } = useQuery({
+    queryKey: ['didInventoryOptions', 'US'],
+    queryFn: () => getInventoryOptions({ country_iso: 'US' }),
+    select: (res: any) => res?.data?.data?.result ?? res?.data?.result ?? null,
+    enabled: !isFaxNumber,
+    staleTime: 60000,
+  });
+  const hasUsStock = Boolean(
+    (inventoryOptions?.types || []).some((t: any) => Number(t?.total || 0) > 0),
+  );
+  const usOption = useMemo(
+    () => (locationOptions || []).find((o: any) => o?.value === 'US'),
+    [locationOptions],
+  );
+
+  useEffect(() => {
+    if (!hasUsStock || !usOption || watchLocation?.value) return;
+    setValue('location', usOption, { shouldValidate: true });
+  }, [hasUsStock, usOption, watchLocation?.value, setValue]);
+
+  /* Hidden only while the United States is the selection and we have stock for
+     it - never hidden in a way that could strand somebody on a country they
+     cannot change. */
+  const hideCountryPicker = hasUsStock && watchLocation?.value === 'US';
+
+
   /* Opens the Location box on the company's default country. Seeded once per
      fax mode and only once the country list has arrived, because the seed has
      to be a country this account can actually buy in. A country the admin has
@@ -463,7 +536,7 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
             },
             watchLocation?.fax_number_types?.local && { name: 'Local', id: 'local' },
           ].filter(Boolean)
-        : numberTypesData
+        : (numberTypesData || []).filter(isSellableNumberType)
       )?.map((item: any) => ({
         label: item?.name,
         value: item?.id,
@@ -561,7 +634,12 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
           </div>
           <div className="flex w-full items-center gap-3">
             <div className="flex w-full flex-col gap-4 md:flex-row">
-              <div className="relative flex w-full gap-1 md:w-1/2">
+              {/* One country in stock means one possible answer, so the picker
+                  is not shown. It returns the moment we have no stock, because
+                  the carrier does sell other countries. */}
+              <div
+                className={`relative flex w-full gap-1 md:w-1/2 ${hideCountryPicker ? 'hidden' : ''}`}
+              >
                 <CustomSelect
                   label="Location"
                   options={locationOptions}
@@ -631,7 +709,7 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
             </div>
           </div>
         </div>
-        {hideStateAreaCode
+        {hideLocationPickers
           ? null
           : watchLocation?.region_available &&
             watchNumberType?.value && (
@@ -728,79 +806,54 @@ const StepOne = ({ formInstance, setStatus, setFeatures, isFaxNumber, setIsFaxNu
               </div>
             ) : null}
 
-            <div className={`w-full pt-2 lg:pt-7 ${isFaxNumber ? '' : 'lg:w-1/4'}`}>
-              {(isFaxNumber ? watchNumberType?.value : watchGroupId?.value) && (
+            {/* Choosing the number. A wall of large tiles, because people scan
+                for one that reads well rather than working down a list - and
+                the same component runs on sign-up, so a customer buying their
+                second number recognises the screen. */}
+            <div className="w-full pt-2 lg:pt-7">
+              {(isFaxNumber ? watchNumberType?.value : (watchGroupId?.value || servedFromStock)) && (
                 <>
-                  {!isFetching ? (
-                    didAvailableData?.length > 0 && (
-                      <div className="pb-1 flex flex-col gap-0.5 px-3">
-                        <h6 className="flex gap-2 text-sm font-semibold">
-                          {isFaxNumber ? 'Available Fax Number' : 'Available DID Number'}
-                        </h6>
-                        {errors?.virtualNumbers?.message && (
-                          <p className="text-red-500 font-medium text-xs">
-                            {errors.virtualNumbers.message}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex items-center justify-center py-3">
-                      <Loader variant="blue" size="md" />
-                    </div>
+                  {errors?.virtualNumbers?.message && (
+                    <p className="pb-2 text-center text-xs font-medium text-red-500">
+                      {errors.virtualNumbers.message}
+                    </p>
                   )}
-                  <>
-                    {!isFetching ? (
-                      didAvailableData?.length ? (
-                        <div className="flex flex-col gap-2 p-3">
-                          {didAvailableData?.slice(0, 10)?.map((item: any) => {
-                            const didNumber = isFaxNumber ? item?.phone_number : item?.number;
-                            const didValue = isFaxNumber ? item?.phone_number : item?.id;
-                            const isChecked = watchVirtualNumbers?.some(
-                              (number: any) => number?.name === didNumber,
-                            );
-                            return (
-                              <div
-                                className="flex gap-1.5 w-full items-center"
-                                key={`${didValue}-${didNumber}`}
-                              >
-                                <Checkbox
-                                  className="cursor-pointer"
-                                  value={JSON.stringify({
-                                    name: didNumber,
-                                    value: didValue,
-                                  })}
-                                  onCheckedChange={(checked: boolean) => {
-                                    const syntheticEvent = {
-                                      target: {
-                                        checked,
-                                        value: JSON.stringify({
-                                          name: didNumber,
-                                          value: didValue,
-                                        }),
-                                      },
-                                    };
-                                    handleCheckboxChange(syntheticEvent);
-                                  }}
-                                  checked={isChecked}
-                                  id={didNumber}
-                                />
-                                <Label className="cursor-pointer" htmlFor={didNumber}>
-                                  {didNumber}
-                                </Label>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="text-red-500 text-sm font-medium">
-                            {isFaxNumber ? 'No fax number found' : 'No DID Found'}
-                          </div>
-                        </div>
-                      )
-                    ) : null}
-                  </>
+                  <NumberPicker
+                    loading={isFetching}
+                    numbers={(didAvailableData || []).map((item: any) => ({
+                      id: String(isFaxNumber ? item?.phone_number : item?.id),
+                      number: String(isFaxNumber ? item?.phone_number : item?.number),
+                      area_code: item?.area_code ?? null,
+                      area_name: item?.area_name ?? null,
+                      region_name: item?.region_name ?? null,
+                      from_inventory: Boolean(item?.from_inventory),
+                    }))}
+                    selectedId={
+                      watchVirtualNumbers?.length ? String(watchVirtualNumbers[0]?.value) : null
+                    }
+                    onSelect={(item) => {
+                      /* One number at a time here, matching what the wizard
+                         already enforced through handleCheckboxChange. */
+                      setValue('virtualNumbers', [{ name: item.number, value: item.id }], {
+                        shouldValidate: true,
+                      });
+                    }}
+                    types={
+                      isFaxNumber
+                        ? undefined
+                        : numberTypeOptions.map((t: any) => ({ label: t.label, value: t.value }))
+                    }
+                    selectedType={watchNumberType?.value ? watchNumberType : null}
+                    onTypeChange={(t) => {
+                      setValue('numberType', t, { shouldValidate: true });
+                      setValue('virtualNumbers', [], { shouldValidate: false });
+                    }}
+                    emptyMessage={
+                      isFaxNumber
+                        ? 'No fax number is available for this location.'
+                        : 'No number is available for this selection.'
+                    }
+                  />
                 </>
               )}
             </div>

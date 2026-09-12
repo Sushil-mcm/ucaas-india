@@ -58,11 +58,15 @@ import {
  *   where a true flag copies this whole voicemail_pin block onto a user when an
  *   admin applies this record as their template.
  *
- * `voicemail_to_text` — STORED. Nothing reads the company copy except the
- *   template-copy path above. The per-person editors
- *   (src/components/common-settings/voicemail-dialog/index.tsx:113-115) read
- *   and write each person's own value, never this one, so changing it here
- *   turns transcription on for nobody who already exists.
+ * `voicemail_to_text` — REAL since 10 Sep 2026. default-api's
+ *   /api/internal/voicemail-process (called by the switch's uploader after
+ *   every stored message) reads this company copy and the person's own
+ *   (settings.voicemail_pin.voicemail_to_text, written by the per-person
+ *   editor src/components/common-settings/voicemail-dialog/index.tsx). The
+ *   rule, same as every other company rule: locked (`override`) -> the
+ *   company value for everyone; otherwise the person's own value when they
+ *   have set one, else this one; nothing set anywhere -> on. The template-copy
+ *   path above still seeds new people from it.
  *
  * `value` (the PIN) — STORED, AND NO LONGER EDITED HERE. The control was taken
  *   off this screen because nothing on the switch ever asks for a PIN: grepped
@@ -443,12 +447,12 @@ const CompanyVoicemail = () => {
             icon={<ScrollText className="h-5 w-5" />}
             title="Voicemail to text"
             description="Whether a message is written out as text as well as left as audio."
-            status="app-only"
-            note="Works in this app, in one place: setting somebody up from these company settings. It does not change anyone already set up."
+            status="active"
+            note="Read for every new message. When the rule is locked this applies to everyone; otherwise a person's own Voicemail to text switch wins and this is the default for people who have not chosen. The text shows under Reports > Voicemails and in the voicemail email."
           >
             <SettingRow
               label="Write messages out as text"
-              description="Stored as YES or NO, the same wording the per-person voicemail dialog writes, so both screens agree on what they are reading."
+              description="On — each message is transcribed after it is saved and can be read next to the recording. Off — messages are kept as audio only."
               control={
                 <Switch
                   checked={form.voicemail_to_text}

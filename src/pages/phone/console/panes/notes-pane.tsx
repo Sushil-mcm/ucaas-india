@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import moment from 'moment';
 import { addDispositionInLeadContatc, getCallQueueNotesList } from '@/services/api';
 import { handleAlert } from '@/lib/utils';
+import { answersToRows } from '@/lib/script-inputs';
 import { useUser } from '@/hooks/use-user';
 import Loader from '@/components/custom/loader';
 import type { DialpadSession } from '@/context/dialpad-context';
@@ -52,7 +53,21 @@ const parseNotes = (response: any) => {
   const rows = candidates.find((item) => Array.isArray(item)) || [];
   const all = rows.flatMap((row: any) => {
     if (!row || typeof row !== 'object') return [];
-    if (Array.isArray(row?.notes) && row.notes.length) return row.notes;
+    /* Script answers saved with that call ride along as one read-only entry. */
+    const answerRows = answersToRows(row?.script_answers);
+    const answers = answerRows.length
+      ? [
+          {
+            kind: 'script_answers',
+            rows: answerRows,
+            name: row?.disposition?.name || row?.disposition?.fullName || 'Script',
+            createdAt: row?.updatedAt || row?.createdAt || null,
+            sipcallId: row?.sipcallId || row?.sipCallId || null,
+          },
+        ]
+      : [];
+    if (Array.isArray(row?.notes) && row.notes.length) return [...row.notes, ...answers];
+    if (answers.length) return answers;
     return [row];
   });
   return all.sort(
@@ -64,6 +79,31 @@ const parseNotes = (response: any) => {
 const NoteCard = ({ note }: { note: any }) => {
   const who = String(note?.name || note?.user_name || 'Someone').trim();
   const at = note?.createdAt && moment(note.createdAt).isValid() ? moment(note.createdAt) : null;
+  if (note?.kind === 'script_answers') {
+    /* Read-only: what the agent filled into the script on that call. */
+    return (
+      <div className="note">
+        <div className="note-head">
+          <span className="note-av">
+            <Ic n="check" size={11} />
+          </span>
+          <span className="note-who">Script answers</span>
+          <span className="note-when num" title={at ? at.format('DD MMM YYYY, HH:mm') : ''}>
+            {at ? at.format('DD MMM · HH:mm') : ''}
+          </span>
+        </div>
+        <div className="note-body">
+          {(note.rows || []).map((row: any) => (
+            <div key={row.key} style={{ display: 'flex', gap: 8 }}>
+              <span style={{ opacity: 0.7, minWidth: 110 }}>{row.label}</span>
+              <span>{row.text}</span>
+            </div>
+          ))}
+        </div>
+        {who && who !== 'Script' ? <div className="note-src">{who}</div> : null}
+      </div>
+    );
+  }
   return (
     <div className="note">
       <div className="note-head">

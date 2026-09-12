@@ -1,5 +1,4 @@
 import {
-  requiredAllString,
   requiredEmail,
   requiredExtension,
   requiredString,
@@ -11,8 +10,10 @@ export const schemaValidationForAddUser = yup.object().shape({
     .array()
     .of(
       yup.object().shape({
-        first_name: requiredString('First name', 3, 50),
-        last_name: requiredString('Last name', 3, 50),
+        /* One letter is a name. "Li", "Ng", "Xu", "Bo" and "Oz" are people, and
+           a three-character minimum turned them away at the door. */
+        first_name: requiredString('First name', 1, 50),
+        last_name: requiredString('Last name', 1, 50),
         email: requiredEmail(),
         role: yup
           .object({
@@ -21,18 +22,26 @@ export const schemaValidationForAddUser = yup.object().shape({
           })
           .required('Role is required'),
         extension: requiredExtension(),
-        phone: requiredAllString('Phone')
-          .min(9, 'Invalid Number Format')
-          .max(15, 'Invalid Number Format'),
+        /* Optional. The platform gives a person their work number; demanding a
+           personal one before anybody can be invited only made admins invent
+           them. Checked for shape only when something was actually typed. */
+        phone: yup
+          .string()
+          .transform((value) => String(value ?? '').trim())
+          .test(
+            'phone-length',
+            'Invalid Number Format',
+            (value) => !value || (value.length >= 9 && value.length <= 15),
+          ),
       }),
     )
-    .min(1, 'At least one user is required'),
+    .min(1, 'Add at least one person'),
   site: yup
     .object({
-      label: requiredString('Site'),
-      value: requiredString('Site'),
+      label: requiredString('Location'),
+      value: requiredString('Location'),
     })
-    .required('Site is required'),
+    .required('Location is required'),
 });
 
 export const passwordValidationSchema = yup.object().shape({
@@ -71,5 +80,5 @@ export const schemaValidationForAddIndividualPassword = yup.object().shape({
           .oneOf([yup.ref('password')], 'Passwords must match'),
       }),
     )
-    .min(1, 'At least one user is required'),
+    .min(1, 'Add at least one person'),
 });

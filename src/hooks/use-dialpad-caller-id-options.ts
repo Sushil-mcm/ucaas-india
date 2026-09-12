@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
 import { isGroupCallerIdOption } from '@/hooks/use-group-caller-id-options';
+import {
+  isCompanyCallerIdOption,
+  useCompanyCallerIdOptions,
+} from '@/hooks/use-company-caller-id-options';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { useGetAssignedDIDNumbers } from './common';
@@ -76,11 +80,21 @@ const isUnitedStatesOption = (option: CallerIdOption) => {
   return digits.length === 10 && option.country?.toUpperCase() === 'US';
 };
 
+/* `number` must be empty, not a placeholder sentence — every caller checks
+   `option.number` (or `.number || fallback`) to tell "there is a real number"
+   from "there is not", and a non-empty string here reads as the former. That
+   silently sent the literal text "No caller id" as an outbound X-CallerId
+   header on a callback with no assigned DID (index.tsx's callbackCallerId
+   fallback never ran), and rendered it — whitespace stripped by
+   formatPhoneNumber, since it looked like a number — as "Nocallerid" in the
+   stage column's "Calling as" chip and Ready state row. `id: 'no-caller-id'`
+   is the actual sentinel; every consumer already checks it (or now can) and
+   none of them need `number` to be truthy. */
 const EMPTY_CALLER_ID_OPTION: CallerIdOption = {
   id: 'no-caller-id',
   label: 'Caller ID',
   country: 'US',
-  number: 'No caller id',
+  number: '',
 };
 
 const getCallerIdErrorMessage = (error: unknown) => {
@@ -107,12 +121,23 @@ export const useDialpadCallerIdOptions = () => {
     },
   });
 
+  /* US numbers are dropped rather than never built, so the console warning
+     below still reports what the account actually holds. */
+  const assignedOptions = useMemo(
+    () =>
+      toCallerIdOptions(assignedDIDList as AssignedDid[]).filter(
+        (option) => !isUnitedStatesOption(option),
+      ),
+    [assignedDIDList],
+  );
+  const hasAssignedNumber = assignedOptions.length > 0;
+  /* A person with no number of their own gets the company's spare numbers,
+     here rather than in one screen, so the dialpad, the console's "Calling
+     as" chip and the header sent on the call all agree. Nothing is fetched
+     while their own list is still loading, or once it is known to have one. */
+  const { companyCallerIdOptions } = useCompanyCallerIdOptions(!isLoading && !hasAssignedNumber);
+
   const { callerIdOptions, defaultCallerIdOption, isCallerIdFallback } = useMemo(() => {
-    /* US numbers are dropped rather than never built, so the console warning
-       below still reports what the account actually holds. */
-    const assignedOptions = toCallerIdOptions(assignedDIDList as AssignedDid[]).filter(
-      (option) => !isUnitedStatesOption(option),
-    );
     const noCallerIdOption: CallerIdOption = {
       ...EMPTY_CALLER_ID_OPTION,
       country: user?.countryInfo?.alpha2code || 'US',
@@ -146,9 +171,18 @@ export const useDialpadCallerIdOptions = () => {
 
     if (assignedOptions.length === 0) {
       /* No number assigned (or every one was a filtered-out US number) - the
-         account genuinely has nothing to call from yet. Get one from Admin >
-         Numbers > Add Number rather than silently defaulting to a shared
-         placeholder number. */
+         account has nothing of its own to call from. The company's spare
+         numbers stand in first; only when there are none either is the
+         answer "get one from Admin > Numbers > Add Number". */
+      if (companyCallerIdOptions.length > 0) {
+        return {
+          callerIdOptions: companyCallerIdOptions,
+          defaultCallerIdOption: companyCallerIdOptions[0],
+          /* Nobody chose this number for them either - flagged the same way
+             as an unchosen first-in-list number. */
+          isCallerIdFallback: true,
+        };
+      }
       return {
         callerIdOptions: [noCallerIdOption],
         defaultCallerIdOption: noCallerIdOption,
@@ -164,20 +198,28 @@ export const useDialpadCallerIdOptions = () => {
          the call rather than after it. */
       isCallerIdFallback: true,
     };
-  }, [assignedDIDList, user?.countryInfo?.alpha2code, user?.user_info?.caller_id]);
+  }, [
+    assignedOptions,
+    companyCallerIdOptions,
+    user?.countryInfo?.alpha2code,
+    user?.user_info?.caller_id,
+  ]);
 
   return {
     callerIdOptions,
     defaultCallerIdOption,
     isCallerIdFallback,
     isCallerIdLoading: isLoading,
+    /* False when the list is only the 'no caller id' placeholder. The dialpad
+       uses it to decide whether to go looking for a company number instead. */
+    hasAssignedNumber,
     isCallerIdUpdating,
     updateCallerIdSelection: async (option: CallerIdOption) => {
       if (!option || option.id === EMPTY_CALLER_ID_OPTION.id) return;
       /* A shared group number is for one call, never someone's saved default.
          The dialer already skips this call for those, but the guard lives here
          too so a future caller cannot persist one by accident. */
-      if (isGroupCallerIdOption(option)) return;
+      if (isGroupCallerIdOption(option) || isCompanyCallerIdOption(option)) return;
       /* Not an assigned DID — nothing to persist as the account's default. */
       if (option.id === TWILIO_CALLER_ID_OPTION.id) return;
       await mutateCallerId({ caller_id: normalizeDidNumber(option.number) });

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { campaignWindow } from '@/lib/campaign-window';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import moment from 'moment';
@@ -9,14 +10,26 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
 import { capitalizeFirstLetter, convertDateFormateApis, handleAlert } from '@/lib/utils';
-import { campaignAnalytics, campaignList, deleteCampaign, playPauseCampaign } from '@/services/api';
+import {
+  allNumbersList,
+  campaignAnalytics,
+  campaignList,
+  deleteCampaign,
+  getCampaignActivtyLogs,
+  getCampaignDetail,
+  playPauseCampaign,
+} from '@/services/api';
+import { findDidRow, numberRoutedToCampaign, restoreNumberRouting } from './inbound-routing';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import useDebounce from '@/hooks/use-debounce';
+import { SocketEvents } from '@/context/socket-events-context';
+import { HEALTH_LABEL } from '@/lib/campaign-dial-mode';
 import type { IAutoDialer } from '../power-predictive/campaign-list';
 
 import AddEditCampaign from './add-edit-campaign';
 import AgentDetailsModal from './modal/agent-details-modal';
 import { DIALER_TYPE } from './add-edit-campaign/consts';
+import type { CampaignAnalytics } from './campaign-ui';
 import {
   DIAL_METHOD_LABEL,
   OutcomeBar,
@@ -46,6 +59,120 @@ import './campaign.css';
  * showing a plausible number nobody computed.
  */
 
+/**
+ * The outcome counts for one campaign, asked of the server rather than read
+ * from the cached snapshot.
+ *
+ * `campaign_analytics` is a document the API rewrites only when something asks
+ * it to, so a campaign nobody has refreshed carries whatever was true last
+ * time — which is why rows showed a solid "no answer" bar and 0 answered while
+ * their own contacts had been reached. The call-statistics endpoint counts the
+ * leads themselves at the moment of asking.
+ *
+ * One query per campaign, shared by the outcome bar and the Answered count
+ * through the same cache key.
+ */
+const useCampaignOutcomeStates = (campaignId: string) =>
+  useQuery({
+    queryKey: ['campaignOutcomeStates', campaignId],
+    queryFn: () =>
+      getCampaignActivtyLogs({
+        page: 1,
+        limit: 1,
+        filters: [{ key: 'campaign_uuid', value: campaignId }],
+      }),
+    select: (response: any) => response?.data?.data?.result?.states || null,
+    enabled: Boolean(campaignId),
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+/**
+ * The server's own state names, in the shape the outcome bar reads.
+ *
+ * `DialedButNotAnswered` is every lead with an outcome that is not ANSWERED,
+ * so no-answer, busy, failed and machine all land in the amber segment — the
+ * same grouping the cached analytics used.
+ */
+const analyticsFromStates = (states: any): CampaignAnalytics | null => {
+  if (!states) return null;
+  const assigned = num(states.totalCall);
+  const dialed = num(states.DialedCall);
+  const answered = num(states.connected);
+  const dnc = num(states.dnc);
+  return {
+    assignedLeads: assigned,
+    dialedLeads: dialed,
+    answeredLeads: answered,
+    totalCallNotAnswered: num(states.DialedButNotAnswered),
+    totalDnc: dnc,
+    /* "Still to call" is the server's own count of leads that are scheduled,
+       in progress or booked for a callback and not DNC - the same test that
+       keeps a campaign running - so "N left" here agrees with the agent's card
+       and the monitor. A lead reached once and due to be tried again counts as
+       left; the remainder of the three outcomes would have said 0. Rows from a
+       server that does not send the figure fall back to that remainder. */
+    ...(states.PendingCall == null ? {} : { pendingLeads: num(states.PendingCall) }),
+  };
+};
+
+/** The outcome bar on a row, drawn from the live counts once they arrive. */
+const OutcomeCell = ({ campaign }: { campaign: any }) => {
+  const { data: states } = useCampaignOutcomeStates(String(campaign?._id || ''));
+  return <OutcomeBar analytics={analyticsFromStates(states) || campaign?.campaignAnalytics} />;
+};
+
+/**
+ * How many of this campaign's leads were actually answered.
+ *
+ * The column used to read `campaignAnalytics.answeredLeads` and show it as a
+ * percentage. Two things were wrong with that. `campaign_analytics` is a
+ * SNAPSHOT the API rewrites when somebody asks it to — a campaign nobody has
+ * refreshed carries whatever was true the last time, which is why rows sat at
+ * 0% while their bar said 100% dialled. And a percentage answers a question
+ * about rate when the question being asked is "how many people did we reach".
+ *
+ * So this asks the call-statistics endpoint instead, which counts the leads
+ * themselves — `systemDisposition === "ANSWERED"` — at the moment of asking.
+ * The cached figure is shown until that lands, so the cell is never blank.
+ */
+const AnsweredCount = ({
+  campaign,
+  onOpen,
+}: {
+  campaign: any;
+  onOpen: (campaign: any) => void;
+}) => {
+  const campaignId = String(campaign?._id || '');
+  const cached = num(campaign?.campaignAnalytics?.answeredLeads);
+  const { data: states } = useCampaignOutcomeStates(campaignId);
+  const answered = states ? num(states.connected) : cached;
+
+  if (!answered) {
+    return (
+      <span className="num" style={{ fontWeight: 800, fontSize: 13, color: 'var(--ink-4)' }}>
+        0
+      </span>
+    );
+  }
+
+  return (
+    <CustomTooltip text="Leads that answered — open them" side="top">
+      <button
+        type="button"
+        className="lnk num"
+        style={{ fontWeight: 800, fontSize: 13 }}
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpen(campaign);
+        }}
+      >
+        {fmt(answered)}
+      </button>
+    </CustomTooltip>
+  );
+};
+
 export interface ModalState {
   open: boolean;
   data: any[];
@@ -56,7 +183,7 @@ const STATUS_FILTERS: Array<[string, string]> = [
   ['ALL', 'All'],
   ['PROCESSING', 'Running'],
   ['PAUSE', 'Paused'],
-  ['NEW', 'Scheduled'],
+  ['NEW', 'Not started'],
   ['COMPLETED', 'Completed'],
 ];
 
@@ -65,6 +192,7 @@ const MODE_FILTERS: Array<[string, string]> = [
   [DIALER_TYPE.PREVIEW, 'Preview'],
   [DIALER_TYPE.NORMAL, 'Progressive'],
   [DIALER_TYPE.PREDICTIVE, 'Predictive'],
+  [DIALER_TYPE.INBOUND, 'Inbound'],
 ];
 
 /**
@@ -102,6 +230,43 @@ const Campaign = ({
     selectedCampaign: null,
   });
   const [refreshingCampaignIds, setRefreshingCampaignIds] = useState<Record<string, boolean>>({});
+  const { socketEventsManager } = useContext(SocketEvents);
+  /* The dialer service pushes a board per running campaign every few seconds
+     on "campaign-live-stats". Kept here by campaign id so each row can show
+     what it is doing right now; a board older than 30 s is treated as gone. */
+  const [liveBoards, setLiveBoards] = useState<Record<string, { board: any; at: number }>>({});
+  useEffect(() => {
+    if (!socketEventsManager) return;
+    const onLive = (payload: any) => {
+      const id = String(payload?.campaignId || '');
+      if (!id) return;
+      setLiveBoards((prev) => ({ ...prev, [id]: { board: payload, at: Date.now() } }));
+    };
+    const onState = () => {
+      queryClient.invalidateQueries({ queryKey: ['getCampaignListForPreview'] });
+      queryClient.invalidateQueries({ queryKey: ['campaignListForKpis'] });
+    };
+    const onAnalytics = (payload: any) => {
+      const id = String(payload?.campaignId || '');
+      if (!id) return;
+      mutateCampaignAnalytics({ campaignId: id });
+      /* The row's bar and Answered count are counted live, not read from the
+         snapshot that mutation rewrites; they need asking again too. */
+      queryClient.invalidateQueries({ queryKey: ['campaignOutcomeStates', id] });
+    };
+    socketEventsManager.on('campaign-live-stats', onLive);
+    socketEventsManager.on('campaign-state-update', onState);
+    socketEventsManager.on('campaign-analytics-updated', onAnalytics);
+    return () => {
+      socketEventsManager.off('campaign-live-stats', onLive);
+      socketEventsManager.off('campaign-state-update', onState);
+      socketEventsManager.off('campaign-analytics-updated', onAnalytics);
+    };
+  }, [socketEventsManager]);
+  const liveBoardFor = (id: string) => {
+    const entry = liveBoards[String(id)];
+    return entry && Date.now() - entry.at < 30000 ? entry.board : null;
+  };
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<IAutoDialer | null>(null);
 
   /* ── aggregates for the KPI strip ────────────────────────────────────
@@ -154,18 +319,78 @@ const Campaign = ({
   };
 
   const { mutate: mutateStatus } = useMutation({
-    mutationFn: playPauseCampaign,
+    mutationFn: (payload: any) => playPauseCampaign(payload),
     onSuccess: (data: any, variables: any) => {
       if (data?.status !== 200) return;
       invalidateCampaigns();
       if (variables?.campaignStatus === 'RESCHEDULED') {
         handleAlert({ text: 'Campaign has been rescheduled successfully', type: 'success' });
+        return;
+      }
+      /* Start and pause leave you on the list.
+         Starting used to navigate to the live board, which is a different job:
+         this button decides whether the campaign is running - whether its
+         agents can pick it up and it begins dialling - and being thrown onto
+         another page every time made pausing and restarting a few campaigns in
+         a row unusable. The eye button is how you open the board.
+         Said out loud instead, because a row changing its own status chip is
+         easy to miss. */
+      if (variables?.campaignStatus === 'PROCESSING') {
+        /* Starting a campaign outside its calling hours used to say "Campaign
+           started. Agents can now join and start dialling" and then, a beat
+           later, pop up "has stopped: calling hours ended". Both were on screen
+           at once and the first one was simply untrue - the engine pauses it
+           again immediately, so no agent can dial anything.
+           The window is decided from the campaign's own hours and timezone, the
+           same judgement the engine makes, so the two agree. Closed: raise the
+           hours notice this browser already knows how to show, and say nothing
+           about starting. */
+        const startedCampaign = (Array.isArray(allCampaigns) ? allCampaigns : []).find(
+          (row: any) => String(row?._id || '') === String(variables?.campaignId || ''),
+        );
+        const window = startedCampaign ? campaignWindow(startedCampaign) : null;
+        if (window && !window.open) {
+          globalThis.dispatchEvent?.(
+            new CustomEvent('mcm:campaign-hours-closed', { detail: startedCampaign }),
+          );
+        } else {
+          handleAlert({
+            text: 'Campaign started. Agents assigned to it can now join and start dialling.',
+            type: 'success',
+          });
+        }
+      } else if (variables?.campaignStatus === 'PAUSE') {
+        handleAlert({ text: 'Campaign paused. No new calls will be placed.', type: 'success' });
       }
     },
   });
 
   const { mutate: mutateDeleteCampaign, isPending: isPendingDeleteCampaign } = useMutation({
-    mutationFn: deleteCampaign,
+    /* A deleted campaign must not keep a company number pointed at a queue
+       that no longer exists: put the number's old rule back first. */
+    mutationFn: async (id: string) => {
+      try {
+        const detail = (await getCampaignDetail({ campaignId: id }))?.data?.data?.result;
+        const number = detail?.settings?.inbound?.did_number || (detail?.callerId || [])[0];
+        if (number && detail?.queue_uuid) {
+          const rows =
+            (await allNumbersList({ page: 1, limit: 1000 }))?.data?.data?.result?.rows || [];
+          const didRow = findDidRow(rows, number);
+          if (didRow && numberRoutedToCampaign(didRow, detail)) {
+            await restoreNumberRouting(
+              didRow,
+              detail?.settings?.inbound?.previous_business_hours || null,
+            );
+          }
+        }
+      } catch (error: any) {
+        handleAlert({
+          text: `The number's routing could not be put back: ${error?.message || 'unknown error'}`,
+          type: 'warning',
+        });
+      }
+      return deleteCampaign(id);
+    },
     onSuccess: (data: any) => {
       if (!data?.data?.success) return;
       handleAlert({
@@ -224,17 +449,63 @@ const Campaign = ({
   const handleNavigateToCallLogs = (type: string, data: any) =>
     navigate('/campaign/all-campaigns/compaign-call-logs', { state: { type, data } });
 
+  /* The id also goes in the URL. Router state alone does not survive a reload
+     or a pasted link, and the board would then have no campaign to show. */
   const openMonitor = (data: any) =>
-    navigate('/campaign/all-campaigns/compaign-record', {
-      state: { campaignDetails: data, campaignId: data?._id },
-    });
+    navigate(
+      `/campaign/all-campaigns/compaign-record?campaignId=${encodeURIComponent(String(data?._id || ''))}`,
+      { state: { campaignDetails: data, campaignId: data?._id } },
+    );
 
   /* ── columns ──────────────────────────────────────────────────────── */
   const columns: any = [
     {
       header: 'Status',
       accessorKey: 'campaignStatus',
-      cell: ({ row }: any) => <StatusPill status={row?.original?.campaignStatus} />,
+      cell: ({ row }: any) => {
+        const board = liveBoardFor(row?.original?._id);
+        const health = board?.health?.state ? HEALTH_LABEL[board.health.state] : null;
+        if (!board || !health)
+          return (
+            <StatusPill
+              status={row?.original?.campaignStatus}
+              dialMethod={row?.original?.dialMethod}
+            />
+          );
+        const tone =
+          health.tone === 'good'
+            ? 'pos'
+            : health.tone === 'crit'
+              ? 'neg'
+              : health.tone === 'warn'
+                ? 'warn'
+                : 'neu';
+        return (
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}
+          >
+            <span
+              className={`tag ${tone}`}
+              /* The server's own sentence when it has one; otherwise the long
+                 form of the label, which the chip itself no longer has room
+                 for. Never an empty tooltip. */
+              title={
+                board?.health?.reason ||
+                (board?.health?.state === 'agent_driven'
+                  ? 'Agents dial from their own records; the system does not dial for them.'
+                  : health.label)
+              }
+            >
+              {health.tone === 'good' ? <span className="dot green" /> : null}
+              {health.label}
+            </span>
+            <span className="src num">
+              {num(board?.calls?.linesInUse)} call{num(board?.calls?.linesInUse) === 1 ? '' : 's'}{' '}
+              up · {num(board?.agents?.idle)} idle of {num(board?.agents?.total)}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: 'Campaign',
@@ -306,20 +577,30 @@ const Campaign = ({
         const campaignId = data?._id;
         const isRefreshing = !!refreshingCampaignIds[campaignId];
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 170 }}>
-            <div style={{ flex: 1, minWidth: 110 }}>
-              <OutcomeBar analytics={data?.campaignAnalytics} />
+          <div className="outcomecell">
+            <div style={{ flex: 1, minWidth: 100 }}>
+              <OutcomeCell campaign={data} />
             </div>
-            <CustomTooltip text="Refresh analytics" side="top">
+            {/* Sits with the bar it refreshes, at the same weight as the row's
+                other icon buttons. It was a lone full-strength circle floating
+                between two columns, which read as a control belonging to
+                neither. */}
+            <CustomTooltip text="Refresh these figures" side="top">
               <button
                 type="button"
-                className="mini ic"
+                className="mini ic refreshbtn"
                 disabled={isRefreshing || !campaignId}
                 onClick={(event) => {
                   event.stopPropagation();
                   if (!campaignId || isRefreshing) return;
                   setRefreshingCampaignIds((prev) => ({ ...prev, [campaignId]: true }));
                   mutateCampaignAnalytics({ campaignId });
+                  /* The bar and the Answered count read the live counts, not
+                     the snapshot this mutation rewrites, so they have to be
+                     asked again as well. */
+                  queryClient.invalidateQueries({
+                    queryKey: ['campaignOutcomeStates', campaignId],
+                  });
                 }}
               >
                 <Ic n="refresh" size={12} className={isRefreshing ? 'pulsing' : ''} />
@@ -331,25 +612,14 @@ const Campaign = ({
     },
     {
       header: 'Answered',
-      accessorKey: 'answeredPercentage',
+      accessorKey: 'answeredLeads',
       enableSorting: false,
-      cell: ({ row }: any) => {
-        const { answered, dialed } = readOutcomes(row?.original?.campaignAnalytics);
-        if (!dialed) return <span style={{ color: 'var(--ink-4)' }}>—</span>;
-        return (
-          <button
-            type="button"
-            className="lnk num"
-            style={{ fontWeight: 800, fontSize: 13 }}
-            onClick={(event) => {
-              event.stopPropagation();
-              handleNavigateToCallLogs('COMPLETED', row?.original);
-            }}
-          >
-            {pct(answered, dialed)}%
-          </button>
-        );
-      },
+      cell: ({ row }: any) => (
+        <AnsweredCount
+          campaign={row?.original}
+          onOpen={(campaign) => handleNavigateToCallLogs('ANSWERED', campaign)}
+        />
+      ),
     },
     {
       header: 'Agents',
@@ -405,7 +675,10 @@ const Campaign = ({
       },
     },
     {
-      header: '',
+      /* An unlabelled column of icons gives a reader nothing to go on, and the
+         header row looked like it simply ran out. Right-aligned to sit over the
+         buttons below it. */
+      header: () => <span style={{ display: 'block', textAlign: 'right' }}>Actions</span>,
       accessorKey: 'action',
       enableSorting: false,
       cell: ({ row }: any) => {
@@ -421,61 +694,93 @@ const Campaign = ({
         const canReschedule = data?.campaignStatus !== 'COMPLETED' && isExpired;
         const isRunning = data?.campaignStatus === 'PROCESSING';
 
+        const windowText = `${start ? start.format('D MMM') : '?'} to ${end ? end.format('D MMM') : '?'}`;
+        const say = (text: string) => handleAlert({ text, type: 'warning' });
+        const isCompleted = data?.campaignStatus === 'COMPLETED';
+        /* Every icon does something: the action when it can, a sentence
+           saying why not when it cannot. A greyed button with a tooltip that
+           never shows read as "broken". */
+        const act = (blocked: string | null, run: () => void) => () =>
+          blocked ? say(blocked) : run();
+        const startBlocked = isCompleted
+          ? 'This campaign is completed. Edit it to change the dates, or reschedule it.'
+          : outOfWindow
+            ? `The campaign window is ${windowText}. Edit the dates to start it now.`
+            : null;
+        const rescheduleBlocked = canReschedule
+          ? null
+          : isCompleted
+            ? 'A completed campaign cannot be rescheduled; make a new one.'
+            : 'Only a campaign past its end date can be rescheduled.';
+        /* An inbound line is always "running"; it can be edited or deleted as it is. */
+        const isInboundLine = String(data?.dialMethod).toUpperCase() === 'INBOUND';
+        const editBlocked =
+          isRunning && !isInboundLine ? 'Pause the campaign first, then edit it.' : null;
+        const deleteBlocked =
+          isRunning && !isInboundLine ? 'Pause the campaign first, then delete it.' : null;
+        const dim = (blocked: string | null) => (blocked ? { opacity: 0.45 } : undefined);
+
         return (
           <div className="rowacts" onClick={(event) => event.stopPropagation()}>
-            {campaignAccess?.pause && (
-              <CustomTooltip text={isRunning ? 'Pause campaign' : 'Start campaign'} side="top">
+            {/* No Join here on purpose. This list is where a campaign is set
+                up and operated - started, paused, rescheduled, edited. Taking
+                a campaign as an agent belongs to the Campaign Workspace, which
+                is where the join actually happens. */}
+            {campaignAccess?.pause && String(data?.dialMethod).toUpperCase() !== 'INBOUND' && (
+              <CustomTooltip
+                text={isRunning ? 'Pause campaign' : startBlocked || 'Start campaign'}
+                side="top"
+              >
                 <button
                   type="button"
                   className="mini ic"
-                  disabled={outOfWindow}
-                  onClick={() => !outOfWindow && onPlayPause(data)}
+                  style={dim(isRunning ? null : startBlocked)}
+                  onClick={act(isRunning ? null : startBlocked, () => onPlayPause(data))}
                 >
                   <Ic n={isRunning ? 'pause' : 'play'} size={12} />
                 </button>
               </CustomTooltip>
             )}
             {campaignAccess?.summary && (
-              <CustomTooltip text="Open live monitor" side="top">
+              <CustomTooltip text="Open live board" side="top">
                 <button type="button" className="mini ic" onClick={() => openMonitor(data)}>
                   <Ic n="eye" size={12} />
                 </button>
               </CustomTooltip>
             )}
             {campaignAccess?.pause && (
-              <CustomTooltip text="Reschedule campaign" side="top">
+              <CustomTooltip text={rescheduleBlocked || 'Reschedule campaign'} side="top">
                 <button
                   type="button"
                   className="mini ic"
-                  disabled={!canReschedule}
-                  onClick={() => canReschedule && onReSchedule(data)}
+                  style={dim(rescheduleBlocked)}
+                  onClick={act(rescheduleBlocked, () => onReSchedule(data))}
                 >
                   <Ic n="cal" size={12} />
                 </button>
               </CustomTooltip>
             )}
             {campaignAccess?.edit && (
-              <CustomTooltip text="Edit campaign" side="top">
+              <CustomTooltip text={editBlocked || 'Edit campaign'} side="top">
                 <button
                   type="button"
                   className="mini ic"
-                  disabled={isRunning || outOfWindow}
-                  onClick={() => {
-                    if (isRunning || outOfWindow) return;
-                    setDrawerState({ selectedCampaign: data, isModalOpen: true });
-                  }}
+                  style={dim(editBlocked)}
+                  onClick={act(editBlocked, () =>
+                    setDrawerState({ selectedCampaign: data, isModalOpen: true }),
+                  )}
                 >
                   <Ic n="sliders" size={12} />
                 </button>
               </CustomTooltip>
             )}
             {campaignAccess?.delete && (
-              <CustomTooltip text="Delete campaign" side="top">
+              <CustomTooltip text={deleteBlocked || 'Delete campaign'} side="top">
                 <button
                   type="button"
                   className="mini ic"
-                  disabled={isRunning}
-                  onClick={() => !isRunning && setShowDeleteConfirmation(data)}
+                  style={dim(deleteBlocked)}
+                  onClick={act(deleteBlocked, () => setShowDeleteConfirmation(data))}
                 >
                   <Ic n="trash" size={12} />
                 </button>
@@ -540,11 +845,12 @@ const Campaign = ({
         {!embedded && (
           <div className="page-head">
             <div>
-              <div className="eyebrow">Campaign · Outbound</div>
+              <div className="eyebrow">Campaign · Outbound and inbound</div>
               <h1>Campaigns</h1>
               <p>
-                Every outbound calling campaign, with its contact outcomes and agent load on one
-                line. Open a campaign to watch it dial.
+                Every calling campaign on one line: outbound dialling with its contact outcomes and
+                agent load, and inbound lines where customers call the team. Open one to watch it
+                live.
               </p>
             </div>
             <button className="btn ghost" type="button" onClick={() => navigate('/campaign/leads')}>
@@ -627,10 +933,14 @@ const Campaign = ({
         <div className="panel-card">
           <div className="pc-head">
             <h3>All campaigns</h3>
-            <span className="src live pc-right">
-              <Ic n="spark" size={10} />
-              live
-            </span>
+            {Object.keys(liveBoards).length ? (
+              <span className="src live pc-right">
+                <Ic n="spark" size={10} />
+                live
+              </span>
+            ) : (
+              <span className="src pc-right">refreshes on change</span>
+            )}
           </div>
 
           <TableManager
@@ -641,6 +951,10 @@ const Campaign = ({
               emptyTablePlaceholder: 'No campaigns found',
               descriptionEmptyTable: 'Create a campaign to start dialling',
               getRowClassName: () => 'rowlink',
+              /* Clicking the row opens that campaign's board. Every
+                 interactive cell already stops propagation, so this only fires
+                 on the row itself. Gated by the same permission as the eye. */
+              ...(campaignAccess?.summary ? { onRowClick: openMonitor } : {}),
               extraParams: {
                 ...(debouncedSearch ? { search: debouncedSearch } : {}),
                 filters: [
@@ -666,8 +980,8 @@ const Campaign = ({
           <div className="pc-foot">
             <OutcomeLegend />
             <span className="pc-right">
-              Pacing metrics — abandon rate, idle agents, line allocation — need a live campaign
-              stats endpoint that does not exist yet.
+              Running campaigns show what is holding them back and how many calls are up. Open one
+              for the live board.
             </span>
           </div>
         </div>
@@ -682,7 +996,10 @@ const Campaign = ({
               : 'Add Campaign'
           }
           isTab={false}
+          isHeader
           enableResponsive
+          width="42rem"
+          responsiveWidth="95%"
           headerClassName="min-h-8 px-4 sm:px-5"
           handleClose={() => setDrawerState({ selectedCampaign: null, isModalOpen: false })}
           content={

@@ -12,6 +12,7 @@ import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { callForwardingSchema } from './schema';
+import { normaliseGeoRoutes, serialiseGeoRoutes } from '@/lib/geo-routes';
 import { callForwarding, upsertCallHandlingTemplate } from '@/services/api';
 import {
   getHolidaysFormVal,
@@ -33,7 +34,6 @@ import Settings from './condition';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { useUser } from '@/hooks/use-user';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
-import { callForwardingOptions } from '@/components/custom/forwarding-actions';
 
 const initialState = {
   regionalSettingsModal: {
@@ -244,6 +244,9 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
     const { welcome = {}, hold = {}, voicemail = {} } = media;
 
     const request = {
+      /* Caller-location rules (Route by caller location on the Call handling tab);
+         the switch reads them as geo_routes, longest prefix wins. */
+      geo_routes: serialiseGeoRoutes(watch('geoRoutes')),
       condition: {
         transcription: transcription,
         ai_call_monitoring: ai_call_monitoring,
@@ -475,13 +478,8 @@ const UpsertCallForwarding: FC<UpdateForwardingProps> = ({
       transcription: condition?.transcription || false,
       ai_call_monitoring: condition?.ai_call_monitoring || false,
     });
-    const aiTypeLabel =
-      callForwardingOptions.find(
-        (item: any) => item?.value === call_handling?.business_hours?.ai_forward_to?.type,
-      )?.label || '';
 
-    console.log(aiTypeLabel);
-
+    setValue('geoRoutes', normaliseGeoRoutes(forwardActions?.geo_routes));
     setValue('callHandling', {
       businessHours: {
         // ai_forward_to: {

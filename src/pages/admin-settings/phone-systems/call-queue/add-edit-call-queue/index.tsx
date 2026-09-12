@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AFTER_CALL_DEFAULTS,
   ESCALATION_DEFAULTS,
+  ROUTING_DEFAULTS,
   CALL_DISTRIBUTION_DATA,
   CALL_QUEUE_INIITAL_VALUES,
   DELAY_GREETING_DEFAULT_INTERVAL,
@@ -31,6 +32,7 @@ import {
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { buildQueueAttachPatch } from '@/lib/queue-numbers';
+import { dedupeMembers } from '@/lib/queue-members';
 import {
   generateRandomExtension,
   getHolidaysFormVal,
@@ -150,7 +152,9 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
 
   const { data: scriptList = [] } = useQuery({
     queryKey: ['getScriptListAccToTypeForQueue'],
-    queryFn: () => getCallScript(),
+    /* Published scripts only: a draft is still being written. */
+    queryFn: () =>
+      getCallScript({ page: 1, limit: 200, filters: [{ key: 'status', value: 'published' }] }),
     select: (data) =>
       data?.data?.data?.result?.rows?.filter((item: any) => item?.dialMethod === 'QUEUE') || [],
   });
@@ -330,7 +334,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
           await attachPendingNumbers(pending, String(watch('extension') || ''));
         }
 
-        queryClient.invalidateQueries(['callQueueListQueryFn'], { exact: true });
+        queryClient.invalidateQueries({ queryKey: ['callQueueListQueryFn'] });
         setDrawerState(false);
       }
     },
@@ -355,10 +359,37 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       all_agent_busy = {},
       delay = {},
     } = greetings;
-    const { name: countryName, ...otherValues } = operational_hours.regional.country || {};
-    const { name: countryCodeName, ...otherCountryCodeValues } =
-      operational_hours.regional.country_code || {};
-    console.info(countryName, countryCodeName);
+    /* Every greeting slot must round-trip uuid + is_default, or a stock/default
+       recording resolves to the wrong path and the player shows "Unable to load
+       this recording." after a reload. Mirrors IVR's getGreetingConfig. */
+    /* `uuid` and `is_default` are deliberately NOT sent.
+       The queue schema validates the six named greeting slots as exactly
+       {enabled, label, value} and rejects anything else, so the moment the
+       greeting picker started carrying a uuid, every queue save failed with
+       `"settings.media.waiting.uuid" is not allowed` - no queue could be
+       created or edited at all. The `.unknown(true)` on `media` only covers
+       greeting slots the schema has not been taught (delay); it does not reach
+       inside the six it has.
+       Checked before removing them: not one of the 64 live queues carries a
+       uuid in media, the switch plays a greeting by its `value` (the file
+       name), and the hydrator above already reads these back as undefined for
+       every existing queue - so this is the shape queues have always had and
+       nothing reads what is being dropped.
+       The durable fix is the schema tolerating extra keys per slot the way it
+       already tolerates extra slots; that patch is staged for campaign-api in
+       backend-patches/campaign-api/patch_queue_media_slot_unknown.py. */
+    const queueGreetingConfig = (slot: any) => ({
+      enabled: slot?.enabled || false,
+      value: slot?.value?.value || '',
+      label: slot?.value?.label || '',
+    });
+
+    /* country / country_code without their display `name` — the API stores the
+       code fields only. */
+    const otherValues = { ...(operational_hours.regional.country || {}) };
+    delete otherValues.name;
+    const otherCountryCodeValues = { ...(operational_hours.regional.country_code || {}) };
+    delete otherCountryCodeValues.name;
     const settings = {
       operational_hours: {
         type: operational_hours?.type,
@@ -421,6 +452,9 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
         },
       },
       wrapup_time: parseInt(wrapupTime),
+      /* Agent screen capture on this queue's calls: the softphone reads it off
+         the queue record when a call arrives. */
+      screen_capture: watch('settings.screen_capture') === true,
       recording,
       display_number: {
         incoming: display_number?.incoming,
@@ -436,18 +470,31 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
          rather than spread from what was stored, so anything missing here is
          dropped from the record — the same way a separate holiday action used
          to be destroyed on every save. */
-      /* `waiting`, `after_call` and `escalation` are deliberately NOT sent.
-         The queue save is forwarded to the service that owns queues, and its
-         settings schema accepts only: operational_hours, recording,
-         display_number, ai_call_monitoring, transcription, wrapup_time, skills,
-         ring_strategy, leave_room_if_no_agent and media. It does not permit
-         unknown keys, so including these three makes the whole save fail
-         validation - an admin changing a queue's name would be told the save
-         did not work, with no clue why.
-
-         The controls stay on screen, marked as coming soon, because that is
-         honest: nothing acts on them yet either. Send them again in the same
-         change that teaches the backend to accept them, and not before. */
+      /* `waiting`, `after_call` and `escalation` are sent whole. The queue
+         service's schema accepts all three (checked against the live bundle on
+         7 Sep 2026) and tolerates keys it has not been taught, so the earlier
+         "send them and the whole save fails" reason is gone. The switch acts on
+         position announcements today; the rest are stored until their services
+         read them. Defaults fill anything the form never touched, so an older
+         queue saves the same shape as a new one. */
+      waiting: {
+        ...WAITING_DEFAULTS,
+        ...(watch('settings.waiting') || {}),
+        callback: { ...WAITING_DEFAULTS.callback, ...((watch('settings.waiting') || {}).callback || {}) },
+      },
+      after_call: {
+        ...AFTER_CALL_DEFAULTS,
+        ...(watch('settings.after_call') || {}),
+        last_agent: { ...AFTER_CALL_DEFAULTS.last_agent, ...((watch('settings.after_call') || {}).last_agent || {}) },
+        service_level: { ...AFTER_CALL_DEFAULTS.service_level, ...((watch('settings.after_call') || {}).service_level || {}) },
+      },
+      escalation: { ...ESCALATION_DEFAULTS, ...(watch('settings.escalation') || {}) },
+      /* Which skills the queue asks for, and the lowest rating that counts. */
+      routing: {
+        ...ROUTING_DEFAULTS,
+        ...(watch('settings.routing') || {}),
+        required_skills: (watch('settings.routing.required_skills') || []).map(String),
+      },
       ring_strategy: {
         value: watch('settings.ring_strategy.value.value'),
         leave_room_if_no_agent: watch('settings.ring_strategy.leave_room_if_no_agent') ?? true,
@@ -463,40 +510,14 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
         },
       },
       media: {
-        welcome: {
-          enabled: welcome?.enabled || false,
-          value: welcome?.value?.value || '',
-          label: welcome?.value?.label || '',
-        },
-        hold: {
-          enabled: hold?.enabled || false,
-          value: hold?.value?.value || '',
-          label: hold?.value?.label || '',
-        },
-        waiting: {
-          enabled: waiting?.enabled || false,
-          value: waiting?.value?.value || '',
-          label: waiting?.value?.label || '',
-        },
-        ring_tone: {
-          enabled: ring_tone?.enabled || false,
-          value: ring_tone?.value?.value || '',
-          label: ring_tone?.value?.label || '',
-        },
-        no_agent_available: {
-          enabled: no_agent_available?.enabled || false,
-          value: no_agent_available?.value?.value || '',
-          label: no_agent_available?.value?.label || '',
-        },
-        all_agent_busy: {
-          enabled: all_agent_busy?.enabled || false,
-          value: all_agent_busy?.value?.value || '',
-          label: all_agent_busy?.value?.label || '',
-        },
+        welcome: queueGreetingConfig(welcome),
+        hold: queueGreetingConfig(hold),
+        waiting: queueGreetingConfig(waiting),
+        ring_tone: queueGreetingConfig(ring_tone),
+        no_agent_available: queueGreetingConfig(no_agent_available),
+        all_agent_busy: queueGreetingConfig(all_agent_busy),
         delay: {
-          enabled: delay?.enabled || false,
-          value: delay?.value?.value || '',
-          label: delay?.value?.label || '',
+          ...queueGreetingConfig(delay),
           interval_seconds: Number(delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
         },
       },
@@ -525,16 +546,23 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
     // Remove duplicates from members array before sending payload for safety
     const members =
       watch('members')?.map((m: any) => {
-        const { label, value, ring_time, timeout, ...rest } = m;
-        console.info(label, value);
-        return {
-          ...rest,
-          timeout: seedDeviceRingTime(ring_time ?? timeout, companySettings).value,
-        };
+        const memberPayload = { ...m };
+        delete memberPayload.label;
+        delete memberPayload.value;
+        delete memberPayload.ring_time;
+        memberPayload.timeout = seedDeviceRingTime(
+          m.ring_time ?? m.timeout,
+          companySettings,
+        ).value;
+        return memberPayload;
       }) || [];
-    const uniqueMembers = Array.from(new Map(members.map((m: any) => [m.user_uuid, m])).values());
-    const { label, value, ...manager } = watch('manager');
-    console.info(label, value);
+    /* Keyed on the id, falling back to the extension. Keying on the id alone
+       collapsed the whole queue to one person whenever the people list came
+       back under the other id spelling and every member's was blank. */
+    const uniqueMembers = dedupeMembers(members);
+    const manager = { ...(watch('manager') || {}) };
+    delete manager.label;
+    delete manager.value;
     const payload = {
       name: watch('name'),
       extension: watch('extension')?.toString() || '',
@@ -566,16 +594,16 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
     const media = queueInfo?.settings?.media;
     setValue('name', queueInfo?.name);
     setValue('extension', queueInfo?.extension);
-    setValue('script_data', queueInfo?.script_data);
     setValue('description', queueInfo?.description);
     setValue('settings.wrapup_time', queueInfo?.settings?.wrapup_time);
+    setValue('settings.screen_capture', queueInfo?.settings?.screen_capture === true);
     setValue('site_uuid', {
       label: queueInfo?.site_uuid?.name || '',
       value: queueInfo?.site_uuid?.site_uuid || '',
     });
     // Reconstruct members with label and value for UI consistency
     const uniqueMembers = queueInfo?.members
-      ? Array.from(new Map(queueInfo.members.map((m: any) => [m.user_uuid, m])).values()).map(
+      ? dedupeMembers(queueInfo.members).map(
           (m: any) => ({
             ...m,
             label: m.label || m.name || `${m.first_name} ${m.last_name}`,
@@ -598,55 +626,28 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       });
     }
 
+    /* Read uuid + is_default back too — see queueGreetingConfig on the save
+       side. Without them a stored stock recording plays once and then fails
+       with "Unable to load this recording." after a reload. */
+    const hydrateGreetingSlot = (slot: any) => ({
+      enabled: slot?.enabled || false,
+      value: {
+        label: slot?.label || '',
+        value: slot?.value ?? '',
+        uuid: slot?.uuid,
+        is_default: slot?.is_default,
+      },
+    });
+
     setValue('greetings', {
-      welcome: {
-        enabled: media?.welcome?.enabled || false,
-        value: {
-          label: media?.welcome?.label || '',
-          value: media?.welcome?.value || '',
-        },
-      },
-      hold: {
-        enabled: media?.hold?.enabled || false,
-        value: {
-          label: media?.hold?.label || '',
-          value: media?.hold?.value,
-        },
-      },
-      waiting: {
-        enabled: media?.waiting?.enabled || false,
-        value: {
-          label: media?.waiting?.label || '',
-          value: media?.waiting?.value,
-        },
-      },
-      ring_tone: {
-        enabled: media?.ring_tone?.enabled || false,
-        value: {
-          label: media?.ring_tone?.label || '',
-          value: media?.ring_tone?.value,
-        },
-      },
-      no_agent_available: {
-        enabled: media?.no_agent_available?.enabled || false,
-        value: {
-          label: media?.no_agent_available?.label || '',
-          value: media?.no_agent_available?.value,
-        },
-      },
-      all_agent_busy: {
-        enabled: media?.all_agent_busy?.enabled || false,
-        value: {
-          label: media?.all_agent_busy?.label || '',
-          value: media?.all_agent_busy?.value,
-        },
-      },
+      welcome: hydrateGreetingSlot(media?.welcome),
+      hold: hydrateGreetingSlot(media?.hold),
+      waiting: hydrateGreetingSlot(media?.waiting),
+      ring_tone: hydrateGreetingSlot(media?.ring_tone),
+      no_agent_available: hydrateGreetingSlot(media?.no_agent_available),
+      all_agent_busy: hydrateGreetingSlot(media?.all_agent_busy),
       delay: {
-        enabled: media?.delay?.enabled || false,
-        value: {
-          label: media?.delay?.label || '',
-          value: media?.delay?.value,
-        },
+        ...hydrateGreetingSlot(media?.delay),
         interval_seconds: Number(media?.delay?.interval_seconds) || DELAY_GREETING_DEFAULT_INTERVAL,
       },
     });
@@ -664,7 +665,6 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
     const ringStrategyLabel = CALL_DISTRIBUTION_DATA.find(
       (item: any) => item?.value === ring_strategy?.value,
     )?.label;
-    console.log(ringStrategyLabel, 'ringStrategyLabelringStrategyLabel', queueInfo?.settings);
 
     const scriptLabel = scriptList?.find((item: any) => item._id === queueInfo?.script)?.name;
     setValue('script', { label: scriptLabel || '', value: queueInfo?.script || '' });
@@ -782,6 +782,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
       transcription: transcription,
       ai_call_monitoring: ai_call_monitoring,
       wrapup_time: wrapup_time,
+      screen_capture: queueInfo?.settings?.screen_capture === true,
       /* Merged over the defaults rather than replacing them, so a queue saved
          before these settings existed opens with sensible values instead of
          undefined fields the inputs cannot render. */
@@ -791,6 +792,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
         callback: { ...WAITING_DEFAULTS.callback, ...(storedWaiting?.callback || {}) },
       },
       escalation: { ...ESCALATION_DEFAULTS, ...(storedEscalation || {}) },
+      routing: { ...ROUTING_DEFAULTS, ...(queueInfo?.settings?.routing || {}) },
       after_call: {
         ...AFTER_CALL_DEFAULTS,
         ...(storedAfterCall || {}),
@@ -841,6 +843,7 @@ const AddCallQueue: FC<AddCallQueueProps> = ({ setDrawerState, queueDetails, tab
                   isChooseTemplate={false}
                   customClass="h-full min-h-0"
                   data={{ settings }}
+                  origin="queue"
                 />
               </div>
             </TabsContent>

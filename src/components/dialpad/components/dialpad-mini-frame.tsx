@@ -1,6 +1,6 @@
 import type { DialpadSession } from '@/context/dialpad-context';
 import { cn } from '@/lib/utils';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Headphones } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { DialpadMaxiTab } from './dialpad-maxi-side-panel';
 import { KEYPAD_KEYS } from '../constants';
@@ -68,6 +68,9 @@ type DialpadMiniFrameProps = {
   onSpeakerToggle: () => void;
   onEndCall: () => void;
   onOpenMaxiTab: (tab: DialpadMaxiTab) => void;
+  /* Only the full-page campaign dialer sets this. Everything else keeps the
+     floating dialer exactly as it is. */
+  fullPage?: boolean;
   topAccessory?: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -110,6 +113,7 @@ const DialpadMiniFrame = ({
   onSpeakerToggle,
   onEndCall,
   onOpenMaxiTab,
+  fullPage = false,
   topAccessory,
   className,
   contentClassName,
@@ -141,6 +145,9 @@ const DialpadMiniFrame = ({
   const shouldShowDialpadContactLink =
     isCallConnected && contactDialTargetDigitsCount > 4 && !hasSessionContactId && isUnknownContact;
   const idleCanCall = canCall && !isManualDialDisabled;
+  /* Full-page campaign dialer, sitting idle, with manual dialling switched
+     off — the one case where the keypad cannot do anything at all. */
+  const isCampaignStandby = fullPage && isManualDialDisabled;
 
   return (
     <div
@@ -186,22 +193,47 @@ const DialpadMiniFrame = ({
               </div>
             ) : null}
 
-            <DialpadNumberDisplay
-              typedNumber={typedNumber}
-              onTypedNumberChange={onTypedNumberChange}
-              onBackspace={onBackspace}
-              onEnterPress={idleCanCall ? onCall : undefined}
-              disabled={isManualDialDisabled}
-            />
+            {/* A campaign agent never dials: the campaign hands them each
+                contact, and every key here is already inert
+                (isManualDialDisabled). On the full page that left a keypad
+                filling half the column that could not be pressed — furniture
+                that reads as broken. Say what is actually happening instead.
+                The floating dialer keeps its keypad, and so does the full page
+                the moment manual dialling is allowed again. */}
+            {isCampaignStandby ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-ucass-active-bg bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-5 py-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ucass-active-bg text-[#1f4f8f]">
+                  <Headphones className="h-5 w-5" />
+                </span>
+                <div className="space-y-1">
+                  <p className="text-[13px] font-semibold text-[#183960]">Standing by</p>
+                  <p className="text-[11.5px] leading-relaxed text-[#5d7394]">
+                    The campaign brings you each contact, so there is nothing to dial by
+                    hand. The next one appears here as soon as it is ready.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <DialpadNumberDisplay
+                  typedNumber={typedNumber}
+                  onTypedNumberChange={onTypedNumberChange}
+                  onBackspace={onBackspace}
+                  onEnterPress={idleCanCall ? onCall : undefined}
+                  disabled={isManualDialDisabled}
+                />
 
-            <div className="lg:my-auto space-y-3 sm:space-y-4 xs:min-h-[300px] xs:mt-18">
-              <DialpadKeypad
-                keys={KEYPAD_KEYS}
-                onPressKey={onPressKey}
-                disabled={isManualDialDisabled}
-              />
-              <DialpadCallButton canCall={idleCanCall} onCall={onCall} />
-            </div>
+                <div className="lg:my-auto space-y-3 sm:space-y-4 xs:min-h-[300px] xs:mt-18">
+                  <DialpadKeypad
+                    keys={KEYPAD_KEYS}
+                    onPressKey={onPressKey}
+                    wide={fullPage}
+                    disabled={isManualDialDisabled}
+                  />
+                  <DialpadCallButton canCall={idleCanCall} onCall={onCall} />
+                </div>
+              </>
+            )}
           </div>
         ) : dialpadScreen === 'ringing' ? (
           <DialpadRingingScreen
@@ -235,11 +267,21 @@ const DialpadMiniFrame = ({
           </div>
         )}
       </div>
-      <DialpadCampaignOverview
-        campaignContactCards={campaignContactCards}
-        dialpadScreen={dialpadScreen}
-      />
-      <DialpadAiConversationOverview session={activeSession} dialpadScreen={dialpadScreen} />
+      {/* Both of these sit below the scrolling area rather than inside it, so
+          they must not be squeezed by it either — without shrink-0 a long lead
+          card is compressed instead of the call area giving up its room. */}
+      <div className="shrink-0">
+        <DialpadCampaignOverview
+          campaignContactCards={campaignContactCards}
+          dialpadScreen={dialpadScreen}
+          fullPage={fullPage}
+        />
+        <DialpadAiConversationOverview
+          session={activeSession}
+          dialpadScreen={dialpadScreen}
+          fullPage={fullPage}
+        />
+      </div>
     </div>
   );
 };

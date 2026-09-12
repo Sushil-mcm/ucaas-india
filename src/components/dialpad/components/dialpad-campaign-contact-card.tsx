@@ -1,4 +1,5 @@
 import { useDialpad } from '@/hooks/use-dialpad';
+import { isServerDialed } from '@/lib/campaign-dial-mode';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { isExtensionDialTarget, normalizeDialTargetUserPart } from '@/lib/extension-utility';
 import { Loader2, PhoneCall, SkipForward } from 'lucide-react';
@@ -30,14 +31,35 @@ export type CampaignContactCard = {
   leadStatus?: string;
   remainingCallAttempts?: number;
   totalCallAttempts?: number;
+  /* Set from the contact when the lead was made. A preview-only lead must be
+     placed by a person even on a campaign where the system dials. */
+  previewOnly?: boolean;
+  ownerExtension?: string | null;
 };
+
+export type SkipReason = { _id: string; name: string };
 
 export type CampaignSkipStatus = 'SKIPPED' | 'NOT_DIALED';
 
 type DialpadCampaignContactCardProps = {
   firstCampaignCard: CampaignContactCard;
   onCall: () => void;
-  onSkip: (status?: CampaignSkipStatus, options?: { isManual?: boolean }) => void;
+  onSkip: (
+    status?: CampaignSkipStatus,
+    options?: {
+      isManual?: boolean;
+      dispositionId?: string;
+      dispositionName?: string;
+      /* Free text the agent typed alongside the reason. */
+      note?: string;
+    },
+  ) => void;
+  /* Reasons the campaign asks for on a skip. Empty means skip straight away. */
+  skipReasons?: SkipReason[];
+  /* Every disposition the campaign switched on, offered on the skip panel. */
+  agentDispositions?: SkipReason[];
+  /* True while another call has the agent's attention; the clock stands still. */
+  pauseTimer?: boolean;
   canCall: boolean;
   canSkip: boolean;
   showCallButton?: boolean;
@@ -62,10 +84,11 @@ const DialpadCampaignContactCard = ({
   timerReferenceTimestampMs,
   timerKey,
   onTimerValueChange,
+  skipReasons = [],
+  agentDispositions = [],
+  pauseTimer = false,
 }: DialpadCampaignContactCardProps) => {
-  console.log('🚀 ~ DialpadCampaignContactCard ~ firstCampaignCard:', firstCampaignCard);
-  const { sessions, activeSessionId, activeCampaign } = useDialpad();
-  console.log('🚀 ~ DialpadCampaignContactCard ~ activeCampaign:', activeCampaign);
+  const { sessions, activeSessionId, activeCampaign, setCampaignSkipRequest } = useDialpad();
   const currentSession = activeSessionId ? sessions?.[activeSessionId] : null;
   console.log('DialpadCampaignContactCard currentSession:', currentSession);
   const dialMethodValue =
@@ -73,10 +96,9 @@ const DialpadCampaignContactCard = ({
     firstCampaignCard?.campaignDetail?.campaignType?.trim() ||
     '';
   const normalizedDialMethod = dialMethodValue.toUpperCase();
-  const isPredictiveDialMethod = normalizedDialMethod.includes('PREDICTIVE');
+  const isPredictiveDialMethod = isServerDialed(normalizedDialMethod);
 
   const sessionStatus = `${currentSession?.status || ''}`.trim();
-  console.log('🚀 ~ DialpadCampaignContactCard ~ sessionStatus:', sessionStatus);
   const hasSessionStatus = Boolean(sessionStatus);
   const formattedSessionStatus = sessionStatus.replace(/_/g, ' ').toUpperCase();
 
@@ -86,11 +108,30 @@ const DialpadCampaignContactCard = ({
   const shouldShowPresence =
     Boolean(normalizedPresenceTarget) && isExtensionDialTarget(normalizedPresenceTarget);
 
+  /* What the campaign asked for when the preview countdown runs out. Older
+     campaigns saved before this setting existed have nothing stored, and they
+     get the safe answer. */
+  const previewTimeoutAction = String(
+    (activeCampaign as any)?.dialerSetting?.preview_timeout_action || 'RETURN_TO_POOL',
+  ).toUpperCase();
+
+  /* The countdown running out must never leave the agent holding a lead with
+     nothing to do. By default the lead goes back to be offered again, which
+     keeps a person in charge of every call that gets placed. Dialling on the
+     agent's behalf is opt-in per campaign, and only when the call could
+     actually be placed - otherwise we fall back to returning the lead rather
+     than silently doing nothing. */
   const handleTimerEnds = () => {
+    if (previewTimeoutAction === 'DIAL' && canCall) {
+      onCall();
+      return;
+    }
     onSkip('NOT_DIALED');
   };
 
-  const hasCallAction = showCallButton;
+  /* A preview-only lead always gets a Call button, whatever the campaign does
+     with everything else. */
+  const hasCallAction = showCallButton || Boolean(firstCampaignCard?.previewOnly);
   const hasSkipAction = allowSkipping;
   const hasAnyAction = hasCallAction || hasSkipAction;
   const shouldUseTwoColumns = hasCallAction && hasSkipAction;
@@ -135,6 +176,7 @@ const DialpadCampaignContactCard = ({
               referenceTimestampMs={timerReferenceTimestampMs}
               onTimeEnds={handleTimerEnds}
               onTick={onTimerValueChange}
+              paused={pauseTimer}
               size="compact"
               className="shrink-0"
             />
@@ -159,7 +201,35 @@ const DialpadCampaignContactCard = ({
           {hasSkipAction ? (
             <button
               type="button"
-              onClick={() => onSkip('SKIPPED', { isManual: true })}
+              onClick={() => {
+                /* When the campaign wants a reason, ask before letting go of the lead. */
+                /* Ask on the right, where there is room for a sentence. The
+                   card only raises the question; the panel decides what the
+                   agent picked and hands it straight back to onSkip. */
+                setCampaignSkipRequest({
+                  campaignNumberId: String(firstCampaignCard?._id || '').trim(),
+                  contactName,
+                  contactNumber,
+                  contactId: String(firstCampaignCard?.contactId || '').trim() || undefined,
+                  campaignId: String(
+                    activeCampaign?._id || firstCampaignCard?.campaignId || '',
+                  ).trim(),
+                  campaignName: String(
+                    activeCampaign?.name ||
+                      firstCampaignCard?.campaignDetail?.campaignName ||
+                      '',
+                  ).trim(),
+                  campaignType: normalizedDialMethod,
+                  reasons: skipReasons,
+                  dispositions: agentDispositions,
+                  onConfirm: ({ dispositionId, dispositionName, note }) =>
+                    onSkip('SKIPPED', {
+                      isManual: true,
+                      ...(dispositionId ? { dispositionId, dispositionName } : {}),
+                      ...(note ? { note } : {}),
+                    }),
+                });
+              }}
               disabled={!canSkip || isSkipLoading}
               className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#cbdcff] bg-white px-3 text-[12px] font-semibold text-[#23456f] transition hover:bg-[#f3f7ff] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -168,7 +238,7 @@ const DialpadCampaignContactCard = ({
               ) : (
                 <SkipForward className="h-3.5 w-3.5" />
               )}
-              {isSkipLoading ? 'Skiping' : 'Skip'}
+              {isSkipLoading ? 'Skipping' : 'Skip'}
             </button>
           ) : null}
         </div>

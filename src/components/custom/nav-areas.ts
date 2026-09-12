@@ -46,7 +46,11 @@ export const NAV_AREAS: NavArea[] = [
     id: 'activity',
     label: 'Activity',
     icon: 'PhoneIcon',
-    items: ['Phone', 'Chat', 'Agent Chat', 'Video', 'Campaign', 'Inbox'],
+    // Tasks and Calendar joined this rail from the header's old "+" quick
+    // menu — they are the agent's own work, the same as Phone/Chat/Campaign,
+    // not a queue-facing channel, so they land at the end rather than among
+    // those.
+    items: ['Phone', 'Chat', 'Agent Chat', 'Video', 'Campaign', 'Inbox', 'Tasks', 'Calendar'],
   },
   {
     id: 'performance',
@@ -84,13 +88,26 @@ export const areaOfPath = (pathname: string, items: { name: string; link: string
   });
   if (owner) return owner;
 
-  /* A view that opens outside its area's base — Tasks, Calendar, Dialer,
-     Activity, Monitor all leave /performance — still belongs to the area whose
-     rail offered it. Without this the path matches no nav item and no area
-     base, falls through to the segment guess below, and lands on Home: the
-     Home tab lights while the user is on a Performance view, and the rail
-     disappears because Home carries a single item. Longest prefix first, so a
-     nested claim beats a shallower one. */
+  // Rail items that send you off to a page outside their area's own base
+  // (Monitoring, Agent Activity — both live under Performance's rail but
+  // route to `/monitoring/...` and `/activity/:uuid`) still need the top nav
+  // and the rail to read as Performance while you are on them. Tasks and
+  // Calendar link with a `?view=` query, so the item-link match above never
+  // sees them; they are claimed here for Activity.
+  const extraOwner = (Object.keys(AREA_EXTRA_PATHS) as AreaId[]).find((id) =>
+    (AREA_EXTRA_PATHS[id] || []).some(
+      (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+    ),
+  );
+  if (extraOwner) return extraOwner;
+
+  /* A view that opens outside its area's base — Dialer, Activity, Monitor,
+     Coaching all leave /performance — still belongs to the area whose rail
+     offered it. Without this the path matches no nav item and no area base,
+     falls through to the segment guess below, and lands on Home: the Home tab
+     lights while the user is on a Performance view, and the rail disappears
+     because Home carries a single item. Longest prefix first, so a nested
+     claim beats a shallower one. */
   const claimed = externalViewPrefixes()
     .filter(({ prefix }) => path === prefix || path.startsWith(`${prefix}/`))
     .sort((a, b) => b.prefix.length - a.prefix.length)[0];
@@ -162,18 +179,20 @@ export type AreaView = {
  * decisions.
  */
 export const DIRECTORY_VIEWS: AreaView[] = [
-  { key: 'people', label: 'People', icon: 'ContactIcon' },
-  { key: 'groups', label: 'Groups', icon: 'DepartmentIcon' },
-  { key: 'roles', label: 'Roles', icon: 'AdminIcon' },
-  { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
+  /* Contacts lead: outside people are what most users come here to look up.
+     The key stays `external` so every saved link keeps working. */
   {
     key: 'external',
-    label: 'External Contacts',
-    icon: 'InboxIcon',
+    label: 'Contacts',
+    icon: 'ContactIcon',
     /* Both open from a row on this list — "New contact" and the clock icon's
        contact Activity — so both stay inside Directory with the rail up. */
     altPaths: ['/contact', '/contact-activity'],
   },
+  { key: 'people', label: 'People', icon: 'ContactIcon' },
+  { key: 'groups', label: 'Groups', icon: 'DepartmentIcon' },
+  { key: 'roles', label: 'Roles', icon: 'AdminIcon' },
+  { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
   { key: 'favourites', label: 'Favourites', icon: 'Star' },
   { key: 'blocked', label: 'Blocked', icon: 'AdminIcon' },
 ];
@@ -199,17 +218,40 @@ export const PERFORMANCE_VIEWS: AreaView[] = [
   { key: 'call-queue', label: 'Queue', icon: 'ListOrderedIcon', feature: 'queue' },
   { key: 'video-dashboard', label: 'Video', icon: 'VideoIcon', feature: 'video' },
   // The top-bar shortcuts, moved down here so the bar itself stays lean.
-  { key: 'ext-calendar', label: 'Calendar', icon: 'CalendarLine', href: '/calendar?view=calendar', sep: true },
+  // (Calendar and Tasks sit in the Activity rail now — they are the agent's
+  // own work, not a performance surface.)
   /* "Dialer" named the tool; this tile opens /my-campaigns, which is the
      agent's own campaign list. The rail label wraps to two lines, so the
      longer name costs nothing. */
-  { key: 'ext-campaigns', label: 'My Campaign', icon: 'DialerIcon', href: '/my-campaigns' },
+  { key: 'ext-campaigns', label: 'My Campaign', icon: 'DialerIcon', href: '/my-campaigns', sep: true },
   // Activity and Monitoring depend on the signed-in user (their uuid, their
   // role/plan access) so their real href is resolved in useAreaNav — this
   // placeholder just claims the slot and the icon.
   { key: 'ext-activity', label: 'Activity', icon: 'HistoryIcon', match: '/activity' },
   { key: 'ext-monitoring', label: 'Monitor', icon: 'HeadsetIcon', match: '/monitoring' },
+  /* Coaching is open to everyone: the page itself says who you coach. */
+  { key: 'ext-coaching', label: 'Coaching', icon: 'UsersIcon', href: '/coaching' },
 ];
+
+/**
+ * Extra path prefixes an area owns beyond what its nav items already cover.
+ * `areaOfPath`'s own item-link matching only works when `link` is a bare
+ * path — a `hrefKind` entry (Monitoring, Agent Activity) sends you to a page
+ * outside the area's base entirely, and Tasks/Calendar both point at
+ * `/calendar` with a `?view=` query baked into `link`, which a plain path
+ * comparison never matches. Without this, all four read as Home the moment
+ * you land on them, and the top nav and rail go with it.
+ *
+ * `/my-campaigns` ("Campaign Workspace" in the Campaign sidebar) is the same
+ * problem from a different angle: it isn't a top-level nav item at all, only
+ * a link inside that sidebar's own list, so `areaOfPath` had nothing to match
+ * it against and it fell all the way through to Home — same symptom, the top
+ * nav and the rail both went with it.
+ */
+export const AREA_EXTRA_PATHS: Partial<Record<AreaId, string[]>> = {
+  performance: ['/monitoring', '/activity'],
+  activity: ['/calendar', '/my-campaigns'],
+};
 
 /** The views an area carries in its rail, if it carries any. */
 /**

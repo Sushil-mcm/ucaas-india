@@ -6,6 +6,7 @@ import CallHistoryLogs from '@/components/call-history-logs';
 import { getDepartmentAndCallLogs } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { safeJSONParse } from '../constants';
+import { PRIORITY_WORD, parseCallRoutingRecord } from '@/lib/call-routing-record';
 
 const QueueDetailsView = ({
   rowData,
@@ -54,7 +55,7 @@ const QueueDetailsView = ({
   const managerInfo: any = safeJSONParse(manager, {});
   const siteInfo: any = safeJSONParse(site, {});
   const transformedCalls = departmentData?.calls || [];
-  console.log(transformedCalls, 'transformedCallstransformedCalls', departmentData);
+  const routing = parseCallRoutingRecord(rowData?.call_flow);
 
   return (
     <>
@@ -68,6 +69,64 @@ const QueueDetailsView = ({
             variant === 'modal' ? '' : 'pt-3 h-[calc(100vh_-_10.3rem)] overflow-auto'
           }`}
         >
+          {routing && (
+            <div className="qdv-card bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">
+              <div className="qdv-card-title font-semibold text-[#2E2D35] truncate text-md mb-2">
+                How this call was routed
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border border-[#EEE7DD] bg-[#FBE2C8]/40 rounded-xl p-3 text-sm">
+                {routing.callback && (
+                  <div>
+                    <p className="qdv-label font-medium text-[#2E2D35]">Callback</p>
+                    <p className="text-[#9A948F]">
+                      {routing.callback.requested
+                        ? `Asked to be called back${routing.callback.position ? ` at position ${routing.callback.position}` : ''}${routing.callback.waited !== null ? ` after ${routing.callback.waited}s` : ''}`
+                        : routing.callback.accepted
+                          ? `Return call${routing.callback.waitBefore ? `, ${routing.callback.waitBefore}s waited before` : ''}${routing.callback.waitAfter !== null ? `, ${routing.callback.waitAfter}s after` : ''}`
+                          : routing.callback.outcome === 'declined'
+                            ? 'Return call declined by the caller'
+                            : 'Return call not accepted'}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="qdv-label font-medium text-[#2E2D35]">Round</p>
+                  <p className="text-[#9A948F]">
+                    {routing.round && routing.rounds ? `${routing.round} of ${routing.rounds}` : '--'}
+                  </p>
+                </div>
+                <div>
+                  <p className="qdv-label font-medium text-[#2E2D35]">Skills asked for</p>
+                  <p className="text-[#9A948F]">
+                    {routing.skills.length
+                      ? `${routing.skills.join(', ')}${routing.bar && routing.bar > 1 ? ` at ${routing.bar}+ stars` : ''}`
+                      : 'None'}
+                    {routing.dropped ? ' (dropped by widening)' : ''}
+                    {routing.waived ? ' (nobody held it, ignored)' : ''}
+                  </p>
+                </div>
+                <div>
+                  <p className="qdv-label font-medium text-[#2E2D35]">Caller chose</p>
+                  <p className="text-[#9A948F]">{routing.caller.length ? routing.caller.join(', ') : '--'}</p>
+                </div>
+                <div>
+                  <p className="qdv-label font-medium text-[#2E2D35]">Priority</p>
+                  <p className="text-[#9A948F]">
+                    {routing.priority ? PRIORITY_WORD[routing.priority] || String(routing.priority) : '--'}
+                    {routing.held > 0
+                      ? ` · held for another caller ${routing.held} time${routing.held === 1 ? '' : 's'}`
+                      : ''}
+                  </p>
+                </div>
+              </div>
+              {routing.reason && (
+                <p className="text-xs text-[#9A948F] mt-2">
+                  Last decision: {routing.reason}
+                  {routing.polls ? ` (${routing.polls} look${routing.polls === 1 ? '' : 's'} for someone free)` : ''}
+                </p>
+              )}
+            </div>
+          )}
           {hasQueueInfo ? (
             <>
               <div className="qdv-card bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 border border-[rgba(225,200,165,0.9)] rounded-xl">

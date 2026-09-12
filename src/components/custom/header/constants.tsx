@@ -18,38 +18,15 @@ import {
 import { BellIcon, CreditCardIcon, VideoIcon } from 'lucide-react';
 import BusyImage from '@/assets/images/status/busy.png';
 import DNDImage from '@/assets/images/status/do-not-disturb.png';
-export const presenceStatusArray = [
-  { title: 'Online', value: 'online', description: 'Ready to call' },
-
-  {
-    title: 'Busy',
-    value: 'busy',
-    /* Made honest alongside Do not disturb below, for the same reason: it
-       promised that internal calls go to voicemail and that a voicemail
-       notification follows. Neither happens. The call path does not read a
-       person's presence at all, and the notification settings it implies are
-       saved but read by nothing. */
-    description: 'Shows colleagues you are busy. Your phone still rings, from inside and outside.',
-  },
-  {
-    title: 'Do not disturb',
-    value: 'dnd',
-    /* This used to promise that every call goes to voicemail. Nothing in the
-       call path reads it - not the dialplan, not the directory service that
-       decides which device to ring - so a phone set to Do not disturb still
-       rings. Somebody who set it before an evening off and was rung anyway
-       would rightly say the product lied to them, so it now says what it
-       actually does. Restore the old sentence when the switch honours it.
-
-       This first said "send calls to voicemail under My Account -> My Phone".
-       That pointed at a second thing that does not work: My Phone saves to
-       `call_forwarding` on the person, and the call path reads none of it -
-       0 matches in both the dialplan and the directory service, against
-       controls of 1 each on the same files. Sending somebody to a remedy that
-       is also inert is worse than saying plainly that there is none yet. */
-    description: 'Shows colleagues you are busy. It does not stop your phone ringing yet.',
-  },
-];
+import { PRESENCE_STATES } from '@/hooks/use-my-presence';
+/* Names and behaviour text come from `use-my-presence`, the single place the
+   three states are described. `title` is kept as the key because the header and
+   the campaign screen both render it. */
+export const presenceStatusArray = PRESENCE_STATES.map((state) => ({
+  title: state.label,
+  value: state.value,
+  description: state.description,
+}));
 
 export const statusImageLookup: any = {
   online: <div className="w-3 h-3 rounded-full bg-green-500"></div>,

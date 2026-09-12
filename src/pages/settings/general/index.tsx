@@ -3,21 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
 import '@/components/mcm/mcm-page.css';
 import { POLICY_FIELDS, useCompanyPolicy, type PolicyField } from '@/lib/company-policy';
-import { getHolidaysFormVal, getHolidaysPayload, handleAlert } from '@/lib/utils';
+import { getHolidaysFormVal, handleAlert } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { isUnchanged } from '@/lib/form-baseline';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
-import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
-import {
-  FORWARDING_TAB_CONSTANT,
-  settingsInitialState,
-} from '@/pages/admin-settings/constants';
+import { FORWARDING_TAB_CONSTANT, settingsInitialState } from '@/pages/admin-settings/constants';
 import { upsertUserSettingsSchema } from '@/pages/admin-settings/people/update-forwarding/schema';
-import { getUserDetails, updateUserSettings } from '@/services/api';
+import { updateUserSettings } from '@/services/api';
+import { buildPreferencesPayload, parseSettings } from './preferences-payload';
+import { useUserDetails, invalidateUserDetails } from '@/hooks/use-user-details';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FC, useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { Link } from 'react-router-dom';
+import { COMPANY_RULES_PATH } from '@/pages/admin-settings/company/company-sections';
+import {
+  DIRECT_CALLS_ONLY_WORDING,
+  LiveNote,
+  NOT_APPLIED_WORDING,
+  NotAppliedNote,
+} from '../not-applied-note';
 
 interface GeneralProps {
   heading?: string;
@@ -26,7 +32,7 @@ interface GeneralProps {
 /* "Preferences" is what the navigation calls this screen. The heading said
    "General", which matched nothing the user had clicked to get here. */
 export const General: FC<GeneralProps> = ({ heading = 'Preferences' }) => {
-  useSetAdminPageMeta({ description: 'Your own regional settings, business hours and call handling. Company-wide rules live under Phone System → Preferences.' });
+  useSetAdminPageMeta({ description: 'Your own regional settings, business hours and call handling. Company-wide rules live under Company → Company Rules.' });
 
   const queryClient: any = useQueryClient();
   const [schemaContext, setSchemaContext] = useState<any>(null);
@@ -65,11 +71,7 @@ export const General: FC<GeneralProps> = ({ heading = 'Preferences' }) => {
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const { data: userInfoData } = useQuery<any>({
-    queryKey: ['getUserDetailsQueryFn'],
-    queryFn: getUserDetails,
-    select: (data) => data?.data?.data?.result,
-  });
+  const { data: userInfoData } = useUserDetails();
 
   const { mutate: mutateGeneralSettings, isPending: PendingGeneralSettings } = useMutation({
     mutationFn: updateUserSettings,
@@ -78,87 +80,25 @@ export const General: FC<GeneralProps> = ({ heading = 'Preferences' }) => {
         text: 'General Settings updated successfully!',
         type: 'success',
       });
-      queryClient.invalidateQueries(['getUsersDetails', 'getUserDetailsQueryFn'], {
-        exact: true,
-      });
+      invalidateUserDetails(queryClient);
       invalidateGlobalUsersDirectory(queryClient);
     },
   });
 
   const onSubmit = () => {
-    const {
-      display_number: { masking = {}, incoming = {}, show_number_if_blocked = 'NO' } = {},
-      operational_hours = {},
-      ...restSettings
-    }: any = watch('settings');
-    const tempSettings = {
-      ...restSettings,
-      display_number: {
-        incoming,
-        masking: {
-          type: masking?.type?.value,
-          label: masking?.type?.label,
-          value: masking?.value,
-        },
-        show_number_if_blocked,
-      },
-
-      operational_hours: {
-        type: operational_hours?.type,
-        value: operational_hours?.value || CUSTOM_HOURS_SCHEDULE_OPTIONS,
-        holidays: operational_hours?.holidays?.length
-          ? getHolidaysPayload(operational_hours.holidays)
-          : [],
-        regional: {
-          country: operational_hours?.regional?.country,
-          timezone: operational_hours?.regional?.timezone,
-          time_format: operational_hours?.regional?.time_format,
-          country_code: operational_hours?.regional?.country_code,
-        },
-        closed_hour_action: {
-          type: operational_hours?.closed_hour_action?.type?.value,
-          value: operational_hours?.closed_hour_action?.value?.value,
-          enabled: operational_hours?.closed_hour_action?.enabled,
-          personal: operational_hours?.closed_hour_action?.personal,
-          type_label: operational_hours?.closed_hour_action?.type?.label,
-          value_label: operational_hours?.closed_hour_action?.value?.label,
-        },
-      },
-    };
-
+    /* The save endpoint replaces the whole `settings` column, so the body is
+       built from the stored record with the form's keys laid over it — see
+       preferences-payload.ts, where that rule is tested. */
     const payload = {
       key: 'settings',
-      value: removeOverride(tempSettings),
+      value: buildPreferencesPayload(parseSettings(userInfoData?.settings), watch('settings')),
     };
     mutateGeneralSettings(payload);
   };
 
-  /* Company rule flags describe what the company does to a person; they are not
-     part of that person's own settings. `override` was already stripped for that
-     reason, and `apply`/`locked` are the same flag split in two, so all three go.
-     Left in, this page would save the company's rule back onto the individual
-     record, and the lock would then be read from the wrong level. */
-  const RULE_FLAG_KEYS = ['override', 'apply', 'locked'];
-
-  function removeOverride<T>(obj: T): T {
-    if (Array.isArray(obj)) {
-      return obj.map(removeOverride) as unknown as T;
-    } else if (typeof obj === 'object' && obj !== null) {
-      return Object.fromEntries(
-        Object.entries(obj)
-          .filter(([key]) => !RULE_FLAG_KEYS.includes(key))
-          .map(([key, value]) => [key, removeOverride(value)]),
-      ) as unknown as T;
-    }
-    return obj;
-  }
-
   useEffect(() => {
     if (userInfoData) {
-      const settingInfo: any =
-        typeof userInfoData?.settings === 'string'
-          ? JSON.parse(userInfoData?.settings)
-          : userInfoData?.settings;
+      const settingInfo: any = parseSettings(userInfoData?.settings);
       setValue(
         'settings.operational_hours.regional.timezone',
         settingInfo?.operational_hours?.regional?.timezone || {},
@@ -259,6 +199,28 @@ export const General: FC<GeneralProps> = ({ heading = 'Preferences' }) => {
         <div className="mcm-acct-narrow">
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)}>
+              {/* The cards below are a shared editor with no badge of its own
+                  on a personal page, so the honest notes sit above them.
+                  Since the switch patch of 3 Sep 2026 the person's own
+                  Business Hours (with the closed-hours destination, else
+                  voicemail) ARE read for a call dialled straight to their
+                  extension - proven by offline tests and by reading the
+                  running switch, not yet by a real call. Recording,
+                  transcription, AI monitoring and display number are still
+                  the company's rule; the personal copies saved here are
+                  not read. */}
+              <div className="mb-3 flex flex-col gap-2">
+                <LiveNote title="Business Hours: Active">
+                  Your hours are followed for direct calls. {DIRECT_CALLS_ONLY_WORDING}
+                </LiveNote>
+                <NotAppliedNote title={NOT_APPLIED_WORDING}>
+                  Covers Recording, Transcription, AI Monitoring and Display Number — set under{' '}
+                  <Link to={COMPANY_RULES_PATH} className="font-semibold underline">
+                    Company Rules
+                  </Link>
+                  .
+                </NotAppliedNote>
+              </div>
               <CommonSettingPermission
                 type={'GENERAL_SETTING'}
                 data={{ user_info: userInfoData?.user_info, settings: userInfoData?.settings }}

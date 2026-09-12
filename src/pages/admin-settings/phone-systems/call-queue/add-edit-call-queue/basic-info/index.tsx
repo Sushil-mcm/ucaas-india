@@ -41,6 +41,7 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
         >
           <SettingRow
             label="Name"
+            required
             description="Shown wherever this queue appears - reports, transfer lists, the queue list."
             control={
               /* The word is fixed and the admin types only the team. Every queue
@@ -89,6 +90,7 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
 
           <SettingRow
             label="Location"
+            required
             description="Sets the clock this queue works to, and the hours it follows."
             control={
               <CustomSelect
@@ -104,7 +106,6 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
               />
             }
           />
-
         </SettingCard>
 
         <QueueNumbersPanel
@@ -122,6 +123,7 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
         >
           <SettingRow
             label="Extension"
+            required
             description={
               queueDetails
                 ? 'Not a number a customer can call. Fixed once the queue exists, because other screens point at it.'

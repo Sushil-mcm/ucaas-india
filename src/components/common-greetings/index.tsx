@@ -38,16 +38,41 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
     ({ name }) => !isStarterPlan || !['hold', 'on_hold_music'].includes(name),
   );
 
+  /* Turning a slot on picks its stock recording, rather than leaving an empty
+     box above a switch that says the slot is in use. Every tenant is seeded
+     with the same defaults, so there is always one to reach for - except ring
+     tone, which has no stock recording, and is simply left blank.
+     A recording already chosen is never overwritten. */
+  const defaultForSlot = (name: string): ISELECTVALUE | null => {
+    const stock = (optionsData?.[name] ?? []).find((item) => Boolean(item?.is_default));
+    if (!stock) return null;
+    return {
+      label: stock.name,
+      value: stock.filename,
+      uuid: stock.uuid,
+      is_default: stock.is_default,
+    } as ISELECTVALUE;
+  };
+
   const onChangeMedia = (name: string, status: boolean) => {
     setValue(`${formParentKey}.${name}.enabled`, status, {
       shouldDirty: true,
       shouldTouch: true,
     });
-    setValue(`${formParentKey}.${name}.value`, { label: '', value: '' } as ISELECTVALUE, {
-      shouldDirty: true,
-      shouldTouch: true,
-      // shouldValidate: true,
-    });
+
+    const current = watch(`${formParentKey}.${name}.value`);
+    const alreadyChosen = Boolean(current?.value);
+    const next = status && !alreadyChosen ? defaultForSlot(name) : null;
+
+    setValue(
+      `${formParentKey}.${name}.value`,
+      (next ?? ({ label: '', value: '' } as ISELECTVALUE)),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        // shouldValidate: true,
+      },
+    );
   };
 
   const preserveGreetingForm = () => {
@@ -82,8 +107,15 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
     <div className={`w-full ${customClass} overflow-y-auto`}>
       <div className="flex flex-col gap-4 p-4 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] ">
         <div className="w-full">
-          {visibleMediaOptions.map(({ name, label, placeholder, icon, iconClass, disabled }) => (
-            <div key={name} className="flex flex-col gap-4 w-full py-2 first:pt-0 last:pb-0">
+          {/* `lockNote` marks a row the company rule has frozen on a person's
+              own Greetings page: the switch and the picker are greyed out and
+              the sentence says why, so a disabled control is not mistaken for
+              a broken one. Admin screens never pass it. */}
+          {visibleMediaOptions.map(({ name, label, placeholder, icon, iconClass, disabled, lockNote }, index) => (
+            <div
+              key={`${name}-${index}`}
+              className="flex flex-col gap-4 w-full py-2 first:pt-0 last:pb-0"
+            >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center flex-wrap gap-1">
                   <Icon name={icon} className={iconClass} />
@@ -108,12 +140,16 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
                     checked={watchMedia?.[name]?.enabled ?? false}
                     onCheckedChange={(checked) => onChangeMedia(name, checked)}
                     className="cursor-pointer"
-                    disabled={disabled}
+                    disabled={disabled || Boolean(lockNote)}
                   />
                 )}
               </div>
+              {lockNote ? <p className="text-xs text-gray-500">{lockNote}</p> : null}
               <div className="flex flex-col gap-2 w-1/2 template-greeting-control-wrap">
-                <div className="w-80 template-greeting-control">
+                <div
+                  className={`w-80 template-greeting-control${lockNote ? ' pointer-events-none opacity-60' : ''}`}
+                  aria-disabled={lockNote ? true : undefined}
+                >
                   {watchMedia?.[name]?.enabled && (
                     <>
                       <SelectGreeting
@@ -134,10 +170,17 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
                             shouldValidate: true,
                           })
                         }
+                        /* `is_default` matters as much as the uuid: it is what
+                           tells the player to fetch from the shared default
+                           path instead of this company's folder, where a stock
+                           file does not exist. Without it a stock recording
+                           resolved to a 404 and the row read "Unable to load
+                           this audio." */
                         options={optionsData[name]?.map((item: GreetingItem) => ({
                           label: item.name,
                           value: item.filename,
                           uuid: item.uuid,
+                          is_default: item.is_default,
                         }))}
                         value={watch(`${formParentKey}.${name}.value`) || null}
                         errors={

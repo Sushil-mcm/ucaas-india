@@ -27,24 +27,32 @@ import {
  * namespaced under `settings.company_messaging` and the rest of the blob is
  * merged back untouched on save.
  *
- * IMPORTANT — nothing in this product reads `settings.company_messaging.*` yet.
- * Checked while writing this file:
+ * Since 9 Sep 2026 the SMS gateway (default-api, SmsController.sendSms and
+ * getInboundSms, with lib/companySection.ts + lib/smsMessagingRules.ts) reads
+ * every key on this screen at the moment a text is sent or received:
  *
- *   - The two places that actually send a text, the Inbox composer
- *     (src/pages/inbox/index.tsx, the handler around line 1108) and the Send SMS
- *     window (src/pages/inbox/send-sms-modal/index.tsx, around line 272), both
- *     call POST /api/v1/sms/send after checking only two things: whether the
- *     destination is a US number with an unverified 10DLC brand, and whether
- *     there is SMS credit left. Neither reads the company record.
- *   - The only consumer of the company record today is src/lib/company-policy.ts,
- *     and it reads `*.override` flags for the personal settings page. It knows
- *     nothing about messaging.
+ *   - sms_mms.enabled === false        -> POST /api/v1/sms/send answers 403 for
+ *     the whole company (Inbox, Send SMS window, Zapier, API keys) and an
+ *     inbound text to any company number is dropped with a log line instead
+ *     of being delivered to an inbox. STOP is still recorded while off.
+ *   - unregistered_us_numbers.outbound_allowed !== true -> a text FROM a US
+ *     number is refused (403) when the company's 10DLC brand is not verified.
+ *     The Inbox and the Send SMS window still refuse before that, in the
+ *     browser, when the brand is known-unverified (src/hooks/use-messaging-permissions.ts).
+ *   - help_message.text -> sent back when someone texts HELP or INFO to a
+ *     company number, once per sender per hour, through the ordinary send path.
+ *     STOP gets the standard unsubscribe line the same way.
  *
- * So every switch here is a recorded decision, not an enforced one. Each card
- * says so in its own words. If the backend starts honouring a key, change that
- * card's note and its `enforced` flag together — an admin who believes they have
- * switched SMS off, and has not, may send messages they are not permitted to.
+ * The browser hook above is still only a guard rail; the server is the lock.
+ * Staged copies of the server patch: backend-patches/default-api/patch_sms_messaging_rules.py
+ * (+ tests/sms-messaging-rules.test.cjs). If that patch is ever rolled back on
+ * the server, flip SERVER_RULES_LIVE below so the badges stop over-promising.
  */
+
+/* Whether the server-side rules described above are running on the API this
+   build talks to. True since 9 Sep 2026 on api2 (mcm-new). One flag, three
+   badges: an admin must never read "Active" on a rule the server ignores. */
+const SERVER_RULES_LIVE = true;
 
 const MESSAGING_KEY = 'company_messaging';
 const MESSAGING_SCHEMA_VERSION = 1;
@@ -303,8 +311,12 @@ const CompanyMessaging = () => {
             icon={<MessageSquare className="h-5 w-5" />}
             title="Inbound and outbound SMS/MMS"
             description="One switch for texting with people outside the company, on every number this account owns."
-            status="app-only"
-            note="Works in this app. When this is off, people are stopped from sending texts here. If you need texting stopped completely — for a legal hold or a carrier complaint — release the SMS numbers and contact support as well."
+            status={SERVER_RULES_LIVE ? 'active' : 'app-only'}
+            note={
+              SERVER_RULES_LIVE
+                ? 'Active. Off is enforced on the server at the moment of sending and receiving, whatever app or integration is used: outgoing texts are refused with a clear message, and incoming texts to your numbers are not delivered to anyone (each one is written to the log, not to an inbox). Texts already in flight at the carrier are not recalled.'
+                : 'Works in this app. When this is off, people are stopped from sending texts here. The server-side rule is built but not switched on for this API yet.'
+            }
           >
             <ToggleRow
               title="Allow SMS and MMS"
@@ -325,8 +337,15 @@ const CompanyMessaging = () => {
                   <p className="text-xs font-semibold text-[#2E2D35]">Stops</p>
                   <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-xs text-[#9A948F]">
                     <li>Texts to and from people outside the company, in and out.</li>
-                    <li>The SMS APIs, so anything you have wired up to text customers.</li>
-                    <li>SMS satisfaction (CSAT) surveys sent after a call or chat.</li>
+                    <li>The SMS APIs and integrations, so anything you have wired up to text customers.</li>
+                    <li>
+                      The automatic HELP reply. Someone who texts STOP is still recorded as opted
+                      out, but gets no confirmation while texting is off.
+                    </li>
+                    <li>
+                      Incoming texts are not kept for later: switch texting back on and only new
+                      texts arrive.
+                    </li>
                   </ul>
                 </div>
                 <div className="rounded-lg bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
@@ -336,6 +355,10 @@ const CompanyMessaging = () => {
                     <li>
                       That traffic never touches a carrier — it runs over this platform&rsquo;s own
                       messaging channel, so it is not SMS and this switch does not cover it.
+                    </li>
+                    <li>
+                      Sign-in codes and security alerts we text you. Those come from the
+                      platform&rsquo;s own number, not yours.
                     </li>
                   </ul>
                 </div>
@@ -347,8 +370,12 @@ const CompanyMessaging = () => {
             icon={<ShieldAlert className="h-5 w-5" />}
             title="Outbound SMS/MMS from unregistered numbers (US only)"
             description="Whether US numbers with no approved 10DLC campaign behind them may still be used to text."
-            status="active"
-            note="Active. You are warned before sending from a number that is not registered, because carriers are likely to block it and charge a higher rate. Registering your brand is what clears the block."
+            status={SERVER_RULES_LIVE ? 'active' : 'app-only'}
+            note={
+              SERVER_RULES_LIVE
+                ? 'Active. With this off, a text from one of your US numbers is refused at the moment of sending unless your 10DLC brand is verified — on every path, including the API. With it on, the text is allowed and you carry the risk of carrier filtering and surcharges. The Inbox still refuses before sending while your brand shows as not verified.'
+                : 'In this app only. The Inbox refuses to send to US numbers while your brand is not verified. This switch itself is not read on the server for this API yet.'
+            }
           >
             <ToggleRow
               title="Allow texting from unregistered US numbers"
@@ -417,8 +444,12 @@ const CompanyMessaging = () => {
             icon={<LifeBuoy className="h-5 w-5" />}
             title="HELP message"
             description="The reply someone should get when they text HELP to one of your numbers."
-            status="coming-soon"
-            note="Coming soon: sending this reply for you. For now it is the wording to give your carrier when you register, so your reply is agreed and written down in one place."
+            status={SERVER_RULES_LIVE ? 'active' : 'coming-soon'}
+            note={
+              SERVER_RULES_LIVE
+                ? 'Active. When someone texts HELP or INFO to one of your numbers, this reply goes back automatically from that number — once per person per hour, billed and logged like any text you send. Leave it empty and nothing is sent. Someone who texts STOP gets the standard unsubscribe line and no further texts from your company until they text START.'
+                : 'Coming soon: sending this reply for you. For now it is the wording to give your carrier when you register, so your reply is agreed and written down in one place.'
+            }
           >
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">

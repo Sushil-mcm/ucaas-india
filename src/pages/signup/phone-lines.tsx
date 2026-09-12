@@ -1,9 +1,7 @@
 import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomSelect from '@/components/custom/custom-select';
-import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import {
   buyVirtualDID,
   countryList,
@@ -15,6 +13,7 @@ import {
   getPlanInfo,
   reserveDid,
   reserveDidQuantity,
+  getInventoryOptions
 } from '@/services/api';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
@@ -29,6 +28,8 @@ import { featuresLookUp, featuresObj } from '../admin-settings/numbers/all-numbe
 import TableManager from '@/components/custom/table-manager';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { getPlanDidCountries, normalizeDidCountries } from '@/lib/did-countries';
+import { isSellableNumberType, lookupInventory } from '@/lib/did-inventory';
+import NumberPicker from '@/components/numbers/number-picker';
 
 const PURCHASE_WINDOW_SECONDS = 2 * 60;
 
@@ -233,7 +234,10 @@ const PhoneLines = () => {
   const didTypeOptions = useMemo(
     () =>
       dataDIDTypeList
-        .filter((item: any) => ['local', 'mobile'].includes(String(item?.name).toLowerCase()))
+        /* Was local + mobile. Mobile does not exist in the US - the carrier
+           returns zero mobile groups for it - so that filter offered one real
+           choice and one that could never be filled. */
+        .filter(isSellableNumberType)
         .map((item: any) => ({
           label: item?.name,
           value: item?.id,
@@ -273,11 +277,40 @@ const PhoneLines = () => {
       selectedCountryIso,
       watchDIDType?.value,
       watchRegion?.value,
+      watchRegion?.label,
       watchCity?.value,
       watchGroupId?.value,
     ],
-    queryFn: () =>
-      getAvailableDid(
+    /* Our own stock first, the carrier only when a state has run dry.
+       This is the sign-up path, so it is the one that matters most: a number
+       we already own is handed over immediately, where asking DIDWW means a
+       search and then an order placed inside the customer's first payment -
+       the slowest and most fragile moment we have. */
+    queryFn: async () => {
+      /* Country and number type only. Sign-up is the worst place to ask a
+         question we can answer ourselves, and we stock a handful of states, so
+         the five come back spread across those. A region is still honoured if
+         one was chosen, which the carrier fallback below needs. */
+      const stock = await lookupInventory({
+        countryIso: selectedCountryIso,
+        numberType: watchDIDType,
+        /* No region, for the same reason as the Add Number screen: scoping
+           to a stale selection emptied the result and fell through to the
+           carrier. */
+        regionName: null,
+        config: onboardingRequestConfig,
+      });
+      if (stock.source === 'inventory') {
+        /* Shaped like the carrier's reply so `select` and everything below it
+           stay unchanged - a row is a row whichever shelf it came from. */
+        return { data: { data: { result: { rows: stock.rows } } } };
+      }
+      /* Nothing in stock. The carrier search is keyed on an area code, so
+         without one there is nothing to ask for yet. */
+      if (!watchGroupId?.value) {
+        return { data: { data: { result: { rows: [] } } } };
+      }
+      return getAvailableDid(
         {
           country_iso: selectedCountryIso,
           region_id: watchRegion?.value,
@@ -285,12 +318,47 @@ const PhoneLines = () => {
           group_id: watchGroupId?.value,
         },
         onboardingRequestConfig,
-      ),
+      );
+    },
     select: (data: any) => data?.data?.data?.result?.rows || [],
-    enabled: Boolean(watchGroupId?.value),
+    /* Stock is held per state, not per area code, so this can now answer before
+       an area code is picked. Toll-free has no state at all. */
+    /* Country + type is enough to ask the shelf; only the carrier fallback
+       needs a region and an area code. */
+    enabled: Boolean(selectedCountryIso && watchDIDType?.value),
   });
+  /* Numbers that came off our own shelf need no narrowing, so the region and
+     area-code pickers are not shown at all - they exist only to scope a carrier
+     search. If the shelf is empty they come back and the old flow applies. */
+  /* We stock the United States and nothing else, so the country picker is a
+     question with a single answer. Asked once on mount: with stock, the United
+     States is chosen for the customer and the picker is not shown. No stock and
+     it comes straight back, because the carrier does sell other countries. */
+  const { data: inventoryOptions } = useQuery({
+    queryKey: ['didInventoryOptions', 'US'],
+    queryFn: () => getInventoryOptions({ country_iso: 'US' }, onboardingRequestConfig),
+    select: (res: any) => res?.data?.data?.result ?? res?.data?.result ?? null,
+    staleTime: 60000,
+  });
+  const hasUsStock = Boolean(
+    (inventoryOptions?.types || []).some((t: any) => Number(t?.total || 0) > 0),
+  );
+  const usCountryOption = useMemo(
+    () => (locationOptions || []).find((o: any) => o?.value === 'US'),
+    [locationOptions],
+  );
+  useEffect(() => {
+    if (!hasUsStock || !usCountryOption || watchLocation?.value) return;
+    setValue('location', usCountryOption, { shouldValidate: true });
+  }, [hasUsStock, usCountryOption, watchLocation?.value, setValue]);
+  const hideCountryPicker = hasUsStock && watchLocation?.value === 'US';
+
+  const servedFromStock = Boolean((didAvailableData || [])[0]?.from_inventory);
   const hasAvailableDidNumbers = Boolean(didAvailableData?.length);
-  const [purchaseSecondsRemaining, setPurchaseSecondsRemaining] = useState(PURCHASE_WINDOW_SECONDS);
+  /* The countdown is no longer shown - the picker has no "complete within"
+     header - but the timer itself stays: it refreshes the offered numbers every
+     two minutes, which keeps a lapsed hold from being presented as available. */
+  const [, setPurchaseSecondsRemaining] = useState(PURCHASE_WINDOW_SECONDS);
 
   useEffect(() => {
     if (!hasAvailableDidNumbers) {
@@ -333,10 +401,6 @@ const PhoneLines = () => {
     };
   }, [hasAvailableDidNumbers, refetchAvailableDids, setValue]);
 
-  const purchaseCountdown = `${String(Math.floor(purchaseSecondsRemaining / 60)).padStart(
-    2,
-    '0',
-  )}:${String(purchaseSecondsRemaining % 60).padStart(2, '0')}`;
   const { mutate: mutateBuyVirtualDID, isPending: isPendingBuyVirtualDID } = useMutation({
     mutationFn: (data: any) => buyVirtualDID(data, onboardingRequestConfig),
     onSuccess: (response: any) => {
@@ -355,7 +419,23 @@ const PhoneLines = () => {
     },
   });
 
-  const { mutate: mutateReserveDid, isPending } = useMutation({
+  /* Reserving is deliberately NOT done on the buy path.
+
+     DIDWW removes a reserved DID from `available_dids`, and the order path
+     (createOrderInternal -> findDID) looks the DID up in `available_dids` to
+     resolve its SKU. So reserving a number three seconds before ordering it
+     made every purchase fail - as a 404 that the backend then reported as
+     "DID provider timeout", which it never was.
+
+     Proven 7 Sep 2026 against the live provider: a DID holding a live
+     reservation returns 404, and the very same DID returns 200 once the hold
+     lapses. There is no payment step between Add Number and Confirm, so a hold
+     buys nothing here anyway.
+
+     The mutation is kept rather than deleted: once the backend resolves the SKU
+     from the reservation instead of from `available_dids`, reserving becomes
+     safe again and this is a one-line restore. */
+  const { isPending } = useMutation({
     mutationKey: ['reserveDid'],
     mutationFn: (data: any) => reserveDid(data, onboardingRequestConfig),
     onSuccess: () => {
@@ -380,10 +460,8 @@ const PhoneLines = () => {
         did_id: watchGroupId?.value,
       });
     } else {
-      mutateReserveDid({
-        available_did_id: [watchDIDNumber?.value],
-        country_iso: selectedCountryIso,
-      });
+      // Straight to the confirm step - no reservation, for the reason above.
+      setIsDIDBuy(true);
     }
   };
 
@@ -509,6 +587,7 @@ const PhoneLines = () => {
             <h3 className="text-2xl font-semibold">Choose a main number for your account</h3>
             <div className={`flex flex-col border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-xl p-3 gap-2`}>
               <div className="flex flex-col gap-4 py-4">
+                {!hideCountryPicker && (
                 <CustomSelect
                   label="Country"
                   placeholder="Select Country"
@@ -525,7 +604,12 @@ const PhoneLines = () => {
                   value={watchLocation}
                   isLoading={isPlanInfoLoading || isFallbackCountryListLoading}
                 />
+                )}
 
+                {/* The type is asked as two cards inside the picker below, the
+                    same way /get-started asks it. Kept mounted but hidden so the
+                    form state and validation are untouched. */}
+                <div className="hidden">
                 <CustomSelect
                   label="DID Type"
                   placeholder="Select DID Type"
@@ -543,7 +627,10 @@ const PhoneLines = () => {
                   isLoading={didTypeListLoading}
                   isDisabled={!selectedCountryIso}
                 />
+                </div>
 
+                {!servedFromStock && (
+                <>
                 <CustomSelect
                   label="Region"
                   placeholder="Select Region"
@@ -586,6 +673,8 @@ const PhoneLines = () => {
                     value={watchCity}
                     isLoading={cityListLoading}
                   />
+                )}
+                </>
                 )}
               </div>
             </div>
@@ -637,87 +726,48 @@ const PhoneLines = () => {
               ) : null}
 
               <div className="w-full">
-                {watchGroupId?.value && (
+                {/* Stock has no area-code group to pick, so the list cannot wait
+                    for one. Both of these gates were written for the carrier
+                    flow, where a group and a region are how a number is found;
+                    from our own shelf the numbers are already in hand. */}
+                {(watchGroupId?.value || servedFromStock) && (
                   <>
                     <div className="flex flex-wrap mx-auto w-full gap-5">
-                      {watchCity?.value && watchRegion?.value ? (
-                        isPendingAvailableDID || isFetchingAvailableDID ? (
-                          <div className="w-full flex justify-center">
-                            <Loader variant="blue" />
-                          </div>
-                        ) : didAvailableData?.length > 0 ? (
-                          <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] w-full border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col">
-                            <div className="pb-1 flex flex-col gap-0.5 px-3">
-                              <h6 className="flex gap-2 text-sm font-semibold">
-                                Please complete the purchase within {purchaseCountdown}
-                              </h6>
-                              {errors?.did_number?.value?.message && (
-                                <div className="text-[#DC5049] font-medium text-xs pb-1 absolute top-2">
-                                  {errors?.did_number?.value?.message}
-                                </div>
-                              )}
-                            </div>
-                            <RadioGroup
-                              value={watchDIDNumber?.value}
-                              onValueChange={(value) => {
-                                const selected = didAvailableData?.find((d: any) => d.id === value);
-                                if (selected) {
-                                  setValue('did_number', {
-                                    label: selected?.number,
-                                    value: selected.id,
-                                  });
-                                }
-                              }}
-                              className="flex w-full flex-wrap gap-4 items-center "
-                            >
-                              {didAvailableData?.slice(0, 10)?.map((item: any) => {
-                                const didNumber = item?.number;
-                                const didId = item?.id;
-
-                                return (
-                                  <div
-                                    className="flex items-center space-x-2 min-w-[150px]"
-                                    key={`${didId}-${didNumber}`}
-                                  >
-                                    <RadioGroupItem value={didId} id={`did-${didId}`} />
-                                    <Label htmlFor={`did-${didId}`}>{didNumber}</Label>
-                                  </div>
-                                );
-                              })}
-                            </RadioGroup>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl p-3 gap-3 flex flex-col items-center">
-                              <div className="pb-1 flex flex-col gap-0.5 px-3">
-                                <h6 className="flex gap-2 text-sm font-semibold">No DID found</h6>
-                              </div>
-                            </div>
-
-                            {/* <div className="flex gap-2">
-                              <CustomSelect
-                                label={'Select quantity'}
-                                options={[1]?.map((v: any) => ({
-                                  label: v,
-                                  value: v,
-                                }))}
-                                handleChange={(data) => {
-                                  setValue(
-                                    'quantity',
-                                    {
-                                      label: data?.label,
-                                      value: data?.value,
-                                    },
-                                    { shouldValidate: true },
-                                  );
-                                }}
-                                value={watchQuantity}
-                                placeholder="Select quantity"
-                                error={errors?.quantity?.value?.message}
-                              />
-                            </div> */}
-                          </div>
-                        )
+                      {servedFromStock || (watchCity?.value && watchRegion?.value) ? (
+                        <div className="w-full">
+                          {errors?.did_number?.value?.message && (
+                            <p className="pb-2 text-center text-xs font-medium text-red-500">
+                              {errors.did_number.value.message}
+                            </p>
+                          )}
+                          {/* The same picker the Add Number wizard uses, so
+                              somebody buying their second number recognises the
+                              screen they signed up on. */}
+                          <NumberPicker
+                            loading={isPendingAvailableDID || isFetchingAvailableDID}
+                            heading="Choose your first phone number"
+                            subheading="Within the US, and you can add more later"
+                            numbers={(didAvailableData || []).map((item: any) => ({
+                              id: String(item?.id),
+                              number: String(item?.number),
+                              area_code: item?.area_code ?? null,
+                              area_name: item?.area_name ?? null,
+                              region_name: item?.region_name ?? null,
+                              from_inventory: Boolean(item?.from_inventory),
+                            }))}
+                            selectedId={watchDIDNumber?.value ? String(watchDIDNumber.value) : null}
+                            onSelect={(item) => {
+                              setValue('did_number', { label: item.number, value: item.id });
+                            }}
+                            types={didTypeOptions.map((t: any) => ({ label: t.label, value: t.value }))}
+                            selectedType={watchDIDType?.value ? watchDIDType : null}
+                            onTypeChange={(t) => {
+                              setValue('did_type', t, { shouldValidate: true });
+                              setValue('did_number', { label: '', value: '' });
+                            }}
+                            emptyMessage="No number is available right now. Please try again shortly."
+                          />
+                        </div>
                       ) : (
                         <div className="rounded-lg m-auto border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3 text-center">
                           <h5 className="text-base text-[#2E2D35] font-normal w-full text-center flex justify-center">

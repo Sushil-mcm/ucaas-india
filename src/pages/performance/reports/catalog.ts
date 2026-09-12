@@ -32,6 +32,9 @@ export type ReportDef = {
   description: string;
   /** Absent when the platform has no real source for this report yet. */
   build?: (context: ReportContext) => ReportTable;
+  /** A report with its own screen and its own server query, instead of a
+      table built from the fetched call-log rows. */
+  custom?: 'queue-series' | 'script-answers';
   /** Why it can't be built, shown instead of fake numbers. */
   unavailableReason?: string;
 };
@@ -66,6 +69,13 @@ export const REPORT_CATALOG: ReportGroup[] = [
         title: 'Daily Trend',
         description: 'Day-by-day volumes, abandon rate, SL and AHT',
         build: dailyTrend,
+      },
+      {
+        id: 'queue-service-level-series',
+        title: 'Service Level by Interval',
+        description:
+          'Service level, abandon rate and ASA by hour or by day, per queue and in total, counted on the server from every call in the range',
+        custom: 'queue-series',
       },
       {
         id: 'abandon-insights',
@@ -136,6 +146,13 @@ export const REPORT_CATALOG: ReportGroup[] = [
         title: 'Repeat Callers',
         description: 'Numbers that called more than once in the range',
         build: repeatCallers,
+      },
+      {
+        id: 'script-answers',
+        title: 'Script Answers',
+        description:
+          'What agents recorded against each question in a call script: counts per choice, number ranges and the latest written answers',
+        custom: 'script-answers',
       },
       {
         id: 'wrapup-by-queue',
@@ -230,8 +247,10 @@ export const findReport = (id: string): ReportDef | undefined => {
   return undefined;
 };
 
+export const isReportAvailable = (report: ReportDef) => Boolean(report.build || report.custom);
+
 export const AVAILABLE_REPORT_COUNT = REPORT_CATALOG.reduce(
-  (count, group) => count + group.reports.filter((report) => report.build).length,
+  (count, group) => count + group.reports.filter(isReportAvailable).length,
   0,
 );
 

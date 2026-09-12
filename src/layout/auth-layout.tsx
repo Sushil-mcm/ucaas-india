@@ -8,13 +8,17 @@ import AgentRunningCampignOuter from '@/components/running-campaign-outer';
 import DialpadGlobalOverlay from '@/components/dialpad/dialpad-global-overlay';
 import { useAvCall } from '@/hooks/use-av-call';
 import { useCampaign } from '@/hooks/use-campaign';
+import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { CAMPAIGN_STATUS_CONST } from '@/pages/auto-dialer/campaign/const';
 import MeetRinging from '@/pages/messenger/chat/meet-ringing';
 import { GlobalCallbackReminder } from '@/components/custom/callback-reminder/global-callback-reminder';
 import { SuspenseOutlet } from '@/components/custom/route-suspense';
 // import PowerDialerCampaign from '@/components/power-dialer-campaign';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import AlertConfirm from '@/components/custom/alert-confirm';
+import { handleAlert } from '@/lib/utils';
+import { HoursNotice, hoursStopNotice } from '@/lib/campaign-window';
 
 import { useIdleTimeout } from '@/hooks/use-idle-timeout';
 
@@ -79,10 +83,50 @@ const AuthLayout = () => {
       },
     };
   }, [allChats, meetInitiateModalData]);
+  /* The popup when a campaign is stopped by its calling hours - by the dialer
+     engine (campaign-state-update, pausedBy HOURS) or because this browser
+     refused a preview call outside them.
+     It used to appear for EVERYONE signed in, on every page. campaign-state-update
+     is broadcast to the whole company, so an agent working a different campaign -
+     or no campaign at all - got a modal thrown over their screen about somebody
+     else's. A modal is an interruption and has to be earned.
+     It is now shown to the people it is actually about: whoever has joined that
+     campaign, and whoever just acted on it in this browser (the local event
+     below, which the campaign list raises for the person who pressed Start). */
+  const { joinedCampaignId } = useDialpad();
+  const [hoursNotice, setHoursNotice] = useState<HoursNotice | null>(null);
+  useEffect(() => {
+    const onLocal = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail && typeof detail === 'object') setHoursNotice(hoursStopNotice(detail));
+    };
+    window.addEventListener('mcm:campaign-hours-closed', onLocal);
+    return () => window.removeEventListener('mcm:campaign-hours-closed', onLocal);
+  }, []);
+
   useEffect(() => {
     if (!socketEventsManager) return;
     const handler = (data: any) => {
       if (data && data?._id) {
+        const isMine =
+          String(joinedCampaignId || '').trim() === String(data?._id || '').trim() &&
+          Boolean(String(joinedCampaignId || '').trim());
+        if (
+          isMine &&
+          data?.campaignStatus === CAMPAIGN_STATUS_CONST.PAUSE &&
+          String(data?.pausedBy || '').toUpperCase() === 'HOURS'
+        ) {
+          setHoursNotice(hoursStopNotice(data));
+        } else if (
+          isMine &&
+          data?.campaignStatus === CAMPAIGN_STATUS_CONST.PROCESSING &&
+          String(data?.resumedBy || '').toUpperCase() === 'HOURS'
+        ) {
+          handleAlert({
+            type: 'success',
+            text: `${data?.name || 'Campaign'} is running again: its calling hours have opened.`,
+          });
+        }
         if (
           data?._id === selectedCampaign?.value &&
           data?.campaignStatus === CAMPAIGN_STATUS_CONST.PAUSE
@@ -103,7 +147,7 @@ const AuthLayout = () => {
     return () => {
       socketEventsManager.off('campaign-state-update', handler);
     };
-  }, [socketEventsManager, selectedCampaign?.value]);
+  }, [socketEventsManager, selectedCampaign?.value, joinedCampaignId]);
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -131,6 +175,18 @@ const AuthLayout = () => {
         </div>
       </div>
       {/* <Dialer {...{ isDialerDrawerOpen, setIsDialerDrawerOpen, isDialerOpen, setIsDialerOpen }} /> */}
+      {hoursNotice ? (
+        <AlertConfirm
+          open
+          setOpen={() => setHoursNotice(null)}
+          headerText={hoursNotice.title}
+          descriptionTextComp={<p className="text-sm text-gray-700">{hoursNotice.text}</p>}
+          singleButton
+          singleButtonText="OK"
+          singleButtonHandler={() => setHoursNotice(null)}
+          onConfirm={() => setHoursNotice(null)}
+        />
+      ) : null}
       <DialpadGlobalOverlay />
       {/* <PowerDialerCampaign /> */}
       <UpgradePlanWidget />

@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
@@ -79,6 +80,7 @@ const CaptainAssistants = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isAssistantDropdownOpen, setIsAssistantDropdownOpen] = useState(false);
 
   // Security tiers & custom tools state
@@ -335,7 +337,6 @@ const CaptainAssistants = () => {
 
   const handleDelete = async (id: string) => {
     if (id === 'default-assistant') return;
-    if (!window.confirm('Delete this assistant? This cannot be undone.')) return;
     setDeletingId(id);
     try {
       const res = await captainFetch(`${CAPTAIN_API_BASE}/assistants/${id}`, { method: 'DELETE' });
@@ -829,13 +830,15 @@ const CaptainAssistants = () => {
             </div>
           </details>
 
-          {/* Bottom Action Bar (Cancel / Update) matching Floatchat app */}
-          <div className="flex items-center justify-center gap-4 pt-4">
+          {/* Bottom Action Bar (Cancel / Update) matching Floatchat app — both
+              buttons split the row evenly and sit close together, rather than
+              two narrow, widely-spaced pills. */}
+          <div className="flex items-center gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setViewMode('list')}
-              className="h-11 w-44 rounded-xl border-gray-300 dark:border-gray-700 bg-transparent text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+              className="h-11 flex-1 rounded-xl !border-gray-300 !bg-white !text-gray-900 text-sm font-semibold hover:!bg-gray-100 dark:!border-gray-600 dark:!bg-gray-800 dark:!text-white dark:hover:!bg-gray-700 cursor-pointer"
             >
               Cancel
             </Button>
@@ -843,7 +846,7 @@ const CaptainAssistants = () => {
               type="button"
               disabled={isSaving || !form.name.trim()}
               onClick={handleSave}
-              className="h-11 w-72 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-md transition-all cursor-pointer"
+              className="h-11 flex-1 rounded-xl !border-indigo-600 !bg-indigo-600 hover:!bg-indigo-500 !text-white text-sm font-semibold shadow-md transition-all cursor-pointer"
             >
               {isSaving ? 'Saving...' : editingId ? 'Update' : 'Save'}
             </Button>
@@ -996,7 +999,7 @@ const CaptainAssistants = () => {
                       variant="destructiveOutline"
                       size="sm"
                       disabled={deletingId === a.id}
-                      onClick={() => handleDelete(a.id)}
+                      onClick={() => setPendingDeleteId(a.id)}
                     >
                       <Trash2 className="size-3.5" />
                       {deletingId === a.id ? 'Deleting...' : 'Delete'}
@@ -1008,6 +1011,13 @@ const CaptainAssistants = () => {
           </div>
         )}
       </div>
+      <DeleteConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+        itemLabel="assistant"
+        itemName={assistants.find((a) => a.id === pendingDeleteId)?.name}
+        onConfirm={() => handleDelete(pendingDeleteId!)}
+      />
     </div>
   );
 };

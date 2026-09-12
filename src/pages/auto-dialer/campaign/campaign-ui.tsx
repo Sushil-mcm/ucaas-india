@@ -58,7 +58,7 @@ export const CAMPAIGN_STATUS: Record<
 > = {
   PROCESSING: { label: 'Running', cls: 'q' },
   PAUSE: { label: 'Paused', cls: 'acw' },
-  NEW: { label: 'Scheduled', cls: 'busy' },
+  NEW: { label: 'Not started', cls: 'busy' },
   COMPLETED: { label: 'Completed', cls: 'away' },
   COMPLETE: { label: 'Completed', cls: 'away' },
 };
@@ -76,9 +76,15 @@ export const DIAL_METHOD_LABEL: Record<string, string> = {
 };
 
 /** Status pill; running campaigns get a live dot. */
-export const StatusPill = ({ status }: { status?: string }) => {
-  const { label, cls } = statusOf(status);
+export const StatusPill = ({ status, dialMethod }: { status?: string; dialMethod?: string }) => {
   const running = String(status || '').toUpperCase() === 'PROCESSING';
+  /* An inbound line is never "started": it is receiving calls or it is off. */
+  const inbound = String(dialMethod || '').toUpperCase() === 'INBOUND';
+  const { label, cls } = inbound
+    ? running
+      ? { label: 'Receiving calls', cls: 'live' }
+      : { label: 'Line off', cls: 'busy' }
+    : statusOf(status);
   return (
     <span className={`state ${cls}`}>
       {running ? <span className="dot green pulse" /> : null}
@@ -99,7 +105,18 @@ export const OutcomeBar = ({
   showFoot?: boolean;
 }) => {
   const { assigned, answered, noAnswer, dnc, pending, dialed } = readOutcomes(analytics);
-  const width = (value: number) => (assigned > 0 ? `${(value / assigned) * 100}%` : '0%');
+  /* A lead can be both dialled-and-unanswered and on the DNC list, so the
+     three segments can add up to more than the assigned total. Dividing by
+     whichever is larger keeps the bar inside its track without silently
+     dropping one of the outcomes. */
+  const span = Math.max(assigned, answered + noAnswer + dnc);
+  /* A single answered call in a list of hundreds is a fraction of a pixel
+     wide, which is the same as not drawing it. Any outcome that happened at
+     all gets at least a sliver. */
+  const seg = (value: number) => ({
+    width: span > 0 ? `${(value / span) * 100}%` : '0%',
+    minWidth: value > 0 ? 4 : 0,
+  });
 
   if (!assigned) {
     return <span style={{ color: 'var(--ink-4)', fontWeight: 600 }}>No leads assigned</span>;
@@ -111,14 +128,23 @@ export const OutcomeBar = ({
         className="segbar"
         title={`${fmt(answered)} answered · ${fmt(noAnswer)} no answer · ${fmt(dnc)} DNC · ${fmt(pending)} pending`}
       >
-        <i className="ans" style={{ width: width(answered) }} />
-        <i className="na" style={{ width: width(noAnswer) }} />
-        <i className="dnc" style={{ width: width(dnc) }} />
+        <i className="ans" style={seg(answered)} />
+        <i className="na" style={seg(noAnswer)} />
+        <i className="dnc" style={seg(dnc)} />
       </div>
       {showFoot ? (
         <div className="segfoot">
           <span>
             <b className="num">{pct(dialed, assigned)}%</b> dialled
+          </span>
+          {/* Answered is the outcome the bar exists to show, and until now it
+              was only in the tooltip — so a row read as "all no answer" when
+              the green segment was simply too small to notice. */}
+          <span>
+            <b className="num" style={{ color: 'var(--live)' }}>
+              {fmt(answered)}
+            </b>{' '}
+            answered
           </span>
           <span className="num">{fmt(pending)} left</span>
         </div>

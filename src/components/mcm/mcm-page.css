@@ -24,7 +24,8 @@
      - @keyframes are prefixed `mcmp-`.
    ============================================================ */
 
-.mcm-page {
+.mcm-page,
+.mcm-dialog {
   --ground: transparent;
   /* Upstream's warm, opaque surfaces, which replace the translucent ones
      the glass pass introduced. They also settle a bug those caused: these
@@ -267,7 +268,6 @@
 .mcm-page :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 .mcm-page ::-webkit-scrollbar {
   width: 9px;
@@ -654,7 +654,8 @@
 }
 
 /* ---- buttons ---- */
-.mcm-page .btn {
+.mcm-page .btn,
+.mcm-dialog .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -669,56 +670,69 @@
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.mcm-page .btn .ic {
+.mcm-page .btn .ic,
+.mcm-dialog .btn .ic {
   width: 17px;
   height: 17px;
 }
-.mcm-page .btn.primary {
+.mcm-page .btn.primary,
+.mcm-dialog .btn.primary {
   background: var(--accent);
   color: #fff;
   box-shadow: var(--shadow-sm);
 }
-.mcm-page .btn.primary:hover {
+.mcm-page .btn.primary:hover,
+.mcm-dialog .btn.primary:hover {
   background: var(--accent-ink);
 }
-.mcm-page .btn.answer {
+.mcm-page .btn.answer,
+.mcm-dialog .btn.answer {
   background: var(--live);
   color: #fff;
 }
-.mcm-page .btn.danger {
+.mcm-page .btn.danger,
+.mcm-dialog .btn.danger {
   background: var(--crit);
   color: #fff;
 }
-.mcm-page .btn.danger:hover {
+.mcm-page .btn.danger:hover,
+.mcm-dialog .btn.danger:hover {
   filter: brightness(0.92);
 }
-.mcm-page .btn.ghost {
+.mcm-page .btn.ghost,
+.mcm-dialog .btn.ghost {
   background: var(--surface-2);
   border-color: var(--line);
   color: var(--ink-2);
 }
-.mcm-page .btn.ghost:hover {
+.mcm-page .btn.ghost:hover,
+.mcm-dialog .btn.ghost:hover {
   border-color: var(--accent-edge);
   color: var(--accent-ink);
 }
-.mcm-page .btn.ai {
+.mcm-page .btn.ai,
+.mcm-dialog .btn.ai {
   background: var(--ai);
   color: #fff;
 }
-.mcm-page .btn.ai:hover {
+.mcm-page .btn.ai:hover,
+.mcm-dialog .btn.ai:hover {
   background: var(--ai-ink);
 }
-.mcm-page .btn.sm {
+.mcm-page .btn.sm,
+.mcm-dialog .btn.sm {
   height: 30px;
   padding: 0 11px;
   font-size: 12px;
   border-radius: 8px;
 }
-.mcm-page .btn.sm .ic {
+.mcm-page .btn.sm .ic,
+.mcm-dialog .btn.sm .ic {
   width: 14px;
   height: 14px;
 }
-.mcm-page .btn:disabled {
+.mcm-page .btn:disabled,
+.mcm-dialog .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -1064,9 +1078,14 @@
 /* ---- dense KPI strip ---- */
 .mcm-page .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  /* 136px, not 158px. Six tiles at the old floor needed ~950px before they
+     would fit on one line, which is more than the content area has once a
+     page carries both the icon rail and a section nav - so the strip ran past
+     the right edge and the last tile was cut in half. The tiles still grow to
+     fill whatever room there is. */
+  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
   gap: 1px;
-  background: var(--line);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   overflow: hidden;
@@ -1086,6 +1105,7 @@
 .mcm-page .kpi {
   background: var(--surface);
   padding: 13px 15px;
+  box-shadow: 0 0 0 1px var(--line);
 }
 .mcm-page .kpi .k {
   font-size: 9.5px;
@@ -2650,10 +2670,11 @@
 }
 
 .mcm-invite .mcm-invitee {
-  border-color: var(--line);
-  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   background: var(--surface);
-  align-items: start;
+  transition: border-color 0.15s ease;
 }
 
 /* The order summary was pinned to half-width on the right, floating away
@@ -6163,7 +6184,6 @@
 .mcm-page .ptabstrip a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-  border-radius: 4px;
 }
 
 /* The thumb moves with `translate`, NOT `transform`, and the difference is the
@@ -8524,3 +8544,1154 @@
   outline-offset: -2px;
 }
 
+/* New Message / Create New Team, opened inside the chat column.
+
+   Both forms were written for a full-height drawer and size their own scroll
+   area against the viewport -- `h-[calc(100vh-10rem)]` on the direct-message
+   form, `min-h-[calc(100vh-140px)]` on the team form. The column is shorter
+   than the window (the app header and the page title sit above it), so those
+   heights overflow it and push the Cancel and Send buttons out of reach.
+   Inside this panel the panel scrolls instead, and the forms size to content.
+   Unlayered, so it beats the Tailwind utility it overrides. */
+.mcm-chat-panel > :last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.mcm-chat-panel > :last-child > form {
+  min-height: 0;
+}
+
+/* The single scrolling element. Both forms put their fields in a box sized
+   against the viewport and pin their buttons underneath it; here that box
+   takes the height the panel actually has, so the buttons stay in view.
+   The negative margin cancels the panel's padding so the scrollbar sits on
+   the column's edge rather than floating in a gutter with the list showing
+   through beside it. */
+.mcm-chat-panel > :last-child > .overflow-auto,
+.mcm-chat-panel > :last-child > form > .overflow-auto {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  /* `w-full` on the team form's box pins it to the content width, so the
+     negative margin alone would not reach; widen it by the same amount. */
+  width: calc(100% + 0.75rem);
+  margin-right: -0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* ==================================================================
+   Rules ported from the unified frontend (new selectors that this
+   stylesheet did not have). Appended so later-wins keeps their intent.
+   ================================================================== */
+/* This reset exists so the ported artifact's bare <button> markup renders
+   unstyled. It must NOT reach the app's own components: a shadcn Button, a
+   Radix Checkbox and a Radix TabsTrigger are all <button> elements carrying
+   Tailwind utilities, and an unlayered rule BEATS a utility class — which is
+   how every icon button lost its border, every table checkbox became invisible,
+   and no wizard tab could show which one was active.
+
+   `@layer base` puts it below Tailwind's utilities layer, so anything with real
+   classes on it keeps them and only bare buttons are reset. */
+@layer base {
+  .mcm-page button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .mcm-page input,
+  .mcm-page textarea,
+  .mcm-page select {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+/* ── sortable column headings ─────────────────────────────── */
+.mcm-page th .mcm-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.mcm-page th .mcm-sort:hover {
+  color: var(--ink);
+}
+
+.mcm-page th .mcm-sort-mark {
+  font-size: 9px;
+  color: var(--ink-4);
+}
+
+.mcm-page th .mcm-sort:hover .mcm-sort-mark,
+.mcm-page th[aria-sort='ascending'] .mcm-sort-mark,
+.mcm-page th[aria-sort='descending'] .mcm-sort-mark {
+  color: var(--accent);
+}
+
+/* ── acting on several rows at once ───────────────────────── */
+.mcm-page .mcm-bulkbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--accent-wash, var(--surface-2));
+}
+
+.mcm-page .mini.danger {
+  border-color: var(--crit);
+  color: var(--crit);
+}
+
+.mcm-page .mini.danger:hover {
+  background: var(--crit);
+  border-color: var(--crit);
+  color: #fff;
+}
+
+.mcm-page .mcm-input {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  width: 100%;
+}
+
+/* Sections of the one panel: a rule between them, equal air either side. Must
+   come after the flattening above — same weight, later wins. The save bar is
+   excluded: it draws its own rule and owns its own spacing, and taking both
+   would double the line above it. */
+.mcm-page .cs-section > * + *:not(.cs-saverow):not(.cs-savebar) {
+  border-top: 1px solid var(--line-2);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+/* ---- primary buttons, everywhere ----
+
+   The reset at the top of this file strips every button's background, colour
+   and border so the console's own controls can be drawn from scratch. That also
+   strips the design system's `primary` variant, which is how a save button ends
+   up as bare dark text on any screen scoped by .mcm-page — the same fault that
+   hid the Change and Start Recording buttons.
+
+   Rather than restate the colour on each of the seventy-odd forms that have a
+   save button, this puts the variant's own utilities back. Two classes beat the
+   one-class-one-element reset, so these win wherever they appear, and they read
+   the accent tokens so a save button is the same blue as the open tab beside
+   it. Nothing has to be changed form by form for the colour to be uniform. */
+.mcm-page .bg-primary {
+  background: var(--accent);
+}
+
+.mcm-page .bg-primary:hover:not(:disabled) {
+  background: var(--accent-ink);
+}
+
+.mcm-page .text-white {
+  color: #fff;
+}
+
+.mcm-page .border-primary {
+  border-color: var(--accent);
+}
+
+/* ---- secondary buttons ----
+
+   The reset near the top of this file strips a button's border, background and
+   colour so the console's own controls can be built from scratch. Anything
+   coming in from the design system loses its variant to it: `outline` is white
+   with a brand border and brand text, and inside a .mcm-page screen it arrives
+   with none of the three, which is how a Change button ends up the same colour
+   as the panel behind it.
+
+   These say it again at a weight the reset cannot undo, in the console's own
+   tokens rather than the utility classes. */
+
+/* On the accent, like everything else here.
+
+   These reached for --primary at first, on the reasoning that a portal should
+   colour its buttons with whatever brand it is set to. That was wrong for this
+   design system: --primary is the raw dynamic value and is currently orange,
+   while every accent token AND every primary utility the pages use — .bg-primary
+   is var(--accent), .text-primary is var(--accent-ink) — already resolves to the
+   console blue. Following --primary made these three controls the only orange
+   things on an otherwise blue screen. */
+
+/* Stop, and anything else that ends something in progress. Red because that is
+   what a recording control is expected to be, and filled because it has to be
+   found at a glance while the microphone is live. */
+.mcm-page .cs-btn-danger {
+  background: var(--crit);
+  color: #fff;
+  border-color: transparent;
+}
+
+@media (hover: hover) {
+  .mcm-page .cs-btn-danger:hover {
+    background: color-mix(in oklab, var(--crit) 88%, black);
+  }
+}
+
+/* ---- a settings section already inside a panel ----
+
+   AdminPage wraps whatever it is given in a `.panel-card`, so a `.cs-section`
+   used on one of those screens draws a second surface inside the first: two
+   borders, two radii, and both lots of padding — which is why the Numbers views
+   sat further in from their edges than the company tabs do from theirs.
+
+   Nested, the section keeps only what it is for — the rhythm between the pieces
+   inside it — and leaves the surface to the panel that already drew one. The
+   padding moves out to that panel so its content is inset once, by the same
+   16px/20px a settings panel uses. */
+.mcm-page .panel-card > .tbl-wrap > .cs-section,
+.mcm-page .panel-card .cs-section {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
+.mcm-page .panel-card > .tbl-wrap:has(> .cs-section) {
+  /* Almost nothing at the top. Three paddings stack between the search box and
+     the first tab — the filter bar's 12px, the body's 16px, and this — and each
+     one looks reasonable alone while together they leave the panel floating
+     well clear of the row above it. The tab strip is 56px tall and carries its
+     own air, so it does not need more added above it. */
+  padding: 2px 20px 14px;
+}
+
+/* Same reason, one level up: the body's own top padding on a screen whose panel
+   opens with a tab strip. */
+.mcm-admin .mcm-adminpage-body:has(> .panel-card > .tbl-wrap > .cs-section) {
+  padding-top: 8px;
+}
+
+/* And the filter bar above it, which was leaving 12px under a search box that
+   already sits in its own bordered field. */
+.mcm-admin .mcm-adminpage-bar:has(~ .mcm-adminpage-body .cs-section) {
+  padding-bottom: 6px;
+}
+
+/* ---- a tab rail inside a settings panel ----
+
+   In the company header the rail sits in `.cs-head`, which sets the inset it
+   bleeds its hairline out to. Dropped straight into a panel there is no such
+   inset, so the line stopped at the padding while the panel carried on — the
+   rail read as floating in the box rather than closing the top of it. Given the
+   panel's own padding to bleed to, the two line up.
+
+   The rail already draws that line, so whatever follows it must not take the
+   divider `.cs-section` puts between its children as well: two hairlines a
+   pixel or two apart is the doubled rule this area spent a while getting rid
+   of. It keeps the spacing, just not the second line. */
+.mcm-page .cs-section > .tabnav {
+  --cs-inset: 20px;
+}
+
+.mcm-page .cs-section > .tabnav + * {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 16px;
+}
+
+/* ---- save row ----
+
+   The end of a settings form: whatever the screen wants to say last, then the
+   button, and nothing drawn around them. No panel, no strip — the row belongs to
+   the form it closes, and a container would only fence it off from the settings
+   it saves.
+
+   .cs-save exists because of the reset near the top of this file: `.mcm-page
+   button { color: inherit }` is unlayered, so it beats Tailwind's `text-white`
+   and the button quietly takes the form's dark ink on a brand-coloured fill.
+   This says the colour again, at a weight the reset cannot undo. */
+/* Pinned to the foot of the screen, not left at the end of the form.
+ 
+   A settings page can be several screens long, and a button that only exists at
+   the very bottom means scrolling the whole way down to save one switch near the
+   top. Sticky keeps it against the bottom edge while there is still form below
+   it, and settles into place at the end — so it is always the same button in the
+   same corner, whatever you are looking at.
+ 
+   The negative margins pull it out to the panel's edges, past the 20px the panel
+   pads its content by, so the bar spans the full width and the settings pass
+   cleanly underneath rather than beside it. It needs its own opaque background
+   for the same reason: content scrolling under a transparent bar reads as a
+   fault. */
+/* A descendant selector, not a child one. Most of these screens wrap their
+   content in a column of their own and put the save bar inside it, so `>` only
+   ever matched the one tab that happened to place it directly in the panel —
+   that tab pinned, every other stayed where it was, and the difference read as
+   the pinned one being broken. */
+.mcm-page .cs-saverow,
+.mcm-page .cs-section .cs-savebar {
+  /* Static, at the end of the settings — not pinned over them.
+ 
+     This was sticky, and on seven of the nine tabs it worked: the bar rode the
+     bottom of the window with the settings passing underneath. On Phone rules
+     and Greetings it did nothing, because their form is `flex: none` and sized
+     to its own content, so the bar had no room to stick within and simply came
+     to rest at the end. One rule, two behaviours, and moving between tabs the
+     footer changed character — which is what made it feel wrong.
+ 
+     Settled everywhere now, which is the behaviour those two tabs already had.
+     It still spans the panel and still draws its own line; it just stays where
+     the form ends instead of following the window. */
+  position: static;
+  margin: 16px -20px -16px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  /* Follows the panel's own corners where it comes to rest at the bottom. */
+  border-radius: 0 0 var(--r) var(--r);
+}
+
+/* `.mcm-field` is also a bare-input utility class elsewhere in this
+   stylesheet (further down, giving a native <input>/<select> its own
+   border and padding) - fields that already wrap a styled `Input`
+   component in a label+control div use this name instead, so the wrapper
+   never accidentally picks up that bare-input border and stacks it on
+   top of the Input's own, which is what made the Profile page's fields
+   read as double-boxed. Same layout as `.mcm-field` above, a different
+   name to keep the two meanings from colliding. */
+.mcm-page .mcm-fitem {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mcm-invite .mcm-invite-step {
+  /* Room under the breadcrumb rule. Location's label was sitting almost on the
+     hairline, which read as though it belonged to the row above it. */
+  padding: 18px 0 4px;
+}
+
+/* A step's own opening line. */
+.mcm-invite .mcm-step-lede h3 {
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.mcm-invite .mcm-step-lede p {
+  margin-top: 3px;
+  max-width: 62ch;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------ Top bar
+   Where you are, and what it will cost, on one hairline-separated row. A
+   two-step stepper centred across the drawer spent the entire top of the
+   screen drawing "1 —————— 2"; a breadcrumb says it in the corner, and hands
+   the finished step back as the way to return to it.
+   -------------------------------------------------------------------------- */
+.mcm-invite .mcm-invite-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  /* Clearance on the right for the drawer's close button, which is positioned
+     against the panel rather than inside this row — with the title block
+     tightened it now hangs down level with the seat readings, and "N to buy"
+     was running underneath it. */
+  padding: 0 34px 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.mcm-invite .mcm-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mcm-invite .mcm-crumb-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mcm-invite .mcm-crumb {
+  /* `appearance` as well as `background`: without it the control keeps the
+     platform's native button face, which is what put a grey chip behind each
+     crumb — a breadcrumb is text you can click, not a tab. */
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 2px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  background-color: transparent;
+  box-shadow: none;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+
+.mcm-invite .mcm-crumb.is-done {
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.mcm-invite .mcm-crumb.is-done:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mcm-invite .mcm-crumb.is-current {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.mcm-invite .mcm-crumb:disabled {
+  cursor: default;
+}
+
+.mcm-invite .mcm-crumb:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.mcm-invite .mcm-crumb-sep {
+  width: 13px;
+  height: 13px;
+  color: var(--line);
+  flex: 0 0 auto;
+}
+
+/* Seats, as three quiet readings rather than a panel. Right-aligned so the
+   eye finds them once and then leaves them alone. */
+.mcm-invite .mcm-seatline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.mcm-invite .mcm-seatstat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mcm-invite .mcm-seatstat.is-buy {
+  color: var(--warn);
+  font-weight: 650;
+}
+
+.mcm-invite .mcm-seatstat i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.mcm-invite .mcm-seatstat i.is-free {
+  background: var(--live);
+}
+
+.mcm-invite .mcm-seatstat i.is-add {
+  background: var(--accent);
+}
+
+.mcm-invite .mcm-seatstat i.is-buy {
+  background: var(--warn);
+}
+
+/* --------------------------------------------------------------- Form toolbar
+   Location on the left, how many people on the right. The count is the
+   control — it adds and removes the cards underneath, which the unlabelled
+   "Enter no." box and its Add button used to take two steps to do.
+   ---------------------------------------------------------------------------- */
+.mcm-invite .mcm-invite-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mcm-invite .mcm-invite-loc {
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.mcm-invite .mcm-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 1px;
+}
+
+.mcm-invite .mcm-count-label {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.mcm-invite .mcm-count-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mcm-invite .mcm-count-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.mcm-invite .mcm-count-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+.mcm-invite .mcm-count-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mcm-invite .mcm-count-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* index.css paints EVERY disabled control with a flat grey fill and a grey
+   border, with `!important` on both. On these round icon buttons that reads as
+   broken rather than unavailable — and its `border` shorthand is only a colour,
+   so it drops the border width too. Dimming the real control says the same
+   thing and keeps its shape. */
+.mcm-invite .mcm-count-btn:disabled,
+.mcm-invite .mcm-pager-btn:disabled {
+  border: 1px solid var(--line) !important;
+  background-color: transparent !important;
+  color: var(--ink-2) !important;
+  opacity: 0.35 !important;
+}
+
+.mcm-invite .mcm-count-value {
+  min-width: 28px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.mcm-invite .mcm-count-info {
+  width: 14px;
+  height: 14px;
+  color: var(--ink-2);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.mcm-invite .mcm-count-info:hover {
+  opacity: 1;
+}
+
+/* A caution, wherever it appears. */
+.mcm-invite .mcm-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--warn);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.mcm-invite .mcm-note.is-block {
+  padding: 8px 11px;
+  border: 1px solid var(--warn);
+  border-radius: var(--r-sm);
+  background: var(--warn-wash);
+  font-weight: 600;
+}
+
+.mcm-invite .mcm-invite-rolenote {
+  color: var(--ink-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------- Pager
+   One person on screen at a time. The dots carry the part the pages take
+   away: with the others hidden, nothing else would say that it is person
+   three who still has a problem. The current one stretches into a pill so it
+   is findable without relying on colour alone.
+   -------------------------------------------------------------------------- */
+.mcm-invite .mcm-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  /* Grouped inside its own strip. Loose on the page, three small controls with
+     no edge around them read as decoration; boxed, they read as one thing that
+     moves you between people. */
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ground);
+}
+
+.mcm-invite .mcm-pager-count {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcm-invite .mcm-pager-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The arrows. Square-ish and bordered rather than small bare circles, so they
+   look like the controls they are and give a real click target. */
+.mcm-invite .mcm-pager-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.mcm-invite .mcm-pager-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.mcm-invite .mcm-pager-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mcm-invite .mcm-pager-tri {
+  width: 13px;
+  height: 13px;
+}
+
+/* One numbered chip per person. */
+.mcm-invite .mcm-pager-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.mcm-invite .mcm-pager-chip {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.mcm-invite .mcm-pager-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.mcm-invite .mcm-pager-chip.is-current {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Somebody on another page still needs something. Red border and text, and it
+   keeps that colour when it is the page you are on. */
+.mcm-invite .mcm-pager-chip.is-bad {
+  border-color: var(--crit);
+  color: var(--crit);
+}
+
+.mcm-invite .mcm-pager-chip.is-bad.is-current {
+  background: var(--crit);
+  color: #fff;
+}
+
+.mcm-invite .mcm-pager-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------- One person, one card
+   The card used to be an unheaded box of six fields, so ten of them were one
+   column of First Name / Last Name / Email repeating with nothing saying where
+   one person ended and the next began. Each is now headed by who it is: the
+   initials, the name as it is typed, and the role and extension underneath.
+   Flat — a hairline and a tinted header, no drop shadow — because eleven
+   shadowed cards stacked inside a drawer is a pile, not a list.
+   ---------------------------------------------------------------------------- */
+.mcm-invite .mcm-invitee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mcm-invite .mcm-invitee:hover {
+  border-color: var(--accent-edge);
+}
+
+.mcm-invite .mcm-invitee:focus-within {
+  border-color: var(--accent);
+}
+
+.mcm-invite .mcm-invitee.is-flagged {
+  border-color: var(--crit);
+}
+
+.mcm-invite .mcm-invitee-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.mcm-invite .mcm-invitee-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--accent-edge);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent-ink);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.mcm-invite .mcm-invitee-id {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 9px;
+}
+
+.mcm-invite .mcm-invitee-name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcm-invite .mcm-invitee-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcm-invite .mcm-invitee-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--crit);
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.mcm-invite .mcm-invitee-remove {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.mcm-invite .mcm-invitee-remove:hover {
+  background: var(--crit-wash);
+  color: var(--crit);
+}
+
+.mcm-invite .mcm-invitee-remove:focus-visible {
+  outline: 2px solid var(--crit);
+  outline-offset: 2px;
+}
+
+.mcm-invite .mcm-invitee-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 14px;
+  align-items: start;
+  padding: 14px 12px;
+}
+
+@media (min-width: 768px) {
+  .mcm-invite .mcm-invitee-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Two columns is the widest this goes. The panel is capped at 765px, so a
+   third column would give each field about 230px — an e-mail address does not
+   fit in that, and the media query measures the viewport rather than the panel,
+   so a wide screen would have forced it regardless. */
+
+/* What a role actually allows, under the box that picks it. */
+.mcm-invite .mcm-role-hint {
+  margin-top: 5px;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.mcm-invite .mcm-role-hint.is-warn {
+  margin-top: 2px;
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* Extension and its dice, on one line. The button used to be a loose grid
+   child that landed wherever the three-column grid put it — usually nowhere
+   near the field it changes. */
+.mcm-invite .mcm-ext-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.mcm-invite .mcm-ext-regen {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.mcm-invite .mcm-ext-regen:hover {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+.mcm-invite .mcm-ext-regen:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------ Step two, sign-in
+   Three radio dots and grey text, where the option you had chosen looked the
+   same as the two you had not. Flat cards, with the fields for an option
+   directly beneath it rather than below all three.
+   ------------------------------------------------------------------------- */
+.mcm-invite .mcm-choice-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mcm-invite .mcm-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.mcm-invite .mcm-choice:hover {
+  border-color: var(--accent-edge);
+}
+
+.mcm-invite .mcm-choice.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.mcm-invite .mcm-choice-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--ground);
+  color: var(--ink-2);
+}
+
+.mcm-invite .mcm-choice.is-selected .mcm-choice-icon {
+  border-color: var(--accent-edge);
+  background: var(--surface);
+  color: var(--accent-ink);
+}
+
+.mcm-invite .mcm-choice-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcm-invite .mcm-choice-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mcm-invite .mcm-choice-tag {
+  padding: 1px 7px;
+  border: 1px solid var(--live);
+  border-radius: 999px;
+  color: var(--live);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mcm-invite .mcm-choice-blurb {
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mcm-invite .mcm-choice-panel {
+  margin: -2px 0 2px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ground);
+}
+
+.mcm-invite .mcm-pay-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+/* ------------------------------------------------------------------ Footer
+   What is about to happen, beside the button that does it. On a ten-person
+   list the seat readings along the top are a long scroll away from Submit.
+   -------------------------------------------------------------------------- */
+.mcm-invite .mcm-invite-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  /* It scrolls with the form now, so it needs its own separation from the last
+     field rather than relying on being pinned away from it. */
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.mcm-invite .mcm-invite-foot-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcm-invite .mcm-invite-foot-summary strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.mcm-invite .mcm-invite-foot-summary .is-buy {
+  color: var(--warn);
+  font-weight: 650;
+}
+
+/* The invite drawer carries its own rule under the breadcrumbs, so the title
+   does not need a second one three lines above it — two hairlines and 66px of
+   title were spending the top of the screen before the form began. The
+   drawer's own 16px child gap goes too, for the same reason. */
+#drawer-example:has(.mcm-invite) > div:first-child {
+  min-height: 0;
+  padding-top: 14px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+#drawer-example:has(.mcm-invite) {
+  gap: 10px;
+}
+
+/* The close control, on this drawer only. The shared one is a bordered white
+   circle with a shadow — a button-shaped object competing with the title beside
+   it. Here it is just the glyph, with the target kept at full size and the
+   surface appearing on hover. Scoped by id so the other drawers keep theirs. */
+#drawer-example:has(.mcm-invite) > button[aria-label='Close'] {
+  /* Smaller and tucked further into the corner, so it stops hanging down into
+     the breadcrumb row beneath the title. */
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-2);
+}
+
+#drawer-example:has(.mcm-invite) > button[aria-label='Close']:hover {
+  background: var(--ground);
+  color: var(--ink);
+}
+
+/* ============================================================
+   CONTACTS — page heading
+
+   The Contacts screen is the platform's own table rather than one of the
+   directory shells, so it needs the page title the shell would have given it.
+   Same type scale as `.page-head` so the two read as one product.
+   ============================================================ */
+.mcm-page .contacts-page-head {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  flex: none;
+}
+
+.mcm-page .contacts-page-head h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.mcm-page .contacts-page-head p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  max-width: 64ch;
+}
+
+@media (max-width: 640px) {
+  .mcm-page .contacts-page-head {
+    padding: 14px 12px 12px;
+  }
+  .mcm-page .contacts-page-head h1 {
+    font-size: 19px;
+  }
+}
+
+.mcm-page .contacts-page-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.mcm-page .contacts-page-head-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.mcm-page .contacts-page-head-add {
+  margin-left: auto;
+  flex: none;
+}

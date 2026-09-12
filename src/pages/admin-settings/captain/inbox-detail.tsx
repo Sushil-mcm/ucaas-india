@@ -464,8 +464,8 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-col gap-4">
-          <TabsList className="h-auto w-full flex-wrap justify-start gap-5 rounded-none border-b border-gray-200 bg-transparent p-0 dark:border-gray-700">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 min-w-0 flex-col gap-4">
+          <TabsList className="h-auto w-full shrink-0 flex-wrap justify-start gap-5 rounded-none border-b border-gray-200 bg-transparent p-0 dark:border-gray-700">
             {TABS.map((t) => (
               <TabsTrigger
                 key={t.key}

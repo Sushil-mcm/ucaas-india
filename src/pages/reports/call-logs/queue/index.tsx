@@ -22,6 +22,24 @@ const formatDuration = (seconds: number): string => {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
+/* The percentage the queue asked to hit, from its own settings. The figure
+   next to it comes from the report and is measured against the queue's own
+   seconds; this is only the goal to compare it with. */
+const serviceLevelTarget = (item: any): number | null => {
+  const raw = item?.settings;
+  let settings = raw;
+  if (typeof raw === 'string') {
+    try {
+      settings = JSON.parse(raw || '{}');
+    } catch {
+      return null;
+    }
+  }
+  const level = settings?.after_call?.service_level;
+  const percent = Number(level?.percent);
+  return level?.enabled && Number.isFinite(percent) && percent > 0 ? percent : null;
+};
+
 const QueueCallLogs = () => {
   // const [dropdownVal, setDropdownVal] = useState(dropdownCallInitialVal);
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -57,7 +75,6 @@ const QueueCallLogs = () => {
         row.original.avg_engage_time ? formatDuration(row.original.avg_engage_time) : '-',
     },
   ];
-  console.log(data?.data?.data?.result?.rows, 'data');
   const handleRefetchTableData = () => {
     mutateCallQueueList({
       page: 1,
@@ -129,11 +146,14 @@ const QueueCallLogs = () => {
                               {item?.queue_stats?.answered_calls || '-'}
                             </span>
                           </span>
-                          <span>
+                          <span title="Hang-ups quicker than the queue's own floor are misdials and are set aside, not counted here">
                             Abandoned Calls :{' '}
                             <span className="font-semibold text-gray-800">
                               {item?.queue_stats?.missed_calls || '-'}
                             </span>
+                            {Number(item?.queue_stats?.short_abandons) > 0 && (
+                              <span className="text-gray-500"> (+{item.queue_stats.short_abandons} quick hang-ups set aside)</span>
+                            )}
                           </span>
                           <span>
                             Avg Waiting Time :{' '}
@@ -147,6 +167,47 @@ const QueueCallLogs = () => {
                               {formatDuration(item?.queue_stats?.avg_engage_time)}
                             </span>
                           </span>
+                          {item?.queue_stats?.service_level_percent !== null &&
+                            item?.queue_stats?.service_level_percent !== undefined && (
+                              <span
+                                title={`Answered within ${item?.queue_stats?.service_level_seconds ?? 20}s, out of the calls this queue answered`}
+                              >
+                                Service level :{' '}
+                                <span className="font-semibold text-gray-800">
+                                  {item.queue_stats.service_level_percent}%
+                                </span>
+                                <span className="text-gray-500">
+                                  {' '}
+                                  of {item?.queue_stats?.counted_calls ?? 0} in{' '}
+                                  {item?.queue_stats?.service_level_seconds ?? 20}s
+                                  {serviceLevelTarget(item)
+                                    ? ` · target ${serviceLevelTarget(item)}%`
+                                    : ''}
+                                </span>
+                              </span>
+                            )}
+                                                    {Number(item?.queue_stats?.routed_calls) > 0 && (
+                            <>
+                              <span title="Answered by the first group the queue rang, before it widened">
+                                Answered in round 1 :{' '}
+                                <span className="font-semibold text-gray-800">
+                                  {item?.queue_stats?.answered_first_round ?? 0}
+                                </span>
+                              </span>
+                              <span title="Calls where the queue widened past its skill requirement">
+                                Skill dropped :{' '}
+                                <span className="font-semibold text-gray-800">
+                                  {item?.queue_stats?.skill_dropped ?? 0}
+                                </span>
+                              </span>
+                              <span title="Calls where a free person was kept for a higher-priority or longer-waiting caller at least once">
+                                Held for priority :{' '}
+                                <span className="font-semibold text-gray-800">
+                                  {item?.queue_stats?.held_for_priority ?? 0}
+                                </span>
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </AccordionTrigger>

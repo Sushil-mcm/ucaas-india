@@ -32,6 +32,7 @@ import DetailsModal from '@/components/activity-list/side-drawers/details-modal'
 import TableManager from '@/components/custom/table-manager';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
+import { formatCallWaitTime } from '@/hooks/use-call-stats';
 
 const timeStringToSeconds = (value: string | null | undefined) => {
   const trimmedValue = String(value || '').trim();
@@ -55,13 +56,6 @@ const timeStringToSeconds = (value: string | null | undefined) => {
   return Math.max(0, Math.floor(seconds));
 };
 
-const formatWaitTime = (row: any) => {
-  const durationSeconds = timeStringToSeconds(row?.duration) ?? 0;
-  const billsecSeconds = timeStringToSeconds(row?.billsec) ?? 0;
-  const waitSeconds = Math.max(0, durationSeconds - billsecSeconds);
-
-  return formatSecondsToMMSS(waitSeconds);
-};
 
 const Inbound = ({
   // Only true when this report renders inside another already-open modal
@@ -223,7 +217,7 @@ const Inbound = ({
           displayDirection = ACTIVITYLIST?.Announcement;
         } else if (
           data?.direction === ACTIVITYLIST?.Inbound &&
-          data?.billsec === 0 &&
+          (timeStringToSeconds(data?.billsec) ?? 0) === 0 &&
           data?.is_voicemail === 0
         ) {
           displayDirection = ACTIVITYLIST?.Missed;
@@ -393,7 +387,7 @@ const Inbound = ({
       header: 'Wait Time',
       accessorKey: 'wait_time',
       cell: ({ row }: any) => {
-        return <span>{formatWaitTime(row?.original)}</span>;
+        return <span>{formatCallWaitTime(row?.original)}</span>;
       },
     },
     {
@@ -602,6 +596,7 @@ const Inbound = ({
               filter_date: {
                 from: dropdownVal?.value?.from,
                 to: dropdownVal?.value?.to,
+                timezone: dropdownVal?.value?.timezone,
               },
             },
             emptyTablePlaceholder: 'No Inbound call records found',

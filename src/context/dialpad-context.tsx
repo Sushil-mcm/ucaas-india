@@ -8,7 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { callQueueInfo, getCampaignDetail, getContactInfoV1 } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
-import { handleAlert, makeAISocketConnection } from '@/lib/utils';
+import { INCOMING_UNANSWERED_EVENT } from '@/lib/agent-duty';
+import { getEnv, handleAlert, makeAISocketConnection, SESSION_NAME } from '@/lib/utils';
+import { queueIdFromHeaders } from '@/lib/queue-session';
 import JsSIP from 'jssip';
 import {
   createContext,
@@ -24,6 +26,25 @@ import {
 import { Mic, Video } from 'lucide-react';
 import { getHeaderFirstValue } from '@/components/dialpad/session-display';
 import { toNullableString } from '@/components/notes';
+
+/* A skip in progress: everything the side panel needs to ask the agent why,
+   plus the way back to the card that started it. onConfirm is the card's own
+   skip handler, so the decision about what a skip DOES stays where it already
+   lives instead of being reimplemented in the panel. */
+export type CampaignSkipRequest = {
+  campaignNumberId: string;
+  contactName: string;
+  contactNumber: string;
+  contactId?: string;
+  campaignId?: string;
+  campaignName?: string;
+  campaignType?: string;
+  reasons: { _id: string; name: string }[];
+  /* Every disposition the campaign switched on for its agents, offered below
+     the note so a skipped lead can still be dispositioned. */
+  dispositions?: { _id: string; name: string }[];
+  onConfirm: (choice: { dispositionId: string; dispositionName: string; note: string }) => void;
+};
 
 export type DialpadModalSize = 'micro' | 'mini' | 'maxi';
 export type DialpadMakeCallOptions = {
@@ -107,6 +128,38 @@ export type DialpadSessionAiInfo = {
   AiChat: any[];
 };
 
+/**
+ * The cause carried on a SIP `Reason` header, as a status code.
+ *
+ * A call can fail in two shapes and the browser sees a different thing in each.
+ * If the far end answers our INVITE with a failure, JsSIP fires `failed` and the
+ * response carries `status_code`. If the switch instead clears an established or
+ * early dialog with a BYE or CANCEL, JsSIP fires `ended` and there is no status
+ * code anywhere - the reason rides on a header instead:
+ *
+ *   Reason: Q.850;cause=88;text="INCOMPATIBLE_DESTINATION"
+ *   Reason: SIP;cause=486;text="Busy Here"
+ *
+ * Both are read. Q.850 causes and SIP codes do not share a numbering scheme, so
+ * which protocol said it is kept alongside the number rather than merged.
+ */
+const readReasonHeader = (message: any): { code?: number; text?: string; protocol?: string } => {
+  try {
+    const raw = message?.getHeader?.('Reason');
+    if (!raw) return {};
+    const protocol = String(raw).split(';')[0]?.trim();
+    const code = Number(String(raw).match(/cause=(\d+)/)?.[1]);
+    const text = String(raw).match(/text="([^"]*)"/)?.[1];
+    return {
+      ...(Number.isFinite(code) ? { code } : {}),
+      ...(text ? { text } : {}),
+      ...(protocol ? { protocol } : {}),
+    };
+  } catch {
+    return {};
+  }
+};
+
 export type DialpadSession = {
   id: string;
   direction: SessionDirection;
@@ -115,7 +168,33 @@ export type DialpadSession = {
   isMuted: boolean;
   isSpeakerOn: boolean;
   isRecording: boolean;
+  recordingLocked?: boolean;
   hasAnswered: boolean;
+  /** The agent saved a disposition for this call (wrap-up rules read it). */
+  dispositionSaved?: boolean;
+  /** The disposition the agent has picked so far, by name; a script page can
+      branch on it (src/lib/script-pages.ts). Set on pick, before the save. */
+  dispositionName?: string;
+  /** The same pick by id, so the campaign wrap-up timer can save it when it
+      runs out (src/hooks/use-disposition-save.ts). Set on pick, before the save. */
+  dispositionId?: string;
+  /** The campaign wrap-up timer ran out with no label saved and the
+      campaign's rule requires one: the ended screen stays, at 0:00, until a
+      label is saved. The next contact waits. */
+  wrapupHeld?: boolean;
+  /** The disposition tab resolved to zero choices for this call - there is
+      nothing to label, so a mandatory wrap-up cannot demand one. */
+  dispositionUnavailable?: boolean;
+  /** What the agent has filled into the script's questions on this call
+      (src/lib/script-inputs.ts), keyed by the question's key. Saved with the
+      disposition; on a campaign call written onto the lead as well. */
+  scriptAnswers?: Record<string, string | number | boolean | null>;
+  /** The questions the script asks, so the save can validate the answers
+      without re-reading the script. */
+  scriptInputs?: any[];
+  /** The call script open on this call, so the saved disposition names it
+      and the script answers report can find every call of a script. */
+  scriptId?: string;
   username?: string;
   email?: string;
   extension?: string;
@@ -125,6 +204,27 @@ export type DialpadSession = {
   connectedAt?: number;
   endedAt?: number;
   cause?: string;
+  /* The SIP response that actually ended the call, kept because JsSIP's `cause`
+     is far coarser than the wire. Production sees twenty distinct codes here -
+     410, 480, 484, 486, 487, 500, 503, 603 and more - and every one of them
+     collapsed into a single "Call Failed" before these were recorded. */
+  sipStatusCode?: number;
+  sipReasonPhrase?: string;
+  /* Set when the failure arrived on a Reason header rather than a response. */
+  q850Cause?: number;
+  q850Protocol?: string;
+  /* The two progress signals are recorded separately because they mean
+     different things and can both happen on one call.
+       180 Ringing          - the far end is genuinely alerting somebody
+       183 Session Progress - early media: a carrier tone or announcement, and
+                              no promise that any phone is ringing
+     Measured on the live switch, the common orders are `183 180 200` (45 calls),
+     `180 200` (41) and `183 200` (71). Because 183 frequently precedes a real
+     180, a single sticky "early media" flag would report "Connecting" for the
+     67 calls that go on to alert - downgrading a true ringing state. So 180 is
+     tracked on its own and always wins. */
+  hasAlerting?: boolean;
+  hadEarlyMedia?: boolean;
   eventOriginator?: SessionEventOriginator;
   headers: DialpadSessionHeaders;
   extraHeaders: string[];
@@ -149,9 +249,19 @@ interface DialpadContextType {
   sipCredentials: SipCredentials | null;
   uaStatus: DialpadUaStatus;
   isRegistered: boolean;
+  /* This tab's SIP contact identity (`sip:<token>@<token>.invalid`), set once the
+     phone is registered. A campaign join sends it so the switch rings this tab
+     only, not every tab the login has open. */
+  sipContact: string;
   lastError: string | null;
   campaignContactCards: any[] | null;
   setCampaignContactCards: Dispatch<SetStateAction<any[] | null>>;
+  /* A skip the agent has started but not finished. The lead card raises it and
+     the side panel answers it, which is why it lives here rather than in either
+     of them: they are siblings, not parent and child. Null means no skip is in
+     progress and the panel shows its ordinary tabs. */
+  campaignSkipRequest: CampaignSkipRequest | null;
+  setCampaignSkipRequest: Dispatch<SetStateAction<CampaignSkipRequest | null>>;
   joinedCampaignId: string | null;
   setJoinedCampaignId: Dispatch<SetStateAction<string | null>>;
   activeCampaign: any | null;
@@ -195,6 +305,8 @@ interface DialpadContextType {
   toggleRecordingCall: (sessionId: string) => void;
   sendDtmf: (sessionId: string, tone: string) => void;
   patchSessionAiInfo: (sessionId: string, aiInfo: DialpadSessionAiInfo | null) => void;
+  /** Small facts a tab learns about a call (e.g. that it has been labelled). */
+  patchSession: (sessionId: string, patch: Partial<DialpadSession>) => void;
   dialpadAiSocket: any | null;
   requestDialpadAiSocketAuth: (token: string) => void;
 }
@@ -219,9 +331,12 @@ export const DialpadContext = createContext<DialpadContextType>({
   sipCredentials: null,
   uaStatus: 'idle',
   isRegistered: false,
+  sipContact: '',
   lastError: null,
   campaignContactCards: null,
   setCampaignContactCards: EMPTY_FN,
+  campaignSkipRequest: null,
+  setCampaignSkipRequest: EMPTY_FN,
   joinedCampaignId: null,
   setJoinedCampaignId: EMPTY_FN,
   activeCampaign: null,
@@ -258,6 +373,7 @@ export const DialpadContext = createContext<DialpadContextType>({
   toggleRecordingCall: EMPTY_FN,
   sendDtmf: EMPTY_FN,
   patchSessionAiInfo: EMPTY_FN,
+  patchSession: EMPTY_FN,
   dialpadAiSocket: null,
   requestDialpadAiSocketAuth: EMPTY_FN,
 });
@@ -425,7 +541,10 @@ const isCampaignOrQueueSession = (session: DialpadSession | null | undefined): b
   const queueId = String(session.queueMetaData?.id || '').trim();
   const campaignId = String(session.campaignMetaData?.id || '').trim();
   const forwardTypeFromHeader = getSessionHeaderValue(session, 'x-forwardtype').toUpperCase();
-  const queueIdFromHeader = getSessionHeaderValue(session, 'x-queue');
+  /* The agent's leg carries the queue id as X-ForwardValue, not X-Queue -
+     see queue-session.ts. Reading only X-Queue found nothing on the one leg
+     the agent is actually on. */
+  const queueIdFromHeader = queueIdFromHeaders((name) => getSessionHeaderValue(session, name));
   const campaignIdFromHeader = getSessionHeaderValue(session, 'x-campaignuuid');
   const liveForwardType = String(session.liveCallData?.forward_type || '')
     .trim()
@@ -640,7 +759,9 @@ const buildPcConfig = (credentials: SipCredentials) => {
     .map((url) => `${url || ''}`.trim())
     .filter((url) => url.length > 0);
 
-  if (relayUrls.length > 0 && turnPassword) {
+  const hasRelay = relayUrls.length > 0 && Boolean(turnPassword);
+
+  if (hasRelay) {
     iceServers.push({
       urls: relayUrls,
       username: turnUsername,
@@ -648,18 +769,66 @@ const buildPcConfig = (credentials: SipCredentials) => {
     });
   }
 
-  return { iceServers };
+  // FreeSWITCH does not run real ICE connectivity checks - it just picks
+  // candidate index 0 and hopes. Left to gather every candidate type, the
+  // browser's own virtual adapters (Docker/WSL/VPN) routinely win that slot
+  // over the real network path, so FS ends up stuck sending STUN to an
+  // address that was never reachable. Restricting gathering to relay-only
+  // candidates means every candidate offered is one on our own TURN server
+  // that FS can always reach, so index 0 is never a dead address.
+  //
+  // Only when a relay is actually configured: with none, 'relay' would leave
+  // the call zero usable candidates - a hard failure - which is worse than
+  // today's one-way-audio bug. Falls back to the permissive default so a
+  // response missing TURN credentials still gets a call, even a flaky one.
+  return hasRelay ? { iceServers, iceTransportPolicy: 'relay' as const } : { iceServers };
 };
 
 const CAMPAIGN_CLEARING_TIMER_SECONDS = 30;
+
+/* A stable SIP contact identity for THIS tab.
+
+   The switch keeps one registration row per browser tab (each REGISTER's
+   Contact is `sip:<user>@<host>`), and the campaign queue script rings the
+   tab whose contact identity the agent row names (`ring_contact`). By
+   default the phone library invents a fresh random contact on every start,
+   so nothing could name a tab twice. sessionStorage is per tab and survives
+   a reload, so the same token is registered again after a refresh and the
+   row the join wrote stays right. The host is `<token>.invalid`, the same
+   shape the library uses (the switch never resolves it: the proxy maps the
+   registration to the open websocket). */
+const SIP_TAB_TOKEN_KEY = 'mcm_sip_tab';
+const sipTabToken = (): string => {
+  let token = '';
+  try {
+    token = window.sessionStorage.getItem(SIP_TAB_TOKEN_KEY) || '';
+  } catch {
+    token = '';
+  }
+  if (!/^[a-z0-9]{8,12}$/.test(token)) {
+    token = Math.random().toString(36).slice(2, 12).padEnd(8, '0').replace(/[^a-z0-9]/g, '0');
+    try {
+      window.sessionStorage.setItem(SIP_TAB_TOKEN_KEY, token);
+    } catch {
+      /* no storage (private mode): the token still lives for this page load */
+    }
+  }
+  return token;
+};
+const tabContactUri = (): string => {
+  const token = sipTabToken();
+  return `sip:${token}@${token}.invalid;transport=ws`;
+};
 
 export const DialpadProvider = ({ children }: { children: ReactNode }) => {
   const [isDialpadOpen, setIsDialpadOpen] = useState(false);
   const [modalSize, setModalSize] = useState<DialpadModalSize>('mini');
   const [uaStatus, setUaStatus] = useState<DialpadUaStatus>('idle');
   const [isRegistered, setIsRegistered] = useState(false);
+  const [sipContact, setSipContact] = useState('');
   const [lastError, setLastError] = useState<string | null>(null);
   const [campaignContactCards, setCampaignContactCards] = useState<any[] | null>(null);
+  const [campaignSkipRequest, setCampaignSkipRequest] = useState<CampaignSkipRequest | null>(null);
   const [joinedCampaignId, setJoinedCampaignId] = useState<string | null>(null);
   const [activeCampaign, setActiveCampaign] = useState<any | null>(null);
   const [campaignClearingSecondsLeft, setCampaignClearingSecondsLeft] = useState(0);
@@ -672,6 +841,7 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
 
   const uaRef = useRef<any>(null);
   const sessionRef = useRef<Record<string, any>>({});
+  const recordingStatusCheckedRef = useRef<Set<string>>(new Set());
   const isStartingRef = useRef(false);
   const credentialKeyRef = useRef<string | null>(null);
   const activeSessionIdRef = useRef<string | null>(null);
@@ -1655,6 +1825,9 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
 
       const clearUnansweredIncomingSession = (wasActiveSession: boolean) => {
         clearIceCandidateReadyTimeout();
+        /* Tell the duty hook: the queue engine counts this as a missed call
+           and, past its limit, stops offering calls without saying so. */
+        window.dispatchEvent(new CustomEvent(INCOMING_UNANSWERED_EVENT, { detail: { sessionId } }));
         removeSessionAudioResources(sessionId);
         delete sessionRef.current[sessionId];
         delete speakerStateRef.current[sessionId];
@@ -1680,8 +1853,15 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       };
 
       session.on('connecting', () => patchSession(sessionId, { status: 'connecting' }));
-      session.on('progress', () => {
-        patchSession(sessionId, { status: 'ringing' });
+      session.on('progress', (event: any) => {
+        /* Both are recorded; neither is ever cleared, because a call that has
+           alerted has alerted even if more early media follows. */
+        const code = event?.response?.status_code;
+        patchSession(sessionId, {
+          status: 'ringing',
+          ...(code === 180 ? { hasAlerting: true } : {}),
+          ...(code === 183 ? { hadEarlyMedia: true } : {}),
+        });
         if (sessionDirection === 'incoming') {
           playIncomingRingtone(sessionId);
         }
@@ -1740,6 +1920,11 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
           isRecording: false,
           endedAt: Date.now(),
           cause: event?.cause || 'ended',
+          sipStatusCode: event?.message?.status_code,
+          sipReasonPhrase:
+            event?.message?.reason_phrase || readReasonHeader(event?.message).text,
+          q850Cause: readReasonHeader(event?.message).code,
+          q850Protocol: readReasonHeader(event?.message).protocol,
           eventOriginator: event?.originator || 'system',
         });
         removeSessionAudioResources(sessionId);
@@ -1789,6 +1974,11 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
           isRecording: false,
           endedAt: Date.now(),
           cause: event?.cause || 'failed',
+          sipStatusCode: event?.message?.status_code,
+          sipReasonPhrase:
+            event?.message?.reason_phrase || readReasonHeader(event?.message).text,
+          q850Cause: readReasonHeader(event?.message).code,
+          q850Protocol: readReasonHeader(event?.message).protocol,
           eventOriginator: event?.originator || 'system',
         });
         removeSessionAudioResources(sessionId);
@@ -1820,6 +2010,7 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       playIncomingRingtone,
       removeSessionAudioResources,
       setCampaignContactCards,
+      setCampaignSkipRequest,
       stopIncomingRingtone,
       switchActiveSession,
     ],
@@ -1850,12 +2041,16 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       ua.on('registered', () => {
         setUaStatus('registered');
         setIsRegistered(true);
+        /* The identity the switch stored for this tab's registration: what a
+           campaign join sends so only this tab is rung. */
+        setSipContact(String(ua?.contact?.uri?.toString?.() || ''));
         setLastError(null);
       });
 
       ua.on('unregistered', () => {
         setUaStatus('unregistered');
         setIsRegistered(false);
+        setSipContact('');
       });
 
       ua.on('registrationFailed', (event: any) => {
@@ -1938,9 +2133,25 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
 
           sessionRef.current[sessionId] = session;
           speakerStateRef.current[sessionId] = true;
-          const hasActiveSession =
-            !!activeSessionIdRef.current && !!sessionRef.current[activeSessionIdRef.current];
-          const shouldSetAsActive = originator === 'local' || !hasActiveSession;
+          /* A new incoming call must always surface unless the agent is
+             genuinely mid-conversation on another call. The old check only
+             asked "is some session tracked as active" - a ringing-but-
+             unanswered session (this device's own earlier incoming leg that
+             hasn't resolved yet, a stale reference, anything short of a real
+             connected call) counted as "active" and silently blocked the new
+             call from ever becoming visible: it rang (ringtone plays
+             unconditionally above) but the UI kept showing whatever was
+             already active, on that one device, while every other device
+             with no such leftover state correctly showed it. */
+          const currentActiveSessionId = activeSessionIdRef.current;
+          const currentActiveSessionStatus = currentActiveSessionId
+            ? String(sessionsStateRef.current[currentActiveSessionId]?.status || '').toLowerCase()
+            : '';
+          const isActiveSessionTrulyConnected =
+            !!currentActiveSessionId &&
+            !!sessionRef.current[currentActiveSessionId] &&
+            ['accepted', 'confirmed'].includes(currentActiveSessionStatus);
+          const shouldSetAsActive = originator === 'local' || !isActiveSessionTrulyConnected;
           if (shouldSetAsActive) {
             setActiveSessionId(sessionId);
           }
@@ -1950,7 +2161,13 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
             request,
             originator === 'local' ? [sessionMetaDataHeader] : [],
           );
-          const queueIdFromHeader = getHeaderValueFromHeaders(sessionHeaders, 'x-queue');
+          /* Same two names for one id: X-Queue on the caller's leg,
+             X-ForwardValue on the agent's. Without this the agent's session
+             got no queueMetaData, so dispositions, call script and the
+             queue's wrap-up time never loaded. */
+          const queueIdFromHeader = queueIdFromHeaders((name) =>
+            getHeaderValueFromHeaders(sessionHeaders, name),
+          );
           const queueMetaData = queueIdFromHeader
             ? {
                 id: queueIdFromHeader,
@@ -2106,6 +2323,9 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
         password,
         session_timers: false,
         registrar_server: `sip:${domain}`,
+        /* One identity per tab (see tabContactUri): the switch stores it, and a
+           campaign join names it so the queue rings this tab only. */
+        contact_uri: tabContactUri(),
         /* Puts the caller's name in the SIP From header, so an internal call
            arrives as `"Umar Ansari" <sip:1010_web@...>` rather than the bare
            extension. The name was already being sent, but only in the custom
@@ -2141,7 +2361,10 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
 
   const unregisterUa = useCallback(() => {
     try {
-      uaRef.current?.unregister({ all: true });
+      /* Own contact only. `all: true` sends `Contact: *`, which removes EVERY
+         registration of the login: with one row per tab on the switch, one
+         tab signing out would unregister the person's other tabs. */
+      uaRef.current?.unregister();
     } catch (error: any) {
       setLastError(error?.message || 'Unable to unregister UA');
     }
@@ -2334,12 +2557,41 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       ensureSessionAudioElement(sessionId);
       bindPeerConnectionAudio(sessionId, session?.connection);
 
-      session.answer();
+      /* Answering built its peer connection with NO configuration, so the
+         browser gathered only host candidates - its own LAN address, e.g.
+         192.168.x.x. The switch then had nothing it could reach:
+
+           Save audio Candidate ... type: host addr: 192.168.12.210:61905
+           Look for Relay Candidates as last resort
+           ... no suitable candidates found.
+           Hangup ... [INCOMPATIBLE_DESTINATION]
+
+         which is cause 88. The caller's leg survives that, falls through
+         `continue_on_fail` to the after-ring rule and hears voicemail, while
+         the person who just pressed Answer sees the call end. It rang, they
+         answered, and both ends got the wrong thing - and every
+         extension-to-extension call between two browsers did this.
+
+         Outgoing calls never showed it because makeCall has always passed
+         `pcConfig`. The answer needs the same STUN/TURN configuration, and
+         the same audio-only constraints: JsSIP defaults `answer` to
+         {audio: true, video: true}, which would ask for the camera. */
+      const answerOptions: any = {
+        mediaConstraints: { audio: true, video: false },
+        rtcAnswerConstraints: { offerToReceiveAudio: 1, offerToReceiveVideo: 0 },
+      };
+      if (sipCredentials) {
+        const pcConfig = buildPcConfig(sipCredentials);
+        if (pcConfig) answerOptions.pcConfig = pcConfig;
+      }
+
+      session.answer(answerOptions);
     },
     [
       bindPeerConnectionAudio,
       ensureSessionAudioElement,
       patchSession,
+      sipCredentials,
       stopIncomingRingtone,
       switchActiveSession,
     ],
@@ -2875,11 +3127,47 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
     const session = sessionRef.current[sessionId];
     if (!session || !tone) return;
     session.sendDTMF(tone, {
-      duration: 160,
+      duration: 100,
       interToneGap: 500,
-      transportType: 'RFC2833',
+      transportType: 'INFO',
     });
   }, []);
+
+  // Ask the switch whether this live call is recording (and whether it is
+  // locked by automatic recording), so the Record button reflects reality on
+  // every call, inbound or outbound, regardless of the agent's own settings.
+  useEffect(() => {
+    Object.entries(sessions).forEach(([sessionId, sess]: [string, any]) => {
+      const st = String(sess?.status || '').toLowerCase();
+      if (
+        (st === 'accepted' || st === 'confirmed' || st === 'connected') &&
+        !recordingStatusCheckedRef.current.has(sessionId)
+      ) {
+        recordingStatusCheckedRef.current.add(sessionId);
+        const s = sessionRef.current[sessionId];
+        const sipCallId = s?._request?.call_id || s?.id || sessionId;
+        const token = localStorage.getItem(SESSION_NAME) || '';
+        fetch(`${getEnv().VITE_API_BASE_URL}/api/internal/recording-control/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ sip_call_id: sipCallId, action: 'status' }),
+        })
+          .then((r) => r.json().catch(() => ({})))
+          .then((res: any) => {
+            if (res && res.success) {
+              patchSession(sessionId, {
+                isRecording: !!res.recording,
+                recordingLocked: !!res.locked,
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    });
+    recordingStatusCheckedRef.current.forEach((id) => {
+      if (!sessions[id]) recordingStatusCheckedRef.current.delete(id);
+    });
+  }, [sessions, patchSession]);
 
   const toggleRecordingCall = useCallback(
     (sessionId: string) => {
@@ -2887,22 +3175,53 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
       const sessionState = sessions[sessionId];
       if (!session || !sessionState) return;
       if (!isLiveSessionStatus(sessionState.status)) return;
+      if ((sessionState as any).recordingLocked) return;
 
       const shouldStartRecording = !sessionState.isRecording;
-      const dtmfTone = shouldStartRecording ? '*2' : '*3';
+      // The SIP Call-ID FreeSWITCH stores as sip_call_id, so the server can find
+      // this exact live channel. DTMF does not survive this WebRTC path, so the
+      // Record button asks the server to toggle recording instead of sending a tone.
+      const sipCallId =
+        session?._request?.call_id || session?.id || sessionId;
+
+      // Optimistic UI; roll back if the server rejects.
+      patchSession(sessionId, { isRecording: shouldStartRecording });
 
       try {
-        // JsSIP sendDTMF supports multi-symbol strings such as '*2' and '*3'.
-        sendDtmf(sessionId, dtmfTone);
-        patchSession(sessionId, { isRecording: shouldStartRecording });
+        const token = localStorage.getItem(SESSION_NAME) || '';
+        fetch(`${getEnv().VITE_API_BASE_URL}/api/internal/recording-control/toggle`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            sip_call_id: sipCallId,
+            action: shouldStartRecording ? 'start' : 'stop',
+          }),
+        })
+          .then((response) => response.json().catch(() => ({})))
+          .then((result: any) => {
+            if (!result?.success) {
+              patchSession(sessionId, { isRecording: !shouldStartRecording });
+              setLastError(
+                result?.message ||
+                  (shouldStartRecording
+                    ? 'Unable to start recording'
+                    : 'Unable to stop recording'),
+              );
+            }
+          })
+          .catch((error: any) => {
+            patchSession(sessionId, { isRecording: !shouldStartRecording });
+            setLastError(error?.message || 'Unable to toggle recording');
+          });
       } catch (error: any) {
-        setLastError(
-          error?.message ||
-            (shouldStartRecording ? 'Unable to start recording' : 'Unable to stop recording'),
-        );
+        patchSession(sessionId, { isRecording: !shouldStartRecording });
+        setLastError(error?.message || 'Unable to toggle recording');
       }
     },
-    [patchSession, sendDtmf, sessions],
+    [patchSession, sessions],
   );
 
   useEffect(() => {
@@ -2955,9 +3274,12 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
         sipCredentials,
         uaStatus,
         isRegistered,
+        sipContact,
         lastError,
         campaignContactCards,
         setCampaignContactCards,
+        campaignSkipRequest,
+        setCampaignSkipRequest,
         joinedCampaignId,
         setJoinedCampaignId,
         activeCampaign,
@@ -2994,6 +3316,7 @@ export const DialpadProvider = ({ children }: { children: ReactNode }) => {
         toggleRecordingCall,
         sendDtmf,
         patchSessionAiInfo,
+        patchSession,
         dialpadAiSocket,
         requestDialpadAiSocketAuth,
       }}

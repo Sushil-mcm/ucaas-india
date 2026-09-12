@@ -27,7 +27,8 @@ export const formInitialState: IADDUSER = {
   users: [userInitialState],
   password: '',
   confirm_password: '',
-  password_type: 'common',
+  /* Default: an invite link. The person chooses their own password. */
+  password_type: 'email',
 };
 
 export const TAB_CONSTANT = {
@@ -39,6 +40,7 @@ export const FORWARDING_TAB_CONSTANT = {
   BASIC_INFORMATION: 'Basic Information',
   SETTING_PERMISSIONS: 'Settings & Permissions',
   GREETING_NOTIFICATION: 'Media',
+  SKILLS: 'Skills',
   CALL_RULES: 'Call Rules',
 };
 
@@ -46,6 +48,7 @@ export const ERROR_TYPES = {
   [FORWARDING_TAB_CONSTANT.BASIC_INFORMATION]: 'basic',
   [FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS]: 'settings',
   [FORWARDING_TAB_CONSTANT.GREETING_NOTIFICATION]: 'greetings',
+  [FORWARDING_TAB_CONSTANT.SKILLS]: 'skills',
   [FORWARDING_TAB_CONSTANT.CALL_RULES]: 'callRules',
 };
 
@@ -73,22 +76,18 @@ const callHandlingInitialState = {
 export const greetingsInitialState = {
   welcome_greeting: {
     enabled: false,
-    override: false,
     value: { label: '', value: '' },
   },
   voicemail: {
     enabled: false,
-    override: false,
     value: { label: '', value: '' },
   },
   ring_tone: {
     enabled: false,
-    override: false,
     value: { label: '', value: '' },
   },
   on_hold_music: {
     enabled: false,
-    override: false,
     value: { label: '', value: '' },
   },
 };
@@ -118,7 +117,6 @@ export const MEMBER_RING_STRATEGY_OPTIONS = [
 
 export const settingsInitialState = {
   role: {
-    override: false,
     label: '',
     value: '',
   },
@@ -126,7 +124,6 @@ export const settingsInitialState = {
     value: '',
     users: [],
     voicemail_to_text: 'YES',
-    override: false,
   },
   ...SETTINGS.settings,
 };
@@ -332,8 +329,9 @@ export const getDepartmentTimeoutOptions = (companySettings: unknown, current?: 
 
 export const DEVICE_TYPE_NAME_CONST = {
   web: 'Desktop',
-  pstn: 'ATA Device',
+  pstn: 'Outside number',
   mobile: 'Mobile',
+  desk: 'Desk phone',
 } as const;
 
 export const holidaySchema = yup.object().shape({

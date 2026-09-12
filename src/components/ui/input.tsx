@@ -6,9 +6,8 @@ import { EyeLine, EyeLineOff } from '@/assets/icons';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;
-  /* Marks the field mandatory. Handled here rather than at the call sites so
-     every form marks required fields the same way. Only for fields that are
-     always required - see the note on `Label`. */
+  /* Pass-through to the shared Label, so a form marks a field required in one
+     place rather than hand-writing an asterisk beside the input. */
   required?: boolean;
   error?: any;
   Icon?: React.ReactNode;
@@ -17,18 +16,25 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   showEye?: boolean;
 }
 
-function Input({
-  className,
-  type = 'text',
-  label = null,
-  required = false,
-  error = '',
-  Icon = null,
-  IconPosition = 'right-0 inset-y-0 pr-2',
-  onIconClick,
-  showEye = false,
-  ...props
-}: InputProps) {
+/* forwardRef so a caller can reach the real <input>. Without it a `ref` prop is
+   dropped on the floor: it does not raise, the ref just stays null and whatever
+   it was for - focusing a field, selecting its text - silently never happens.
+   Callers that pass no ref are unaffected. */
+const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    className,
+    type = 'text',
+    label = null,
+    required,
+    error = '',
+    Icon = null,
+    IconPosition = 'right-0 inset-y-0 pr-2',
+    onIconClick,
+    showEye = false,
+    ...props
+  },
+  ref,
+) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const isSearchInput =
@@ -61,6 +67,7 @@ function Input({
         )}
         <div className="flex">
           <input
+            ref={ref}
             autoComplete="off"
             type={!showPassword ? type : 'text'}
             data-slot="input"
@@ -90,6 +97,6 @@ function Input({
       </div>
     </div>
   );
-}
+});
 
 export { Input };

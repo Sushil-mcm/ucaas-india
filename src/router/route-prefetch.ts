@@ -40,7 +40,8 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/phone',
-    importers: [() => import('@/pages/phone')],
+    // The router renders the console for /phone, not the pages/phone index.
+    importers: [() => import('@/pages/phone/console')],
   },
   {
     prefix: '/messenger',
@@ -117,20 +118,16 @@ const routePrefetchers: RoutePrefetcher[] = [
     importers: monitoringBase,
   },
   {
-    prefix: '/integration/data-reporting/zapier',
-    importers: withIntegration(() => import('@/pages/integration/data-reporting/zapier')),
-  },
-  {
-    prefix: '/integration/data-reporting/manage-webhook',
-    importers: withIntegration(() => import('@/pages/integration/data-reporting/manage-webhook')),
-  },
-  {
     prefix: '/integration/data-reporting/general-settings',
     importers: withIntegration(() => import('@/pages/integration/data-reporting/general-settings')),
   },
   {
     prefix: '/integration',
     importers: withIntegration(() => import('@/pages/integration/crm')),
+  },
+  {
+    prefix: '/admin-settings/desk-phones',
+    importers: withAdmin(() => import('@/pages/admin-settings/people/desk-phones')),
   },
   {
     prefix: '/admin-settings/people',
@@ -178,7 +175,7 @@ const routePrefetchers: RoutePrefetcher[] = [
   },
   {
     prefix: '/admin-settings/phone/shared-line',
-    importers: withAdmin(() => import('@/pages/directory/groups')),
+    importers: withAdmin(() => import('@/pages/admin-settings/phone-systems/departments')),
   },
   {
     prefix: '/admin-settings/knowledge/all-knowledge-base',
@@ -385,6 +382,10 @@ const routePrefetchers: RoutePrefetcher[] = [
   {
     prefix: '/campaign/logs',
     importers: withCampaign(() => import('@/pages/auto-dialer/campaign-logs')),
+  },
+  {
+    prefix: '/campaign/compliance',
+    importers: withCampaign(() => import('@/pages/auto-dialer/compliance')),
   },
   {
     prefix: '/campaign/disposition-logs',

@@ -18,6 +18,98 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import PerfStatCard from './stat-card';
 import { formatSecsToClock } from './format';
 import './agents-theme.css';
+import { useAgentDuty, useBreakReasons } from '@/hooks/use-agent-duty';
+import { pickableReasons } from '@/lib/break-reasons';
+import { useAgentDayToday } from '@/hooks/use-agent-day';
+import { clockText } from '@/lib/agent-day';
+import { clock, describeDuty, describePending, dutyTone, overBy, secondsInState } from '@/lib/agent-duty';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+/* The duty cell and the supervisor's actions on it. Duty (on duty / on break
+   with a reason / off duty) is a different axis from the live status beside
+   it (on a call, ringing, free): a person can be on duty and on a call, or
+   on break and still finishing a call. The clock is the time in the current
+   duty; past a reason's allowance it turns amber with "over by N" - shown,
+   counted, never enforced. Managers change it from here; the change is
+   parked while the person is on a queue call and applied when it ends. */
+const DUTY_TONE_CLASS: Record<string, string> = {
+  good: 'bg-green-100 text-green-800',
+  warn: 'bg-amber-100 text-amber-800',
+  busy: 'bg-red-100 text-red-800',
+  idle: 'bg-gray-100 text-gray-700',
+};
+
+const DutyCell = ({ userUuid, now }: { userUuid: string; now: number }) => {
+  const { byUser, setDuty, isSaving, canManageOthers, canChangeOwn, ownRefusal, othersRefusal, myUuid } = useAgentDuty();
+  const { reasons } = useBreakReasons();
+  const [open, setOpen] = useState(false);
+  const duty = byUser[userUuid];
+  if (!duty) return <span className="text-xs" style={{ color: 'var(--ink-4)' }}>Not on a queue</span>;
+  const reason = reasons.find((r) => r.id === duty.reason_id || r.name === duty.reason);
+  const over = overBy(duty, reason?.limit_minutes ?? null, now);
+  const tone = over ? 'warn' : dutyTone(duty);
+  const pending = describePending(duty);
+  /* My own row asks duty.own (refused for an agent under the company lock);
+     anybody else's asks duty.others. The same two answers the server gives. */
+  const isMe = userUuid === myUuid;
+  const canAct = isMe ? canChangeOwn : canManageOthers;
+  /* The server's own sentence for a cell that is read-only: the lock on my
+     row ("Your supervisor sets your status."), the role or the company
+     switch on anybody else's. */
+  const refusal = isMe ? ownRefusal : othersRefusal;
+  const act = (action: 'start' | 'break' | 'end' | 'ready', r?: { id: string; name: string }) => {
+    setDuty({ action, ...(userUuid !== myUuid ? { user_uuid: userUuid } : {}), ...(r ? { reason_id: r.id, reason: r.name } : {}) });
+    setOpen(false);
+  };
+  const chip = (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${DUTY_TONE_CLASS[tone]}`}>
+      {describeDuty(duty)}
+      {duty.since ? <span className="tabular-nums font-normal opacity-80">{clock(secondsInState(duty, now))}</span> : null}
+    </span>
+  );
+  return (
+    <div className="flex flex-col gap-0.5">
+      {canAct ? (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger className="text-left" title="Change this person's duty">{chip}</PopoverTrigger>
+          <PopoverContent className="w-60 p-2 flex flex-col gap-0.5 shadow-xl ring-1 ring-black/5">
+            {duty.missed_too_many ? (
+              <button type="button" className="text-left text-sm px-2 py-1.5 rounded-lg hover:bg-gray-100" disabled={isSaving} onClick={() => act('ready')}>
+                Ready again
+              </button>
+            ) : null}
+            {duty.duty !== 'on_duty' ? (
+              <button type="button" className="text-left text-sm px-2 py-1.5 rounded-lg hover:bg-gray-100" disabled={isSaving} onClick={() => act('start')}>
+                {duty.duty === 'on_break' ? 'Back from break' : 'Set on duty'}
+              </button>
+            ) : null}
+            {duty.duty !== 'off_duty' ? (
+              <>
+                <span className="text-[10px] uppercase tracking-widest text-gray-500 px-2 pt-1">Break</span>
+                {pickableReasons(reasons).map((r) => (
+                  <button key={r.id} type="button" className="text-left text-sm px-2 py-1.5 rounded-lg hover:bg-gray-100" disabled={isSaving || (duty.duty === 'on_break' && duty.reason_id === r.id)} onClick={() => act('break', r)}>
+                    {r.name}
+                  </button>
+                ))}
+                <button type="button" className="text-left text-sm px-2 py-1.5 rounded-lg hover:bg-gray-100 text-gray-700" disabled={isSaving} onClick={() => act('end')}>
+                  End shift
+                </button>
+              </>
+            ) : null}
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <span title={refusal || undefined} aria-disabled="true">{chip}</span>
+      )}
+      {!canAct && isMe && refusal ? (
+        <span className="text-[11px]" style={{ color: 'var(--ink-4)' }}>{refusal}</span>
+      ) : null}
+      {over ? <span className="text-[11px] text-amber-700">over the {reason?.limit_minutes} min allowance by {over} min</span> : null}
+      {pending ? <span className="text-[11px] text-amber-700">{pending}</span> : null}
+      {duty.missed_too_many ? <span className="text-[11px] text-red-700">missed {duty.no_answer_count} calls in a row — not being offered</span> : null}
+    </div>
+  );
+};
 
 const STATUS_STYLES: Record<string, string> = {
   'On Call': 'state busy',
@@ -123,6 +215,25 @@ const AgentPagination = ({
   );
 };
 
+/* "Today so far" for one person: on calls and on breaks today, from the
+   agent-day summary (one request for everyone, refreshed every minute). Live
+   status stays in the columns to the left; this is the day's running total.
+   On calls counts campaign calls only, hence the ≈. */
+const TodayCell = ({ row }: { row: any }) => {
+  if (!row) return <span className="text-xs" style={{ color: 'var(--ink-4)' }}>Nothing yet today</span>;
+  const breaks = (row.breaks || []) as { reason: string; count: number; seconds: number }[];
+  return (
+    <div className="flex flex-col" style={{ fontSize: 11.5, color: 'var(--ink-2)' }}>
+      <span>On duty: {clockText(row.on_duty_s)}</span>
+      <span>On calls: ≈{clockText(row.on_call_s)}</span>
+      <span title={breaks.map((b) => `${b.reason} ×${b.count} ${clockText(b.seconds)}`).join(', ') || 'No breaks yet'}>
+        Breaks: {clockText(row.break_s)}
+        {breaks.length ? ` (${breaks.map((b) => `${b.reason} ${clockText(b.seconds)}`).join(', ')})` : ''}
+      </span>
+    </div>
+  );
+};
+
 /* ─── Main tab ───────────────────────────────────────────────────────────── */
 
 const AgentsTab = ({
@@ -157,6 +268,12 @@ const AgentsTab = ({
     () => buildAgentRows({ agentRows, queues, usersOnlineStatus, activeQueueCalls }),
     [agentRows, queues, usersOnlineStatus, activeQueueCalls],
   );
+  const today = useAgentDayToday();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   /* Client-side search: filter here so we can paginate the results before
      handing them to TableManager, rather than letting TableManager filter
@@ -282,6 +399,22 @@ const AgentsTab = ({
           <span style={{ color: 'var(--ink-4)' }}>—</span>
         ),
     },
+    {
+      header: 'Duty',
+      accessorKey: 'duty',
+      cell: ({ row }: any) => (
+        <DutyCell userUuid={String(row.original.uuid || row.original.user_uuid || '')} now={now} />
+      ),
+    },
+    {
+      /* Today is this browser's today (the person looking wants their own
+         day); the header says which zone so nobody reads it as the company's. */
+      header: `Today so far (${today.timeZone})`,
+      accessorKey: 'todaySoFar',
+      cell: ({ row }: any) => (
+        <TodayCell row={today.byUser[String(row.original.uuid || row.original.user_uuid || '')]} />
+      ),
+    },
     { header: 'Queue / Campaign', accessorKey: 'queueOrCampaign' },
     { header: 'Caller ID', accessorKey: 'callerId' },
     {
@@ -322,8 +455,10 @@ const AgentsTab = ({
       header: 'Queues',
       accessorKey: 'queuesCount',
     },
+  /* `now` and `today` are the only inputs that change; everything else the
+     cells read comes off the row itself. */
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], []);
+  ], [now, today]);
 
   return (
     <div className="perf-agents flex flex-col gap-4 px-[22px] py-4">

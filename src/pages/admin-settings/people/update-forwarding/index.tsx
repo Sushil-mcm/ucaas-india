@@ -1,5 +1,7 @@
 import { useEffect, useState, type FC } from 'react';
+import { buildBusyActionPayload, readBusyActionForm } from '@/lib/busy-action';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SkillsTab from './skills-tab';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   basicInitialState,
@@ -13,6 +15,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { upsertUserSettingsSchema } from './schema';
 import BasicInformation from './basic-information';
 import GreetingNotification from './greetings';
+import { roleDisplayName } from '@/pages/admin-settings/roles/role-names';
 import CallRules from './call-rules';
 import { RING_TYPE_LABELS } from '@/constants/forwarding-consts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +33,8 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import CommonSettingPermission from '@/components/common-settings';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { mergeCallForwarding } from '@/lib/call-forwarding-record';
+import { listDeskPhones } from '@/pages/admin-settings/people/desk-phones/desk-phones-api';
+import { deskRowPayload, isDeskRowKey, mergeDeskPhoneRows, outsideNumberDigits, storedRowKey } from '@/lib/desk-phone-device-rows';
 
 // ========== Types =========
 interface DeviceOption {
@@ -45,6 +50,11 @@ interface DeviceOption {
 interface GreetingValue {
   label: string;
   value: string;
+  // Kept through save + hydrate so the switch can tell a stock default from a
+  // custom recording (see greeting-select). Both are optional: a freshly
+  // picked "Select" placeholder has neither.
+  uuid?: string;
+  is_default?: boolean | number;
 }
 
 interface GreetingState {
@@ -87,6 +97,7 @@ const TABS_ORDER = [
   FORWARDING_TAB_CONSTANT.BASIC_INFORMATION,
   FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS,
   FORWARDING_TAB_CONSTANT.GREETING_NOTIFICATION,
+  FORWARDING_TAB_CONSTANT.SKILLS,
   FORWARDING_TAB_CONSTANT.CALL_RULES,
 ];
 
@@ -230,6 +241,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         type: 'manual',
         message: 'Template is required',
       });
+      handleAlert({ text: 'Choose a template before saving.', type: 'error' });
       setActiveTab(FORWARDING_TAB_CONSTANT.BASIC_INFORMATION);
       return;
     }
@@ -250,6 +262,10 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               message: validationError.message,
             });
           }
+        });
+        handleAlert({
+          text: `Fix the highlighted field under ${tabKey} before saving.`,
+          type: 'error',
         });
         setActiveTab(tabKey);
         return;
@@ -276,16 +292,28 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
   const { mutate: mutateUpdateMember, isPending: isPendingUpdateMember } = useMutation({
     mutationFn: updateMemberForwading,
     onSuccess: (data) => {
-      handleAlert({ text: data?.data?.message || 'User updated successfully!', type: 'success' });
-      queryClient.invalidateQueries(['fetchUsersList']);
+      handleAlert({ text: data?.data?.message || 'Person updated', type: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
       invalidateGlobalUsersDirectory(queryClient);
       setDrawerState(false);
-      setTabData(data?.data?.data?.result);
+      /* Optional prop: the People list opens this drawer without it. Calling it
+         unconditionally threw "setTabData is not a function" on every save. */
+      setTabData?.(data?.data?.data?.result);
     },
   });
 
   const onSubmit = () => {
     const { basic = basicInitialState, greetings = {}, settings, callRules = {} } = watch();
+    /* Hydration is wrapped in try/catch and only logs on failure, so `settings`
+       can still be undefined here. Bail with a message instead of throwing on
+       the destructure below. */
+    if (!settings || typeof settings !== 'object') {
+      handleAlert({
+        text: 'Could not load this person’s settings. Close and reopen this panel, then try again.',
+        type: 'error',
+      });
+      return;
+    }
     const {
       display_number: { masking = {}, incoming = {}, show_number_if_blocked = 'NO' } = {},
       role = {},
@@ -378,6 +406,9 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           personal: callRules?.failureAction?.personal,
         },
       },
+      /* When already on a call: call waiting (off) or send it somewhere (on).
+         Same shape as failure_action; the router reads it as rule 3.5. */
+      busy_action: buildBusyActionPayload(callRules?.busyAction, selectedUser),
       outgoing_calls: {
         enabled: callRules?.outgoingCall?.enabled,
         default_caller_id: callRules?.outgoingCall?.defaultCallerId?.value,
@@ -400,6 +431,11 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
       last_name: basic?.last_name,
       job_title: basic?.job_title,
       caller_id: basic?.caller_id,
+      /* The photo, passed through exactly as stored. The server writes
+         `profile = profile ?? null` on every update, so leaving it out of this
+         payload wiped the person's photo on every save from this drawer. This
+         drawer does not edit the photo; it only has to hand it back. */
+      profile: data?.profile ?? null,
       /* Omitted rather than sent empty: a blank value here means we failed to
          resolve the current site, not that the admin cleared it. */
       ...(basic?.site?.value ? { site_uuid: basic.site.value } : {}),
@@ -426,16 +462,30 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
 
   const getGreetingConfig = (
     key: string,
-    greetings: Record<string, { enabled?: boolean; value?: { label?: string; value?: string } }>,
+    greetings: Record<
+      string,
+      {
+        enabled?: boolean;
+        value?: { label?: string; value?: string; uuid?: string; is_default?: boolean | number };
+      }
+    >,
   ) => ({
     enabled: greetings?.[key]?.enabled,
     label: greetings?.[key]?.value?.label,
     value: greetings?.[key]?.value?.value,
+    /* Without these two, a stock recording plays fine right after picking it
+       and says "Unable to load this recording." the moment the page reloads -
+       the player only knows to fetch from the shared default path (not this
+       person's own folder, where a stock file does not exist) when it can see
+       is_default or a recognised uuid. See greeting-select.tsx's own note. */
+    uuid: greetings?.[key]?.value?.uuid,
+    is_default: greetings?.[key]?.value?.is_default,
   });
 
   function transformPayloadNew(res: any[]) {
-    return res.map((item) => ({
+    return res.map((item) => isDeskRowKey(item?.key) ? deskRowPayload(item.key, item, selectedUser?.extension || '') : ({
       type: item?.type || 'web',
+      ...(item?.type === 'pstn' ? { number: outsideNumberDigits(item?.number) } : {}),
       status: item.status ?? false,
       label: item.value.label || '',
       value: item?.key === 'web' ? selectedUser?.extension || '' : item.option?.value || '',
@@ -465,8 +515,24 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     return obj;
   }
 
+  /* This person's desk phones (the list endpoint, filtered to their extension
+     and owner). Waited for before the form is seeded. */
+  const personPhones = useQuery({
+    queryKey: ['admin', 'desk-phones', 'for-person', data?.uuid, data?.extension],
+    queryFn: () => listDeskPhones({ search: String(data?.extension || ''), limit: 200, kind: 'user' }),
+    enabled: Boolean(data?.uuid && data?.extension),
+    retry: false,
+  });
+  const phonesSettled = !data?.extension || personPhones.isFetched || personPhones.isError;
+  const phoneRows =
+    personPhones.data?.kind === 'ok'
+      ? personPhones.data.list.result.filter(
+          (p) => p.owner?.uuid === data?.uuid || String(p.extension ?? p.sip_username ?? '') === String(data?.extension || ''),
+        )
+      : [];
+
   useEffect(() => {
-    if (!data?.uuid || !roleList.length || isSelectedTemplate) return;
+    if (!data?.uuid || !roleList.length || isSelectedTemplate || !phonesSettled) return;
     try {
       if (data?.uuid) {
         const roleID = data?.custom_role_uuid || data?.role_uuid;
@@ -495,12 +561,14 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
 
           // Build initial tempObj
           tempDeviceOptions.forEach((item) => {
-            const typeKey =
-              data?.extension !== item?.value ? item?.name || 'web' : item?.type || 'web';
+            const typeKey = storedRowKey(item, data?.extension || '');
             tempObj[typeKey] = {
               status: item?.status,
               isDefault: item?.isDefault,
               type: item?.type || 'web',
+              device: (item as any)?.device,
+              number: (item as any)?.number || '',
+              suggested: item?.type === 'pstn' ? data?.phone || '' : undefined,
               value: {
                 label: item?.label,
                 value: seedDeviceRingTime(
@@ -534,6 +602,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               status: true,
               value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'pstn',
+              suggested: data?.phone || '',
               option: {
                 label: selectedUser?.name || '',
                 value: selectedUser?.extension || '',
@@ -565,6 +634,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               status: true,
               value: seedDeviceRingTime(undefined, companyDefaults?.settings),
               type: 'pstn',
+              suggested: data?.phone || '',
               option: {
                 label: selectedUser?.name || '',
                 value: selectedUser?.extension || '',
@@ -585,6 +655,13 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           },
           personal: !!callHandlingData?.forward_calls?.personal,
         });
+
+        tempObj = mergeDeskPhoneRows(
+          tempObj,
+          phoneRows,
+          data?.extension || '',
+          seedDeviceRingTime(undefined, companyDefaults?.settings),
+        );
 
         setValue('callRules.incomingCall', {
           enabled: true,
@@ -623,11 +700,9 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
           region: callHandlingData?.outgoing_calls?.region || '',
         });
 
-        ['failureAction'].forEach((key) => {
-          const action =
-            callHandlingData?.incoming_calls?.[
-              key === 'failureAction' ? 'failure_action' : 'closed_hour_action'
-            ];
+        {
+          const key = 'failureAction';
+          const action = callHandlingData?.incoming_calls?.failure_action;
           setValue(`callRules.${key}`, {
             enabled: action?.enabled || false,
             type: {
@@ -638,9 +713,16 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               label: action?.value_label || 'Select',
               value: action?.value || user_info?.extension,
             },
-            personal: action?.personal || true,
+            /* `|| true` forced this to true even when the stored value was an
+               explicit false; `?? true` keeps the default for a missing value. */
+            personal: action?.personal ?? true,
           });
-        });
+        }
+
+        setValue(
+          'callRules.busyAction',
+          readBusyActionForm(callHandlingData?.busy_action, data?.extension || user_info?.extension || ''),
+        );
 
         setValue('templateName', data?.name || '');
 
@@ -718,6 +800,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             value: {
               label: welcomeGreetingData?.label || 'Select',
               value: welcomeGreetingData?.value || '',
+              uuid: welcomeGreetingData?.uuid,
+              is_default: welcomeGreetingData?.is_default,
             },
           },
           voicemail: {
@@ -725,6 +809,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             value: {
               label: greetingsData?.voicemail?.label || 'Select',
               value: greetingsData?.voicemail?.value || '',
+              uuid: greetingsData?.voicemail?.uuid,
+              is_default: greetingsData?.voicemail?.is_default,
             },
           },
           ring_tone: {
@@ -732,6 +818,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             value: {
               label: greetingsData?.ring_tone?.label || 'Select',
               value: greetingsData?.ring_tone?.value || '',
+              uuid: greetingsData?.ring_tone?.uuid,
+              is_default: greetingsData?.ring_tone?.is_default,
             },
           },
           on_hold_music: {
@@ -739,24 +827,20 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
             value: {
               label: onHoldMusicData?.label || 'Select',
               value: onHoldMusicData?.value || '',
+              uuid: onHoldMusicData?.uuid,
+              is_default: onHoldMusicData?.is_default,
             },
           },
         });
-        /* Same copy decision as `seSettingsData`, on the non-template path. The
-           question is "should this value be put onto the person", which is the
-           apply half; a record carrying only the old flag reads exactly as before. */
-        setValue(
-          'settings.transcription',
-          readRuleFlags(settingsData, 'transcription').apply
-            ? settingsData?.transcription?.enabled
-            : false,
-        );
-        setValue(
-          'settings.ai_call_monitoring',
-          readRuleFlags(settingsData, 'ai_call_monitoring').apply
-            ? settingsData?.ai_call_monitoring?.enabled
-            : false,
-        );
+        /* This is the person's own record, not a template, so the value shown is
+           the value stored - in either of its two shapes, a bare boolean from the
+           server's defaults or {enabled} from a later save. Gating it on the
+           person's own apply flag turned a stored "on" into "off" on every page
+           load, and the next save wrote that "off" back. */
+        const storedToggle = (node: any): boolean =>
+          typeof node === 'object' && node !== null ? !!node.enabled : !!node;
+        setValue('settings.transcription', storedToggle(settingsData?.transcription));
+        setValue('settings.ai_call_monitoring', storedToggle(settingsData?.ai_call_monitoring));
 
         setValue('basic', {
           email: data?.email || '',
@@ -779,7 +863,7 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
     } catch (error: any) {
       console.error('Something went wrong', error?.message);
     }
-  }, [data, roleList, isSelectedTemplate]);
+  }, [data, roleList, isSelectedTemplate, phonesSettled]);
 
   useEffect(() => {
     if (!data?.uuid || !isSelectedTemplate) return;
@@ -884,6 +968,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         value: {
           label: welcomeGreetingData?.label || 'Select',
           value: welcomeGreetingData?.value || '',
+          uuid: welcomeGreetingData?.uuid,
+          is_default: welcomeGreetingData?.is_default,
         },
       });
     }
@@ -893,6 +979,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         value: {
           label: greetingsData?.voicemail?.label || 'Select',
           value: greetingsData?.voicemail?.value || '',
+          uuid: greetingsData?.voicemail?.uuid,
+          is_default: greetingsData?.voicemail?.is_default,
         },
       });
     }
@@ -902,6 +990,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         value: {
           label: greetingsData?.ring_tone?.label || 'Select',
           value: greetingsData?.ring_tone?.value || '',
+          uuid: greetingsData?.ring_tone?.uuid,
+          is_default: greetingsData?.ring_tone?.is_default,
         },
       });
     }
@@ -911,6 +1001,8 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
         value: {
           label: onHoldMusicData?.label || 'Select',
           value: onHoldMusicData?.value || '',
+          uuid: onHoldMusicData?.uuid,
+          is_default: onHoldMusicData?.is_default,
         },
       });
     }
@@ -936,13 +1028,15 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
                 />
                 <div style={{ minWidth: 0 }}>
                   <div className="mcm-personhead-name">
-                    {`${data?.first_name || ''} ${data?.last_name || ''}`.trim() || 'User'}
+                    {`${data?.first_name || ''} ${data?.last_name || ''}`.trim() || 'Person'}
                   </div>
                   <div className="mcm-personhead-meta">
                     {data?.extension ? <span className="tag neu">Ext {data.extension}</span> : null}
                     {data?.custom_role_data?.name || data?.role_data?.name || data?.role ? (
                       <span className="tag acc">
-                        {data?.custom_role_data?.name || data?.role_data?.name || data?.role}
+                        {roleDisplayName(
+                          data?.custom_role_data?.name || data?.role_data?.name || data?.role,
+                        )}
                       </span>
                     ) : null}
                     {data?.email ? <span className="mcm-field-note">{data.email}</span> : null}
@@ -1008,6 +1102,12 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
                 className="mcm-userform-body"
               >
                 <GreetingNotification customClass="h-full" />
+              </TabsContent>
+              <TabsContent value={FORWARDING_TAB_CONSTANT.SKILLS} className="mcm-userform-body">
+                <SkillsTab
+                  userUuid={data?.uuid}
+                  personName={[data?.first_name, data?.last_name].filter(Boolean).join(' ')}
+                />
               </TabsContent>
               <TabsContent value={FORWARDING_TAB_CONSTANT.CALL_RULES} className="mcm-userform-body">
                 <CallRules {...{ UUID: data?.uuid, userData: data }} customClass="h-full" />

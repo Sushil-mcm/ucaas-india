@@ -2,16 +2,16 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import FileCropper from '@/components/custom/file-cropper';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
-import { useCompanyFeatures } from '@/hooks/rbac';
 import { requiredString } from '@/lib/schema';
 import { Icon } from '@/assets/icons/icon';
 import { handleAlert, MAX_FILE_SIZE, validateFileSize } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { isDemoMode } from '@/lib/demo-mode';
 import { basicInitialState } from '@/pages/admin-settings/constants';
-import BasicInformation from '@/pages/admin-settings/people/update-forwarding/basic-information';
+import ProfileForm, { JOB_TITLE_MAX } from './profile-form';
 import '@/components/mcm/mcm-page.css';
-import { getUserDetails, mediaUploadUrl, userProfileUpdate } from '@/services/api';
+import { mediaUploadUrl, userProfileUpdate } from '@/services/api';
+import { useUserDetails, invalidateUserDetails } from '@/hooks/use-user-details';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -22,15 +22,31 @@ import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import HowCallsReachYou from './how-calls-reach-you';
 import CallSetupGuide from './call-setup-guide';
 import { buildProfileUpdatePayload } from './profile-update-payload';
+import {
+  SELF_PROFILE_QUERY_KEY,
+  fetchSelfProfile,
+  getSelfProfileStore,
+  updateSelfProfile,
+} from './profile-self-api';
+import { DEFAULT_INTERFACE_LANGUAGE, PRONOUNS_MAX, cleanPronouns } from './interface-languages';
 
 export const BasicInfoSettingSchema = yup.object().shape({
   basic: yup.object().shape({
     first_name: requiredString('First name', 2, 50),
     last_name: requiredString('Last name', 2, 50),
-    job_title: yup.string().trim().required('Fill a job title'),
-    site: yup.object().shape({
-      value: yup.string().trim().required('Select a location'),
-    }),
+    /* The column is varchar(30) and the database is strict: one character
+       over and the whole save fails, name and photo with it. The field stops
+       typing at the limit; this catches a pasted value. */
+    job_title: yup
+      .string()
+      .nullable()
+      .max(JOB_TITLE_MAX, `Job title can be at most ${JOB_TITLE_MAX} characters`),
+    /* users.pronouns is varchar(40); same strict-database reasoning. */
+    pronouns: yup
+      .string()
+      .nullable()
+      .max(PRONOUNS_MAX, `Pronouns can be at most ${PRONOUNS_MAX} characters`),
+    interface_language: yup.string().nullable(),
   }),
 });
 
@@ -46,10 +62,6 @@ const BasicInfoSettings = () => {
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const cropperUploadRef = useRef<any>(null);
   const queryClient: any = useQueryClient();
-  const { features } = useCompanyFeatures();
-  const basicInfoAccess =
-    features?.plan_features?.account_setting?.USER?.action ||
-    features?.plan_features?.account_setting?.access?.USER?.action;
 
   const methods = useForm<any>({
     mode: 'all',
@@ -59,25 +71,35 @@ const BasicInfoSettings = () => {
 
   const { handleSubmit, setValue, watch } = methods;
 
-  const { data: userInfoData, isPending: PendingUserData } = useQuery({
-    queryKey: ['getUserDetailsQueryFn'],
-    queryFn: getUserDetails,
-    select: (data) => data?.data?.data?.result,
+  const { data: userInfoData, isPending: PendingUserData } = useUserDetails();
+
+  /* Pronouns and interface language live on the new five-field endpoint;
+     /api/user/info does not return them. `null` here means the server has no
+     such endpoint, and the form is told so. Quiet probe: a missing endpoint
+     is a state, not an error. */
+  const { data: selfProfile, isPending: PendingSelfProfile } = useQuery({
+    queryKey: SELF_PROFILE_QUERY_KEY,
+    queryFn: fetchSelfProfile,
+    retry: false,
+  });
+  const selfProfileAvailable: boolean | null = PendingSelfProfile ? null : selfProfile !== null;
+
+  const afterSave = (message: string) => {
+    handleAlert({ text: message, type: 'success' });
+    invalidateUserDetails(queryClient);
+    queryClient.invalidateQueries({ queryKey: SELF_PROFILE_QUERY_KEY });
+    invalidateGlobalUsersDirectory(queryClient);
+    setLoader(false);
+  };
+
+  /* The old whole-record write. Still the only way to save the photo, and the
+     only way to save anything on a server without the five-field endpoint. */
+  const { mutateAsync: mutateProfileUpdate, isPending: PendingProfileUpdate } = useMutation({
+    mutationFn: userProfileUpdate,
   });
 
-  const { mutate: mutateProfileUpdate, isPending: PendingProfileUpdate } = useMutation({
-    mutationFn: userProfileUpdate,
-    onSuccess: (data: any) => {
-      handleAlert({
-        text: data?.data?.message || 'Profile updated successfully!',
-        type: 'success',
-      });
-      queryClient.invalidateQueries(['getUsersDetails', 'getUserDetailsQueryFn'], {
-        exact: true,
-      });
-      invalidateGlobalUsersDirectory(queryClient);
-      setLoader(false);
-    },
+  const { mutateAsync: mutateSelfUpdate, isPending: PendingSelfUpdate } = useMutation({
+    mutationFn: updateSelfProfile,
   });
 
   const handleChangeFile = (e: any) => {
@@ -127,6 +149,8 @@ const BasicInfoSettings = () => {
         job_title: user.job_title ?? '',
         first_name: user.first_name ?? '',
         last_name: user.last_name ?? '',
+        pronouns: selfProfile?.pronouns || '',
+        interface_language: selfProfile?.interface_language || DEFAULT_INTERFACE_LANGUAGE,
       },
       /* Root-level, not under `basic` — this is the key the upload flow and
          the save payload both read. */
@@ -178,7 +202,9 @@ const BasicInfoSettings = () => {
             method: 'PUT',
             body: file,
           });
-          if (uploadFileResponse.status === 200) {
+          /* Presigned S3 PUT answers 204 (or 200) on success — `.ok` covers the
+             whole 2xx range; `=== 200` treated a good upload as a silent no-op. */
+          if (uploadFileResponse.ok) {
             setValue('profile', file_name);
             /* A new picture undoes an earlier removal in the same session —
                without this the save would still send the removal. */
@@ -199,25 +225,69 @@ const BasicInfoSettings = () => {
     }
   };
 
-  const onSubmit = () => {
-    mutateProfileUpdate(
-      buildProfileUpdatePayload({
-        userInfoData,
-        basic: {
-          first_name: watch('basic.first_name'),
-          last_name: watch('basic.last_name'),
-          job_title: watch('basic.job_title'),
-          site_uuid: watch('basic.site')?.value,
-        },
-        uploadedProfile: watch('profile'),
-        isImageRemoved,
-      }),
+  /* Two saves, chosen by what the server offers and what changed.
+
+     Server with /api/profile/update-self: the five fields go there (own row,
+     no role, no email, nothing else touched). The photo is not one of the
+     five, so a changed photo still goes through the old whole-record write -
+     only when it changed, because that write resends the entire record.
+
+     Server without it: the old write carries name and job title as before,
+     and the page says pronouns and language were not saved rather than
+     letting them vanish quietly. */
+  const onSubmit = async () => {
+    const basic = {
+      first_name: watch('basic.first_name'),
+      last_name: watch('basic.last_name'),
+      job_title: watch('basic.job_title'),
+    };
+    const pronouns = cleanPronouns(watch('basic.pronouns'));
+    const interfaceLanguage = String(
+      watch('basic.interface_language') || DEFAULT_INTERFACE_LANGUAGE,
     );
+    const uploadedProfile = watch('profile');
+    const photoChanged = !!uploadedProfile || isImageRemoved;
+
+    const legacyPayload = buildProfileUpdatePayload({
+      userInfoData,
+      basic,
+      uploadedProfile,
+      isImageRemoved,
+    });
+
+    try {
+      const outcome =
+        getSelfProfileStore() === 'absent'
+          ? ({ kind: 'absent' } as const)
+          : await mutateSelfUpdate({
+              ...basic,
+              pronouns: pronouns || null,
+              interface_language: interfaceLanguage,
+            });
+
+      if (outcome.kind === 'saved') {
+        if (photoChanged) await mutateProfileUpdate(legacyPayload);
+        afterSave(outcome.message);
+        return;
+      }
+
+      const legacy: any = await mutateProfileUpdate(legacyPayload);
+      afterSave(legacy?.data?.message || 'Profile updated successfully!');
+      if (pronouns || interfaceLanguage !== DEFAULT_INTERFACE_LANGUAGE) {
+        handleAlert({
+          text: 'Name and job title saved. Pronouns and language are not saved on this server yet.',
+          type: 'warning',
+        });
+      }
+    } catch {
+      /* The request layer has already shown the server's message. */
+      setLoader(false);
+    }
   };
 
   useEffect(() => {
     applyUserToForm(userInfoData?.user_info);
-  }, [userInfoData]);
+  }, [userInfoData, selfProfile]);
 
   const info = userInfoData?.user_info;
   const hasPhoto = Boolean(imagePreview || watch('profile'));
@@ -343,12 +413,14 @@ const BasicInfoSettings = () => {
 
                 <FormProvider {...methods}>
                   <form onSubmit={handleSubmit(onSubmit)}>
-                    <BasicInformation
-                      isChooseTemplate={false}
-                      isSiteDisabled={false}
-                      customClass=""
-                    />
-                    {basicInfoAccess?.edit && hasUnsavedChanges && (
+                    <ProfileForm selfProfile={selfProfileAvailable} />
+                    {/* Always shown once there is something to save. This is the
+                        person's own name, title and photo, and saving those is
+                        theirs to do. The bar used to hide behind the People-admin
+                        permission (account_setting.USER.action.edit), which is the
+                        key that gates editing OTHER people - so anyone without it
+                        saw a form with no way to save it. */}
+                    {hasUnsavedChanges && (
                       <div className="mcm-savebar" role="status">
                         <span className="mcm-savebar-dot" aria-hidden="true" />
                         <span className="mcm-savebar-text">
@@ -361,14 +433,14 @@ const BasicInfoSettings = () => {
                           type="button"
                           className="mcm-savebar-discard"
                           onClick={handleDiscardChanges}
-                          disabled={PendingProfileUpdate}
+                          disabled={PendingProfileUpdate || PendingSelfUpdate}
                         >
                           Discard
                         </button>
                         <Button
                           variant={'primary'}
                           type="submit"
-                          disabled={PendingProfileUpdate}
+                          disabled={PendingProfileUpdate || PendingSelfUpdate}
                           /* The `.mcm-page button` reset a few sections up (there
                              for icon-only ghost buttons) strips this button's
                              background/text-color classes since it has higher
@@ -376,7 +448,7 @@ const BasicInfoSettings = () => {
                              `!` forces these to win regardless. */
                           className="!bg-primary !text-white !border-primary hover:!bg-primary/90 min-w-[128px] justify-center"
                         >
-                          {PendingProfileUpdate ? (
+                          {PendingProfileUpdate || PendingSelfUpdate ? (
                             <span className="flex items-center gap-2">
                               <Loader variant="white" size="sm" />
                               Saving…
@@ -396,12 +468,9 @@ const BasicInfoSettings = () => {
                   live under `user_info`; the call rules, settings and
                   greetings are its siblings at the response root. */}
               <aside className="mcm-profile-aside">
-                <HowCallsReachYou
-                  userInfo={userInfoData?.user_info}
-                  callForwarding={userInfoData?.call_forwarding}
-                  settings={userInfoData?.settings}
-                  greetings={userInfoData?.greetings}
-                />
+                {/* Reads the extension and location off `user_info` and fetches
+                    the person's own assigned numbers itself. */}
+                <HowCallsReachYou userInfo={userInfoData?.user_info} />
                 <CallSetupGuide userInfo={userInfoData} />
               </aside>
             </div>

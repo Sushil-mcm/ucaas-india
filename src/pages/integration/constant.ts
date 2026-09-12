@@ -10,7 +10,6 @@ import MondayLogo from '@/assets/images/MondayLogo.png';
 import Zendesk from '@/assets/images/Zendesk.jpg';
 import Microsoft from '@/assets/images/Microsoft.png';
 import MsTeams from '@/assets/images/MsTeams.png';
-import * as yup from 'yup';
 import { getEnv } from '@/lib/utils';
 
 type MainSiteInfoWithSmallLogo = { small_logo?: unknown } | null | undefined;
@@ -22,6 +21,10 @@ export const getMcmLogoIcon = (mainSiteInfo?: MainSiteInfoWithSmallLogo): string
 };
 
 const AiIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`;
+
+const EspoCrmIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="%23FF7625"/><text x="50%25" y="54%25" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="white">E</text></svg>`;
+
+const OdooIcon = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="%238F8F8F"/><rect width="40" height="40" rx="8" fill="%23714B67"/><text x="50%25" y="54%25" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="white">O</text></svg>`;
 
 export const getBelongsToIcons = (
   mainSiteInfo?: MainSiteInfoWithSmallLogo,
@@ -41,6 +44,8 @@ export const getBelongsToIcons = (
     MSTEAMS: MsTeams,
     MONDAY: MondayLogo,
     AI: AiIcon,
+    ESPOCRM: EspoCrmIcon,
+    ODOO: OdooIcon,
     DEFAULT: dynamicMcmLogo,
   };
 };
@@ -58,6 +63,8 @@ export const BELONGS_TO_LABELS: Record<string, string> = {
   MICROSOFT365: 'Microsoft 365',
   MSTEAMS: 'MS TEAMS',
   AI: 'AI',
+  ESPOCRM: 'EspoCRM',
+  ODOO: 'Odoo',
   DEFAULT: 'MCM',
 };
 export const generalSettings = [
@@ -216,200 +223,24 @@ export const crmList: crmListProps[] = [
     comingSoon: false,
     id: 'Monday',
   },
-];
-
-export const crmZapData: Record<
-  string,
   {
-    title: string;
-    zaps: {
-      label: string;
-      subtitle: string;
-      icons: string[];
-      url: string;
-    }[];
-  }
-> = {
-  google_contacts: {
-    title: 'Google Contacts',
-    zaps: [
-      {
-        label: 'Create contacts in Ucass added to Google Contacts',
-        subtitle: 'Ucaas → Google Contacts',
-        icons: [McmLogo, GoogleContact],
-        url: 'https://zapier.com/editor/313251219/draft/313251220/setup',
-      },
-      {
-        label: 'Create new contacts in Google Contacts added to Ucaas',
-        subtitle: 'Google Contacts → Ucaas',
-        icons: [GoogleContact, McmLogo],
-        url: 'https://zapier.com/editor/313272431/draft/313272431/setup',
-      },
-      {
-        label: 'Trigger SMS sending from new Google Contact',
-        subtitle: 'Google Contacts → Ucaas (Send SMS)',
-        icons: [GoogleContact, McmLogo],
-        url: 'https://zapier.com/editor/313251582/draft/313251583/setup',
-      },
-      // {
-      //   label: 'Trigger MMS sending from new Google Contact',
-      //   subtitle: 'Google Contacts → Ucaas (Send MMS)',
-      //   icons: [GoogleContact, McmLogo],
-      // url: 'url',
-      // },
-    ],
+    name: 'EspoCRM',
+    label: 'espocrm-crm',
+    image: EspoCrmIcon,
+    alt: 'EspoCRM',
+    description:
+      'Connect your self-hosted, open-source EspoCRM to sync contacts and log calls — free, no per-user fees.',
+    comingSoon: false,
+    id: 'EspoCRM',
   },
-  google_sheets: {
-    title: 'Google Sheets',
-    zaps: [
-      {
-        label: 'Create new contacts in Ucass added to Google Sheets',
-        subtitle: 'Ucaas → Google Sheets',
-        icons: [McmLogo, GoogleSheet],
-        url: 'https://zapier.com/editor/313251890/draft/313251891/setup',
-      },
-      {
-        label: 'Create rows in Google Sheets for new contacts added to Ucaas',
-        subtitle: 'Google Sheets → Ucaas',
-        icons: [GoogleSheet, McmLogo],
-        url: 'https://zapier.com/editor/313273038/draft/313273039/setup',
-      },
-      {
-        label: 'Trigger SMS sending from new Google Sheet row',
-        subtitle: 'Google Sheets → Ucaas (Send SMS)',
-        icons: [GoogleSheet, McmLogo],
-        url: 'https://zapier.com/editor/313251934/draft/313251935/setup',
-      },
-      // {
-      //   label: 'Trigger MMS sending from new Google Sheet row',
-      //   subtitle: 'Google Sheets → Ucaas (Send MMS)',
-      //   icons: [GoogleSheet, McmLogo],
-      // url: 'url',
-      // },
-    ],
+  {
+    name: 'Odoo',
+    label: 'odoo-crm',
+    image: OdooIcon,
+    alt: 'Odoo',
+    description:
+      'Connect your self-hosted, open-source Odoo CRM to sync contacts and log calls — free Community edition, no per-user fees.',
+    comingSoon: false,
+    id: 'Odoo',
   },
-  pipedrive: {
-    title: 'Pipedrive',
-    zaps: [
-      {
-        label: 'Create contacts in Ucass added to Pipedrive',
-        subtitle: 'Ucaas → Pipedrive',
-        icons: [McmLogo, Pipedrive],
-        url: 'https://zapier.com/editor/313252061/draft/313252062/setup',
-      },
-      {
-        label: 'Create new contacts in Pipedrive added to Ucaas',
-        subtitle: 'Pipedrive → Ucaas',
-        icons: [Pipedrive, McmLogo],
-        url: 'https://zapier.com/editor/313273430/draft/313273431/setup',
-      },
-      {
-        label: 'Send SMS from new contact added in Pipedrive',
-        subtitle: 'Pipedrive → UCaaS (Send SMS)',
-        icons: [Pipedrive, McmLogo],
-        url: 'https://zapier.com/editor/313252124/draft/313252125/setup',
-      },
-      // {
-      //   label: 'Send MMS from new contact added in Pipedrive',
-      //   subtitle: 'Pipedrive → UCaaS (Send MMS)',
-      //   icons: [Pipedrive, McmLogo],
-      // url:'url',
-      // },
-    ],
-  },
-  hubSpot: {
-    title: 'HubSpot',
-    zaps: [
-      {
-        label: 'Create contacts in Ucass added to HubSpot',
-        subtitle: 'Ucaas → HubSpot',
-        icons: [McmLogo, Hubspot],
-        url: 'https://zapier.com/editor/313252488/draft/313252489/setup',
-      },
-      {
-        label: 'Create new contacts in HubSpot added to Ucaas',
-        subtitle: 'HubSpot → Ucaas',
-        icons: [Hubspot, McmLogo],
-        url: 'https://zapier.com/editor/313273732/draft/313273733/setup',
-      },
-      {
-        label: 'Send SMS from new contact added in HubSpot',
-        subtitle: 'HubSpot → UCaaS (Send SMS)',
-        icons: [Hubspot, McmLogo],
-        url: 'https://zapier.com/editor/313252609/draft/313252610/setup',
-      },
-      // {
-      //   label: 'Send MMS from new contact added in HubSpot',
-      //   subtitle: 'HubSpot → UCaaS (Send MMS)',
-      //   icons: [Hubspot, McmLogo],
-      // url:'url',
-      // },
-    ],
-  },
-};
-
-export const crmTypes = [
-  { label: 'Google Contacts', value: 'GOOGLE_CONTACTS' },
-  { label: 'Google Sheets', value: 'GOOGLE_SHEETS' },
-  { label: 'Pipedrive', value: 'PIPEDRIVE' },
-  { label: 'Monday', value: 'MONDAY' },
-  { label: 'HubSpot', value: 'HUBSPOT' },
-  { label: 'Zendesk', value: 'ZENDESK' },
-  { label: 'Microsoft 365', value: 'MICROSOFT365' },
-  { label: 'MS Teams', value: 'MSTEAMS' },
 ];
-export const initialState = {
-  type: null,
-  path: '',
-};
-export const validationSchema = yup.object().shape({
-  type: yup
-    .object({
-      label: yup.string().required('Type label is required'),
-      value: yup.string().required('Type is required'),
-    })
-    .nullable()
-    .required('Type is required'),
-  path: yup.string().required('Path is required'),
-});
-export interface editForm {
-  isEdit: boolean;
-  formData: any;
-}
-export interface ReportingDataProps {
-  items: { title: string; description: string; icon: string; id: string }[];
-}
-export const reportingData: Record<string, ReportingDataProps> = {
-  zapier: {
-    items: [
-      {
-        title: 'Google Contacts',
-        id: 'google_contacts',
-        description:
-          'Sync your Google Contacts with UCAAS to easily manage your customer list and enable seamless calling and messaging directly from your contact book.',
-        icon: GoogleContact,
-      },
-      {
-        title: 'Google Sheets',
-        id: 'google_sheets',
-        description:
-          'Import your contacts from Google Sheets into UCAAS and track all incoming and outgoing SMS with your customers.',
-        icon: GoogleSheet,
-      },
-      {
-        title: 'Pipedrive',
-        id: 'pipedrive',
-        description:
-          'Sync your contacts and log SMS activity between Pipedrive and UCAAS for streamlined communication.',
-        icon: Pipedrive,
-      },
-      {
-        title: 'HubSpot',
-        id: 'hubSpot',
-        description:
-          'Automatically import contacts and record SMS/MMS history in HubSpot with UCAAS integration.',
-        icon: Hubspot,
-      },
-    ],
-  },
-};

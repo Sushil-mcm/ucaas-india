@@ -43,8 +43,14 @@ export interface CreateNewContactProps {
   handleClose?: () => void;
   isLead?: boolean;
   prefillPhone?: string;
+  /** Extra fields to pre-fill when creating a contact, e.g. captured by the browser extension. */
+  prefill?: ContactPrefill;
   hideCancelButton?: boolean;
 }
+
+export type ContactPrefill = Partial<
+  Pick<ContactFormValues, 'first_name' | 'last_name' | 'email' | 'company' | 'title' | 'notes'>
+>;
 
 export type ContactFormValues = {
   first_name: string;

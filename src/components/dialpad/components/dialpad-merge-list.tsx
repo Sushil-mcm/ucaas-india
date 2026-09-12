@@ -5,6 +5,7 @@ import { useUser } from '@/hooks/use-user';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { isExtensionDialTarget, normalizeDialTargetUserPart } from '@/lib/extension-utility';
 import { handleAlert } from '@/lib/utils';
+import { getHeaderFirstValue } from '@/components/dialpad/session-display';
 import { ChevronLeft, MergeIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getDialpadSessionStatusLabel } from '../session-status';
@@ -100,27 +101,58 @@ const DialpadMergeList = ({ onBack, session }: DialpadMergeListProps) => {
 
     setIsMerging(true);
     setMergingSessionId(targetSession.id);
-    setAddedMergeTargets((previousState) => ({
-      ...previousState,
-      [normalizedTarget]: true,
-    }));
     const conferenceOwner = String(
       user?.user_info?.extension || user?.sip_credentials?.extension || user?.extension || '',
     ).trim();
 
+    // The switch needs one leg of each call: it moves that leg together with
+    // whoever it is bridged to. For a call this phone dialled the record carries
+    // the phone's own leg as call_uuid and often no b_leg_uuid at all, so until
+    // 5 Sep 2026 both ids went out empty, the server logged "missing UUIDs" and
+    // nothing happened while this panel closed as if the merge had worked.
+    const legOf = (live: any) => String(live?.b_leg_uuid || live?.call_uuid || '').trim();
+    // The phone always knows each call's SIP Call-ID (X-cid for calls it
+    // received); the server can resolve its own leg from that when the live
+    // record never arrived, which is the normal case for plain browser calls.
+    const sipIdOf = (s: DialpadSession | null | undefined) =>
+      String(
+        s?.liveCallData?.sip_call_id ||
+          getHeaderFirstValue(s?.headers, 'x-cid') ||
+          getHeaderFirstValue(s?.headers, 'call-id') ||
+          '',
+      ).trim();
+    const anchorSession = session || currentSession;
     const payload = {
       confId: conferenceId || targetSession?.conferenceData?.conference_id || '',
-      callerUniqueId: session?.liveCallData?.b_leg_uuid,
+      callerUniqueId: legOf(session?.liveCallData) || legOf(currentSession?.liveCallData),
       childUniqueId: targetSession?.conferenceData?.conference_id
-        ? currentSession?.liveCallData?.call_uuid
-        : targetSession?.liveCallData?.b_leg_uuid
-          ? targetSession?.liveCallData?.b_leg_uuid
-          : currentSession?.liveCallData?.direction === 'inbound'
-            ? currentSession?.liveCallData?.call_uuid
-            : currentSession?.liveCallData?.b_leg_uuid || '',
+        ? String(currentSession?.liveCallData?.call_uuid || '')
+        : legOf(targetSession?.liveCallData) ||
+          (currentSession?.liveCallData?.direction === 'inbound'
+            ? String(currentSession?.liveCallData?.call_uuid || '')
+            : legOf(currentSession?.liveCallData)),
+      callerSipCallId: sipIdOf(anchorSession),
+      childSipCallId: sipIdOf(targetSession),
       direction: currentSession?.liveCallData?.direction,
       conferenceOwner,
     };
+
+    const callerKey = payload.callerUniqueId || payload.callerSipCallId;
+    const childKey = payload.childUniqueId || payload.childSipCallId;
+    if (!callerKey || !childKey || callerKey === childKey) {
+      setIsMerging(false);
+      setMergingSessionId(null);
+      handleAlert({
+        text: 'These calls cannot be merged yet: the switch has not reported both call ids. Try again in a moment.',
+        type: 'error',
+      });
+      return;
+    }
+
+    setAddedMergeTargets((previousState) => ({
+      ...previousState,
+      [normalizedTarget]: true,
+    }));
 
     mergeTimeoutRef.current = setTimeout(() => {
       socketEventsManager?.emit('add-call-conf', {
@@ -140,7 +172,6 @@ const DialpadMergeList = ({ onBack, session }: DialpadMergeListProps) => {
     };
   }, []);
 
-  console.log('🚀 ~ DialpadMergeList ~ currentSession:', currentSession);
 
   return (
     <div className="flex h-full min-h-0 flex-col w-full">
@@ -164,7 +195,6 @@ const DialpadMergeList = ({ onBack, session }: DialpadMergeListProps) => {
         ) : (
           <div className="mt-2.5 min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain touch-pan-y pr-1 sm:mt-3 sm:space-y-2">
             {otherLiveSessions.map((targetSession) => {
-              console.log('🚀 ~ DialpadMergeList ~ targetSession:', targetSession);
               const displayName = getDisplayName(targetSession);
               const displayNumber = getDisplayNumber(targetSession);
               const normalizedMergeTarget = normalizeMergeTarget(displayNumber);
@@ -198,7 +228,9 @@ const DialpadMergeList = ({ onBack, session }: DialpadMergeListProps) => {
                         <CustomAvatar
                           name={displayName}
                           image={String(
-                            targetSession?.contactInfo?.profile ||
+                            (typeof targetSession?.contactInfo?.profile === 'string'
+                              ? targetSession?.contactInfo?.profile
+                              : targetSession?.contactInfo?.profile?.contactPic) ||
                               targetSession?.contactInfo?.avatar ||
                               '',
                           ).trim()}

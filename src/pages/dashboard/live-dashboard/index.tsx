@@ -59,6 +59,7 @@ import {
   getMonitorTargetCallId,
   isDialpadMonitoringSessionActiveForCall,
   normalizeMonitorDialValue,
+  requestMonitorSession,
 } from '@/lib/monitoring-actions';
 import {
   getMonitoringCallTimestamp,
@@ -477,7 +478,12 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
     }
 
     setPendingMonitorLock(normalizedCallId, code);
-    makeCall(`${code}${normalizedCallId}`);
+    requestMonitorSession(socketEventsManager, code, normalizedCallId, (ok, error) => {
+      if (!ok) {
+        clearPendingMonitorLock(normalizedCallId);
+        handleAlert({ text: error || 'Could not start monitoring.', type: 'error' });
+      }
+    });
   };
 
   const terminateCallSession = (call: any) => {

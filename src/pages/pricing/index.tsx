@@ -1,14 +1,34 @@
 import LogoIcon from '@/assets/images/LogoIcon.svg';
-import CustomPlanVector from '@/assets/images/customplanvector.svg';
 import { useNavigate } from 'react-router-dom';
 import PricingDropDown from './dropdown';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import Loader from '@/components/custom/loader'; 
 import { useGetPlans } from '@/hooks/common';
-import { durationMap, PlanDurationMap, PRICE_FEATURES } from '../admin-settings/billing/constants';
+import PlanCards from './plan-cards';
+import {
+  money,
+  popularUuid,
+  priceView,
+  signupBase,
+  TALK_TO_SALES_PATH,
+  trialDays,
+  type Cycle,
+  type PricingPlan,
+} from '@/lib/pricing-cards';
+
+/* Which sign-up the plan buttons open. The new get-started flow is the
+   default since 11 Sep 2026; the older /sign-up stays as a backup and can be
+   forced per browser with localStorage.signup_v2 = 'off' ('on' forces new). */
+const SIGNUP_V2_DEFAULT = true;
+const signupPath = (): string => {
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem('signup_v2');
+  } catch {
+    stored = null;
+  }
+  return signupBase(stored, SIGNUP_V2_DEFAULT);
+};
 import { Check, InfoIcon } from '@/assets/icons';
 import { getEnv } from '@/lib/utils';
 import { useOrganization } from '@/hooks/use-organisation';
@@ -44,9 +64,28 @@ const Pricing = () => {
     sms: false,
     learn: false,
   });
-  const [planDuration, setPlanDuration] = useState(1);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [cycle, setCycle] = useState<Cycle>('MONTHLY');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const compareRef = useRef<HTMLDivElement>(null);
   const { data: planData, isLoading } = useGetPlans();
+  const trialPlan = ((planData as PricingPlan[] | undefined) || []).find((p) => trialDays(p) > 0) || null;
+  const livePlans = (planData as PricingPlan[] | undefined) || [];
+  const popular = popularUuid(livePlans);
+  const isPopularName = (name?: string): boolean =>
+    !!name && livePlans.some((p) => p.uuid === popular && p.plan_name === name);
+  /* The compare table's column heads read the live record, like the cards; the
+     hand-written catalogue line is only the fallback while the list loads. */
+  const comparePriceLine = (plan?: (typeof PAID_PLANS)[number]): string => {
+    if (!plan) return '';
+    const live = livePlans.find((p) => p.plan_name === plan.name);
+    if (!live) return planPriceLine(plan);
+    const monthly = priceView(live, 'MONTHLY');
+    const yearly = priceView(live, 'YEARLY');
+    if (monthly.kind === 'quote') return 'Priced on a quote';
+    if (monthly.kind === 'free') return 'No monthly fee';
+    const year = yearly.kind === 'priced' && yearly.perYear ? ` · ${money(yearly.perYear)} per user, per year` : '';
+    return `${money(monthly.perMonth)} per user, per month${year}`;
+  };
 
   const toggleDropdown = (key: PricingDropdownKey) => {
     setDropDown((prevState) => ({
@@ -59,10 +98,6 @@ const Pricing = () => {
     }));
   };
 
-  const getPlanCost = (cost = []) => {
-    const costDetails = cost.filter((item: any) => item.type === durationMap[planDuration]);
-    return costDetails?.[0] || {};
-  };
   return (
     <>
       <div className="w-full bg-white h-full">
@@ -91,6 +126,9 @@ const Pricing = () => {
                 <button
                   type="button"
                   className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 "
+                  aria-expanded={menuOpen}
+                  aria-controls="pricing-mobile-menu"
+                  onClick={() => setMenuOpen((v) => !v)}
                 >
                   <span className="sr-only">Open main menu</span>
                   <svg
@@ -217,11 +255,36 @@ const Pricing = () => {
               {/* menus */}
 
               {/* actions */}
-              <Button variant={'outline'} onClick={() => navigate('/')}>
-                Login
-              </Button>
+              <div className="hidden md:flex md:items-center md:gap-3">
+                <Button variant={'outline'} onClick={() => navigate('/')}>
+                  Login
+                </Button>
+                {trialPlan && (
+                  <Button
+                    className="bg-primary text-white hover:bg-primary/90"
+                    onClick={() =>
+                      navigate(`${signupPath()}?planId=${encodeURIComponent(trialPlan.uuid)}&isTrial=true`)
+                    }
+                  >
+                    Try free for {trialDays(trialPlan)} days
+                  </Button>
+                )}
+              </div>
               {/* actions */}
             </nav>
+            {menuOpen && (
+              <div id="pricing-mobile-menu" className="md:hidden border-t border-gray-100 px-4 py-4 flex flex-col gap-3">
+                <button type="button" className="text-left text-sm font-semibold py-2" onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Plans</button>
+                <button type="button" className="text-left text-sm font-semibold py-2" onClick={() => { setMenuOpen(false); compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>Compare features</button>
+                <button type="button" className="text-left text-sm font-semibold py-2" onClick={() => navigate(TALK_TO_SALES_PATH)}>Talk to sales</button>
+                <Button variant={'outline'} className="w-full" onClick={() => navigate('/')}>Login</Button>
+                {trialPlan && (
+                  <Button className="w-full bg-primary text-white hover:bg-primary/90" onClick={() => navigate(`${signupPath()}?planId=${encodeURIComponent(trialPlan.uuid)}&isTrial=true`)}>
+                    Try free for {trialDays(trialPlan)} days
+                  </Button>
+                )}
+              </div>
+            )}
           </header>
         </div>
         {/* header */}
@@ -238,170 +301,33 @@ const Pricing = () => {
 
           {/* pricing */}
           <div className="absolute top-4 left-0 w-full">
-            <div className="mx-auto w-full px-8">
-              <div className="flex justify-end gap-2">
-                <Label>Monthly</Label>
-                <Switch
-                  checked={planDuration === 12}
-                  onCheckedChange={(checked) => {
-                    setPlanDuration(checked ? 12 : 1);
-                  }}
-                />
-                <Label>Annually</Label>
-              </div>
-            </div>
-            <div className="mx-auto w-full px-8 pt-8 gap-5 flex flex-col">
-              {/* <div className="flex items-center justify-center gap-5 pb-8"> */}
-              <div className="grid grid-cols-4 w-full gap-5 pb-8">
-                {isLoading ? (
-                  <Loader variant="blue" />
-                ) : planData?.length ? (
-                  planData?.map((plan: any, index: number) => {
-                    const { plan_name, cost, description, licenses, trial_period } = plan || {};
-                    const costDetails: any = getPlanCost(cost);
-                    return (
-                      <>
-                        <div
-                          key={`${index}-${plan_name}`}
-                          // className={`p-6 rounded-xl ${index === activeIndex ? 'bg-primary' : 'bg-white'} shadow-md w-1/3 relative`}
-                          className={`p-6 rounded-xl ${index === activeIndex ? 'bg-primary' : 'bg-white'} shadow-md w-full relative transition-colors duration-300 ease-in-out`}
-                          onClick={() => setActiveIndex(index)}
-                        >
-                          <div className="flex flex-col gap-6">
-                            {costDetails?.discount_enabled && (
-                              <span
-                                className={`inline-flex items-center rounded-b-md px-2 py-1 text-xs ${index === activeIndex ? 'bg-white text-primary' : 'bg-primary text-white'} font-medium tracking-widest absolute top-0 right-6`}
-                              >
-                                {costDetails?.discount}% Discount
-                              </span>
-                            )}
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-6">
-                                <h2
-                                  className={`text-2xl ${index === activeIndex ? 'text-white' : 'text-primary'} font-semibold flex items-center gap-5`}
-                                >
-                                  {plan_name}
-                                </h2>
-                                {index === 0 && (
-                                  <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
-                                    Popular
-                                  </span>
-                                )}
-                              </div>
-                              <small
-                                className={`${index === activeIndex ? 'text-white' : 'text-gray-800'} font-normal text-[.8rem]`}
-                              >
-                                {description}
-                              </small>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-3">
-                                <h2
-                                  className={`text-4xl ${index === activeIndex ? 'text-white' : 'text-primary'} font-semibold flex items-center`}
-                                >{`$${costDetails?.discount_enabled ? costDetails?.discount_price : costDetails?.original_price}`}</h2>
-                                {costDetails?.discount_enabled && (
-                                  <h4
-                                    className={`line-through text-xl ${index === activeIndex ? 'text-white' : 'text-primary'}`}
-                                  >
-                                    ${costDetails?.original_price}
-                                  </h4>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <p
-                                  className={`${index === activeIndex ? 'text-white' : 'text-primary'} text-sm`}
-                                >
-                                  /{PlanDurationMap[planDuration]}/user
-                                </p>
-                                <p
-                                  className={`font-semibold text-sm ${index === activeIndex ? 'text-white' : 'text-primary'}`}
-                                >
-                                  Licences: {!licenses ? 'Unlimited' : `Up to ${licenses}`}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-4">
-                              <Button
-                                className={`${index === activeIndex ? 'text-primary bg-white border-primary hover:bg-white hover:text-primary/90' : 'text-primary bg-white border-primary hover:bg-primary hover:text-white'}`}
-                                onClick={() => {
-                                  navigate(
-                                    `/sign-up?planId=${encodeURIComponent(plan.uuid)}&isTrial=false`,
-                                  );
-                                }}
-                              >
-                                Subscribe Now
-                              </Button>
-
-                              {trial_period > 0 ? (
-                                <p
-                                  className={`${index === activeIndex ? 'text-white' : 'text-primary'} text-sm p-1 rounded-full flex justify-center cursor-pointer font-semibold underline-offset-4 underline w-auto mx-auto`}
-                                  onClick={() => {
-                                    navigate(
-                                      `/sign-up?planId=${encodeURIComponent(plan.uuid)}&isTrial=true`,
-                                    );
-                                  }}
-                                >
-                                  {trial_period}-days free trial
-                                </p>
-                              ) : null}
-
-                              {plan_name === 'Standard' && <p className="p-1">&nbsp;</p>}
-                              {plan_name === 'Intermediate' && <p className="p-1">&nbsp;</p>}
-                              <h5
-                                className={` ${index === activeIndex ? 'text-white' : ''} font-medium text-lg`}
-                              >
-                                All Advanced Features
-                              </h5>
-                              <ul
-                                className={`${index === activeIndex ? 'list-image-[url(assets/images/CheckWhite.svg)]' : 'list-image-[url(assets/images/CheckBlue.svg)]'} list-inside ${index === activeIndex ? 'text-white' : 'text-gray-800'} text-sm font-medium flex flex-col gap-4 pb-1.5`}
-                              >
-                                {PRICE_FEATURES.map(({ name }, i) => {
-                                  return <li key={`${i + 1}-${name}`}>{name}</li>;
-                                })}
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })
-                ) : (
-                  <div>No Plans are found</div>
-                )}
-                {planData && planData?.length > 0 && (
-                  <div className="p-6 rounded-xl bg-white shadow-md w-full flex flex-col items-center justify-center gap-3 relative">
-                    <img
-                      src={CustomPlanVector}
-                      alt="Custom Plan "
-                      className="w-full h-full max-h-52 object-contain"
-                    />
-                    <h5 className={`font-medium text-lg text-center`}>Customize Your Plan</h5>
-                    <p className={`font-medium text-sm text-gray-500 text-center mb-1`}>
-                      Design a plan that fits your workflow with flexible options and transparent
-                      pricing.
-                    </p>
-                    <Button
-                      onClick={() => navigate('/sign-up?planId=custom&isTrial=false')}
-                      className={`text-white bg-primary  hover:bg-primary/90  w-full`}
-                    >
-                      Contact Us
-                    </Button>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col items-center gap-6">
-                <h1 className="text-3xl text-gray-900 font-semibold">Compare plan features</h1>
-                <div className="flex w-full">
-                  <div className="flex flex-col w-[30%] justify-center gap-5">
+            <div className="mx-auto w-full px-4 md:px-8 pt-4 gap-5 flex flex-col">
+              <PlanCards
+                plans={planData}
+                isLoading={isLoading}
+                cycle={cycle}
+                onCycle={setCycle}
+                signupBase={signupPath()}
+                onCompare={() => compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              />
+              <div className="h-8" />
+              <div ref={compareRef} className="flex flex-col items-center gap-6 scroll-mt-6">
+                <h1 className="text-2xl md:text-3xl text-gray-900 font-semibold text-center">Compare plan features</h1>
+                <div className="w-full overflow-x-auto">
+                <div className="flex w-full min-w-[960px]">
+                  <div className="flex flex-col w-[30%] justify-center gap-5 sticky left-0 z-10 bg-white">
                     <div className="flex flex-col py-3">
                       <div className="flex flex-col w-full min-h-20 justify-center">
                         <div className="flex items-center gap-3">
                           <h4 className="flex items-center text-xl">Have a question?</h4>
                         </div>
-                        <h4 className="font-semibold flex items-center text-xl">
-                          Call (000) 123 4567
-                        </h4>
+                        <button
+                          type="button"
+                          className="font-semibold flex items-center text-xl text-primary underline underline-offset-4 w-fit"
+                          onClick={() => navigate(TALK_TO_SALES_PATH)}
+                        >
+                          Talk to sales
+                        </button>
                       </div>
                     </div>
                     <div className="flex flex-col gap-6 pt-3">
@@ -642,12 +568,14 @@ const Pricing = () => {
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
                             {PAID_PLANS[0]?.name ?? ''}
                           </h2>
-                          <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
-                            Popular
-                          </span>
+                          {isPopularName(PAID_PLANS[0]?.name) && (
+                            <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
+                              Popular
+                            </span>
+                          )}
                         </div>
                         <small className="text-gray-800 font-normal">
-                          {planPriceLine(PAID_PLANS[0])}
+                          {comparePriceLine(PAID_PLANS[0])}
                         </small>
                       </div>
                     </div>
@@ -803,9 +731,14 @@ const Pricing = () => {
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
                             {PAID_PLANS[1]?.name ?? ''}
                           </h2>
+                          {isPopularName(PAID_PLANS[1]?.name) && (
+                            <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
+                              Popular
+                            </span>
+                          )}
                         </div>
                         <small className="text-gray-800 font-normal">
-                          {planPriceLine(PAID_PLANS[1])}
+                          {comparePriceLine(PAID_PLANS[1])}
                         </small>
                       </div>
                     </div>
@@ -985,9 +918,14 @@ const Pricing = () => {
                           <h2 className="text-primary font-semibold flex items-center leading-none text-2xl">
                             {PAID_PLANS[2]?.name ?? ''}
                           </h2>
+                          {isPopularName(PAID_PLANS[2]?.name) && (
+                            <span className="inline-flex items-center rounded-md bg-ucass-green px-2 py-1 text-xs font-medium  uppercase tracking-widest">
+                              Popular
+                            </span>
+                          )}
                         </div>
                         <small className="text-gray-800 font-normal">
-                          {planPriceLine(PAID_PLANS[2])}
+                          {comparePriceLine(PAID_PLANS[2])}
                         </small>
                       </div>
                     </div>
@@ -1160,6 +1098,7 @@ const Pricing = () => {
                       </div>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </div>

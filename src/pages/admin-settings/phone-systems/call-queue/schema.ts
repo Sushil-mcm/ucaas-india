@@ -5,7 +5,6 @@ import {
   MAX_WAITING_CALLERS_LIMITS,
   QUEUE_TIMEOUT_LIMITS,
 } from './constant';
-import { optionalString, requiredString } from '@/lib/schema';
 import { checkQueueName } from '@/lib/queue-naming';
 import { holidaySchema } from '../../constants';
 import { FORWARD_TYPES } from '@/constants/forwarding-consts';
@@ -23,7 +22,6 @@ export const upsertCallQueueSchema = [
         return result.ok || this.createError({ message: result.reason });
       }),
     extension: requiredExtension(),
-    script_data: optionalString('Description', 10, 500),
     site_uuid: yup.mixed().required('Site is required'),
     description: yup
       .string()
@@ -217,18 +215,17 @@ export const upsertCallQueueSchema = [
         }),
       }),
       waiting: yup.object().shape({
-        value: yup
-          .object()
-          .nullable()
-          .test(
-            'waiting-value-required',
-            'Waiting greeting is required',
-            (val: any) =>
-              val !== null &&
-              val !== undefined &&
-              typeof val?.value === 'string' &&
-              val.value.trim().length > 0,
-          ),
+        /* Gated on `enabled` like every other slot. The unconditional test
+           made the Greetings step impossible to pass on any queue saved
+           before the waiting slot existed (enabled=false, no visible control
+           to set a value), so Save was permanently dead on those queues. */
+        value: yup.object().shape({
+          value: yup.string().when('$schemaContext', {
+            is: (schema: typeof CALL_QUEUE_INIITAL_VALUES) => schema?.greetings?.waiting?.enabled,
+            then: () => yup.string().required('Waiting greeting is required'),
+            otherwise: () => yup.string().notRequired(),
+          }),
+        }),
       }),
       ring_tone: yup.object().shape({
         value: yup.object().shape({
@@ -288,6 +285,56 @@ export const upsertCallQueueSchema = [
       ring_strategy: yup.object().shape({
         value: yup.mixed().required('Ring strategy is required'),
       }),
+      /* The answering target lives on this tab. The numbers are only demanded
+         when the switch is on; the short-abandon floor is always bounded,
+         because it applies whether or not a target is set. */
+      after_call: yup
+        .object()
+        .shape({
+          service_level: yup
+            .object()
+            .shape({
+              enabled: yup.boolean().optional().nullable(),
+              percent: yup
+                .number()
+                .transform((value, original) => (original === '' ? undefined : value))
+                .when('enabled', {
+                  is: true,
+                  then: (schema) =>
+                    schema
+                      .typeError('Enter the share of calls to answer')
+                      .required('Enter the share of calls to answer')
+                      .min(1, 'At least 1%')
+                      .max(100, 'No more than 100%'),
+                  otherwise: (schema) => schema.optional().nullable(),
+                }),
+              seconds: yup
+                .number()
+                .transform((value, original) => (original === '' ? undefined : value))
+                .when('enabled', {
+                  is: true,
+                  then: (schema) =>
+                    schema
+                      .typeError('Enter the seconds to answer within')
+                      .required('Enter the seconds to answer within')
+                      .min(1, 'At least 1 second')
+                      .max(3600, 'No more than an hour'),
+                  otherwise: (schema) => schema.optional().nullable(),
+                }),
+              short_abandon_seconds: yup
+                .number()
+                .transform((value, original) => (original === '' ? undefined : value))
+                .typeError('Enter seconds, or 0 to count every hang-up')
+                .min(0, 'Cannot be negative')
+                .max(60, 'No more than a minute')
+                .optional()
+                .nullable(),
+            })
+            .optional()
+            .nullable(),
+        })
+        .optional()
+        .nullable(),
     }),
   }),
 ];

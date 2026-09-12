@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useUser } from '@/hooks/use-user';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import ErrorTooltip from './error-tooltip';
@@ -109,6 +110,12 @@ const ForwardingActions = ({
   mode = 'default',
   optionsData = null,
   disableInternalFetch = false,
+  /* Destination types this particular slot saves but cannot carry out. Named
+     here rather than removed: one person on the platform already has such a
+     value stored, and dropping it from the list would silently rewrite their
+     setting the next time somebody opened and saved this drawer. Labelling it
+     stops anyone NEW choosing it, without touching what is already there. */
+  unsupportedTypes = null,
 }: any) => {
   const { user } = useUser();
   const { user_info } = user || {};
@@ -128,6 +135,19 @@ const ForwardingActions = ({
     '';
 
   const SITE_UUID_TEMP = SITE_UUID || watch('site')?.value || user_info?.site_uuid;
+
+  /* The list this slot offers, with anything it cannot actually carry out said
+     plainly on the option itself. */
+  const typeOptions = useMemo(() => {
+    const base = mode === 'ai-agent' ? callForwardAgentAI : callForwardingOptions;
+    const blocked: string[] = Array.isArray(unsupportedTypes) ? unsupportedTypes : [];
+    if (!blocked.length) return base;
+    return base.map((option: any) =>
+      blocked.includes(option.value)
+        ? { ...option, label: `${option.label} — not followed here yet` }
+        : option,
+    );
+  }, [mode, unsupportedTypes]);
   const shouldUseExternalOptions = Boolean(optionsData);
   const shouldFetchInternally = !disableInternalFetch && !shouldUseExternalOptions;
 
@@ -350,7 +370,7 @@ const ForwardingActions = ({
       <div className={`flex sm:flex-row flex-col w-full  items-start ${gap}`}>
         <div className={`flex w-full sm:w-auto ${mainTypeDivClass}`}>
           <CustomSelect
-            options={mode === 'ai-agent' ? callForwardAgentAI : callForwardingOptions}
+            options={typeOptions}
             label={typeLabel}
             placeholder="Select Type"
             menuPlacement={menuPlacement}

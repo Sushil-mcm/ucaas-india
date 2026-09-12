@@ -11,6 +11,10 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/login',
   },
+  GOOGLE_LOGIN: {
+    METHOD: 'POST',
+    URL: '/api/auth/google',
+  },
   FORGET_PASSWORD: {
     METHOD: 'POST',
     URL: '/api/forgot-password',
@@ -18,6 +22,23 @@ export const routes = {
   NEW_PASSWORD: {
     METHOD: 'POST',
     URL: '/api/verify-password',
+  },
+  /* Invite links for new people (backend-patches/invites). */
+  INVITE_INSPECT: {
+    METHOD: 'POST',
+    URL: '/api/invite/inspect',
+  },
+  INVITE_ACCEPT: {
+    METHOD: 'POST',
+    URL: '/api/invite/accept',
+  },
+  INVITE_RESEND: {
+    METHOD: 'POST',
+    URL: '/api/invite/resend',
+  },
+  INVITE_PENDING: {
+    METHOD: 'POST',
+    URL: '/api/invite/pending',
   },
 
   DASHBOARD_STATS: {
@@ -57,6 +78,11 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/tenant/report/call-queue/list',
   },
+  /* Service level by hour or by day, per queue, from totals. */
+  CALL_QUEUE_SERIES: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/call-queue/series',
+  },
 
   CALL_LOG_QUEUE_REPORT_DETAIL: {
     METHOD: 'POST',
@@ -84,6 +110,50 @@ export const routes = {
   ROLE_LIST: {
     METHOD: 'POST',
     URL: '/api/user/role/list',
+  },
+  /* Rewrites a draft message. Returns text and never sends anything - what
+     happens to the suggestion is entirely the composer's decision. */
+  AI_MESSAGE_REWRITE: {
+    METHOD: 'POST',
+    URL: '/api/ai/message/rewrite',
+  },
+  /* Records a thumbs up/down. Stores which preset was rated, never the
+     message itself - see the route's own comment for why. */
+  AI_MESSAGE_REWRITE_FEEDBACK: {
+    METHOD: 'POST',
+    URL: '/api/ai/message/rewrite/feedback',
+  },
+  /* Summarizes the messages already loaded in an open conversation. Nothing
+     is stored - the transcript is sent in the request body and discarded
+     once the response comes back. */
+  AI_CONVERSATION_SUMMARIZE: {
+    METHOD: 'POST',
+    URL: '/api/ai/conversation/summarize',
+  },
+  /* Answers a question grounded only in that same transcript. */
+  AI_CONVERSATION_ASK: {
+    METHOD: 'POST',
+    URL: '/api/ai/conversation/ask',
+  },
+  /* Suggests replies someone could send next. Returns candidate strings -
+     nothing is sent, so picking one stays the composer's decision. */
+  AI_CONVERSATION_SUGGEST_REPLIES: {
+    METHOD: 'POST',
+    URL: '/api/ai/conversation/suggest-replies',
+  },
+  /* AI Call Recap: generate reads the transcript and calls the model, get
+     only reads what is already stored (free), update saves a person's edits. */
+  AI_CALL_RECAP: {
+    METHOD: 'POST',
+    URL: '/api/ai/call/recap',
+  },
+  AI_CALL_RECAP_GET: {
+    METHOD: 'POST',
+    URL: '/api/ai/call/recap/get',
+  },
+  AI_CALL_RECAP_UPDATE: {
+    METHOD: 'POST',
+    URL: '/api/ai/call/recap/update',
   },
   GET_URL_TYPE_LIST: {
     METHOD: 'POST',
@@ -154,6 +224,14 @@ export const routes = {
   UPSERT_CONTACT: {
     URL: '/api/contact/upsert',
     // URL: '/api/contact/update',
+    METHOD: 'POST',
+  },
+  CONTACT_PHONE_ADD: {
+    URL: '/api/contact/phone/add',
+    METHOD: 'POST',
+  },
+  CONTACT_PHONE_REMOVE: {
+    URL: '/api/contact/phone/remove',
     METHOD: 'POST',
   },
   BULK_UPSERT_CONTACT: {
@@ -364,6 +442,28 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/did/inventory/india/claim',
   },
+  /* Numbers we already own, served from our own stock. The carrier is only
+     asked when a state has run dry - see DID_AVAILABLE above. */
+  DID_INVENTORY_AVAILABLE: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/available',
+  },
+  DID_INVENTORY_OPTIONS: {
+    METHOD: 'GET',
+    URL: '/api/did/inventory/options',
+  },
+  DID_INVENTORY_HOLD: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/hold',
+  },
+  DID_INVENTORY_RELEASE: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/release',
+  },
+  DID_INVENTORY_CLAIM: {
+    METHOD: 'POST',
+    URL: '/api/did/inventory/claim',
+  },
   FAX_DID_COUNTRY_LIST: {
     METHOD: 'POST',
     URL: '/api/fax/did/country/list',
@@ -558,6 +658,10 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/campaign/change-state',
   },
+  CAMPAIGN_CALLING_RULES: {
+    METHOD: 'GET',
+    URL: '/api/campaign/calling-rules',
+  },
   CAMPAIGN_JOIN_UPSERT: {
     METHOD: 'POST',
     URL: '/api/campaign/join/upsert',
@@ -585,6 +689,19 @@ export const routes = {
   CAMPAIGN_ANALYTICS: {
     METHOD: 'POST',
     URL: '/api/campaign/analytics',
+  },
+  /* The dialer engine's own board, over HTTP. The same object the engine
+     pushes on "campaign-live-stats", so a screen can have it immediately
+     instead of waiting for the next push - or when the socket never arrives. */
+  /* Leads by skill, who on the team holds each, and the count nobody can
+     take. GET <URL>/<campaignId>/skill-coverage; the helper builds the path. */
+  CAMPAIGN_SKILL_COVERAGE: {
+    METHOD: 'GET',
+    URL: '/api/tenant/campaign',
+  },
+  CAMPAIGN_LIVE_SNAPSHOT: {
+    METHOD: 'POST',
+    URL: '/api/campaign/live/snapshot',
   },
   GROUP_LIST: {
     METHOD: 'POST',
@@ -722,6 +839,53 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/did/call-forwarding',
   },
+  /* Rename a number in its own did_name column (durable: survives Remove
+     forwarding and Release). The number's uuid is appended to the URL. */
+  UPDATE_DID_LABEL: {
+    METHOD: 'PATCH',
+    URL: '/api/did',
+  },
+  /* Voicemail workflow: who owns a message, whether it is resolved, and the
+     note on it. The call's uuid is appended to the GET URL. */
+  VOICEMAIL_ACTION_GET: {
+    METHOD: 'GET',
+    URL: '/api/tenant/voicemail/action',
+  },
+  VOICEMAIL_ACTION_SET: {
+    METHOD: 'POST',
+    URL: '/api/tenant/voicemail/action',
+  },
+  /* Coaching teams (tenant-api coaching_teams, created on first use). The
+     team's uuid is appended to GET and DELETE. */
+  COACHING_TEAM_LIST: {
+    METHOD: 'POST',
+    URL: '/api/tenant/coaching-team/list',
+  },
+  COACHING_TEAM_MINE: {
+    METHOD: 'GET',
+    URL: '/api/tenant/coaching-team/mine',
+  },
+  COACHING_TEAM_GET: {
+    METHOD: 'GET',
+    URL: '/api/tenant/coaching-team',
+  },
+  COACHING_TEAM_SAVE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/coaching-team/save',
+  },
+  COACHING_TEAM_DELETE: {
+    METHOD: 'DELETE',
+    URL: '/api/tenant/coaching-team',
+  },
+  /* Agent screen recordings (tenant-api screen_recordings). */
+  SCREEN_RECORDING_SAVE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/screen-recording/save',
+  },
+  SCREEN_RECORDING_LIST: {
+    METHOD: 'POST',
+    URL: '/api/tenant/screen-recording/list',
+  },
   CALL_HANDLING_LIST: {
     URL: '/api/tenant/call-handling/template/list',
     METHOD: 'POST',
@@ -795,6 +959,50 @@ export const routes = {
     METHOD: 'DELETE',
     URL: '/api/user/delete',
   },
+  /* Person states (3 Sep 2026). Suspend / reactivate are served by default-api's
+     personStateRoute (administrators only, never yourself, never the owner);
+     PERSON_STATES returns every person's state, because /api/user/list does
+     not carry `status`. List-deleted / restore are the 72-hour removal window. */
+  PERSON_SUSPEND: {
+    METHOD: 'POST',
+    URL: '/api/person/suspend',
+  },
+  /* People module stage 1: end every session of one person (administrators, in scope). */
+  PERSON_SIGN_OUT: {
+    METHOD: 'POST',
+    URL: '/api/person/sign-out',
+  },
+  PERSON_REACTIVATE: {
+    METHOD: 'POST',
+    URL: '/api/person/reactivate',
+  },
+  PERSON_STATES: {
+    METHOD: 'POST',
+    URL: '/api/person/state',
+  },
+  /* Admin scope: who an administrator may act on. SET writes one person's
+     scope (owner or account admin only); SCOPES lists everybody's resolved
+     role and stored scope, joined by uuid on the People list. A newer server
+     also returns, per person, `effective_scope`, `scope_source`
+     ('stored' | 'role-default') and `managed_group_uuids` — the reach the
+     server actually enforces; the browser derives the same when they are
+     absent (lib/admin-scope.ts). */
+  PERSON_SCOPE_SET: {
+    METHOD: 'POST',
+    URL: '/api/person/scope',
+  },
+  PERSON_SCOPES: {
+    METHOD: 'POST',
+    URL: '/api/person/scope',
+  },
+  LIST_DELETED_MEMBERS: {
+    METHOD: 'POST',
+    URL: '/api/user/list-deleted',
+  },
+  RESTORE_MEMBER: {
+    METHOD: 'POST',
+    URL: '/api/user/restore',
+  },
   GET_PLANS: {
     METHOD: 'GET',
     URL: '/api/plan/list',
@@ -861,6 +1069,52 @@ export const routes = {
   TEMPLATE_DELETE: {
     METHOD: 'DELETE',
     URL: '/api/tenant/user/template/delete',
+  },
+  // Company settings, one section per former top-level key of the template blob
+  COMPANY_SETTINGS_LIST: {
+    METHOD: 'POST',
+    URL: '/api/tenant/user/company-settings/list',
+  },
+  COMPANY_SETTINGS_GET: {
+    METHOD: 'POST',
+    URL: '/api/tenant/user/company-settings/get',
+  },
+  COMPANY_SETTINGS_SAVE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/user/company-settings/save',
+  },
+  COMPANY_SETTINGS_HISTORY: {
+    METHOD: 'POST',
+    URL: '/api/tenant/user/company-settings/history',
+  },
+  // Scheduled reports
+  REPORT_SCHEDULE_TYPES: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/types',
+  },
+  REPORT_SCHEDULE_LIST: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/list',
+  },
+  REPORT_SCHEDULE_CREATE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/create',
+  },
+  REPORT_SCHEDULE_UPDATE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/update',
+  },
+  REPORT_SCHEDULE_TOGGLE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/toggle',
+  },
+  REPORT_SCHEDULE_DELETE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/delete',
+  },
+  REPORT_SCHEDULE_RUN_NOW: {
+    METHOD: 'POST',
+    URL: '/api/tenant/report/schedules/run-now',
   },
   // Delete Call Handling Template
   DELETE_CALL_HANDLING_TEMPLATE: {
@@ -960,6 +1214,14 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/crm/disconnect',
   },
+  CRM_ESPOCRM_CONNECT: {
+    METHOD: 'POST',
+    URL: '/api/crm/espocrm/connect',
+  },
+  CRM_ODOO_CONNECT: {
+    METHOD: 'POST',
+    URL: '/api/crm/odoo/connect',
+  },
   SAVE_CRM_SETTINGS: {
     METHOD: 'POST',
     URL: '/api/crm/settings',
@@ -988,6 +1250,11 @@ export const routes = {
   CALL_SCRIPT_DELETE: {
     METHOD: 'DELETE',
     URL: '/api/campaign/call-script/delete',
+  },
+  /* What agents recorded against one script's questions over a date range. */
+  SCRIPT_ANSWERS_REPORT: {
+    METHOD: 'POST',
+    URL: '/api/campaign/call-script/answers-report',
   },
 
   DISPOSITION_LIST: {
@@ -1037,9 +1304,22 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/contact/tag',
   },
+  /* The block list (Directory > Blocked). */
+  BLOCKED_LIST: { METHOD: 'POST', URL: '/api/contact/blocked/list' },
+  BLOCKED_ADD: { METHOD: 'POST', URL: '/api/contact/blocked/add' },
+  BLOCKED_UPDATE: { METHOD: 'POST', URL: '/api/contact/blocked/update' },
+  BLOCKED_REMOVE: { METHOD: 'POST', URL: '/api/contact/blocked/remove' },
+  BLOCKED_REACH: { METHOD: 'POST', URL: '/api/contact/blocked/reach' },
+  /* The get-started flow's "Setting things up" screen. */
+  SIGNUP_STATUS: { METHOD: 'GET', URL: '/api/get-started/status' },
+  SIGNUP_PROVISION_RETRY: { METHOD: 'POST', URL: '/api/get-started/provision-retry' },
   CAMPAIGN_CALL_LOGS: {
     METHOD: 'POST',
     URL: '/api/campaign/call/statistics',
+  },
+  CAMPAIGN_COMPLIANCE_REPORT: {
+    METHOD: 'POST',
+    URL: '/api/campaign/compliance/report',
   },
   CAMPAIGN_RETRY_CALL_LOG: {
     METHOD: 'POST',
@@ -1065,9 +1345,73 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/call-queue/queue-involvement',
   },
+  /* In-queue callbacks: callers keeping a place to be rung back, and withdrawing one. */
+  CALL_QUEUE_CALLBACKS_LIST: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/callbacks/list',
+  },
+  CALL_QUEUE_CALLBACKS_CANCEL: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/callbacks/cancel',
+  },
   MAKE_CALLQUEUE_AVAILABLE: {
     METHOD: 'POST',
     URL: '/api/call-queue/agent/status',
+  },
+  AGENT_DUTY: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent/duty',
+  },
+  AGENT_DUTY_LIST: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent/duty/list',
+  },
+  /* Agent-day reports (campaign-api behind the gateway): where each person's
+     day went, half-hour intervals, every break, preview figures per campaign. */
+  AGENT_DAY_SUMMARY: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent-day/summary',
+  },
+  AGENT_DAY_INTERVALS: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent-day/intervals',
+  },
+  AGENT_DAY_BREAKS: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent-day/breaks',
+  },
+  AGENT_DAY_PREVIEW: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/agent-day/preview',
+  },
+  /* Workforce (campaign-api behind the gateway): schedules, time off, coverage. */
+  WORKFORCE_SCHEDULE_LIST: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/schedule/list',
+  },
+  WORKFORCE_SCHEDULE_SAVE: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/schedule/save',
+  },
+  WORKFORCE_SCHEDULE_PUBLISH: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/schedule/publish',
+  },
+  WORKFORCE_TIMEOFF_LIST: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/timeoff/list',
+  },
+  WORKFORCE_TIMEOFF_REQUEST: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/timeoff/request',
+  },
+  WORKFORCE_TIMEOFF_DECIDE: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/timeoff/decide',
+  },
+  WORKFORCE_COVERAGE: {
+    METHOD: 'POST',
+    URL: '/api/call-queue/workforce/coverage',
   },
   USER_BASED_CAMPAIGNS_LIST: {
     METHOD: 'POST',
@@ -1499,6 +1843,18 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/admin/company/upsert',
   },
+  /* The company's own record, read and written by its own admins. The company
+     is taken from the session on the server, never from the body. These two
+     are the tenant-scoped doors that COMPANY_INFO and COMPANY_UPSERT never
+     were: those sit under /api/admin behind the platform-staff check. */
+  COMPANY_SELF: {
+    METHOD: 'POST',
+    URL: '/api/company/self',
+  },
+  COMPANY_SELF_UPDATE: {
+    METHOD: 'POST',
+    URL: '/api/company/self/update',
+  },
   // MAIN SITE INFO
   MAIN_SITE_INFO: {
     METHOD: 'POST',
@@ -1537,5 +1893,19 @@ export const routes = {
   TWILIO_VOICE_TOKEN: {
     METHOD: 'POST',
     URL: '/api/twilio-voice/token',
+  },
+  /* Queue alerts: the rules (a company settings section, read and saved
+     through default-api so the server checks them) and the recent alerts. */
+  QUEUE_ALERT_RULES: {
+    METHOD: 'POST',
+    URL: '/api/tenant/queue-alerts/rules',
+  },
+  QUEUE_ALERT_SAVE: {
+    METHOD: 'POST',
+    URL: '/api/tenant/queue-alerts/save',
+  },
+  QUEUE_ALERT_HISTORY: {
+    METHOD: 'POST',
+    URL: '/api/tenant/queue-alerts/history',
   },
 };

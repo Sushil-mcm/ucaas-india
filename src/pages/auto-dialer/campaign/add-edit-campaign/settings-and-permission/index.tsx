@@ -6,7 +6,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@/hooks/use-user';
 import parsePhoneNumberFromString from 'libphonenumber-js';
 import { Input } from '@/components/ui/input';
-import { calculateSelectedDays, getTodayInTimezone } from '@/lib/utils';
+import { getTodayInTimezone } from '@/lib/utils';
+import { describeWindow } from '@/lib/campaign-dates';
+import { chooseCampaignTimezone, isZoneKept, readBrowserZone } from '@/lib/campaign-timezone';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import ErrorTooltip from '@/components/custom/error-tooltip';
@@ -98,19 +100,29 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
     }
   }, [watchRegionalSettings?.country_code?.value]);
 
+  /* Which zone the campaign gets once a country is chosen. It used to be the
+     first in the country's list - alphabetical, so America/Adak for the
+     United States - and it ran on every edit, replacing whatever was saved.
+     The rule now lives in src/lib/campaign-timezone.ts: a saved zone that
+     belongs to the country is kept; else the browser's zone if it is in the
+     list; else the country's most common zone; never first-in-list. */
   useEffect(() => {
-    if (timezonesList?.length > 0) {
-      const firstTimezone = timezonesList[0];
-      setValue(
-        'settings.operational_hours.regional.timezone',
-        {
-          label: firstTimezone?.zoneName,
-          value: firstTimezone?.zoneName,
-        },
-        { shouldValidate: true },
-      );
-    }
-  }, [timezonesList]);
+    if (!timezonesList?.length) return;
+    const names: string[] = timezonesList.map((zone: any) => String(zone?.zoneName || ''));
+    if (isZoneKept(selectedTimezone, names)) return;
+    const chosen = chooseCampaignTimezone({
+      saved: selectedTimezone,
+      browserZone: readBrowserZone(),
+      countryIso: watchRegionalSettings?.country_code?.value,
+      zones: names,
+    });
+    if (!chosen) return;
+    setValue(
+      'settings.operational_hours.regional.timezone',
+      { label: chosen, value: chosen },
+      { shouldValidate: true },
+    );
+  }, [timezonesList, selectedTimezone, watchRegionalSettings?.country_code?.value, setValue]);
 
   // const today = new Date().toISOString().split('T')[0];
   const _start_date = watch('startDate');
@@ -122,7 +134,10 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
 
   const startDate = watch('startDate') ? moment(watch('startDate')) : null;
   const endDate = watch('endDate') ? moment(watch('endDate')) : null;
-  const totalSelectedDays = calculateSelectedDays(startDate, endDate, selectedDays);
+  /* Both numbers: the calendar days in the window and the days the hours
+     grid lets the campaign call on. The chip used to show only the second,
+     labelled "Days", so a one-month window read "22 Days". */
+  const windowChip = describeWindow(_start_date, _end_date, selectedDays);
 
   const isDayWithinRange = (day: string) => {
     if (!startDate || !endDate) return true;
@@ -228,11 +243,22 @@ const SettingsAndPermission = ({ campaignStatus }: { campaignStatus: string }) =
               min={_start_date ? moment(_start_date).add(1, 'day').format('YYYY-MM-DD') : today}
             />
 
-            <span className="bg-gray-100 rounded-lg text-gray-700 text-sm font-medium px-3 py-2 inline-flex items-center justify-center min-w-[140px] max-h-[40px] min-h-[40px]">
-              {totalSelectedDays} Days
+            <span
+              className="bg-gray-100 rounded-lg text-gray-700 text-sm font-medium px-3 py-2 inline-flex items-center justify-center min-w-[140px] max-h-[40px] min-h-[40px] whitespace-nowrap"
+              title="Calendar days in the window, and how many of them the hours below allow calling on"
+            >
+              {windowChip}
             </span>
           </div>
         </div>
+        {/* The dates are days in the campaign's zone, which is not always the
+            person's own: said here, with that zone's today, so a date that
+            looks like yesterday or tomorrow is not a surprise. */}
+        {selectedTimezone ? (
+          <p className="-mt-2 text-xs text-gray-500">
+            Dates are in {selectedTimezone}, where today is {today}.
+          </p>
+        ) : null}
         <div className="w-full">
           <div
             className={`flex flex-col gap-2 ${

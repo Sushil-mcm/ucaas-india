@@ -50,3 +50,35 @@ export const isDialpadMonitoringSessionActiveForCall = (
     return monitorAction.targetCallId === normalizedCallId;
   });
 };
+
+/**
+ * Start a supervisor monitor session the right way.
+ *
+ * The old screens dialled `*87<uuid>` through the softphone, which the switch
+ * treated as an ordinary outbound call — it reached the carrier, not the agent.
+ * Monitoring is now a request to the call manager: it answers the supervisor's
+ * own phone and eavesdrops (listen), whispers, barges or intercepts the agent's
+ * live channel. The supervisor's extension and domain come from the signed-in
+ * session on the server, never from here, so a browser cannot monitor another
+ * tenant. `code` is the same *86..*89 the buttons already use; the call manager
+ * resolves it to a mode.
+ *
+ * The callback reports whether the call manager accepted the request. On
+ * success the supervisor's phone rings as an incoming call; on failure the
+ * caller should release its per-call lock and tell the user why.
+ */
+export const requestMonitorSession = (
+  socketEventsManager: any,
+  code: string,
+  callId: unknown,
+  onResult?: (ok: boolean, error?: string) => void,
+) => {
+  const call_uuid = normalizeMonitorDialValue(callId);
+  if (!call_uuid || typeof socketEventsManager?.emit !== 'function') {
+    onResult?.(false, 'Monitoring is not available right now.');
+    return;
+  }
+  socketEventsManager.emit('call-monitor', { data: { code, call_uuid } }, (resp: any) => {
+    onResult?.(Boolean(resp?.ok), resp?.error);
+  });
+};

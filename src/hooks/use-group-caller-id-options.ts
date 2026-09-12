@@ -67,6 +67,7 @@
  */
 
 import { useMemo } from 'react';
+import { splitMenuTarget } from '@/lib/menu-target';
 import { useQuery } from '@tanstack/react-query';
 
 import {
@@ -359,7 +360,7 @@ export const useGroupCallerIdOptions = (): GroupCallerIdOptions => {
       if (!uuid) return;
       const leadsToMyGroup = parseIvrOptions(ivr?.ivr_option).some((option: any) => {
         const type = cleanId(option?.type).toUpperCase();
-        const value = cleanId(option?.value);
+        const value = cleanId(splitMenuTarget(option?.value).target);
         if (!value) return false;
         if (type === 'DEPARTMENT') return myGroups.has(`DEPARTMENT:${value}`);
         if (type === 'QUEUE') return myGroups.has(`QUEUE:${value}`);

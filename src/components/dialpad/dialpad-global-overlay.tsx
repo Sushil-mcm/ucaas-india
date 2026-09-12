@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 import Dialpad from '.';
+import ScreenCaptureController from './screen-capture-controller';
 import type { DialpadMaxiTab } from './components/dialpad-maxi-side-panel';
 
 type DragPosition = {
@@ -58,10 +59,37 @@ const toPixelNumber = (value?: string) => {
 };
 
 const DialpadGlobalOverlay = () => {
-  const { isDialpadOpen, modalSize } = useDialpad();
+  const { isDialpadOpen, modalSize, activeCampaign, joinedCampaignId, campaignContactCards } =
+    useDialpad();
   const location = useLocation();
   const isDialpadRoute = location.pathname.startsWith('/phone');
   const isMaxiMode = modalSize === 'maxi';
+
+  /**
+   * A campaign dialer takes the whole page; every other dialer keeps its box.
+   *
+   * An agent working a campaign is not glancing at a call - they are reading a
+   * lead, following a script, taking notes and dispositioning, one after
+   * another for a whole shift. That work does not fit a floating panel with
+   * margins, and it was being squeezed into one. A normal call is the opposite:
+   * you want it small and out of the way while you use the rest of the app.
+   *
+   * So the size is decided by what the dialer is FOR, not by which button was
+   * pressed. The manual expand button still gives an ordinary call the wide
+   * two-column view inside its box, exactly as before - only a campaign goes
+   * full page.
+   *
+   * The test is the one the dialpad itself uses, to the letter: an empty card
+   * array still means "in a campaign, waiting for the next lead", and treating
+   * that as "no campaign" would shrink the frame out from under an agent
+   * between calls.
+   */
+  const isCampaignDialer = Boolean(
+    String(activeCampaign?._id || '').trim() ||
+      String(joinedCampaignId || '').trim() ||
+      campaignContactCards !== null,
+  );
+  const isFullPage = isMaxiMode && isCampaignDialer;
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const draggableNodeRef = useRef<HTMLDivElement | null>(null);
   const hasPositionedOnOpenRef = useRef(false);
@@ -80,16 +108,19 @@ const DialpadGlobalOverlay = () => {
 
   const frameClassName = useMemo(
     () =>
-      `pointer-events-auto rounded-[24px] bg-white shadow-[0px_12px_50px_0px_rgba(0,_0,_0,_0.3)] ${
-        isMaxiMode
-          ? 'h-full w-full max-w-[calc(100dvw-6rem)] max-h-[calc(100dvh-2rem)] overflow-hidden'
-          : 'max-h-[calc(100dvh-2rem)] max-w-[calc(100dvw-400px)] overflow-hidden md:max-w-[min(100%,300px)] lg:max-w-[min(100%,300px)] xl:max-w-[min(100%,430px)]'
-      }`,
-    [isMaxiMode],
+      isFullPage
+        ? /* No rounding, no shadow, no width cap: it IS the page. */
+          'pointer-events-auto h-full w-full bg-white overflow-hidden'
+        : `pointer-events-auto rounded-[24px] bg-white shadow-[0px_12px_50px_0px_rgba(0,_0,_0,_0.3)] ${
+            isMaxiMode
+              ? 'h-full w-full max-w-[calc(100dvw-6rem)] max-h-[calc(100dvh-2rem)] overflow-hidden'
+              : 'max-h-[calc(100dvh-2rem)] max-w-[calc(100dvw-400px)] overflow-hidden md:max-w-[min(100%,300px)] lg:max-w-[min(100%,300px)] xl:max-w-[min(100%,430px)]'
+          }`,
+    [isFullPage, isMaxiMode],
   );
   const frameStyle = useMemo<CSSProperties>(
     () =>
-      isMaxiMode
+      isFullPage || isMaxiMode
         ? {}
         : modalSize === 'mini'
           ? {
@@ -98,15 +129,21 @@ const DialpadGlobalOverlay = () => {
           : {
               height: 'auto',
             },
-    [isMaxiMode, modalSize],
+    [isFullPage, isMaxiMode, modalSize],
   );
   const draggableFrameStyle = useMemo<CSSProperties>(
-    () => ({
-      ...frameStyle,
-      transform: `translate3d(${dragPositionRef.current.x}px, ${dragPositionRef.current.y}px, 0)`,
-      willChange: 'transform',
-    }),
-    [frameStyle],
+    () =>
+      /* Dragging a full-page panel only ever moves it off screen, and a stale
+         transform left over from a previous drag would do exactly that the
+         moment a campaign opens. Full page is pinned. */
+      isFullPage
+        ? { ...frameStyle, transform: 'none' }
+        : {
+            ...frameStyle,
+            transform: `translate3d(${dragPositionRef.current.x}px, ${dragPositionRef.current.y}px, 0)`,
+            willChange: 'transform',
+          },
+    [frameStyle, isFullPage],
   );
 
   const applyDragTransform = useCallback((position: DragPosition) => {
@@ -313,21 +350,25 @@ const DialpadGlobalOverlay = () => {
   if (isDialpadRoute) return null;
 
   return (
+    <>
+      {/* Agent screen capture lives beside the dialpad, not inside it: its
+          pill must stay visible while the dialpad is closed. */}
+      <ScreenCaptureController />
     <div
       ref={overlayRef}
       aria-hidden={!isDialpadOpen}
-      className={`pointer-events-none fixed inset-0 z-[1300] overflow-hidden p-4 ${
-        isDialpadOpen ? 'visible' : 'invisible'
-      }`}
+      className={`pointer-events-none fixed inset-0 z-[1300] overflow-hidden ${
+        isFullPage ? 'p-0' : 'p-4'
+      } ${isDialpadOpen ? 'visible' : 'invisible'}`}
     >
       <div
         ref={draggableNodeRef}
         className={frameClassName}
         style={draggableFrameStyle}
-        onPointerDown={handleDragPointerDown}
-        onPointerMove={handleDragPointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
+        onPointerDown={isFullPage ? undefined : handleDragPointerDown}
+        onPointerMove={isFullPage ? undefined : handleDragPointerMove}
+        onPointerUp={isFullPage ? undefined : finishDrag}
+        onPointerCancel={isFullPage ? undefined : finishDrag}
       >
         <Dialpad
           mode="overlay"
@@ -336,6 +377,7 @@ const DialpadGlobalOverlay = () => {
         />
       </div>
     </div>
+    </>
   );
 };
 

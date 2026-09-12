@@ -28,18 +28,33 @@ export const useAreaNav = () => {
   const bottomItems = useMemo(() => navListBottom(features, IS_ADMIN), [features, IS_ADMIN]);
 
   // Resolved the same way the top bar used to resolve them for its own
-  // shortcuts, before those shortcuts moved into this rail.
-  const monitoringAccess = (features as any)?.plan_features?.monitoring?.action || {};
+  // shortcuts, before those shortcuts moved into this rail. Monitoring's
+  // landing page depends on the same role + plan-access check the header used
+  // to make for its quick-menu icon, and Agent Activity is just this person's
+  // own `/activity/:uuid` — both are resolved here, where the signed-in user
+  // and their plan access already live.
+  const monitoringAccessView = Boolean(features?.plan_features?.monitoring?.action?.view);
   const campaignAccess = (features as any)?.plan_features?.campaign?.IS_SHOW;
-  const activityHref = (user as any)?.user_info?.uuid
-    ? `/activity/${(user as any).user_info.uuid}`
-    : undefined;
+  const roleName =
+    (user as any)?.user_info?.custom_role_data?.name ||
+    (user as any)?.user_info?.role_data?.name ||
+    (user as any)?.user_info?.role ||
+    'User';
   const monitoringHref =
-    !IS_ADMIN || !monitoringAccess?.view ? '/monitoring/department' : '/monitoring/all-calls';
+    roleName !== 'ADMIN' || !monitoringAccessView ? '/monitoring/department' : '/monitoring/all-calls';
+  const activityUuid = (user as any)?.user_info?.uuid as string | undefined;
+  const activityHref = activityUuid ? `/activity/${activityUuid}` : undefined;
+  /* Keyed by view key. Both spellings are accepted so the rail resolves
+     whichever the view list uses (`ext-*` placeholders or the bare keys).
+     Coaching is open to everyone: the page itself says who you coach. */
   const dynamicHrefByKey: Record<string, string | undefined> = {
     'ext-activity': activityHref,
-    'ext-monitoring': monitoringAccess?.view ? monitoringHref : undefined,
+    'agent-activity': activityHref,
+    'ext-monitoring': monitoringAccessView ? monitoringHref : undefined,
+    monitoring: monitoringAccessView ? monitoringHref : undefined,
     'ext-campaigns': campaignAccess ? '/my-campaigns' : undefined,
+    'ext-coaching': '/coaching',
+    coaching: '/coaching',
   };
 
   const currentArea: AreaId = useMemo(
@@ -74,7 +89,7 @@ export const useAreaNav = () => {
       if (view.feature === 'ai') return Boolean(planFeatures?.ai?.IS_SHOW);
       if (view.feature === 'queue')
         return Boolean(planFeatures?.phone_system_action?.access?.QUEUE);
-      // The three former top-bar shortcuts that depend on the signed-in user
+      // The former top-bar shortcuts that depend on the signed-in user
       // — drop the rail item entirely rather than link somewhere broken.
       if (view.key in dynamicHrefByKey) return Boolean(dynamicHrefByKey[view.key]);
       return true;
@@ -95,7 +110,7 @@ export const useAreaNav = () => {
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areaViews, areaConfig, currentArea, planFeatures, activityHref, monitoringAccess?.view, campaignAccess]);
+  }, [areaViews, areaConfig, currentArea, planFeatures, activityHref, monitoringHref, monitoringAccessView, campaignAccess]);
 
   const rail = viewItems.length ? viewItems : railTop;
   const hasRail = rail.length + railBottom.length > 1;

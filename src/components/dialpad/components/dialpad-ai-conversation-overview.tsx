@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import type { DialpadSession } from '@/context/dialpad-context';
-import { getAiBaseUrl } from '@/lib/utils';
+import { cn, getAiBaseUrl } from '@/lib/utils';
 import { Sparkles, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -14,6 +14,10 @@ type DialpadScreenState = 'idle' | 'ringing' | 'connected' | 'ended';
 type DialpadAiConversationOverviewProps = {
   session: DialpadSession | null;
   dialpadScreen: DialpadScreenState;
+  /* See the note on the campaign overview: floating above the trigger is
+     right in the small dialer and wrong on the full page, where it covers
+     the call controls and the sentiment gauges. */
+  fullPage?: boolean;
 };
 
 type AiConversationMessage = {
@@ -44,6 +48,7 @@ const getHeaderFirstValue = (
 const DialpadAiConversationOverview = ({
   session,
   dialpadScreen,
+  fullPage = false,
 }: DialpadAiConversationOverviewProps) => {
   const [accordionValue, setAccordionValue] = useState('');
   const [isConversationLoading, setIsConversationLoading] = useState(false);
@@ -168,7 +173,14 @@ const DialpadAiConversationOverview = ({
         onValueChange={(value) => setAccordionValue(value)}
       >
         <AccordionItem value={AI_CONVERSATION_ACCORDION_VALUE} className="relative border-0">
-          <AccordionContent className="absolute bottom-[calc(100%+0.5rem)] left-0 right-0 z-20 max-h-[75vh] !pb-0 !pt-0">
+          <AccordionContent
+            className={cn(
+              'max-h-[75vh] !pb-0 !pt-0',
+              fullPage
+                ? 'mb-2'
+                : 'absolute bottom-[calc(100%+0.5rem)] left-0 right-0 z-20',
+            )}
+          >
             <div className="flex max-h-[72vh] min-h-[20rem] flex-col rounded-2xl border border-[#d6e4ff] bg-white px-3 py-3 shadow-[0_12px_28px_rgba(17,58,112,0.16)]">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">

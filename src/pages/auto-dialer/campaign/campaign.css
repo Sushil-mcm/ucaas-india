@@ -176,8 +176,8 @@
 .cmp .rowacts {
   display: flex;
   gap: 4px;
-  opacity: 0.4;
-  transition: opacity 0.13s;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
 }
 .cmp tr.rowlink {
   cursor: pointer;
@@ -406,4 +406,148 @@
     radial-gradient(70% 55% at 100% 0%, rgba(231, 139, 80, 0.14) 0%, transparent 100%),
     radial-gradient(60% 55% at 0% 100%, rgba(217, 101, 46, 0.08) 0%, transparent 100%),
     #fdf6f0;
+}
+
+/* ==================================================================
+   Rules ported from the unified frontend (new selectors that this
+   stylesheet did not have). Appended so later-wins keeps their intent.
+   ================================================================== */
+.cmp .rowacts .mini.ic {
+  width: 28px;
+  padding: 0;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.cmp .rowacts .mini.ic:hover:not(:disabled) {
+  color: var(--ai-ink);
+  border-color: var(--ai-edge);
+  background: var(--ai-wash, var(--surface-2));
+}
+
+/* A row that opens something should look like it does before it is clicked. */
+.cmp tr.rowlink:hover {
+  background: var(--surface-2);
+}
+
+/* ── the monitor's tab strip ───────────────────────────────────
+   The shared strip styles the button but not what is inside it, so the icon,
+   the label and the count ran together: the Agents tab read "Agents2". */
+.cmp .ptabstrip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cmp .ptabstrip .cnt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.cmp .ptabstrip button.on .cnt {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── contact outcomes cell ─────────────────────────────────────
+   The bar and its refresh button are one control group: the button is tied to
+   the bar beside it, not to the column after it. Narrower than it was (170px)
+   so the table has one less reason to run past the right edge. */
+.cmp .outcomecell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 148px;
+}
+
+.cmp .outcomecell .refreshbtn {
+  width: 28px;
+  padding: 0;
+  justify-content: center;
+  flex: none;
+  color: var(--ink-4);
+}
+
+.cmp .outcomecell .refreshbtn:hover:not(:disabled) {
+  color: var(--ai-ink);
+  border-color: var(--ai-edge);
+}
+
+.cmp .outcomecell .refreshbtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── making the campaigns table fit, rather than scroll ────────
+   Eight columns at the shared table's 16px side padding spend 256px on gaps
+   alone, and the page adds 26px down each edge on top. The table was wider
+   than the space it had and grew a horizontal scrollbar, which on a list you
+   read left-to-right means the actions are permanently off screen.
+   The room is taken back from padding instead: tighter cells, tighter page
+   edges, a narrower outcome cell. Scoped to `.cmp`, so no other table in the
+   app changes. */
+.cmp .page {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.cmp table th,
+.cmp table td {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.cmp .outcomecell {
+  min-width: 124px;
+}
+
+.cmp .segbar {
+  min-width: 84px;
+}
+
+/* The window reads "07 Sep – 15 Sep" and never needs to wrap mid-date. */
+.cmp .tbl-window {
+  white-space: nowrap;
+}
+
+/* ── vertical density: fit a list, not four rows ───────────────
+   Only four campaigns were visible at a time. The height was going on
+   generous cell padding, a deep page footer gap and the space under the KPI
+   strip - none of it carrying information. Each row still holds its two lines
+   (name over mode, status over live counts); they simply sit closer together.
+   Scoped to `.cmp`, so tables elsewhere keep their own rhythm. */
+.cmp .page {
+  padding-top: 14px;
+  padding-bottom: 16px;
+}
+
+.cmp .kpis {
+  margin-bottom: 12px;
+}
+
+.cmp table td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.cmp table th {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.cmp .cmeta {
+  margin-top: 2px;
+}
+
+.cmp .segfoot {
+  margin-top: 3px;
 }

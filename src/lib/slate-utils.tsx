@@ -1,9 +1,10 @@
 import React from 'react';
 import { Editor, Element as SlateElement, Transforms } from 'slate';
-import { RenderElementProps, RenderLeafProps, useSlate } from 'slate-react';
+import { ReactEditor, RenderElementProps, RenderLeafProps, useSlate } from 'slate-react';
 import { css, cx } from '@emotion/css';
 import isUrl from 'is-url';
 import { Bold, Code, Italic, List, ListOrdered, Underline } from 'lucide-react';
+import { ScriptEmbedElement, ScriptInputElement } from '@/components/custom/script-blocks';
 
 // -------------------- Custom Types --------------------
 
@@ -40,6 +41,31 @@ type ListElement = {
   type: 'bulleted-list' | 'numbered-list' | 'list-item';
   children: CustomText[];
 };
+
+/* A question the agent answers, and a page shown beside the script. Stored
+   shape and rules in src/lib/script-inputs.ts; drawn by script-blocks.tsx. */
+type ScriptInputElement = {
+  type: 'input';
+  kind: 'checkbox' | 'dropdown' | 'number' | 'text';
+  key: string;
+  label: string;
+  options?: string[];
+  required?: boolean;
+  children: CustomText[];
+};
+
+type ScriptEmbedElement = {
+  type: 'embed';
+  url: string;
+  height: number;
+  children: CustomText[];
+};
+
+/* The slate module augmentation below must match the one in
+   src/pages/messenger/chat/editor/utils.tsx exactly (TypeScript merges them),
+   so the script blocks are not added to this union; the places that meet
+   them read `type` as a plain string instead. */
+export type ScriptBlockElement = ScriptInputElement | ScriptEmbedElement;
 
 type CustomElement = MentionElement | LinkElement | ParagraphElement | ListElement;
 
@@ -96,6 +122,17 @@ export const withMentions = (editor: Editor): Editor => {
   const { isInline, isVoid } = editor;
   editor.isInline = (element: SlateElement) => element.type === 'mention' || isInline(element);
   editor.isVoid = (element: SlateElement) => element.type === 'mention' || isVoid(element);
+  return editor;
+};
+
+/* The script blocks are void: the caret never enters them and Backspace
+   removes the whole block, the way an image behaves in a document. */
+export const withScriptBlocks = (editor: Editor): Editor => {
+  const { isVoid } = editor;
+  editor.isVoid = (element: SlateElement) => {
+    const type = String((element as { type?: string }).type || '');
+    return type === 'input' || type === 'embed' || isVoid(element);
+  };
   return editor;
 };
 
@@ -167,7 +204,7 @@ export const Leaf: React.FC<RenderLeafProps> = ({ attributes, children, leaf }) 
 };
 
 export const ElementRender: React.FC<RenderElementProps> = ({ attributes, children, element }) => {
-  switch (element.type) {
+  switch ((element as { type?: string }).type as string) {
     // case 'mention':
     //   return (
     //     <span
@@ -198,6 +235,10 @@ export const ElementRender: React.FC<RenderElementProps> = ({ attributes, childr
           {children}
         </a>
       );
+    case 'input':
+      return <ScriptInputElement attributes={attributes} element={element}>{children}</ScriptInputElement>;
+    case 'embed':
+      return <ScriptEmbedElement attributes={attributes} element={element}>{children}</ScriptEmbedElement>;
     case 'bulleted-list':
       return (
         <ul {...attributes} style={{ listStyleType: 'disc', paddingLeft: 24 }}>
@@ -401,6 +442,40 @@ export const BlockButton: React.FC<{ format: string; icon: string }> = ({ format
     >
       <Icon>{icon}</Icon>
     </Button>
+  );
+};
+
+/* Insert a placeholder at the cursor.
+ *
+ * A call script is written once and read on every call, so the parts that
+ * change are written as {{Customer.FirstName}} and filled in when the agent
+ * reads it. Typing that by hand invites a typo that silently renders blank,
+ * which is why it is a menu rather than a note telling you the syntax. */
+export const VariableMenu: React.FC<{
+  variables: Array<{ token: string; label: string; description?: string }>;
+}> = ({ variables }) => {
+  const editor = useSlate();
+  if (!variables?.length) return null;
+  return (
+    <select
+      className="ml-2 h-7 max-w-[190px] rounded-md border border-gray-300 bg-white px-2 text-xs text-gray-700"
+      value=""
+      title="Insert a detail that fills itself in on every call"
+      onChange={(event) => {
+        const token = event.target.value;
+        event.target.value = '';
+        if (!token) return;
+        ReactEditor.focus(editor as any);
+        Transforms.insertText(editor, `{{${token}}}`);
+      }}
+    >
+      <option value="">Insert a detail…</option>
+      {variables.map((variable) => (
+        <option key={variable.token} value={variable.token} title={variable.description}>
+          {variable.label}
+        </option>
+      ))}
+    </select>
   );
 };
 

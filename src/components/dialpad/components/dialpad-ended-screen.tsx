@@ -1,4 +1,5 @@
 import type { DialpadSession } from '@/context/dialpad-context';
+import { isServerDialed } from '@/lib/campaign-dial-mode';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
@@ -7,14 +8,18 @@ import {
   // addDispositionInLeadContatc,
   createEventAndTask,
   makeCallQueueAvailable,
+  saveNoteInLeadContact,
   // queueDisposition,
 } from '@/services/api';
 import moment from 'moment';
 import { CalendarClock, Clock3, NotebookPen, Phone, PhoneOff, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DialpadCountdownRingTimer from './dialpad-countdown-ring-timer';
+import { holdsForLabel, wrapupVerdict } from '@/lib/wrapup-rule';
+import { tickedDisposition, useDispositionSave } from '@/hooks/use-disposition-save';
 import DialpadScheduleCallback from './dialpad-schedule-callback';
 import DialpadSessionSummaryCard from './dialpad-session-summary-card';
+import { getDialpadSessionState } from '../session-status';
 import { formatDialpadDuration } from './dialpad-call-timer';
 import { handleAlert } from '@/lib/utils';
 import { isExtensionDialTarget } from '@/lib/extension-utility';
@@ -27,7 +32,10 @@ type DialpadEndedScreenProps = {
   onClose: () => void;
 };
 
-const WAIT_AFTER_CALL_MS = 30000;
+/* The wait before the next lead is no longer a constant here. Leaving
+   nextContactDelayMs unset hands the decision to dialpad-campaign-overview,
+   the one reader, which resolves it from the campaign's wait_after_call, the
+   company default, or the built-in number (src/lib/campaign-timers.ts). */
 
 // const getScheduleCallbackSuccessMessage = (response: any): string => {
 //   return (
@@ -56,14 +64,26 @@ const getHeaderFirstValueFromSessionHeaders = (
   return String(values[0] || '').trim();
 };
 
+/** How long the no-answer strip waits before moving to the next contact.
+    Long enough to read it and reach a button, short enough not to drag. */
+const NO_ANSWER_STRIP_SECONDS = 10;
+
 const DialpadEndedScreen = ({
   session,
   onAddNotes,
   onCallAgain,
   onClose,
 }: DialpadEndedScreenProps) => {
-  const { clearAllSessions, clearSession, setCampaignContactCards, setActiveCampaign } =
-    useDialpad();
+  const {
+    clearAllSessions,
+    clearSession,
+    setCampaignContactCards,
+    setActiveCampaign,
+    makeCall,
+    patchSession,
+    sipContact,
+  } = useDialpad();
+  const { save: saveDisposition } = useDispositionSave();
   const { socketEventsManager } = useSocketEvents();
   const { user } = useUser();
   const userDetailsPayload = useMemo(
@@ -82,6 +102,7 @@ const DialpadEndedScreen = ({
   );
   const wrapupAvailabilityCallRef = useRef<string | null>(null);
   const [isScheduleCallbackOpen, setIsScheduleCallbackOpen] = useState(false);
+  const [noAnswerCountdown, setNoAnswerCountdown] = useState<number | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
   const unansweredCampaignHandledSessionRef = useRef<string | null>(null);
   const endedCampaignWithoutWrapupHandledSessionRef = useRef<string | null>(null);
@@ -89,24 +110,22 @@ const DialpadEndedScreen = ({
   const currentCompanyUuid = user?.company_info?.uuid || '';
 
   const normalizedCause = (session?.cause || '').toLowerCase();
+  /* Still used by the wrap-up timer and the queue/campaign paths below. */
   const isRejectedCause = normalizedCause.includes('rejected');
-  const endStatus =
-    session?.status === 'ended'
-      ? session?.eventOriginator === 'remote'
-        ? 'Remote Hung Up'
-        : 'Call Ended'
-      : normalizedCause.includes('no answer') ||
-          normalizedCause.includes('request timeout') ||
-          normalizedCause.includes('expires') ||
-          normalizedCause.includes('unavailable')
-        ? 'No Pickup'
-        : normalizedCause.includes('busy')
-          ? 'Busy'
-          : isRejectedCause
-            ? 'Rejected'
-            : 'Call Failed';
 
-  const causeLabel = session?.cause || 'No reason available';
+  /* The shared reader, not a second copy of the rules. This screen used to
+     decide the wording itself off `session.cause` alone, which knows nothing
+     about the SIP response, so every carrier failure -- 500, the codec
+     rejection on the India route, 480, 410 -- collapsed into "Call Failed".
+     getDialpadSessionState reads the status code and the Q.850 cause the
+     switch actually sent, so the agent is told "Busy", "Number disconnected"
+     or "Carrier error (500)" and can act on it. */
+  const endState = getDialpadSessionState(session);
+  const endStatus = endState.label;
+
+  /* The reason line: the plain-English explanation when there is one, falling
+     back to the switch's raw cause. */
+  const causeLabel = endState.detail || session?.cause || 'No reason available';
   const queueWrapupTimeSeconds = Number(
     session?.queueMetaData?.response?.settings?.wrapup_time ?? 0,
   );
@@ -170,8 +189,43 @@ const DialpadEndedScreen = ({
     !session?.hasAnswered &&
     ['ended', 'failed'].includes(String(session?.status || '').toLowerCase()),
   );
+  /* Which of the five wrap-up rules this queue chose. Every queue call used to
+     hide the close button outright, so "optional" and "cannot be skipped" were
+     the same product - the supervisor's choice was saved and ignored.
+     
+     The half that still is not honoured is "may leave early once the call is
+     labelled": whether a disposition has been picked is held in the disposition
+     tab, a different component, so it is passed as false here. That makes every
+     mandatory mode behave exactly as it does today, and only the modes that let
+     the agent go are newly obeyed. Nothing gets stricter than it was. */
+  const wrapupRule = wrapupVerdict({
+    /* A queue call reads the queue's rule; a campaign call reads the
+       campaign's (dialerSetting.wrapup_mode, same five values). */
+    mode:
+      session?.queueMetaData?.response?.settings?.after_call?.wrapup_prompt ||
+      session?.campaignMetaData?.response?.dialerSetting?.wrapup_mode,
+    totalSeconds: wrapupTimeSeconds,
+    elapsedSeconds: wrapupReferenceTimestampMs
+      ? Math.max(0, Math.floor((Date.now() - Number(wrapupReferenceTimestampMs)) / 1000))
+      : 0,
+    /* Set by the disposition tab: either the agent saved a label, or there
+       was never one to save. A mandatory wrap-up cannot hold the agent
+       hostage to a choice that does not exist - see dispositionUnavailable
+       on DialpadSession. Both count as "labelled" for mayLeave. */
+    hasDisposition: Boolean(session?.dispositionSaved) || Boolean(session?.dispositionUnavailable),
+  });
+
+  /* The campaign wrap-up ran out with nothing saved and the rule requires a
+     label: the screen stays, at 0:00, until one is saved. Close is hidden
+     for the same reason the timer no longer moves on. */
+  const hasDispositionForRule =
+    Boolean(session?.dispositionSaved) || Boolean(session?.dispositionUnavailable);
+  const isHeldForLabel = Boolean(session?.wrapupHeld) && !hasDispositionForRule;
   const shouldHideCloseButton =
-    (isQueueCallFromSession || isCampaignCallFromSession) && !isRejectedCause;
+    (isQueueCallFromSession || isCampaignCallFromSession) &&
+    !isRejectedCause &&
+    /* Both a queue and a campaign now carry a rule of their own. */
+    (!wrapupRule.mayLeave || isHeldForLabel);
   const sessionDialTarget = String(session?.remoteNumber || session?.extension || '').trim();
   const isExtensionCallSession = isExtensionDialTarget(sessionDialTarget);
   const monitorCallLabel = getMonitoringCallLabel(
@@ -271,7 +325,7 @@ const DialpadEndedScreen = ({
       )
         .trim()
         .toUpperCase();
-      const isPredictiveCampaign = campaignDialMethod === 'PREDICTIVE';
+      const isPredictiveCampaign = isServerDialed(campaignDialMethod);
 
       if (isPredictiveCampaign) {
         socketEventsManager.emit(
@@ -308,6 +362,7 @@ const DialpadEndedScreen = ({
             campaign_uuid: normalizedCampaignId,
             status: 'Available',
             state: 'Waiting',
+            sip_contact: sipContact,
           });
           console.log('makeCallQueueAvailable response:', availabilityResponse);
         } catch (error) {
@@ -327,7 +382,7 @@ const DialpadEndedScreen = ({
         return {
           ...(prev || {}),
           manualStatus: 'PROCESSING',
-          nextContactDelayMs: WAIT_AFTER_CALL_MS,
+          nextContactDelayMs: undefined,
           deferredNextAction: getCampaignNextAction(options?.status || ''),
         };
       });
@@ -370,6 +425,16 @@ const DialpadEndedScreen = ({
     }
   }, [clearAllSessions, session?.id, session?.queueMetaData?.id]);
 
+  /* When the campaign wrap-up runs out (live test, 9 Sep: both predictive
+     calls ended with the tick lost when the 15 s passed):
+       1. a label is ticked and not saved  -> save it now, then move on as a
+          Save press would (the hook clears the session and asks for the next
+          contact);
+       2. nothing is ticked and the rule requires a label -> stay here, timer
+          at 0:00, until one is saved; the next contact waits;
+       3. otherwise -> close and move on, as before.
+     A save that fails falls through to 2, so the label is never silently
+     dropped: the agent sees the screen and can press Save. */
   const handleCampaignWrapupTimeEnds = useCallback(async () => {
     const campaignId = String(session?.campaignMetaData?.id || '').trim();
     const sessionId = String(session?.id || '').trim();
@@ -379,6 +444,21 @@ const DialpadEndedScreen = ({
     if (wrapupAvailabilityCallRef.current === callKey) return;
 
     wrapupAvailabilityCallRef.current = callKey;
+
+    const ticked = tickedDisposition(session);
+    if (ticked) {
+      const saved = await saveDisposition(session, ticked);
+      if (saved) return;
+    }
+
+    const labelled =
+      Boolean(session?.dispositionSaved) || Boolean(session?.dispositionUnavailable);
+    const mode = session?.campaignMetaData?.response?.dialerSetting?.wrapup_mode;
+    if (!labelled && holdsForLabel(mode)) {
+      patchSession(sessionId, { wrapupHeld: true });
+      return;
+    }
+
     try {
       clearSession(sessionId);
       void fetchCampaignPreviewContacts(campaignId, { status: '' });
@@ -386,7 +466,7 @@ const DialpadEndedScreen = ({
       wrapupAvailabilityCallRef.current = null;
       console.error('Failed to fetch campaign contacts after wrap-up timer end', error);
     }
-  }, [clearSession, fetchCampaignPreviewContacts, session?.campaignMetaData?.id, session?.id]);
+  }, [clearSession, fetchCampaignPreviewContacts, patchSession, saveDisposition, session]);
 
   const handleWrapupTimeEnds = useCallback(() => {
     if (wrapupTimerSource === 'queue') {
@@ -412,16 +492,41 @@ const DialpadEndedScreen = ({
     if (!isOutgoingNoAnswerCampaignCall) return;
     if (unansweredCampaignHandledSessionRef.current === sessionId) return;
 
+    /* A no-answer used to jump straight to the next lead, which felt like the
+       call had been swallowed. Now a short strip says what happened and gives
+       the agent a moment to retry or schedule a callback before moving on. */
     unansweredCampaignHandledSessionRef.current = sessionId;
-    clearSession(sessionId);
-    void fetchCampaignPreviewContacts(campaignIdForNoAnswerFetch, { status: 'NOT_DIALED' });
-  }, [
-    campaignIdForNoAnswerFetch,
-    clearSession,
-    fetchCampaignPreviewContacts,
-    isOutgoingNoAnswerCampaignCall,
-    session?.id,
-  ]);
+    setNoAnswerCountdown(NO_ANSWER_STRIP_SECONDS);
+  }, [campaignIdForNoAnswerFetch, isOutgoingNoAnswerCampaignCall, session?.id]);
+
+  const moveOnAfterNoAnswer = useCallback(() => {
+    const sessionId = String(session?.id || '').trim();
+    setNoAnswerCountdown(null);
+    if (sessionId) clearSession(sessionId);
+    if (campaignIdForNoAnswerFetch) {
+      void fetchCampaignPreviewContacts(campaignIdForNoAnswerFetch, { status: 'NOT_DIALED' });
+    }
+  }, [campaignIdForNoAnswerFetch, clearSession, fetchCampaignPreviewContacts, session?.id]);
+
+  useEffect(() => {
+    if (noAnswerCountdown === null) return;
+    if (noAnswerCountdown <= 0) {
+      moveOnAfterNoAnswer();
+      return;
+    }
+    const timer = setTimeout(() => setNoAnswerCountdown((value) => (value === null ? null : value - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [moveOnAfterNoAnswer, noAnswerCountdown]);
+
+  const handleRetryNoAnswer = useCallback(() => {
+    const sessionId = String(session?.id || '').trim();
+    const target = String(session?.remoteNumber || '').trim();
+    setNoAnswerCountdown(null);
+    if (sessionId) clearSession(sessionId);
+    if (!target) return;
+    // Same lead, same campaign headers, so the switch treats it as the same attempt context.
+    void makeCall(target, { extraHeaders: Array.isArray(session?.extraHeaders) ? session.extraHeaders : [] });
+  }, [clearSession, makeCall, session?.extraHeaders, session?.id, session?.remoteNumber]);
 
   useEffect(() => {
     const sessionId = String(session?.id || '').trim();
@@ -534,188 +639,71 @@ const DialpadEndedScreen = ({
       setIsScheduling(true);
       try {
         const response = await createEventAndTask(eventTaskPayload);
-        console.log(response?.data, 'lllsss');
 
         handleAlert({
           text: response?.data?.data?.message || 'Callback scheduled successfully',
           type: 'success',
         });
-        console.log('Queue callback scheduled payload:', eventTaskPayload);
         setIsScheduleCallbackOpen(false);
       } catch (error) {
         console.error('Failed to schedule queue callback disposition', error);
       } finally {
         setIsScheduling(false);
       }
-      // if (isQueueCallSession) {
-      //   const queueDispositions = Array.isArray(session?.queueMetaData?.response?.agentDisposition)
-      //     ? session?.queueMetaData?.response?.agentDisposition
-      //     : [];
-      //   const selectedDisposition = queueDispositions[0] || null;
-      //   const dispositionName = selectedDisposition?.disposition?.name || null;
-      //   const queuePayload = {
-      //     disposition: {
-      //       disposition: dispositionName,
-      //       name: userName || null,
-      //       extension: user?.user_info?.extension || null,
-      //       uuid: user?.uuid || null,
-      //       createdAt: new Date().toISOString(),
-      //       _id: queueId || null,
-      //     },
-      //     contactId: contactId || null,
-      //     contactName: contactPhone || null,
-      //     contactPhone: contactPhone || null,
-      //     sipCallId: sipCallId || null,
-      //     source: 'QUEUE',
-      //     serviceDetail: {
-      //       name: queueName || null,
-      //       type: 'QUEUE',
-      //       uuid: queueId || null,
-      //     },
-      //     wrap_time_sec: currentWrapupSnapshot,
-      //     queueUuid: queueId || null,
-      //     callbackScheduledDate,
 
-      //   };
-
-      // try {
-      //   const response = await queueDisposition(queuePayload);
-      //   handleAlert({
-      //     text: getScheduleCallbackSuccessMessage(response),
-      //     type: 'success',
-      //   });
-      //   console.log('Queue callback scheduled payload:', queuePayload);
-
-      // } catch (error) {
-      //   console.error('Failed to schedule queue callback disposition', error);
-      // }
-      // } else if (hasCampaignSession) {
-      //   const campaignDispositions = Array.isArray(
-      //     session?.campaignMetaData?.response?.agentDisposition,
-      //   )
-      //     ? session?.campaignMetaData?.response?.agentDisposition
-      //     : [];
-      //   const selectedDisposition = campaignDispositions[0] || null;
-      //   const dispositionName = selectedDisposition?.disposition?.name || null;
-      //   const campaignPayload = {
-      //     disposition: {
-      //       disposition: dispositionName,
-      //       name: userName || null,
-      //       extension: user?.user_info?.extension || null,
-      //       uuid: user?.uuid || null,
-      //       createdAt: new Date().toISOString(),
-      //       _id: String(selectedDisposition?._id || '').trim() || null,
-      //     },
-      //     contactId: contactId || null,
-      //     contactName: contactName || null,
-      //     contactPhone: contactPhone || null,
-      //     sipCallId: sipCallId || null,
-      //     source: 'LEAD',
-      //     serviceDetail: {
-      //       name: campaignName || null,
-      //       type: campaignType || null,
-      //       uuid: campaignId || null,
-      //     },
-      //     wrap_time_sec: currentWrapupSnapshot,
-      //     campaignNumberId: campaignNumberId || null,
-      //     callbackScheduledDate,
-      //     //
-      //   };
-
-      //   try {
-      //     const response = await addDispositionInLeadContatc(campaignPayload);
-      //     handleAlert({
-      //       text: getScheduleCallbackSuccessMessage(response),
-      //       type: 'success',
-      //     });
-      //     console.log('Campaign callback scheduled payload:', campaignPayload);
-      //   } catch (error) {
-      //     console.error('Failed to schedule campaign callback disposition', error);
-      //   }
-      // } else {
-      //   const fallbackPayload = {
-      //     contactName: contactPhone || null,
-      //     contactPhone: contactPhone || null,
-      //     sipCallId: sipCallId || null,
-      //     source: 'CALL',
-      //     callbackScheduledDate
-      //     // disposition: {
-      //     //   disposition: null,
-      //     //   name: userName || null,
-      //     //   extension: user?.user_info?.extension || null,
-      //     //   uuid: user?.uuid || null,
-      //     //   createdAt: new Date().toISOString(),
-      //     //   _id: null,
-      //     // },
-      //     // contactId: contactId || null,
-      //     // contactName: contactName || null,
-      //     // contactPhone: contactPhone || null,
-      //     // sipCallId: sipCallId || null,
-      //     // source: 'CALLBACK',
-      //     // serviceDetail: {
-      //     //   name: null,
-      //     //   type: null,
-      //     //   uuid: null,
-      //     // },
-      //     // wrap_time_sec: currentWrapupSnapshot,
-      //     // campaignNumberId: campaignNumberId || null,
-      //     // queueUuid: null,
-      //     // callbackScheduledDate,
-      //   };
-
-      //   try {
-      //     const response = await addDispositionInLeadContatc(fallbackPayload);
-      //     handleAlert({
-      //       text: getScheduleCallbackSuccessMessage(response),
-      //       type: 'success',
-      //     });
-      //     console.log('Fallback callback scheduled payload:', fallbackPayload);
-
-      //     const eventTaskPayload = {
-      //       name: 'Call Back Schedule',
-      //       startTime: moment(selectedDateTime).format('YYYY-MM-DD HH:mm:ss'),
-      //       description: '',
-      //       category: 'TASK',
-      //       reminderMode: ['EMAIL', 'NOTIFICATION'],
-      //       reminder: true,
-      //       mode: 'CALL',
-      //       requestStatus: 'CALLBACK_SCHEDULED',
-      //       source: window?.location?.pathname.includes('/contact') ? 'CONTACT' : window?.location?.pathname.includes('/department/organization/') ? "DEPARTMENT" : 'DIALER',
-      //       sipCallId: sipCallId || null,
-      //       didNumber: user?.user_info?.caller_id || '',
-      //       timezone:
-      //         user?.settings?.operational_hours?.regional?.timezone?.value ||
-      //         Intl.DateTimeFormat().resolvedOptions().timeZone ||
-      //         'Asia/Kolkata',
-      //       members: [
-      //         {
-      //           extension: String(user?.user_info?.extension || '').trim(),
-      //           email: String(user?.user_info?.email || user?.email || '').trim(),
-      //           name: userName,
-      //           type: String(user?.role || user?.user_info?.role || 'ADMIN').toUpperCase(),
-      //           user_uuid: String(user?.uuid || '').trim(),
-      //         },
-      //       ],
-      //       details: {
-      //         contactName: contactName || ' ',
-      //         contactPhone: contactPhone || '',
-      //       },
-      //     };
-      //     await createEventAndTask(eventTaskPayload);
-      //   } catch (error) {
-      //     console.error('Failed to schedule callback with fallback payload', error);
-      //   }
-      // }
-
-      console.log(
-        'Dialpad callback date-time selected:',
-        callbackScheduledDate,
-        selectedDateTime.toString(),
-      );
+      /* Until now the chosen date was only logged: the lead never became a
+         scheduled callback and nothing ever dialled it. The campaign service's
+         note-and-disposition save sets the lead to CALLBACK_SCHEDULED with the
+         date, which both the preview list and the server dialer pick up when
+         it comes due. */
+      if (hasCampaignSession) {
+        const campaignNumberId =
+          getHeaderFirstValue('x-campaignnumberuuid') ||
+          String((session as any)?.liveCallData?.campaign_number_uuid || '').trim();
+        const contactUuid =
+          getHeaderFirstValue('x-contactuuid') ||
+          String((session as any)?.liveCallData?.contact_uuid || '').trim();
+        try {
+          /* Only the keys the campaign service's validator names; anything
+             else is a 400. */
+          await saveNoteInLeadContact({
+            contact_uuid: contactUuid || null,
+            sipcall_id: sipCallId || null,
+            phone: contactPhone || null,
+            note: null,
+            creator_uuid: String(user?.uuid || '').trim(),
+            campaign_detail: {
+              campaignId,
+              campaignNumberId: campaignNumberId || null,
+              campaignName: session?.campaignMetaData?.response?.name || '',
+              campaignType: session?.campaignMetaData?.response?.dialMethod || '',
+            },
+            callback_scheduled_date: callbackScheduledDate,
+          });
+          handleAlert({
+            text: `Callback scheduled for ${moment(selectedDateTime).format('D MMM, h:mm a')}. The lead will be dialled again then.`,
+            type: 'success',
+          });
+          setNoAnswerCountdown(null);
+          const sessionId = String(session?.id || '').trim();
+          if (sessionId) clearSession(sessionId);
+          if (campaignId && !isServerDialed(session?.campaignMetaData?.response?.dialMethod)) {
+            void fetchCampaignPreviewContacts(campaignId, { status: '' });
+          }
+        } catch (error: any) {
+          handleAlert({
+            text: `Could not schedule the callback: ${error?.response?.data?.error?.message || error?.message || 'unknown error'}`,
+            type: 'error',
+          });
+        }
+      }
       setIsScheduleCallbackOpen(false);
     },
     [
       getHeaderFirstValue,
+      clearSession,
+      fetchCampaignPreviewContacts,
+      user?.uuid,
       session?.campaignMetaData?.id,
       session?.campaignMetaData?.response?.agentDisposition,
       session?.campaignMetaData?.response?.dialMethod,
@@ -768,6 +756,38 @@ const DialpadEndedScreen = ({
           <span className="font-mono">{formatDialpadDuration(callDurationSeconds)}</span>
         </div>
 
+        {noAnswerCountdown !== null ? (
+          <div className="mt-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-900">
+            <p className="font-semibold">No answer. Next contact in {noAnswerCountdown}s.</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className="rounded-lg bg-primary px-3 py-1 text-[11px] font-semibold text-white"
+                onClick={handleRetryNoAnswer}
+              >
+                Retry now
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1 text-[11px] font-semibold text-amber-900"
+                onClick={() => {
+                  setNoAnswerCountdown(null);
+                  setIsScheduleCallbackOpen(true);
+                }}
+              >
+                Schedule callback
+              </button>
+              <button
+                type="button"
+                className="rounded-lg px-3 py-1 text-[11px] font-semibold text-amber-900 underline"
+                onClick={moveOnAfterNoAnswer}
+              >
+                Next contact
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {shouldShowWrapupTimer ? (
           <div className="mt-3 flex w-full flex-col items-center justify-center gap-1.5 sm:mt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#5a7396] max-[380px]:text-[10px] sm:text-xs">
@@ -778,6 +798,11 @@ const DialpadEndedScreen = ({
               referenceTimestampMs={wrapupReferenceTimestampMs}
               onTimeEnds={handleWrapupTimeEnds}
             />
+            {isHeldForLabel ? (
+              <p className="mt-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-[12px] font-medium text-amber-900">
+                Pick an outcome for this call and save it. The next contact waits until you do.
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>

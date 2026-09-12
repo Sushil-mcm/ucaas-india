@@ -21,7 +21,8 @@ import { DateFilterTypes, handleDate } from '@/components/custom/date-dropdown/c
 import Timer from '@/components/timer';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { isViewAllowedByPlan } from '@/components/custom/nav-areas';
+import { PERFORMANCE_VIEWS, isViewAllowedByPlan } from '@/components/custom/nav-areas';
+import { serviceLevelBand } from '@/lib/queue-series';
 import QueuesActivityTab from './queues-activity-tab';
 import CampaignActivityTab from './campaign-activity-tab';
 import AgentsTab from './agents-tab';
@@ -47,40 +48,36 @@ import VideoDashboard from '@/pages/dashboard/video-dashboard';
 import CallQueueContent from '@/pages/dashboard/call-dashboard/Call-queue-content';
 
 /**
- * Wallboards used to hang off Home as a second tab strip, which put a "Home"
- * tab inside Home. They are performance surfaces, so they live here.
+ * The views this page can show — their keys, order and plan gates — live in one
+ * place, PERFORMANCE_VIEWS, which the area rail reads too. This page only needs
+ * the valid-key set and the default. It used to keep its own second copy of the
+ * list, and a rail item ("Flows") drifted out of sync and pointed at a view
+ * this page never rendered.
  *
- * The `feature` below is the plan entitlement each one needs. It used to be
- * declared here and read by nothing — the comment claimed each wallboard was
- * "still gated on the plan feature that gated it before", but the only
- * enforcement was in the rail, which hides the link. `?view=ai-wallboard`
- * typed, pasted or bookmarked rendered the AI wallboard on any plan.
+ * The wallboards (Live/AI/Call Queue/Video) are in that list as well — they
+ * used to hang off Home as a second tab strip, which put a "Home" tab inside
+ * Home; they are performance surfaces, so they belong here, each still gated on
+ * the plan feature that gated it before.
  *
- * `isViewAllowedByPlan` is the same function the rail asks, so the link and
- * the view can no longer disagree. The labels live in `nav-areas.ts` with the
- * rest of the rail, so they are not repeated here.
+ * The `feature` on each view is the plan entitlement it needs. The only
+ * enforcement used to be in the rail, which hides the link, so
+ * `/performance/ai-wallboard` typed, pasted or bookmarked rendered the AI
+ * wallboard on any plan. `isViewAllowedByPlan` is the same function the rail
+ * asks, so the link and the view can no longer disagree.
+ *
+ * The rail's own shortcuts (Activity, Monitor, My Campaign, Coaching) are in
+ * PERFORMANCE_VIEWS too, but they carry an `href`/`match` and send you to a
+ * page outside this one entirely — this page has no tab body for them, so
+ * they are left out of the valid-key set rather than rendering blank.
  */
-const WALLBOARD_TABS = [
-  { key: 'live-wallboard', feature: undefined },
-  { key: 'ai-wallboard', feature: 'ai' },
-  { key: 'call-queue', feature: 'queue' },
-  { key: 'video-dashboard', feature: 'video' },
-] as const;
+const PAGE_VIEWS = PERFORMANCE_VIEWS.filter((view) => !view.href && !view.match);
+const DEFAULT_VIEW = PAGE_VIEWS[0].key;
 
-const TABS = [
-  { key: 'queues-activity', label: 'Queues Activity' },
-  { key: 'campaign-activity', label: 'Campaign Activity' },
-  { key: 'agents', label: 'Agents' },
-  { key: 'interactions', label: 'Interactions' },
-  { key: 'flows', label: 'Flows' },
-  { key: 'dashboards', label: 'Dashboards' },
-  { key: 'live-interactions', label: 'Live Interactions' },
-  { key: 'callbacks', label: 'Callbacks' },
-  { key: 'speech-text', label: 'Speech & Text' },
-  { key: 'reports', label: 'Reports' },
-];
-
-const SHOW_KPI_HEADER_TABS = new Set(['queues-activity', 'campaign-activity', 'dashboards']);
+// The live queue KPI band is queue-centric — Waiting, Longest wait, Service
+// level, On a call now. It only belongs on Queues Activity: on Campaign Activity
+// those metrics read 0 / — for outbound work, and on Dashboards it repeats
+// figures the tab already shows.
+const SHOW_KPI_HEADER_TABS = new Set(['queues-activity']);
 
 /**
  * The views that actually read `useLiveContactCentre`.
@@ -98,11 +95,15 @@ const LIVE_DATA_TABS = new Set([
   'agents',
 ]);
 
-const slaTone = (sla: number | null): 'default' | 'success' | 'warning' | 'danger' => {
-  if (sla === null) return 'default';
-  if (sla >= 80) return 'success';
-  if (sla >= 60) return 'warning';
-  return 'danger';
+const slaTone = (
+  sla: number | null,
+  targetPercent: number | null,
+): 'default' | 'success' | 'warning' | 'danger' => {
+  const band = serviceLevelBand(sla, targetPercent);
+  if (band === 'good') return 'success';
+  if (band === 'warn') return 'warning';
+  if (band === 'bad') return 'danger';
+  return 'default';
 };
 
 const Performance = () => {
@@ -110,23 +111,19 @@ const Performance = () => {
   const navigate = useNavigate();
   const { companyPlanFeatures } = useCompanyFeatures();
 
-  /* Wallboards the plan does not include are removed from the set of valid
-     views, so an unentitled `?view=` resolves to the default the same way a
-     misspelled one does. This is the page half of the gate the rail already
-     applies to its links. */
-  const allowedWallboardKeys = useMemo(
+  /* Views the plan does not include are removed from the set of valid views,
+     so an unentitled path resolves to the default the same way a misspelled
+     one does. This is the page half of the gate the rail already applies to
+     its links. */
+  const allTabKeys = useMemo(
     () =>
-      WALLBOARD_TABS.filter((tab) =>
-        isViewAllowedByPlan({ feature: tab.feature }, companyPlanFeatures),
-      ).map((tab) => tab.key as string),
+      PAGE_VIEWS.filter((view) => isViewAllowedByPlan(view, companyPlanFeatures)).map(
+        (view) => view.key,
+      ),
     [companyPlanFeatures],
   );
-  const allTabKeys = useMemo(
-    () => [...TABS.map((tab) => tab.key), ...allowedWallboardKeys],
-    [allowedWallboardKeys],
-  );
   const activeTab =
-    viewParam && allTabKeys.includes(viewParam) ? viewParam : TABS[0].key;
+    viewParam && allTabKeys.includes(viewParam) ? viewParam : DEFAULT_VIEW;
   useEffect(() => {
     if (viewParam && viewParam !== activeTab) navigate(`/performance/${activeTab}`, { replace: true });
   }, [viewParam, activeTab]);
@@ -187,14 +184,16 @@ const Performance = () => {
     liveSlaByName,
     liveQueueStatsByName,
     waitingCalls,
+    callbacksWaitingCount,
+    callbacksByQueueUuid,
     longestWaitTimestamp,
     longestWaitSecs,
     totals,
     onlineAgentsCount,
-    avgSla,
+    serviceLevel,
     avgHandleTime,
     abandonRate,
-    occupancy,
+    agentsOnCallPct,
     callStats,
     cdrByQueueUuid,
     isCdrSampled,
@@ -355,7 +354,7 @@ const Performance = () => {
               onClick={() => navigate('/performance/dashboards')}
             >
               <Ic n="grid" />
-              My dashboards
+              Boards
             </button>
           </div>
         </div>
@@ -473,10 +472,12 @@ const Performance = () => {
               />
               <PerfStatCard
                 label={'Service\nLevel'}
-                value={<AnimatedValue value={avgSla} format={(n) => `${Math.round(n)}%`} />}
-                sub="target 80% in 20s"
+                value={<AnimatedValue value={serviceLevel.percent} format={(n) => `${Math.round(n)}%`} />}
+                /* The real goal: one line when every queue asks for the same thing,
+                   "per-queue targets" when they do not. Never a fixed number. */
+                sub={serviceLevel.targetText}
                 icon={Gauge}
-                tone={slaTone(avgSla)}
+                tone={slaTone(serviceLevel.percent, serviceLevel.targetPercent)}
               />
               <PerfStatCard
                 label={'Handle\nTime'}
@@ -524,9 +525,9 @@ const Performance = () => {
                 icon={Users}
               />
               <PerfStatCard
-                label={'Occupancy\nRate'}
-                value={<AnimatedValue value={occupancy} format={(n) => `${Math.round(n)}%`} />}
-                sub="target 75–85%"
+                label={'On a\nCall Now'}
+                value={<AnimatedValue value={agentsOnCallPct} format={(n) => `${Math.round(n)}%`} />}
+                sub="of agents on queue"
                 icon={Activity}
               />
             </div>
@@ -548,11 +549,13 @@ const Performance = () => {
             isLoading={isQueuesLoading}
             selectedQueueUuid={selectedQueueUuid}
             setSelectedQueueUuid={setSelectedQueueUuid}
+            callbacksWaitingCount={callbacksWaitingCount}
+            callbacksByQueueUuid={callbacksByQueueUuid}
             globalSearch={globalSearchQuery}
           />
         )}
         {activeTab === 'campaign-activity' && (
-          <CampaignActivityTab globalSearch={globalSearchQuery} />
+          <CampaignActivityTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />
         )}
         {activeTab === 'agents' && (
           <AgentsTab
@@ -567,7 +570,7 @@ const Performance = () => {
         {activeTab === 'interactions' && (
           <InteractionsTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />
         )}
-        {activeTab === 'flows' && <FlowsTab globalSearch={globalSearchQuery} />}
+        {activeTab === 'flows' && <FlowsTab selectedRange={selectedRange} globalSearch={globalSearchQuery} />}
         {activeTab === 'dashboards' && <DashboardsTab />}
         {activeTab === 'live-interactions' && (
           <LiveInteractionsTab globalSearch={globalSearchQuery} />

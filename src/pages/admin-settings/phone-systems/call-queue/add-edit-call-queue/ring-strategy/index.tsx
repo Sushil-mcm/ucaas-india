@@ -1,4 +1,6 @@
 import CustomSelect from '@/components/custom/custom-select';
+import ServiceLevelCard from './service-level-card';
+import { useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -13,14 +15,75 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import {
   AFTER_CALL_LIMITS,
+  CALLBACK_KEYS,
   ESCALATION_LIMITS,
   MEMBER_TIERS,
   CALL_DISTRIBUTION_DATA,
   DEPARTMENT_RING_STRATEGY_DESC,
   LAST_AGENT_MODES,
+  ROUTING_ORDERS,
+  ROUTING_PRIORITIES,
   WAITING_LIMITS,
 } from '../../constant';
-import { SettingCard, SettingGrid, SettingNest, SettingRow } from '@/components/mcm/setting-card';
+import { Link } from 'react-router-dom';
+import {
+  SkillOption,
+  holdsQueueSkills,
+  readRouting,
+  useMembersSkills,
+  useSkillCategories,
+  useSkillsCatalogue,
+  widenLadder,
+} from '@/hooks/use-queue-skills';
+import {
+  QueueRouting,
+  RequirementRow,
+  effectiveRows,
+  legacyFromRows,
+  normaliseRows,
+} from '@/lib/queue-requirements';
+import RequirementRows from './requirement-rows';
+
+/* A queue saved before categories existed holds a flat list. Shown as rows
+   by category - one per category for "all of them", one row for "any one" -
+   until the admin touches it; only then is the list written back as rows. */
+const legacyAsRows = (routing: QueueRouting, skills: SkillOption[]): RequirementRow[] => {
+  if (routing.requirements?.length || !routing.required_skills.length) return [];
+  const byId = new Map(skills.map((s) => [s.value, s]));
+  const base = {
+    min_stars: routing.min_stars,
+    weight: 1,
+    relax: { after_seconds: 0, to: 'ladder' as const },
+  };
+  if (routing.evaluation === 'ANY') {
+    const first = byId.get(routing.required_skills[0]);
+    return [
+      {
+        ...base,
+        category_id: first?.category_id || '',
+        category_name: first?.category_name || '',
+        skill_ids: routing.required_skills,
+        match: 'ANY',
+      },
+    ];
+  }
+  const groups = new Map<string, RequirementRow>();
+  routing.required_skills.forEach((id) => {
+    const skill = byId.get(id);
+    const key = skill?.category_id || '';
+    const row = groups.get(key) || {
+      ...base,
+      category_id: key,
+      category_name: skill?.category_name || '',
+      skill_ids: [],
+      match: 'ALL' as const,
+    };
+    row.skill_ids.push(id);
+    groups.set(key, row);
+  });
+  return Array.from(groups.values());
+};
+import { SettingCard, SettingNest, SettingRow } from '@/components/mcm/setting-card';
 import RingPreview from '../ring-preview';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -44,6 +107,36 @@ const RingStrategy = () => {
   const companySettings = companyDefaults?.settings;
 
   const getRingTimeOption = (ringTime: any) => seedDeviceRingTime(ringTime, companySettings);
+
+  /* The rows this queue asks for, and who on it meets them. */
+  const routingRaw = watch('settings.routing') || {};
+  const routingKey = JSON.stringify(routingRaw);
+  const routing = useMemo(() => readRouting(routingRaw), [routingKey]);
+  const { options: skillOptions, isLoading: skillsLoading } = useSkillsCatalogue();
+  const { rows: categories } = useSkillCategories();
+  const { byUser: memberSkills } = useMembersSkills(
+    (watchMembers || []).map((m: any) => m?.user_uuid),
+  );
+  /* Rows on screen: the saved list, or the old flat list as rows until the
+     admin touches it. A row without a skill yet lives only in the draft. */
+  const savedRows = routing.requirements || [];
+  const legacyRows = useMemo(() => legacyAsRows(routing, skillOptions), [routing, skillOptions]);
+  const [draft, setDraft] = useState<RequirementRow[] | null>(null);
+  const rows: RequirementRow[] = draft ?? (savedRows.length ? savedRows : legacyRows);
+  const writeRows = (next: RequirementRow[]) => {
+    setDraft(next);
+    const kept = normaliseRows(next);
+    setValue('settings.routing.requirements', kept, { shouldDirty: true });
+    /* The flat fields too, for a picker that has not learnt rows yet. */
+    const legacy = legacyFromRows(kept);
+    setValue('settings.routing.required_skills', legacy.required_skills, { shouldDirty: true });
+    setValue('settings.routing.min_stars', legacy.min_stars, { shouldDirty: true });
+    setValue('settings.routing.evaluation', legacy.evaluation, { shouldDirty: true });
+  };
+  const requiredSkills: string[] = effectiveRows(routing).flatMap((row) => row.skill_ids);
+  const holders = (watchMembers || []).filter((m: any) =>
+    holdsQueueSkills(memberSkills[String(m?.user_uuid || '')], routing),
+  );
 
   const getRingStrategyLabel = () => {
     const index = CALL_DISTRIBUTION_DATA.findIndex(
@@ -149,19 +242,126 @@ const RingStrategy = () => {
         </div>
       </div>
 
-      {/* Widening the ring rather than failing.
-          Established systems ring the best people first and then add more after
-          a timer. Their version can also drop a skill requirement as it widens;
-          we have no skills, so the honest half is tiers. Everyone on tier 1
-          behaves exactly as the queue does today, which is the default. */}
+      {/* What this queue asks for, one row per category. People are rated on
+          their profile; the queue service offers only those who meet every
+          row, best fit first (or in the ring strategy's order, on "fair"). */}
+      <SettingCard
+        title="Skills this queue needs"
+        description="One row per category. A person must meet every row; inside a row, any one skill will do. Read each row as a sentence."
+      >
+        <SettingRow
+          label="Requirement"
+          description={
+            rows.length
+              ? 'Remove every row and everybody on the queue rings, as before.'
+              : 'Leave empty and everybody on the queue rings, as before.'
+          }
+          status={requiredSkills.length ? 'active' : 'off'}
+        >
+          <RequirementRows
+            rows={rows}
+            onChange={writeRows}
+            skills={skillOptions}
+            categories={categories}
+            loading={skillsLoading}
+            /* Both live on this screen but outside the rows, and both decide
+               whether part of a row does anything. See RequirementRowsProps. */
+            order={routing.order}
+            escalationEnabled={!!watch('settings.escalation.enabled')}
+          />
+        </SettingRow>
+
+        <SettingNest when={requiredSkills.length > 0}>
+          <SettingRow
+            label="Who rings first"
+            description={
+              ROUTING_ORDERS.find((o) => o.value === routing.order)?.description ||
+              ROUTING_ORDERS[0].description
+            }
+            control={
+              <div className="w-56">
+                <CustomSelect
+                  options={ROUTING_ORDERS}
+                  value={ROUTING_ORDERS.find((o) => o.value === routing.order) || ROUTING_ORDERS[0]}
+                  handleChange={(picked: any) =>
+                    setValue('settings.routing.order', picked?.value === 'fair' ? 'fair' : 'best_first', {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+              </div>
+            }
+          />
+
+          <p
+            className={`text-xs px-1 ${
+              holders.length ? 'text-gray-600' : 'text-amber-700'
+            }`}
+          >
+            {!watchMembers?.length
+              ? 'Add members on the Members tab to see who meets these rows.'
+              : holders.length
+                ? `${holders.length} of ${watchMembers.length} member${
+                    watchMembers.length === 1 ? '' : 's'
+                  } meet${holders.length === 1 ? 's' : ''} every row and will be offered calls.`
+                : 'Nobody on this queue meets these rows yet. A row nobody holds is set aside by the queue until somebody is rated. Rate people on their profile, or change the rows.'}{' '}
+            <Link to="/admin-settings/phone/skills" className="text-primary underline">
+              Manage skills
+            </Link>
+          </p>
+        </SettingNest>
+      </SettingCard>
+
+      {/* Priority between queues. Every waiting call asks the queue picker on
+          its own, so two queues sharing a person used to race for them; the
+          picker now keeps a free person for the higher-priority caller, or the
+          longer-waiting one at the same priority. */}
+      <SettingCard
+        title="Priority between queues"
+        description="When the same people answer for several queues, whose caller gets a free person first."
+      >
+        <SettingRow
+          label="This queue's priority"
+          description={
+            ROUTING_PRIORITIES.find((o) => o.value === (Number(routing?.priority) || 5))
+              ?.description || 'First come, first served across queues.'
+          }
+          status={(Number(routing?.priority) || 5) === 5 ? 'off' : 'active'}
+          control={
+            <div className="w-56">
+              <CustomSelect
+                options={ROUTING_PRIORITIES}
+                value={
+                  ROUTING_PRIORITIES.find((o) => o.value === (Number(routing?.priority) || 5)) ||
+                  ROUTING_PRIORITIES[1]
+                }
+                handleChange={(picked: any) =>
+                  setValue('settings.routing.priority', Number(picked?.value) || 5, {
+                    shouldDirty: true,
+                  })
+                }
+              />
+            </div>
+          }
+        />
+      </SettingCard>
+
+      {/* Widening the ring rather than failing. Each round adds the next tier
+          and, when the queue asks for skills, drops the skill bar one notch
+          (the queue's minimum, then one star, then none). The queue picker
+          does exactly this, in lockstep, every widen_after_seconds. */}
       <SettingCard
         title="Widening the ring"
         description="What happens when the first group of people does not pick up."
       >
         <SettingRow
           label="Widen the ring if nobody answers"
-          description="Start with tier 1, then bring in the next tier. People are added, never swapped out, so the first group keeps ringing."
-          status="coming-soon"
+          description={
+            requiredSkills.length
+              ? 'Each round adds the next tier. A row set to follow the ring drops one notch each round; the other rows keep their own clock. People are added, never swapped out.'
+              : 'Start with tier 1, then bring in the next tier. People are added, never swapped out, so the first group keeps ringing.'
+          }
+          status={watch('settings.escalation.enabled') ? 'active' : 'off'}
           control={
             <Switch
               checked={!!watch('settings.escalation.enabled')}
@@ -189,22 +389,31 @@ const RingStrategy = () => {
             }
           />
 
-          <SettingRow
-            label="Only ring people rated at least"
-            description="Set ratings on the Members tab. Leave this at 0 and everybody rings from the start; raise it and the first group is only your strongest, with everyone else added when it widens."
-            control={
-              <Input
-                type="number"
-                min={ESCALATION_LIMITS.minimum_rating.min}
-                max={ESCALATION_LIMITS.minimum_rating.max}
-                value={watch('settings.escalation.minimum_rating') ?? 0}
-                onChange={(event) => {
-                  const raw = Number(event.target.value) || 0;
-                  setValue('settings.escalation.minimum_rating', Math.min(100, Math.max(0, raw)));
-                }}
-              />
-            }
-          />
+          {requiredSkills.length > 0 && (
+            <ol className="text-xs text-gray-600 px-1 flex flex-col gap-0.5">
+              {widenLadder({
+                tiers: (watchMembers || []).map((m: any) => Number(m?.tier) || 1),
+                routing,
+                widenAfterSeconds: Number(watch('settings.escalation.widen_after_seconds')) || 30,
+              }).map((r) => (
+                <li key={r.round} className="tabular-nums">
+                  <span className="font-medium text-gray-800">Round {r.round}</span>
+                  {r.fromSeconds ? ` from ${r.fromSeconds}s` : ' at once'}:{' '}
+                  {r.tiersUpTo > 1 ? `tiers 1–${r.tiersUpTo}` : 'tier 1'},{' '}
+                  {effectiveRows(routing)
+                    .map(
+                      (row, i) =>
+                        `${row.category_name || 'skills'} ${
+                          r.bars[i] > 0
+                            ? `at ${r.bars[i] === 1 ? '1 star' : `${r.bars[i]}+ stars`}`
+                            : 'dropped'
+                        }`,
+                    )
+                    .join(' · ')}
+                </li>
+              ))}
+            </ol>
+          )}
         </SettingNest>
       </SettingCard>
 
@@ -215,17 +424,23 @@ const RingStrategy = () => {
           both reference platforms have it, we had nothing. It always falls back
           to normal routing when that person is not free: holding a caller for
           one person is a choice, never a side effect.
-          Service level gives reporting a target, so a supervisor sees a number
-          against a goal instead of a bare average.
-          Stored, not yet acted on. */}
+          Last agent is honoured by the queue picker (it looks the repeat caller
+          up and tries that person first, alone, then routes normally). The
+          answering target used to sit here too; it is its own card below,
+          because it changes how the queue is judged, not who rings. */}
       <SettingCard
-        title="Who to prefer, and the target"
-        description="Two choices a supervisor makes about the queue rather than about a single call."
+        title="Who to prefer"
+        description="A choice a supervisor makes about the queue rather than about a single call."
       >
         <SettingRow
           label="Send them back to the person they spoke to last"
           description="Familiar voice, no repeating themselves. If that person is busy or signed out the call routes normally - nobody waits for one agent unless you ask for it."
-          status="coming-soon"
+          status={
+            watch('settings.after_call.last_agent.mode') &&
+            watch('settings.after_call.last_agent.mode') !== 'DISABLED'
+              ? 'active'
+              : 'off'
+          }
           control={
             <CustomSelect
               options={LAST_AGENT_MODES}
@@ -262,63 +477,26 @@ const RingStrategy = () => {
             }
           />
         </SettingNest>
-
-        <SettingRow
-          label="Set a target for answering"
-          description="Reporting compares against this instead of showing a bare average, so a supervisor sees a number against a goal."
-          status="coming-soon"
-          control={
-            <Switch
-              checked={!!watch('settings.after_call.service_level.enabled')}
-              onCheckedChange={(checked: boolean) =>
-                setValue('settings.after_call.service_level.enabled', checked)
-              }
-            />
-          }
-        />
-
-        <SettingNest when={!!watch('settings.after_call.service_level.enabled')}>
-          <SettingGrid>
-            <Input
-              label="Answer this share of calls (%)"
-              type="number"
-              min={AFTER_CALL_LIMITS.percent.min}
-              max={AFTER_CALL_LIMITS.percent.max}
-              value={watch('settings.after_call.service_level.percent') ?? ''}
-              onChange={(event) =>
-                setValue('settings.after_call.service_level.percent', Number(event.target.value))
-              }
-            />
-            <Input
-              label="Within this many seconds"
-              type="number"
-              min={AFTER_CALL_LIMITS.seconds.min}
-              max={AFTER_CALL_LIMITS.seconds.max}
-              value={watch('settings.after_call.service_level.seconds') ?? ''}
-              onChange={(event) =>
-                setValue('settings.after_call.service_level.seconds', Number(event.target.value))
-              }
-            />
-          </SettingGrid>
-        </SettingNest>
       </SettingCard>
 
+      <ServiceLevelCard />
+
       {/* What happens while somebody waits.
-          Established systems all do three things here that we did not: offer a
-          callback so the caller can hang up and keep their place, tell them
-          where they are in the line, and repeat a message on a timer.
-          These controls store the choice. Nothing acts on them yet — the call
-          path has no queue-depth counter, no rolling handle time and no callback
-          scheduler — so each block says so rather than letting an admin believe
-          it is switched on. */}
+          The position announcement and the wait estimate are both real: the
+          switch says the position, and the queue service works the estimate
+          out from the people on duty and how long this queue's calls take.
+          The callback is real too: the switch makes the offer on the same
+          clock, takes the number, and the queue service keeps the caller's
+          place and rings them back (customer first, then an agent) through
+          the same path an outbound campaign call takes. */}
       <SettingCard
         title="While the caller waits"
         description="What somebody hears, and what they can do, between joining the line and being answered."
       >
         <SettingRow
           label="Tell them where they are in the line"
-          description="Callers who know they are third wait more willingly than callers who know nothing."
-          status="coming-soon"
+          description="Callers who know they are third wait more willingly than callers who know nothing. The switch reads this and says the position while they wait."
+          status="active"
           control={
             <Switch
               checked={!!watch('settings.waiting.announce_position')}
@@ -331,8 +509,8 @@ const RingStrategy = () => {
 
         <SettingRow
           label="Tell them roughly how long"
-          description="An estimate from how long recent calls have taken. Better a rough number than silence."
-          status="coming-soon"
+          description="The queue works it out from the people on duty and how long its own calls take, and says it every minute or so. Nothing is said while it cannot be worked out honestly."
+          status={watch('settings.waiting.announce_wait_time') ? 'active' : 'off'}
           control={
             <Switch
               checked={!!watch('settings.waiting.announce_wait_time')}
@@ -345,8 +523,8 @@ const RingStrategy = () => {
 
         <SettingRow
           label="Offer to call them back"
-          description="They hang up and keep their place. The queue rings them when their turn comes, so a long wait does not have to be spent holding."
-          status="coming-soon"
+          description="Instead of holding, a caller can press a key, confirm their number and hang up. They keep their place in the line; when their turn comes the queue rings them, and once they accept, an agent."
+          status={watch('settings.waiting.callback.enabled') ? 'active' : 'off'}
           control={
             <Switch
               checked={!!watch('settings.waiting.callback.enabled')}
@@ -359,8 +537,8 @@ const RingStrategy = () => {
 
         <SettingNest when={!!watch('settings.waiting.callback.enabled')}>
           <SettingRow
-            label="Offer it once this many are waiting"
-            description="Below this, callers are likely to be answered quickly enough that offering would be a nuisance."
+            label="Offer it when more than this many are ahead"
+            description="0 means the number of callers is not used."
             control={
               <Input
                 type="number"
@@ -368,17 +546,14 @@ const RingStrategy = () => {
                 max={WAITING_LIMITS.offer_after_callers.max}
                 value={watch('settings.waiting.callback.offer_after_callers') ?? ''}
                 onChange={(event) =>
-                  setValue(
-                    'settings.waiting.callback.offer_after_callers',
-                    Number(event.target.value),
-                  )
+                  setValue('settings.waiting.callback.offer_after_callers', Number(event.target.value))
                 }
               />
             }
           />
           <SettingRow
-            label="Or once the wait passes (minutes)"
-            description="Whichever happens first."
+            label="Or once the wait passes this many minutes"
+            description="Measured so far, or as estimated. 0 means the wait is not used. With both at 0 the offer is never made."
             control={
               <Input
                 type="number"
@@ -386,17 +561,43 @@ const RingStrategy = () => {
                 max={WAITING_LIMITS.offer_after_minutes.max}
                 value={watch('settings.waiting.callback.offer_after_minutes') ?? ''}
                 onChange={(event) =>
-                  setValue(
-                    'settings.waiting.callback.offer_after_minutes',
-                    Number(event.target.value),
-                  )
+                  setValue('settings.waiting.callback.offer_after_minutes', Number(event.target.value))
                 }
               />
             }
           />
           <SettingRow
-            label="Try this many times"
-            description="If nobody picks up when the queue rings them back."
+            label="Key to press"
+            description="What the caller presses to ask for the callback. Keep it clear of any key a menu on this queue already uses."
+            control={
+              <CustomSelect
+                options={CALLBACK_KEYS}
+                handleChange={(value: any) =>
+                  setValue('settings.waiting.callback.key', value?.value || '1')
+                }
+                value={
+                  CALLBACK_KEYS.find((key) => key.value === watch('settings.waiting.callback.key')) ||
+                  CALLBACK_KEYS[0]
+                }
+                menuPlacement="auto"
+              />
+            }
+          />
+          <SettingRow
+            label="Confirm the number first"
+            description="Read back the number they called from and ask before taking it. Off means it is taken as it is. A withheld number is always asked for."
+            control={
+              <Switch
+                checked={watch('settings.waiting.callback.confirm_number') !== false}
+                onCheckedChange={(checked: boolean) =>
+                  setValue('settings.waiting.callback.confirm_number', checked)
+                }
+              />
+            }
+          />
+          <SettingRow
+            label="Return call attempts"
+            description="How many times to ring them back before giving up. A missed attempt keeps their place."
             control={
               <Input
                 type="number"
@@ -410,8 +611,7 @@ const RingStrategy = () => {
             }
           />
           <SettingRow
-            label="Wait between tries (minutes)"
-            description="Long enough that a second ring is not an annoyance."
+            label="Minutes between attempts"
             control={
               <Input
                 type="number"
@@ -419,17 +619,14 @@ const RingStrategy = () => {
                 max={WAITING_LIMITS.retry_after_minutes.max}
                 value={watch('settings.waiting.callback.retry_after_minutes') ?? ''}
                 onChange={(event) =>
-                  setValue(
-                    'settings.waiting.callback.retry_after_minutes',
-                    Number(event.target.value),
-                  )
+                  setValue('settings.waiting.callback.retry_after_minutes', Number(event.target.value))
                 }
               />
             }
           />
           <SettingRow
-            label="Give up after (hours)"
-            description="Past this the callback is dropped rather than ringing somebody about a problem from yesterday."
+            label="Give up after this many hours"
+            description="A request nobody could reach by then is closed."
             control={
               <Input
                 type="number"
@@ -437,10 +634,7 @@ const RingStrategy = () => {
                 max={WAITING_LIMITS.expires_after_hours.max}
                 value={watch('settings.waiting.callback.expires_after_hours') ?? ''}
                 onChange={(event) =>
-                  setValue(
-                    'settings.waiting.callback.expires_after_hours',
-                    Number(event.target.value),
-                  )
+                  setValue('settings.waiting.callback.expires_after_hours', Number(event.target.value))
                 }
               />
             }

@@ -1,3 +1,4 @@
+import { Ban } from 'lucide-react';
 import { Icon } from '@/assets/icons/icon';
 import moment from 'moment';
 
@@ -72,6 +73,8 @@ export const CALL_DIRECTIONS: any = {
   Missed: <Icon name="MissedCallStrokeIcon" className="w-4.5 h-4.5 text-red-500" />,
   Voicemail: <Icon name="VoicemailLineIcon" className="w-5 h-5 text-grey-500" />,
   Announcement: <Icon name="AnnouncementIcon" className="w-4 h-4 text-grey-500 -scale-x-100" />,
+  /* A caller stopped by Directory > Blocked. Filed apart from missed calls. */
+  Blocked: <Ban className="w-4.5 h-4.5 text-red-500" />,
 };
 export const FORWARD_ICONS: any = {
   EXTENSION: <Icon name="Grid" className="w-4 h-4 text-grey-500" />,

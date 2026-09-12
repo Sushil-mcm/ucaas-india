@@ -11,6 +11,7 @@ import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
 import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 
 const textAreaClass =
   'w-full resize-none rounded-xl border border-gray-300 dark:border-border bg-white dark:bg-card px-3 py-2.5 text-sm text-gray-700 dark:text-foreground shadow-sm outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-muted-foreground hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10';
@@ -74,6 +75,7 @@ const CaptainDocuments = () => {
   const [modalError, setModalError] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
@@ -173,7 +175,6 @@ const CaptainDocuments = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this document? This cannot be undone.')) return;
     try {
       const res = await captainFetch(`${CAPTAIN_API_BASE}/documents/${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete document');
@@ -451,7 +452,7 @@ const CaptainDocuments = () => {
                       <Pencil className="size-3.5" />
                       Edit content
                     </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive" onClick={() => handleDelete(doc.id)}>
+                    <DropdownMenuItem variant="destructive" onClick={() => setPendingDeleteId(doc.id)}>
                       <Trash2 className="size-3.5" />
                       Delete
                     </DropdownMenuItem>
@@ -635,6 +636,13 @@ const CaptainDocuments = () => {
         selectedIds={selectedIds}
         type="document"
         onConfirm={handleBulkDelete}
+      />
+
+      <DeleteConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+        itemLabel="document"
+        onConfirm={() => handleDelete(pendingDeleteId!)}
       />
     </div>
   );

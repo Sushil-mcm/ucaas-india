@@ -1,4 +1,6 @@
 import type { DialpadSession } from '@/context/dialpad-context';
+import { isServerDialed } from '@/lib/campaign-dial-mode';
+import { callDisplayName } from '@/lib/campaign-call-display';
 
 export const getMonitoringCallLabel = (numberValue: string): string | null => {
   const normalizedNumber = String(numberValue || '')
@@ -108,14 +110,24 @@ export const getDialpadSessionDisplayInfo = (session: DialpadSession | null | un
   )
     .trim()
     .toUpperCase();
+  /* A browser-dialled preview call carries the campaign only in the headers
+     the dialer itself added (X-CampaignUuid and friends): no metadata fetch
+     has run yet when the card first draws, and there is no live-call row for
+     it either. Read the header too, or a preview call is not a campaign call
+     until later - which is exactly when the wrong name was on the card. */
+  const campaignIdFromHeader = getSessionHeaderFirstValue(session, 'x-campaignuuid');
   const isCampaignCall = Boolean(
-    campaignIdFromSession || liveForwardType === 'CAMPAIGN' || liveCampaignType,
+    campaignIdFromSession || campaignIdFromHeader || liveForwardType === 'CAMPAIGN' || liveCampaignType,
   );
-  const isPredictiveCampaignCall = isCampaignCall && campaignDialMethod.includes('PREDICTIVE');
-  const predictiveHeaderContactName = decodeHeaderValue(
-    getSessionHeaderFirstValue(session, 'x-contactname'),
-    true,
-  );
+  const isPredictiveCampaignCall = isCampaignCall && isServerDialed(campaignDialMethod);
+  /* The lead's name as the campaign offered it. The dialer writes it on the
+     INVITE for a call it places itself, and the switch echoes it back on a
+     call it placed for the agent, so the same header serves both. The live
+     call row (contact_name) is the fallback for a server-dialled call whose
+     headers were not carried through. */
+  const leadName =
+    decodeHeaderValue(getSessionHeaderFirstValue(session, 'x-contactname'), true) ||
+    (isCampaignCall ? String(session?.liveCallData?.contact_name || '').trim() : '');
   const predictiveHeaderContactNumber = decodeHeaderValue(
     getSessionHeaderFirstValue(session, 'x-contactnumber'),
   );
@@ -135,16 +147,23 @@ export const getDialpadSessionDisplayInfo = (session: DialpadSession | null | un
   const mergedName = `${firstName || ''} ${lastName || ''}`.trim();
   const directName =
     typeof sessionContactInfo?.name === 'string' ? sessionContactInfo.name.trim() : '';
-  const contactName = isConferenceSession
-    ? 'Conference Call'
-    : monitoringCallLabel ||
-      (isPredictiveCampaignCall ? predictiveHeaderContactName : '') ||
-      mergedName ||
-      directName ||
-      'Unknown Contact';
+  /* On a campaign call the lead comes first and the saved contact's name is
+     a second line when it differs (src/lib/campaign-call-display.ts). The
+     lead name used to count only on a server-dialled call, so a preview call
+     showed whichever contact the number happened to match - "Plumber Test"
+     on the card while the lead card beside it said "Loopback Test IVR". */
+  const named = callDisplayName({
+    isCampaignCall,
+    leadName,
+    savedContactName: mergedName || directName,
+  });
+  const contactName = isConferenceSession ? 'Conference Call' : monitoringCallLabel || named.primary;
+  const savedContactName = isConferenceSession || monitoringCallLabel ? '' : named.secondary;
 
   return {
     contactName,
+    /* The contact's saved name when the card is showing a lead's name instead. */
+    savedContactName,
     contactNumber,
     isConferenceSession,
     isMonitoringCall,

@@ -1,4 +1,5 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
+import { joinMenuTarget, splitMenuTarget } from '@/lib/menu-target';
 import { useNavigate } from 'react-router-dom';
 import { IVR_PATH, IVR_DEFAULT_TAB, ivrSlugFromTab, ivrTabFromSlug } from '../ivr-tabs';
 import { Button } from '@/components/ui/button';
@@ -15,8 +16,9 @@ import {
 import IvrBasicInfo from './basic-info';
 import { upsertIVRSchemaValidation } from '../schema';
 import IvrKeyPresses from './key-presses';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { upsertIVR } from '@/services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ivrList, upsertIVR } from '@/services/api';
+import { checkIvrMenu, hasBlockingIvrFinding } from '@/lib/ivr-menu-checks';
 import { getHolidaysFormVal, getHolidaysPayload, getObjectLength, handleAlert } from '@/lib/utils';
 import { CUSTOM_HOURS_SCHEDULE_OPTIONS } from '@/pages/admin-settings/numbers/set-number-forwarding/constants';
 import CommonSettingPermission from '@/components/common-settings';
@@ -103,6 +105,33 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
     formState: { errors },
   } = form;
 
+  /* The same menu checks the Key Presses step shows as advice, run here too so
+     an error-level finding (a key pointing at a deleted target, a loop, a
+     duplicate digit) blocks Submit instead of only being coloured red. The
+     query key matches useIvrMenuChecks, so the menu list is fetched once. */
+  const ivrActionsWatch = watch('ivrActions');
+  const { data: menusForChecks } = useQuery({
+    queryKey: ['ivrMenusForChecks'],
+    queryFn: () => ivrList({ page: 1, limit: 500 } as any),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const hasBlockingIvr = useMemo(() => {
+    const rows =
+      (menusForChecks as any)?.data?.data?.result?.rows ??
+      (menusForChecks as any)?.data?.data?.rows ??
+      [];
+    const findings = checkIvrMenu({
+      menu: {
+        uuid: initialData?.uuid as string | undefined,
+        name: initialData?.name as string | undefined,
+        ivrActions: ivrActionsWatch,
+      },
+      allMenus: Array.isArray(rows) && rows.length ? rows : undefined,
+    });
+    return hasBlockingIvrFinding(findings);
+  }, [menusForChecks, ivrActionsWatch, initialData]);
+
   /** Going backward is always allowed. */
 
   const handleTabChange = async (nextTab: string) => {
@@ -164,13 +193,22 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
   const { mutate: mutateUpsertIVR, isPending: isPendingUpsertIVR } = useMutation({
     mutationFn: upsertIVR,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(['ivrList']);
+      /* The list is cached under 'fetchIvrList' (TableManager fetcherKey), not
+         'ivrList' — the old key matched nothing, so the list never refreshed. */
+      queryClient.invalidateQueries({ queryKey: ['fetchIvrList'] });
       handleAlert({ text: data?.data?.message || 'IVR saved successfully!', type: 'success' });
       setDrawerState(false);
     },
   });
 
   const onSubmit = () => {
+    if (hasBlockingIvr) {
+      handleAlert({
+        text: 'A key press points at something that no longer exists, or the menu loops. Fix the highlighted key presses before saving.',
+        type: 'error',
+      });
+      return;
+    }
     const {
       extension = '',
       name = '',
@@ -283,12 +321,18 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
       language: language?.value,
       site: JSON.stringify(site),
       settings: JSON.stringify(nextSettings),
-      ivr_option: ivrActions?.map((item: any) => ({
-        key: item?.key?.value,
-        type: item?.forwardType?.value,
-        value: item?.forwardValue?.value,
-        label: item?.forwardValue?.label,
-      })),
+      ivr_option: ivrActions?.map((item: any) => {
+        /* A queue key may also say what the caller needs; the skill rides
+           inside the value, see src/lib/menu-target.ts. */
+        const skill = item?.forwardType?.value === 'QUEUE' ? item?.skill?.value || '' : '';
+        return {
+          key: item?.key?.value,
+          type: item?.forwardType?.value,
+          value: joinMenuTarget(item?.forwardValue?.value, skill),
+          label: item?.forwardValue?.label,
+          ...(skill ? { skill, skill_label: item?.skill?.label || '' } : {}),
+        };
+      }),
 
       generic_keys: JSON.stringify({
         enabled: generic?.enabled,
@@ -324,11 +368,24 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
 
   const getGreetingConfig = (
     key: string,
-    greetings: Record<string, { enabled?: boolean; value?: { label?: string; value?: string } }>,
+    greetings: Record<
+      string,
+      {
+        enabled?: boolean;
+        value?: { label?: string; value?: string; uuid?: string; is_default?: boolean | number };
+      }
+    >,
   ) => ({
     enabled: greetings?.[key]?.enabled,
     label: greetings?.[key]?.value?.label,
     value: greetings?.[key]?.value?.value,
+    /* Without these two, a stock recording plays fine right after picking it
+       and says "Unable to load this recording." the moment the page reloads -
+       the player only knows to fetch from the shared default path (not this
+       menu's own folder, where a stock file does not exist) when it can see
+       is_default or a recognised uuid. See greeting-select.tsx's own note. */
+    uuid: greetings?.[key]?.value?.uuid,
+    is_default: greetings?.[key]?.value?.is_default,
   });
 
   useEffect(() => {
@@ -382,7 +439,10 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
     const ivrOptionValues = ivrOptionsData?.map((item: any) => ({
       key: { label: item?.key?.toString() || '', value: item?.key ?? '' },
       forwardType: { label: '', value: item?.type || '' },
-      forwardValue: { label: item?.label, value: item?.value || '' },
+      forwardValue: { label: item?.label, value: splitMenuTarget(item?.value).target },
+      skill: splitMenuTarget(item?.value).skill
+        ? { label: item?.skill_label || '', value: splitMenuTarget(item?.value).skill }
+        : null,
     }));
 
     const genericValues = {
@@ -476,6 +536,8 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
         value: {
           label: media?.welcome?.label || 'Select',
           value: media?.welcome?.value || '',
+          uuid: media?.welcome?.uuid,
+          is_default: media?.welcome?.is_default,
         },
       },
       menu: {
@@ -483,6 +545,8 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
         value: {
           label: media?.menu?.label || 'Select',
           value: media?.menu?.value || '',
+          uuid: media?.menu?.uuid,
+          is_default: media?.menu?.is_default,
         },
       },
       invalid: {
@@ -490,6 +554,8 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
         value: {
           label: media?.invalid?.label || 'Select',
           value: media?.invalid?.value || '',
+          uuid: media?.invalid?.uuid,
+          is_default: media?.invalid?.is_default,
         },
       },
     });
@@ -517,7 +583,8 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
                   value={value}
                 >
                   {value}{' '}
-                  {(errors as any)[ERROR_TYPES[value]] && (
+                  {((errors as any)[ERROR_TYPES[value]] ||
+                    (value === IVR_TAB_CONSTANT.KEY_PRESSES && hasBlockingIvr)) && (
                     <div className="flex justify-end">
                       <ErrorTooltip text={IVR_ERROR_TYPES_MESSAGES[value]} />
                     </div>
@@ -574,7 +641,7 @@ const AddEditIvrMenu: FC<AddEditIvrProps> = ({ setDrawerState, initialData = nul
                 <Button
                   variant={'outline'}
                   type="submit"
-                  disabled={isPendingUpsertIVR}
+                  disabled={isPendingUpsertIVR || hasBlockingIvr}
                   className="min-w-0 flex-1 px-3 sm:flex-none"
                 >
                   {isPendingUpsertIVR ? 'Submiting...' : 'Submit'}

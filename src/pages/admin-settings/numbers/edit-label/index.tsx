@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { handleAlert } from '@/lib/utils';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
-import { callForwarding } from '@/services/api';
+import { callForwarding, updateDidLabel } from '@/services/api';
 import {
   LABEL_MAX_LENGTH,
   buildLabelPatch,
@@ -47,8 +47,25 @@ const EditNumberLabel: FC<EditNumberLabelProps> = ({ did, open, onClose }) => {
   const normalised = normaliseLabel(value);
   const unchanged = normalised === labelOf(did);
 
+  /* Save the label to the number's own column first. That is the durable home
+     — it survives Remove forwarding and Release, which both wipe the
+     call-handling blob. If the column route is not bound yet the API answers
+     404, and we fall back to writing the name into the blob exactly as before,
+     so a label is never lost while the backend catches up. Any other error is
+     a real failure and is surfaced. */
   const { mutate, isPending } = useMutation({
-    mutationFn: callForwarding,
+    mutationFn: async () => {
+      const durableName = normaliseLabel(value);
+      try {
+        return await updateDidLabel({ uuid: String(did.uuid), did_name: durableName });
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          const patch = buildLabelPatch(did, value);
+          if (patch) return await callForwarding(patch);
+        }
+        throw error;
+      }
+    },
     onSuccess: () => {
       invalidateNumberLists(queryClient);
       handleAlert({
@@ -69,9 +86,11 @@ const EditNumberLabel: FC<EditNumberLabelProps> = ({ did, open, onClose }) => {
   });
 
   const handleSave = () => {
-    const patch = buildLabelPatch(did, value);
-    if (!patch) return;
-    mutate(patch);
+    /* Guard on the same conditions the blob write needs, so the button never
+       fires a save that both paths would reject. The mutation reads did/value
+       from closure and picks the durable column route first. */
+    if (!canEditLabel(did).ok || !checkLabel(value).ok) return;
+    mutate();
   };
 
   return (

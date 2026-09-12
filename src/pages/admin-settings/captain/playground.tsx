@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Send, Bot, User, UserCheck, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormattedMessage } from '@/components/captain/FormattedMessage';
 import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import PlaygroundTemplate, { type PendingTemplate } from './widget/PlaygroundTemplate';
@@ -16,67 +17,7 @@ type Message = {
   template?: PendingTemplate;
 };
 
-const FormattedMessage = ({ content, isUser }: { content: string; isUser: boolean }) => {
-  if (isUser) {
-    return <span>{content}</span>;
-  }
 
-  const linkRegex = /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<]+)/g;
-  const parts: (string | React.ReactNode)[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = linkRegex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(content.substring(lastIndex, match.index));
-    }
-
-    const matchedStr = match[0];
-    if (matchedStr.startsWith('[')) {
-      const label = match[2];
-      const url = match[3];
-      parts.push(
-        <a
-          key={match.index}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 break-all transition-colors"
-        >
-          {label}
-        </a>
-      );
-    } else {
-      const url = matchedStr.replace(/[.,;!?)]+$/, '');
-      parts.push(
-        <a
-          key={match.index}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 break-all transition-colors"
-        >
-          {url}
-        </a>
-      );
-      const trailing = matchedStr.slice(url.length);
-      if (trailing) {
-        parts.push(trailing);
-      }
-    }
-    lastIndex = match.index + matchedStr.length;
-  }
-
-  if (lastIndex < content.length) {
-    parts.push(content.substring(lastIndex));
-  }
-
-  return (
-    <div className="leading-relaxed whitespace-pre-wrap">
-      {parts.length > 0 ? parts : content}
-    </div>
-  );
-};
 
 const CaptainPlayground = () => {
   const { assistants, selectedId: assistantId, selectAssistant } = useSelectedAssistant();

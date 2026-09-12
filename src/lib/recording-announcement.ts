@@ -184,7 +184,7 @@ export const validateRecordingAnnouncement = (text: string): RecordingAnnounceme
       valid: true,
       missing,
       reason:
-        'This wording mentions both that the call may be recorded or transcribed and that a third party may be involved, which is what established systems asks for. This is an automatic wording check only, so please also make sure it matches the rules where you and your callers are.',
+        'This wording mentions both that the call may be recorded or transcribed and that a third party may be involved, which is what a compliant notice needs. This is an automatic wording check only, so please also make sure it matches the rules where you and your callers are.',
     };
   }
 
@@ -193,7 +193,7 @@ export const validateRecordingAnnouncement = (text: string): RecordingAnnounceme
     ? 'This wording does not say that the call may be recorded or transcribed, and it does not say that another company may be doing it.'
     : missing[0] === 'recording'
       ? 'This wording mentions a third party, but it never tells callers that the call may be recorded, transcribed or monitored.'
-      : 'This wording tells callers the call may be recorded, but it does not say that another company — a third party working for us — may be doing the recording. established systems turns down announcements that stop there, which is why "This call may be recorded for quality purposes" is not enough on its own.';
+      : 'This wording tells callers the call may be recorded, but it does not say that another company — a third party working for us — may be doing the recording. Reviewers turn down announcements that stop there, which is why "This call may be recorded for quality purposes" is not enough on its own.';
 
   return {
     valid: false,

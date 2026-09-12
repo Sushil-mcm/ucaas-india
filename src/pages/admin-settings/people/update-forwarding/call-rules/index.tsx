@@ -1,4 +1,4 @@
-import { ChevronIcon, LandlineOutlined, MobileOutlined, Monitor } from '@/assets/icons';
+import { ChevronIcon, LandlineOutlined, MobileOutlined, Monitor, PhoneLine } from '@/assets/icons';
 import CustomSelect from '@/components/custom/custom-select';
 import ForwardingActions from '@/components/custom/forwarding-actions';
 import { Switch } from '@/components/ui/switch';
@@ -9,16 +9,19 @@ import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import { FC, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import DeviceOptionsList from './device-options';
+import { deskPhoneStateLabel, outsideNumberDigits, ringsToday, rowRings } from '@/lib/desk-phone-device-rows';
 import AddCoworkerModal from './add-coworker';
 import { useLocation } from 'react-router-dom';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { DEVICE_TYPE_NAME_CONST } from '../../../constants';
+import { describeBusyAction, readBusyActionForm } from '@/lib/busy-action';
 
 const collapseInitialState = {
   forwardCall: false,
   incomingCall: false,
   outgoingCall: false,
   failureAction: false,
+  busyAction: false,
 };
 
 const returnTrimValue = (val: string) => val?.trim();
@@ -125,9 +128,11 @@ const CallRules: FC<CallRulesProps> = ({
       };
     });
 
-    // Step 2: Preserve device options like web/mobile/pstn if they existed earlier
-    ['web', 'mobile', 'pstn'].forEach((key) => {
-      if (deviceOptions[key] && !updatedOptionsMap[key]) {
+    // Step 2: Preserve the person's own device rows (web, mobile, pstn and
+    // every desk phone) if they existed earlier; only colleague rows are rebuilt.
+    Object.keys(deviceOptions).forEach((key) => {
+      const own = (deviceOptions[key] as any)?.option?.value === user_extension;
+      if (own && !updatedOptionsMap[key]) {
         updatedOptionsMap[key] = deviceOptions[key];
       }
     });
@@ -195,8 +200,11 @@ const CallRules: FC<CallRulesProps> = ({
   const forwardingAll = Boolean(summaryRules?.forwardCall?.enabled);
   const dndOn = Boolean(summaryRules?.doNotDisturb);
   const activeDevices = Object.values(summaryRules?.incomingCall?.deviceOptions || {}).filter(
-    (device: any) => device?.status,
+    (device: any) => rowRings(device),
   ).length;
+  const outsideNumberOn = Object.values(summaryRules?.incomingCall?.deviceOptions || {}).some(
+    (device: any) => String(device?.type) === 'pstn' && rowRings(device),
+  );
 
   /* This summary used to describe what happens to a caller: devices ringing,
      callers going straight to voicemail, rules being skipped. None of it
@@ -208,18 +216,22 @@ const CallRules: FC<CallRulesProps> = ({
      admin has chosen is still worth reading back to them.
      Restore the "what a caller gets" wording when the rules are honoured. */
   const savedIntent = dndOn
-    ? `Do Not Disturb is on, and your fallback is set to ${describeTarget(summaryRules?.failureAction)}.`
+    ? `Do Not Disturb is on; falls back to ${describeTarget(summaryRules?.failureAction)}.`
     : forwardingAll
-      ? `Every call is set to go to ${describeTarget(summaryRules?.forwardCall)}.`
+      ? `All calls forward to ${describeTarget(summaryRules?.forwardCall)}.`
       : activeDevices
-        ? `${activeDevices} ${activeDevices === 1 ? 'device is' : 'devices are'} switched on, with ${describeTarget(summaryRules?.failureAction)} as the fallback.`
-        : `No device is switched on, and your fallback is ${describeTarget(summaryRules?.failureAction)}.`;
+        ? `${activeDevices} ${activeDevices === 1 ? 'device rings' : 'devices ring'}; fallback ${describeTarget(summaryRules?.failureAction)}.`
+        : `No device rings; fallback ${describeTarget(summaryRules?.failureAction)}.`;
 
-  const summary = `${savedIntent} This is saved, but the call path does not read it yet — your devices ring as normal whatever is set here.`;
+  /* Since 8 September 2026 the switch reads the device list on calls straight
+     to this person: each switch, the drag order, "in order" versus "all at
+     once" and each ring time. Mobile and outside-number rows are still saved
+     only; the switch dials the desktop app and the desk phones. */
+  const summary = `${savedIntent} Order and ring times are live.${
+    outsideNumberOn ? ' Outside number rings too (press 1).' : ''
+  } On a call: ${describeBusyAction(summaryRules?.busyAction)}.`;
 
-  /* Always 'warn': what is on screen is not in force, whichever rule is chosen,
-     and an 'ok' tone would suggest one of these states is working. */
-  const summaryTone = 'warn';
+  const summaryTone = dndOn || forwardingAll || !activeDevices ? 'warn' : 'ok';
 
   return (
     <div className={`flex flex-col gap-4 overflow-y-auto pr-1 pt-2 ${customClass}`}>
@@ -248,6 +260,15 @@ const CallRules: FC<CallRulesProps> = ({
             describes an intention, not what happens to a caller today. Saying
             "checked first" without this reads as a working precedence order.
             Delete this in the same change that makes the rules real. */}
+        <p className="mcm-setrow-note is-info mb-3">
+          Live for calls straight to this person: forward all calls, do not disturb, which desktop
+          and desk phones ring, in what order and for how long (since 8 September 2026), and what
+          happens after ringing when it is voicemail, an extension or hang up. An outside number, a
+          queue or a menu after the ring is saved but not followed yet, and ringing a mobile app
+          is not offered yet. An outside number rings with the other devices once a number is
+          saved on its row. Calls through a queue or a menu follow that queue's or menu's own
+          rules.
+        </p>
         <div className="mcm-rule">
           <span className="block">
             <div className="mcm-rule-h">
@@ -332,6 +353,68 @@ const CallRules: FC<CallRulesProps> = ({
             </div>
           </span>
         </div> */}
+        {/* Call waiting (10 Sep 2026). Off: a second call rings this person's
+            devices as a second call, the way every device here always did. On:
+            the switch checks its live channels when a call reaches this person
+            and, if they are already talking on any device, sends it to the
+            chosen destination instead (rule 3.5 in person_call_plan). Do not
+            disturb and Forward All Calls are judged before it; the after-ring
+            rule below is not involved, because the call never rings. */}
+        <div className="mcm-rule">
+          <span className="block">
+            <div className="mcm-rule-h">
+              <div className="mcm-rule-t">
+                <span className="mcm-dot acc" />
+                <label htmlFor="busyAction" className="cursor-pointer truncate">
+                  When Already On A Call
+                </label>
+                <span className="mcm-rule-rank">
+                  {watch('callRules.busyAction.enabled') ? 'Second calls sent away' : 'Call waiting'}
+                </span>
+                {(errors.callRules as any)?.busyAction?.value?.value?.message && (
+                  <ErrorTooltip
+                    text={(errors.callRules as any)?.busyAction?.value?.value?.message}
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="busyAction"
+                  className="cursor-pointer"
+                  onCheckedChange={(checked) => {
+                    setValue(
+                      'callRules.busyAction',
+                      { ...readBusyActionForm(undefined, user_extension), enabled: checked },
+                      { shouldValidate: true },
+                    );
+                  }}
+                  checked={Boolean(watch('callRules.busyAction.enabled'))}
+                />
+              </div>
+            </div>
+          </span>
+          {watch('callRules.busyAction.enabled') ? (
+            <div className="mcm-rule-b">
+              <ForwardingActions
+                setValue={setValue}
+                watch={watch}
+                errors={errors}
+                forwardState="callRules.busyAction"
+                description="Where a call goes when it reaches you while you are already talking on any of your devices. Switch this off to get call waiting instead: the second call rings you, and answering it puts the first on hold."
+                unsupportedTypes={['DEPARTMENT', 'MESSAGE']}
+                isUser={true}
+                SITE_UUID={watch('basic.site.value')}
+                selectedUserExt={watch('basic.extension')}
+              />
+            </div>
+          ) : (
+            <p className="px-3 pb-3 text-xs text-gray-600">
+              Call waiting is on: a call that reaches you while you are on another rings you as a
+              second call. Answering it puts your current call on hold; you can switch between
+              the two.
+            </p>
+          )}
+        </div>
         <div className="mcm-rule">
           <span className="block">
             <div
@@ -357,7 +440,7 @@ const CallRules: FC<CallRulesProps> = ({
                     take their route from the number rather than from the person.
                     So nothing is bypassed, because nothing is applied.
                     Restore the three labels when the rules are honoured. */}
-                <span className="mcm-rule-rank off">Saved, not applied yet</span>
+                <span className="mcm-rule-rank">Live for direct calls</span>
                 {(errors.callRules as any)?.failureAction?.value?.value?.message && (
                   <ErrorTooltip
                     text={(errors.callRules as any)?.failureAction?.value?.value?.message}
@@ -428,7 +511,9 @@ const CallRules: FC<CallRulesProps> = ({
                       </div>
                       <div className="border-b-0 border-[#EEE7DD]">
                         {incomingCall?.deviceOptions &&
-                          Object.keys(incomingCall?.deviceOptions)?.map((objKey) => {
+                          Object.keys(incomingCall?.deviceOptions)
+                            ?.filter((objKey) => ringsToday(incomingCall?.deviceOptions?.[objKey]))
+                            .map((objKey) => {
                             return (
                               <div
                                 key={objKey}
@@ -480,18 +565,76 @@ const CallRules: FC<CallRulesProps> = ({
                                         ) : incomingCall?.deviceOptions?.[objKey].type ===
                                           'pstn' ? (
                                           <LandlineOutlined className="w-5 h-5" />
+                                        ) : incomingCall?.deviceOptions?.[objKey].type ===
+                                          'desk' ? (
+                                          <PhoneLine className="w-5 h-5" />
                                         ) : (
                                           <Monitor className="w-5 h-5" />
                                         )}
                                       </span>
-                                      <span>
-                                        {
-                                          DEVICE_TYPE_NAME_CONST[
-                                            incomingCall?.deviceOptions?.[objKey]
-                                              .type as keyof typeof DEVICE_TYPE_NAME_CONST
-                                          ]
-                                        }
-                                      </span>
+                                      {incomingCall?.deviceOptions?.[objKey].type === 'desk' ? (
+                                        <span className="flex flex-col">
+                                          <span className="flex items-center gap-2">
+                                            {incomingCall?.deviceOptions?.[objKey]?.option?.label ||
+                                              DEVICE_TYPE_NAME_CONST.desk}
+                                            <span
+                                              className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
+                                                deskPhoneStateLabel(incomingCall?.deviceOptions?.[objKey]?.state).live
+                                                  ? 'bg-green-50 text-green-700'
+                                                  : 'bg-amber-50 text-amber-800'
+                                              }`}
+                                            >
+                                              {deskPhoneStateLabel(incomingCall?.deviceOptions?.[objKey]?.state).text}
+                                            </span>
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            {incomingCall?.deviceOptions?.[objKey]?.detail ||
+                                              DEVICE_TYPE_NAME_CONST.desk}
+                                          </span>
+                                        </span>
+                                      ) : incomingCall?.deviceOptions?.[objKey].type === 'pstn' ? (
+                                        <span className="flex flex-col gap-1">
+                                          <span>{DEVICE_TYPE_NAME_CONST.pstn}</span>
+                                          <input
+                                            type="tel"
+                                            className="w-56 rounded border border-gray-300 px-2 py-1 text-sm"
+                                            placeholder={
+                                              incomingCall?.deviceOptions?.[objKey]?.suggested
+                                                ? `e.g. ${incomingCall?.deviceOptions?.[objKey]?.suggested}`
+                                                : 'Mobile or other number'
+                                            }
+                                            value={
+                                              watch(
+                                                `callRules.incomingCall.deviceOptions.${objKey}.number`,
+                                              ) || ''
+                                            }
+                                            onChange={(e) =>
+                                              setValue(
+                                                `callRules.incomingCall.deviceOptions.${objKey}.number`,
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                          <span className="text-xs text-gray-500">
+                                            {outsideNumberDigits(
+                                              watch(
+                                                `callRules.incomingCall.deviceOptions.${objKey}.number`,
+                                              ),
+                                            )
+                                              ? 'Rings with the other devices; press 1 on that phone to take the call.'
+                                              : 'Add a number to ring it. Until then this row does nothing.'}
+                                          </span>
+                                        </span>
+                                      ) : (
+                                        <span>
+                                          {
+                                            DEVICE_TYPE_NAME_CONST[
+                                              incomingCall?.deviceOptions?.[objKey]
+                                                .type as keyof typeof DEVICE_TYPE_NAME_CONST
+                                            ]
+                                          }
+                                        </span>
+                                      )}
                                     </div>
                                   ) : (
                                     <span className="flex flex-col text-sm">
@@ -602,7 +745,15 @@ const CallRules: FC<CallRulesProps> = ({
                       errors={errors}
                       forwardState="callRules.failureAction"
                       label="If Busy / Unanswered / Unreachable"
-                      description="The last stop for a call: you rejected it, nobody picked up, or your devices were offline. Leave this on voicemail — if it is unset the switch simply ends the call and the caller hears silence."
+                      description="The last stop for a call: you rejected it, nobody picked up, or your devices were offline. Leave this on voicemail — if it is unset the switch simply ends the call and the caller hears silence. An outside number, a queue or a menu can be chosen before the ring (Forward All Calls) but is not followed after one."
+                      /* Verified in the call switch: only voicemail, an extension
+                         and hang-up can run once the ring has already failed. A
+                         queue or a menu needs an answer-and-script sequence of its
+                         own and an outside number needs a carrier lookup, neither
+                         of which can start from inside the extension that has just
+                         finished ringing. The other three saved perfectly and did
+                         nothing, with nothing on this screen saying so. */
+                      unsupportedTypes={['PHONE', 'QUEUE', 'IVR', 'DEPARTMENT', 'MESSAGE']}
                       isUser={true}
                       SITE_UUID={watch('basic.site.value')}
                       selectedUserExt={watch('basic.extension')}

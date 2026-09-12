@@ -39,6 +39,10 @@
 
   --live: #0d9488;
   --live-wash: #dcf5f1;
+  /* "available to do" green, distinct from --live ("a call is up") — the leg
+     actions need a fourth hue that does not claim a call is connected. */
+  --ok: #15803d;
+  --ok-wash: #e3f5e9;
   --warn: #c2670a;
   --warn-wash: #fdf0dc;
   --crit: #d32f2f;
@@ -82,6 +86,8 @@
   --ai-edge: #3c2d66;
   --live: #2dd4bf;
   --live-wash: #0f2f2c;
+  --ok: #4ade80;
+  --ok-wash: #12301d;
   --warn: #f0a24b;
   --warn-wash: #33240f;
   --crit: #f87171;
@@ -132,7 +138,6 @@
 .mcm-console :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 .mcm-console ::-webkit-scrollbar {
   width: 9px;
@@ -666,6 +671,28 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* A flex item only honours `overflow: hidden` once it is allowed to shrink
+     below its content. Without this the title pushed the row instead of
+     ellipsising. */
+  min-width: 0;
+}
+
+/* An unsaved number stands in for the name here, and a tabular monospace
+   number is far wider than a person's name at the same size: `+91 83569 98852`
+   plus its flag ran past the width left by the avatar, the timestamp and the
+   call button, and lost its last digits. Only the number is stepped down --
+   real names keep the 13px they were designed at. */
+.mcm-console .cr-name .num {
+  font-size: 11.5px;
+  letter-spacing: -0.03em;
+  /* NumberWithFlag wraps the flag and digits in an `inline-flex` span, and an
+     inline-flex box neither shrinks nor ellipsises -- it kept its full
+     intrinsic width, overflowed the title's `overflow: hidden`, and was cut
+     mid-digit ("+91 83569 9885"). Capping it at the title's width means it can
+     never reach past the row, whatever the number's length. */
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 .mcm-console .cr-time {
   margin-left: auto;
@@ -1119,7 +1146,7 @@
 .mcm-console .pscroll {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
+  min-height: 120px;
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -1812,16 +1839,18 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 200px;
+  max-height: 160px;
   overflow-y: auto;
+  scrollbar-width: none;
+}
+.mcm-console .dres::-webkit-scrollbar {
+  display: none;
 }
 .mcm-console .dres-row {
   display: flex;
-  gap: 10px;
+  gap: 4px;
   align-items: center;
-  padding: 8px 10px;
   border-radius: 10px;
-  text-align: left;
   width: 100%;
 }
 .mcm-console .dres-row:hover {
@@ -3073,6 +3102,9 @@
   align-items: center;
   gap: 11px;
   padding: 11px 16px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }
 .mcm-console .leg:hover {
   background: var(--surface-2);
@@ -3116,21 +3148,25 @@
   flex: none;
 }
 .mcm-console .legbtn {
+  --legbtn-hue: var(--ink-3);
+  --legbtn-edge: var(--line);
+  --legbtn-wash: var(--surface-2);
   width: 30px;
   height: 30px;
   border-radius: 9px;
   display: grid;
   place-items: center;
   flex: none;
-  border: 1px solid var(--line);
+  border: 1px solid var(--legbtn-edge);
   background: var(--surface);
-  color: var(--ink-3);
+  color: var(--legbtn-hue);
   transition: all 0.12s;
 }
-.mcm-console .legbtn:hover:not(:disabled) {
-  border-color: var(--accent-edge);
-  color: var(--accent-ink);
-  background: var(--accent-wash);
+.mcm-console .legbtn:hover:not(:disabled),
+.mcm-console .legbtn.on:not(:disabled) {
+  background: var(--legbtn-hue);
+  border-color: var(--legbtn-hue);
+  color: var(--surface);
 }
 .mcm-console .legbtn.on {
   background: var(--accent);
@@ -3195,6 +3231,8 @@
   gap: 2px;
   min-width: 0;
   white-space: nowrap;
+  /* The count gives way, not the number - see below. */
+  flex-wrap: wrap;
 }
 
 /* leg rows stay on one line and truncate rather than stacking */
@@ -3241,9 +3279,10 @@
   min-width: 0;
 }
 .mcm-console .seg button {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* ============================================================
@@ -4217,4 +4256,415 @@
   .mcm-console .col.stage .stage-inner .btn.danger {
     animation: none;
   }
+}
+
+/* ==================================================================
+   Rules ported from the unified frontend (new selectors that this
+   stylesheet did not have). Appended so later-wins keeps their intent.
+   ================================================================== */
+/* This reset exists so the ported artifact's bare <button> markup renders
+   unstyled. It must NOT reach the app's own components: a shadcn Button, a
+   Radix Checkbox and a Radix TabsTrigger are all <button> elements carrying
+   Tailwind utilities, and an unlayered rule BEATS a utility class — which is
+   how every icon button lost its border, every table checkbox became invisible,
+   and no wizard tab could show which one was active.
+
+   `@layer base` puts it below Tailwind's utilities layer, so anything with real
+   classes on it keeps them and only bare buttons are reset. */
+@layer base {
+  .mcm-console button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+}
+
+/* ONE scroller for every suggestion group.
+   Capping each list on its own let a full contacts list and a full directory
+   list stack past the card's height and push the keypad out of view. ~212px is
+   about four rows: enough to read, short enough that the keypad stays put. */
+.mcm-console .dres-scroll {
+  max-height: 212px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcm-console .dres-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 10px;
+  background: var(--surface);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.mcm-console .dres-none {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.mcm-console .dres-pick {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px 8px 10px;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mcm-console .dres-call {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin-right: 6px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--ok);
+  background: var(--surface);
+  color: var(--ok);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.mcm-console .dres-call:hover:not(:disabled) {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: var(--surface);
+}
+
+.mcm-console .dres-pick:disabled,
+.mcm-console .dres-call:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Which leg is the right-hand panel talking about? An accent wash plus a left
+   bar answers that at a glance when a call has several legs. */
+.mcm-console .leg.on {
+  background: var(--accent-wash);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.mcm-console .leg.on:hover {
+  background: var(--accent-wash);
+}
+
+.mcm-console .leg-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.mcm-console .legbtn.play:not(:disabled) {
+  --legbtn-hue: var(--accent);
+  --legbtn-edge: var(--accent-edge);
+  --legbtn-wash: var(--accent-wash);
+}
+
+.mcm-console .legbtn.dl:not(:disabled) {
+  --legbtn-hue: var(--live);
+  --legbtn-edge: var(--live);
+  --legbtn-wash: var(--live-wash);
+}
+
+.mcm-console .legbtn.ai:not(:disabled) {
+  --legbtn-hue: var(--ai);
+  --legbtn-edge: var(--ai-edge);
+  --legbtn-wash: var(--ai-wash);
+}
+
+.mcm-console .legbtn.call:not(:disabled) {
+  --legbtn-hue: var(--ok);
+  --legbtn-edge: var(--ok);
+  --legbtn-wash: var(--ok-wash);
+}
+
+/* A voicemail is a message someone still has to act on: assign it, note the
+   follow-up, mark it resolved. Same left indent as .leg-audio so it reads as
+   "about that voicemail", not a separate card, but boxed and warn-tinted so
+   an unresolved message doesn't blend into the row above it. */
+.mcm-console .leg-vm {
+  margin: 0 16px 12px 63px;
+  padding: 11px 13px;
+  border: 1px solid var(--warn-wash);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.mcm-console .leg-vm-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--warn);
+}
+
+.mcm-console .leg-vm-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mcm-console .leg-vm-done {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--ok-wash);
+  color: var(--ok);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Neutral: nobody has touched this voicemail yet - not a problem, just the
+   ordinary first-time state, so it gets a quiet grey pill rather than the
+   warn colour .leg-vm-warn uses for an actual failed fetch. */
+.mcm-console .leg-vm-hint {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* There really was nothing to fetch - the read failed rather than coming back
+   empty - so the fields are locked (see the `unavailable` disabled checks)
+   and this says why instead of leaving them looking editable but dead. */
+.mcm-console .leg-vm-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 7px 9px;
+  border-radius: var(--r-sm);
+  background: var(--warn-wash);
+  color: var(--warn);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.mcm-console .leg-vm-warn .ic {
+  flex: none;
+  margin-top: 1px;
+}
+
+.mcm-console .leg-vm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.mcm-console .leg-vm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
+.mcm-console .leg-vm-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mcm-console .leg-vm-select,
+.mcm-console .leg-vm-textarea {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+.mcm-console .leg-vm-select:focus,
+.mcm-console .leg-vm-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.mcm-console .leg-vm-select:disabled,
+.mcm-console .leg-vm-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mcm-console .leg-vm-textarea {
+  resize: vertical;
+  min-height: 52px;
+}
+
+.mcm-console .leg-vm-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  flex: none;
+}
+
+.mcm-console .leg-vm-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--ok);
+}
+
+.mcm-console .leg-vm-note {
+  margin-bottom: 10px;
+}
+
+.mcm-console .leg-vm-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The number never shrinks.
+   The header is one nowrap row whose buttons are `flex: none`, so every pixel
+   the buttons need was taken from this column - and the number, being a flex
+   item, gave it up and was cut off mid-digits: "+1 442 212 87" for
+   +1 442 212 8756. A half-printed phone number is worse than useless, and it
+   only showed up on the rows with the longer "Add to contacts" button, which
+   is why it looked intermittent.
+   The number now holds its width and the "· N calls" beside it wraps
+   underneath when there is no room. The name above it still truncates with an
+   ellipsis, which is the right thing to lose: a shortened name is still
+   recognisable, a shortened number is not. */
+.mcm-console .record-sub > * {
+  flex: none;
+}
+
+/* A row titled by a number, because nobody has saved it as a contact.
+   `.cr-name` ellipsises, which is right for a name and wrong for a number: a
+   name cut short is still the same person, a number cut short is a different
+   number and cannot be dialled or recognised. The longer international numbers
+   were losing their last digits to it. Names keep the ellipsis. */
+.mcm-console .cr-name.is-num {
+  overflow: visible;
+  text-overflow: clip;
+  flex: none;
+}
+
+/* The three source tabs always fit, so they need no scroll container at all —
+   and a clipping one cut off the active tab's underline. */
+.mcm-console .panel-tabs.source-tabs {
+  overflow: visible;
+}
+
+/* header: the date range now shares the title row, so both need to be tighter */
+.mcm-console .col.calls .col-head {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.mcm-console .col.calls .col-title {
+  gap: 8px;
+}
+
+.mcm-console .col.calls .panel-tabs .ptab {
+  padding: 9px 8px 8px;
+}
+
+/* The date range is an app form control — 40px tall with a 9vw value box, which
+   is a page filter's size, not a column header's. */
+.mcm-console .col-title .console-datefilter {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 62%;
+}
+
+.mcm-console .col-title .console-datefilter .custom-react-select__control {
+  min-height: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  padding-left: 8px !important;
+  padding-right: 6px !important;
+  font-size: 12.5px !important;
+}
+
+.mcm-console .col-title .console-datefilter .custom-react-select__value-container {
+  width: auto !important;
+  font-size: 12.5px !important;
+}
+
+.mcm-console .col-title .console-datefilter .custom-react-select__indicator {
+  padding: 2px !important;
+}
+
+/* How many calls a grouped row stands for. The list shows one row per number —
+   ringing the same person five times used to be five identical rows, which
+   pushed the rest of the day out of sight.
+
+   `flex: none` matters: this sits in .cr-top beside a name that truncates, and
+   without it the badge is the thing that gets squeezed — a count of 92 rendered
+   as a clipped "9". */
+.mcm-console .cr-count {
+  flex: none;
+  align-self: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mcm-console .call-row.on .cr-count {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+/* Source tabs (Calls / Recordings / Voicemails).
+   The strip carried its spacing in an inline style, which left the first tab's
+   label indented by its own padding — "Calls" sat 8px right of "Phone" and of
+   the search box below it, so the column had three different left edges. The
+   negative margin pulls the label back into line while the tab keeps its hit
+   area, and the gap below separates the strip from the direction filter. */
+.mcm-console .col.calls .panel-tabs.source-tabs {
+  padding: 0;
+  margin: 2px 0 4px -8px;
+  gap: 2px;
+}
+
+.mcm-console .col.calls .panel-tabs.source-tabs .ptab {
+  padding: 8px 8px 7px;
 }

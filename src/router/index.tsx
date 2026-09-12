@@ -73,16 +73,21 @@ const CompanyLayout = lazy(() => import('@/pages/admin-settings/company/company-
 const CompanyPhoneRules = lazy(() => import('@/pages/admin-settings/company/page-phone-rules'));
 const CompanyGreetings = lazy(() => import('@/pages/admin-settings/company/page-greetings'));
 const CompanyVoicemailPage = lazy(() => import('@/pages/admin-settings/company/page-voicemail'));
+const CompanyCalling = lazy(
+  () => import('@/pages/admin-settings/company/company-calling-permissions'),
+);
 const CompanyHolidaysPage = lazy(() => import('@/pages/admin-settings/company/page-holidays'));
 const CompanyEmergency = lazy(
   () => import('@/pages/admin-settings/company/company-emergency-address'),
 );
-const CompanyCalling = lazy(
-  () => import('@/pages/admin-settings/company/company-calling-permissions'),
-);
 const CompanyMessagingPage = lazy(() => import('@/pages/admin-settings/company/company-messaging'));
 const CompanyPoliciesPage = lazy(() => import('@/pages/admin-settings/company/company-policies'));
+const CompanyBreakReasonsPage = lazy(() => import('@/pages/admin-settings/company/company-break-reasons'));
+const CompanyDutyPolicyPage = lazy(() => import('@/pages/admin-settings/company/company-duty-policy'));
+const CompanyCampaignTimersPage = lazy(() => import('@/pages/admin-settings/company/company-campaign-timers'));
+const CompanyAlertsPage = lazy(() => import('@/pages/admin-settings/company/company-alerts'));
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
+const CompanyDeskPhonesPage = lazy(() => import('@/pages/admin-settings/company/company-desk-phones'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 /* Directory and Performance used to carry the page in a query --
    `/directory?view=groups`, `/performance?view=agents`. Those addresses are in
@@ -120,6 +125,9 @@ const PastMeetings = lazy(() => import('@/pages/video-meetings/past-meetings'));
 const AllRecording = lazy(() => import('@/pages/video-meetings/recordings/all-recording'));
 const MyRecording = lazy(() => import('@/pages/video-meetings/recordings/my-recording'));
 const CallQueues = lazy(() => import('@/pages/admin-settings/phone-systems/call-queue'));
+const SkillsPage = lazy(() => import('@/pages/admin-settings/phone-systems/skills'));
+const CoachingTeamsPage = lazy(() => import('@/pages/admin-settings/phone-systems/coaching-teams'));
+const CoachingPage = lazy(() => import('@/pages/coaching'));
 const GreetingDetailsPage = lazy(() => import('@/pages/greetings'));
 const GreetingContent = lazy(() => import('@/pages/greetings/greetings-content'));
 const Plan = lazy(loadBillingPlan);
@@ -149,23 +157,22 @@ const UserDetails = lazy(() => import('@/pages/departments/users-list/user-detai
 const Pricing = lazy(() => import('@/pages/pricing'));
 const SignUp = lazy(() => import('@/pages/signup'));
 const SignUpPayment = lazy(() => import('@/pages/signup/payment'));
+const GetStarted = lazy(() => import('@/pages/get-started'));
 const PaymentSuccess = lazy(() => import('@/pages/signup/payment-success'));
 const PhoneLines = lazy(() => import('@/pages/signup/phone-lines'));
 const AllCallMonitoring = lazy(() => import('@/pages/monitoring/all-calls'));
 const RecordingDetails = lazy(() => import('@/pages/video-meetings/recordings/recording-details'));
 const ForgotPassword = lazy(() => import('@/pages/login/forget-password'));
 const ResetPassword = lazy(() => import('@/pages/login/reset-password'));
+const AcceptInvite = lazy(() => import('@/pages/login/accept-invite'));
 const SocialMediaChannels = lazy(() => import('@/pages/admin-settings/social-media-channels'));
 const Integration = lazy(() => import('@/pages/integration'));
 const CRMIntegration = lazy(() => import('@/pages/integration/crm'));
 const CalendarPage = lazy(() => import('@/pages/video-meetings/Calender'));
 const SharedWithMe = lazy(() => import('@/pages/video-meetings/recordings/shared-wth-me'));
-const Zapier = lazy(() => import('@/pages/integration/data-reporting/zapier'));
 const GeneralSettings = lazy(() => import('@/pages/integration/data-reporting/general-settings'));
 const UserActivity = lazy(() => import('@/pages/activity/user-activity'));
-const ManageWebhook = lazy(() => import('@/pages/integration/data-reporting/manage-webhook'));
 const AutoDialer = lazy(() => import('@/pages/auto-dialer'));
-const PowerDialer = lazy(() => import('@/pages/auto-dialer/power-predictive'));
 const CallScripts = lazy(() => import('@/pages/auto-dialer/call-scripts'));
 const DispositionsList = lazy(() => import('@/pages/auto-dialer/dispositions'));
 const Leads = lazy(() => import('@/pages/leads'));
@@ -188,6 +195,7 @@ const CreateAgent = lazy(
   () => import('@/pages/admin-settings/knowledge-base/ai-agent/create-chatbot-agent'),
 );
 const CampaignLogs = lazy(() => import('@/pages/auto-dialer/campaign-logs'));
+const CampaignCompliance = lazy(() => import('@/pages/auto-dialer/compliance'));
 const DispositionLogs = lazy(() => import('@/pages/auto-dialer/disposition-logs'));
 const Security = lazy(() => import('@/pages/settings/security'));
 const RenewPlan = lazy(() => import('@/pages/login/renew-plan'));
@@ -220,8 +228,6 @@ const DLCBrands = lazy(() => import('@/pages/admin-settings/compliance/10DLC-bra
 const DNC = lazy(() => import('@/pages/auto-dialer/dnc'));
 const AdminHome = lazy(() => import('@/pages/admin-settings/admin-home'));
 const CallCoverage = lazy(() => import('@/pages/admin-settings/call-coverage'));
-const DeskPhones = lazy(() => import('@/pages/admin-settings/company/desk-phones'));
-const AdminSkills = lazy(() => import('@/pages/admin-settings/phone-systems/skills'));
 const StatementOfAccount = lazy(() => import('@/pages/admin-settings/billing/statement'));
 const BillingSummary = lazy(() => import('@/pages/admin-settings/billing/summary'));
 const CostCentres = lazy(() => import('@/pages/admin-settings/billing/cost-centres'));
@@ -248,10 +254,13 @@ const BILLING_ELEMENTS: Record<string, ReactElement> = {
 };
 /* Admin ▸ Users reuses the Directory screens rather than keeping a second,
    older implementation of the same lists. Same components, same actions. */
-const DirectoryPeople = lazy(() => import('@/pages/directory/people'));
+/* Admin › People is the single People screen (10 Sep 2026); Directory › People stays the lookup. */
+const AdminPeople = lazy(() => import('@/pages/admin-settings/people'));
+const DeskPhones = lazy(() => import('@/pages/admin-settings/people/desk-phones'));
 const DirectoryGroups = lazy(() => import('@/pages/directory/groups'));
 const DirectoryRoles = lazy(() => import('@/pages/directory/roles'));
 const AdminScope = lazy(() => import('@/pages/admin-settings/roles/admin-scope'));
+const Authentication = lazy(() => import('@/pages/admin-settings/people/authentication'));
 const DefaultPermissions = lazy(() => import('@/pages/admin-settings/roles/default-permissions'));
 const AccessControl = lazy(() => import('@/pages/admin-settings/roles/access-control'));
 const CapabilityMatrix = lazy(() => import('@/pages/admin-settings/roles/capability-matrix'));
@@ -266,7 +275,12 @@ const Inbound = lazy(() => import('@/pages/reports/call-logs/inbound'));
 const Outbound = lazy(() => import('@/pages/reports/call-logs/outbound'));
 const ActivityCallLogs = lazy(() => import('@/pages/reports/call-logs/activity'));
 const AgentReports = lazy(() => import('@/pages/reports/call-logs/agentReports'));
+const WorkforceSchedules = lazy(() => import('@/pages/reports/workforce/schedules'));
+const WorkforceAdherence = lazy(() => import('@/pages/reports/workforce/adherence'));
+const WorkforceTimeOff = lazy(() => import('@/pages/reports/workforce/time-off'));
+const WorkforceCoverage = lazy(() => import('@/pages/reports/workforce/coverage'));
 const CallAnalytics = lazy(() => import('@/pages/reports/analytics'));
+const ScheduledReports = lazy(() => import('@/pages/reports/scheduled'));
 const ContactActivity = lazy(() => import('@/pages/new-contact/contact-activity'));
 const AgentChatMessenger = lazy(() => import('@/pages/agent-chat'));
 const OmniChannelConnect = lazy(() => import('@/pages/omni-channel-connect'));
@@ -275,8 +289,53 @@ const AuthProvider = lazy(() => import('@/auth/auth-provider'));
 const AuthRemover = lazy(() => import('@/auth/auth-remover'));
 const AuthLayout = lazy(() => import('@/layout/auth-layout'));
 const PlanPendingGuard = lazy(() => import('@/auth/plan-pending-guard'));
+const HubspotDialer = lazy(() => import('@/pages/hubspot-dialer'));
+const CrmWidget = lazy(() => import('@/pages/crm-widget/widget-shell'));
+
+/**
+ * Composio OAuth popup lands here after a successful connection. It only has to
+ * close itself, so it is a plain component rather than a lazy import.
+ */
+function OAuthSuccess() {
+  window.close();
+  return (
+    <p style={{ fontFamily: 'sans-serif', textAlign: 'center', marginTop: '40px', color: '#555' }}>
+      Connected! You can close this window.
+    </p>
+  );
+}
 
 export const router = createBrowserRouter([
+  {
+    // Composio OAuth popup lands here after a successful connection. Must be
+    // outside the auth wrapper so the popup can close itself without needing a
+    // logged-in session.
+    path: '/oauth-success',
+    element: <OAuthSuccess />,
+    id: 'oauth-success',
+  },
+  {
+    // No AuthProvider here on purpose -- see widget-shell.tsx. A redirect out of
+    // this route lands somewhere the embedding CRM is not allowed to frame.
+    path: '/crm-widget',
+    element: <CrmWidget />,
+    errorElement: <ErrorPage text="Error Occurred" />,
+  },
+  {
+    path: '/hubspot-dialer',
+    element: (
+      <PlanPendingGuard>
+        <AuthProvider>
+          <SocketEventsProvider>
+            <JitsiContextProvider>
+              <HubspotDialer />
+            </JitsiContextProvider>
+          </SocketEventsProvider>
+        </AuthProvider>
+      </PlanPendingGuard>
+    ),
+    errorElement: <ErrorPage text="Error Occurred" />,
+  },
   {
     path: '/no-organization',
     element: <NoOrganization />,
@@ -317,6 +376,13 @@ export const router = createBrowserRouter([
         id: 'sign-up',
       },
       {
+        /* The new sign-up, trial and purchase flow. Lives beside /sign-up until
+           the pricing page's switch sends people here. */
+        path: 'get-started',
+        element: <GetStarted />,
+        id: 'get-started',
+      },
+      {
         path: 'payment',
         element: <SignUpPayment />,
         id: 'payment',
@@ -338,6 +404,11 @@ export const router = createBrowserRouter([
       {
         path: 'reset-password',
         element: <ResetPassword />,
+      },
+      {
+        /* Public: a new person lands here from the invite e-mail. */
+        path: 'accept-invite',
+        element: <AcceptInvite />,
       },
       {
         path: 'renew-plan',
@@ -684,6 +755,11 @@ export const router = createBrowserRouter([
                   { path: 'calling', element: <CompanyCalling /> },
                   { path: 'messaging', element: <CompanyMessagingPage /> },
                   { path: 'policies', element: <CompanyPoliciesPage /> },
+                  { path: 'break-reasons', element: <CompanyBreakReasonsPage /> },
+                  { path: 'duty-policy', element: <CompanyDutyPolicyPage /> },
+                  { path: 'campaign-timers', element: <CompanyCampaignTimersPage /> },
+                  { path: 'alerts', element: <CompanyAlertsPage /> },
+                  { path: 'desk-phone-settings', element: <CompanyDeskPhonesPage /> },
                   {
                     /* Administrator-only. It holds the sign-in policy, and the
                            phone-system permission is far too wide a key for that. */
@@ -692,6 +768,7 @@ export const router = createBrowserRouter([
                       <ProtectedRoute
                         element={<CompanySecurityPage />}
                         guard={{ adminOnly: true }}
+                        sectionName="Security"
                       />
                     ),
                   },
@@ -734,8 +811,6 @@ export const router = createBrowserRouter([
                 element: <Outlet />,
                 children: [
                   { index: true, element: <GeneralSettings /> },
-                  { path: 'zapier', element: <Zapier /> },
-                  { path: 'manage-webhook', element: <ManageWebhook /> },
                   { path: 'general-settings', element: <GeneralSettings /> },
                 ],
               },
@@ -787,19 +862,43 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                /* The media library moved to Phone System > Media Files
+                   (`/admin-settings/phone/media`) on 3 Sep 2026: it is the
+                   company's audio, not one person's. These paths are in
+                   bookmarks and support articles, so every one of them still
+                   lands on the same screen at its new address. The `type-`
+                   slugs are the older spelling of the same three libraries. */
                 path: 'media',
                 element: <Outlet />,
                 children: [
-                  { index: true, element: <GreetingContent /> },
-                  /* `greetings`, `prompts`, `voicemail` — what the thing is
-                     called, not how it is typed internally. The `type-` slugs
-                     below stay forever: they are in people's bookmarks. */
-                  { path: 'greetings', element: <GreetingContent /> },
-                  { path: 'prompts', element: <GreetingContent /> },
-                  { path: 'voicemail', element: <GreetingContent /> },
-                  { path: 'type-greeting', element: <Navigate to="../greetings" replace /> },
-                  { path: 'type-prompt', element: <Navigate to="../prompts" replace /> },
-                  { path: 'type-voicemail', element: <Navigate to="../voicemail" replace /> },
+                  {
+                    index: true,
+                    element: <Navigate to="/admin-settings/phone/media" replace />,
+                  },
+                  {
+                    path: 'greetings',
+                    element: <Navigate to="/admin-settings/phone/media/greetings" replace />,
+                  },
+                  {
+                    path: 'prompts',
+                    element: <Navigate to="/admin-settings/phone/media/prompts" replace />,
+                  },
+                  {
+                    path: 'voicemail',
+                    element: <Navigate to="/admin-settings/phone/media/voicemail" replace />,
+                  },
+                  {
+                    path: 'type-greeting',
+                    element: <Navigate to="/admin-settings/phone/media/greetings" replace />,
+                  },
+                  {
+                    path: 'type-prompt',
+                    element: <Navigate to="/admin-settings/phone/media/prompts" replace />,
+                  },
+                  {
+                    path: 'type-voicemail',
+                    element: <Navigate to="/admin-settings/phone/media/voicemail" replace />,
+                  },
                 ],
               },
               { path: 'security', element: <Security /> },
@@ -932,12 +1031,26 @@ export const router = createBrowserRouter([
             id: 'people',
             element: (
               <ProtectedRoute
-                element={<DirectoryPeople />}
+                element={<AdminPeople />}
                 guard={{
                   permission: 'account_setting.access.USER.action.view',
                 }}
               />
             ),
+          },
+          {
+            /* The company's desk phones (Yealink, Poly) and who each belongs
+               to. Administrator-only: it hands out SIP credentials. */
+            path: 'desk-phones',
+            id: 'desk-phones',
+            element: <ProtectedRoute element={<DeskPhones />} guard={{ adminOnly: true }} />,
+          },
+          {
+            /* First shipped under People on 7 Sep 2026; moved beside Company
+               the same day because a phone is a thing in a place (room phones
+               have no person). Old address still opens. */
+            path: 'people/desk-phones',
+            element: <Navigate to="/admin-settings/desk-phones" replace />,
           },
           {
             /* This page defines what every role in the company may do, and it
@@ -966,11 +1079,24 @@ export const router = createBrowserRouter([
           },
           {
             /* Who each administrator covers, as opposed to what they may do.
-               Administrator-only for the same reason the Roles screen is: it
-               describes the shape of authority across the whole company. */
+               The account owner and account admins set scopes (the server
+               refuses anybody else), so the gate is the people-edit box rather
+               than owner-only; the screen itself is read-only for the rest. */
             path: 'admin-scope',
             id: 'admin-scope',
-            element: <ProtectedRoute element={<AdminScope />} guard={{ adminOnly: true }} />,
+            element: (
+              <ProtectedRoute
+                element={<AdminScope />}
+                guard={{ permission: 'account_setting.access.USER.action.edit' }}
+              />
+            ),
+          },
+          {
+            /* Sign-in, sessions, allowed domains and provisioning. Owner only:
+               each one is a company-wide security rule. */
+            path: 'authentication',
+            id: 'authentication',
+            element: <ProtectedRoute element={<Authentication />} guard={{ adminOnly: true }} />,
           },
           {
             /* What each kind of person should be able to do on their first day.
@@ -1190,6 +1316,27 @@ export const router = createBrowserRouter([
                 element: <Navigate to="/admin-settings/phone/ivr" replace />,
               },
               {
+                /* The company's audio library — IVR prompts, greetings,
+                   voicemail — beside the menus that play it. Moved here from
+                   My Account > Media Files; the old address redirects. Not
+                   wrapped in a phone-system guard on purpose: the old route
+                   had none, and the screen's own greeting permission already
+                   decides who may add or delete. `?mine=1` narrows the list
+                   to files the signed-in person added, so My Account >
+                   Greetings can open it on their own files. */
+                path: 'media',
+                element: <Outlet />,
+                children: [
+                  { index: true, element: <GreetingContent /> },
+                  { path: 'greetings', element: <GreetingContent /> },
+                  { path: 'prompts', element: <GreetingContent /> },
+                  { path: 'voicemail', element: <GreetingContent /> },
+                  { path: 'type-greeting', element: <Navigate to="../greetings" replace /> },
+                  { path: 'type-prompt', element: <Navigate to="../prompts" replace /> },
+                  { path: 'type-voicemail', element: <Navigate to="../voicemail" replace /> },
+                ],
+              },
+              {
                 /* A queue, and the tab inside it, each have their own address.
                    All four paths render the same screen: the list is always
                    there, and the id decides whether the editor opens over it.
@@ -1211,13 +1358,29 @@ export const router = createBrowserRouter([
                 ),
               },
               {
-                /* Skills only matter to queue routing, so they sit beside
-                   queues and share the queue permission. */
+                /* Coaching teams are a kind of team, like groups, so they
+                   share the group permission rather than waiting on a key of
+                   their own. */
+                path: 'coaching-teams',
+                id: 'coaching-teams',
+                element: (
+                  <ProtectedRoute
+                    element={<CoachingTeamsPage />}
+                    guard={{
+                      feature: 'phone_system_action.access.DEPARTMENT',
+                      permission: 'phone_system_action.action.view',
+                    }}
+                  />
+                ),
+              },
+              {
+                /* Skills exist for queue routing, so they share the queue
+                   permission rather than waiting on a key of their own. */
                 path: 'skills',
                 id: 'skills',
                 element: (
                   <ProtectedRoute
-                    element={<AdminSkills />}
+                    element={<SkillsPage />}
                     guard={{
                       feature: 'phone_system_action.access.QUEUE',
                       permission: 'phone_system_action.action.view',
@@ -1463,14 +1626,6 @@ export const router = createBrowserRouter([
                module's feature flag, which asked whether the company had bought
                phone features when the real question is whether this person is
                allowed to see the company's money. */
-            /* The company's handsets and who each belongs to. Administrator-only:
-               the screen hands out SIP credentials. Listed under Company in the
-               nav rather than People, because a room phone has no person. */
-            path: 'desk-phones',
-            id: 'desk-phones',
-            element: <ProtectedRoute element={<DeskPhones />} guard={{ adminOnly: true }} />,
-          },
-          {
             path: 'billing',
             id: 'billing',
             children: [
@@ -1537,6 +1692,13 @@ export const router = createBrowserRouter([
         path: 'campaign',
         element: <AutoDialer />,
         children: [
+          {
+            /* Bare /campaign used to fall through to the optional :type? route
+               below and render the legacy dialer with a monitor of hard-coded
+               zeros. The campaign list is the page people mean. */
+            index: true,
+            element: <Navigate to="all-campaigns" replace />,
+          },
           {
             path: 'all-campaigns',
             element: <Outlet />,
@@ -1635,6 +1797,18 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'compliance',
+            element: (
+              <ProtectedRoute
+                element={<CampaignCompliance />}
+                guard={{
+                  feature: 'campaign.IS_SHOW',
+                  permission: 'campaign.action.view',
+                }}
+              />
+            ),
+          },
+          {
             path: 'disposition-logs',
             element: (
               <ProtectedRoute
@@ -1664,15 +1838,9 @@ export const router = createBrowserRouter([
                undefined. So /campaign/<anything> rendered the dialer while
                bypassing both the plan-feature check and the view permission. */
             path: ':type?',
-            element: (
-              <ProtectedRoute
-                element={<PowerDialer />}
-                guard={{
-                  feature: 'campaign.IS_SHOW',
-                  permission: 'campaign.action.view',
-                }}
-              />
-            ),
+            /* Any other /campaign/<word> lands on the list too, never on the
+               legacy dialer stack (kept on disk, no longer routed). */
+            element: <Navigate to="/campaign/all-campaigns" replace />,
           },
           {
             path: 'dnc',
@@ -1685,6 +1853,16 @@ export const router = createBrowserRouter([
                 }}
               />
             ),
+          },
+          {
+            /* "Campaign Workspace" in this same sidebar (campaignMenuItems)
+               links here rather than to the standalone `/my-campaigns` below,
+               so the sidebar it was clicked from stays on screen instead of
+               unmounting with the rest of this layout. Same component either
+               way - `/my-campaigns` stays for the other places that already
+               navigate straight to it (leaving a campaign, global search). */
+            path: 'my-campaigns',
+            element: <MyCampaignListStandalone />,
           },
         ],
       },
@@ -1774,6 +1952,13 @@ export const router = createBrowserRouter([
           { path: 'type-prompt', element: <Navigate to="../prompts" replace /> },
           { path: 'type-voicemail', element: <Navigate to="../voicemail" replace /> },
         ],
+      },
+      {
+        /* The coach's own page. No plan or permission key: being named a
+           coach on a team is the permission, and the page says so when the
+           signed-in person coaches nobody. */
+        path: 'coaching',
+        element: <ProtectedRoute element={<CoachingPage />} />,
       },
       {
         path: 'monitoring',
@@ -1910,6 +2095,10 @@ export const router = createBrowserRouter([
             path: 'agent-reports',
             element: <AgentReports />,
           },
+          { path: 'workforce/schedules', element: <WorkforceSchedules /> },
+          { path: 'workforce/adherence', element: <WorkforceAdherence /> },
+          { path: 'workforce/time-off', element: <WorkforceTimeOff /> },
+          { path: 'workforce/coverage', element: <WorkforceCoverage /> },
           {
             path: 'sms-log',
             element: (
@@ -1925,6 +2114,10 @@ export const router = createBrowserRouter([
           {
             path: 'analytics',
             element: <CallAnalytics />,
+          },
+          {
+            path: 'scheduled',
+            element: <ScheduledReports />,
           },
         ],
       },
@@ -1947,14 +2140,6 @@ export const router = createBrowserRouter([
           {
             path: 'data-reporting',
             children: [
-              {
-                path: 'zapier',
-                element: <Zapier />,
-              },
-              {
-                path: 'manage-webhook',
-                element: <ManageWebhook />,
-              },
               {
                 path: 'general-settings',
                 element: <GeneralSettings />,

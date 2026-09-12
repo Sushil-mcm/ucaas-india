@@ -1,39 +1,98 @@
-import { useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Users,
-  PhoneIncoming,
-  CheckCircle2,
-  PhoneOff,
-  ShieldAlert,
-  UserCheck,
-  Activity,
-  PhoneForwarded,
-} from 'lucide-react';
-import Campaign from '@/pages/auto-dialer/campaign';
-import { campaignList } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
+import TableManager from '@/components/custom/table-manager';
+import { Button } from '@/components/ui/button';
+import { SocketEvents } from '@/context/socket-events-context';
+import { campaignList, getCampaignComplianceReport } from '@/services/api';
+import { DIAL_METHOD_LABEL, StatusPill } from '@/pages/auto-dialer/campaign/campaign-ui';
+import { HEALTH_LABEL } from '@/lib/campaign-dial-mode';
+import { capitalizeFirstLetter } from '@/lib/utils';
 import PerfStatCard from './stat-card';
+import buildCampaignRows, {
+  ABANDON_CAP_PERCENT,
+  pacingFor,
+  summariseCampaignRows,
+  type CampaignPerfRow,
+  type ComplianceDayRow,
+} from './campaign-rows';
 import './campaigns-theme.css';
 
-const parseMembers = (members: any) => {
-  try {
-    const parsed = typeof members === 'string' ? JSON.parse(members || '[]') : members;
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+/**
+ * Performance ▸ Campaigns.
+ *
+ * This tab used to show five account-wide totals and then embed the campaign
+ * MANAGEMENT list — edit, pause and delete buttons on a performance screen,
+ * and not one figure that told you whether a campaign was dialling safely.
+ *
+ * It now answers the three questions an outbound supervisor actually has:
+ *   how much did each campaign dial, how much of it connected, and is the
+ *   abandon rate inside the cap. Plus, for a running campaign, what the dialer
+ *   is doing this second and how far ahead it is dialling.
+ *
+ * The abandon figures are the same ones the Compliance report shows, from the
+ * same endpoint and the same grouping, so the two screens cannot disagree.
+ */
+
+const pct = (value: number | null, digits = 0) =>
+  value === null || !Number.isFinite(value) ? '—' : `${value.toFixed(digits)}%`;
+
+const hhmm = (seconds: number) => {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  if (h) return `${h}h ${m}m`;
+  const s = total % 60;
+  return m ? `${m}m ${s}s` : `${s}s`;
 };
 
-const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
+const CSV_COLUMNS: Array<[string, (row: CampaignPerfRow) => string | number]> = [
+  ['campaign', (r) => r.name],
+  ['mode', (r) => DIAL_METHOD_LABEL[r.dialMethod] || r.dialMethod || ''],
+  ['status', (r) => r.status],
+  ['attempts', (r) => r.calls],
+  ['live_answers', (r) => r.answeredLive],
+  ['connect_rate_percent', (r) => (r.connectRatePct === null ? '' : r.connectRatePct.toFixed(1))],
+  ['abandoned', (r) => r.abandoned],
+  ['abandon_rate_percent', (r) => (r.abandonRatePct === null ? '' : r.abandonRatePct.toFixed(1))],
+  ['abandon_cap_percent', (r) => r.capPercent],
+  ['over_cap', (r) => (r.overCap ? 'yes' : 'no')],
+  ['answering_machine', (r) => r.machine],
+  ['busy', (r) => r.busy],
+  ['no_answer', (r) => r.noAnswer],
+  ['callbacks', (r) => r.callbacks],
+  ['talk_seconds', (r) => r.talkSeconds],
+  ['leads_assigned', (r) => r.assignedLeads ?? ''],
+];
+
+const downloadCsv = (rows: CampaignPerfRow[], from: string, to: string) => {
+  const body = [
+    CSV_COLUMNS.map(([header]) => header).join(','),
+    ...rows.map((row) => CSV_COLUMNS.map(([, read]) => JSON.stringify(read(row) ?? '')).join(',')),
+  ].join('\n');
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([body], { type: 'text/csv' }));
+  link.download = `campaign-performance-${from}-${to}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
+
+const CampaignActivityTab = ({
+  selectedRange,
+}: {
+  selectedRange: { from: string; to: string };
+}) => {
+  const navigate = useNavigate();
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
   /**
    * `perf-warm-backdrop` flags the document so campaigns-theme.css can paint
-   * the full-page ambient gradient and the live-queue KPI band — done on
+   * the full-page ambient gradient and the KPI band — done on
    * `.perf-campaigns` itself rather than through the generic `.mcm-page`
-   * rule, since the embedded `<Campaign />` below renders its own nested
-   * `.mcm-page` panel.
+   * rule.
    *
-   * The toolbar itself (`perf-warm-toolbar`) is now toggled once in the
-   * parent `Performance` component (index.tsx), since the toolbar renders
+   * The toolbar itself (`perf-warm-toolbar`) is toggled once in the parent
+   * `Performance` component (index.tsx), since the toolbar renders
    * unconditionally there for every tab — adding it here too would race
    * with the parent's own toggle on tab switches.
    */
@@ -42,155 +101,326 @@ const CampaignActivityTab = ({ globalSearch }: { globalSearch?: string } = {}) =
     return () => document.body.classList.remove('perf-warm-backdrop');
   }, []);
 
+  /* The dialer service pushes a board per running campaign every few seconds.
+     Kept by campaign id; a board older than 30 s is treated as gone, the same
+     rule the campaign list uses, so the two screens age out together. */
+  const { socketEventsManager } = useContext(SocketEvents);
+  const [liveBoards, setLiveBoards] = useState<Record<string, { board: any; at: number }>>({});
+  useEffect(() => {
+    if (!socketEventsManager) return;
+    const onLive = (payload: any) => {
+      const id = String(payload?.campaignId || '');
+      if (!id) return;
+      setLiveBoards((prev) => ({ ...prev, [id]: { board: payload, at: Date.now() } }));
+    };
+    socketEventsManager.on('campaign-live-stats', onLive);
+    return () => socketEventsManager.off('campaign-live-stats', onLive);
+  }, [socketEventsManager]);
+
+  /* A board goes stale on the clock, not on a re-render, so the rows need a
+     reason to recompute even when nothing arrived. */
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 10000);
+    return () => clearInterval(id);
+  }, []);
+
   const { data: campaigns = [] } = useQuery({
     queryKey: ['performanceCampaignActivityList'],
-    queryFn: () => campaignList({ page: 1, limit: 100, filters: [] }),
+    queryFn: () => campaignList({ page: 1, limit: 500, filters: [] }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
-  const totals = useMemo(() => {
-    const acc = {
-      assignedLeads: 0,
-      answeredLeads: 0,
-      totalCallNotAnswered: 0,
-      totalDnc: 0,
-      members: 0,
-      byStatus: {} as Record<string, number>,
-      byDialMethod: {} as Record<string, number>,
+  /* Every campaign's calls in the range, grouped by day — the same endpoint
+     the Compliance report reads, asked without a campaign id. */
+  const {
+    data: report,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['performanceCampaignCompliance', selectedRange.from, selectedRange.to, timezone],
+    queryFn: () =>
+      getCampaignComplianceReport({
+        from: selectedRange.from,
+        to: selectedRange.to,
+        timezone,
+        abandonCapPercent: ABANDON_CAP_PERCENT,
+      }),
+    select: (res: any) => res?.data?.data?.result || null,
+    staleTime: 60 * 1000,
+  });
+
+  const rows = useMemo(() => {
+    const liveBoardFor = (id: string) => {
+      const entry = liveBoards[String(id)];
+      return entry && Date.now() - entry.at < 30000 ? entry.board : null;
     };
-    campaigns.forEach((campaign: any) => {
-      const analytics = campaign?.campaignAnalytics || {};
-      acc.assignedLeads += Number(analytics?.assignedLeads) || 0;
-      acc.answeredLeads += Number(analytics?.answeredLeads) || 0;
-      acc.totalCallNotAnswered += Number(analytics?.totalCallNotAnswered) || 0;
-      acc.totalDnc += Number(analytics?.totalDnc) || 0;
-      acc.members += parseMembers(campaign?.members).length;
-
-      const status = String(campaign?.campaignStatus || 'UNKNOWN').toUpperCase();
-      acc.byStatus[status] = (acc.byStatus[status] || 0) + 1;
-
-      const dialMethod = String(campaign?.dialMethod || 'UNKNOWN').toUpperCase();
-      acc.byDialMethod[dialMethod] = (acc.byDialMethod[dialMethod] || 0) + 1;
+    return buildCampaignRows({
+      byDay: (report?.byDay || []) as ComplianceDayRow[],
+      campaigns,
+      liveBoardFor,
     });
-    return acc;
-  }, [campaigns]);
+    // `tick` is here on purpose: it ages the live boards out.
+  }, [report, campaigns, liveBoards, tick]);
 
-  const connectRate = totals.assignedLeads
-    ? (totals.answeredLeads / totals.assignedLeads) * 100
-    : null;
-  const noAnswerRate = totals.assignedLeads
-    ? (totals.totalCallNotAnswered / totals.assignedLeads) * 100
-    : null;
+  const totals = useMemo(() => summariseCampaignRows(rows), [rows]);
 
-  const statusEntries = Object.entries(totals.byStatus).sort((a, b) => b[1] - a[1]);
-  const dialMethodEntries = Object.entries(totals.byDialMethod).sort((a, b) => b[1] - a[1]);
+  const openMonitor = (row: CampaignPerfRow) =>
+    navigate(
+      `/campaign/all-campaigns/compaign-record?campaignId=${encodeURIComponent(row.id)}`,
+      { state: { campaignId: row.id } },
+    );
 
-  /* `pt-7` lands the first card on the same 28px as every other Performance
-     tab (Agents/Calls reach it as a `py-4` root plus the 12px their stat
-     grids add via `py-3`). Bottom keeps this tab's own `py-5`. */
+  const columns: any = [
+    {
+      header: 'Campaign',
+      accessorKey: 'name',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        const mode = DIAL_METHOD_LABEL[data.dialMethod];
+        return (
+          <button
+            type="button"
+            onClick={() => openMonitor(data)}
+            style={{ minWidth: 0, textAlign: 'left', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+            title="Open this campaign's monitor"
+          >
+            <div style={{ fontWeight: 600, color: 'var(--ink)' }}>
+              {capitalizeFirstLetter(data.name)}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+              {mode ? <span className="tag neu">{mode}</span> : null}
+              {data.status ? (
+                <span className="src">{capitalizeFirstLetter(data.status.toLowerCase())}</span>
+              ) : null}
+            </div>
+          </button>
+        );
+      },
+    },
+    {
+      header: 'Now',
+      accessorKey: 'board',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        const health = data.board?.health?.state ? HEALTH_LABEL[data.board.health.state] : null;
+        if (!data.board || !health)
+          return <StatusPill status={data.status} dialMethod={data.dialMethod} />;
+        const tone =
+          health.tone === 'good'
+            ? 'pos'
+            : health.tone === 'crit'
+              ? 'neg'
+              : health.tone === 'warn'
+                ? 'warn'
+                : 'neu';
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+            <span className={`tag ${tone}`} title={data.board?.health?.reason || health.label}>
+              {health.tone === 'good' ? <span className="dot green" /> : null}
+              {health.label}
+            </span>
+            <span className="src num">
+              {Number(data.board?.calls?.linesInUse || 0)} up ·{' '}
+              {Number(data.board?.agents?.idle || 0)} idle of{' '}
+              {Number(data.board?.agents?.total || 0)}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Attempts',
+      accessorKey: 'calls',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => (
+        <span className="num">{row.original.calls.toLocaleString()}</span>
+      ),
+    },
+    {
+      header: 'Connected',
+      accessorKey: 'answeredLive',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        return (
+          <div>
+            <div className="num">{data.answeredLive.toLocaleString()}</div>
+            <span className="src">{pct(data.connectRatePct, 1)} of attempts</span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Abandon rate',
+      accessorKey: 'abandonRatePct',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        if (!data.paced)
+          return (
+            <div>
+              <div className="num">—</div>
+              <span className="src">
+                {data.dialMethod?.toUpperCase() === 'INBOUND'
+                  ? 'callers dial in'
+                  : 'preview calls cannot abandon'}
+              </span>
+            </div>
+          );
+        return (
+          <div>
+            <div className="num" style={data.overCap ? { color: 'var(--crit)', fontWeight: 700 } : undefined}>
+              {pct(data.abandonRatePct, 1)}
+              {data.overCap ? ' over cap' : ''}
+            </div>
+            <span className="src">
+              {data.abandoned.toLocaleString()} abandoned · cap {data.capPercent}%
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Dialling ahead',
+      accessorKey: 'pacing',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const pacing = pacingFor(row.original);
+        return (
+          <div>
+            <div className="num" style={pacing.warn ? { color: 'var(--warn)', fontWeight: 700 } : undefined}>
+              {pacing.text}
+            </div>
+            {pacing.sub ? <span className="src">{pacing.sub}</span> : null}
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Not reached',
+      accessorKey: 'machine',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        return (
+          <div>
+            <div className="num">{(data.machine + data.busy + data.noAnswer).toLocaleString()}</div>
+            <span className="src">
+              {data.machine} machine · {data.busy} busy · {data.noAnswer} no answer
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Talk time',
+      accessorKey: 'talkSeconds',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        return (
+          <div>
+            <div className="num">{hhmm(data.talkSeconds)}</div>
+            <span className="src">
+              {data.answeredLive > 0
+                ? `${hhmm(data.talkSeconds / data.answeredLive)} per connect`
+                : '—'}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Leads',
+      accessorKey: 'assignedLeads',
+      cell: ({ row }: { row: { original: CampaignPerfRow } }) => {
+        const data = row.original;
+        if (data.assignedLeads === null) return <span className="src">—</span>;
+        return (
+          <div>
+            <div className="num">{data.assignedLeads.toLocaleString()}</div>
+            <span className="src">assigned</span>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
+    /* `pt-7` lands the first card on the same 28px as every other Performance
+       tab (Agents/Calls reach it as a `py-4` root plus the 12px their stat
+       grids add via `py-3`). Bottom keeps this tab's own `py-5`. */
     <div className="perf-campaigns flex w-full flex-col gap-4 px-[22px] pt-7 pb-5">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
         <PerfStatCard
-          label="Total leads"
-          value={String(totals.assignedLeads)}
-          sub={`across ${campaigns.length} campaigns`}
-          icon={Users}
+          label="Attempts"
+          value={totals.calls.toLocaleString()}
+          sub={`${rows.length} campaign${rows.length === 1 ? '' : 's'} in range`}
         />
-        <PerfStatCard
-          label="Answered leads"
-          value={String(totals.answeredLeads)}
-          /* The denominator the number beside it is a share of — 1,476 on
-             its own doesn't say whether that's most of the book or a
-             fraction of it. */
-          sub={totals.assignedLeads ? `of ${totals.assignedLeads} assigned` : undefined}
-          icon={PhoneIncoming}
-        />
+        <PerfStatCard label="Connected" value={totals.answeredLive.toLocaleString()} sub="a person answered" />
         <PerfStatCard
           label="Connect rate"
-          value={connectRate === null ? '—' : `${Math.round(connectRate)}%`}
-          sub="answered ÷ assigned"
-          icon={CheckCircle2}
+          value={pct(totals.connectRatePct, 1)}
+          sub="connected ÷ attempts"
         />
         <PerfStatCard
-          label="No-answer rate"
-          value={noAnswerRate === null ? '—' : `${Math.round(noAnswerRate)}%`}
-          tone={noAnswerRate !== null && noAnswerRate > 50 ? 'warning' : 'default'}
-          /* Spelled out the same way Connect rate states its own formula
-             next door, so the pair reads as two shares of one denominator
-             rather than two unrelated percentages that happen not to add
-             up to 100 (they don't — a lead can be neither yet). */
-          sub="unanswered ÷ assigned"
-          icon={PhoneOff}
+          label="Abandon rate"
+          value={pct(totals.abandonRatePct, 1)}
+          sub={`cap ${ABANDON_CAP_PERCENT}% · paced campaigns only`}
+          tone={
+            totals.abandonRatePct !== null && totals.abandonRatePct > ABANDON_CAP_PERCENT
+              ? 'danger'
+              : 'success'
+          }
         />
         <PerfStatCard
-          label="DNC skips"
-          value={String(totals.totalDnc)}
-          /* A count of skips means little without the book it was skipped
-             from — 141 is either a rounding error or a real dent depending
-             on whether the list is 3,000 or 300. */
-          sub={
-            totals.assignedLeads
-              ? `${Math.round((totals.totalDnc / totals.assignedLeads) * 100)}% of assigned`
-              : undefined
-          }
-          icon={ShieldAlert}
+          label="Over the cap"
+          value={String(totals.campaignsOverCap)}
+          sub={totals.campaignsOverCap ? 'needs slowing down' : 'every campaign inside the cap'}
+          tone={totals.campaignsOverCap > 0 ? 'danger' : 'default'}
         />
         <PerfStatCard
-          label="Members assigned"
-          value={String(totals.members)}
-          /* This total sums each campaign's own member list, so someone on
-             two campaigns is counted twice — it's assignments, not people.
-             Framing it per-campaign is what that number actually supports,
-             and avoids implying a headcount it isn't. */
-          sub={
-            campaigns.length
-              ? `≈${Math.round(totals.members / campaigns.length)} per campaign`
-              : undefined
-          }
-          icon={UserCheck}
+          label="Answering machines"
+          value={totals.machine.toLocaleString()}
+          sub={totals.calls > 0 ? `${((totals.machine / totals.calls) * 100).toFixed(1)}% of attempts` : undefined}
         />
-        <PerfStatCard
-          label="Top status"
-          value={
-            statusEntries.length
-              ? `${statusEntries[0][0].charAt(0)}${statusEntries[0][0].slice(1).toLowerCase()}`
-              : '—'
-          }
-          sub={
-            statusEntries.length
-              ? statusEntries
-                  .map(
-                    ([status, count]) =>
-                      `${status.charAt(0)}${status.slice(1).toLowerCase()}: ${count}`,
-                  )
-                  .join(' · ')
-              : undefined
-          }
-          icon={Activity}
-        />
-        <PerfStatCard
-          label="Top dial method"
-          value={
-            dialMethodEntries.length
-              ? `${dialMethodEntries[0][0].charAt(0)}${dialMethodEntries[0][0].slice(1).toLowerCase()}`
-              : '—'
-          }
-          sub={
-            dialMethodEntries.length
-              ? dialMethodEntries
-                  .map(
-                    ([method, count]) =>
-                      `${method.charAt(0)}${method.slice(1).toLowerCase()}: ${count}`,
-                  )
-                  .join(' · ')
-              : undefined
-          }
-          icon={PhoneForwarded}
-        />
+        <PerfStatCard label="Talk time" value={hhmm(totals.talkSeconds)} sub="agents on campaign calls" />
       </div>
-      <Campaign embedded globalSearch={globalSearch} />
+
+      {isError ? (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load campaign call figures:{' '}
+          {(error as any)?.response?.data?.error?.message || (error as any)?.message || 'unknown error'}
+        </div>
+      ) : null}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="secondary"
+          size="sm"
+          type="button"
+          disabled={!rows.length}
+          onClick={() => downloadCsv(rows, selectedRange.from, selectedRange.to)}
+        >
+          Export CSV
+        </Button>
+      </div>
+
+      <TableManager
+        columns={columns}
+        staticData={rows}
+        loading={isLoading}
+        showPagination={false}
+        emptyTablePlaceholder="No campaign calls in this range"
+        descriptionEmptyTable="Campaigns that placed calls in the selected dates show their figures here."
+      />
+
+      <p className="page-note">
+        Attempts, connects, abandons and talk time are the campaign call log for the selected
+        dates, grouped in {timezone} — the same source and the same grouping as the Compliance
+        report. The abandon rate is measured across the whole range, not per day, because that is
+        how the {ABANDON_CAP_PERCENT}% rule is written. "Now" and "Dialling ahead" come from the
+        dialer engine and only exist while it is running a campaign; a campaign that stopped shows
+        its stored status instead. Per-lead progress and the dial log are on each campaign's own
+        monitor — click a campaign name.
+      </p>
     </div>
   );
 };

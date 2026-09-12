@@ -16,13 +16,14 @@ import { useUser } from '@/hooks/use-user';
 import { cn, handleAlert } from '@/lib/utils';
 import { createEventAndTask, saveNoteInLeadContact, userUpdateStatus } from '@/services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getRescheduleOptions, RUNNING_CAMPAIGN_TAB_CONST, statusMessages } from '../const';
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import { CALL_STATUS_CONST } from '@/components/audio-video-call/constants';
 import NotesWidget from '@/components/notes';
 import TextEditor from '@/components/custom/text-editor';
+import { resolveScriptNodes, scriptValuesFromCall } from '@/lib/script-variables';
 import Loader from '@/components/custom/loader';
 import { useCampaign } from '@/hooks/use-campaign';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -72,6 +73,30 @@ const AgentRunningCampign = () => {
   const navigate = useNavigate();
   const { autoStart } = useLocation().state || {};
   const { user } = useUser();
+
+  /* The lead in front of the agent and the agent themselves, so a script's
+     placeholders read as this call rather than as braces. */
+  const scriptValues = useMemo(
+    () =>
+      scriptValuesFromCall({
+        customerName: [
+          selectedContact?.contacts?.[0]?.firstName,
+          selectedContact?.contacts?.[0]?.lastName,
+        ]
+          .filter(Boolean)
+          .join(' '),
+        customerNumber: selectedContact?.contacts?.[0]?.phone || selectedContact?.contactNumber,
+        customerEmail: selectedContact?.contacts?.[0]?.email || selectedContact?.contactEmail,
+        agentName: [user?.user_info?.first_name, user?.user_info?.last_name]
+          .filter(Boolean)
+          .join(' '),
+        agentExtension: user?.user_info?.extension,
+        agentEmail: user?.user_info?.email,
+        companyName: user?.company_info?.company_name || user?.company_info?.name,
+        campaignName: selectedCampaign?.label || selectedCampaign?.name,
+      }),
+    [selectedContact, selectedCampaign, user],
+  );
   const [showPresence, setShowPresence] = useState(false);
   const queryClient: any = useQueryClient();
   const [waitingProgress, setWaitingProgress] = useState(0);
@@ -597,14 +622,15 @@ const AgentRunningCampign = () => {
                         <div className="w-full">
                           <TextEditor
                             key={selectedCampaign?.scriptData?.[0]?.script}
-                            initialValue={
+                            initialValue={resolveScriptNodes(
                               selectedCampaign?.scriptData?.[0]?.script || [
                                 {
                                   type: 'paragraph',
                                   children: [{ text: '' }],
                                 },
-                              ]
-                            }
+                              ],
+                              scriptValues,
+                            )}
                             readOnly={true}
                             maxHeight={'max-h-[calc(100vh_-_14.1rem)]'}
                           />

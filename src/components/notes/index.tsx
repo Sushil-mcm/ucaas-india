@@ -1,4 +1,5 @@
 import { convertDateFormateApis, handleAlert } from '@/lib/utils';
+import { answersToRows } from '@/lib/script-inputs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { addDispositionInLeadContatc, getCallQueueNotesList } from '@/services/api';
 import { Send } from '@/assets/icons';
@@ -43,6 +44,30 @@ const getHeaderFirstValue = (
   return String(values[0] || '').trim();
 };
 
+/* A read-only card of what the agent filled into the script on that call. */
+const ScriptAnswersCard = ({ item }: { item: any }) => (
+  <li
+    className="w-full rounded-xl border border-[#d7e3f6] bg-[#f3f7ff] p-3"
+    key={`answers-${item?.sipcallId || item?.createdAt || ''}`}
+  >
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-sm font-semibold text-gray-900">Script answers</span>
+      <small className="text-xs font-medium text-gray-500">
+        {item?.createdAt ? convertDateFormateApis(item.createdAt, 'MMM DD, hh:mm A') : ''}
+      </small>
+    </div>
+    <dl className="mt-2 grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-x-3 gap-y-1 text-sm">
+      {(item?.rows || []).map((row: any) => (
+        <div key={row.key} className="contents">
+          <dt className="truncate text-gray-500">{row.label}</dt>
+          <dd className="break-words text-gray-800">{row.text}</dd>
+        </div>
+      ))}
+    </dl>
+    {item?.name ? <p className="mt-2 text-[11px] text-gray-500">{item.name}</p> : null}
+  </li>
+);
+
 const getNotesListFromResponse = (response: any) => {
   const candidateRows = [
     response?.data?.data?.result?.rows,
@@ -62,13 +87,33 @@ const getNotesListFromResponse = (response: any) => {
     const rowSipCallId =
       toNullableString(row?.sipcallId) ?? toNullableString(row?.sipCallId) ?? undefined;
 
+    /* What the agent filled into the script on that call, shown read-only
+       beside the notes it was saved with. */
+    const scriptAnswerRows = answersToRows(row?.script_answers);
+    const answersEntry = scriptAnswerRows.length
+      ? [
+          {
+            kind: 'script_answers',
+            rows: scriptAnswerRows,
+            name: row?.disposition?.name || row?.disposition?.fullName || '',
+            createdAt: row?.updatedAt || row?.createdAt || null,
+            sipcallId: rowSipCallId,
+          },
+        ]
+      : [];
+
     if (Array.isArray(row?.notes) && row.notes.length > 0) {
-      return row.notes.map((item: any) => ({
-        ...item,
-        sipcallId:
-          toNullableString(item?.sipcallId) ?? toNullableString(item?.sipCallId) ?? rowSipCallId,
-      }));
+      return [
+        ...row.notes.map((item: any) => ({
+          ...item,
+          sipcallId:
+            toNullableString(item?.sipcallId) ?? toNullableString(item?.sipCallId) ?? rowSipCallId,
+        })),
+        ...answersEntry,
+      ];
     }
+
+    if (answersEntry.length) return answersEntry;
 
     return [
       {
@@ -326,7 +371,9 @@ const NotesWidget = ({
       <div className="w-full min-h-0 flex-1 overflow-y-auto bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3" ref={scrollNoteRef}>
         {renderedNotes && renderedNotes?.length ? (
           <ul className="w-full flex flex-col gap-3">
-            {renderedNotes?.map((item: any, index: number) => (
+            {renderedNotes?.map((item: any, index: number) => item?.kind === 'script_answers' ? (
+              <ScriptAnswersCard item={item} key={`answers-${item?.sipcallId || index}`} />
+            ) : (
               <li
                 className="w-full rounded-xl border border-[#EEE7DD] bg-ucass-active-bg p-3"
                 key={item?._id || item?.createdAt || `${index}-${item?.name || 'note'}`}

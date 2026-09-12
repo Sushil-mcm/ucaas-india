@@ -8,6 +8,20 @@ import {
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import {
+  WORKDAY_TREE_LABELS,
+  WORKDAY_TREE_MODULE,
+  WORKDAY_TREE_MODULE_LABEL,
+} from '@/lib/workday-permissions';
+
+/* Most boxes are labelled by their key ("call recording listen"). The agent
+   workday group is labelled by its sentence ("May end another person's
+   shift"), because "duty others" says nothing to the person ticking it. */
+const boxLabel = (path: string[], key: string): string =>
+  WORKDAY_TREE_LABELS[path.join('.')] ?? key.replace(/_/g, ' ');
+
+const groupLabel = (featureKey: string): string =>
+  featureKey === WORKDAY_TREE_MODULE ? WORKDAY_TREE_MODULE_LABEL : featureKey.replace(/_/g, ' ');
 
 type PermissionNode = boolean | PermissionObject;
 
@@ -62,6 +76,8 @@ const PermissionTree = ({
   basePath,
   readOnly,
   onToggle,
+  /* Kept as a prop rather than removed, so anywhere that ever does want
+     to lock an Access section has to say so on purpose. */
   lockAccessValues = false,
 }: {
   companyData: PermissionObject;
@@ -119,7 +135,7 @@ const PermissionTree = ({
               <Label
                 className={`capitalize leading-5 break-words ${disabled ? 'text-muted-foreground' : ''}`}
               >
-                {key.replace(/_/g, ' ')}
+                {boxLabel(currentPath, key)}
               </Label>
             </div>
           );
@@ -233,7 +249,7 @@ export const PermissionsAccordion = ({
                 variant="default"
                 className="bg-gray-50 px-3 py-4 text-left text-sm font-semibold uppercase text-gray-900 hover:no-underline sm:px-4"
               >
-                {featureKey.replace(/_/g, ' ')}
+                {groupLabel(featureKey)}
               </AccordionTrigger>
 
               <AccordionContent className="space-y-6 pt-0">
@@ -245,7 +261,14 @@ export const PermissionsAccordion = ({
                       userData={userPermissions}
                       basePath={[featureKey, 'access']}
                       readOnly={readOnly}
-                      lockAccessValues={featureKey !== 'phone_system_action'}
+                      /* Access used to be locked for every feature except
+                         phone_system_action, so a company that owns AI chat and
+                         voice could see those boxes and never tick them. The flag
+                         arrived inside an unrelated commit about queue wrap-up and
+                         was never explained. Access is plan-derived and role-
+                         configurable exactly like Actions, and the tree only ever
+                         renders keys the company's own plan contains. */
+                      lockAccessValues={false}
                       onToggle={handleToggle}
                     />
                   </div>

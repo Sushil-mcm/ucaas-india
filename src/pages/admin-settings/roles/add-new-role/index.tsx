@@ -10,8 +10,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { upsertCustomRole, userRolesList } from '@/services/api';
 import SelectRole from './select-role';
 import { extractPlanFeatures, useCompanyFeatures } from '@/hooks/rbac';
+import { withWorkdayGroup } from '@/lib/workday-permissions';
 import Loader from '@/components/custom/loader';
 import { handleAlert, sanitizePlainTextInput } from '@/lib/utils';
+import { invalidateRoleLists } from '@/lib/role-list-cache';
+import { BLANK_PARENT, systemRoleUuid } from './role-presets';
 import '@/components/mcm/mcm-page.css';
 
 interface AddEditRoleProps {
@@ -51,7 +54,7 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
         text: data?.data?.data?.message || 'Custom role updated successfully!',
         type: 'success',
       });
-      queryClient.invalidateQueries(['rolesList'], { exact: true });
+      invalidateRoleLists(queryClient);
       setDrawerState(false);
     },
   });
@@ -67,20 +70,37 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
 
   const onSubmit = (values: typeof UPSERT_ROLE_INITIAL) => setPendingSave(values);
 
+  /* The parent built-in role this role is saved under.
+
+     The server keeps a parent on every company role (custom_roles.role_uuid,
+     NOT NULL) and it is what the holder becomes on the server side - AGENT
+     means their own calls and numbers only. The sentinels for "Nothing" and
+     the ready-made roles name no real row, so for those the parent is looked
+     up by name in the list the server returned. A copied or edited role
+     already carries its own. Without a parent the server refused every save
+     from a preset or from "Nothing" - silently, as a 500. */
+  const parentRoleUuid = (): string => {
+    const chosen = String(selectedRole?.role_uuid || '');
+    if (chosen && chosen !== '__blank__' && !chosen.startsWith('__preset__:')) return chosen;
+    return systemRoleUuid(allRoleList, selectedRole?.parent || BLANK_PARENT);
+  };
+
   const confirmSave = () => {
     if (!pendingSave) return;
+    const role_uuid = parentRoleUuid();
+    if (!role_uuid) {
+      handleAlert({
+        text: 'This company has no built-in role to base a new one on, so the role cannot be saved.',
+        type: 'error',
+      });
+      setPendingSave(null);
+      return;
+    }
     mutateUpsertCustomRole({
       name: pendingSave.name,
       description: pendingSave.description,
       permission: { plan_features: pendingSave.permission },
-      /* The blank starting point names no real role, so it is not sent. */
-      /* Neither the blank starting point nor a ready-made preset names a real
-         role, so their sentinels are not sent. */
-      ...(selectedRole?.role_uuid &&
-      selectedRole.role_uuid !== '__blank__' &&
-      !String(selectedRole.role_uuid).startsWith('__preset__:')
-        ? { role_uuid: selectedRole.role_uuid }
-        : {}),
+      role_uuid,
       ...(roleData?.uuid ? { uuid: roleData.uuid } : {}),
     });
     setPendingSave(null);
@@ -113,7 +133,9 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
                     rolesListData: allRoleList,
                     setSelectedRole,
                     selectedRole,
-                    companyJson: companyPlanFeatures,
+                    /* The agent workday group is not a plan feature - everybody
+                       has a workday - so it is merged in here for the boxes. */
+                    companyJson: withWorkdayGroup(companyPlanFeatures),
                     initialData,
                     roleData,
                     viewPermission,

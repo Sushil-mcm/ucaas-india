@@ -7,9 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { handleAlert } from '@/lib/utils';
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 import { useSelectedAssistant } from './assistant-switcher';
 import InboxDetail, { InboxSummary } from './inbox-detail';
 import AddInboxWizard from './add-inbox-wizard';
@@ -315,19 +313,13 @@ const CaptainInboxes = () => {
         }}
       />
 
-      <Dialog open={!!inboxToDelete} onOpenChange={(open) => !open && setInboxToDelete(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Inbox</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this website inbox? Its embed script will stop working immediately.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="destructive" onClick={deleteInbox}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={!!inboxToDelete}
+        onOpenChange={(open) => !open && setInboxToDelete(null)}
+        itemLabel="inbox"
+        description="Are you sure you want to delete this website inbox? Its embed script will stop working immediately."
+        onConfirm={deleteInbox}
+      />
     </div>
   );
 };

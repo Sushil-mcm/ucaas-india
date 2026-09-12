@@ -32,7 +32,7 @@ import {
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { featuresLookUp, featuresObj } from '../all-numbers/constants';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { canEditLabel, labelOf } from '@/lib/number-labels';
+import { canEditLabel, isRouted, labelOf } from '@/lib/number-labels';
 import EditNumberLabel from '../edit-label';
 import NumbersByLine from '../by-line';
 
@@ -194,7 +194,13 @@ const NumberList = () => {
   const virtualNumberAccess = features?.plan_features?.virtual_numbers || {};
 
   const handleAddNumber = () => {
-    if (isTrial) return;
+    if (isTrial) {
+      handleAlert({
+        text: 'Buying numbers isn’t available on a trial. Upgrade your plan to add numbers.',
+        type: 'error',
+      });
+      return;
+    }
 
     if (isPlanExpired) {
       handleAlert({
@@ -351,6 +357,20 @@ const NumberList = () => {
                   FAX
                 </span>
               )}
+              {/* A number with no call handling at all reaches the switch, finds
+                  no destination and the caller gets nothing. Eight of the
+                  thirty-six numbers on this platform were in that state and
+                  nothing said so until somebody rang one. `isRouted` already
+                  existed for the label rules; this is the same test, said out
+                  loud where the numbers are listed. */}
+              {!isRouted(data) ? (
+                <span
+                  title="This number has no call handling set, so calls to it are not answered. Open it and choose where its calls should go."
+                  className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800"
+                >
+                  Not routed
+                </span>
+              ) : null}
             </div>
           );
         },
@@ -380,7 +400,7 @@ const NumberList = () => {
       },
       {
         header: 'Assigned to',
-        accessorKey: 'uuid',
+        id: 'assigned_to',
         cell: ({ row }: any) => {
           const data = row?.original?.User || {};
           if (data?.first_name) {
@@ -402,7 +422,7 @@ const NumberList = () => {
       },
       {
         header: 'Forwarded to',
-        accessorKey: 'uuid',
+        id: 'forwarded_to',
         cell: ({ row }: any) => {
           const data = row?.original || {};
 
@@ -490,7 +510,7 @@ const NumberList = () => {
 
     base.push({
       header: 'Site',
-      accessorKey: 'type',
+      id: 'site',
       cell: ({ row: { original: _val } }: any) => _val?.Site?.name ?? '--',
     });
 
@@ -658,7 +678,9 @@ const NumberList = () => {
       {/* Up into the shared strip beside the screen title, where the head used
           to sit. All five views are one table with a tab bar, so the head was
           spending three lines to repeat a title the strip already prints. */}
-      {!isTrial && view.showAddNumber && virtualNumberAccess?.action?.buy ? (
+      {view.showAddNumber && virtualNumberAccess?.action?.buy ? (
+        /* Shown on trial too — the click explains why it is unavailable
+           rather than the button silently doing nothing / not appearing. */
         <AdminHeadActions>
           <button type="button" className="btn primary" onClick={handleAddNumber}>
             <Plus className="w-3 h-3" />
@@ -709,7 +731,7 @@ const NumberList = () => {
               above every row of the table to say so on every visit. */}
           {view.key === 'all' && (
             <CustomTooltip
-              text="Adding an additional number to an existing user or plan charges only for the phone number itself. It does not create a new subscription or user plan. Your monthly recurring total is updated by the quantity of numbers added."
+              text="Adding a number to an existing plan charges for the number only, not a new subscription. Your monthly total updates to match."
               side="bottom"
               className="max-w-sm"
             >

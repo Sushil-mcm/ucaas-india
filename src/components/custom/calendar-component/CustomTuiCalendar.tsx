@@ -748,6 +748,34 @@ const CustomTuiCalendar = forwardRef<CalendarRef, CalendarProps>(
 
       return () => observer.disconnect();
     }, []);
+
+    /* TUI Calendar lays out its day columns with pixel widths computed once,
+       at mount or whenever `.render()` runs — it never re-measures itself.
+       This page's own container can change width a tick after first paint
+       (the app sidebar's rail depends on the signed-in user's nav
+       permissions, which load asynchronously), and when that happens after
+       TUI has already measured, its grid drifts out of step with its own
+       header row and leaves a dead gutter where the stale, wider
+       measurement used to end. A resize observer keeps it honest without
+       the caller having to know why. */
+    useEffect(() => {
+      const container = tuiRef.current;
+      if (!container || typeof ResizeObserver === 'undefined') return;
+
+      let frame: number | null = null;
+      const observer = new ResizeObserver(() => {
+        if (frame) cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => {
+          calendarInstRef.current?.render();
+        });
+      });
+      observer.observe(container);
+
+      return () => {
+        if (frame) cancelAnimationFrame(frame);
+        observer.disconnect();
+      };
+    }, []);
     useEffect(() => {
       return () => {
         if (calendarInstRef.current) {

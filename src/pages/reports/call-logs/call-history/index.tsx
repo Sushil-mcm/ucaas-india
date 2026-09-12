@@ -1,3 +1,4 @@
+import { normalizeCallNumber, pickCounterpartNumber } from '@/lib/call-number';
 import TableManager from '@/components/custom/table-manager';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
@@ -14,11 +15,13 @@ import { callList, callListById, forwardActionType, getSessionList } from '@/ser
 import { CALL_DIRECTIONS, FORWARD_ICONS } from '@/pages/dashboard/constant';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import ContactNumber from '@/components/custom/contact-number';
+import BlockNumberButton from '@/components/custom/block-number-button';
 import AudioModal from '@/pages/phone/audio-dialog';
 import CommonFilter, { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
-import { Merge, X } from 'lucide-react';
+import { Loader2, Merge, Sparkles, X } from 'lucide-react';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -26,6 +29,7 @@ import { ACTIVITYLIST } from '@/components/activity-list/constants';
 
 import { CALL_TYPE, FORWARD_TYPES_ARR, handleStatus, STATUS_TYPE } from '../constant';
 import SideDrawer from '@/components/custom/side-drawer';
+import AiCallRecap from '@/components/custom/ai-call-recap';
 import IVRDetailsView from '@/components/activity-list/side-drawers/ivr-details-view';
 import DepartmentDetailsView from '@/components/activity-list/side-drawers/department-details-view';
 import QueueDetailsView from '@/components/activity-list/side-drawers/queue-details-view';
@@ -35,6 +39,7 @@ import { useUsersDirectory } from '@/hooks/use-users-directory';
 import TranscriptInfo from '@/pages/phone/transcript-info';
 import AiSessionDetailDrawer from '@/pages/admin-settings/knowledge-base/components/ai-session-detail-drawer';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
+import { formatCallWaitTime } from '@/hooks/use-call-stats';
 
 type CallHistoryDateFilter = {
   from?: string;
@@ -94,9 +99,10 @@ const EMPTY_CALL_HISTORY_FILTERS: { key: string; value: string }[] = [];
 const getCallHistoryDropdownValue = (dateFilter?: CallHistoryDateFilter) => {
   if (!dateFilter) return dropdownCallInitialVal;
 
-  const value = {
+  const value: { from: string; to: string; timezone?: string } = {
     from: dateFilter.from || '',
     to: dateFilter.to || '',
+    timezone: handleDate('Today').timezone,
   };
   const matchedDateOption = dropdownCallInitialVal.dateOptions.find((option: any) => {
     const optionValue = handleDate(option.value);
@@ -132,33 +138,13 @@ const timeStringToSeconds = (value: string | null | undefined) => {
   return Math.max(0, Math.floor(seconds));
 };
 
-const formatWaitTime = (row: any) => {
-  const durationSeconds = timeStringToSeconds(row?.duration) ?? 0;
-  const billsecSeconds = timeStringToSeconds(row?.billsec) ?? 0;
-  const waitSeconds = Math.max(0, durationSeconds - billsecSeconds);
-
-  return formatSecondsToMMSS(waitSeconds);
-};
 
 const TERMINAL_DIALPAD_SESSION_STATUSES = new Set(['ended', 'failed']);
 
-const normalizeCallTarget = (value: unknown) => {
-  const normalizedValue = String(value || '')
-    .replace(/\s+/g, '')
-    .trim()
-    .toLowerCase();
+const normalizeCallTarget = (value: unknown) =>
+  normalizeCallNumber(value).toLowerCase().replace(/^\+/, '');
 
-  if (!normalizedValue) return '';
-
-  return normalizedValue
-    .replace(/^sip:/i, '')
-    .split('@')[0]
-    .replace(/_web$/i, '')
-    .replace(/^\+/, '');
-};
-
-const getCallHistoryDialTarget = (data: any) =>
-  data?.direction === 'Outbound' ? data?.destination_number : data?.caller_id_number;
+const getCallHistoryDialTarget = (data: any) => pickCounterpartNumber(data || {});
 
 const isLiveDialpadSession = (session: any) =>
   !TERMINAL_DIALPAD_SESSION_STATUSES.has(String(session?.status || '').toLowerCase());
@@ -196,8 +182,15 @@ const CallHistory = ({
     IVR: false,
     QUEUE: false,
     transcription: false,
+    recap: false,
   });
-  const [transcriptionState, setTranscriptionState] = useState({ url: '', src: '' });
+  const [transcriptionState, setTranscriptionState] = useState({ url: '', src: '', callUuid: '' });
+  /* The call the AI Recap drawer is showing. Holds the transcript file too,
+     because a recap can only be generated for a call that was transcribed. */
+  const [recapState, setRecapState] = useState<{ callUuid: string; transcriptFile: string }>({
+    callUuid: '',
+    transcriptFile: '',
+  });
 
   const [rowData, setRowData] = useState({});
   const [recordingUrl, serRecordingUrl] = useState<any>('');
@@ -244,14 +237,7 @@ const CallHistory = ({
     (data: any) => {
       if (iamOnCall || isOnCallWithUser(data)) return;
 
-      let number = '';
-      if (data?.direction === 'Outbound') {
-        number = data?.destination_number;
-      } else {
-        number = data?.caller_id_number;
-      }
-
-      const normalizedNumber = String(number || '').trim();
+      const normalizedNumber = pickCounterpartNumber(data || {});
       if (!normalizedNumber) return;
 
       const displayCallerNumber = String(data?.display_caller_number ?? '').trim();
@@ -339,19 +325,19 @@ const CallHistory = ({
   const formatCallLogsForCSV = (data = []) => {
     return data?.map((row: any) => ({
       Date: convertDateFormateApis(row?.start_stamp, 'MMM DD hh:mm A'),
-      From: row?.caller_id_number || '',
+      From: normalizeCallNumber(row?.caller_id_number) || '',
       DID: row?.via_did || '',
       To:
         row?.direction === 'Outbound'
-          ? row?.destination_number
+          ? normalizeCallNumber(row?.destination_number)
           : row?.forward_name
             ? `${row?.forward_name} (${row?.forward_value || ''})`
-            : row?.destination_number || 'Unknown',
+            : normalizeCallNumber(row?.destination_number) || 'Unknown',
       Status: row?.status?.toLowerCase()?.replaceAll('_', ' ') || '---',
       Duration: row?.billsectotal
         ? formatSecondsToMMSS(Number(row?.billsectotal))
         : row?.billsec?.slice(3) || '00:00',
-      'Wait Time': formatWaitTime(row),
+      'Wait Time': formatCallWaitTime(row),
       Charge: row?.charge || '0.00',
     }));
   };
@@ -418,6 +404,7 @@ const CallHistory = ({
       filter_date: {
         from: dropdownVal?.value?.from,
         to: dropdownVal?.value?.to,
+        timezone: dropdownVal?.value?.timezone,
       },
     }),
     [dropdownVal?.value?.from, dropdownVal?.value?.to, filters],
@@ -436,6 +423,7 @@ const CallHistory = ({
         filter_date: {
           from: dropdownVal?.value?.from,
           to: dropdownVal?.value?.to,
+          timezone: dropdownVal?.value?.timezone,
         },
       }),
     select: (res: any) => res?.data?.data?.result?.call_stats || null,
@@ -462,7 +450,7 @@ const CallHistory = ({
             displayDirection = ACTIVITYLIST?.Announcement;
           } else if (
             data?.direction === ACTIVITYLIST?.Inbound &&
-            data?.billsec === 0 &&
+            (timeStringToSeconds(data?.billsec) ?? 0) === 0 &&
             data?.is_voicemail === 0
           ) {
             displayDirection = ACTIVITYLIST?.Missed;
@@ -498,11 +486,11 @@ const CallHistory = ({
                     </span>
                   </span>
                 ) : (
-                  <NumberWithFlag number={data?.display_caller_number} />
+                  <ContactNumber number={data?.display_caller_number} />
                 )
               ) : (
                 <span className="flex items-center gap-1">
-                  <NumberWithFlag number={data?.display_caller_number} />
+                  <ContactNumber number={data?.display_caller_number} />
                 </span>
               )}
             </span>
@@ -588,7 +576,7 @@ const CallHistory = ({
                   {data?.forward_type === 'CAMPAIGN' && (
                     <span className="flex justify-center">{FORWARD_ICONS[data?.forward_type]}</span>
                   )}
-                  <NumberWithFlag number={data?.display_caller_number} />
+                  <ContactNumber number={data?.display_caller_number} />
                   {data?.forward_type?.toLowerCase() === 'conference' && (
                     <CustomTooltip text="Conference">
                       <span className="flex items-center text-[#175CD3] cursor-pointer ml-1">
@@ -680,13 +668,31 @@ const CallHistory = ({
             data?.status === 'SUCCESS'
               ? 'answered'
               : data?.status?.toLowerCase()?.replaceAll('_', ' ') || '---';
+          /* Call monitoring's verdict on the call, written by the API once the
+             transcript has been read through. Shown only when it exists, so
+             a call that was never transcribed looks exactly as before. */
+          const sentiment = String(data?.sentiment || '').trim().toLowerCase();
+          const sentimentTone =
+            sentiment === 'negative'
+              ? 'bg-red-50 text-red-700 border-red-200'
+              : sentiment === 'positive'
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-gray-50 text-gray-600 border-gray-200';
           return (
-            <div className="w-full flex">
+            <div className="w-full flex items-center gap-1.5 flex-wrap">
               <div
                 className={`flex items-center gap-1 text-[12px] text capitalize rounded-full px-2 py-0.5 ${handleStatus(status)}`}
               >
                 {status}
               </div>
+              {['positive', 'neutral', 'negative'].includes(sentiment) ? (
+                <span
+                  title="Call monitoring: how the call read overall"
+                  className={`text-[11px] capitalize rounded-full border px-2 py-0.5 ${sentimentTone}`}
+                >
+                  {sentiment}
+                </span>
+              ) : null}
             </div>
           );
         },
@@ -707,7 +713,7 @@ const CallHistory = ({
         header: 'Wait Time',
         accessorKey: 'wait_time',
         cell: ({ row }: any) => {
-          return <span>{formatWaitTime(row?.original)}</span>;
+          return <span>{formatCallWaitTime(row?.original)}</span>;
         },
       },
       {
@@ -724,14 +730,33 @@ const CallHistory = ({
         accessorKey: 'action',
         cell: ({ row }: any) => {
           const data = row?.original;
-          let number = '';
-          if (data?.direction === 'Outbound') {
-            number = data?.destination_number;
-          } else {
-            number = data?.caller_id_number;
-          }
+          const number = pickCounterpartNumber(data || {});
           const hasRecording = data?.recording_file || null;
-          const hasTranscription = Boolean(data?.transcript_file);
+          /* Same reasoning as canTryRecap just below, and for the same
+             reason: transcript_file is NULL for most real calls (the
+             upload callback that fills it in 404s), but the transcript
+             usually exists on the switch's disk regardless - the recap
+             backend derives the file name from the call id and finds it
+             either way. Gating on the column would greyed-out this icon on
+             exactly the calls people just made.
+             *
+             * NOT answer_stamp: this endpoint (CallListRepository.getCallListNew)
+             * never selects that column at all - verified directly against the
+             * deployed repository, it is simply absent from every row - so a
+             * check like `Boolean(data?.answer_stamp)` is always false here and
+             * would silently disable this for every real call. billsec on this
+             * endpoint is SEC_TO_TIME-formatted ("00:00:54"), which is why this
+             * goes through timeStringToSeconds rather than a bare Number(). */
+          const hasTranscription = (timeStringToSeconds(data?.billsec) ?? 0) > 0;
+          /* A recap needs a transcript, but NOT a transcript_file column.
+             That column is filled in by a callback that currently 404s, so
+             recent calls have a transcript sitting on the switch's disk and
+             an empty column. The server derives the file name from the call
+             id and finds it either way, so gating the button on the column
+             would hide the feature on exactly the calls people just made.
+             Answered calls are offered instead; the panel says plainly when
+             no transcript turns up. */
+          const canTryRecap = (timeStringToSeconds(data?.billsec) ?? 0) > 0;
 
           const recordingSrcUrl = data?.recording_file
             ? `${MEDIA_URL}/${user?.company_info?.uuid}/recording/${data.recording_file}`
@@ -768,7 +793,7 @@ const CallHistory = ({
               )}
               {canShowTranscriptionAction && (
                 <CustomTooltip
-                  text={hasTranscription ? 'View transcription' : 'No transcription available'}
+                  text={hasTranscription ? 'Call Intelligence' : 'Call was not answered, so no transcript'}
                   side="top"
                 >
                   <div
@@ -778,12 +803,40 @@ const CallHistory = ({
                       const src = data?.recording_file
                         ? `${MEDIA_URL}/${user?.company_info?.uuid}/recording/${data.recording_file}`
                         : '';
-                      setTranscriptionState({ url, src });
+                      setTranscriptionState({
+                        url,
+                        src,
+                        callUuid: String(data?.xml_cdr_uuid || '').trim(),
+                      });
                       setDrawerState((prev) => ({ ...prev, transcription: true }));
                     }}
                     className={`flex items-center justify-center rounded-full w-8 h-8 ${hasTranscription ? 'bg-purple-100 text-purple-500 hover:bg-purple-400 hover:text-white cursor-pointer' : 'cursor-not-allowed bg-gray-200 border-transparent'}`}
                   >
                     <Icon name="TranscriptLineIcon" className="w-4 h-4" />
+                  </div>
+                </CustomTooltip>
+              )}
+              {canShowTranscriptionAction && (
+                <CustomTooltip
+                  text={canTryRecap ? 'AI Recap' : 'Call was not answered, so no recap'}
+                  side="top"
+                >
+                  <div
+                    onClick={() => {
+                      if (!canTryRecap) return;
+                      setRecapState({
+                        callUuid: String(data?.xml_cdr_uuid || '').trim(),
+                        transcriptFile: String(data?.transcript_file || '').trim(),
+                      });
+                      setDrawerState((prev) => ({ ...prev, recap: true }));
+                    }}
+                    className={`flex items-center justify-center rounded-full w-8 h-8 ${
+                      canTryRecap
+                        ? 'bg-amber-100 text-amber-600 hover:bg-amber-400 hover:text-white cursor-pointer'
+                        : 'cursor-not-allowed bg-gray-200 border-transparent'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4" />
                   </div>
                 </CustomTooltip>
               )}
@@ -797,6 +850,9 @@ const CallHistory = ({
                   </span>
                 </CustomTooltip>
               )}
+              {/* Block the outside party of this call, the way the reference
+                  products block from the conversation in front of you. */}
+              <BlockNumberButton number={number} source="call-history" />
               {callLogActionAccess?.sms && (
                 <CustomTooltip text="SMS" side="top">
                   <Button
@@ -836,6 +892,9 @@ const CallHistory = ({
     { label: 'Outgoing Calls', count: callStats?.outbound_calls || 0 },
     { label: 'Missed Calls', count: callStats?.missed_calls || 0 },
     { label: 'Voicemails', count: callStats?.voicemail || 0 },
+    /* Calls the block list stopped. Kept out of Missed on the server, so a
+       blocked caller never looks like somebody the team failed to answer. */
+    { label: 'Blocked', count: callStats?.blocked_calls || 0 },
   ];
   const handleTabClick = (tab: string) => {
     let temp = '';
@@ -849,6 +908,8 @@ const CallHistory = ({
       temp = 'Missed';
     } else if (tab === 'Voicemails') {
       temp = 'Voicemail';
+    } else if (tab === 'Blocked') {
+      temp = 'Blocked';
     }
     if (temp) {
       setFilters([
@@ -1123,6 +1184,24 @@ const CallHistory = ({
             content={<QueueDetailsView rowData={rowData} />}
           />
         ))}
+      {drawerState?.recap && (
+        <SideDrawer
+          isHeader
+          isOpen={drawerState?.recap}
+          title="AI Recap"
+          backgroundStyle="bg-transparent"
+          handleClose={() => setDrawerState((prev) => ({ ...prev, recap: false }))}
+          content={
+            <div className="p-3">
+              <AiCallRecap
+                callUuid={recapState.callUuid}
+                transcriptFile={recapState.transcriptFile}
+              />
+            </div>
+          }
+        />
+      )}
+
       {drawerState?.transcription && (
         <SideDrawer
           isHeader
@@ -1134,6 +1213,7 @@ const CallHistory = ({
             <TranscriptInfo
               initialData={transcriptionState.src}
               transcriptSrcURL={transcriptionState.url}
+              callUuid={transcriptionState.callUuid}
               setTranscriptionState={setTranscriptionState}
             />
           }

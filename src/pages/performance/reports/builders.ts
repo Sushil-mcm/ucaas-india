@@ -5,7 +5,10 @@ import {
   callWaitSeconds,
   isMissedCall,
 } from '@/hooks/use-call-stats';
+import { SERVICE_LEVEL_DEFAULTS, type ServiceLevelTarget } from '@/lib/queue-service-target';
+import { isFlowOut } from '@/lib/call-routing-record';
 import { formatSecsToClock } from '../format';
+import { STATUS_SUMMARY_HEAD, STATUS_SUMMARY_NOTE, statusSummaryRows } from '@/lib/agent-day-rows';
 
 /**
  * Report builders.
@@ -26,15 +29,26 @@ export type ReportTable = {
 
 export type ReportContext = {
   rows: any[];
+  /** Each queue's own target and short-abandon floor, keyed by queue uuid.
+      A queue absent here is measured against the platform defaults. */
+  targetsByQueue?: Record<string, ServiceLevelTarget>;
   isSampled: boolean;
   agentStatsRows: any[];
+  /** Agent-day summary rows (one per agent per day) from the duty history. */
+  agentDayRows: any[];
+  /** The users directory, for naming a person whose queue rows carry no name. */
+  users?: any[];
+  /** "Days are cut at midnight in Asia/Kolkata (company).": the zone of the agent-day rows. */
+  timeZoneLabel?: string;
   campaigns: any[];
   aiResult: any;
   smsRows: any[];
   contactLists: any[];
 };
 
-const SERVICE_LEVEL_TARGET_SEC = 20;
+/* The platform's defaults, for calls that belong to no queue or to a queue that
+   set nothing of its own. A queue's own numbers arrive through the context. */
+const SERVICE_LEVEL_TARGET_SEC = SERVICE_LEVEL_DEFAULTS.seconds;
 
 const pct = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 100)}%` : '—');
 const avg = (values: number[]) =>
@@ -46,17 +60,51 @@ const isIvrCall = (row: any) => String(row?.forward_type || '').toUpperCase() ==
 const queueNameOf = (row: any) => String(row?.forward_name || '').trim() || 'Unassigned';
 const isAnswered = (row: any) => callTalkSeconds(row) > 0;
 
-/** Offered / handled / abandoned / SL / ASA / AHT for an arbitrary set of calls. */
-const summarise = (calls: any[]) => {
-  const handled = calls.filter(isAnswered);
-  const abandoned = calls.filter(isMissedCall);
-  const withinTarget = handled.filter((row) => callWaitSeconds(row) <= SERVICE_LEVEL_TARGET_SEC);
+/**
+ * A hang-up too quick to be a customer decision — a misdial or a wrong number.
+ * Standard practice sets these aside so they neither count against the centre
+ * nor pad out its totals. Without this rule a run of instant failures reads as
+ * customers abandoning, which points the investigation the wrong way.
+ */
+const SHORT_ABANDON_SEC = SERVICE_LEVEL_DEFAULTS.shortAbandonSeconds;
+
+const isShortAbandon = (row: any, floorSec: number = SHORT_ABANDON_SEC) =>
+  !isAnswered(row) && Math.max(callWaitSeconds(row), callTotalSeconds(row)) < floorSec;
+
+/**
+ * A caller the queue sent on - to voicemail, a menu, an extension - or whose
+ * wait the queue itself ended. Not answered, but not a customer giving up
+ * either, so it is neither handled nor abandoned. It stays in Offered
+ * (Offered = handled + abandoned + flow-out + short abandons) and is kept
+ * out of the service-level denominator, which counts only what an agent
+ * could have answered: handled plus real abandons. The CDR writer marks it
+ * in the routing record (flow_out); older rows have no mark and still read
+ * as abandons.
+ */
+const isFlowOutCall = (row: any) => !isAnswered(row) && isFlowOut(row);
+
+/** Offered / handled / abandoned / flow-out / SL / ASA / AHT for an arbitrary set of calls,
+    measured against a queue's own target and floor when one is given. */
+const summarise = (calls: any[], target?: ServiceLevelTarget) => {
+  const targetSec = target?.seconds ?? SERVICE_LEVEL_TARGET_SEC;
+  const floorSec = target?.shortAbandonSeconds ?? SHORT_ABANDON_SEC;
+  const counted = calls.filter((row) => !isShortAbandon(row, floorSec));
+  const handled = counted.filter(isAnswered);
+  const flowOut = counted.filter(isFlowOutCall);
+  const abandoned = counted.filter((row) => isMissedCall(row) && !isFlowOutCall(row));
+  const inDenominator = handled.length + abandoned.length;
+  const withinTarget = handled.filter((row) => callWaitSeconds(row) <= targetSec);
   return {
     offered: calls.length,
+    shortAbandons: calls.length - counted.length,
+    counted: counted.length,
     handled: handled.length,
     abandoned: abandoned.length,
-    abandonPct: pct(abandoned.length, calls.length),
-    slPct: pct(withinTarget.length, calls.length),
+    flowOut: flowOut.length,
+    /* Abandon % is over everything offered (less misdials), flow-outs
+       included; SL % is over what an agent could have answered. */
+    abandonPct: pct(abandoned.length, counted.length),
+    slPct: pct(withinTarget.length, inDenominator),
     asa: avg(handled.map(callWaitSeconds)),
     aht: avg(handled.map(callTalkSeconds)),
     talkTotal: handled.reduce((sum, row) => sum + callTalkSeconds(row), 0),
@@ -77,6 +125,7 @@ const SUMMARY_HEAD = [
   'Offered',
   'Handled',
   'Abandoned',
+  'Flow-out',
   'Abandon %',
   'SL %',
   'ASA',
@@ -84,12 +133,13 @@ const SUMMARY_HEAD = [
   'Total talk',
 ];
 
-const summaryCells = (calls: any[]) => {
-  const s = summarise(calls);
+const summaryCells = (calls: any[], target?: ServiceLevelTarget) => {
+  const s = summarise(calls, target);
   return [
     s.offered,
     s.handled,
     s.abandoned,
+    s.flowOut,
     s.abandonPct,
     s.slPct,
     clock(s.asa),
@@ -98,16 +148,32 @@ const summaryCells = (calls: any[]) => {
   ];
 };
 
-const slNote = `SL % counts calls answered within ${SERVICE_LEVEL_TARGET_SEC}s of the total offered.`;
+const slNote =
+  `SL % counts calls answered within each queue's own target (${SERVICE_LEVEL_TARGET_SEC}s ` +
+  `where a queue has not set one), out of handled plus abandoned. Flow-out is a caller the ` +
+  `queue sent on to voicemail, a menu or an extension, or whose wait it ended itself: not ` +
+  `abandoned, so it is left out of SL % but stays in Offered. Hang-ups faster than the queue's ` +
+  `floor (${SHORT_ABANDON_SEC}s unless it chose otherwise) are counted as misdials, not ` +
+  `abandonment, and are left out of ` +
+  `both SL % and Abandoned % — Offered still shows every call. Internal calls between ` +
+  `extensions are not included in any of these reports.`;
+
+/* Which queue a group of calls belongs to, so its own target can be looked up.
+   Reports group by the queue's name; the uuid rides on each row. */
+const targetForCalls = (ctx: ReportContext, calls: any[]): ServiceLevelTarget | undefined => {
+  const uuid = String(calls[0]?.forward_value || calls[0]?.forward_uuid || '').trim();
+  return uuid ? ctx.targetsByQueue?.[uuid] : undefined;
+};
 
 /* ------------------------------------------------------------------ queues */
 
-export const queueSummary = ({ rows }: ReportContext): ReportTable => {
+export const queueSummary = (ctx: ReportContext): ReportTable => {
+  const { rows } = ctx;
   const queueCalls = rows.filter(isQueueCall);
   const grouped = groupBy(queueCalls, queueNameOf);
   const tableRows = Array.from(grouped.entries())
     .sort((a, b) => b[1].length - a[1].length)
-    .map(([name, calls]) => [name, ...summaryCells(calls)]);
+    .map(([name, calls]) => [name, ...summaryCells(calls, targetForCalls(ctx, calls))]);
   return {
     head: ['Queue', ...SUMMARY_HEAD],
     rows: tableRows,
@@ -151,7 +217,9 @@ const ABANDON_BUCKETS: { label: string; max: number }[] = [
 ];
 
 export const abandonInsights = ({ rows }: ReportContext): ReportTable => {
-  const abandoned = rows.filter(isQueueCall).filter(isMissedCall);
+  const abandoned = rows
+    .filter(isQueueCall)
+    .filter((row) => isMissedCall(row) && !isFlowOutCall(row));
   const grouped = groupBy(abandoned, queueNameOf);
 
   const bucketCounts = (calls: any[]) =>
@@ -193,7 +261,7 @@ export const abandonInsights = ({ rows }: ReportContext): ReportTable => {
       clock(avg(abandoned.map(callWaitSeconds))),
       clock(abandoned.length ? Math.max(...abandoned.map(callWaitSeconds)) : 0),
     ],
-    note: 'Wait time is the time before the caller gave up, derived the same way Call History derives it (total duration minus talk time).',
+    note: `Wait time is the switch's own measurement of how long the caller held. Every hang-up is shown here, including those inside ${SHORT_ABANDON_SEC}s — a cluster in the fastest bucket usually means calls are failing on arrival rather than callers losing patience, so it is worth seeing. Those same calls are excluded from the Abandoned % on the summary reports.`,
   };
 };
 
@@ -242,6 +310,20 @@ export const agentSummary = ({ agentStatsRows }: ReportContext): ReportTable => 
     note: 'From the agent activity report for the selected range.',
   };
 };
+
+/**
+ * Where each agent's day went, from the duty history rows (start shift,
+ * breaks with a reason, end shift) plus the campaign call log and the
+ * browser's wrap-up events. Time in each state is exact; time on calls covers
+ * campaign calls only and wrap-up is what the browser reported, so both are
+ * marked as such. Adherence needs schedules the platform does not have, so
+ * that column says so instead of showing a number.
+ */
+export const agentStatusSummary = ({ agentDayRows, users, timeZoneLabel }: ReportContext): ReportTable => ({
+  head: [...STATUS_SUMMARY_HEAD],
+  rows: statusSummaryRows(agentDayRows, users || []),
+  note: `${timeZoneLabel ? `${timeZoneLabel} ` : ''}${STATUS_SUMMARY_NOTE}`,
+});
 
 const agentNameOf = (row: any) =>
   String(row?.to_display_name || '').trim() ||
@@ -606,24 +688,6 @@ export const forecastVsActual = ({ rows }: ReportContext): ReportTable => {
 // measure against — this is a stated assumption the notes below call out.
 const AGENT_SHIFT_MINUTES = 480;
 
-export const agentStatusSummary = ({ agentStatsRows }: ReportContext): ReportTable => {
-  const tableRows = agentStatsRows
-    .map((row: any) => {
-      const stats = row?.stats || {};
-      const name = `${row?.first_name || ''} ${row?.last_name || ''}`.trim() || '—';
-      const onCallMin = Number(stats.time_on_calls_minutes || 0);
-      const availableMin = Math.max(0, AGENT_SHIFT_MINUTES - onCallMin);
-      const occupancy = Math.min(100, Math.round((onCallMin / AGENT_SHIFT_MINUTES) * 100));
-      return [name, clock(onCallMin * 60), clock(availableMin * 60), occupancy];
-    })
-    .sort((a, b) => Number(b[3]) - Number(a[3]))
-    .map((row) => [row[0], row[1], row[2], `${row[3]}%`]);
-  return {
-    head: ['Agent', 'On call', 'Available (est.)', 'Occupancy (est.)'],
-    rows: tableRows,
-    note: `No presence login/logout log is available, so "Available" and Occupancy are estimated against an assumed ${AGENT_SHIFT_MINUTES / 60}-hour shift rather than a measured one. On call time is real, from the agent activity report.`,
-  };
-};
 
 export const evaluationSummary = ({ agentStatsRows }: ReportContext): ReportTable => {
   const rowsWithCalls = agentStatsRows.filter(

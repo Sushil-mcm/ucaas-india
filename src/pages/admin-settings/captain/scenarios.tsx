@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil, Trash2, Plus, GitBranch, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, GitBranch, X, Search, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { handleAlert } from '@/lib/utils';
 import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
+import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 
 const HIDE_SUGGESTIONS_KEY = 'captain_scenarios_hide_suggestions';
 
@@ -81,9 +84,13 @@ const CaptainScenarios = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [hideSuggestions, setHideSuggestions] = useState(
     () => localStorage.getItem(HIDE_SUGGESTIONS_KEY) === '1',
   );
@@ -202,7 +209,6 @@ const CaptainScenarios = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this scenario?')) return;
     setDeletingId(id);
     try {
       await captainFetch(`${CAPTAIN_API_BASE}/assistants/${selectedId}/scenarios/${id}`, {
@@ -226,7 +232,6 @@ const CaptainScenarios = () => {
   // Chatwoot has no bulk-delete endpoint either — it Promise.all()s single deletes.
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    if (!window.confirm(`Delete ${selectedIds.size} scenario(s)?`)) return;
     setIsBulkDeleting(true);
     try {
       await Promise.all(
@@ -273,12 +278,17 @@ const CaptainScenarios = () => {
     });
   };
 
-  const toggleSelectAll = () => {
-    setSelectedIds((prev) =>
-      prev.size === filteredScenarios.length
-        ? new Set()
-        : new Set(filteredScenarios.map((s) => s.id)),
-    );
+  const handleCardHover = (isHovered: boolean, id: string) => {
+    setHoveredCard(isHovered ? id : null);
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const previewTools = getToolsFromInstruction(form.instruction);
@@ -286,21 +296,17 @@ const CaptainScenarios = () => {
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-bold text-gray-950 dark:text-foreground">Scenarios</div>
-          <div className="text-sm text-gray-500 dark:text-muted-foreground">
-            Give your assistant some context—like &ldquo;what to do when a user is stuck,&rdquo; or
-            &ldquo;how to act during a refund request.&rdquo; Matching conversations are routed to a
-            specialised sub-agent.
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
-          <Button type="button" variant="primary" onClick={openCreateModal} disabled={!selectedId}>
-            <Plus className="size-4" />
-            Add a scenario
-          </Button>
-        </div>
+        <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} pageTitle="Scenarios" />
+        <Button type="button" variant="primary" onClick={openCreateModal} disabled={!selectedId}>
+          <Plus className="size-4" />
+          Add a scenario
+        </Button>
+      </div>
+
+      <div className="text-sm text-gray-500 dark:text-muted-foreground">
+        Give your assistant some context—like &ldquo;what to do when a user is stuck,&rdquo; or
+        &ldquo;how to act during a refund request.&rdquo; Matching conversations are routed to a
+        specialised sub-agent.
       </div>
 
       {error && (
@@ -339,45 +345,31 @@ const CaptainScenarios = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        {selectedIds.size > 0 ? (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-muted-foreground">{selectedIds.size} selected</span>
-            <Button
-              type="button"
-              variant="destructiveOutline"
-              size="sm"
-              disabled={isBulkDeleting}
-              onClick={handleBulkDelete}
-            >
-              <Trash2 className="size-3.5" />
-              {isBulkDeleting ? 'Deleting...' : `Delete (${selectedIds.size})`}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            {scenarios.length > 0 && (
-              <Checkbox
-                checked={
-                  filteredScenarios.length > 0 && selectedIds.size === filteredScenarios.length
-                }
-                onCheckedChange={toggleSelectAll}
-              />
-            )}
-            <span className="text-sm text-gray-500 dark:text-muted-foreground">
-              {scenarios.length} scenario{scenarios.length === 1 ? '' : 's'}
-            </span>
-          </div>
-        )}
-        {scenarios.length > 0 && (
+      {selectedId && (
+        <div className="relative w-full max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
           <Input
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="max-w-xs"
+            placeholder="Search scenarios..."
+            className="pl-9"
           />
-        )}
-      </div>
+        </div>
+      )}
+
+      <BulkSelectBar
+        items={filteredScenarios}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onSelectAllLabel={(count, allSelected) =>
+          allSelected ? `Unselect all (${count})` : `Select all (${count})`
+        }
+        selectedCountLabel={(count) => `${count} selected`}
+        deleteLabel="Delete"
+        onDelete={() => setIsBulkDeleteDialogOpen(true)}
+        isDeleting={isBulkDeleting}
+      />
 
       <div className="flex-1 overflow-auto rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card">
         {isLoading ? (
@@ -397,62 +389,85 @@ const CaptainScenarios = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-border">
-            {filteredScenarios.map((s) => (
-              <div
-                key={s.id}
-                className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-muted"
-              >
-                <div className="flex flex-1 items-start gap-3">
-                  <div className="pt-1">
-                    <Checkbox
-                      checked={selectedIds.has(s.id)}
-                      onCheckedChange={() => toggleSelected(s.id)}
-                    />
-                  </div>
-                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
-                    <GitBranch className="size-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-950 dark:text-foreground">{s.title}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          s.enabled ? 'bg-green-50 text-green-700' : 'bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground'
+            {filteredScenarios.map((s) => {
+              const isExpanded = expandedIds.has(s.id);
+              return (
+                <div
+                  key={s.id}
+                  className="flex items-start justify-between gap-4 px-5 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  onMouseEnter={() => handleCardHover(true, s.id)}
+                  onMouseLeave={() => handleCardHover(false, s.id)}
+                >
+                  <div className="flex flex-1 items-start gap-3">
+                    <div className="pt-1">
+                      <Checkbox
+                        checked={selectedIds.has(s.id)}
+                        onCheckedChange={() => toggleSelected(s.id)}
+                        className={`transition-opacity ${
+                          hoveredCard === s.id || selectedIds.size > 0 ? 'opacity-100' : 'opacity-0'
                         }`}
-                      >
-                        {s.enabled ? 'Enabled' : 'Disabled'}
-                      </span>
+                      />
                     </div>
-                    {s.description && <div className="mt-0.5 text-sm text-gray-500 dark:text-muted-foreground">{s.description}</div>}
-                    <div className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs text-gray-400 dark:text-muted-foreground">
-                      {s.instruction}
+                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
+                      <GitBranch className="size-4" />
                     </div>
-                    {s.tools?.length > 0 && (
-                      <div className="mt-1.5 text-xs font-medium text-gray-400 dark:text-muted-foreground">
-                        Tools used: {s.tools.map((t) => `@${t}`).join(', ')}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-950 dark:text-foreground">{s.title}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            s.enabled ? 'bg-green-50 text-green-700' : 'bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground'
+                          }`}
+                        >
+                          {s.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
                       </div>
-                    )}
+                      {s.description && <div className="mt-0.5 text-sm text-gray-500 dark:text-muted-foreground">{s.description}</div>}
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleExpanded(s.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleExpanded(s.id);
+                          }
+                        }}
+                        aria-label={isExpanded ? 'Show less' : 'Show more'}
+                        className="mt-1 cursor-pointer whitespace-pre-wrap text-xs text-gray-400 outline-none dark:text-muted-foreground"
+                      >
+                        <div className={isExpanded ? '' : 'line-clamp-2'}>{s.instruction}</div>
+                        {!isExpanded && (
+                          <ChevronDown className="mx-auto mt-0.5 size-3.5 text-gray-300 dark:text-muted-foreground/70" />
+                        )}
+                      </div>
+                      {s.tools?.length > 0 && (
+                        <div className="mt-1.5 text-xs font-medium text-gray-400 dark:text-muted-foreground">
+                          Tools used: {s.tools.map((t) => `@${t}`).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Switch checked={s.enabled} onCheckedChange={() => handleToggle(s)} />
+                    <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(s)}>
+                      <Pencil className="size-3.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructiveOutline"
+                      size="sm"
+                      disabled={deletingId === s.id}
+                      onClick={() => setPendingDeleteId(s.id)}
+                    >
+                      <Trash2 className="size-3.5" />
+                      {deletingId === s.id ? 'Deleting...' : 'Delete'}
+                    </Button>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Switch checked={s.enabled} onCheckedChange={() => handleToggle(s)} />
-                  <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(s)}>
-                    <Pencil className="size-3.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructiveOutline"
-                    size="sm"
-                    disabled={deletingId === s.id}
-                    onClick={() => handleDelete(s.id)}
-                  >
-                    <Trash2 className="size-3.5" />
-                    {deletingId === s.id ? 'Deleting...' : 'Delete'}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -560,6 +575,22 @@ const CaptainScenarios = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <BulkDeleteDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        selectedIds={selectedIds}
+        type="scenario"
+        onConfirm={handleBulkDelete}
+      />
+
+      <DeleteConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+        itemLabel="scenario"
+        itemName={scenarios.find((s) => s.id === pendingDeleteId)?.title}
+        onConfirm={() => handleDelete(pendingDeleteId!)}
+      />
     </div>
   );
 };

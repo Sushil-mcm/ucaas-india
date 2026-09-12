@@ -21,6 +21,7 @@ import {
   updateEventTaskStatus,
 } from '@/services/api/index.tsx';
 import AssignMembersStandaloneModal from '../send-invites/assign-members-standalone';
+import { getApiErrorMessage } from '../lib/list-feedback';
 import {
   calendars,
   colors,
@@ -258,7 +259,6 @@ const CalendarPage = () => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [event, setEvent] = useState<ExtendedEvent | null>(null);
-  console.log(event, detailsModal);
 
   /* Closing this popup (the X button, clicking the backdrop, or Escape —
      `onOpenChange` covers all three) never moves the mouse. The day cell
@@ -352,6 +352,12 @@ const CalendarPage = () => {
       queryClient.invalidateQueries({ queryKey: ['calendarMeetingListTodayEvents'] });
       queryClient.invalidateQueries({ queryKey: ['calendarMeetingListTaskList'] });
       handleAlert({ text: 'Status updated successfully', type: 'success' });
+    },
+    onError: (error: any) => {
+      handleAlert({
+        text: getApiErrorMessage(error, "Couldn't update the status. Please try again."),
+        type: 'error',
+      });
     },
   });
 
@@ -486,6 +492,12 @@ const CalendarPage = () => {
     mutationKey: ['saveAccessToken'],
     mutationFn: saveAccessToken,
     onSuccess: () => queryClient.invalidateQueries(['getCalendarAccessToken'], { exact: true }),
+    onError: (error: any) => {
+      handleAlert({
+        text: getApiErrorMessage(error, "Couldn't finish connecting your calendar. Please try again."),
+        type: 'error',
+      });
+    },
     onSettled: () => navigate(window.location.pathname, { replace: true }),
   });
 
@@ -524,10 +536,22 @@ const CalendarPage = () => {
       const newText = deleteMessages[category] || 'Item deleted successfully';
       handleAlert({ text: newText, type: 'success' });
     },
+    onError: (error: any) => {
+      handleAlert({
+        text: getApiErrorMessage(error, "Couldn't delete this item. Please try again."),
+        type: 'error',
+      });
+    },
   });
 
   const { mutateAsync: mutateMeetingDelete, isPending: isMeetingDeleting } = useMutation({
     mutationFn: meetingDelete,
+    onError: (error: any) => {
+      handleAlert({
+        text: getApiErrorMessage(error, "Couldn't delete the meeting. Please try again."),
+        type: 'error',
+      });
+    },
   });
 
   const toggle = () => {
@@ -721,8 +745,6 @@ const CalendarPage = () => {
     return value instanceof Date ? value : new Date(value);
   };
   const openCustomDetailsPopup = useCallback((schedule: any) => {
-    console.log(schedule, 'schedule????');
-
     setCopiedLink(false);
     setDetailsModal(schedule);
   }, []);
@@ -737,9 +759,15 @@ const CalendarPage = () => {
   const handleCopyLink = () => {
     if (!detailsModal?.raw?.referenceId && !detailsModal?.referenceId) return;
     const meetUrl = `${window.location.origin}/video-meet?meetCode=${detailsModal?.raw?.referenceId || detailsModal?.referenceId}`;
-    navigator.clipboard.writeText(meetUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    navigator.clipboard.writeText(meetUrl).then(
+      () => {
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2000);
+      },
+      () => {
+        handleAlert({ text: "Couldn't copy the link to the clipboard.", type: 'error' });
+      },
+    );
   };
   /* Off `raw` first. A schedule that crossed midnight has had its `end`
      pulled back to 23:59 for the month grid, so reading the schedule here
@@ -1079,7 +1107,6 @@ const CalendarPage = () => {
                     <DropdownMenuItem
                       disabled={iamOnCall}
                       onClick={() => {
-                        console.log(schedule, 'scheduleschedule dropdown');
                         if (schedule.details?.contactPhone) {
                           makeCall(schedule.details.contactPhone, {
                             extraHeaders: [`X-ContactName: ${schedule.details.contactName || ' '}`],
@@ -1144,8 +1171,6 @@ const CalendarPage = () => {
                         <DropdownMenuItem
                           className=""
                           onClick={() => {
-                            console.log(schedule, 'scheduleschedule');
-
                             setDetailsModal(null);
                             setModal(true);
                             setEvent({ schedule: schedule });

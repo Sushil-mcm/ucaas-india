@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { SearchLine } from '@/assets/icons';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/assets/icons/icon';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AgentBreaksTab, AgentDayTab } from './agent-day-tabs';
 
 const AgentReports = () => {
   const tableRef = useRef<any>(null);
@@ -18,6 +20,9 @@ const AgentReports = () => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const [dropdownVal, setDropdownVal] = useState(dropdownCallInitialVal);
+  /* Calls: the existing per-agent call counts. Day: where each agent's day
+     went (from the duty history). Breaks: every break with its allowance. */
+  const [view, setView] = useState<'calls' | 'day' | 'breaks'>('calls');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 1000);
   // const { data: dataExtensionsList } = useGetExtensions({
@@ -117,6 +122,13 @@ const AgentReports = () => {
   ];
   const Filters = (
     <div className="flex items-center gap-2 filters">
+      <Tabs value={view} onValueChange={(value) => setView(value as 'calls' | 'day' | 'breaks')}>
+        <TabsList className="h-9">
+          <TabsTrigger value="calls">Calls</TabsTrigger>
+          <TabsTrigger value="day">Day</TabsTrigger>
+          <TabsTrigger value="breaks">Breaks</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="w-full sm:w-52 lg:w-60">
         <Input
           placeholder="Search"
@@ -155,6 +167,13 @@ const AgentReports = () => {
   return (
     <ReportsPageLayout filters={Filters}>
       <div className="w-full  p-3 flex flex-col gap-2">
+        {view === 'day' ? (
+          <AgentDayTab from={dropdownVal?.value?.from} to={dropdownVal?.value?.to} search={debouncedSearch} />
+        ) : null}
+        {view === 'breaks' ? (
+          <AgentBreaksTab from={dropdownVal?.value?.from} to={dropdownVal?.value?.to} search={debouncedSearch} />
+        ) : null}
+        {view === 'calls' ? (
         <TableManager
           {...{
             tableRef,
@@ -181,6 +200,7 @@ const AgentReports = () => {
             // descriptionEmptyTable: 'Start making or receiving calls to generate call logs.',
           }}
         />
+        ) : null}
       </div>
     </ReportsPageLayout>
   );

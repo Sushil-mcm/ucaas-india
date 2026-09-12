@@ -14,15 +14,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Loader from '@/components/custom/loader';
 import { SocketEvents } from '@/context/socket-events-context';
+import { UsersDirectoryContext } from '@/context/users-directory-context';
 import { useUser } from '@/hooks/use-user';
 import { useCallStats } from '@/hooks/use-call-stats';
-import { callReportAgentList, campaignList, getGroupList, getSmsLogList } from '@/services/api';
+import { useCompanyTimeZone } from '@/hooks/use-company-time-zone';
+import { downloadCsv } from '@/lib/csv-download';
+import { canExportReport } from '@/lib/report-export-rules';
+import { serviceLevelTargetsByUuid } from '@/lib/queue-service-target';
+import {
+  callQueueList,
+  callReportAgentList,
+  campaignList,
+  getAgentDaySummary,
+  getGroupList,
+  getSmsLogList,
+} from '@/services/api';
 import PerfStatCard from './stat-card';
 import {
   REPORT_CATALOG,
   AVAILABLE_REPORT_COUNT,
   TOTAL_REPORT_COUNT,
   findReport,
+  isReportAvailable,
 } from './reports/catalog';
 import type { ReportTable } from './reports/builders';
 import './reports-theme.css';
@@ -119,6 +132,9 @@ const toCsvValue = (value: unknown) => {
   const text = String(value ?? '');
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
+import QueueSeriesReport from './reports/queue-series-report';
+import ScriptAnswersReportScreen from './reports/script-answers-report';
+import { useSearchParamManager } from '@/hooks/use-search-params';
 
 // Columns are dynamic per report (each builder defines its own `head`), so
 // alignment can't be a fixed per-index rule beyond column 0 — it's keyed by
@@ -179,8 +195,17 @@ const ReportsTab = ({
   globalSearch?: string;
 }) => {
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [selectedId, setSelectedId] = useState('queue-summary');
-  const [openReport, setOpenReport] = useState<LinkedReport | null>(null);
+  /* The agent-day report cuts days in the company's zone, not the browser's,
+     so two people in two places read the same numbers; the note says which. */
+  const companyZone = useCompanyTimeZone();
+  /* A link can open a report directly (?report=script-answers&script=<id>),
+     the way the script list's "Answers" action does. */
+  const { getParam } = useSearchParamManager();
+  const linkedReport = findReport(String(getParam('report') || ''));
+  const linkedScriptId = String(getParam('script') || '').trim();
+  const [selectedId, setSelectedId] = useState(
+    linkedReport && isReportAvailable(linkedReport) ? linkedReport.id : 'queue-summary',
+  );
   // The dropdown is the primary picker; the full catalog opens on demand,
   // matching the console.
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
@@ -211,7 +236,26 @@ const ReportsTab = ({
   };
 
   const selected = findReport(selectedId);
-  const callStats = useCallStats(selectedRange);
+
+  /* Each queue's own answering target and short-abandon floor, so a report row
+     is judged by what that queue asked for rather than one number for all.
+     Same query key as the live contact-centre hook, so the two share a cache
+     entry instead of fetching the list twice. */
+  const { data: queueRows = [] } = useQuery({
+    queryKey: ['performanceQueueList'],
+    queryFn: () => callQueueList({ page: 1, limit: 200, filters: [], search: '' }),
+    select: (res: any) => res?.data?.data?.result?.rows || [],
+  });
+  const targetsByQueue = useMemo(() => serviceLevelTargetsByUuid(queueRows), [queueRows]);
+  const targetSecondsByQueue = useMemo(() => {
+    const map: Record<string, number> = {};
+    Object.entries(targetsByQueue).forEach(([uuid, target]) => {
+      map[uuid] = target.seconds;
+    });
+    return map;
+  }, [targetsByQueue]);
+
+  const callStats = useCallStats(selectedRange, { targetSecondsByQueue });
 
   /**
    * `perf-warm-backdrop` flags the document so reports-theme.css can paint
@@ -235,6 +279,7 @@ const ReportsTab = ({
     'evaluation-summary',
     'adherence-summary',
   ].includes(selectedId);
+  const needsAgentDay = selectedId === 'agent-status-summary';
   const needsCampaigns = selectedId === 'campaign-performance';
   const needsAi = selectedId === 'sentiment-topics';
   const needsSms = selectedId === 'media-type';
@@ -251,11 +296,31 @@ const ReportsTab = ({
         limit: 200,
         timezone: browserTimezone,
         filter_date: selectedRange,
-        filter: [],
+        /* See use-live-contact-centre: the agents report refuses a `filter`
+           key, and an empty array was never filtering anything. */
       }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
     enabled: needsAgents,
   });
+
+  const { data: agentDayRows = [], isPending: isAgentDayPending } = useQuery({
+    queryKey: ['performanceReportAgentDay', selectedRange, companyZone.timeZone],
+    queryFn: () =>
+      getAgentDaySummary({
+        date_from: selectedRange.from,
+        date_to: selectedRange.to,
+        timezone: companyZone.timeZone,
+      }),
+    select: (res: any) => res?.data?.data?.rows || [],
+    enabled: needsAgentDay,
+  });
+
+  /* Names for people whose queue rows carry none (they left every queue):
+     the users directory the site already holds, asked only for this report. */
+  const directory = useContext(UsersDirectoryContext);
+  useEffect(() => {
+    if (needsAgentDay) directory.ensureUsersDirectory();
+  }, [needsAgentDay, directory.ensureUsersDirectory]);
 
   const { data: campaigns = [], isPending: isCampaignPending } = useQuery({
     queryKey: ['performanceReportCampaigns'],
@@ -270,7 +335,11 @@ const ReportsTab = ({
       getSmsLogList({
         page: 1,
         limit: 1000,
-        filter_date: { from: selectedRange.from, to: selectedRange.to },
+        filter_date: {
+          from: selectedRange.from,
+          to: selectedRange.to,
+          timezone: (selectedRange as any).timezone,
+        },
       }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
     enabled: needsSms,
@@ -304,8 +373,12 @@ const ReportsTab = ({
     try {
       return selected.build({
         rows: callStats.rows,
+        targetsByQueue,
         isSampled: callStats.isQueueBreakdownSampled,
         agentStatsRows,
+        agentDayRows,
+        users: directory.users,
+        timeZoneLabel: companyZone.sentence,
         campaigns,
         aiResult: campaignAiLiveCallData?.data?.result,
         smsRows,
@@ -317,7 +390,11 @@ const ReportsTab = ({
   }, [
     selected,
     callStats.rows,
+    targetsByQueue,
     agentStatsRows,
+    agentDayRows,
+    directory.users,
+    companyZone.sentence,
     campaigns,
     campaignAiLiveCallData,
     smsRows,
@@ -340,25 +417,21 @@ const ReportsTab = ({
   const isLoading =
     callStats.isPending ||
     (needsAgents && isAgentPending) ||
+    (needsAgentDay && isAgentDayPending) ||
     (needsCampaigns && isCampaignPending) ||
     (needsSms && isSmsPending) ||
     (needsLists && isListsPending);
 
+  /* The shared writer (lib/csv-download): one quoting rule for every screen,
+     a BOM so Excel keeps the ≈ and ×. The total line, when a report has
+     one, goes out as the last row. */
   const exportCsv = () => {
     if (!report || !selected) return;
-    const lines = [report.head.map(toCsvValue).join(',')];
-    report.rows.forEach((row) => lines.push(row.map(toCsvValue).join(',')));
-    if (report.total) lines.push(report.total.map(toCsvValue).join(','));
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selected.id}_${selectedRange.from}_${selectedRange.to}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const rows = report.total ? [...report.rows, report.total] : report.rows;
+    downloadCsv(`${selected.id}_${selectedRange.from}_${selectedRange.to}`, report.head, rows);
   };
+  /* Agent reports leave the building only with reports.agents.export. */
+  const mayExport = canExportReport(user, selected?.id);
 
   return (
     <div
@@ -423,7 +496,7 @@ const ReportsTab = ({
                     {group.group}
                   </DropdownMenuLabel>
                   {group.reports.map((definition) => {
-                    const isAvailable = Boolean(definition.build);
+                    const isAvailable = isReportAvailable(definition);
                     const isSelected = definition.id === selectedId;
                     return (
                       <DropdownMenuItem
@@ -461,20 +534,28 @@ const ReportsTab = ({
             {selectedRange.from} <span className="rp-range-arrow">→</span> {selectedRange.to}
           </span>
           <span className="rp-range-hint">(set by the date filter above)</span>
+          {needsAgentDay && (
+            <span className="rp-range-hint" title="Days in this report are cut at midnight in this zone">
+              {companyZone.label}
+            </span>
+          )}
         </div>
 
         <span style={{ flex: 1 }} />
 
-        <button
-          type="button"
-          className="btn ghost sm"
-          onClick={exportCsv}
-          disabled={!report || !report.rows.length}
-          style={{ opacity: !report || !report.rows.length ? 0.5 : 1 }}
-        >
-          <Download style={{ width: 14, height: 14 }} />
-          Export CSV
-        </button>
+        {/* A custom report carries its own export, next to its own controls. */}
+        {!selected?.custom && mayExport && (
+          <button
+            type="button"
+            className="btn ghost sm"
+            onClick={exportCsv}
+            disabled={!report || !report.rows.length}
+            style={{ opacity: !report || !report.rows.length ? 0.5 : 1 }}
+          >
+            <Download style={{ width: 14, height: 14 }} />
+            Export CSV
+          </button>
+        )}
       </div>
 
       {/* ---- catalog (collapsed by default, like the console) ---- */}
@@ -505,7 +586,7 @@ const ReportsTab = ({
                 <div className="rp-catalog-grid">
                   {visibleReports.map((definition) => {
                     const isSelected = definition.id === selectedId;
-                    const isAvailable = Boolean(definition.build);
+                    const isAvailable = isReportAvailable(definition);
                     return (
                       <button
                         type="button"
@@ -545,6 +626,11 @@ const ReportsTab = ({
       )}
 
       {/* ---- selected report ---- */}
+      {selected?.custom === 'queue-series' ? (
+        <QueueSeriesReport selectedRange={selectedRange} />
+      ) : selected?.custom === 'script-answers' ? (
+        <ScriptAnswersReportScreen selectedRange={selectedRange} initialScriptId={linkedScriptId} />
+      ) : (
       <div className="panel-card" ref={tableSectionRef}>
         <div className="pc-head">
           <h3>{selected?.title}</h3>
@@ -587,11 +673,18 @@ const ReportsTab = ({
             );
           })()}
 
+          {!isLoading && selected?.build && !report && (
+            <p style={{ margin: '10px 0', fontSize: 12, color: 'var(--crit)' }}>
+              This report couldn't be built from the data in this range. Try a different date
+              range, or pick another report.
+            </p>
+          )}
+
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
               <Loader variant="blue" size="md" />
             </div>
-          ) : (
+          ) : !report ? null : (
             <div className="rp-table-wrap" style={{ overflowX: 'auto' }}>
               <table
                 style={{
@@ -704,6 +797,7 @@ const ReportsTab = ({
           )}
         </div>
       </div>
+      )}
 
       {/* ---- existing full report pages ---- */}
       <div className="panel-card">

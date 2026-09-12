@@ -1,12 +1,41 @@
 import Loader from '@/components/custom/loader';
-import TextEditor from '@/components/custom/text-editor';
+import { scriptValuesFromCall } from '@/lib/script-variables';
+import { pagesOf } from '@/lib/script-pages';
+import ScriptPagesViewer from '@/components/custom/script-pages-viewer';
+import {
+  scriptInputsIn,
+  validateScriptAnswers,
+  type ScriptAnswerValue,
+  type ScriptAnswers,
+} from '@/lib/script-inputs';
+import type { ScriptRun } from '@/components/custom/script-blocks';
+import { useDialpad } from '@/hooks/use-dialpad';
 import { getCallScriptDetail } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+/* The call this script is being read on, so its placeholders can be filled in.
+   Built by the panel above, which already holds the lead, the caller, the
+   agent and the campaign or queue. */
+export type ScriptCallValues = {
+  customerName?: unknown;
+  customerNumber?: unknown;
+  customerEmail?: unknown;
+  agentName?: unknown;
+  agentExtension?: unknown;
+  agentEmail?: unknown;
+  companyName?: unknown;
+  campaignName?: unknown;
+  queueName?: unknown;
+};
 
 type DialpadMaxiScriptSidebarProps = {
   scriptId: string;
+  call?: ScriptCallValues;
   sessionId?: string | null;
+  /* The disposition the agent has chosen so far on this call: a page can
+     send the call to another page on the strength of it. */
+  disposition?: string | null;
 };
 
 type ScriptNode = {
@@ -19,6 +48,7 @@ type CallScriptDetail = {
   name?: string;
   script?: ScriptNode[] | string | null;
   content?: ScriptNode[] | string | null;
+  pages?: unknown;
 };
 
 const EMPTY_SCRIPT_BLOCKS = [
@@ -76,13 +106,19 @@ const resolveScriptBlocks = (scriptDetail: CallScriptDetail | null): ScriptNode[
   return EMPTY_SCRIPT_BLOCKS;
 };
 
-const DialpadMaxiScriptSidebar = ({ scriptId, sessionId }: DialpadMaxiScriptSidebarProps) => {
+const DialpadMaxiScriptSidebar = ({
+  scriptId,
+  sessionId,
+  call,
+  disposition,
+}: DialpadMaxiScriptSidebarProps) => {
   const normalizedScriptId = String(scriptId || '').trim();
 
   const {
     data: scriptDetail,
     isLoading: isScriptLoading,
     isError: isScriptError,
+    error: scriptError,
   } = useQuery({
     queryKey: ['getCallScriptDetail', 'dialpad-maxi-script-sidebar', normalizedScriptId],
     queryFn: () => getCallScriptDetail({ scriptId: normalizedScriptId }),
@@ -91,15 +127,76 @@ const DialpadMaxiScriptSidebar = ({ scriptId, sessionId }: DialpadMaxiScriptSide
   });
 
   const scriptTitle = String(scriptDetail?.name || '').trim() || 'Call Script';
-  const scriptBlocks = useMemo(() => resolveScriptBlocks(scriptDetail ?? null), [scriptDetail]);
+  const callValues = useMemo(() => scriptValuesFromCall(call || {}), [call]);
+  /* The script is stored with its placeholders and resolved every time it is
+     read, so the same script says the right name on every call. A script
+     saved before pages existed is one page; the viewer reads either. */
+  const pages = useMemo(
+    () => pagesOf({ pages: scriptDetail?.pages, script: resolveScriptBlocks(scriptDetail ?? null) }),
+    [scriptDetail],
+  );
+  /* Every block on every page, for the questions the script asks. */
+  const scriptBlocks = useMemo(() => pages.flatMap((page) => page.body as any[]), [pages]);
   const hasScriptContent = useMemo(
     () =>
-      scriptBlocks.some((block) =>
-        Array.isArray(block?.children)
-          ? block.children.some((child) => String(child?.text || '').trim().length > 0)
-          : false,
+      pages.some((page) =>
+        page.body.some((block: any) =>
+          Array.isArray(block?.children)
+            ? block.children.some((child: any) => String(child?.text || '').trim().length > 0) ||
+              block.type === 'input' ||
+              block.type === 'embed'
+            : false,
+        ),
       ),
-    [scriptBlocks],
+    [pages],
+  );
+  /* The server says why in words when it refuses - a draft, most likely. */
+  const scriptErrorText =
+    (scriptError as any)?.response?.data?.error?.message ||
+    (scriptError as any)?.response?.data?.message ||
+    'Unable to load script.';
+
+  /* The questions this script asks, and what the agent has answered so far.
+     Answers live on the session so the disposition save (a different tab)
+     can send them with the call; with no session yet - a preview lead - they
+     are kept here until one exists. */
+  const { sessions, patchSession } = useDialpad();
+  const session = sessionId ? sessions?.[sessionId] : null;
+  const scriptInputs = useMemo(() => scriptInputsIn(scriptBlocks), [scriptBlocks]);
+  const [localAnswers, setLocalAnswers] = useState<ScriptAnswers>({});
+  const answers: ScriptAnswers = session?.scriptAnswers ?? localAnswers;
+  const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId || !session) return;
+    if (session.scriptInputs === scriptInputs && (session.scriptId || '') === normalizedScriptId) return;
+    /* The questions for the save's validation, and the script's id so the
+       saved disposition says which script the answers belong to. */
+    patchSession(sessionId, { scriptInputs, scriptId: normalizedScriptId });
+  }, [sessionId, session, scriptInputs, normalizedScriptId, patchSession]);
+
+  const onAnswer = useCallback(
+    (key: string, value: ScriptAnswerValue) => {
+      setTouched(true);
+      const next = { ...answers, [key]: value };
+      if (sessionId && session) patchSession(sessionId, { scriptAnswers: next });
+      else setLocalAnswers(next);
+    },
+    [answers, sessionId, session, patchSession],
+  );
+
+  /* Problems are shown only once the agent has started answering, so a
+     fresh script is not covered in red before they have read it. */
+  const problems = useMemo(() => {
+    if (!touched) return {};
+    return Object.fromEntries(
+      validateScriptAnswers(scriptInputs, answers).problems.map((p) => [p.key, p.message]),
+    );
+  }, [touched, scriptInputs, answers]);
+
+  const scriptRun: ScriptRun = useMemo(
+    () => ({ answers, onAnswer, values: callValues, problems }),
+    [answers, onAnswer, callValues, problems],
   );
 
   return (
@@ -117,14 +214,16 @@ const DialpadMaxiScriptSidebar = ({ scriptId, sessionId }: DialpadMaxiScriptSide
             <Loader variant="blue" />
           </div>
         ) : isScriptError ? (
-          <p className="mt-2 text-[13px] text-[#6c809e] sm:text-sm">Unable to load script.</p>
+          <p className="mt-2 text-[13px] text-[#6c809e] sm:text-sm">{scriptErrorText}</p>
         ) : hasScriptContent ? (
-          <div className="mt-2 min-h-0 flex-1 overflow-hidden rounded-xl border border-ucass-active-bg p-2">
-            <TextEditor
-              key={`${sessionId || 'session'}-${normalizedScriptId}`}
-              initialValue={scriptBlocks}
-              readOnly={true}
-              maxHeight="h-full text-sm"
+          <div className="mt-2 min-h-0 flex-1">
+            <ScriptPagesViewer
+              pages={pages}
+              values={callValues}
+              disposition={disposition}
+              resetKey={`${sessionId || 'session'}-${normalizedScriptId}`}
+              scriptRun={scriptRun}
+              dense
             />
           </div>
         ) : (

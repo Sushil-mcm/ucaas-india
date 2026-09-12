@@ -8,7 +8,7 @@ import ErrorTooltip from '@/components/custom/error-tooltip';
 import { PermissionsAccordion } from '../role-permissions';
 import { ROLE_DESCRIPTION_MAX_LENGTH, ROLE_NAME_MAX_LENGTH } from '../schema';
 import { sanitizePlainTextInput } from '@/lib/utils';
-import { ROLE_PRESETS, buildPresetPermission } from '../role-presets';
+import { BLANK_PARENT, ROLE_PRESETS, buildPresetPermission } from '../role-presets';
 import { extractPlanFeatures } from '@/hooks/rbac';
 
 /* Chosen as the value for "start empty". It is never sent to the API — the
@@ -46,6 +46,7 @@ const SelectRole: FC<any> = ({
       setSelectedRole({
         role_uuid: BLANK_ROLE,
         name: 'Nothing',
+        parent: BLANK_PARENT,
         permission: { plan_features: {} },
       });
       setValue('permission', {});
@@ -68,7 +69,14 @@ const SelectRole: FC<any> = ({
     const preset = ROLE_PRESETS.find((entry) => `${PRESET_PREFIX}${entry.id}` === role_uuid);
     if (preset) {
       const permission = buildPresetPermission(preset, companyJson || {});
-      setSelectedRole({ role_uuid, name: preset.name, permission: { plan_features: permission } });
+      /* `parent` is which built-in role the holder becomes on the server. The
+         save resolves it to the company's own row; see role-presets.ts. */
+      setSelectedRole({
+        role_uuid,
+        name: preset.name,
+        parent: preset.parent,
+        permission: { plan_features: permission },
+      });
       setValue('permission', permission);
       /* The name and description are filled in too. A ready-made role that still
          makes you type its name is only half a shortcut. Both stay editable. */
@@ -77,7 +85,12 @@ const SelectRole: FC<any> = ({
       return;
     }
     if (role_uuid === BLANK_ROLE) {
-      setSelectedRole({ role_uuid: BLANK_ROLE, name: 'Nothing', permission: { plan_features: {} } });
+      setSelectedRole({
+        role_uuid: BLANK_ROLE,
+        name: 'Nothing',
+        parent: BLANK_PARENT,
+        permission: { plan_features: {} },
+      });
       setValue('permission', {});
       return;
     }
@@ -238,7 +251,8 @@ const SelectRole: FC<any> = ({
                   </span>
                   <span className="block text-xs text-gray-600">
                     Every permission your plan has, all switched off. Tick only what this role
-                    should hold.
+                    should hold. On the server it counts as an agent: their own calls and
+                    numbers only.
                   </span>
                 </span>
               </label>

@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { useRecentlyRemoved } from './use-recently-removed';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import useDebounce from '@/hooks/use-debounce';
 import {
   History,
   MoreHorizontal,
@@ -24,16 +24,34 @@ import { mayActOn } from '@/lib/role-rank';
 import { Ic } from '@/components/mcm/icons';
 import SideDrawer from '@/components/custom/side-drawer';
 import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
-import { DirectoryDrawer, DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
+import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useInstantMeeting } from '@/hooks/use-instant-meeting';
-import { usePeopleRows, type PersonRow } from './people-rows';
+import {
+  PERSON_STATE_LABEL,
+  SKILL_STARS_MAX,
+  STATUS_FILTER_OPTIONS,
+  stateOfStatusFilter,
+  usePeopleRows,
+  type PersonRow,
+} from './people-rows';
+import RemovedPeople from './people-removed';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import { useUser } from '@/hooks/use-user';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteMember, removeAssignNumber, updateMemberForwading } from '@/services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  assignRoleBulkUsers,
+  getRoleList,
+  deleteMember,
+  reactivateMember,
+  removeAssignNumber,
+  resendInvite,
+  suspendMember,
+  updateMemberForwading,
+} from '@/services/api';
 import { handleAlert } from '@/lib/utils';
+import { locksFor } from '@/lib/admin-scope';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import RemovalWarning, { useRemovalImpact } from '@/components/mcm/removal-warning';
@@ -44,6 +62,7 @@ import {
 } from '@/hooks/use-presence-control';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import RoleChangeModal from '@/pages/admin-settings/people/role-change-modal';
+import { roleDisplayName } from '@/pages/admin-settings/roles/role-names';
 import AssignCallerIdModal from '@/pages/admin-settings/people/add-users/assign-caller-id-modal';
 import AddUsers from '@/pages/admin-settings/people/add-users';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
@@ -55,13 +74,55 @@ import './groups-glass.css';
  * Directory ▸ People — the organisation roster.
  *
  * Everyone in the org with their role, department, extension, the queues they
- * take (the platform's nearest thing to an ACD skill), live presence, and one
- * click to call, message or start video.
+ * take, their rated skills, live presence, and one click to call, message or
+ * start video.
  *
- * Row actions mirror the platform's own Extension page rather than inventing a
- * second vocabulary: on this platform "Edit" for a user means Update Forwarding,
- * and it is gated on the same admin + plan permissions, so People cannot offer
- * an action the Extension page would refuse.
+ * Row actions reuse the platform's own person editor rather than inventing a
+ * second one: "Edit" opens Update Forwarding, and every action is gated on the
+ * plan's USER permission tree.
+ *
+ * WHAT THE GATES HERE ARE, AND ARE NOT
+ *
+ * The buttons below are hidden or shown from the role's permission tree
+ * (account_setting.access.USER.action.edit / .delete). Hiding a button is a
+ * courtesy: it keeps people from seeing buttons that would fail. The real
+ * check is on the server, which reads the same tree on the People routes
+ * (and on media, devices and company settings), and checks the caller's
+ * admin scope on remove, edit, role change, restore and suspend. So a hidden
+ * button and a refused request are the same decision made twice, and the
+ * server's is the one that counts. It is the same gate for all three actions
+ * on purpose: Edit and Change role used to demand the ADMIN role as well,
+ * while Remove did not, so a custom role holding the edit permission could
+ * delete a colleague but not rename them.
+ *
+ * The scope check is mirrored too, as greyed-out buttons rather than hidden
+ * ones: a person outside the caller's reach (a location admin's location, a
+ * group admin's groups — see lib/admin-scope.ts) keeps the buttons, disabled,
+ * with the reason as the tooltip. A group admin inside their groups may Edit
+ * (duty, skills, membership) but not change who a person is, their role, or
+ * remove them; those stay disabled with that sentence. Most group admins
+ * manage no group and have no stored scope, so they now reach nobody, and the
+ * buttons must say so rather than fail with a 403.
+ *
+ * ONE PAGE AT A TIME
+ *
+ * The list is read a page at a time from the same endpoint every other list
+ * uses. It used to ask for 500 rows once, and any company larger than that
+ * was silently cut off — with an export button that still said "everybody".
+ * Search and Location go to the server (it matches name, e-mail, extension and
+ * the location's name); Groups, Presence and Status are only known once the
+ * page has arrived, so they narrow the page on screen. The export covers exactly the
+ * rows on screen and its label says so.
+ *
+ * STATES
+ *
+ * Every person has a state as well as a presence: Invited (has not accepted
+ * the invite yet), Active, Suspended (an administrator switched them off), and
+ * Removed (soft-deleted, restorable for 72 hours on the Removed tab). The
+ * pill in the Status column is the state; Presence stays what it was. What
+ * Suspended actually blocks today is written on the pill itself, and it must
+ * stay honest: login is blocked the moment it is set, the phone only once
+ * the switch update is applied.
  */
 
 const TONE_CLASS: Record<string, string> = {
@@ -71,21 +132,105 @@ const TONE_CLASS: Record<string, string> = {
   idle: 'tag neu',
 };
 
+/** Columns a supervisor can order the roster by. */
+export type SortKey = 'name' | 'roleLabel' | 'state' | 'department' | 'location' | 'presence';
+
+/* Sorts the way a person reads a name list: case-insensitively, with an empty
+   value last whichever direction the column is pointing. */
+const compareBy = (key: SortKey, desc: boolean) => (left: any, right: any) => {
+  const a = String(left?.[key] ?? '').trim();
+  const b = String(right?.[key] ?? '').trim();
+  const aEmpty = !a || a === '—';
+  const bEmpty = !b || b === '—';
+  if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+  const compared = a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true });
+  return desc ? -compared : compared;
+};
+
+/**
+ * One sortable column heading.
+ *
+ * Sorting orders the WHOLE company: picking a column puts the roster into its
+ * whole-roster load, so the first name in the list is the first name in the
+ * company rather than the first on page one.
+ */
+const SortHeader = ({
+  sortKey,
+  label,
+  sort,
+  onSort,
+}: {
+  sortKey: SortKey;
+  label: string;
+  sort: { key: SortKey; desc: boolean } | null;
+  onSort: (key: SortKey) => void;
+}) => {
+  const active = sort?.key === sortKey;
+  return (
+    <th aria-sort={active ? (sort?.desc ? 'descending' : 'ascending') : 'none'}>
+      <button type="button" className="mcm-sort" onClick={() => onSort(sortKey)}>
+        {label}
+        <span className="mcm-sort-mark">{active ? (sort?.desc ? '\u25BC' : '\u25B2') : '\u21C5'}</span>
+      </button>
+    </th>
+  );
+};
+
+const PAGE_SIZE = 50;
+
 const People = () => {
   const navigate = useNavigate();
   const { dial } = useConsoleDialer();
   const { startVideoCall, isStarting } = useInstantMeeting();
-  const { rows, isLoading } = usePeopleRows();
+
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 400);
+  const [location, setLocation] = useState('All');
+  const [page, setPage] = useState(1);
+
+  /* A new search or location starts from the first page again. */
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, location]);
+
+  const [department, setDepartment] = useState('All');
+  const [presence, setPresence] = useState('Any');
+  const [status, setStatus] = useState('Any');
+
+  /* Groups, Presence and Status are decided here rather than by the server —
+     presence is live socket state and neither groups nor the invited/suspended
+     state is a column on the users table. So the moment one of them (or a sort)
+     is in play the screen needs the whole company in hand, not one page of it,
+     or a match on page two would simply not exist. */
+  const [sort, setSort] = useState<{ key: SortKey; desc: boolean } | null>(null);
+  const [exportAll, setExportAll] = useState(false);
+  const needsWholeRoster =
+    department !== 'All' || presence !== 'Any' || status !== 'Any' || Boolean(sort) || exportAll;
+
+  const { rows, isLoading, isFetching, total, totalPages, locationNames, myScope } = usePeopleRows({
+    page,
+    limit: PAGE_SIZE,
+    search: debouncedSearch,
+    location,
+    loadAll: needsWholeRoster,
+  });
 
   const { user } = useUser();
-  const { setMyPresence, isPending: isSettingPresence, myUuid } = useMyPresenceControl();
+  const {
+    setMyPresence,
+    isPending: isSettingPresence,
+    myUuid,
+    isOnCall,
+  } = useMyPresenceControl();
   const { features } = useCompanyFeatures();
 
-  /* Same source the Extension page reads, so the two pages can't disagree about
-     who may edit a user. */
+  /* The same tree the server reads on these routes — see the note at the top
+     of the file. Hiding a button here only saves somebody a refused request. */
   const userAccess = features?.plan_features?.account_setting?.access?.USER?.action;
-  const isAdmin = user?.user_info?.role === 'ADMIN';
-  const canEdit = Boolean(isAdmin && userAccess?.edit);
+  /* The Activity page is a report, so the button follows the reports
+     permission the Reports pages are guarded with, not the raw role string. */
+  const canViewActivity = Boolean(features?.plan_features?.reports?.IS_SHOW);
+  const canEdit = Boolean(userAccess?.edit);
   const canAssignCallerId = Boolean(
     features?.plan_features?.virtual_numbers?.action?.assign_number,
   );
@@ -95,9 +240,12 @@ const People = () => {
      that one way for every action on this screen -- see lib/role-rank.ts. */
   const outranks = (row: PersonRow) => mayActOn(user?.user_info, row.raw);
 
-  /* Same gate the Extension page puts on Add Users: trial accounts and users
-     without the add permission don't get an invite button that would fail. */
+  /* Trial accounts and people without the add permission don't get an invite
+     button that would fail. */
   const canInvite = Boolean(userAccess?.add) && user?.company_info?.is_trial !== 'Y';
+  /* Sending an invite again is the same permission as sending it the first
+     time. The server refuses it for anybody who has already accepted. */
+  const canResendInvite = Boolean(userAccess?.add);
   const canDelete = Boolean(userAccess?.delete);
 
   const queryClient = useQueryClient();
@@ -105,24 +253,69 @@ const People = () => {
 
   /* Before anybody is removed, find what still points at them — a queue they
      are the last agent on, a menu key, a number forwarded to their extension.
-     The roster is already on screen, so it is handed over rather than fetched
-     a second time. */
-  const roster = useMemo(() => rows.map((row: any) => row.raw), [rows]);
-  const removal = useRemovalImpact((deleting?.raw ?? null) as any, Boolean(deleting), roster);
+     Only one page of the roster is on screen now, and "is this the last
+     administrator?" needs everybody, so the check fetches its own list. */
+  const removal = useRemovalImpact((deleting?.raw ?? null) as any, Boolean(deleting));
   const [unassigning, setUnassigning] = useState<PersonRow | null>(null);
-
-  const { show: showRemoved, setShow: setShowRemoved, entries: recentlyRemoved, track: trackRemoval } = useRecentlyRemoved();
 
   const { mutate: removePerson, isPending: isDeletingPerson } = useMutation({
     mutationKey: ['deleteMember'],
     mutationFn: deleteMember,
     onSuccess: ({ data }: any) => {
-      if (deleting) trackRemoval(deleting);
       queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
       queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
       invalidateGlobalUsersDirectory(queryClient);
       handleAlert({ text: data?.data?.message || 'Person removed', type: 'success' });
       setDeleting(null);
+    },
+  });
+
+  /* Suspend / reactivate. The server decides who may (an administrator,
+     never yourself, never the account owner); these only hide the buttons
+     from people it would refuse. Every failed request is toasted by the API
+     client, so there is no onError here. */
+  const [suspending, setSuspending] = useState<PersonRow | null>(null);
+  const [reactivating, setReactivating] = useState<PersonRow | null>(null);
+  const afterStateChange = (message: string) => {
+    queryClient.invalidateQueries({ queryKey: ['directoryPersonStates'] });
+    queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
+    queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
+    handleAlert({ text: message, type: 'success' });
+  };
+  const { mutate: suspendPerson, isPending: isSuspending } = useMutation({
+    mutationKey: ['suspendMember'],
+    mutationFn: suspendMember,
+    onSuccess: ({ data }: any) => {
+      afterStateChange(data?.data?.message || 'Person suspended');
+      setSuspending(null);
+    },
+  });
+  const { mutate: reactivatePerson, isPending: isReactivating } = useMutation({
+    mutationKey: ['reactivateMember'],
+    mutationFn: reactivateMember,
+    onSuccess: ({ data }: any) => {
+      afterStateChange(data?.data?.message || 'Person reactivated');
+      setReactivating(null);
+    },
+  });
+
+  /* Send the invite link again to somebody who has not accepted it yet. The
+     server makes a new link and the old one stops working. */
+  const {
+    mutate: resendInviteTo,
+    isPending: isResendingInvite,
+    variables: resendingUuid,
+  } = useMutation({
+    mutationKey: ['resendInvite'],
+    mutationFn: (uuid: string) => resendInvite({ user_uuid: uuid }),
+    onSuccess: () => {
+      handleAlert({ text: 'Invite sent again. The link works for 3 days.', type: 'success' });
+    },
+    onError: (error: any) => {
+      handleAlert({
+        text: error?.response?.data?.message || 'The invite could not be sent. Please try again.',
+        type: 'error',
+      });
     },
   });
 
@@ -139,19 +332,41 @@ const People = () => {
     },
   });
 
-  /* Was `row.role !== 'ADMIN'`, which reads the label: an administrator on a
-     custom role named anything else passed it. Rank reads the stored role. */
-  const canChangeRoleOf = (row: PersonRow) => isAdmin && outranks(row);
+  /* What the caller's admin scope refuses on this row: `edit` for Edit,
+     `identity` for Change role / Suspend / Reactivate / Remove. Each is the
+     reason to show, or null when the action is allowed. Call, chat, video and
+     favourite are not administration and are never locked. */
+  /* Your own row is never locked by scope: the server exempts self, and Profile
+     is where you edit yourself anyway. Everyone else is judged against reach. */
+  const locksOn = (row: PersonRow) =>
+    row.uuid === user?.uuid ? { edit: null, identity: null } : locksFor(myScope, row);
+
+  /* Anyone with the edit permission may change a role, except the owner's —
+     and only for somebody they outrank: `row.role !== 'ADMIN'` alone reads
+     the label, so an administrator on a custom role named anything else
+     passed it. The role-change dialog refuses the owner role too. */
+  const canChangeRoleOf = (row: PersonRow) =>
+    canEdit && outranks(row) && String(row.role || '').toUpperCase() !== 'ADMIN';
+
+  /* Same shape as Remove: the delete permission, never yourself, never the
+     owner. Only once the state is known — a null state means the states
+     request has not answered, and a button that acts on a guess is worse
+     than none. */
+  const canSuspendOf = (row: PersonRow) =>
+    canDelete &&
+    row.uuid !== myUuid &&
+    outranks(row) &&
+    String(row.role || '').toUpperCase() !== 'ADMIN' &&
+    row.state !== null;
+
+  /* People, or the people removed in the last 72 hours. */
+  const [tab, setTab] = useState<'people' | 'removed'>('people');
 
   const [changingRole, setChangingRole] = useState<PersonRow | null>(null);
   const [assigningCallerId, setAssigningCallerId] = useState<PersonRow | null>(null);
   const [inviting, setInviting] = useState(false);
 
-  const [search, setSearch] = useState('');
-  const [department, setDepartment] = useState('All');
   const { isFavourite, toggleFavourite } = useDirectoryFavourites();
-  const [presence, setPresence] = useState('Any');
-  const [location, setLocation] = useState('All');
   const [open, setOpen] = useState<PersonRow | null>(null);
   const [editing, setEditing] = useState<PersonRow | null>(null);
 
@@ -188,11 +403,9 @@ const People = () => {
     return ['All', ...Array.from(found).sort()];
   }, [rows]);
 
-  const locations = useMemo(() => {
-    const found = new Set<string>();
-    rows.forEach((row) => row.location !== '—' && found.add(row.location));
-    return ['All', ...Array.from(found).sort()];
-  }, [rows]);
+  /* Every location the company has, not just the ones on this page — otherwise
+     picking one would make the others vanish from the list. */
+  const locations = useMemo(() => ['All', ...locationNames], [locationNames]);
 
   const presences = useMemo(() => {
     const found = new Set<string>();
@@ -200,42 +413,160 @@ const People = () => {
     return ['Any', ...Array.from(found).sort()];
   }, [rows]);
 
-  const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return rows.filter((row) => {
+  /* Search and location went to the server. Groups, Presence and Status are
+     applied here — across the WHOLE roster, because `needsWholeRoster` had the
+     hook fetch every page as soon as one of them was picked. */
+  const statusFilter = stateOfStatusFilter(status);
+  const matching = useMemo(() => {
+    const filtered = rows.filter((row) => {
       if (department !== 'All' && row.department !== department) return false;
-      if (location !== 'All' && row.location !== location) return false;
       if (presence !== 'Any' && row.presence !== presence) return false;
-      if (!needle) return true;
-      return [
-        row.name,
-        row.role,
-        row.department,
-        row.location,
-        row.extension,
-        row.email,
-        ...row.skills,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle));
+      if (statusFilter && row.state !== statusFilter) return false;
+      return true;
     });
-  }, [rows, search, department, presence, location]);
+    return sort ? [...filtered].sort(compareBy(sort.key, sort.desc)) : filtered;
+  }, [rows, department, presence, statusFilter, sort]);
+
+  /* When the whole roster is in hand the server's paging no longer applies, so
+     the page is cut here; otherwise the server already sent one page. */
+  const visible = useMemo(
+    () =>
+      needsWholeRoster ? matching.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : matching,
+    [matching, needsWholeRoster, page],
+  );
+
+  const shownTotal = needsWholeRoster ? matching.length : total;
+  const shownTotalPages = needsWholeRoster
+    ? Math.max(1, Math.ceil(matching.length / PAGE_SIZE))
+    : totalPages;
+
+  /* A filter or a sort can leave the current page past the end of the result. */
+  useEffect(() => {
+    if (page > shownTotalPages) setPage(shownTotalPages);
+  }, [page, shownTotalPages]);
+
+  const toggleSort = (key: SortKey) => {
+    setPage(1);
+    setSort((current) =>
+      current?.key === key ? (current.desc ? null : { key, desc: true }) : { key, desc: false },
+    );
+  };
+
+  /* ── working on several people at once ──────────────────────────────
+     Every bulk action is the single-person action repeated, because that is
+     what the API offers: there is no bulk endpoint, so the screen must not
+     pretend one call is happening. Each person is reported on, and a refusal
+     for one (the server will not let anybody suspend themselves, or remove the
+     last administrator) does not stop the rest. */
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const canBulk = canDelete || canEdit;
+  const selectedRows = useMemo(
+    () => visible.filter((row) => selected.has(row.uuid)),
+    [visible, selected],
+  );
+  const allOnPageSelected = visible.length > 0 && visible.every((row) => selected.has(row.uuid));
+  const togglePage = () =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (allOnPageSelected) visible.forEach((row) => next.delete(row.uuid));
+      else visible.forEach((row) => next.add(row.uuid));
+      return next;
+    });
+  const toggleOne = (uuid: string) =>
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(uuid)) next.delete(uuid);
+      else next.add(uuid);
+      return next;
+    });
+  /* A filter or a page change must not leave invisible people selected. */
+  useEffect(() => {
+    setSelected(new Set());
+  }, [department, presence, status, location, debouncedSearch, page]);
+
+  const [bulkAction, setBulkAction] = useState<'delete' | 'suspend' | 'role' | null>(null);
+  const [bulkRole, setBulkRole] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  /* Roles have a real bulk endpoint, so that one is a single call. Remove and
+     suspend do not, so they are the single-person call repeated. */
+  const { data: bulkRoleOptions = [] } = useQuery({
+    queryKey: ['useRolesList', false],
+    queryFn: () => getRoleList(),
+    select: (response: any) =>
+      (response?.data?.data?.result?.rows || []).map((role: any) => ({
+        label: roleDisplayName(role?.name),
+        value: String(role?.type || '').toLowerCase() === 'custom' ? role?.uuid : role?.role_uuid,
+      })),
+    enabled: bulkAction === 'role',
+  });
+
+  const runBulk = async () => {
+    if (!bulkAction || !selectedRows.length) return;
+    setBulkBusy(true);
+    let done = 0;
+    const failed: string[] = [];
+
+    if (bulkAction === 'role') {
+      if (!bulkRole) {
+        setBulkBusy(false);
+        return;
+      }
+      try {
+        await assignRoleBulkUsers({
+          role_uuid: bulkRole,
+          users: selectedRows.map((row) => row.uuid),
+        });
+        done = selectedRows.length;
+      } catch {
+        failed.push(...selectedRows.map((row) => row.name));
+      }
+    } else {
+      for (const row of selectedRows) {
+        try {
+          if (bulkAction === 'delete') await deleteMember(row.uuid);
+          else await suspendMember(row.uuid);
+          done += 1;
+        } catch {
+          failed.push(row.name);
+        }
+      }
+    }
+
+    setBulkBusy(false);
+    setBulkAction(null);
+    setBulkRole('');
+    setSelected(new Set());
+    queryClient.invalidateQueries({ queryKey: ['directoryPeople'] });
+    queryClient.invalidateQueries({ queryKey: ['directoryPersonStates'] });
+    queryClient.invalidateQueries({ queryKey: ['fetchUsersList'] });
+    invalidateGlobalUsersDirectory(queryClient);
+    handleAlert({
+      text: failed.length
+        ? `${done} done, ${failed.length} refused by the server: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}`
+        : `${done} ${done === 1 ? 'person' : 'people'} updated`,
+      type: failed.length ? 'error' : 'success',
+    });
+  };
 
   const onQueue = rows.filter((row) => row.tone === 'good').length;
 
+  const pageFirst = shownTotal ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const pageLast = Math.min(page * PAGE_SIZE, shownTotal);
+
   /* Take the roster away as a spreadsheet.
    *
-   * The platform has no export of any kind for people, so this is built here
-   * out of the list already on screen. That is why it exports what the filters
-   * are showing rather than "everybody": the rows are what this page fetched,
-   * and pretending otherwise would quietly hand somebody a partial file
-   * labelled as the whole company. The button says how many are in it.
+   * The platform has no people export of its own, so this is built here. It
+   * used to hold whatever was on screen — one page of fifty — which is worse
+   * than no export for anyone with a real company. Now it walks every page of
+   * the list endpoint first, so "Export all" means all of them; the filters
+   * that are on still apply, and the button says which of the two it is.
    *
    * The file starts with a byte-order mark because otherwise a spreadsheet
    * opening it on Windows reads the accents in people's names as rubbish. */
-  const exportRoster = () => {
+  const writeCsv = (exportRows: PersonRow[]) => {
     const csv = buildRosterCsv(
-      visible.map((row) =>
+      exportRows.map((row) =>
         toExportRow(
           row.raw,
           row.department && row.department !== '—' ? row.department.split(', ') : [],
@@ -254,6 +585,23 @@ const People = () => {
     URL.revokeObjectURL(url);
   };
 
+  /* Export asks the hook for the whole company first, then writes what it
+     shaped — one row-shaping path, so the file carries the same groups,
+     numbers and roles the table does. */
+  const exportRoster = () => {
+    if (needsWholeRoster || shownTotalPages <= 1) {
+      writeCsv(matching);
+      return;
+    }
+    setExportAll(true);
+  };
+
+  useEffect(() => {
+    if (!exportAll || isFetching) return;
+    writeCsv(matching);
+    setExportAll(false);
+  }, [exportAll, isFetching, matching]);
+
   return (
     <>
       <div className="gp-people">
@@ -270,22 +618,22 @@ const People = () => {
               <Ic n="users" />
               Groups
             </button>
-            {/* The count is in the label on purpose: filters are on this page,
-                and a button that just says "Export" invites somebody to file a
-                filtered list as the whole company. */}
+            {/* The count is in the label on purpose: filters and paging are
+                on this page, and a button that just says "Export" invites
+                somebody to file one page as the whole company. */}
             <button
               type="button"
               className="btn ghost"
-              disabled={!visible.length}
+              disabled={!visible.length || exportAll}
               title={
-                visible.length === rows.length
-                  ? 'Download everybody as a spreadsheet'
-                  : 'Downloads the people these filters are showing, not the whole company'
+                needsWholeRoster || shownTotalPages <= 1
+                  ? `Download all ${matching.length} matching people as a spreadsheet`
+                  : `Downloads every one of the ${shownTotal} people this filter matches`
               }
               onClick={exportRoster}
             >
               <Ic n="dl" />
-              Export {visible.length}
+              {exportAll ? 'Preparing…' : `Export all ${shownTotal}`}
             </button>
             {canInvite ? (
               <button type="button" className="btn primary" onClick={() => setInviting(true)}>
@@ -315,73 +663,138 @@ const People = () => {
               options={presences}
               onChange={setPresence}
             />
+            <FilterChip
+              label="Status"
+              value={status}
+              options={STATUS_FILTER_OPTIONS}
+              onChange={setStatus}
+            />
             <SearchChip value={search} onChange={setSearch} placeholder="Search people" />
-            <button type="button" className="fchip" style={{ cursor: 'pointer', gap: 6, fontWeight: showRemoved ? 700 : undefined, background: showRemoved ? 'var(--primary)' : undefined, color: showRemoved ? '#fff' : undefined, borderColor: showRemoved ? 'var(--primary)' : undefined }} onClick={() => setShowRemoved((v) => !v)}>
-              <Ic n="clock" size={12} />
-              Recently removed
-            </button>
-            <span className="fchip live" style={{ marginLeft: 'auto' }}>
-              <span className="num">{onQueue}</span> available
+            <span className="fchip" style={{ marginLeft: 'auto' }}>
+              {total ? (
+                <>
+                  Showing <span className="num">{pageFirst}</span>–
+                  <span className="num">{pageLast}</span> of <span className="num">{total}</span>
+                </>
+              ) : (
+                'Nobody to show'
+              )}
+            </span>
+            <span className="fchip live">
+              <span className="num">{onQueue}</span> available on this page
             </span>
           </>
         }
       >
-        {showRemoved && (
-          <table>
-            <thead>
-              <tr>
-                <th>Person</th>
-                <th>Role</th>
-                <th>Groups</th>
-                <th>Location</th>
-                <th>Numbers</th>
-                <th>ACD skills</th>
-                <th>Presence</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentlyRemoved.length ? recentlyRemoved.map((entry) => {
-                const hoursAgo = Math.round((Date.now() - entry.removedAt) / 3600000);
-                return (
-                  <tr key={entry.uuid}>
-                    <td><span className="flex items-center gap-2.5"><CustomAvatar name={entry.name} size="30" /><span style={{ fontWeight: 700 }}>{entry.name}</span></span></td>
-                    <td>{entry.role || '—'}</td>
-                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
-                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
-                    <td className="num">{entry.extension || '—'}</td>
-                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
-                    <td><span className="tag neg">Removed {hoursAgo < 1 ? 'just now' : `${hoursAgo}h ago`}</span></td>
-                    <td><span style={{ color: 'var(--ink-4)' }}>—</span></td>
-                  </tr>
-                );
-              }) : (
-                <EmptyRow span={8} message="Nobody has been removed in the last 72 hours." />
-              )}
-            </tbody>
-          </table>
-        )}
+        {/* Two views of the same roster: the people here now, and the people
+            removed in the last 72 hours who can still be brought back. */}
+        <div
+          className="flex items-center gap-1"
+          role="tablist"
+          aria-label="People or removed people"
+          style={{ padding: '8px 12px', borderBottom: '1px solid var(--line)' }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'people'}
+            className={tab === 'people' ? 'mini solid' : 'mini'}
+            onClick={() => setTab('people')}
+          >
+            <Ic n="users" size={12} />
+            People
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'removed'}
+            className={tab === 'removed' ? 'mini solid' : 'mini'}
+            title="People removed in the last 72 hours, who can still be restored"
+            onClick={() => setTab('removed')}
+          >
+            <Ic n="trash" size={12} />
+            Removed
+          </button>
+        </div>
 
-        {!showRemoved && (
+        {/* What can be done to several people at once. It appears only when
+            something is selected, and it names the number so nobody acts on a
+            selection they have forgotten about. */}
+        {tab === 'people' && canBulk && selected.size ? (
+          <div className="mcm-bulkbar">
+            <span className="num" style={{ fontWeight: 800 }}>
+              {selected.size} selected
+            </span>
+            {canEdit ? (
+              <button type="button" className="mini" onClick={() => setBulkAction('role')}>
+                Change role
+              </button>
+            ) : null}
+            {canEdit ? (
+              <button type="button" className="mini" onClick={() => setBulkAction('suspend')}>
+                Suspend
+              </button>
+            ) : null}
+            {canDelete ? (
+              <button type="button" className="mini danger" onClick={() => setBulkAction('delete')}>
+                Remove
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="mini"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => setSelected(new Set())}
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
+
+        {tab === 'removed' ? (
+          <RemovedPeople canRestore={canDelete} />
+        ) : (
         <table>
           <thead>
             <tr>
-              <th>Person</th>
-              <th>Role</th>
-              <th>Groups</th>
-              <th>Location</th>
+              {canBulk ? (
+                <th style={{ width: 34 }}>
+                  <input
+                    type="checkbox"
+                    aria-label={allOnPageSelected ? 'Clear selection' : 'Select everyone on this page'}
+                    checked={allOnPageSelected}
+                    onChange={togglePage}
+                  />
+                </th>
+              ) : null}
+              <SortHeader sortKey="name" label="Person" sort={sort} onSort={toggleSort} />
+              <SortHeader sortKey="roleLabel" label="Role" sort={sort} onSort={toggleSort} />
+              <SortHeader sortKey="state" label="Status" sort={sort} onSort={toggleSort} />
+              <SortHeader sortKey="department" label="Groups" sort={sort} onSort={toggleSort} />
+              <SortHeader sortKey="location" label="Location" sort={sort} onSort={toggleSort} />
               <th>Numbers</th>
-              <th>ACD skills</th>
-              <th>Presence</th>
+              <th>Queues</th>
+              <th>Skills</th>
+              <SortHeader sortKey="presence" label="Presence" sort={sort} onSort={toggleSort} />
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <EmptyRow span={8} message="Loading the roster…" />
+              <EmptyRow span={canBulk ? 11 : 10} message="Loading the roster…" />
             ) : visible.length ? (
               visible.map((row: PersonRow) => (
                 <tr key={row.uuid} className="gp-person-row" onClick={() => openPerson(row)}>
+                  {canBulk ? (
+                    <td onClick={(event) => event.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${row.name}`}
+                        checked={selected.has(row.uuid)}
+                        onChange={() => toggleOne(row.uuid)}
+                      />
+                    </td>
+                  ) : null}
                   <td>
                     <span className="flex items-center gap-2.5">
                       <CustomAvatar name={row.name} image={row.image} size="30" />
@@ -398,7 +811,32 @@ const People = () => {
                       </span>
                     </span>
                   </td>
-                  <td>{row.role}</td>
+                  {/* The friendly name, never the stored MANAGER/AGENT string;
+                      the same map every other role screen reads. The suffix is
+                      the administrator's effective reach — derived from the role
+                      when nothing is stored: "Location admin · Mumbai",
+                      "Group admin · Sales, Support", "Group admin · no groups yet". */}
+                  <td>
+                    {row.roleLabel}
+                    {row.scopeSuffix ? (
+                      <span style={{ fontSize: 11, color: 'var(--ink-4)' }}> · {row.scopeSuffix}</span>
+                    ) : null}
+                  </td>
+                  {/* The account's state, not their presence. The note on the
+                      pill says exactly what the state blocks today. Nothing is
+                      shown until the states request has answered. */}
+                  <td>
+                    {row.state ? (
+                      <span
+                        className={TONE_CLASS[PERSON_STATE_LABEL[row.state].tone] || 'tag neu'}
+                        title={PERSON_STATE_LABEL[row.state].note}
+                      >
+                        {PERSON_STATE_LABEL[row.state].label}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--ink-4)' }}>—</span>
+                    )}
+                  </td>
                   <td>{row.department}</td>
                   <td>
                     <span style={{ display: 'block' }}>{row.location}</span>
@@ -418,8 +856,27 @@ const People = () => {
                     ) : null}
                   </td>
                   <td>
+                    {row.queues.length ? (
+                      row.queues.join(', ')
+                    ) : (
+                      <span style={{ color: 'var(--ink-4)' }}>—</span>
+                    )}
+                  </td>
+                  {/* Rated skills from the Skills feature, best first, on the
+                      same one-to-five scale the drawer's Skills tab uses. */}
+                  <td>
                     {row.skills.length ? (
-                      row.skills.join(', ')
+                      <span className="flex flex-wrap items-center gap-1">
+                        {row.skills.map((skill) => (
+                          <span
+                            key={skill.id}
+                            className="tag neu"
+                            title={`${skill.name}: ${skill.stars} of ${SKILL_STARS_MAX} stars`}
+                          >
+                            {skill.name} {skill.stars}/{SKILL_STARS_MAX}
+                          </span>
+                        ))}
+                      </span>
                     ) : (
                       <span style={{ color: 'var(--ink-4)' }}>—</span>
                     )}
@@ -434,11 +891,16 @@ const People = () => {
                         className="mcm-presence-set"
                         aria-label="Set my availability"
                         value={presenceValueOf(row.availability)}
-                        disabled={isSettingPresence}
+        disabled={isSettingPresence || isOnCall}
+        title={isOnCall ? 'You cannot change this during a call' : undefined}
                         onChange={(event) => setMyPresence(event.target.value)}
                       >
+                        {/* Each option carries what it actually does. Busy is the one people
+                            read wrong - it holds back colleagues only, and a customer still
+                            rings through - so the control says so rather than leaving the word
+                            to imply something the switch does not do. */}
                         {PRESENCE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
+                          <option key={option.value} value={option.value} title={option.description}>
                             {option.label}
                           </option>
                         ))}
@@ -512,15 +974,28 @@ const People = () => {
                               ? 'Remove from favourites'
                               : 'Add to favourites'}
                           </DropdownMenuItem>
+                          {/* Scope locks (lib/admin-scope) grey an item out with
+                              the reason as its tooltip rather than hiding it. */}
                           {canEdit ? (
                             <DropdownMenuItem
                               className="cursor-pointer"
+                              title={locksOn(row).edit || undefined}
+                              disabled={Boolean(locksOn(row).edit)}
                               onClick={() => setEditing(row)}
                             >
                               <Pencil className="h-4 w-4" /> Edit person
                             </DropdownMenuItem>
                           ) : null}
-                          {isAdmin ? (
+                          {canResendInvite && row.state === 'PENDING' ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              disabled={isResendingInvite && resendingUuid === row.uuid}
+                              onClick={() => resendInviteTo(row.uuid)}
+                            >
+                              <Ic n="send" size={14} /> Resend invite
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canViewActivity ? (
                             <DropdownMenuItem
                               className="cursor-pointer"
                               onClick={() => navigate(`/activity/${row.uuid}`)}
@@ -531,9 +1006,31 @@ const People = () => {
                           {canChangeRoleOf(row) ? (
                             <DropdownMenuItem
                               className="cursor-pointer"
+                              title={locksOn(row).identity || undefined}
+                              disabled={Boolean(locksOn(row).identity)}
                               onClick={() => setChangingRole(row)}
                             >
                               <ShieldCheck className="h-4 w-4" /> Change role
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canSuspendOf(row) && row.state !== 'SUSPENDED' ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              title={locksOn(row).identity || undefined}
+                              disabled={Boolean(locksOn(row).identity)}
+                              onClick={() => setSuspending(row)}
+                            >
+                              <Ic n="pause" size={14} /> Suspend
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canSuspendOf(row) && row.state === 'SUSPENDED' ? (
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              title={locksOn(row).identity || undefined}
+                              disabled={Boolean(locksOn(row).identity)}
+                              onClick={() => setReactivating(row)}
+                            >
+                              <Ic n="play" size={14} /> Reactivate
                             </DropdownMenuItem>
                           ) : null}
                           {canAssignCallerId && outranks(row) ? (
@@ -552,11 +1049,14 @@ const People = () => {
                               <PhoneOff className="h-4 w-4" /> Remove caller ID
                             </DropdownMenuItem>
                           ) : null}
-                          {/* Admins can remove a person; never yourself, and
-                              never another admin unless you are one. */}
+                          {/* Anyone with the delete permission can remove a person
+                              they outrank; never yourself. The server refuses to
+                              delete the owner whoever asks. Browser-side gate. */}
                           {canDelete && row.uuid !== myUuid && outranks(row) ? (
                             <DropdownMenuItem
                               className="cursor-pointer text-red-600 focus:text-red-600"
+                              title={locksOn(row).identity || undefined}
+                              disabled={Boolean(locksOn(row).identity)}
                               onClick={() => setDeleting(row)}
                             >
                               <Trash2 className="h-4 w-4" /> Remove person
@@ -570,15 +1070,54 @@ const People = () => {
               ))
             ) : (
               <EmptyRow
-                span={8}
+                span={canBulk ? 11 : 10}
                 message={
-                  rows.length ? 'Nobody matches those filters.' : 'No people on the roster yet.'
+                  rows.length
+                    ? /* The filters now run over the whole company, so this
+                         really does mean nobody — not "nobody on this page". */
+                      'Nobody in the company matches those filters.'
+                    : debouncedSearch.trim() || location !== 'All'
+                      ? 'Nobody matches that search.'
+                      : 'No people yet.'
                 }
               />
             )}
           </tbody>
         </table>
         )}
+
+        {/* One page at a time. The page you are on, out of how many, with the
+            two buttons that move it; nothing else, because nothing else is
+            needed to get to any person. */}
+        {tab === 'people' && totalPages > 1 ? (
+          <div
+            className="flex flex-wrap items-center justify-between gap-2"
+            style={{ padding: '10px 12px', borderTop: '1px solid var(--line)' }}
+          >
+            <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+              Page {page} of {totalPages}
+              {isFetching ? ' · loading…' : ''}
+            </span>
+            <span className="flex items-center gap-1">
+              <button
+                type="button"
+                className="btn ghost"
+                disabled={page <= 1 || isFetching}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="btn ghost"
+                disabled={page >= totalPages || isFetching}
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              >
+                Next
+              </button>
+            </span>
+          </div>
+        ) : null}
 
         <Dialog open={Boolean(open)} onOpenChange={(next) => !next && setOpen(null)}>
           <DialogContent className="sm:max-w-[560px] w-[calc(100vw-32px)] p-0 gap-0 rounded-2xl overflow-hidden border border-[rgba(225,200,165,0.5)]">
@@ -589,7 +1128,14 @@ const People = () => {
                   <CustomAvatar name={open.name} image={open.image} size="48" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[17px] font-bold text-gray-900 truncate">{open.name}</div>
-                    <div className="text-[13px] text-gray-500 mt-0.5">{open.role}</div>
+                    <div className="text-[13px] text-gray-500 mt-0.5">{open.roleLabel}</div>
+                    {/* The account's state, not their presence — what it blocks
+                        today is on the note. */}
+                    {open.state ? (
+                      <div className="text-[11px] text-gray-400 mt-0.5" title={PERSON_STATE_LABEL[open.state].note}>
+                        {PERSON_STATE_LABEL[open.state].label} · {PERSON_STATE_LABEL[open.state].note}
+                      </div>
+                    ) : null}
                   </div>
                   <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
                     open.tone === 'good' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
@@ -645,6 +1191,20 @@ const People = () => {
                   </div>
 
                   <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-1">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Queues</span>
+                    <span className="text-sm text-gray-700">{open.queues.length ? open.queues.join(', ') : '—'}</span>
+                  </div>
+                  {/* Rated skills from the Skills feature, best first, on the
+                      same one-to-five scale the drawer's Skills tab uses. */}
+                  <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Skills</span>
+                    <span className="text-sm text-gray-700">
+                      {open.skills.length
+                        ? open.skills.map((skill) => `${skill.name} ${skill.stars}/${SKILL_STARS_MAX}`).join(' · ')
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-t border-gray-100">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Caller ID</span>
                     {open.callerId ? (
                       <span className="text-sm font-medium text-gray-900">{open.callerId}</span>
@@ -697,7 +1257,8 @@ const People = () => {
                   <button
                     type="button"
                     className="h-9 px-5 rounded-lg bg-primary text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    disabled={isSavingPerson}
+                    title={locksOn(open).edit || undefined}
+                    disabled={isSavingPerson || Boolean(locksOn(open).edit)}
                     onClick={() => savePerson({ first_name: personForm.first_name, last_name: personForm.last_name, email: personForm.email, phone: personForm.phone })}
                   >
                     {isSavingPerson ? 'Saving...' : 'Save'}
@@ -716,12 +1277,71 @@ const People = () => {
         <SideDrawer
           isOpen={inviting}
           title="Invite people"
-          width="min(1180px, 88vw)"
+          width="min(765px, 94vw)"
           isTab={false}
           handleClose={() => setInviting(false)}
           content={<AddUsers setDrawerState={() => setInviting(false)} />}
         />
       )}
+
+      {/* Several people at once. The dialog names every one of them: the
+          single-person removal shows what would break, and this cannot (it
+          would be one impact check per person), so the least it can do is make
+          the admin read the list before it acts. */}
+      <AlertConfirm
+        {...{
+          apiLoading: bulkBusy,
+          open: Boolean(bulkAction),
+          setOpen: (value: boolean) => !value && setBulkAction(null),
+          onConfirm: runBulk,
+          onCancel: () => setBulkAction(null),
+          onClose: () => setBulkAction(null),
+          confirmBtnText:
+            bulkAction === 'delete'
+              ? `Remove ${selectedRows.length}`
+              : bulkAction === 'suspend'
+                ? `Suspend ${selectedRows.length}`
+                : `Change ${selectedRows.length}`,
+          closeBtnText: 'Cancel',
+          confirmBtnDisabled: bulkAction === 'role' && !bulkRole,
+          className: 'w-full sm:w-2/3 md:w-1/2 lg:w-2/5 p-3',
+          descriptionTextComp: (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontWeight: 700 }}>
+                {bulkAction === 'delete'
+                  ? `Remove ${selectedRows.length} ${selectedRows.length === 1 ? 'person' : 'people'}?`
+                  : bulkAction === 'suspend'
+                    ? `Suspend ${selectedRows.length} ${selectedRows.length === 1 ? 'person' : 'people'}?`
+                    : `Give ${selectedRows.length} ${selectedRows.length === 1 ? 'person' : 'people'} a new role`}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                {selectedRows.map((row) => row.name).join(', ')}
+              </div>
+              {bulkAction === 'role' ? (
+                <select
+                  className="mcm-input"
+                  value={bulkRole}
+                  onChange={(event) => setBulkRole(event.target.value)}
+                >
+                  <option value="">Choose a role…</option>
+                  {bulkRoleOptions.map((option: any) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+              <div style={{ fontSize: 11.5, color: 'var(--ink-4)' }}>
+                {bulkAction === 'delete'
+                  ? 'Removed people can be restored from the Removed tab for 72 hours. The server still refuses anyone it protects — the last administrator, or yourself.'
+                  : bulkAction === 'suspend'
+                    ? 'Suspending blocks their login immediately; their phone stops once the switch update is applied. The server refuses to suspend you or the account owner.'
+                    : 'Roles cannot be changed for anyone who has not accepted their invite yet; the server refuses those.'}
+              </div>
+            </div>
+          ),
+        }}
+      />
 
       <AlertConfirm
         {...{
@@ -764,6 +1384,46 @@ const People = () => {
             <div className="text-md">
               Remove <strong>{unassigning?.callerId}</strong> from {unassigning?.name}? The number
               stays on the account and can be assigned again.
+            </div>
+          ),
+        }}
+      />
+
+      <AlertConfirm
+        {...{
+          apiLoading: isSuspending,
+          open: Boolean(suspending),
+          setOpen: (value: boolean) => !value && setSuspending(null),
+          onConfirm: () => suspending?.uuid && suspendPerson(suspending.uuid),
+          onCancel: () => setSuspending(null),
+          onClose: () => setSuspending(null),
+          confirmBtnText: 'Suspend',
+          closeBtnText: 'Cancel',
+          descriptionTextComp: (
+            <div className="text-md">
+              Suspend <strong>{suspending?.name}</strong>? They are signed out everywhere at
+              once and cannot sign in until you reactivate them. Their phone stops working once
+              the switch update is applied. Nothing is deleted: their extension, e-mail, role and
+              settings stay as they are.
+            </div>
+          ),
+        }}
+      />
+
+      <AlertConfirm
+        {...{
+          apiLoading: isReactivating,
+          open: Boolean(reactivating),
+          setOpen: (value: boolean) => !value && setReactivating(null),
+          onConfirm: () => reactivating?.uuid && reactivatePerson(reactivating.uuid),
+          onCancel: () => setReactivating(null),
+          onClose: () => setReactivating(null),
+          confirmBtnText: 'Reactivate',
+          closeBtnText: 'Cancel',
+          descriptionTextComp: (
+            <div className="text-md">
+              Reactivate <strong>{reactivating?.name}</strong>? They can sign in again straight
+              away.
             </div>
           ),
         }}

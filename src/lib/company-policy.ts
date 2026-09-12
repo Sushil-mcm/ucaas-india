@@ -14,8 +14,12 @@
  *     shared editor is an admin configuring a number, department, IVR or queue, and
  *     locking those would be nonsense.
  *   - With no company record saved, it defers entirely to the old behaviour. A
- *     tenant that has never opened the company page sees no change at all, rather
- *     than every field silently locking because absent flags read as false.
+ *     tenant that has never opened the company page sees no change at all.
+ *   - Once a record exists, a rule the company has never set is open. An absent
+ *     flag used to read as a lock, so the record coming into being for any reason
+ *     (a holiday saved, say) locked every governed field on every person's phone.
+ *     Now only a flag an admin actually stored as "locked" locks anything; see the
+ *     table in src/lib/company-rule-flags.ts.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -42,6 +46,19 @@ export const POLICY_FIELDS = {
 
 export type PolicyField = keyof typeof POLICY_FIELDS;
 
+/* The four recordings on the company's greetings record. Their lock flags sit
+   on the greeting's own node (`greetings.voicemail.override` and friends), not
+   in the settings blob POLICY_FIELDS indexes, so they are read separately. The
+   bare name `voicemail` is already a settings rule pointing at `voicemail_pin`,
+   which is why these are never folded into POLICY_FIELDS. */
+export const GREETING_SLOTS = ['welcome_greeting', 'on_hold_music', 'voicemail', 'ring_tone'] as const;
+
+export type GreetingSlot = (typeof GREETING_SLOTS)[number];
+
+/* Said at a control the company rule has greyed out, so a disabled control is
+   not mistaken for a broken one. One sentence, used word for word. */
+export const COMPANY_LOCK_WORDING = 'Set by your company, so you cannot change it here.';
+
 export interface CompanyPolicy {
   /* True once a company record exists and its flags are governing this page. */
   isActive: boolean;
@@ -50,6 +67,8 @@ export interface CompanyPolicy {
   allows: (field: PolicyField) => boolean;
   /* Whether the company value should be copied onto a person. */
   applies: (field: PolicyField) => boolean;
+  /* Whether the person may change this recording on their own Greetings page. */
+  allowsGreeting: (slot: GreetingSlot) => boolean;
 }
 
 export const useCompanyPolicy = ({ enabled }: { enabled: boolean }): CompanyPolicy => {
@@ -75,7 +94,8 @@ export const useCompanyPolicy = ({ enabled }: { enabled: boolean }): CompanyPoli
        when provisioning a new person it meant "copy this value onto them". One
        bit could not say both, so "everyone gets this and nobody may change it"
        — the thing admins actually want — was unsayable. The flags are separate
-       now; a record holding only the old flag still reads exactly as it did. */
+       now. A record holding only the old flag reads as it did for `true` and for a
+       stored `false`; a flag that was never stored reads as open, not locked. */
     allows: (field: PolicyField) => {
       if (!isActive) return true;
       return !readRuleFlags(settings, field).locked;
@@ -84,6 +104,12 @@ export const useCompanyPolicy = ({ enabled }: { enabled: boolean }): CompanyPoli
     applies: (field: PolicyField) => {
       if (!isActive) return false;
       return readRuleFlags(settings, field).apply;
+    },
+    /* Same rules as `allows`, read off the greetings record. The path carries
+       the trailing `.override` for the reason given at GREETING_SLOTS. */
+    allowsGreeting: (slot: GreetingSlot) => {
+      if (!isActive) return true;
+      return !readRuleFlags(data?.greetings, `${slot}.override`).locked;
     },
   };
 };

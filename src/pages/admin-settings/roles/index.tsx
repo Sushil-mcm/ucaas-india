@@ -9,6 +9,7 @@ import CustomTooltip from '@/components/custom/custom-tooltip';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { handleAlert } from '@/lib/utils';
+import { invalidateRoleLists } from '@/lib/role-list-cache';
 import { useUser } from '@/hooks/use-user';
 import AssignUsersModal from './assign-users-modal';
 
@@ -30,7 +31,7 @@ const UserRoles = () => {
         text: data?.data?.data?.message || 'Custom role deleted successfully!',
         type: 'success',
       });
-      queryClient.invalidateQueries(['rolesList']);
+      invalidateRoleLists(queryClient);
       setIsDeleteRole(false);
     },
   });
@@ -181,9 +182,15 @@ const UserRoles = () => {
               : `Duplicate ${data?.name}`,
             cb: () => {
               setRoleData({
-                name: `${data?.name} (copy)`,
+                /* "copy", not "(copy)": the name rule allows no brackets, so the
+                   old name could not be saved without retyping it. */
+                name: `${data?.name} copy`,
                 description: data?.description,
                 permission: data?.permission,
+                /* The parent the copy is saved under. A built-in role's own id,
+                   or a company role's parent - either way the built-in the
+                   server needs. */
+                role_uuid: data?.role_uuid,
               });
               /* Cleared explicitly. Viewing a built-in role sets read-only, and
                  without this a copy started straight after a view would open

@@ -37,15 +37,25 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useDialpad } from '@/hooks/use-dialpad';
+import { getEnv } from '@/lib/utils';
 import type { DialpadSession } from '@/context/dialpad-context';
 import type { BriefRow, CopilotCard } from './copilot-adapter';
 
 /**
  * Master switch for the copilot backend integration. See the header comment for
- * exactly what each position does. Set to true when the backend worker starts
- * emitting `copilot.suggestion`.
+ * exactly what each position does.
+ *
+ * Per PORTAL rather than a compile-time constant, because the answer differs by
+ * deployment: it belongs on wherever Captain's copilot worker is actually
+ * running, and off everywhere else. A hardcoded `false` meant no portal could
+ * turn it on without a code change, and a hardcoded `true` would have switched
+ * it on for every portal at once.
+ *
+ * Default OFF. Only the exact string "true" enables it, so a stray value in an
+ * env file cannot switch a live portal on by accident.
  */
-export const COPILOT_BACKEND_ENABLED = false;
+export const COPILOT_BACKEND_ENABLED =
+  String(getEnv().VITE_COPILOT_BACKEND_ENABLED ?? '').trim().toLowerCase() === 'true';
 
 export type CopilotSuggestion = CopilotCard & {
   confidence?: number;

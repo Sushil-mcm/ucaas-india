@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Send, User, BookOpen, UserCheck, RotateCcw,
-  ChevronDown, Check, Server, LayoutPanelTop, LayoutTemplate, Info,
+  ChevronDown, ChevronUp, Check, CircleDashed, CheckCircle, Server, LayoutPanelTop, LayoutTemplate, Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useCustomToolDraft } from '@/hooks/use-custom-tool-draft';
+import { FormattedMessage } from '@/components/captain/FormattedMessage';
 import WidgetSection from './widget/WidgetSection';
 import { draftStore } from './widget/helpers/draft-store';
 import {
@@ -150,7 +151,9 @@ const InlinePlayground = ({ assistantId, assistantName, samplePrompts = [] }: { 
               {m.template ? (
                 <PlaygroundTemplate template={m.template} onPostback={(msg) => send(msg)} />
               ) : (
-                <div className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-xs ${m.role === 'user' ? 'rounded-br-sm bg-blue-600 text-white' : 'rounded-bl-sm border border-gray-100 bg-gray-50 text-gray-800 dark:border-neutral-800 dark:bg-[#2b274a] dark:text-gray-100'}`}>{m.content}</div>
+                <div className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-xs ${m.role === 'user' ? 'rounded-br-sm bg-blue-600 text-white' : 'rounded-bl-sm border border-gray-100 bg-gray-50 text-gray-800 dark:border-neutral-800 dark:bg-[#2b274a] dark:text-gray-100'}`}>
+                  <FormattedMessage content={m.content} isUser={m.role === 'user'} />
+                </div>
               )}
               {m.handoff && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"><UserCheck className="size-3" />Handed off to a human agent</span>}
               {!!m.sources?.length && (
@@ -209,44 +212,26 @@ const StepAccordion = ({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) => (
-  <div className="transition-all bg-transparent">
-    <div
-      role="button"
-      tabIndex={isLocked ? -1 : 0}
+  <div className="bg-transparent">
+    <button
+      type="button"
+      disabled={isLocked}
       onClick={isLocked ? undefined : onToggle}
-      onKeyDown={(e) => {
-        if (!isLocked && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
-      className={`flex w-full items-center justify-between py-4 px-1 text-left select-none bg-transparent ${
-        isLocked ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
+      className={`flex w-full items-center justify-between py-4 text-left select-none ${
+        isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <div
-          className={`flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+          className={`flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
             isDone
               ? 'bg-teal-600 text-white dark:bg-teal-500'
-              : isOpen
-              ? 'border-2 border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold'
-              : 'border border-dashed border-gray-400 text-gray-400 dark:border-neutral-600 dark:text-neutral-500'
+              : 'border border-dashed border-gray-400 text-gray-500 dark:border-neutral-600 dark:text-neutral-400'
           }`}
         >
           {isDone ? <Check className="size-3" /> : number}
         </div>
-        <span
-          className={`text-base font-semibold ${
-            isOpen
-              ? 'text-gray-950 dark:text-white'
-              : isLocked
-              ? 'text-gray-400 dark:text-neutral-500'
-              : 'text-gray-700 dark:text-neutral-300'
-          }`}
-        >
-          {title}
-        </span>
+        <span className="text-base font-semibold text-gray-900 dark:text-white">{title}</span>
       </div>
       {!isLocked && (
         <ChevronDown
@@ -255,9 +240,9 @@ const StepAccordion = ({
           }`}
         />
       )}
-    </div>
+    </button>
     {isOpen && (
-      <div className="pb-6 pt-1 px-1 flex flex-col gap-4 bg-transparent">
+      <div className="mb-6 flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60">
         {children}
         {footer && <div className="pt-2">{footer}</div>}
       </div>
@@ -1264,8 +1249,13 @@ const HttpWizard = ({
   );
 };
 
-// ── Dashed-circle accordion (Floatchat style for lead/form/button) ────────────
-
+// ── Accordion section for lead/form/button — ported from Chatwoot's
+// CollectLeadsForm.vue / CustomFormForm.vue / CustomButtonForm.vue, which all
+// share this exact pattern: an icon-only status marker (no step number, that's
+// only StepHeader's thing for the Custom action wizard), a plain toggle row
+// with no background change, and — this is the part that actually gives the
+// open section visual weight — its content sits in a bordered, backgrounded
+// card instead of floating loose on the page.
 const DashedSection = ({
   sectionKey, title, children, openSection, onToggle, isDone, footer,
 }: {
@@ -1275,33 +1265,28 @@ const DashedSection = ({
 }) => {
   const isOpen = openSection === sectionKey;
   return (
-    <div className="transition-all bg-transparent">
-      <div
-        role="button"
-        tabIndex={0}
+    <div className="flex flex-col gap-4">
+      <button
+        type="button"
         onClick={() => onToggle(sectionKey)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onToggle(sectionKey);
-          }
-        }}
-        className="flex w-full items-center justify-between py-4 px-1 text-left cursor-pointer select-none bg-transparent"
+        className="flex w-full items-center justify-between text-left cursor-pointer select-none"
       >
-        <div className="flex items-center gap-3">
+        <span className="flex items-center gap-2">
           {isDone ? (
-            <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-600 dark:bg-teal-500 text-white"><Check className="size-3" /></div>
+            <CheckCircle className="size-5 text-teal-600 dark:text-teal-500" />
           ) : (
-            <div className={`flex size-5 shrink-0 items-center justify-center rounded-full border border-dashed transition-colors ${
-              isOpen ? 'border-blue-500 text-blue-500 dark:border-blue-400' : 'border-gray-400 dark:border-neutral-600'
-            }`} />
+            <CircleDashed className="size-5 text-gray-400 dark:text-neutral-500" />
           )}
-          <span className={`text-base font-semibold ${isOpen ? 'text-gray-950 dark:text-white' : 'text-gray-700 dark:text-neutral-300'}`}>{title}</span>
-        </div>
-        <ChevronDown className={`size-4 text-gray-400 dark:text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
+          <span className="text-base font-semibold text-gray-900 dark:text-white">{title}</span>
+        </span>
+        {isOpen ? (
+          <ChevronUp className="size-5 text-gray-400 dark:text-neutral-500" />
+        ) : (
+          <ChevronDown className="size-5 text-gray-400 dark:text-neutral-500" />
+        )}
+      </button>
       {isOpen && (
-        <div className="pb-6 pt-1 px-1 flex flex-col gap-4 bg-transparent">
+        <div className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60">
           {children}
           {footer && <div className="pt-2">{footer}</div>}
         </div>
@@ -1664,7 +1649,7 @@ const ToolWizard = () => {
 
       <div className="flex flex-1 min-h-0 gap-8 overflow-hidden">
         {/* LEFT — per-kind accordion sections */}
-        <div className="flex w-[46%] shrink-0 flex-col overflow-y-auto pl-2 pr-3 py-1 divide-y divide-gray-200 dark:divide-neutral-800">
+        <div className="flex w-[46%] shrink-0 flex-col gap-4 overflow-y-auto pl-2 pr-3 py-1 pb-4">
 
           {/* ── COLLECT LEADS ─────────────────────────────────────────── */}
           {kind === 'lead' && (<>

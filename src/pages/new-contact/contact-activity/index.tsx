@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import type { ContactPrefill } from '@/interfaces/contact-interface';
 import CreateContactNew from '../create-new-contact';
 import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +42,31 @@ const ContactActivity = ({
   const goBack = onClose ?? (() => navigate(-1));
   const [showDialer, setShowDialer] = useState(false);
   const [numberToAdd, setNumberToAdd] = useState('');
+  // Pre-fill for a new contact, sent by the browser extension's "Save to
+  // Unified" in the URL fragment (#mcm-prefill=<json>). A fragment never
+  // reaches the server, so captured names and emails stay out of access logs.
+  const prefillHash = useLocation().hash;
+  const prefill = useMemo<ContactPrefill & { phone?: string }>(() => {
+    if (searchParams.get('contactId') !== 'add') return {};
+    const match = /(?:^#|&)mcm-prefill=([^&]*)/.exec(prefillHash || '');
+    if (!match) return {};
+    try {
+      const raw = JSON.parse(decodeURIComponent(match[1])) as Record<string, unknown>;
+      const out: ContactPrefill & { phone?: string } = {};
+      const keys = ['first_name', 'last_name', 'email', 'company', 'title', 'notes', 'phone'] as const;
+      keys.forEach((key) => {
+        const value = typeof raw[key] === 'string' ? String(raw[key]).trim().slice(0, 500) : '';
+        if (value) out[key] = value;
+      });
+      return out;
+    } catch (_e) {
+      return {};
+    }
+  }, [prefillHash, searchParams]);
+
+  useEffect(() => {
+    if (prefill.phone && !searchParams.get('number')) setNumberToAdd(prefill.phone);
+  }, [prefill.phone, searchParams]);
 
   const { makeCall } = useDialpad();
 
@@ -205,6 +231,7 @@ const ContactActivity = ({
                   contactData={contactData}
                   isDisable={false}
                   prefillPhone={numberToAdd}
+                  prefill={prefill}
                   isLead={isLeadList}
                   hideCancelButton={true}
                   keepFormDataAfterSave={true}

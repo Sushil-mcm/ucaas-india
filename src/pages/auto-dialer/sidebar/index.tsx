@@ -36,6 +36,23 @@ const campaignMenuItems = (features: any, IS_ADMIN: boolean): MenuItem[] =>
         visible: Boolean(features?.plan_features?.campaign?.action?.view),
       },
       {
+        /* This used to live behind the header's "+" quick menu as "My
+           Campaigns" — the agent's own entry point into a running campaign,
+           not the admin list above it. Renamed to say what it actually is.
+           Routed through /campaign/my-campaigns (a sibling of the other
+           tiles in this same sidebar, not the standalone /my-campaigns) so
+           clicking it keeps this sidebar mounted instead of leaving the
+           whole /campaign layout, which is what unmounted it and dropped
+           back to the plain page with no rail. */
+        label: 'Campaign Workspace',
+        value: 'my-campaigns',
+        icon: <Icon name="Headphones" className="w-5 h-5" />,
+        key: 'my-campaigns',
+        path: '/campaign/my-campaigns',
+        enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
+        visible: Boolean(features?.plan_features?.campaign?.action?.view),
+      },
+      {
         label: 'Leads',
         value: 'leads',
         key: 'lead',
@@ -80,6 +97,15 @@ const campaignMenuItems = (features: any, IS_ADMIN: boolean): MenuItem[] =>
       //   enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
       //   visible: Boolean(features?.plan_features?.campaign?.action?.view),
       // },
+      {
+        label: 'Compliance',
+        value: 'compliance',
+        icon: <Icon name="CampaignLogsIcon" className="w-5 h-5" />,
+        key: 'compliance',
+        path: '/campaign/compliance',
+        enabled: Boolean(features?.plan_features?.campaign?.IS_SHOW),
+        visible: Boolean(features?.plan_features?.campaign?.action?.view),
+      },
       {
         label: 'DNC',
         value: 'dnc',

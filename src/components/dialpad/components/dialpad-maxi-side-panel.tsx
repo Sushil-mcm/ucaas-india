@@ -2,6 +2,9 @@ import type { DialpadSession } from '@/context/dialpad-context';
 import { cn } from '@/lib/utils';
 import { isExtensionDialTarget } from '@/lib/extension-utility';
 import { useCompanyFeatures } from '@/hooks/rbac';
+import { useDialpad } from '@/hooks/use-dialpad';
+import { useUser } from '@/hooks/use-user';
+import DialpadCampaignSkipPanel from './dialpad-campaign-skip-panel';
 import { ContactRound, FileText, History, ListChecks, NotebookPen, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import DialpadMaxiScriptSidebar from './dialpad-maxi-script-sidebar';
@@ -19,6 +22,9 @@ type DialpadMaxiSidePanelProps = {
   activeTabOverride?: DialpadMaxiTab | null;
   onActiveTabOverrideApplied?: () => void;
   onActiveTabChange?: (tab: DialpadMaxiTab) => void;
+  /* The full-page campaign dialer borrows the console's flat look: no floating
+     card, a tab strip rather than a pill bar. Everywhere else keeps the box. */
+  fullPage?: boolean;
   className?: string;
 };
 
@@ -31,6 +37,7 @@ type DialpadTabButtonProps = {
   isActive: boolean;
   onClick: () => void;
   compact?: boolean;
+  underline?: boolean;
 };
 
 type DialpadTabConfig = {
@@ -62,7 +69,28 @@ const DialpadTabButton = ({
   isActive,
   onClick,
   compact = false,
+  underline = false,
 }: DialpadTabButtonProps) => {
+  /* The console's tab strip: plain text on white with the active one
+     underlined. A row of filled pills inside a filled bar reads as five
+     buttons competing for a press; an underline says "you are here" and
+     leaves the panel below as the thing being looked at. */
+  if (underline) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 pb-2.5 pt-3 text-[12.5px] font-bold transition ${
+          isActive
+            ? 'border-primary text-primary'
+            : 'border-transparent text-[#5f7392] hover:text-[#17385e]'
+        }`}
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  }
   return (
     <button
       type="button"
@@ -90,9 +118,16 @@ const DialpadMaxiSidePanel = ({
   activeTabOverride = null,
   onActiveTabOverrideApplied,
   onActiveTabChange,
+  fullPage = false,
   className,
 }: DialpadMaxiSidePanelProps) => {
   const { features } = useCompanyFeatures();
+  /* The agent reading the script, and the company they are reading it for. */
+  const { user } = useUser();
+  /* Read so the tab order can put the lead first on a campaign, and so the
+     Contact Info tab has something to show in preview - where the agent is
+     looking at a lead but no call has started yet. */
+  const { activeCampaign, campaignContactCards, campaignSkipRequest } = useDialpad();
   const [activeTab, setActiveTab] = useState<DialpadMaxiTab>('call-history');
   const dispositionAutoFocusKeyRef = useRef<string | null>(null);
 
@@ -158,6 +193,26 @@ const DialpadMaxiSidePanel = ({
     ? campaignScriptId || queueScriptId || fallbackScriptId
     : queueScriptId || campaignScriptId || fallbackScriptId;
   const hasScript = Boolean(scriptId);
+
+  /* What this call can fill a script's placeholders with. The lead's name and
+     number on a campaign call, the caller's number on a queue call, and the
+     agent and company either way. */
+  const scriptCallValues = useMemo(() => {
+    const card: any = Array.isArray(campaignContactCards) ? campaignContactCards[0] : null;
+    const campaign: any = activeSession?.campaignMetaData?.response || activeSession?.campaignMetaData;
+    const queue: any = activeSession?.queueMetaData?.response || activeSession?.queueMetaData;
+    return {
+      customerName: card?.contactName || (activeSession as any)?.remoteName || '',
+      customerNumber: card?.contactNumber || activeSession?.remoteNumber || '',
+      customerEmail: card?.contactEmail || '',
+      agentName: [user?.user_info?.first_name, user?.user_info?.last_name].filter(Boolean).join(' '),
+      agentExtension: user?.user_info?.extension || '',
+      agentEmail: user?.user_info?.email || '',
+      companyName: user?.company_info?.company_name || user?.company_info?.name || '',
+      campaignName: campaign?.name || card?.campaignDetail?.campaignName || activeCampaign?.name || '',
+      queueName: queue?.name || '',
+    };
+  }, [activeSession, campaignContactCards, activeCampaign, user]);
   const advanceCallManagementAccess =
     features?.plan_features?.advance_call_management?.access || {};
   const canAccessTranscription = Boolean(advanceCallManagementAccess.TRANSCRIPTION);
@@ -230,10 +285,48 @@ const DialpadMaxiSidePanel = ({
     ],
   );
 
-  const accessibleTabs = useMemo(
-    () => tabConfigs.filter((tabConfig) => tabConfig.access),
-    [tabConfigs],
+  /**
+   * On a campaign, the lead comes first.
+   *
+   * Contact Info sat last, behind Call History, Transcript, Notes and AI
+   * Assist. On an ordinary call that is the right order - you know who you
+   * rang. On a campaign it is backwards: the whole job in preview is to read
+   * who you are about to call BEFORE you press Call, and the agent had to hunt
+   * to the end of the row to find it, on a screen that gives them a countdown
+   * to decide in.
+   *
+   * Only reordered for a campaign. Everywhere else the order is untouched, so
+   * nobody's muscle memory on the normal dialpad is disturbed.
+   */
+  const isCampaignContext = Boolean(
+    activeCampaign || activeSession?.campaignMetaData || campaignContactCards?.length,
   );
+
+  const accessibleTabs = useMemo(() => {
+    const allowed = tabConfigs.filter((tabConfig) => tabConfig.access);
+    if (!isCampaignContext) return allowed;
+    const contactInfo = allowed.filter((tabConfig) => tabConfig.key === 'contact-info');
+    if (!contactInfo.length) return allowed;
+    return [...contactInfo, ...allowed.filter((tabConfig) => tabConfig.key !== 'contact-info')];
+  }, [tabConfigs, isCampaignContext]);
+
+  /* Being first in the row is not the same as being open. The panel starts on
+     Call History, so on a campaign the agent still landed on an empty history
+     with the lead one click away. Opening the lead is done once per campaign,
+     keyed on which campaign it is, so switching to Notes or the script is not
+     undone on the next render - and leaving and rejoining primes it again. */
+  const campaignTabPrimedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isCampaignContext) {
+      campaignTabPrimedRef.current = null;
+      return;
+    }
+    const key = String(activeCampaign?._id || 'campaign');
+    if (campaignTabPrimedRef.current === key) return;
+    if (!accessibleTabs.some((tabConfig) => tabConfig.key === 'contact-info')) return;
+    campaignTabPrimedRef.current = key;
+    setActiveTab('contact-info');
+  }, [isCampaignContext, activeCampaign?._id, accessibleTabs]);
 
   const shouldAutoFocusDispositions =
     hasDispositionMetadata &&
@@ -285,29 +378,63 @@ const DialpadMaxiSidePanel = ({
     [accessibleTabs, activeTab],
   );
 
+  /* A skip in progress takes the whole panel. It is a question the agent has to
+     answer before the lead moves, so leaving the tabs reachable underneath would
+     invite them to wander off mid-answer and lose what they had typed. */
+  if (campaignSkipRequest) {
+    return (
+      <div
+        className={cn(
+          'flex h-full min-h-0 w-full flex-col bg-white',
+          fullPage
+            ? 'rounded-2xl border border-ucass-active-bg'
+            : 'rounded-[32px] border border-white/80',
+          className,
+        )}
+      >
+        <DialpadCampaignSkipPanel request={campaignSkipRequest} />
+      </div>
+    );
+  }
+
   return (
     <div
-      style={{ overflowX: 'auto' }}
+      /* `overflowX: auto` on the root put a scrollbar down the side of the
+         whole panel - visible beside the tab strip on a full-page layout that
+         has nothing to scroll. The narrow floating panel still needs it. */
+      style={fullPage ? undefined : { overflowX: 'auto' }}
       className={cn(
-        'flex h-full min-h-0 w-full flex-col rounded-[32px] border border-white/80 bg-white',
-        'px-3 pb-3 pt-2.5 max-[380px]:px-2.5 max-[380px]:pb-2.5 max-[380px]:pt-2 sm:px-4 sm:pb-4 sm:pt-3 md:px-2 md:pb-3 md:pt-3 xxl:p-4',
+        'flex h-full min-h-0 w-full flex-col bg-white',
+        fullPage
+          ? 'rounded-2xl border border-ucass-active-bg px-4 pb-4 pt-0'
+          : 'rounded-[32px] border border-white/80 px-3 pb-3 pt-2.5 max-[380px]:px-2.5 max-[380px]:pb-2.5 max-[380px]:pt-2 sm:px-4 sm:pb-4 sm:pt-3 md:px-2 md:pb-3 md:pt-3 xxl:p-4',
         className,
       )}
     >
       <div className="min-h-0 flex flex-1 gap-2">
         {hasScript ? (
           <div className="min-h-0 w-[44%] min-w-[220px] max-w-[320px]">
-            <DialpadMaxiScriptSidebar scriptId={scriptId} sessionId={activeSession?.id} />
+            <DialpadMaxiScriptSidebar
+              scriptId={scriptId}
+              sessionId={activeSession?.id}
+              call={scriptCallValues}
+              disposition={activeSession?.dispositionName || null}
+            />
           </div>
         ) : null}
 
         <div className="min-h-0 flex flex-1 flex-col">
           <div
             className={cn(
-              'mb-2.5 flex items-center rounded-2xl border border-ucass-active-bg bg-ucass-active-bg p-1 max-[380px]:mb-2 sm:mb-3',
-              hasScript
-                ? 'gap-1 max-[380px]:gap-0.5 sm:gap-1'
-                : 'gap-1.5 max-[380px]:gap-1 sm:gap-1',
+              'flex items-center',
+              fullPage
+                ? 'no-scrollbar mb-3 gap-1 overflow-x-auto border-b border-ucass-active-bg'
+                : cn(
+                    'mb-2.5 rounded-2xl border border-ucass-active-bg bg-ucass-active-bg p-1 max-[380px]:mb-2 sm:mb-3',
+                    hasScript
+                      ? 'gap-1 max-[380px]:gap-0.5 sm:gap-1'
+                      : 'gap-1.5 max-[380px]:gap-1 sm:gap-1',
+                  ),
             )}
           >
             {accessibleTabs.map((tabConfig) => (
@@ -318,11 +445,19 @@ const DialpadMaxiSidePanel = ({
                 isActive={activeTab === tabConfig.key}
                 onClick={() => setActiveTab(tabConfig.key)}
                 compact={hasScript}
+                underline={fullPage}
               />
             ))}
           </div>
 
-          <div className="min-h-0 flex-1 flex flex-col pr-1">{activeTabConfig?.component}</div>
+          <div
+            className={cn(
+              'flex min-h-0 flex-1 flex-col',
+              fullPage ? 'no-scrollbar overflow-y-auto' : 'pr-1',
+            )}
+          >
+            {activeTabConfig?.component}
+          </div>
         </div>
       </div>
     </div>

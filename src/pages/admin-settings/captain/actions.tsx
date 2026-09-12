@@ -1064,52 +1064,52 @@ const CaptainActions = () => {
       )}
 
       <Dialog open={!!previewModalKind} onOpenChange={(open) => { if (!open) setPreviewModalKind(null); }}>
-        <DialogContent className="max-w-4xl p-6 sm:p-10 bg-[#16161e] border-neutral-800 dark:border-border text-white rounded-3xl overflow-hidden shadow-2xl">
+        <DialogContent className="max-w-4xl p-6 sm:p-10 bg-white dark:bg-[#16161e] border-gray-200 dark:border-neutral-800 text-gray-900 dark:text-white rounded-3xl overflow-hidden shadow-2xl">
           <DialogTitle className="sr-only">{previewModalData?.title || 'Action Preview'}</DialogTitle>
           <DialogDescription className="sr-only">Preview of {previewModalData?.title}</DialogDescription>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-2">
-            <div className="w-[310px] sm:w-[330px] rounded-2xl border border-neutral-800 dark:border-border bg-[#0e0e13] overflow-hidden shadow-2xl flex flex-col shrink-0">
-              <div className="h-12 px-3.5 bg-[#141419] border-b border-neutral-800 dark:border-border flex items-center justify-between">
+            <div className="w-[310px] sm:w-[330px] rounded-2xl border border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-[#0e0e13] overflow-hidden shadow-2xl flex flex-col shrink-0">
+              <div className="h-12 px-3.5 bg-gray-100 dark:bg-[#141419] border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="size-6 rounded-full bg-neutral-900 border border-neutral-700 dark:border-border flex items-center justify-center text-white">
+                  <div className="size-6 rounded-full bg-gray-900 dark:bg-neutral-900 border border-gray-700 dark:border-neutral-700 flex items-center justify-center text-white">
                     <Bot className="size-3.5 text-white" />
                   </div>
-                  <span className="text-xs font-semibold text-white tracking-wide">AI Agent</span>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white tracking-wide">AI Agent</span>
                 </div>
-                <div className="flex items-center gap-2 text-neutral-400 dark:text-muted-foreground">
+                <div className="flex items-center gap-2 text-gray-400 dark:text-muted-foreground">
                   <MoreHorizontal className="size-4" />
                 </div>
               </div>
 
               <div className="bg-white dark:bg-card p-4 flex flex-col justify-between min-h-[380px] select-none">
                 <div className="flex flex-col gap-3">
-                  <div className="text-[12px] text-neutral-800 dark:text-foreground font-normal leading-relaxed">
+                  <div className="text-[12px] text-gray-800 dark:text-foreground font-normal leading-relaxed">
                     Hey, how can I help?
                   </div>
 
-                  <div className="self-end max-w-[85%] rounded-2xl bg-neutral-100 dark:bg-muted px-3 py-2 text-[11px] text-neutral-800 dark:text-foreground shadow-2xs border border-neutral-200/60 dark:border-border/60 leading-relaxed font-normal">
+                  <div className="self-end max-w-[85%] rounded-2xl bg-gray-100 dark:bg-muted px-3 py-2 text-[11px] text-gray-800 dark:text-foreground shadow-2xs border border-gray-200/60 dark:border-border/60 leading-relaxed font-normal">
                     {previewModalData?.userMessage || 'Notify the sales team that the Acme deal closed'}
                   </div>
 
                   <div className="flex flex-col gap-1.5 max-w-[95%]">
-                    <div className="text-[11px] text-neutral-800 dark:text-foreground leading-relaxed font-normal">
+                    <div className="text-[11px] text-gray-800 dark:text-foreground leading-relaxed font-normal">
                       {previewModalData?.assistantReply || "Done, I've posted to #sales-team on Slack: 'The Acme deal has just closed. Great work, team!' The message was delivered successfully."}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-neutral-400 dark:text-muted-foreground pt-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-muted-foreground pt-0.5">
                       <span>Just now</span>
-                      <ThumbsUp className="size-3 text-neutral-400 dark:text-muted-foreground hover:text-neutral-600 dark:hover:text-muted-foreground transition cursor-pointer" />
-                      <ThumbsDown className="size-3 text-neutral-400 dark:text-muted-foreground hover:text-neutral-600 dark:hover:text-muted-foreground transition cursor-pointer" />
+                      <ThumbsUp className="size-3 text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-muted-foreground transition cursor-pointer" />
+                      <ThumbsDown className="size-3 text-gray-400 dark:text-muted-foreground hover:text-gray-600 dark:hover:text-muted-foreground transition cursor-pointer" />
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-full border border-neutral-200 dark:border-border bg-white dark:bg-card px-3 py-1.5 flex items-center justify-between text-neutral-400 dark:text-muted-foreground text-xs shadow-2xs">
+                <div className="mt-4 rounded-full border border-gray-200 dark:border-border bg-white dark:bg-card px-3 py-1.5 flex items-center justify-between text-gray-400 dark:text-muted-foreground text-xs shadow-2xs">
                   <div className="flex items-center gap-2 text-[11px]">
-                    <Bot className="size-3.5 text-neutral-400 dark:text-muted-foreground" />
+                    <Bot className="size-3.5 text-gray-400 dark:text-muted-foreground" />
                     <span>Ask a question...</span>
                   </div>
-                  <div className="flex items-center gap-2 text-neutral-400 dark:text-muted-foreground">
+                  <div className="flex items-center gap-2 text-gray-400 dark:text-muted-foreground">
                     <Mic className="size-3.5" />
                     <Volume2 className="size-3.5" />
                   </div>
@@ -1118,41 +1118,41 @@ const CaptainActions = () => {
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-4 sm:px-8">
-              <div className="size-14 rounded-2xl bg-purple-950/40 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-6 shadow-inner">
+              <div className="size-14 rounded-2xl bg-purple-100 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6 shadow-inner">
                 {previewModalData?.icon}
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-950 dark:text-white tracking-tight mb-2">
                 {previewModalData?.title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-neutral-400 dark:text-muted-foreground max-w-sm mb-7 leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-muted-foreground max-w-sm mb-7 leading-relaxed">
                 {previewModalData?.description}
               </p>
 
               <div className="w-full max-w-xs flex flex-col items-start gap-1.5 mb-7 text-left">
-                <label className="text-xs font-medium text-neutral-400 dark:text-muted-foreground">Set up for assistant</label>
+                <label className="text-xs font-medium text-gray-500 dark:text-muted-foreground">Set up for assistant</label>
                 <div className="relative w-full">
                   <select
                     value={previewAssistantId}
                     onChange={(e) => setPreviewAssistantId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-neutral-800 dark:border-border bg-[#1e1e24] pl-9 pr-8 py-2.5 text-xs text-white focus:outline-none focus:border-neutral-700 dark:focus:border-border cursor-pointer"
+                    className="w-full appearance-none rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-[#1e1e24] pl-9 pr-8 py-2.5 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-gray-400 dark:focus:border-neutral-700 cursor-pointer"
                   >
                     {assistants.map((ast) => (
-                      <option key={ast.id} value={String(ast.id)} className="bg-[#1e1e24] text-white">
+                      <option key={ast.id} value={String(ast.id)} className="bg-white dark:bg-[#1e1e24] text-gray-900 dark:text-white">
                         {ast.name || `Assistant #${ast.id}`}
                       </option>
                     ))}
                   </select>
-                  <Bot className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 dark:text-muted-foreground pointer-events-none" />
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 dark:text-muted-foreground pointer-events-none" />
+                  <Bot className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 dark:text-muted-foreground pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 dark:text-muted-foreground pointer-events-none" />
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleStartCustomizing}
-                className="rounded-full bg-black text-white px-8 py-2.5 text-xs font-semibold border border-neutral-700 dark:border-border hover:bg-neutral-900 transition-all cursor-pointer shadow-lg active:scale-98"
+                className="rounded-full bg-black text-white px-8 py-2.5 text-xs font-semibold border border-gray-700 dark:border-neutral-700 hover:bg-gray-900 dark:hover:bg-neutral-900 transition-all cursor-pointer shadow-lg active:scale-98"
               >
                 Start customizing
               </button>

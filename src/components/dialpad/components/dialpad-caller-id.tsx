@@ -129,7 +129,13 @@ const DialpadCallerId = ({
                   {selectedOption.label} - {normalizeCountry(selectedOption.country)}
                 </p>
                 <p className="mt-0.5 truncate text-[13px] font-semibold tracking-tight text-[#1d5fd9] max-[380px]:text-[10px] sm:mt-1 sm:text-[12px] md:text-[14px] lg:text-[14px] xl:text-[18px]">
-                  <NumberWithFlag number={selectedOption.number} />
+                  {/* An empty number here used to look like a broken screen; say
+                      what it is, and below the box, what to do about it. */}
+                  {isNoCallerIdOption(selectedOption) ? (
+                    <span className="text-[#9a4f00]">No number assigned</span>
+                  ) : (
+                    <NumberWithFlag number={selectedOption.number} />
+                  )}
                 </p>
               </div>
             </div>
@@ -143,6 +149,13 @@ const DialpadCallerId = ({
           </div>
         </button>
 
+        {isNoCallerIdOption(selectedOption) && (
+          <p className="mt-1.5 px-1 text-[11px] leading-snug text-[#9a4f00] max-[380px]:text-[10px]">
+            You have no phone number, so you cannot call out yet. An admin can assign one under
+            Admin &rsaquo; Numbers.
+          </p>
+        )}
+
         {isOpen && (
           <div className="absolute left-0 right-0 z-20 mt-2 max-h-[min(52vh,260px)] overflow-y-auto overscroll-contain rounded-2xl border border-ucass-active-bg bg-white shadow-[0_16px_28px_rgba(25,42,70,0.18)]">
             {options.map((option, index) => {
@@ -150,13 +163,15 @@ const DialpadCallerId = ({
               /* A heading before the first shared number. Without it a queue's
                  number sits in the list looking like one of your own, and
                  somebody presents the wrong identity without realising. */
-              const isGroup = (option as PickerOption).source === 'group';
-              const isFirstGroup =
-                isGroup && (options[index - 1] as PickerOption)?.source !== 'group';
+              const source = (option as PickerOption).source;
+              const previousSource = (options[index - 1] as PickerOption)?.source;
+              const isFirstGroup = source === 'group' && previousSource !== 'group';
+              const isFirstCompany = source === 'company' && previousSource !== 'company';
+              const isPlaceholder = isNoCallerIdOption(option);
 
               return (
                 <Fragment key={`${option.id}-group`}>
-                  {index === 0 && options.some((o) => (o as PickerOption).source === 'group') && (
+                  {index === 0 && !source && options.some((o) => (o as PickerOption).source) && (
                     <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[#8fa0b8]">
                       Your numbers
                     </p>
@@ -164,6 +179,11 @@ const DialpadCallerId = ({
                   {isFirstGroup && (
                     <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[#8fa0b8]">
                       Shared numbers &mdash; this call only
+                    </p>
+                  )}
+                  {isFirstCompany && (
+                    <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-[#8fa0b8]">
+                      Company numbers &mdash; this call only
                     </p>
                   )}
                 <button
@@ -181,10 +201,16 @@ const DialpadCallerId = ({
                       {option.label}
                     </p>
                     <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-[#7d8ea8] max-[380px]:text-[10px] sm:text-xs">
-                      <span className="shrink-0">{normalizeCountry(option.country)} -</span>
-                      <span className="min-w-0 truncate">
-                        <NumberWithFlag number={option.number} />
-                      </span>
+                      {isPlaceholder ? (
+                        <span className="min-w-0 truncate">No number assigned to you</span>
+                      ) : (
+                        <>
+                          <span className="shrink-0">{normalizeCountry(option.country)} -</span>
+                          <span className="min-w-0 truncate">
+                            <NumberWithFlag number={option.number} />
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
                   <span
@@ -202,7 +228,9 @@ const DialpadCallerId = ({
         open={Boolean(pendingOption)}
         currentOption={selectedOption}
         nextOption={pendingOption}
-        isOneCallOnly={(pendingOption as PickerOption | null)?.source === 'group'}
+        isOneCallOnly={['group', 'company'].includes(
+          String((pendingOption as PickerOption | null)?.source || ''),
+        )}
         onCancel={handleCancelCallerIdChange}
         onConfirm={handleConfirmCallerIdChange}
       />

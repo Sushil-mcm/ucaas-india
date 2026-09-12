@@ -16,7 +16,11 @@ import { mediaUploadUrl, addContact, upsertContact } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
 import { Icon } from '@/assets/icons/icon';
 import CustomSelect from '@/components/custom/custom-select';
-import { ContactFormValues, CreateNewContactProps } from '@/interfaces/contact-interface';
+import {
+  ContactFormValues,
+  ContactPrefill,
+  CreateNewContactProps,
+} from '@/interfaces/contact-interface';
 import PhoneInput from 'react-phone-input-2';
 import countryList from '@/lib/countries.json';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -32,6 +36,7 @@ import { getBelongsToIcons } from '../integration/constant';
 import { X } from 'lucide-react';
 import { contactsInitialValues, genderOptions } from './const';
 import { useOrganization } from '@/hooks/use-organisation';
+import { removeContactPhone } from '@/services/api';
 
 const CreateContactNew: React.FC<CreateNewContactProps> = ({
   contactData = null,
@@ -43,6 +48,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
   handleClose = () => {},
   isLead = false,
   prefillPhone = '',
+  prefill,
   hideCancelButton = false,
 }) => {
   const { user } = useUser();
@@ -58,6 +64,24 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
   const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showLoader, setShowLoader] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const extraPhones: { label?: string; number: string }[] = Array.isArray(contactData?.contact?.phones)
+    ? contactData.contact.phones.filter((p: any) => p?.number)
+    : [];
+  const { mutate: removePhone, isPending: removingPhone } = useMutation({
+    mutationFn: (data: { contact_id: string; phone: string }) => removeContactPhone(data),
+    onSuccess: (res: any) => {
+      handleAlert({ text: 'Number removed.', type: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['getContactList'] });
+      const fresh = res?.data?.data;
+      if (fresh && contactData && typeof contactData === 'object') {
+        (contactData as any).contact = fresh?.contact || contactData?.contact;
+      }
+    },
+    onError: (error: any) => {
+      handleAlert({ text: error?.response?.data?.message || 'Could not remove the number.', type: 'error' });
+    },
+  });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -203,6 +227,9 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
     !!contactData?._id && !!existingProfilePic && !hasSelectedNewImage;
   const today = new Date().toISOString().split('T')[0];
   const normalizedPrefillPhone = typeof prefillPhone === 'string' ? prefillPhone.trim() : '';
+  // Serialised so the reset effect re-runs when the pre-fill VALUES change, not
+  // every time a parent re-renders with a fresh object literal.
+  const prefillKey = JSON.stringify(prefill || {});
   const isEditMode = Boolean(contactData?._id);
   const isSystemGenerated =
     contactData &&
@@ -296,6 +323,9 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
       setValue('company', company ?? (keepFormDataAfterSave ? currentValues?.company : ''));
       setValue('webpage', webpage ?? (keepFormDataAfterSave ? currentValues?.webpage : ''));
       setValue('title', title ?? (keepFormDataAfterSave ? currentValues?.title : ''));
+      if (gender || dob || webpage || title || safeContactData?.address?.street || safeContactData?.address?.city) {
+        setShowMore(true);
+      }
 
       if (safeContactData?._id) {
         const selectedGroupsFromMeta = groupMetaList
@@ -406,6 +436,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
 
     reset({
       ...contactsInitialValues,
+      ...(JSON.parse(prefillKey) as ContactPrefill),
       phone: normalizedPrefillPhone,
     });
     setValue('avatar', null);
@@ -414,6 +445,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
     getValues,
     keepFormDataAfterSave,
     normalizedPrefillPhone,
+    prefillKey,
     reset,
     setValue,
     user?.company_info?.uuid,
@@ -454,18 +486,11 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
           ?.join(',')
       : belongsTo?.value || '';
 
-    const filledSocial = Object.entries({
-      twitter,
-      facebook,
-      linkedin,
-      whatsapp,
-      instagram,
-      telegram,
-    }).reduce<Record<string, string>>((acc, [key, value]) => {
-      const handle = String(value ?? '').trim();
-      if (handle) acc[key] = handle;
-      return acc;
-    }, {});
+    const socialHandles = Object.fromEntries(
+      Object.entries({ twitter, facebook, linkedin, whatsapp, instagram, telegram })
+        .map(([key, value]) => [key, String(value ?? '').trim()])
+        .filter(([, value]) => Boolean(value)),
+    );
 
     const payload: Record<string, any> = {
       name: {
@@ -491,11 +516,11 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
         zipcode: zipcode || '',
         ...(country?.value ? { country: country } : {}),
       },
-      /* Only the handles that were actually filled in. Sending the whole map
-         with empty strings had the API reject the save outright with
-         `"social.whatsapp" is not allowed`, so no contact could be created at
-         all — and when none are filled the key is left off entirely. */
-      ...(Object.keys(filledSocial).length ? { social: filledSocial } : {}),
+      /* Only handles that were actually filled in. Sending every key with an
+         empty string made the API reject the whole save with `"social.whatsapp"
+         is not allowed`, so no contact could be created at all — with or
+         without a WhatsApp. When none are filled the key is omitted entirely. */
+      ...(Object.keys(socialHandles).length ? { social: socialHandles } : {}),
       type: isLead ? 'LEAD' : 'CONTACT',
       ...(selectedBelongsTo ? { belongsTo: selectedBelongsTo } : {}),
     };
@@ -549,7 +574,12 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* <div className={`flex flex-col gap-4 ${isDisable?'h-[calc(100vh_-_10rem)]':'h-[calc(100vh_-_14rem)]'} overflow-auto pr-3`}> */}
-      <div className="flex flex-col flex-1 min-h-0 overflow-auto gap-4 pt-2 pr-1 pb-4">
+      {/* px-1.5 is not decoration: this container scrolls, so it clips anything
+          that reaches outside it. The focus ring sits 2px off a field and is
+          2px wide, and with no left padding at all its left edge was sliced
+          straight off. 6px each side clears the ring and makes the two sides
+          symmetric — it used to have 4px on the right and none on the left. */}
+      <div className="flex flex-col flex-1 min-h-0 overflow-auto gap-4 px-1.5 pt-2 pb-4">
         {!isDisable && (
           <label
             htmlFor="file-upload"
@@ -643,7 +673,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
             />
 
             <Input
-              label={'Last Name'}
+              label={'Last Name (optional)'}
               {...register('last_name')}
               placeholder="Enter last name"
               type="text"
@@ -687,6 +717,53 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               </div>
             </div>
           </div>
+          {isEditMode && extraPhones.length ? (
+            <div className="flex flex-col gap-1.5">
+              <Label>Other numbers</Label>
+              <ul className="flex flex-col gap-1">
+                {extraPhones.map((p) => (
+                  <li key={p.number} className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-1.5 text-sm">
+                    <span>
+                      <span className="text-gray-900">{p.number}</span>
+                      <span className="ml-2 text-xs uppercase tracking-wide text-gray-500">{p.label || 'other'}</span>
+                    </span>
+                    {!isDisable ? (
+                      <button
+                        type="button"
+                        className="text-xs text-red-600 hover:underline"
+                        disabled={removingPhone}
+                        onClick={() => removePhone({ contact_id: String(contactData?._id), phone: p.number })}
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="flex gap-4 flex-wrap">
+            <Input
+              placeholder="Enter company"
+              {...register('company')}
+              label="Company"
+              error={errors?.company?.message}
+              disabled={isDisable}
+              maxLength={50}
+            />
+          </div>
+          {/* Everything a phone hides behind "More": details, social, address.
+              Open when a saved contact already has any of it, so editing never
+              hides what is there. */}
+          <button
+            type="button"
+            className="self-start text-sm font-medium text-primary hover:underline"
+            onClick={() => setShowMore((v) => !v)}
+          >
+            {showMore ? 'Fewer details' : 'More details'}
+          </button>
+          {showMore ? (
+          <>
           <div className="flex gap-4 flex-wrap">
             <CustomSelect
               label={'Gender'}
@@ -718,14 +795,6 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
             </div>
           </div>
           <div className="flex gap-4 flex-wrap">
-            <Input
-              placeholder="Enter company"
-              {...register('company')}
-              label="Company"
-              error={errors?.company?.message}
-              disabled={isDisable}
-              maxLength={50}
-            />
             <Input
               placeholder="Enter webpage"
               {...register('webpage')}
@@ -857,6 +926,9 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               />
             </div>
 
+          </div>
+          </>
+          ) : null}
             {!isSystemGenerated && (
               <div className="flex gap-4 flex-wrap relative">
                 <div className="flex flex-col gap-1.5 w-full">
@@ -931,7 +1003,6 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                 </div>
               </div>
             )}
-          </div>
           {/* <div className="flex flex-col w-full gap-4">
             <p className="font-semibold text-gray-900">Notes Information</p>
             <div className="flex gap-4 relative">

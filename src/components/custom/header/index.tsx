@@ -332,7 +332,7 @@ const Header = () => {
               </a>
               <AreaNav />
             </div>
-            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:mx-auto md:w-auto relative">
+            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:min-w-0 md:w-auto md:flex-1 relative">
               {hasActiveCampaign && (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                   <span className="relative flex h-2.5 w-2.5">
@@ -375,7 +375,7 @@ const Header = () => {
             </div>
             <div
               id="mobile-header-actions"
-              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap gap-2 items-center border-t border-gray-200 pt-3 md:order-3 md:flex md:w-auto md:flex-nowrap md:border-t-0 md:pt-0`}
+              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap gap-2 items-center border-t border-gray-200 pt-3 md:order-3 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:border-t-0 md:pt-0`}
             >
               {/* Tasks, Calendar, My Campaigns, Activity and Monitoring moved
                   into the Performance area rail — the bar keeps only
@@ -413,7 +413,7 @@ const Header = () => {
             </div>
             <div
               id="mobile-header-wallet-profile"
-              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-5 md:flex md:w-auto md:flex-nowrap md:justify-end md:border-t-0 md:pt-0`}
+              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-5 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:justify-end md:border-t-0 md:pt-0`}
             >
               {/* Wallet / Add Funds */}
               {features?.plan_features?.billing?.action?.view ? (

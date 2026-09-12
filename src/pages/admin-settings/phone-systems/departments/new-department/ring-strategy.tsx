@@ -1,4 +1,5 @@
 import CustomSelect from '@/components/custom/custom-select';
+import { Switch } from '@/components/ui/switch';
 import { useFormContext } from 'react-hook-form';
 import { MEMBER_RING_STRATEGY_OPTIONS } from '../../../constants';
 import {
@@ -39,8 +40,29 @@ const RingStrategy = () => {
           </p>
         </div>
       </div>
+      {/* Read by the switch when this group rings (10 Sep 2026): off, a member
+          who is already on a call is left out of the ring, so the call goes to
+          whoever is free - and to the group's fallback when nobody is. On, the
+          call rings every member, and someone on a call sees it as a second
+          call. */}
+      <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white p-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900">Call waiting for members</p>
+          <p className="text-xs text-gray-600">
+            On — a member already on a call still gets this group&rsquo;s calls as a second call.
+            Off — members on a call are skipped, and the call goes to whoever is free (or to the
+            fallback when everyone is busy).
+          </p>
+        </div>
+        <Switch
+          className="cursor-pointer shrink-0"
+          checked={watch('call_waiting') !== false}
+          onCheckedChange={(checked: boolean) => setValue('call_waiting', checked)}
+          aria-label="Call waiting for members"
+        />
+      </div>
       {/* <div className="flex flex-col gap-1">
-        <p className="font-semibold text-gray-900 truncate text-md">Department Manager</p>
+        <p className="font-semibold text-gray-900 truncate text-md">Group manager</p>
         <div className="w-1/4 px-1.5">
           <div className="flex items-center justify-between border border-primary rounded-lg w-full p-3 gap-1 bg-white">
             <CustomAvatar
@@ -71,7 +93,7 @@ const RingStrategy = () => {
         </div>
       </div> */}
       <div className="w-full">
-        <p className="font-semibold text-gray-900 truncate text-md mb-2">Department Members</p>
+        <p className="font-semibold text-gray-900 truncate text-md mb-2">People in this group</p>
         {watchRingStrategy?.value !== DEPARTMENT_RING_STRATEGY.LINEAR ? (
           <div className="w-full lg:w-1/2">
             <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">

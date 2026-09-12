@@ -1,0 +1,145 @@
+/* Get started: the public sign-up frame. Sits on the app's tokens (mcm-page.css)
+   and adds only the layout this flow needs. */
+.gs-page { min-height: 100vh; background: var(--ground); display: flex; flex-direction: column; }
+.gs-header { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 48px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.gs-brand img { height: 32px; cursor: pointer; }
+.gs-help { font-size: 13px; color: var(--ink-2); }
+.gs-help a { color: var(--accent-ink); font-weight: 600; cursor: pointer; }
+.gs-main { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 40px 24px 48px; }
+.gs-rail { display: flex; align-items: center; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.gs-rail li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; color: var(--ink-4); }
+.gs-rail li + li::before { content: ''; width: 28px; height: 1px; background: var(--line); margin-right: 2px; }
+.gs-rail li.current { color: var(--accent-ink); font-weight: 700; }
+.gs-rail li.done { color: var(--live); }
+.gs-dot { display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); font-size: 11px; font-weight: 700; }
+.gs-rail li.current .gs-dot { border-color: var(--accent); background: var(--accent-wash); }
+.gs-rail li.done .gs-dot { border-color: var(--live); background: var(--live-wash); }
+.gs-card { width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px 32px 32px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px; }
+.gs-card.gs-narrow { max-width: 480px; }
+.gs-card.gs-wide { max-width: 760px; }
+.gs-card h1 { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -0.035em; }
+.gs-card .gs-h2 { margin: 10px 0 0; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.gs-sub { margin: -6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.gs-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.gs-grid3 { display: grid; grid-template-columns: 1.2fr 1.2fr 0.8fr; gap: 14px; }
+.gs-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gs-field > span { color: var(--ink-2); font-size: 12px; font-weight: 700; letter-spacing: 0.01em; }
+.gs-field small { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+.gs-hint { color: var(--warn) !important; font-weight: 600; }
+.gs-captcha { min-height: 66px; }
+.gs-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.gs-actions .btn.primary { flex: 1 1 auto; }
+/* Small print still has to be readable: ink-2 clears 4.5:1 on the surface; ink-4 did not. */
+.gs-fine { margin: 0; font-size: 12px; color: var(--ink-2); line-height: 1.55; text-align: center; }
+.gs-fine a, .gs-fine a:hover { color: var(--accent-ink); font-weight: 600; cursor: pointer; }
+.gs-otp { font-family: var(--mono); font-size: 26px; letter-spacing: 0.35em; text-align: center; height: 56px; }
+.gs-choice-list { display: flex; flex-direction: column; gap: 10px; }
+.gs-choice { text-align: left; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); display: flex; flex-direction: column; gap: 2px; cursor: pointer; font: inherit; color: inherit; }
+.gs-choice:hover { border-color: var(--accent-edge); background: var(--accent-wash); }
+.gs-choice strong { font-size: 13px; font-weight: 700; }
+.gs-choice span { font-size: 12px; color: var(--ink-2); }
+.gs-question { display: flex; flex-direction: column; gap: 8px; }
+.gs-q { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.gs-picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.gs-pick { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+.gs-pick.on { border: 2px solid var(--accent); background: var(--accent-wash); color: var(--accent-ink); padding: 11px 13px; }
+.gs-note { padding: 12px 14px; border-radius: var(--r); background: var(--live-wash); color: var(--live); font-size: 12.5px; line-height: 1.5; font-weight: 600; }
+.gs-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.gs-plan { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.gs-plan.on { border: 2px solid var(--accent); background: var(--accent-wash); padding: 13px 15px; }
+.gs-plan strong { font-size: 13px; font-weight: 800; }
+.gs-plan .num { font-size: 20px; font-weight: 600; }
+.gs-plan small { font-size: 12px; color: var(--ink-2); }
+.gs-stepper { display: inline-flex; align-items: center; gap: 8px; }
+.gs-stepper input { width: 64px; text-align: center; }
+.gs-total { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 2px 0; font-size: 13px; color: var(--ink-2); }
+.gs-total strong { font-size: 20px; font-weight: 600; color: var(--ink); }
+.gs-order { border: 1px solid var(--line); border-radius: var(--r); padding: 4px 16px; display: flex; flex-direction: column; }
+.gs-order > div { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line-2); font-size: 13px; color: var(--ink-2); }
+.gs-order > div.gs-order-total { font-weight: 700; color: var(--ink); border-bottom: 0; }
+.gs-order small { padding: 6px 0 10px; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+.gs-agree { display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.gs-agree input { margin-top: 2px; }
+.gs-stripe { padding-top: 4px; }
+.gs-progress { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.gs-progress li { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line-2); font-size: 13px; color: var(--ink-3); }
+.gs-progress li.done { color: var(--ink); font-weight: 600; }
+.gs-progress li.busy { color: var(--accent-ink); font-weight: 600; }
+.gs-progress li.stuck { color: var(--warn); font-weight: 600; }
+.gs-pick small { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--ink-3); }
+.gs-fault { margin: 0; padding: 10px 12px; border-radius: var(--r); background: var(--crit-wash); color: var(--crit); font-size: 12.5px; line-height: 1.5; font-weight: 600; }
+.gs-countdown { float: right; font-weight: 500; color: var(--ink-2); }
+.gs-numbers { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.gs-number { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); font: inherit; font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+.gs-number:hover { border-color: var(--accent-edge); }
+.gs-number.on { border: 2px solid var(--accent); background: var(--accent-wash); color: var(--accent-ink); padding: 11px 13px; }
+.gs-number small { font-family: var(--sans, inherit); font-size: 11.5px; font-weight: 500; color: var(--ink-3); }
+.gs-main-number { padding: 18px 16px; border-radius: var(--r); background: var(--live-wash); color: var(--live); font-family: var(--mono); font-size: 26px; font-weight: 700; text-align: center; letter-spacing: 0.02em; }
+.gs-err { font-size: 12px; color: var(--crit); font-weight: 600; line-height: 1.45; }
+.mcm-page .mcm-field.invalid { border-color: var(--crit); box-shadow: 0 0 0 2px var(--crit-wash); }
+.gs-ok { margin: 0; padding: 10px 12px; border-radius: var(--r); background: var(--live-wash); color: var(--live); font-size: 12.5px; line-height: 1.5; font-weight: 600; }
+.gs-warn { margin: 0; padding: 10px 12px; border-radius: var(--r); background: var(--warn-wash); color: var(--warn); font-size: 12.5px; line-height: 1.5; font-weight: 600; }
+.gs-resumed { width: 100%; max-width: 640px; }
+.gs-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.gs-fine.gs-left { text-align: left; color: var(--warn); font-weight: 600; }
+/* The payment component's own button: full width and primary like every other
+   step, and inert until the agreement is ticked. */
+.mcm-page .gs-stripe .justify-end > button { width: 100%; max-width: none; height: 40px; border-radius: 10px; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.mcm-page .gs-stripe .justify-end > button:hover { background: var(--accent-ink); border-color: var(--accent-ink); color: #fff; }
+.mcm-page .gs-stripe.locked .justify-end > button { pointer-events: none; opacity: 0.5; }
+.gs-loading { position: fixed; bottom: 16px; left: 16px; font-size: 12px; color: var(--ink-4); }
+@media (max-width: 720px) {
+  .gs-header { padding: 0 20px; }
+  .gs-main { padding: 20px 12px 40px; }
+  .gs-card { padding: 20px 18px 24px; }
+  .gs-grid2, .gs-grid3 { grid-template-columns: 1fr; }
+  /* Narrow screens: dots only, except the current step, which keeps its name. */
+  .gs-rail li:not(.current) { font-size: 0; gap: 0; }
+  .gs-rail li .gs-dot { font-size: 11px; }
+  .gs-rail li.current { font-size: 12px; }
+  .gs-rail li + li::before { width: 14px; }
+}
+
+/* The shared shell gives .mcm-page a fixed height and scrolls its .page
+   internally, which is right inside the app's router outlet and wrong on a
+   public page: here the document itself must scroll, or a laptop screen never
+   reaches the Continue button. */
+.mcm-page.gs-page { height: auto; min-height: 100vh; overflow: visible; }
+
+/* --- widths, small to large ------------------------------------------ */
+.gs-help { text-align: right; line-height: 1.4; }
+.gs-actions { flex-wrap: wrap; }
+.gs-actions .btn { min-height: 40px; }
+.gs-title-row { flex-wrap: wrap; }
+.gs-order > div { gap: 12px; }
+.gs-order > div > span:last-child { text-align: right; white-space: nowrap; }
+@media (max-width: 480px) {
+  .gs-header { height: 56px; padding: 0 14px; }
+  .gs-brand img { height: 26px; }
+  .gs-help { font-size: 12px; }
+  .gs-main { padding: 16px 10px 32px; gap: 16px; }
+  .gs-card { padding: 18px 14px 20px; border-radius: var(--r); }
+  .gs-card h1 { font-size: 20px; }
+  .gs-otp { font-size: 22px; letter-spacing: 0.25em; }
+  .gs-picks { grid-template-columns: 1fr 1fr; }
+  .gs-plans { grid-template-columns: 1fr; }
+  .gs-numbers { grid-template-columns: 1fr 1fr; }
+  .gs-number { font-size: 14px; padding: 10px 10px; }
+  .gs-main-number { font-size: 22px; }
+  .gs-order > div { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .gs-order > div > span:last-child { text-align: left; white-space: normal; }
+  .gs-actions { flex-direction: column-reverse; }
+  .gs-actions .btn { width: 100%; }
+  .gs-countdown { float: none; display: block; margin-top: 2px; }
+}
+@media (min-width: 721px) and (max-width: 1024px) {
+  .gs-main { padding: 28px 20px 40px; }
+}
+@media (min-width: 1600px) {
+  .gs-main { padding-top: 56px; gap: 26px; }
+  .gs-card { max-width: 700px; }
+  .gs-card.gs-wide { max-width: 840px; }
+  .gs-card.gs-narrow { max-width: 520px; }
+}
+/* The Stripe element and its button must never overflow a narrow card. */
+.gs-stripe, .gs-stripe > * { max-width: 100%; min-width: 0; }

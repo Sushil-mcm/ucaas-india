@@ -2,7 +2,9 @@ import {
   getMonitoringCallTimestamp,
   isMonitoringCallForForwardValue,
 } from '@/pages/monitoring/live-call-helpers';
-import type { QueueCallStats } from '@/hooks/use-call-stats';
+import type { QueueAgentStats, QueueCallStats } from '@/hooks/use-call-stats';
+import { SERVICE_LEVEL_TARGET_SEC } from '@/hooks/use-call-stats';
+import type { ServiceLevelTarget } from '@/lib/queue-service-target';
 import { formatPercent } from './format';
 
 /**
@@ -23,6 +25,8 @@ export type QueueRow = {
   membersCount: number;
   memberKeys: string[];
   members: any[];
+  /** The queue's own answering target, when the caller has it. */
+  target?: ServiceLevelTarget;
 };
 
 export type QueueStats = {
@@ -40,11 +44,22 @@ export type LiveQueueRow = QueueRow & {
   longestWaitTimestamp: number | null;
   handledToday: number | null;
   offered: number | null;
+  abandoned: number | null;
   sla: number | null;
+  /** The seconds `sla` was measured against — the queue's own, else the platform's 20. */
+  slaTargetSec: number;
+  /** The share the queue asked to hit, or null when it set no goal. */
+  slaTargetPct: number | null;
   asa: number | null;
   aht: number | null;
   available: number;
   abandonRate: string;
+  /** Longest anyone waited over the selected range, answered or not. */
+  longestWaitInRange: number | null;
+  /** Total time agents spent talking to this queue's callers, in the range. */
+  talkSec: number | null;
+  /** Per-agent performance for this queue over the range, busiest first. */
+  agents: QueueAgentStats[];
 };
 
 type BuildInput = {
@@ -97,6 +112,12 @@ export const buildQueueRows = ({
     const offeredCount = cdr?.total ?? stats.total_calls;
     const abandonRate = offeredCount ? formatPercent(abandonedCount || 0, offeredCount) : '—';
 
+    /* Service level from the call log, so it covers the range the rest of the
+       row covers. The live figure is a right-now snapshot from the socket and
+       stays as the fallback for a queue with no calls in the range yet. */
+    const serviceLevel =
+      cdr?.serviceLevelPct ?? (typeof sla === 'number' ? sla : null);
+
     return {
       ...queue,
       waiting: waitingCalls.length,
@@ -106,11 +127,17 @@ export const buildQueueRows = ({
         : null,
       handledToday: handled,
       offered: offeredCount ?? null,
-      sla: typeof sla === 'number' ? sla : null,
+      abandoned: abandonedCount ?? null,
+      sla: serviceLevel,
+      slaTargetSec: cdr?.targetSec ?? queue.target?.seconds ?? SERVICE_LEVEL_TARGET_SEC,
+      slaTargetPct: queue.target?.percent ?? null,
       asa,
       aht: cdr?.avgHandleSec ?? null,
       available: liveStats ? liveStats.availableCount : 0,
       abandonRate,
+      longestWaitInRange: cdr?.longestWaitSec ?? null,
+      talkSec: cdr?.talkSec ?? null,
+      agents: cdr?.agents ?? [],
     };
   });
 

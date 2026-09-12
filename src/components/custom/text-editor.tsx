@@ -11,9 +11,12 @@ import {
   Leaf,
   MarkButton,
   Toolbar,
+  VariableMenu,
   withLinks,
   withMentions,
+  withScriptBlocks,
 } from '@/lib/slate-utils';
+import { ScriptBlockTools, ScriptRunContext, type ScriptRun } from '@/components/custom/script-blocks';
 
 const TextEditor = ({
   initialValue,
@@ -21,8 +24,19 @@ const TextEditor = ({
   readOnly = false,
   placeholder = 'Type something...',
   maxHeight = 'max-h-[calc(100vh_-_25.625rem)]',
-}: any) => {
-  const editor = useMemo(() => withMentions(withLinks(withReact(withHistory(createEditor())))), []);
+  /* Details that fill themselves in when the text is read - see
+     src/lib/script-variables.ts. Absent everywhere except a call script, and
+     the control is not drawn without them. */
+  variables,
+  /* On a live call: the agent's answers so far and where to send a new one.
+     Turns each question block into its control and each embed into its
+     page. Absent, the blocks draw as chips (the editor, the overview). */
+  scriptRun,
+}: any & { scriptRun?: ScriptRun | null }) => {
+  const editor = useMemo(
+    () => withScriptBlocks(withMentions(withLinks(withReact(withHistory(createEditor()))))),
+    [],
+  );
   const [mentionSearch, setMentionSearch] = useState('');
   const [target, setTarget] = useState(null);
   const [index, setIndex] = useState(0);
@@ -104,6 +118,7 @@ const TextEditor = ({
   };
 
   return (
+    <ScriptRunContext.Provider value={readOnly && scriptRun ? scriptRun : null}>
     <Slate editor={editor as any} initialValue={initialValue} onChange={handleChange}>
       <div className="flex flex-col h-full w-full">
         {!readOnly && (
@@ -115,6 +130,10 @@ const TextEditor = ({
             <MarkButton format="code" icon="code" />
             <BlockButton format="numbered-list" icon="format_list_numbered" />
             <BlockButton format="bulleted-list" icon="format_list_bulleted" />
+            <VariableMenu variables={variables || []} />
+            {/* Questions and embedded pages belong to call scripts only, and a
+                script editor is the one place `variables` is passed. */}
+            {variables?.length ? <ScriptBlockTools /> : null}
           </Toolbar>
           // </div>
         )}
@@ -165,6 +184,7 @@ const TextEditor = ({
         </div>
       )}
     </Slate>
+    </ScriptRunContext.Provider>
   );
 };
 

@@ -32,33 +32,44 @@ export const QUEUE_TIMEOUT_LIMITS = { min: 10, max: 18000 };
 
 /* What happens while a caller waits.
  *
- * Three settings that established systems have and we did not: an offer of a
- * callback when the queue is busy, announcements of position and expected wait,
- * and a message that repeats on an interval rather than only playing once.
+ * Three settings that established systems have: an offer of a callback when
+ * the queue is busy, announcements of position and expected wait, and a
+ * message that repeats on an interval rather than only playing once.
  *
- * IMPORTANT — these record the admin's intent. They are stored and read back,
- * but nothing acts on them yet: the call path needs a queue-depth counter, a
- * rolling handle time, and a callback scheduler, none of which exist. Every
- * control is labelled in the interface as not yet in effect, following the same
- * rule the company security page set — a setting that looks live but is not is
- * worse than no setting, because an admin reads it and believes they are
- * covered. Remove those labels in the same change that makes them real.
+ * All three are acted on by the phone system: the switch says the position,
+ * the queue service works out the wait, and the callback is offered by the
+ * switch, kept in line by the queue service and rung back through the same
+ * path an outbound campaign call takes. The callback keys (`key`,
+ * `confirm_number`) were added when the offer became real; a queue saved
+ * before then reads them from these defaults.
  */
 export const WAITING_DEFAULTS = {
   announce_position: false,
   announce_wait_time: false,
   callback: {
     enabled: false,
-    /* Offer a callback once this many people are already waiting, or once the
-       expected wait passes this many minutes. Either can be turned off by
-       setting it to zero; both off means the offer never goes out. */
+    /* Offer a callback once more than this many people are ahead, or once the
+       wait (measured or estimated) passes this many minutes. Either can be
+       turned off by setting it to zero; both off means the offer never goes
+       out. */
     offer_after_callers: 5,
     offer_after_minutes: 5,
+    /* The key the caller presses, and whether the number they called from is
+       read back and confirmed before it is taken (a withheld number is always
+       asked for). */
+    key: '1',
+    confirm_number: true,
     max_attempts: 3,
     retry_after_minutes: 15,
     expires_after_hours: 24,
   },
 };
+
+/* Every key a caller can press for the callback offer. */
+export const CALLBACK_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '*', '#'].map((key) => ({
+  label: key,
+  value: key,
+}));
 
 export const WAITING_LIMITS = {
   offer_after_callers: { min: 0, max: MAX_WAITING_CALLERS_LIMITS.max },
@@ -122,6 +133,12 @@ export const AFTER_CALL_DEFAULTS = {
        long-standing contact centre convention, so it is the starting point. */
     percent: 80,
     seconds: 20,
+    /* Hang-ups faster than this are misdials, not abandonment, and are left out
+       of the abandon rate and the service level. Five seconds is the usual
+       floor; a queue may lower it to zero to count every hang-up. Read by
+       src/lib/queue-service-target.ts, and applied whether or not a target is
+       set — a misdial is a misdial either way. */
+    short_abandon_seconds: 5,
   },
 };
 
@@ -129,6 +146,8 @@ export const AFTER_CALL_LIMITS = {
   window_hours: { min: 1, max: 720 },
   percent: { min: 1, max: 100 },
   seconds: { min: 1, max: 3600 },
+  /* Zero means count every hang-up. Above a minute nobody is "too quick". */
+  short_abandon: { min: 0, max: 60 },
 };
 
 /* Widening the ring instead of failing.
@@ -137,13 +156,10 @@ export const AFTER_CALL_LIMITS = {
  * people after a timer, rather than choosing one group and giving up. Ours only
  * ever rang one set: whoever was on the queue, all at once or in order.
  *
- * Their version can also drop a skill requirement as it widens. We have no
- * skills, so the honest half of the idea is tiers: every member sits in a tier,
- * calls start at tier 1, and each tier is added after its own delay. A queue
- * where everyone is tier 1 behaves exactly as it does today, which is why that
- * is the default for existing members.
- *
- * Stored, not yet acted on — same as the rest of the waiting settings. */
+ * Every member sits in a tier, calls start at tier 1, and each tier is added
+ * after its own delay. A queue where everyone is tier 1 behaves exactly as it
+ * does today, which is why that is the default for existing members. The queue
+ * service honours the switch and the delay (since 2 Sep 2026). */
 export const MEMBER_TIERS = [
   { value: 1, label: 'Tier 1 — rings first' },
   { value: 2, label: 'Tier 2 — added next' },
@@ -166,10 +182,79 @@ export const ESCALATION_LIMITS = {
   minimum_rating: { min: 0, max: 100 },
 };
 
+/* Skills this queue asks for.
+ *
+ * A skill is rated per PERSON (1-5 stars, on their profile), not per queue.
+ * The queue names the skills it needs and the lowest rating that counts; the
+ * queue service offers only people who hold them, best rated first, and the
+ * ring strategy breaks ties. No skills named = the queue rings exactly as it
+ * always has. */
+export const ROUTING_DEFAULTS = {
+  required_skills: [] as string[],
+  min_stars: 1,
+  evaluation: 'ALL' as 'ALL' | 'ANY',
+  /* Between queues that share people. 1-10; 5 is normal. */
+  priority: 5,
+  /* One row per category: any one of the row's skills at the row's bar, and
+     every row must be met. The flat fields above are written from these for
+     older pickers. See src/lib/queue-requirements.ts. */
+  requirements: [] as any[],
+  order: 'best_first' as 'best_first' | 'fair',
+};
+
+/* What a row does while the caller waits. Each row has its own clock. */
+export const ROW_RELAX_OPTIONS = [
+  { value: 'never', label: 'Hold for the whole wait', description: 'Never loosen this row.' },
+  { value: 'one_star', label: 'Drop to 1 star after a while', description: 'Anyone who holds the skill at all, after the seconds below.' },
+  { value: 'one_star_then_drop', label: 'Drop to 1 star, then drop the row', description: 'One star after the seconds below, then the row stops mattering after twice that.' },
+  { value: 'drop', label: 'Drop the row after a while', description: 'The row stops mattering after the seconds below.' },
+  { value: 'ladder', label: 'Follow the ring widening', description: 'One notch lower each round, in step with the tiers. Needs "Widen the ring" switched on.' },
+];
+
+export const ROW_MATCH_OPTIONS = [
+  { value: 'ANY', label: 'Any one of them', description: 'Holding one of the skills is enough.' },
+  { value: 'ALL', label: 'All of them', description: 'A person must hold every skill in the row.' },
+];
+
+/* How much a row weighs when the people who qualify are put in order.
+ *
+ * This only ever changes the ORDER. It never changes who qualifies - every row
+ * still has to be met. The five labels used to be "Normal", "2x - counts
+ * double", "3x", "4x", "5x - counts most": two carried an explanation and two
+ * did not, and "counts most" described it being the largest on offer rather
+ * than what it does. Each one now says the same kind of thing. */
+export const ROW_WEIGHTS = [
+  { value: 1, label: 'Normal', description: 'Counts once when ranking.' },
+  { value: 2, label: 'Double', description: 'This row counts twice as much as a normal row.' },
+  { value: 3, label: 'Triple', description: 'This row counts three times as much as a normal row.' },
+  { value: 4, label: 'Four times', description: 'This row counts four times as much as a normal row.' },
+  { value: 5, label: 'Five times', description: 'This row counts five times as much as a normal row.' },
+];
+
+/* Who rings first among the people who qualify. */
+export const ROUTING_ORDERS = [
+  { value: 'best_first', label: 'Best rated first', description: 'The highest score among those who qualify rings first; the ring strategy breaks ties.' },
+  { value: 'fair', label: 'Share the work', description: 'The rows only decide who qualifies; the ring strategy decides the order, so your best person does not take every call.' },
+];
+
+/* Between queues that share the same people, a free person goes to the
+   caller from the higher-priority queue first; at the same priority, to
+   whoever has waited longest, across queues. Four words, not ten numbers. */
+export const ROUTING_PRIORITIES = [
+  { value: 1, label: 'Low', description: 'Other queues\u2019 callers are served first.' },
+  { value: 5, label: 'Normal', description: 'First come, first served across queues.' },
+  { value: 8, label: 'High', description: 'Served before Normal and Low queues.' },
+  { value: 10, label: 'Urgent', description: 'Served before every other queue.' },
+];
+
+export const ROUTING_EVALUATIONS = [
+  { value: 'ALL', label: 'All of them', description: 'A person must hold every skill listed.' },
+  { value: 'ANY', label: 'Any one of them', description: 'Holding one of the skills is enough.' },
+];
+
 export const CALL_QUEUE_INIITAL_VALUES = {
   name: '',
   extension: '',
-  script_data: '',
   site_uuid: null,
   description: '',
   script: null,
@@ -232,6 +317,7 @@ export const CALL_QUEUE_INIITAL_VALUES = {
     waiting: WAITING_DEFAULTS,
     after_call: AFTER_CALL_DEFAULTS,
     escalation: ESCALATION_DEFAULTS,
+    routing: ROUTING_DEFAULTS,
   },
   greetings: {
     welcome: {
@@ -339,7 +425,7 @@ export const DEPARTMENT_RING_STRATEGY_DESC = {
   'top-down':
     'Always starts at the top of the list. Your most experienced people take most of the calls, and the rest only hear the busy ones.',
   'agent-with-least-talk-time':
-    'Whoever has spent least time on calls today is tried first. Evens out how long people spend talking, not how many calls they take.',
+    'Whoever has spent least time on calls is tried first. Evens out time on the phone rather than the number of calls, so one long call counts for more than several short ones.',
   'agent-with-fewest-calls':
     'Whoever has taken fewest calls is tried first. Evens out the number of calls, even if some take much longer than others.',
   random: 'Tried in a different order each time. No pattern, and no one person favoured.',

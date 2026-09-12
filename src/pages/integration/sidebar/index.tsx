@@ -40,19 +40,9 @@ const integrationSidebarArr = (features: any, IS_ADMIN: boolean): IMenuItems[] =
         visible: Boolean(features?.plan_features?.integration?.action?.view),
         children: [
           {
-            title: 'Zapier',
-            icon: 'ZapierIcon',
-            path: '/integration/data-reporting/zapier',
-          },
-          {
             title: 'General settings',
             icon: 'SettingsIcon',
             path: '/integration/data-reporting/general-settings',
-          },
-          {
-            title: 'Manage Webhook',
-            icon: 'WebhookIcon',
-            path: '/integration/data-reporting/manage-webhook',
           },
         ],
       },

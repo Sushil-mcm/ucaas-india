@@ -82,6 +82,8 @@ export type LiveAgentRow = {
   queueOrCampaign: string;
   callerId: string;
   isOnCall: boolean;
+  uuid: string;
+  user_uuid: string;
   handledToday: number;
   aht: number | null;
   queuesCount: number;
@@ -125,6 +127,11 @@ export const buildAgentRows = ({
     const matchedQueue = forwardValue ? queues.find((q) => q.uuid === forwardValue) : null;
 
     return {
+      /* The person's id travels with the row: the Duty and Today cells look
+         their duty and day up by it. Without it every agent read "Not on a
+         queue" whatever their queues said. */
+      uuid: String(agent?.uuid || agent?.user_uuid || ''),
+      user_uuid: String(agent?.user_uuid || agent?.uuid || ''),
       name: `${agent?.first_name || ''} ${agent?.last_name || ''}`.trim() || 'Unknown',
       extension,
       image: agent?.profile || agent?.image,

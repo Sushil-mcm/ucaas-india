@@ -1,4 +1,5 @@
 import { SearchLine } from '@/assets/icons';
+import { isServerDialed } from '@/lib/campaign-dial-mode';
 import { Icon } from '@/assets/icons/icon';
 import Loader from '@/components/custom/loader';
 import type { DialpadSession } from '@/context/dialpad-context';
@@ -12,7 +13,6 @@ import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useUser } from '@/hooks/use-user';
 import { handleAlert } from '@/lib/utils';
-import { DIALER_TYPE } from '@/pages/auto-dialer/campaign/add-edit-campaign/consts';
 import { CAMPAIGN_STATUS_CONST, CAMPAIGN_TYPE_NAME } from '@/pages/auto-dialer/campaign/const';
 import CallQueueCard from '@/pages/dashboard/call-dashboard/Call-queue-content/call-queue-card';
 import NotFound from '@/assets/images/not-found-img.svg';
@@ -112,6 +112,7 @@ const MyCampaignListStandalone = () => {
     startCampaignClearingTimer,
     sessions,
     isRegistered,
+    sipContact,
   } = useDialpad();
   const { user } = useUser();
 
@@ -336,7 +337,6 @@ const MyCampaignListStandalone = () => {
   }, []);
 
   const launchCampaign = async (campaign: any) => {
-    console.log('🚀 ~ handleJoinCampaign ~ campaign:', campaign);
     const { _id } = campaign || {};
 
     if (!_id) return;
@@ -377,10 +377,10 @@ const MyCampaignListStandalone = () => {
       },
     });
 
-    const isPredictiveCampaign =
-      String(campaign?.dialMethod || '')
-        .trim()
-        .toUpperCase() === DIALER_TYPE.PREDICTIVE;
+    /* Predictive and (once the server dials it) progressive: the agent goes
+       available in the campaign's queue and waits for the dialer to ring them.
+       Preview: the agent pulls records and dials from their own phone. */
+    const isPredictiveCampaign = isServerDialed(campaign?.dialMethod);
 
     if (isPredictiveCampaign) {
       try {
@@ -388,6 +388,8 @@ const MyCampaignListStandalone = () => {
           campaign_uuid: _id,
           status: 'Available',
           state: 'Waiting',
+          /* This tab's SIP identity: the queue rings this tab, not every tab of the login. */
+          sip_contact: sipContact,
         });
         console.log('makeCallQueueAvailable response:', availabilityResponse);
       } catch (error) {
@@ -449,7 +451,6 @@ const MyCampaignListStandalone = () => {
           }
 
           setActiveCampaign((prev: any) => ({ ...prev, manualStatus: campaignStatus }));
-          console.log('res-X', res);
           const rows = getCampaignRows(res);
           setCampaignContactCards(rows);
           openDialpad('maxi');
@@ -565,22 +566,14 @@ const MyCampaignListStandalone = () => {
         caller_id: campaign?.callerId,
       },
     });
-    const isPredictiveCampaign =
-      String(campaign?.dialMethod || '')
-        .trim()
-        .toUpperCase() === DIALER_TYPE.PREDICTIVE;
+    const isPredictiveCampaign = isServerDialed(campaign?.dialMethod);
 
+    /* Leaving a campaign is not a break: the leave event below is what the
+       engine reads, and the person's duty on every queue stays as it is.
+       (isPredictiveCampaign is still read above for the other branches.) */
+    void isPredictiveCampaign;
     try {
-      if (isPredictiveCampaign) {
-        const availabilityResponse = await makeCallQueueAvailable({
-          campaign_uuid: _id,
-          status: 'On Break',
-          state: 'Idle',
-        });
-        console.log('makeCallQueueAvailable leave response:', availabilityResponse);
-      }
-    } catch (error) {
-      console.error('makeCallQueueAvailable failed while leaving campaign:', error);
+      /* nothing to write before the leave event */
     } finally {
       startCampaignClearingTimer();
       setJoinedCampaignId(null);
@@ -722,13 +715,27 @@ const MyCampaignListStandalone = () => {
                               </div>
 
                               {isJoined ? (
-                                <button
-                                  onClick={() => handleLeaveCampaign(campaign)}
-                                  disabled={hasActionPending}
-                                  className="shrink-0 px-4 py-2 rounded-lg border text-sm font-semibold cursor-pointer bg-rose-50 text-rose-700 border-rose-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
-                                  {isActionPending ? 'Leaving...' : 'Leave'}
-                                </button>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  {/* Leaving is not the only thing you might
+                                      want to do to a campaign you are in. An
+                                      agent who closed the dialer had no way
+                                      back to it from here - the only button on
+                                      a joined campaign was the one that quits
+                                      it. */}
+                                  <button
+                                    onClick={() => openDialpad('maxi')}
+                                    className="shrink-0 cursor-pointer rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                                  >
+                                    Open dialer
+                                  </button>
+                                  <button
+                                    onClick={() => handleLeaveCampaign(campaign)}
+                                    disabled={hasActionPending}
+                                    className="shrink-0 px-4 py-2 rounded-lg border text-sm font-semibold cursor-pointer bg-rose-50 text-rose-700 border-rose-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    {isActionPending ? 'Leaving...' : 'Leave'}
+                                  </button>
+                                </div>
                               ) : hasJoinedAnotherCampaign ? null : (
                                 <button
                                   onClick={() => handleJoinCampaign(campaign)}

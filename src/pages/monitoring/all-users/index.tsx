@@ -24,6 +24,7 @@ import {
   getMonitorTargetCallId,
   isDialpadMonitoringSessionActiveForCall,
   normalizeMonitorDialValue,
+  requestMonitorSession,
 } from '@/lib/monitoring-actions';
 import { getUserList } from '@/services/api';
 import { ColumnDef } from '@tanstack/react-table';
@@ -92,7 +93,7 @@ const AllUserMonitoring = ({
   const tableRef = useRef<any>(null);
   const { user } = useUser();
   const { features } = useCompanyFeatures();
-  const { makeCall, sessions } = useDialpad();
+  const { sessions } = useDialpad();
   const { users: extensionUsers = [] } = useUsersDirectory();
   // const { user_info } = user;
   const { usersOnlineStatus, liveCalls, socketEventsManager, eventLiveCallsData } =
@@ -247,7 +248,12 @@ const AllUserMonitoring = ({
     }
 
     setPendingMonitorLock(normalizedCallId, code);
-    makeCall(`${code}${normalizedCallId}`);
+    requestMonitorSession(socketEventsManager, code, normalizedCallId, (ok, error) => {
+      if (!ok) {
+        clearPendingMonitorLock(normalizedCallId);
+        handleAlert({ text: error || 'Could not start monitoring.', type: 'error' });
+      }
+    });
   };
 
   const terminateCallSession = (call: any) => {

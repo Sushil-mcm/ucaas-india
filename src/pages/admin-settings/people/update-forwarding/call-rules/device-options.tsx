@@ -1,4 +1,4 @@
-import { DragLineIcon, LandlineOutlined, MobileOutlined, Monitor } from '@/assets/icons';
+import { DragLineIcon, LandlineOutlined, MobileOutlined, Monitor, PhoneLine } from '@/assets/icons';
 import CustomSelect from '@/components/custom/custom-select';
 import { Switch } from '@/components/ui/switch';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
@@ -14,6 +14,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { FC } from 'react';
 import { DEVICE_TYPE_NAME_CONST } from '../../../constants';
+import { deskPhoneStateLabel, outsideNumberDigits, ringsToday } from '@/lib/desk-phone-device-rows';
 
 const SortableItem: FC<any> = ({
   id,
@@ -71,12 +72,48 @@ const SortableItem: FC<any> = ({
               <MobileOutlined className="w-5 h-5" />
             ) : device?.type === 'pstn' ? (
               <LandlineOutlined className="w-5 h-5" />
+            ) : device?.type === 'desk' ? (
+              <PhoneLine className="w-5 h-5" />
             ) : (
               <Monitor className="w-5 h-5" />
             )}
-            <span>
-              {DEVICE_TYPE_NAME_CONST[device?.type as keyof typeof DEVICE_TYPE_NAME_CONST]}
-            </span>
+            {device?.type === 'desk' ? (
+              <span className="flex flex-col">
+                <span className="flex items-center gap-2">
+                  {device?.option?.label || DEVICE_TYPE_NAME_CONST.desk}
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
+                      deskPhoneStateLabel(device?.state).live ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-800'
+                    }`}
+                  >
+                    {deskPhoneStateLabel(device?.state).text}
+                  </span>
+                </span>
+                <span className="text-xs text-gray-500">{device?.detail || DEVICE_TYPE_NAME_CONST.desk}</span>
+              </span>
+            ) : device?.type === 'pstn' ? (
+              <span className="flex flex-col gap-1">
+                <span>{DEVICE_TYPE_NAME_CONST.pstn}</span>
+                <input
+                  type="tel"
+                  className="w-56 rounded border border-gray-300 px-2 py-1 text-sm"
+                  placeholder={device?.suggested ? `e.g. ${device.suggested}` : 'Mobile or other number'}
+                  value={watch(`callRules.incomingCall.deviceOptions.${objKey}.number`) || ''}
+                  onChange={(e) =>
+                    setValue(`callRules.incomingCall.deviceOptions.${objKey}.number`, e.target.value)
+                  }
+                />
+                <span className="text-xs text-gray-500">
+                  {outsideNumberDigits(watch(`callRules.incomingCall.deviceOptions.${objKey}.number`))
+                    ? 'Rings with your other devices; press 1 on that phone to take the call.'
+                    : 'Add a number to ring it. Until then this row does nothing.'}
+                </span>
+              </span>
+            ) : (
+              <span>
+                {DEVICE_TYPE_NAME_CONST[device?.type as keyof typeof DEVICE_TYPE_NAME_CONST]}
+              </span>
+            )}
           </div>
         ) : (
           <div className="flex items-center gap-3">
@@ -169,7 +206,9 @@ const DeviceOptionsList: FC<any> = ({
   };
 
   const deviceOptions = incomingCall?.deviceOptions || {};
-  const deviceKeys = Object.keys(deviceOptions);
+  /* Only rows the switch dials are listed; the stored mobile and
+     outside-number rows stay in the form untouched. */
+  const deviceKeys = Object.keys(deviceOptions).filter((key) => ringsToday(deviceOptions[key]));
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

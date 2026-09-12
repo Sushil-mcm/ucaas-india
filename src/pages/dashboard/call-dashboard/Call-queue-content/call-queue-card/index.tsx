@@ -5,7 +5,7 @@ import CustomAvatar from '@/components/custom/custom-avatar';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon } from '@/assets/icons/icon';
 import { safeJSONParse } from '@/components/activity-list/constants';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { getInitials } from '@/lib/utils';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useSocketEvents } from '@/hooks/use-socket-events';
@@ -48,8 +48,7 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
     members: membersProp,
     agent = [],
   } = queue || {};
-  const { activeQueueData, setActiveQueueData } = useDialpad();
-  const hasFiredUnavailableOnUnloadRef = useRef(false);
+  const { setActiveQueueData } = useDialpad();
   const [modalState, setModalState] = useState<ModalState>({
     open: false,
     data: [],
@@ -113,30 +112,12 @@ const CallQueueCard = ({ queue, refetch }: ICallQueueCardProps) => {
     mutateMakeAvailable(payload);
   };
 
-  useEffect(() => {
-    if (!activeQueueData?.uuid || activeQueueData.uuid !== uuid) return;
-
-    const makeQueueUnavailableOnReload = () => {
-      if (hasFiredUnavailableOnUnloadRef.current) return;
-      hasFiredUnavailableOnUnloadRef.current = true;
-
-      void makeCallQueueAvailable({
-        queue_uuid: String(activeQueueData.uuid || '').trim(),
-        status: 'On Break',
-        state: 'Idle',
-      }).catch(() => {
-        // Ignore unload API errors.
-      });
-    };
-
-    window.addEventListener('beforeunload', makeQueueUnavailableOnReload);
-    window.addEventListener('pagehide', makeQueueUnavailableOnReload);
-
-    return () => {
-      window.removeEventListener('beforeunload', makeQueueUnavailableOnReload);
-      window.removeEventListener('pagehide', makeQueueUnavailableOnReload);
-    };
-  }, [activeQueueData?.uuid, uuid]);
+  /* A reload or a closed tab no longer writes "On Break" here. Since 9 Sep
+     2026 the presence service tells campaign-api when the last web session
+     drops; the person keeps the status they chose, is not rung while
+     disconnected, and is signed out only after the grace window. Writing a
+     break from the browser on unload left people "on break" after every
+     reload, and a break is a deliberate act that a reconnect must not undo. */
 
   /* Opaque surfaces, not glass. The card used to be a translucent blue-tinted
      gradient (0.72 -> 0.5 alpha) over a 26px backdrop-blur, sitting on the

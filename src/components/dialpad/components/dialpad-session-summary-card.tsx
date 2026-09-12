@@ -35,13 +35,19 @@ const DialpadSessionSummaryCard = ({
   const conferenceMembers = Array.isArray(conferenceData?.conference_members)
     ? conferenceData.conference_members
     : [];
-  const { contactName, contactNumber, isConferenceSession, isMonitoringCall } =
+  const { contactName, savedContactName, contactNumber, isConferenceSession, isMonitoringCall } =
     getDialpadSessionDisplayInfo(session);
   const normalizedPresenceTarget = normalizeDialTargetUserPart(session?.extension || contactNumber);
   const shouldShowPresence =
     Boolean(normalizedPresenceTarget) && isExtensionDialTarget(normalizedPresenceTarget);
+  /* A saved contact's `profile` is an object (gender, title, company, the
+     picture under `contactPic`), not a file name. Stringifying it produced a
+     request for ".../profile/[object Object]" and a 404 on every call. */
+  const contactProfile = session?.contactInfo?.profile;
   const avatarImage = String(
-    session?.contactInfo?.profile || session?.contactInfo?.avatar || '',
+    (typeof contactProfile === 'string' ? contactProfile : contactProfile?.contactPic) ||
+      session?.contactInfo?.avatar ||
+      '',
   ).trim();
 
   useEffect(() => {
@@ -93,6 +99,14 @@ const DialpadSessionSummaryCard = ({
               <p className="truncate text-[12px] text-[#6c7c95] max-[380px]:text-[11px] sm:text-[12px] xl:text-sm  items-center flex">
                 {contactNumber}
               </p>
+              {savedContactName ? (
+                <p
+                  className="truncate text-[11px] text-[#8494ab] max-[380px]:text-[10px] xl:text-xs"
+                  title="This number is a saved contact under a different name"
+                >
+                  Saved as {savedContactName}
+                </p>
+              ) : null}
             </>
           ) : null}
           {session?.contactInfo?.type && (

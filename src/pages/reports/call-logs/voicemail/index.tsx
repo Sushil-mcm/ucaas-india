@@ -1,3 +1,4 @@
+import { timeStringToSeconds } from '@/pages/performance/format';
 import { useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,9 @@ import { callList, callListById, forwardActionType } from '@/services/api';
 import { CALL_DIRECTIONS, FORWARD_ICONS } from '@/pages/dashboard/constant';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import ContactNumber from '@/components/custom/contact-number';
 import AudioModal from '@/pages/phone/audio-dialog';
+import VoicemailTranscriptDialog from '@/components/custom/voicemail-transcript-dialog';
 import { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal } from '@/components/custom/date-dropdown/constant';
@@ -61,6 +64,12 @@ const Voicemail = ({
   const [rowData, setRowData] = useState({});
   const [recordingUrl, serRecordingUrl] = useState<any>('');
   const [modalState, setModalState] = useState<any>(false);
+  /* The transcript viewer: which message's document to read, and who left it. */
+  const [transcriptState, setTranscriptState] = useState<{
+    url: string;
+    from: string;
+    when: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { features } = useCompanyFeatures();
   const [selectedFilters, setSelectedFilters] = useState<any>({});
@@ -196,7 +205,7 @@ const Voicemail = ({
           displayDirection = ACTIVITYLIST?.Announcement;
         } else if (
           data?.direction === ACTIVITYLIST?.Inbound &&
-          data?.billsec === 0 &&
+          (timeStringToSeconds(data?.billsec) ?? 0) === 0 &&
           data?.is_voicemail === 0
         ) {
           displayDirection = ACTIVITYLIST?.Missed;
@@ -223,7 +232,7 @@ const Voicemail = ({
           <span>
             {data?.caller_id_number?.length > 5 ? (
               <span className="flex items-center gap-1">
-                <NumberWithFlag number={data?.caller_id_number} />
+                <ContactNumber number={data?.caller_id_number} />
               </span>
             ) : (
               <span className="flex flex-col">
@@ -258,7 +267,7 @@ const Voicemail = ({
         const callDirection = data?.direction;
 
         if (callDirection === 'Outbound') {
-          return <NumberWithFlag number={data?.destination_number} />;
+          return <ContactNumber number={data?.destination_number} />;
         } else {
           if (!data?.forward_type) {
             return (
@@ -376,6 +385,15 @@ const Voicemail = ({
         const recordingSrcUrl = data?.recording_file
           ? `${MEDIA_URL}/${user?.company_info?.uuid}/recording/${data.recording_file}`
           : '';
+        /* Same column and URL shape the call log's Transcript action uses
+           (call-history/index.tsx): the uploader stores the document next to
+           the recording and the row names it. Empty means nothing was written
+           out - the mailbox has voicemail-to-text off, or the message had no
+           speech. */
+        const transcriptFile = String(data?.transcript_file ?? '').trim();
+        const transcriptSrcUrl = transcriptFile
+          ? `${MEDIA_URL}/${user?.company_info?.uuid}/recording/${transcriptFile}`
+          : '';
 
         return (
           <span className="flex text-center gap-2 items-center">
@@ -393,6 +411,31 @@ const Voicemail = ({
                   }}
                 >
                   <Icon name="PlayLine" className="w-4.5 h-4.5" />
+                </div>
+              </CustomTooltip>
+            )}
+            {callLogActionAccess?.call_recording_listen && canPlayRecording(data).allowed && (
+              <CustomTooltip
+                text={transcriptSrcUrl ? 'Read the transcript' : 'No transcript for this message'}
+                side="top"
+              >
+                <div
+                  className={`${
+                    transcriptSrcUrl
+                      ? 'bg-primary/20 text-primary hover:bg-primary hover:text-white cursor-pointer'
+                      : 'cursor-not-allowed bg-gray-200 border-transparent'
+                  } flex items-center justify-center rounded-full w-8 h-8`}
+                  aria-label="Read the transcript"
+                  onClick={() => {
+                    if (!transcriptSrcUrl) return;
+                    setTranscriptState({
+                      url: transcriptSrcUrl,
+                      from: String(data?.contact_name || number || '').trim(),
+                      when: String(data?.start_stamp || '').trim(),
+                    });
+                  }}
+                >
+                  <Icon name="TranscriptLineIcon" className="w-4 h-4" />
                 </div>
               </CustomTooltip>
             )}
@@ -484,6 +527,7 @@ const Voicemail = ({
               filter_date: {
                 from: dropdownVal?.value?.from,
                 to: dropdownVal?.value?.to,
+                timezone: dropdownVal?.value?.timezone,
               },
             },
             emptyTablePlaceholder: 'No Voicemail records found',
@@ -502,6 +546,15 @@ const Voicemail = ({
             filterRef,
             handleFilterSelect,
           }}
+        />
+        <VoicemailTranscriptDialog
+          open={Boolean(transcriptState)}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setTranscriptState(null);
+          }}
+          url={transcriptState?.url || ''}
+          from={transcriptState?.from}
+          when={transcriptState?.when}
         />
         <AudioModal
           modalState={modalState}

@@ -65,11 +65,14 @@
  *   Department Admin   one or more departments: their call handling, their
  *                      hours, their members, and watching them work. Cannot
  *                      create or delete a person.
- *   Supervisor         watches a department and nothing else. Changes no
- *                      setting. Promoted from inside the department, not sent
- *                      down from head office. That is the point of the tier:
- *                      you can trust somebody to watch a queue without
- *                      trusting them to change it.
+ *   Supervisor         watches and helps the people in their own groups and
+ *                      nothing else. Changes no setting. Promoted from inside
+ *                      the group, not sent down from head office. That is the
+ *                      point of the tier: you can trust somebody to watch a
+ *                      queue without trusting them to change it. Since Sep
+ *                      2026 this is a system role of its own (SUPERVISOR):
+ *                      reach = the groups they belong to (lib/admin-scope.ts),
+ *                      duty changes only when Company › Duty policy allows.
  *   Agent              does the work, sees their own calls. The tools of the
  *                      job and nothing about anybody else.
  *   User               an ordinary person with a phone. Their own line, their
@@ -206,19 +209,21 @@ export const TIERS: TierInfo[] = [
     label: 'Supervisor',
     scope: 'department',
     description:
-      'Watches a department while it works — sees who is on a call, listens in, whispers, takes a call over, and reads the department’s reports.',
+      'Watches and helps the people in their groups: sees their duty and reports, can change their duty when the company allows it. Configures nothing.',
     boundary:
       'Changes no settings at all. No call handling, no hours, no adding people. Watching, not configuring.',
-    aliases: ['supervisor', 'floor supervisor', 'team supervisor'],
+    aliases: ['supervisor', 'group supervisor', 'floor supervisor', 'team supervisor'],
   },
   {
     tier: 'agent',
     label: 'Agent',
     scope: 'self',
-    description:
-      'Takes and makes calls as part of a department, with the tools that go with it — the dialler, campaigns, messaging and the shared inbox.',
-    boundary:
-      'Sees their own calls and nobody else’s. No live supervision, no other people’s recordings, no settings.',
+    /* Two sentences, not four clauses and a list. The dialler, campaigns,
+       messaging and the shared inbox are what "a department's tools" means, and
+       naming all four under every Role dropdown on a form of ten people is more
+       words than the choice needs. */
+    description: 'Takes and makes calls with a department\u2019s tools.',
+    boundary: 'Sees only their own calls. No supervision, recordings or settings.',
     aliases: ['agent', 'contact centre agent', 'contact center agent', 'operator'],
   },
   {
@@ -332,6 +337,7 @@ export type CapabilityArea =
   | 'call_handling'
   | 'reporting'
   | 'supervision'
+  | 'workday'
   | 'billing';
 
 export const AREAS: { area: CapabilityArea; title: string; blurb: string }[] = [
@@ -359,6 +365,11 @@ export const AREAS: { area: CapabilityArea; title: string; blurb: string }[] = [
     area: 'supervision',
     title: 'Live supervision',
     blurb: 'Watching calls while they are happening, and stepping into them.',
+  },
+  {
+    area: 'workday',
+    title: 'Agent workday',
+    blurb: 'Shifts, breaks and their reasons, the campaign timers, and the agent reports.',
   },
   {
     area: 'billing',
@@ -645,6 +656,42 @@ export const RULES: PermissionRule[] = [
         'meeting',
         'meetings',
       ].includes(module_(path)),
+  },
+
+  /* --- The agent's workday (lib/workday-permissions.ts holds the keys) ---
+     The same three questions again, over the `agent_workday` group: doing
+     the job (own duty), supervision (other people's duty, their reports),
+     configuration (reasons, allowances, timers, the lock, scheduling). The
+     stored tree keys are the sentences' ids with underscores, and the
+     server reads them by exactly these names. */
+  {
+    id: 'workday_own',
+    area: 'workday',
+    principle: 'the_job',
+    title: 'Their own shift and breaks',
+    why: 'Starting and ending the shift and taking a break are the day itself. Everybody who works a queue gets them, unless the company lock says the supervisor sets them.',
+    tiers: WORKERS,
+    match: (path) => module_(path) === 'agent_workday' && leaf(path) === 'duty_own',
+  },
+  {
+    id: 'workday_supervise',
+    area: 'workday',
+    principle: 'supervision',
+    title: 'Other people’s duty, and the agent reports',
+    why: 'Ending somebody’s shift, putting them on a break, reading and exporting how their day went. This is done by the person standing with the team, so it reaches the supervisor.',
+    tiers: WATCHERS,
+    match: (path) =>
+      module_(path) === 'agent_workday' &&
+      ['duty_others', 'reports_agents_view', 'reports_agents_export'].includes(leaf(path)),
+  },
+  {
+    id: 'workday_configure',
+    area: 'workday',
+    principle: 'supervision',
+    title: 'Break reasons, allowances, campaign timers, the lock and scheduled reports',
+    why: 'Each of these lasts until somebody changes it back and applies to every agent. They stay with the account holder.',
+    tiers: ['company_admin'],
+    match: (path) => module_(path) === 'agent_workday',
   },
 ];
 

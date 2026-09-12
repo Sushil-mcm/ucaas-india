@@ -101,7 +101,7 @@ const RING_TIME_OPTIONS = [
   buildOption(COMMON_DEFAULT_SECONDS, 'recommended'),
   buildOption(40),
   buildOption(45),
-  buildOption(MAX_SECONDS, 'other established systems maximum'),
+  buildOption(MAX_SECONDS, 'longest allowed'),
 ];
 
 /* Where the "what happens next" half of this question is answered.

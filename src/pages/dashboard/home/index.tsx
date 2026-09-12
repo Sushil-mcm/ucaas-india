@@ -16,6 +16,7 @@ import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
  * in step with still writes `KPI_REFRESH_MS * 15`, which reads as 30s there
  * and would be 2.5 minutes here — keep this constant when porting. */
 const HOME_COUNTER_REFRESH_MS = 30000;
+import { serviceLevelBand } from '@/lib/queue-series';
 import { useAnimatedNumber } from '@/pages/performance/use-animated-number';
 import { formatSecsToClock } from '@/pages/performance/format';
 import buildQueueRows from '@/pages/performance/queue-rows';
@@ -28,6 +29,7 @@ import {
 import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import '@/components/mcm/mcm-page.css';
+import '@/pages/dashboard/dashboard.css';
 
 /**
  * MCM Unified Console — Home.
@@ -98,6 +100,8 @@ type Kpi = {
   value: ReactNode;
   sub?: ReactNode;
   tone?: 'good' | 'warnv' | 'bad';
+  // Optional progress bar under the value, e.g. service level against its target.
+  meter?: { value: number; target: number };
 };
 
 const Home = () => {
@@ -120,10 +124,10 @@ const Home = () => {
     usersOnlineStatus,
     totals,
     onlineAgentsCount,
-    avgSla,
+    serviceLevel,
     avgHandleTime,
     abandonRate,
-    occupancy,
+    agentsOnCallPct,
   } = live;
 
   const firstName = String(user?.user_info?.first_name || '').trim();
@@ -174,6 +178,16 @@ const Home = () => {
       pct: Math.round(((counts.get(state) || 0) / total) * 100),
     }));
   }, [liveAgents]);
+
+  /* The bar is a picture, so it needs saying in words for anyone who cannot see
+     it — the same split, read out. */
+  const rosterSummary = useMemo(
+    () =>
+      stateDistribution.length
+        ? `Roster: ${stateDistribution.map((s) => `${s.state} ${s.count} (${s.pct}%)`).join(', ')}`
+        : 'Nobody on the roster',
+    [stateDistribution],
+  );
 
   /* Busiest first: on a call, then ringing, then everyone else by handled. */
   const agentsByActivity = useMemo(
@@ -307,10 +321,10 @@ const Home = () => {
   const waitingAnimated = useAnimatedNumber(waitingCalls.length);
   const answeredAnimated = useAnimatedNumber(totals.answered);
   const onlineAgentsAnimated = useAnimatedNumber(onlineAgentsCount);
-  const slaAnimated = useAnimatedNumber(avgSla);
+  const slaAnimated = useAnimatedNumber(serviceLevel.percent);
   const abandonAnimated = useAnimatedNumber(abandonRate);
   const ahtAnimated = useAnimatedNumber(avgHandleTime);
-  const occupancyAnimated = useAnimatedNumber(occupancy);
+  const onCallAnimated = useAnimatedNumber(agentsOnCallPct);
 
   const kpis: Kpi[] = [
     {
@@ -330,9 +344,22 @@ const Home = () => {
     {
       key: 'sla',
       label: 'Service level',
-      value: avgSla === null ? '—' : `${Math.round(slaAnimated)}%`,
-      sub: 'target 80% in 20s',
-      tone: avgSla === null ? undefined : avgSla >= 80 ? 'good' : avgSla >= 60 ? 'warnv' : 'bad',
+      value: serviceLevel.percent === null ? '—' : `${Math.round(slaAnimated)}%`,
+      /* The real goal, from the queues' own settings: one line when they all
+         ask for the same thing, "per-queue targets" when they do not. */
+      sub: serviceLevel.targetText,
+      /* The one figure on the strip with a number to be judged against, so it
+         is the one that gets a track. Both values are real: the level comes
+         from the same feed as the figure above it, the target is the 80% the
+         sub-line already quotes. */
+      meter:
+        serviceLevel.percent === null || serviceLevel.targetPercent === null
+          ? undefined
+          : { value: Math.round(slaAnimated), target: serviceLevel.targetPercent },
+      tone: (() => {
+        const band = serviceLevelBand(serviceLevel.percent, serviceLevel.targetPercent);
+        return band === null ? undefined : band === 'warn' ? 'warnv' : band;
+      })(),
     },
     { key: 'answered', label: 'Answered today', value: round(answeredAnimated), sub: 'all queues' },
     {
@@ -354,10 +381,10 @@ const Home = () => {
       sub: `of ${agentRows.length} on the roster`,
     },
     {
-      key: 'occupancy',
-      label: 'Occupancy',
-      value: occupancy === null ? '—' : `${Math.round(occupancyAnimated)}%`,
-      sub: 'target 75–85%',
+      key: 'agentsOnCall',
+      label: 'On a call now',
+      value: agentsOnCallPct === null ? '—' : `${Math.round(onCallAnimated)}%`,
+      sub: 'of agents on queue',
     },
   ];
 
@@ -369,7 +396,7 @@ const Home = () => {
     : 'You are not assigned to a queue right now — direct calls only.';
 
   return (
-    <div className="mcm-page">
+    <div className="mcm-page home-v2">
       <McmIconSprite />
       <div className="page">
         {/* ── hero ─────────────────────────────────────────────────────── */}
@@ -406,6 +433,19 @@ const Home = () => {
             <div key={kpi.key} className={`kpi${kpi.tone === 'bad' ? ' alert' : ''}`}>
               <div className="k">{kpi.label}</div>
               <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+              {kpi.meter ? (
+                <div
+                  className="kpi-meter"
+                  role="img"
+                  aria-label={`${kpi.meter.value}% against a ${kpi.meter.target}% target`}
+                >
+                  <span style={{ width: `${Math.min(100, Math.max(0, kpi.meter.value))}%` }} />
+                  {/* Where the target sits on the same rail, so the gap between
+                      the two is the thing you read rather than a number you
+                      have to hold in your head. */}
+                  <i style={{ left: `${Math.min(100, kpi.meter.target)}%` }} />
+                </div>
+              ) : null}
               {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
             </div>
           ))}
@@ -766,6 +806,25 @@ const Home = () => {
             </span>
           </div>
           <div className="pc-body">
+            {/* The whole roster as one bar, before the states are listed out.
+                Four separate bars each measured against its own empty track say
+                how big each state is; one bar divided between them says how the
+                team is split, which is the question this panel exists to
+                answer. The rows below stay as the detail. */}
+            {stateDistribution.length ? (
+              <div className="rosterbar" role="img" aria-label={rosterSummary}>
+                {stateDistribution.map((slice) => (
+                  <span
+                    key={slice.state}
+                    style={{
+                      width: `${slice.pct}%`,
+                      background: slice.state === 'Offline' ? 'var(--ink-4)' : 'var(--accent)',
+                    }}
+                    title={`${slice.state} · ${slice.count} · ${slice.pct}%`}
+                  />
+                ))}
+              </div>
+            ) : null}
             {stateDistribution.length ? (
               <>
                 {/* One row instead of a bar per state: each slice's width is
@@ -806,10 +865,12 @@ const Home = () => {
         </div>
 
         {/* ── Agents ─────────────────────────────────────────────────────
-            Occupancy, adherence and sentiment are in the artifact but have no
-            service behind them yet, so this shows what the platform knows
-            rather than filling the columns in. */}
-        <div className="panel-card roomy-rows">
+            Adherence and sentiment are in the artifact but have no service
+            behind them yet, so this shows what the platform knows rather than
+            filling the columns in. Occupancy needs how long each person spent
+            in each status: agent_status_history started recording that on
+            9 Sep 2026, so it becomes answerable once a range of it exists. */}
+        <div className="panel-card roomy-rows fill-remaining">
           <div className="pc-head">
             <h3>Agents</h3>
             <button type="button" className="btn sm ghost" onClick={() => navigate('/performance')}>

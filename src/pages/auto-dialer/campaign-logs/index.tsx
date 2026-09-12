@@ -13,7 +13,6 @@ const CampaignLogs = () => {
   const [disposition, setDisposition] = useState<any>();
   const [campaignStatistics, setCampaignStatistics] = useState<any>(null);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
-  console.log(disposition, 'dispositiondisposition', campaign);
 
   const getCardValue = (keys: string[]) =>
     keys.reduce(

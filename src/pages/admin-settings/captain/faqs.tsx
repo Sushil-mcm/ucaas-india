@@ -10,6 +10,7 @@ import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
 import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
+import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 
 
 type Faq = {
@@ -41,6 +42,7 @@ const CaptainFaqs = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
@@ -159,7 +161,6 @@ const CaptainFaqs = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this FAQ? This cannot be undone.')) return;
     setDeletingId(id);
     try {
       const res = await captainFetch(`${CAPTAIN_API_BASE}/faqs/${id}`, { method: 'DELETE' });
@@ -326,7 +327,7 @@ const CaptainFaqs = () => {
                     variant="destructiveOutline"
                     size="sm"
                     disabled={deletingId === faq.id}
-                    onClick={() => handleDelete(faq.id)}
+                    onClick={() => setPendingDeleteId(faq.id)}
                   >
                     <Trash2 className="size-3.5" />
                     {deletingId === faq.id ? 'Deleting...' : 'Delete'}
@@ -401,6 +402,13 @@ const CaptainFaqs = () => {
         selectedIds={selectedIds}
         type="faq"
         onConfirm={handleBulkDelete}
+      />
+
+      <DeleteConfirmDialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+        itemLabel="FAQ"
+        onConfirm={() => handleDelete(pendingDeleteId!)}
       />
     </div>
   );

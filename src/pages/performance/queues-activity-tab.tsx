@@ -14,6 +14,7 @@ import Timer from '@/components/timer';
 import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers';
 import PerfStatCard from './stat-card';
 import type { QueueCallStats } from '@/hooks/use-call-stats';
+import { CDR_LIMIT } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
 import type { QueueRow, QueueStats, LiveQueueStats } from './queue-rows';
@@ -115,11 +116,31 @@ const STATUS_STYLES: Record<string, string> = {
   Offline: 'state away',
 };
 
+/** Totals run to hours, where a mm:ss clock stops being readable. */
+const formatTotal = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return '—';
+  const hours = Math.floor(seconds / 3600);
+  return hours ? `${hours}h ${Math.floor((seconds % 3600) / 60)}m` : formatSecsToClock(seconds);
+};
+
 const getMemberStatus = (member: any, usersOnlineStatus: any[], activeQueueCalls: any[]) => {
   const key = member?.user_uuid || member?.extension || member?.uuid;
   if (!key) return 'Offline';
   if (activeQueueCalls.some((call) => isMonitoringCallForMember(call, key))) return 'On Call';
-  const presence = usersOnlineStatus?.find((u: any) => String(u?.userId) === String(key));
+
+  /* Presence is keyed by EXTENSION, not by user uuid. This used to look up
+     `user_uuid || extension || uuid` - and because every member carries a
+     user_uuid, it compared a uuid against an extension, never matched, and
+     reported every agent in every queue as Offline no matter who was signed
+     in. Matching on the extension first is what makes the column true; the
+     other identifiers stay as fallbacks for members that have no extension. */
+  const candidates = [member?.extension, member?.user_uuid, member?.uuid]
+    .map((value) => String(value ?? '').trim())
+    .filter(Boolean);
+
+  const presence = usersOnlineStatus?.find((u: any) =>
+    candidates.includes(String(u?.userId ?? '').trim()),
+  );
   return presence?.online ? 'Available' : 'Offline';
 };
 
@@ -136,6 +157,8 @@ const QueuesActivityTab = ({
   selectedQueueUuid,
   setSelectedQueueUuid,
   globalSearch,
+  callbacksWaitingCount,
+  callbacksByQueueUuid,
 }: {
   queues: QueueRow[];
   activeQueueCalls: any[];
@@ -156,6 +179,10 @@ const QueuesActivityTab = ({
      already gives server-backed tables (Flows, Callbacks, Campaigns)
      applies here too rather than a bespoke filter written per tab. */
   globalSearch?: string;
+  /* Callers keeping a place to be called back: not on a channel, so not in
+     activeQueueCalls; counted from the queue service's ledger instead. */
+  callbacksWaitingCount?: number;
+  callbacksByQueueUuid?: Record<string, number>;
 }) => {
   /* The warm ambient backdrop and the KPI hero band (Waiting / Longest wait
      / Service / Volume / Coverage) both render one level up, in the
@@ -276,15 +303,32 @@ const QueuesActivityTab = ({
           : row.original.handledToday,
     },
     {
+      header: 'Abandoned',
+      accessorKey: 'abandoned',
+      cell: ({ row }: any) =>
+        row.original.abandoned === null || row.original.abandoned === undefined
+          ? '—'
+          : row.original.abandoned,
+    },
+    {
       header: 'SL today',
       accessorKey: 'sla',
+      /* Measured against this queue's own seconds, which may differ from the
+         next row's — so the seconds travel with the figure. */
       cell: ({ row }: any) =>
         row.original.sla === null ? (
           '—'
         ) : (
-          <StatusPill tone={slaPillTone(row.original.sla)}>
-            {Math.round(row.original.sla)}%
-          </StatusPill>
+          <span
+            title={`Answered within ${row.original.slaTargetSec}s${
+              row.original.slaTargetPct !== null ? ` · target ${row.original.slaTargetPct}%` : ''
+            }`}
+          >
+            <StatusPill tone={slaPillTone(row.original.sla)}>
+              {Math.round(row.original.sla)}%
+            </StatusPill>
+            <small className="ml-1 text-[#9A948F]">/{row.original.slaTargetSec}s</small>
+          </span>
         ),
     },
     {
@@ -316,13 +360,53 @@ const QueuesActivityTab = ({
   ];
 
   if (selectedRow) {
-    const memberRows = (selectedRow.members || []).map((member: any) => ({
-      name: member?.name || 'Unknown',
-      status: getMemberStatus(member, usersOnlineStatus, activeQueueCalls),
-    }));
+    /* Live status answers "who can take a call right now"; the call log answers
+       "who actually did, and how well". Neither is the whole picture on its
+       own, so the agent list carries both — one row per person, per queue. */
+    const perfByExtension = new Map(
+      (selectedRow.agents || []).map((agent) => [String(agent.extension).trim(), agent]),
+    );
+
+    const memberRows: any[] = (selectedRow.members || []).map((member: any) => {
+      const extension = String(member?.extension ?? '').trim();
+      const perf = extension ? perfByExtension.get(extension) : undefined;
+      if (perf) perfByExtension.delete(extension);
+      return {
+        name: member?.name || 'Unknown',
+        extension: extension || '—',
+        status: getMemberStatus(member, usersOnlineStatus, activeQueueCalls),
+        handled: perf?.handled ?? 0,
+        talkSec: perf?.talkSec ?? 0,
+        avgHandleSec: perf?.avgHandleSec ?? null,
+        avgWaitSec: perf?.avgWaitSec ?? null,
+        longestWaitSec: perf?.longestWaitSec ?? null,
+      };
+    });
+
+    /* Somebody can answer for a queue and be taken off it later. Dropping their
+       calls would leave the per-agent rows adding up to less than the queue's
+       own Handled, and the difference unexplained — so they stay, labelled. */
+    perfByExtension.forEach((perf, extension) => {
+      memberRows.push({
+        name: extension,
+        extension,
+        status: 'Left the queue',
+        handled: perf.handled,
+        talkSec: perf.talkSec,
+        avgHandleSec: perf.avgHandleSec,
+        avgWaitSec: perf.avgWaitSec,
+        longestWaitSec: perf.longestWaitSec,
+      });
+    });
+
+    memberRows.sort((a, b) => b.handled - a.handled || a.name.localeCompare(b.name));
+
+    const clock = (seconds: number | null | undefined) =>
+      seconds === null || seconds === undefined ? '—' : formatSecsToClock(seconds);
 
     const memberColumns = [
       { header: 'Agent', accessorKey: 'name' },
+      { header: 'Ext', accessorKey: 'extension' },
       {
         header: 'Status',
         accessorKey: 'status',
@@ -334,12 +418,100 @@ const QueuesActivityTab = ({
           </span>
         ),
       },
+      { header: 'Handled', accessorKey: 'handled' },
+      {
+        header: 'Talk time',
+        accessorKey: 'talkSec',
+        cell: ({ row }: any) => (row.original.handled ? formatTotal(row.original.talkSec) : '—'),
+      },
+      {
+        header: 'Avg handle',
+        accessorKey: 'avgHandleSec',
+        cell: ({ row }: any) => clock(row.original.avgHandleSec),
+      },
+      {
+        header: 'Avg wait',
+        accessorKey: 'avgWaitSec',
+        cell: ({ row }: any) => clock(row.original.avgWaitSec),
+      },
+      {
+        header: 'Longest wait',
+        accessorKey: 'longestWaitSec',
+        cell: ({ row }: any) => clock(row.original.longestWaitSec),
+      },
     ];
 
     const detailKpis = [
-      { label: 'Waiting', value: String(selectedRow.waiting), icon: Clock },
       {
-        label: 'Longest wait',
+        label: 'Offered',
+        value: selectedRow.offered === null ? '—' : String(selectedRow.offered),
+        sub: 'calls that reached the queue',
+        icon: PhoneCall,
+      },
+      {
+        label: 'Handled',
+        value:
+          selectedRow.handledToday === null || selectedRow.handledToday === undefined
+            ? '—'
+            : String(selectedRow.handledToday),
+        sub: 'an agent came on the line',
+        icon: CheckCircle2,
+      },
+      {
+        label: 'Abandoned',
+        value:
+          selectedRow.abandoned === null || selectedRow.abandoned === undefined
+            ? '—'
+            : String(selectedRow.abandoned),
+        sub: 'caller gave up waiting',
+        icon: PhoneMissed,
+      },
+      {
+        label: 'Abandon rate',
+        value: selectedRow.abandonRate,
+        tone:
+          selectedRow.offered && (selectedRow.abandoned ?? 0) / selectedRow.offered > 0.1
+            ? 'danger'
+            : 'default',
+        icon: PhoneMissed,
+      },
+      {
+        label: 'Service level',
+        value: selectedRow.sla === null ? '—' : `${Math.round(selectedRow.sla)}%`,
+        sub:
+          selectedRow.slaTargetPct === null
+            ? `answered within ${selectedRow.slaTargetSec}s · no target set`
+            : `answered within ${selectedRow.slaTargetSec}s · target ${selectedRow.slaTargetPct}%`,
+        /* Red means "below what this queue asked for". A queue that set no goal
+           is judged against the platform's 60% floor, as before. */
+        tone:
+          selectedRow.sla !== null && selectedRow.sla < (selectedRow.slaTargetPct ?? 60)
+            ? 'danger'
+            : 'default',
+        icon: Target,
+      },
+      {
+        label: 'ASA',
+        value: clock(selectedRow.asa),
+        sub: 'average wait before an answer',
+        icon: Gauge,
+      },
+      { label: 'AHT', value: clock(selectedRow.aht), sub: 'average time on the call', icon: Gauge },
+      {
+        label: 'Talk time',
+        value: selectedRow.talkSec === null ? '—' : formatTotal(selectedRow.talkSec),
+        sub: 'total, all agents',
+        icon: PhoneCall,
+      },
+      { label: 'Waiting', value: String(selectedRow.waiting), sub: 'in the queue now', icon: Clock },
+      {
+        label: 'Callbacks',
+        value: String(callbacksByQueueUuid?.[selectedRow.uuid] ?? 0),
+        sub: 'keeping their place to be called back',
+        icon: PhoneCall,
+      },
+      {
+        label: 'Longest wait now',
         value: selectedRow.longestWaitTimestamp ? (
           <Timer startTime={selectedRow.longestWaitTimestamp} />
         ) : (
@@ -347,30 +519,18 @@ const QueuesActivityTab = ({
         ),
         icon: TimerIcon,
       },
-      { label: 'Interacting', value: String(selectedRow.interacting), icon: PhoneCall },
-      { label: 'Members', value: String(selectedRow.membersCount), icon: Users },
       {
-        label: 'Handled',
-        value:
-          selectedRow.handledToday === null || selectedRow.handledToday === undefined
-            ? '—'
-            : String(selectedRow.handledToday),
-        icon: CheckCircle2,
+        label: 'Longest wait',
+        value: clock(selectedRow.longestWaitInRange),
+        sub: 'worst of the range',
+        icon: TimerIcon,
       },
       {
-        label: 'Service level',
-        value: selectedRow.sla === null ? '—' : `${Math.round(selectedRow.sla)}%`,
-        icon: Target,
+        label: 'Members',
+        value: String(selectedRow.membersCount),
+        sub: `${selectedRow.interacting} on a call now`,
+        icon: Users,
       },
-      {
-        label: 'ASA',
-        value:
-          selectedRow.asa === null || selectedRow.asa === undefined
-            ? '—'
-            : formatSecsToClock(selectedRow.asa),
-        icon: Gauge,
-      },
-      { label: 'Abandon', value: selectedRow.abandonRate, icon: PhoneMissed },
     ];
 
     return (
@@ -395,11 +555,13 @@ const QueuesActivityTab = ({
         </h2>
 
         <div className="summary-grid">
-          {detailKpis.map((kpi) => (
+          {detailKpis.map((kpi: any) => (
             <PerfStatCard
               key={kpi.label}
               label={kpi.label}
               value={kpi.value}
+              sub={kpi.sub}
+              tone={kpi.tone}
               icon={kpi.icon}
               layout="inline"
             />
@@ -408,14 +570,19 @@ const QueuesActivityTab = ({
 
         <div>
           <h3 className="sect-title" style={{ marginBottom: 8 }}>
-            Members — live status
+            Agents — status now, performance over the range
           </h3>
           <TableManager
             columns={memberColumns}
             staticData={memberRows}
             showPagination={false}
             emptyTablePlaceholder="No members in this queue"
+            descriptionEmptyTable="Add people to this queue and their calls will be reported here."
           />
+          <p className="page-note">
+            Status is live. Handled, talk time and the wait figures cover the selected date
+            range, and count only calls this queue put through to the agent.
+          </p>
         </div>
       </div>
     );
@@ -434,6 +601,15 @@ const QueuesActivityTab = ({
                 ? `${busiestQueue.interacting} interacting now`
                 : `${busiestQueue.handledToday} handled today`
               : undefined,
+          },
+          {
+            key: 'callbacks-waiting',
+            label: 'Callbacks waiting',
+            value: callbacksWaitingCount ?? 0,
+            sub:
+              (callbacksWaitingCount ?? 0) > 0
+                ? 'keeping their place to be called back'
+                : 'nobody asked to be called back',
           },
           {
             key: 'longest-waiting',
@@ -494,8 +670,9 @@ const QueuesActivityTab = ({
       {isCdrSampled && (
         <div className="qa-notice">
           <p className="page-note">
-            Offered, Handled, ASA, AHT and Abandon are counted from the most recent 1,000 calls in
-            this range — older calls in the range aren't included in these columns.
+            Offered, Handled, Abandoned, SL, ASA and AHT are counted from the most recent{' '}
+            {CDR_LIMIT.toLocaleString()} calls in this range — older calls in the range aren't
+            included in these columns.
           </p>
         </div>
       )}
