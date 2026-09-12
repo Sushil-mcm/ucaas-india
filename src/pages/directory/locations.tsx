@@ -280,11 +280,13 @@ const Locations = () => {
         </DialogContent>
       </Dialog>
 
-      {/* The platform's own site form — `data` empty means create. */}
+      {/* The platform's own site form — `data` empty means create. Title
+          lives on the step rail now (`railTitle`/`railSubtitle` below), so
+          this bar is just the close control -- same pattern as Create
+          group/Invite people. */}
       <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
-        <DialogContent className="gp-create-group-dialog sm:max-w-[860px]" showCloseButton={false}>
-          <div className="gp-create-group-head">
-            <h2>{editing ? `Update location (${editing?.name || ''})` : 'New location'}</h2>
+        <DialogContent className="gp-create-group-dialog sm:max-w-[1100px]" showCloseButton={false}>
+          <div className="gp-create-group-head gp-create-group-head--bare">
             <button
               type="button"
               aria-label="Close"
@@ -295,7 +297,12 @@ const Locations = () => {
             </button>
           </div>
           <div className="gp-create-group-body">
-            <NewSiteSteps data={editing || {}} handleClose={closeForm} />
+            <NewSiteSteps
+              data={editing || {}}
+              handleClose={closeForm}
+              railTitle={editing ? `Update location (${editing?.name || ''})` : 'New location'}
+              railSubtitle="Add an office location or branch site for your company."
+            />
           </div>
         </DialogContent>
       </Dialog>

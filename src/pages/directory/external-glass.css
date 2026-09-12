@@ -550,9 +550,39 @@
 .gp-contact-form-dialog {
   background: #ffffff !important;
 }
+/* White, not the cream/orange wash this used to keep on purpose (matching
+   the old side-drawer) -- New location/New role's own dialog headers are
+   plain white too, and this one stood out warm beside them. */
 .gp-contact-form-dialog .gp-create-group-head {
-  background: #fff6e9;
+  background: #ffffff;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+  /* Down from the shared head's own 16px top/bottom (groups-glass.css) --
+     this dialog's own heading read as sitting in an oversized bar next to
+     the close button beside it. */
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.gp-contact-form-dialog .gp-create-group-head h2 {
+  /* Up from the shared head's own 16px -- matching how much bigger New
+     location/New role's own rail heading reads next to their form, this
+     one looked small for the dialog's own width. */
+  font-size: 18px;
+}
+/* `CreateContactNew`'s own field rows (First/Last Name, Email/Phone,
+   Gender/Birth Date, ...) are each a plain `flex gap-4 flex-wrap` with no
+   width cap on its own `Input`s (which default to `w-full`) -- at this
+   dialog's old 620px they always wrapped to one field per line regardless
+   of width. Widening the dialog (external.tsx) alone wouldn't have fixed
+   that on its own: capping each row's children to half its width is what
+   actually seats two fields side by side, and the wider dialog is what
+   gives that half-width room to be usable rather than cramped. Targets the
+   Tailwind classes directly (`.flex.gap-4.flex-wrap`) rather than editing
+   `create-new-contact.tsx` itself, which is shared by several other,
+   narrower callers (Leads, Phone console's contact pane, ...) that still
+   need their own single-column stack. */
+.gp-contact-form-dialog .flex.gap-4.flex-wrap > * {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 0;
 }
 /* `CreateContactNew`'s own section headings ("Address Information",
    "Notes Information") — plain grey-900 text with nothing separating one

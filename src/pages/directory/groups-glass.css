@@ -1,95 +1,298 @@
-/* Directory ▸ Groups — the platform's own "Users / Groups" split-pane
-   layout, recoloured to the console's orange theme rather than the
-   platform's plain white/gray. Scoped under `.gp-groups` so no other
-   `.mcm-page` screen is affected. */
+/* Directory ▸ Groups — same table/pager design as People and Roles
+   (people-glass.css / roles-glass.css), scoped under `.gp-groups` so no
+   other `.mcm-page` screen is affected. */
 
 .gp-groups {
-  height: 100%;
-  min-height: 0;
-  /* Fills the width of whatever column it is dropped into. Admin renders this
-     screen as Phone System ▸ Departments inside a flex row, where a plain block
-     child is sized by its own CONTENT — so the table, its card and this tint
-     all stopped about half way across and left bare page beside them.
-     `.gp-people` carries the same two lines for the same reason; every other
-     Directory list is wide enough to reach the edge on its own and hid it. */
-  width: 100%;
-  min-width: 0;
-  /* `.mcm-page`'s own background is transparent (the site-wide orange
-     gradient pass made it so, to show through by default) — this page
-     paints its own copy of that same gradient rather than inheriting it,
-     so it stays consistent even if an ancestor's background changes. */
-  background:
-    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.35), transparent 58%),
-    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.28), transparent 55%),
-    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.3), transparent 60%),
-    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
+  position: relative;
+  isolation: isolate;
+  /* fills the whole scroll area, not just the height of its own content --
+     same fix as People/Roles: a plain `100%` falls 22px short of the true
+     bottom edge because negative margin-top pulls this box up by 22px and
+     a block box's height, unlike its width, doesn't automatically grow to
+     absorb that. */
+  min-height: calc(100% + 22px);
+  /* Flat, matching People/Roles' own page background rather than the
+     layered radial-gradient backdrop this used to carry. `#fdf1e2` is the
+     live site's own `body` background. */
+  background: #fdf1e2;
+  /* cancel `.page`'s own padding so the background reaches the page's real
+     edges instead of stopping in a boxed-off inset -- see the matching
+     rule and comment in people-glass.css for the full mechanism. */
+  margin: -22px -26px -40px;
+  padding: 22px 26px 8px;
 }
-
-.gp-groups .gp-groups-refresh {
+.gp-groups .page {
+  padding-bottom: 8px;
+}
+.gp-groups {
+  max-height: 100%;
+  overflow-y: auto;
+}
+.gp-groups::-webkit-scrollbar {
+  width: 10px;
+}
+.gp-groups::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-groups::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
   border-radius: 999px;
-  border-color: #f2994a;
-  color: #f2994a;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
-.gp-groups .gp-groups-refresh:hover {
-  background: #fff1e0;
-  border-color: #f2994a;
-  color: #c96f1f;
+.dark .gp-groups::-webkit-scrollbar-thumb {
+  background: rgba(255, 171, 94, 0.28);
+  background-clip: padding-box;
 }
 
-/* ---- left: list panel ---- */
-.gp-groups .gp-ug-left {
-  background: #fff !important;
-  border-right-color: rgba(242, 153, 74, 0.25) !important;
+/* Header card -- the title/actions row (and each filter chip) sit on their
+   own white card, same as People's own `.page-head` (people-glass.css).
+   Missing this was the actual bug: everything else about this page already
+   matched People, but without it the heading and buttons just sat directly
+   on the peach page background instead of a distinct white strip. */
+.gp-groups .page-head,
+.gp-groups .tbar .fchip {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
 }
-.gp-groups .list-row {
+.gp-groups .page-head {
+  background: #fff;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.gp-groups .page-head h1 {
+  color: #1a1a1a;
+}
+
+/* "People" / "Export" — `.btn.ghost` is normally a neutral grey action
+   button (used all over the app outside Directory), so left alone it read
+   as off-theme here -- copied exactly from People's own override
+   (people-glass.css). Orange border + text by default, filled orange on
+   hover, matching every other action on this page. */
+.gp-groups .btn.ghost {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.gp-groups .btn.ghost:hover {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
+.gp-groups .btn.ghost:disabled {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(150, 100, 50, 0.15);
+  color: var(--ink-2);
+}
+
+/* The filter bar reads as one frosted strip, not loose chips floating on
+   the background -- same glass treatment as the header and table panel,
+   copied exactly from People's own `.tbar` (people-glass.css). This was
+   the other half of the missing "white part": without it, the search box
+   and the count chip sat directly on the peach page background instead of
+   inside a shared card. */
+.gp-groups .tbar {
+  background: rgba(255, 251, 246, 0.85);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(242, 153, 74, 0.18);
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 16px 22px;
+  margin-bottom: 16px;
+}
+.gp-groups .tbar .fchip input::placeholder {
+  color: #8a8a8a !important;
+  opacity: 1 !important;
+}
+.gp-groups .tbar .fchip {
+  height: 33px;
+  padding-left: 18px;
+  padding-right: 18px;
+  font-size: 13.5px;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(150, 100, 50, 0.12);
+  font-weight: 700;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.gp-groups .tbar .fchip input {
+  font-size: 13.5px;
+}
+.gp-groups .tbar .fchip:has(input) {
+  flex: 1 1 320px !important;
+  max-width: 460px !important;
+}
+.gp-groups .tbar .fchip:hover {
+  background: #fff;
+  border-color: var(--accent-edge);
+}
+.gp-groups .tbar .fchip.live {
+  background: rgba(220, 245, 241, 0.75);
+  border-color: transparent;
+}
+
+/* ---- table ---- */
+.gp-groups .panel-card {
+  background: #fffdfb;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.gp-groups .tbl-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+}
+.gp-groups table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: transparent;
+}
+.gp-groups thead {
+  display: block;
+  flex: none;
+  width: 100%;
+}
+.gp-groups tbody {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding-bottom: 6px;
+}
+.gp-groups thead tr,
+.gp-groups tbody tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  /* Same idea as People/Roles' own row floor -- below this the Open
+     column's share would squeeze its label/chevron onto two lines. */
+  min-width: 520px;
+}
+/* Group holds the same single-line avatar+name as Manager -- there's no
+   reason its share should be nearly double Manager's the way the old 38%
+   was. At a wide viewport (a low browser zoom like 80% reports one) that
+   extra share showed up as a dead gap between the name and Manager rather
+   than as anything the column actually used. */
+.gp-groups th:nth-child(1),
+.gp-groups td:nth-child(1) {
+  width: 24%;
+  padding-left: 22px;
+}
+.gp-groups th:nth-child(2),
+.gp-groups td:nth-child(2) {
+  width: 24%;
+}
+.gp-groups th:nth-child(3),
+.gp-groups td:nth-child(3) {
+  width: 14%;
+}
+.gp-groups th:nth-child(4),
+.gp-groups td:nth-child(4) {
+  width: 16%;
+}
+.gp-groups th:nth-child(5),
+.gp-groups td:nth-child(5) {
+  width: 22%;
+  min-width: 100px;
+}
+.gp-groups th {
+  background: #fffdfb;
+  color: #1a1a1a;
+  font-weight: 800;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  height: 40px;
+  font-size: 11.5px;
+}
+.gp-groups td {
+  border-bottom-color: rgba(150, 100, 50, 0.1);
+}
+.gp-groups .gp-group-row {
   cursor: pointer;
 }
-.gp-groups .list-row:hover {
-  background: rgba(255, 205, 155, 0.25);
+.gp-groups .gp-group-row:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
-.gp-groups .list-row.on {
-  /* Lighter than --accent (#f2994a) — the full-strength shade read as too
-     dark/heavy for a list row selection compared to the rest of the page's
-     softer palette. */
-  background: #f6ad70;
+/* "Open" -- chevron + label, not a full button chrome, matching the
+   platform's own understated row-action link. */
+.gp-groups .gp-group-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: auto;
+  width: auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: #c96f1f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
-.gp-groups .list-row.on::before {
-  background: var(--accent-ink);
-}
-/* The row's own text colors are tuned for a light background — on solid
-   orange they need to flip to white to stay readable. Named individually
-   rather than "everything except X": a blanket `:not(...)` still reached
-   the avatar's initials <span>, which isn't itself `.rounded-full` (only
-   its parent is) — forcing white text there made the initials disappear
-   against the avatar's own near-white fill, the same way it did for the
-   member-count tag before that was excluded. */
-.gp-groups .list-row.on {
-  color: #fff !important;
-}
-.gp-groups .list-row.on .list-row-name,
-.gp-groups .list-row.on .list-row-meta,
-.gp-groups .list-row.on p {
-  color: #fff !important;
+.gp-groups .gp-group-open:hover {
+  color: #f2994a;
 }
 
-.gp-groups .gp-ug-detail-head {
-  background: #fff !important;
-  border-bottom-color: rgba(242, 153, 74, 0.25) !important;
+/* ---- Pager row -- same shape as People's/Roles' (people-glass.css /
+   roles-glass.css), reusing the app's own `.mcm-pager` classes
+   (index.css). ---- */
+.gp-groups-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid rgba(150, 100, 50, 0.12);
+}
+.gp-groups-pager-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a6f57;
+}
+.dark .gp-groups-pager {
+  border-top-color: rgba(255, 171, 94, 0.12);
+}
+.dark .gp-groups-pager-count {
+  color: var(--mcm-ink-3, #93a1ba);
 }
 
-/* ---- right: detail panel background, warm instead of flat gray ---- */
-.gp-groups .gp-ug-right-body {
-  background: rgba(255, 246, 233, 0.6) !important;
+/* ---- "Open" -- call/message icon buttons on a group's manager/member
+   rows. Plain hex, not Tailwind's arbitrary-bracket classes
+   (`bg-[#FBE2C8]/50`, `text-[#2E2D35]/70`) -- those failed to generate in
+   this project (confirmed live: the icon's `fill` computed as a flat
+   `rgb(0,0,0)` instead of inheriting the intended colour, so both buttons
+   rendered as solid dark circles instead of the pale rest state below). */
+.gp-group-call {
+  background: #f0fdf4;
+  color: #22c55e;
 }
-.gp-groups .bg-white.border.border-gray-200 {
-  border-color: rgba(242, 153, 74, 0.2) !important;
-  box-shadow: 0 4px 16px rgba(160, 95, 30, 0.06);
+.gp-group-call:hover {
+  background: #22c55e;
+  color: #fff;
 }
-.gp-groups .bg-gray-100 {
-  background: var(--accent-wash, #fff1e0) !important;
+.gp-group-message {
+  background: #fbe2c8;
+  color: rgba(46, 45, 53, 0.7);
 }
-.gp-groups .text-primary {
-  color: var(--accent-ink) !important;
+.gp-group-message:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* ---- "Create group" popup ----
@@ -98,7 +301,7 @@
    JSX — these rules target the dialog's own class instead of an ancestor
    scope it will never actually be inside. */
 .gp-create-group-dialog {
-  background: #fffaf3;
+  background: #ffffff;
   border-color: rgba(242, 153, 74, 0.3);
   padding: 0;
   max-height: 85vh;
@@ -113,6 +316,30 @@
   padding: 16px 20px;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
   flex: none;
+}
+/* "Create group" only -- the title now lives on the step rail itself
+   (`railTitle`, above), so this bar is down to just the close button.
+   Floated out of flow entirely, same fix as the Invite people dialog's
+   own `--bare` head (`.gp-invite-dialog .gp-create-group-head--bare`,
+   invite-glass.css): previously a full-width row with its own border,
+   which put the rail's card a whole row below the dialog's true top edge
+   and left a redundant horizontal rule under an otherwise-empty bar. */
+.gp-create-group-head--bare {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  padding: 14px;
+  border-bottom: none;
+}
+/* The form column (to the right of the rail) would otherwise start flush
+   under the now-floating close button with nothing to clear it -- same
+   34px the Invite dialog gives its own step content for the same reason.
+   `:has()` scopes this to dialogs that actually use the bare head, so
+   every other `.gp-create-group-dialog` (New role, New location, ...)
+   keeps its normal header's own spacing untouched. */
+.gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-create-group-body {
+  padding-top: 34px;
 }
 .gp-create-group-head h2 {
   margin: 0;
@@ -136,11 +363,32 @@
   border-color: #f2994a;
   color: #c96f1f;
 }
+/* The gap under the dialog title was 46px, stacked from three places: the
+   dialog's own 16px flex gap, this padding, and a `pt-3` on the form inside
+   (new-department/index.tsx). This is the only one of the three that isn't
+   shared with something else, so the trim goes here -- 4px, leaving ~32px
+   in total. */
 .gp-create-group-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 20px;
+  padding: 0 20px 18px;
+}
+/* The other half of that gap is the dialog's own `gap-4` (16px) between its
+   two children -- the title bar and this body. Nothing else sits between
+   them, so tightening it here only closes the title-to-description space;
+   the footer's spacing lives inside the body and is untouched. */
+.gp-create-group-dialog {
+  /* `!important`: the dialog carries Tailwind's own `gap-4`, and a plain
+     rule at equal specificity doesn't displace it. */
+  gap: 0 !important;
+}
+/* Last contributor: the department form's own `pt-2 sm:pt-3` (12px). It is
+   overridden from here rather than edited in
+   new-department/index.tsx, so the same form keeps its original spacing
+   wherever else it is rendered. */
+.gp-create-group-body > div[class*='pt-2'] {
+  padding-top: 6px !important;
 }
 
 /* The step tab strip's base styling (`components/ui/tabs.tsx`) paints a
@@ -151,6 +399,357 @@
 .gp-create-group-body [data-slot='tabs-trigger'][data-state='active'] {
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* Tab list rail -- white card (not peach: this is the page's own reading
+   surface, same reasoning as People's panel-card staying solid white
+   rather than glass), full column height, plain left-aligned step titles.
+   `new-department/index.tsx`'s other caller, Admin's own Departments page,
+   keeps its default unstyled look untouched. */
+/* Rail (steps) beside the form, not stacked above it -- the component's
+   own markup (new-department/index.tsx) only switches from a stacked
+   column to that side-by-side row at its `lg:` breakpoint (1024px), so
+   this dialog fell back to steps-above-form on anything narrower. Forced
+   to the row layout at every width instead: `:has()` targets the rail's
+   own flex parent, rather than editing the shared component's classes, so
+   Admin's own Departments page (the component's other caller) keeps its
+   default responsive behaviour. */
+.gp-create-group-body div:has(> .gp-department-rail) {
+  flex-direction: row !important;
+}
+.gp-create-group-body .gp-department-rail {
+  background: #ffffff;
+  border: 1px solid rgba(242, 153, 74, 0.2);
+  border-radius: 16px;
+  padding: 20px 16px;
+  height: 100%;
+  /* `flex` shorthand, not just `width` -- this element's own description
+     text ("Route calls to a team...") is wide enough that plain `width`
+     alone didn't override its flex-basis:auto content size once
+     `flex-shrink:0` (the component's own `shrink-0` class) stopped it
+     shrinking back down. Setting flex-basis explicitly through the
+     shorthand pins it at exactly 260px regardless -- matching the width
+     Invite people's own rail column uses (`grid-template-columns: 260px
+     1fr`, invite-glass.css). */
+  flex: 0 0 260px !important;
+  width: 260px !important;
+  align-self: flex-start;
+}
+
+/* Heading + description above the step list -- same shape as Invite
+   people's own rail head (`.mcm-invite-rail .mcm-stepper-panel-head`,
+   invite-glass.css), threaded through via `NewDepartment`'s existing
+   `railTitle`/`railSubtitle` props (groups.tsx) rather than a new element. */
+.gp-create-group-body .gp-department-rail .mcm-stepper-panel-head {
+  margin-bottom: 22px;
+}
+.gp-create-group-body .gp-department-rail .mcm-stepper-panel-head h3 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.gp-create-group-body .gp-department-rail .mcm-stepper-panel-head p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6b5c4d;
+}
+
+/* Steps as plain tab rows -- padded, rounded, with a hover/active fill --
+   no numbered circles, no connecting line, no per-step description. Full
+   step names still wrap rather than ellipsing, since the rail's own text
+   ("Settings & Permissions" etc.) is tight at 260px otherwise. */
+.gp-create-group-body .gp-department-tab .truncate {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.3;
+}
+.gp-create-group-body .gp-department-tab {
+  position: relative;
+  color: #6b5c4d;
+  padding: 9px 12px !important;
+  border-radius: 10px;
+  font-size: 15px;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.gp-create-group-body .gp-department-tab:hover {
+  background: rgba(242, 153, 74, 0.08) !important;
+}
+.gp-create-group-body .gp-department-tab[data-state='active'] {
+  background: rgba(242, 153, 74, 0.12) !important;
+  color: #f2994a;
+  font-weight: 800;
+}
+
+/* "If no one answer" ▸ Voicemail row (`ForwardingActions`,
+   components/custom/forwarding-actions.tsx): "Send to Voicemail", the
+   radio pair ("My Voicemail"/"Another Voicemail") and, once "Another
+   Voicemail" is picked, a "Select" dropdown are all one `flex` row (two
+   of them nested) with no wrap of their own -- fine at the component's
+   other, wider call sites, but next to this dialog's own 268px rail
+   (above) the remaining form width isn't enough, and the row ran off the
+   edge needing a horizontal scrollbar to reach "Select". Stacked instead:
+   every ancestor `:has()` finds between the outer row and the radio group
+   itself (there are two -- the type-select/value-area split, and the
+   radio+select row inside that) turns column, so each control lands on
+   its own line top to bottom rather than wrapping mid-row. Targeted by
+   `:has()` off the radio group rather than editing the shared component's
+   own classes, so every other place `ForwardingActions` renders keeps its
+   single-line layout untouched. */
+.gp-create-group-body div:has([role='radiogroup']) {
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 8px;
+}
+/* The checked radio (radio-group.tsx) wasn't actually clipped -- measured
+   live, its ring sits ~290px from the nearest overflow boundary, nowhere
+   close to being cut off. The real cause: `data-[state=checked]:shadow-md`
+   stacks a directional drop shadow (offset down, blurred) UNDERNEATH the
+   symmetric `ring-2` ring -- confirmed via computed `box-shadow`, which
+   carries both `0 0 0 2px` (the even ring) and `0 4px 6px -1px`/
+   `0 2px 4px -2px` (shadow-md's downward offset). More shadow collects
+   under the circle than above it, which reads as the top/left edge being
+   "cut" next to a heavier blob on the bottom/right. Replaced with just
+   the ring on its own. */
+.gp-create-group-body [role='radio'][data-state='checked'] {
+  box-shadow: 0 0 0 2px rgba(242, 153, 74, 0.3) !important;
+}
+
+/* "Add Members" ▸ Manager column (add-members.tsx: `ManagerRadioCell`) --
+   its radio is `disabled` (and reads as `disabled:opacity-30` on a
+   `border-gray-400` outline with no fill) until that row's own member
+   checkbox is checked, which is the entire column at first load. 30%
+   opacity on an already-faint grey outline rendered as nothing at all --
+   the whole column looked blank/broken rather than "a control you unlock
+   by checking the row". Raised enough to read as a real, if inactive,
+   circle. */
+.gp-create-group-body [role='radio']:disabled {
+  opacity: 0.6 !important;
+  border-color: rgba(150, 100, 50, 0.45) !important;
+}
+.gp-create-group-body div:has([role='radiogroup']) > * {
+  width: 100% !important;
+}
+
+/* Field labels ("Name", "Location", ...) and section headings ("Response
+   Time Settings", "If no one answer") -- up from the shared `Label`
+   component's own `text-sm` (14px) and the section `<h5>`'s `text-md`,
+   both sized for a denser settings page than this dialog's own roomier
+   two-column form calls for. Scoped to this dialog's body only, so the
+   shared `Label`/`<h5>` styling everywhere else is untouched. */
+.gp-create-group-body [data-slot='label'] {
+  font-size: 15px;
+}
+.gp-create-group-body h5 {
+  font-size: 17px;
+}
+/* "Settings & Permissions" step (`common-settings/index.tsx`, shared with
+   AI Receptionist/AI Agent elsewhere) -- each row's own title ("Regional
+   Settings", "Business Hours", "Automatic Transcription", ...) is a bare
+   `<p className="font-semibold truncate text-md">` with no id/data-hook
+   of its own, so matched here by its literal Tailwind class combination
+   rather than editing the shared component. Scoped to this dialog only. */
+.gp-create-group-body p.font-semibold.truncate.text-md {
+  font-size: 17px !important;
+}
+/* The "Set how you'd like your calls to be handled..." line under "If no
+   one answer" -- a plain unclassed `<p>`, same bump for consistency with
+   the label it sits beside. */
+.gp-create-group-body p {
+  font-size: 14px;
+}
+
+/* ---- "Add Members" step (add-members.tsx) — restyled to match the rest
+   of Directory's own table language (People/Roles: bold dark header,
+   warm row hover, a real search pill) instead of the platform's default
+   dense admin-settings table it inherited. ---- */
+
+/* Search + live "N selected" count -- same shape as every other
+   Directory list's `SearchChip` + count pair (page-shell.tsx), rebuilt
+   here since this field is a plain `Input`, not a `SearchChip`. */
+.gp-create-group-body .gp-members-toolbar {
+  margin-bottom: 2px;
+}
+.gp-create-group-body .gp-members-search {
+  height: 33px !important;
+  min-height: 33px !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(150, 100, 50, 0.12) !important;
+  font-size: 13.5px !important;
+  font-weight: 700;
+  color: #1a1a1a;
+  box-shadow: none !important;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.gp-create-group-body .gp-members-search:hover {
+  background: #fff !important;
+  border-color: var(--accent-edge) !important;
+}
+.gp-create-group-body .gp-members-search:focus {
+  background: #fff !important;
+  border-color: #f2994a !important;
+  box-shadow: none !important;
+}
+.gp-create-group-body .gp-members-search::placeholder {
+  color: rgba(138, 111, 87, 0.7) !important;
+  opacity: 1 !important;
+  font-weight: 400;
+}
+.gp-create-group-body .gp-members-search-icon {
+  width: 13px !important;
+  height: 13px !important;
+}
+.gp-create-group-body .gp-members-count {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 33px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(220, 245, 241, 0.75);
+  color: var(--live, #0d9488);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* The table itself -- `customClass="gp-members-table"` (add-members.tsx)
+   lands on `TableManager`'s own scroll box (the non-`splitStickyHeader`
+   path this caller uses), same as every other `.gp-contact-table`-style
+   override elsewhere in this file. */
+/* `TableManager`'s own default classes on this element already include
+   `overflow-auto` (table-manager.tsx) -- it just had no bounded height to
+   scroll within, so it grew to fit every row instead and ran the table
+   off the bottom of the dialog. A real max-height turns that into an
+   actual, visible scroller. */
+/* "Set how you'd like to answer calls..." ▸ Ring Strategy step
+   (ring-strategy.tsx) -- the label's own `lg:max-w-xs` (320px) wrapped it
+   onto two lines next to the "Ring All" select, in a dialog now wide
+   enough (1100px, groups.tsx) to fit it on one. Scoped to this dialog
+   only via the marker classes added there, so the component's other
+   caller (Admin ▸ Departments, at whatever width it renders) keeps its
+   own wrap. */
+.gp-create-group-body .gp-ring-label {
+  max-width: none !important;
+  white-space: nowrap;
+  flex: none;
+}
+.gp-create-group-body .gp-ring-row {
+  flex-wrap: nowrap;
+}
+/* The "Ring All" select's own wrapper (ring-strategy.tsx) is `w-full` --
+   right when it's the row's only other child in a narrower layout, but
+   with the label now staying on one line (above) `width: 100%` resolves
+   as flex-basis against the ROW's own full width, so this wrapper tried
+   to claim the entire remaining row itself and pushed the select (capped
+   at its own 300px) off to the far right with a wide gap after the label
+   instead of sitting right next to it. Bounded here instead of stretching. */
+.gp-create-group-body .gp-ring-select-wrap {
+  width: auto !important;
+  max-width: 340px;
+  flex: none;
+}
+
+/* `TableManager`'s own default classes on this element include
+   `rounded-xl` -- rounded corners on the element that ALSO scrolls
+   (`overflow-auto`) and holds the sticky header (below). That combination
+   is a known Chromium rendering bug: content near a rounded corner on a
+   scrolling+sticky box can get an extra sliver clipped off, which is what
+   actually read as "the scroll touching the top" / a cut-off first row --
+   not a real spacing problem, a corner-radius rendering artifact.
+   Squaring this element off (the dialog's own outer rounding still
+   applies elsewhere) removes the bug outright. */
+.gp-create-group-body .gp-members-table {
+  background: #fffdfb !important;
+  max-height: 420px !important;
+  border-radius: 0 !important;
+  scroll-snap-type: y mandatory;
+}
+/* Scrolling used to stop wherever the wheel/drag ended, which often left
+   a row sliced in half at the very top of the visible area under the
+   sticky header -- "the scroll is touching on the top" was that half-row
+   with nothing whole above it. Snapped to each row's own top edge, with
+   `scroll-margin-top` pulling that snap point down by the sticky header's
+   own height so a snapped row lands clear of it instead of tucked
+   underneath. */
+.gp-create-group-body .gp-members-table tbody tr {
+  scroll-snap-align: start;
+  scroll-margin-top: 40px;
+}
+/* `border-collapse: separate` -- the default `collapse` merges the sticky
+   header's own bottom border with the first body row's top border into
+   one shared line, which is what read as the first row sitting flush
+   against (or half under) the header with no breathing room once the
+   header started sticking. Separate borders plus a touch of spacing keeps
+   a real seam between them regardless of scroll position. */
+.gp-create-group-body .gp-members-table table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.gp-create-group-body .gp-members-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: #1a1a1a !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4) !important;
+  background: #fffdfb !important;
+  /* A soft cast under the sticky header, the same purpose as the border
+     above but one that still reads while scrolled (the border alone,
+     sitting exactly on the boundary, thinned out against the first row's
+     own hover wash). */
+  box-shadow: 0 2px 4px -2px rgba(160, 95, 30, 0.15);
+}
+/* First two header cells (the "Members" checkbox column and "Manager")
+   left-align by table default, but their own body cells are centered
+   (`SelectAllHeader`/`ManagerRadioCell`, both `flex justify-center`) --
+   matched here so the column heading sits over its own column instead of
+   reading offset from the checkboxes/radios underneath it. "Name" is left
+   alone -- its own body content (`MemberNameCell`: avatar + name) is
+   itself left-packed against the column's left edge with the rest of the
+   (wide) column empty, so centering the heading text put it floating
+   over blank space to the right instead of over the name it labels. */
+.gp-create-group-body .gp-members-table th:nth-child(1),
+.gp-create-group-body .gp-members-table th:nth-child(2) {
+  text-align: center;
+}
+.gp-create-group-body .gp-members-table td {
+  border-bottom-color: rgba(150, 100, 50, 0.1) !important;
+}
+.gp-create-group-body .gp-members-table tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55) !important;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* Role badge beside the name -- was a bare 10px `<small>`, easy to miss
+   next to the name it was meant to qualify. */
+.gp-create-group-body .gp-member-name {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.gp-create-group-body .gp-member-role {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(242, 153, 74, 0.12);
+  color: #c96f1f;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.gp-create-group-body .gp-member-extension {
+  font-size: 12px;
+}
+.gp-create-group-body .gp-member-email {
+  font-size: 12px;
+  color: #8a8a8a;
 }
 
 /* Shared with the "New role" popup (Directory ▸ Roles), which reuses this
@@ -174,8 +773,12 @@
 /* `:not([data-slot='button'])` keeps this off the shared `Button` component's
    `outline` variant (`bg-white ... hover:bg-primary/90 hover:text-white`) —
    without it, this `!important` beat the hover utility's lower-specificity
-   background, leaving white hover text on an unchanged white background. */
-.gp-create-group-body .bg-white:not([data-slot='button']) {
+   background, leaving white hover text on an unchanged white background.
+   `:not(.gp-location-rail)` keeps it off Locations' own step rail
+   (locations-glass.css), which carries this same Tailwind `bg-white` class
+   (from `Stepper`, stepper.tsx) but needs to stay pure white rather than
+   join this dialog's cream repaint. */
+.gp-create-group-body .bg-white:not([data-slot='button']):not(.gp-location-rail) {
   background: #fffdfb !important;
 }
 /* `.mcm-userform` paints its own opaque white background — built for sitting
@@ -206,6 +809,48 @@
 .gp-create-group-body .mcm-step {
   padding: 12px 18px 14px;
   gap: 11px;
+}
+
+/* ---- "Create group" form fields -- same warm, pill-shaped treatment as
+   Invite people's own inputs (invite-glass.css), rather than the platform's
+   plain grey/white boxes. Scoped to `.gp-create-group-body` so Admin's own
+   Departments page (which renders this same `NewDepartment` form outside
+   this dialog) is untouched. ---- */
+.gp-create-group-body [data-slot='input'] {
+  border-color: rgba(242, 153, 74, 0.25);
+  background: #fffdfb;
+}
+.gp-create-group-body [data-slot='input']:hover,
+.gp-create-group-body [data-slot='input']:focus {
+  border-color: #f2994a;
+}
+/* Same fix as Invite people's own inputs: the base layer's
+   `outline-ring/50` reset otherwise showed as a second ring alongside this
+   border on focus. */
+.gp-create-group-body [data-slot='input']:focus,
+.gp-create-group-body [data-slot='input']:focus-visible {
+  outline: none !important;
+}
+.gp-create-group-body .custom-react-select__control {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-create-group-body .custom-react-select__control--is-focused {
+  border-color: #f2994a !important;
+  box-shadow: none !important;
+}
+/* The Member Ring Timeout field is the one row that doesn't already pair
+   two fields side by side (Name+Location, Description+Extension do) --
+   capped at a flat 320px it read as a stray narrow field with dead space
+   beside it. Widened to the same half-row share as every other field in
+   this form, so the whole dialog reads as a consistent 2-column grid
+   rather than 2-column-then-1-column. `department-info.tsx` renders this
+   for Admin's own Departments page too, so the fix is scoped here rather
+   than changing that shared file's own layout. */
+@media (min-width: 640px) {
+  .gp-create-group-body div[class*='max-w-[320px]'] {
+    max-width: 50% !important;
+  }
 }
 
 /* Footer Cancel/Save — `AddEditUserRole`'s own footer div, targeted by the
@@ -247,14 +892,254 @@
   opacity: 0.6 !important;
 }
 
-/* Orange-bordered ghost buttons, matching People's header style. */
-.gp-groups .btn.ghost {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid var(--accent);
-  color: var(--accent-ink);
+/* ---- Dark theme — same treatment as people-glass.css's own .dark block,
+   covering the Groups table page and the shared Create-group / Open
+   dialog shells (Create-group reused by Roles' "New role" and
+   Departments' wizard). ---- */
+.dark .gp-groups {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 138, 46, 0.1), transparent 60%),
+    radial-gradient(900px 700px at 100% -2%, rgba(255, 120, 40, 0.07), transparent 55%),
+    radial-gradient(900px 640px at 50% 118%, rgba(255, 160, 80, 0.06), transparent 60%),
+    var(--mcm-ground, #080d12);
 }
-.gp-groups .btn.ghost:hover {
-  background: var(--accent);
-  border: 1px solid var(--accent);
+.dark .gp-groups .page-head,
+.dark .gp-groups .tbar .fchip {
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-groups .page-head {
+  background: linear-gradient(180deg, #17212d 0%, #111a24 100%);
+}
+.dark .gp-groups .tbar .fchip {
+  background: var(--mcm-accent-wash, #1a2733);
+}
+.dark .gp-groups .panel-card {
+  background: linear-gradient(180deg, #141d28 0%, #101922 100%);
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+}
+.dark .gp-groups .page-head h1 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-groups .page-head p {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-groups .tbar {
+  background: rgba(20, 29, 40, 0.75);
+  border: 1px solid rgba(255, 171, 94, 0.12);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-groups .tbar .fchip {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+  color: var(--mcm-ink, #f3f6f9);
+}
+.dark .gp-groups .tbar .fchip:hover {
+  background: var(--mcm-surface-3, #1a2733);
+  border-color: var(--mcm-accent-edge);
+}
+.dark .gp-groups .fchip.live {
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  border-color: transparent !important;
+  color: #f3f6f9;
+}
+.dark .gp-groups .btn.ghost {
+  background: rgba(17, 29, 39, 0.6);
+}
+.dark .gp-groups .btn.ghost:hover:not(:disabled) {
+  background: #f2994a;
+  border: 1px solid #f2994a;
   color: #fff;
+}
+.dark .gp-groups .btn.primary:hover {
+  background: var(--accent);
+}
+.dark .gp-groups .btn.ghost:disabled {
+  background: rgba(14, 24, 33, 0.6);
+}
+.dark .gp-groups th {
+  background: #1a232f;
+  color: var(--mcm-accent, #ffab5e);
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35);
+}
+.dark .gp-groups td {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-groups .gp-group-row:hover {
+  background: rgba(255, 171, 94, 0.06);
+}
+.dark .gp-groups .gp-group-open {
+  color: var(--mcm-accent, #ffab5e);
+}
+.dark .gp-groups .gp-group-open:hover {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+
+.dark .gp-group-detail-dialog {
+  background: var(--mcm-surface, #111c26);
+  border-color: #1b2934;
+}
+.dark .gp-group-detail-head {
+  border-bottom-color: #1b2934;
+}
+.dark .gp-group-detail-label {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.dark .gp-group-person {
+  background: var(--mcm-surface-2, #16222c);
+  border-color: #1b2934;
+}
+.dark .gp-group-person-action {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-group-person-action:hover {
+  background: var(--mcm-accent-wash, #1a2733);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.dark .gp-group-person-action.call:hover:not(:disabled) {
+  background: rgba(45, 212, 191, 0.14);
+  color: #2dd4bf;
+}
+
+.dark .gp-create-group-dialog {
+  background: #111c26;
+  border-color: #1b2934;
+}
+.dark .gp-create-group-head {
+  border-bottom: 1px solid #1b2934;
+}
+.dark .gp-create-group-head h2 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-create-group-close {
+  background: var(--mcm-surface-3, #1a2733);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-create-group-close:hover {
+  border-color: var(--mcm-accent, #f97316);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.dark .gp-create-group-body .gp-department-rail {
+  background: var(--mcm-surface, #111c26);
+  border-color: #1b2934;
+}
+.dark .gp-create-group-body .gp-department-rail .mcm-stepper-panel-head h3 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-create-group-body .gp-department-rail .mcm-stepper-panel-head p {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.dark .gp-create-group-body .gp-department-tab {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-create-group-body .gp-department-tab:hover {
+  background: rgba(255, 171, 94, 0.08) !important;
+}
+.dark .gp-create-group-body .gp-department-tab[data-state='active'] {
+  background: rgba(255, 171, 94, 0.14) !important;
+  color: var(--mcm-accent, #ffab5e);
+}
+.dark .gp-create-group-body .bg-gray-50 {
+  background: var(--mcm-accent-wash, #1a2733) !important;
+}
+.dark .gp-create-group-body .gp-members-search {
+  background: rgba(17, 29, 39, 0.6) !important;
+  border-color: #293746 !important;
+  color: var(--mcm-ink, #f3f6f9) !important;
+}
+.dark .gp-create-group-body .gp-members-search:hover,
+.dark .gp-create-group-body .gp-members-search:focus {
+  background: var(--mcm-surface-3, #1a2733) !important;
+  border-color: var(--mcm-accent-edge) !important;
+}
+.dark .gp-create-group-body .gp-members-search::placeholder {
+  color: var(--mcm-ink-3, #93a1ba) !important;
+}
+.dark .gp-create-group-body .gp-members-count {
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  color: #f3f6f9;
+}
+.dark .gp-create-group-body .gp-members-table {
+  background: var(--mcm-surface, #111c26) !important;
+}
+.dark .gp-create-group-body .gp-members-table th {
+  color: var(--mcm-accent, #ffab5e) !important;
+  background: #1a232f !important;
+  border-bottom-color: rgba(255, 171, 94, 0.35) !important;
+}
+.dark .gp-create-group-body .gp-members-table td {
+  border-bottom-color: rgba(255, 171, 94, 0.1) !important;
+}
+.dark .gp-create-group-body .gp-members-table tbody tr:hover {
+  background: rgba(255, 171, 94, 0.06) !important;
+}
+.dark .gp-create-group-body .gp-member-name {
+  color: var(--mcm-ink, #f3f6f9);
+}
+.dark .gp-create-group-body .gp-member-role {
+  background: rgba(255, 171, 94, 0.14);
+  color: var(--mcm-accent, #ffab5e);
+}
+.dark .gp-create-group-body .gp-member-email {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+.dark .gp-create-group-body .border-gray-200 {
+  border-color: #1b2934 !important;
+}
+.dark .gp-create-group-body .bg-white:not([data-slot='button']):not(.gp-location-rail) {
+  background: var(--mcm-surface, #111c26) !important;
+}
+.dark .gp-create-group-body [data-slot='input'] {
+  border-color: #1b2934;
+  background: var(--mcm-surface, #111c26);
+}
+.dark .gp-create-group-body [data-slot='input']:hover,
+.dark .gp-create-group-body [data-slot='input']:focus {
+  border-color: #f97316;
+}
+.dark .gp-create-group-body .custom-react-select__control {
+  border-color: #1b2934 !important;
+  background: var(--mcm-surface, #111c26) !important;
+}
+.dark .gp-create-group-body .custom-react-select__control--is-focused {
+  border-color: #f97316 !important;
+}
+.dark .gp-create-group-body .gp-role-form-footer button[type='button'] {
+  color: var(--mcm-accent, #f97316) !important;
+  border: 1px solid var(--mcm-accent, #f97316) !important;
+}
+.dark .gp-create-group-body .gp-role-form-footer button[type='button']:hover {
+  background: var(--mcm-accent, #f97316) !important;
+  color: #f8fafc !important;
+}
+.dark .gp-create-group-body .gp-role-form-footer button[type='submit'] {
+  background: var(--mcm-accent, #f97316) !important;
+  color: #f8fafc !important;
+  border: 1px solid var(--mcm-accent, #f97316) !important;
+}
+.dark .gp-create-group-body .gp-role-form-footer button[type='submit']:hover {
+  background: var(--mcm-accent-ink, #ff8a2a) !important;
+  color: #111c26 !important;
+}
+
+/* ---- Department dialog tab strip, dark --------------------------------
+   The markup already asks for the right thing --
+   `data-[state=active]:text-primary` with an orange bottom border and no
+   fill (new-department/index.tsx). The shared Tabs component's own
+   `dark:data-[state=active]:text-foreground` lands later in Tailwind's
+   layer and wins, so the active tab came out white with a faint white
+   underline and a boxed edge. Restated here: orange label, orange rule
+   underneath, no box. */
+.dark .gp-create-group-dialog [data-slot='tabs-trigger'][data-state='active'] {
+  background: transparent !important;
+  color: var(--mcm-accent, #ffab5e) !important;
+  border-color: transparent !important;
+  border-bottom-color: var(--mcm-accent, #ffab5e) !important;
+  box-shadow: none !important;
 }

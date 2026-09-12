@@ -689,19 +689,6 @@
    (new-department/index.tsx), which keeps its bordered white card look
    on purpose -- this rail is plain, no card, so the override has to sit
    on a class only this page uses. */
-/* The row wrapper (rail + form column, new-site-steps/index.tsx) carries
-   `overflow-hidden` -- harmless for the plain-tab rail (Create group),
-   but it makes that row itself the nearest ancestor `position: sticky`
-   measures against for the rail's own sticky content below, instead of
-   the real scrolling container (`.gp-create-group-body`). Since the row
-   never scrolls on its own (only the body around it does), the "stuck"
-   element just travelled with the row's own static position instead of
-   staying pinned to the visible viewport -- what looked like sticky doing
-   nothing. `visible` restores `.gp-create-group-body` as the actual
-   scrolling ancestor sticky resolves against. */
-.gp-create-group-body div:has(> .gp-location-rail) {
-  overflow: visible !important;
-}
 .gp-create-group-body .gp-location-rail {
   /* Explicit white, not transparent -- transparent let whatever sits
      behind it (the dialog's own off-white `#fffdfb`-family background)
@@ -711,28 +698,39 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  /* Stretched, not `gp-department-rail`'s own default `align-self:
-     flex-start` (groups-glass.css, Create group's plain-tab rail) --
-     this box (and the border-right drawn on it) needs to span the whole
-     scrollable column, not just its own content's height, so the divider
-     reaches the dialog's true bottom edge instead of stopping partway
-     down. The box itself is NOT the sticky element, though: a stretched
-     box is already exactly as tall as the scrollable range, leaving no
-     slack for it to lag behind and catch, so `position: sticky` on it
-     would be a no-op. Stepper's own `stickyPanel` prop (stepper.tsx)
-     handles the actual pinning instead, on just the heading+step list
-     inside -- see `new-site-steps/index.tsx`. */
+  /* `gp-department-rail`'s own `align-self: flex-start` (groups-glass.css)
+     is a deliberate choice for Create group's plain-tab rail -- it sizes
+     to its own short content rather than stretching to match whatever
+     taller step is showing beside it. This divider needs the opposite:
+     without stretch, the box (and the border-right drawn on it) is only
+     as tall as the step list, so the line stopped partway down instead of
+     reaching the dialog's true bottom edge.
+
+     `align-self: stretch` alone, height left at its default `auto` --
+     NOT an explicit `height: 100%` alongside it. Stretch only fills the
+     cross size when the item's own height computes to `auto`; an explicit
+     height (even 100%, even if it resolved correctly) overrides stretch
+     rather than cooperating with it, and 100% here didn't resolve to the
+     row's real height anyway (a flex item's percentage height needs its
+     containing block to have a definite height set directly on it -- this
+     one only gets its size from being a flex item itself, `flex: 1`, not
+     from a plain `height` property, which is exactly the case percentage
+     resolution doesn't handle reliably). Plain `stretch` + `auto` sidesteps
+     the whole percentage question. */
   align-self: stretch !important;
   height: auto !important;
-  /* `.gp-create-group-body`'s own content box sits inset from the
-     dialog's real top edge by its own padding (34px -- room for the
-     floating close button, `.gp-create-group-head--bare` above,
-     groups-glass.css). Bleeding the box up by that same amount and adding
-     it back as padding brings the rail's own white fill and border-right
-     flush with the dialog's real top edge, while the heading inside lands
-     back where it was. */
+  /* Still short of the dialog's true top/bottom edges even stretched:
+     that fills `.gp-create-group-body`'s own content box, which sits
+     inset from the real edges by its own padding (34px top -- room for
+     the floating close button, `.gp-create-group-head--bare` above; 18px
+     bottom, both groups-glass.css). Bleeding the box out by that same
+     amount on each side and adding it back as padding stretches the box
+     (and the border-right drawn on it) flush with the dialog's real top
+     and bottom, while the heading and step list inside land back where
+     they were. */
   margin-top: -34px;
   padding-top: 34px;
+  margin-bottom: -18px;
   padding-bottom: 18px;
   /* The one visual boundary left between rail and form, matching Invite
      people's own `mcm-invite-rail` divider (invite-glass.css) now that
