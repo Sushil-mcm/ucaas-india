@@ -5,25 +5,13 @@
 .gp-external {
   position: relative;
   isolation: isolate;
-  /* Matches People's own `calc(100% + 22px)` (people-glass.css) -- a plain
-     `100%` falls 22px short of the true bottom edge for the same reason
-     documented there. */
-  min-height: calc(100% + 22px);
+  min-height: 100%;
   /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
   background: #fdf1e2;
   margin: -22px -26px -40px;
-  /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
-     (people-glass.css) so the gap below the table reads the same as the
-     22px this page opens with above the header. */
-  padding: 22px 26px 8px;
-}
-
-/* The real scroll container is this `.page` div sitting *inside*
-   `.gp-external`, same as People's own (people-glass.css). */
-.gp-external .page {
-  padding-bottom: 8px;
+  padding: 22px 26px 40px;
 }
 
 .gp-external .page-head,
@@ -96,19 +84,18 @@
 .gp-external {
   max-height: 100%;
   overflow-y: auto;
-  /* No visible scroll indicator on this page -- its own content (tabs,
-     sync button, search row, table) is taller than People's, so this outer
-     scroll engages far more often, and even the same slim warm thumb every
-     other Directory page shares (people-glass.css) read as an unwanted
-     grey line at 35% opacity when it's on-screen this much. Scrolling
-     itself (wheel/trackpad/keyboard) is unaffected -- just nothing drawn
-     for it. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 .gp-external::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  width: 10px;
+}
+.gp-external::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-external::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 .dark .gp-external::-webkit-scrollbar-thumb {
   background: rgba(255, 171, 94, 0.28);
@@ -419,61 +406,26 @@
 .gp-contact-table > div:first-child {
   background: transparent !important;
 }
-/* TableManager's own body/rows default to a translucent
-   `rgba(251,249,246,0.88)` fill plus a 12px backdrop-blur (its "glass"
-   look, table-manager.tsx) -- with nothing colourful behind them to blur
-   (`.panel-card` above is a plain near-white card, not the layered
-   backdrop that treatment was designed to sit over), the transparency
-   just dulled the white into a flatter, slightly grey tone instead.
-   People's own table (`.gp-people`, people-glass.css) never carries this
-   -- solid `#fffdfb`, no blur -- so matching that here instead. */
-.gp-contact-table .table-scroll,
-.gp-contact-table tbody {
-  background: #fffdfb !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
 /* With `splitStickyHeader`, the scrollable body is its own box directly
    under the (separate, non-scrolling) header box — and that body box
    carries its own `border-radius: 18px` on every corner, same as any other
    TableManager instance. Sitting flush under the header with no gap, its
    rounded top corners show up as a visible curve right below the column
-   headings. Bottom corners get the same treatment now that the pager below
-   (external-glass.css's own pager override, further down) is a plain flush
-   bar rather than TableManager's default opaque card -- that used to sit
-   directly against this box with no gap and hid the mismatch; stripped
-   down, the leftover 18px bottom curve poked out past `.gp-contact-table`'s
-   own flattened (0px) corner, showing `.panel-card`'s paler fill through
-   the sliver. `.panel-card` owns the whole card's real rounding (20px,
-   above), this box just needs to sit flush inside it. */
+   headings. The outer `.gp-contact-table` box already owns the card's
+   overall rounding; the body only needs to keep its bottom corners, to
+   match that outer box's own bottom radius. */
 .gp-contact-table .table-scroll {
-  border-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 /* Near-black instead of the washed brown, bolder and a size up -- same
    correction as People's own header (people-glass.css `.gp-people th`):
    at 9.5px/normal-weight/`#8a6f57` the uppercase, wide-tracking labels
    read as a texture rather than column names. */
-/* `position: sticky` (`.gp-external th` above) is for a table that scrolls
-   its header along with the body in one box -- this one already renders
-   its header in its own separate, non-scrolling box (`splitStickyHeader`,
-   table-manager.tsx), so the header never needs to stick to anything.
-   Left on, it promotes th to its own compositing layer for no reason, and
-   that layer's own edge antialiasing against the translucent 3px border
-   below it was rendering as a soft vertical gradient/blur band rather than
-   a crisp line -- a rendering artifact, not an actual gradient anywhere in
-   the CSS. Static removes the layer and the artifact with it. */
 .gp-contact-table th {
-  position: static !important;
   color: #1a1a1a !important;
   font-weight: 800 !important;
-  /* Same visible colour as People/Locations' translucent
-     rgba(242,153,74,0.4) border -- rgba(242,153,74,0.4) composited over
-     this header's own solid #fffdfb background works out to this exact
-     opaque value -- but flat/opaque instead of alpha-blended, so there's
-     no antialiased blend zone at the border's own top/bottom edge for a
-     tight zoom to expose as a "gradient." Looks identical at any normal
-     zoom, without the artifact the real alpha version left behind. */
-  border-bottom: 3px solid #fad5b4 !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4) !important;
   height: 40px !important;
   font-size: 11.5px !important;
 }
@@ -550,39 +502,9 @@
 .gp-contact-form-dialog {
   background: #ffffff !important;
 }
-/* White, not the cream/orange wash this used to keep on purpose (matching
-   the old side-drawer) -- New location/New role's own dialog headers are
-   plain white too, and this one stood out warm beside them. */
 .gp-contact-form-dialog .gp-create-group-head {
-  background: #ffffff;
+  background: #fff6e9;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
-  /* Down from the shared head's own 16px top/bottom (groups-glass.css) --
-     this dialog's own heading read as sitting in an oversized bar next to
-     the close button beside it. */
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-.gp-contact-form-dialog .gp-create-group-head h2 {
-  /* Up from the shared head's own 16px -- matching how much bigger New
-     location/New role's own rail heading reads next to their form, this
-     one looked small for the dialog's own width. */
-  font-size: 18px;
-}
-/* `CreateContactNew`'s own field rows (First/Last Name, Email/Phone,
-   Gender/Birth Date, ...) are each a plain `flex gap-4 flex-wrap` with no
-   width cap on its own `Input`s (which default to `w-full`) -- at this
-   dialog's old 620px they always wrapped to one field per line regardless
-   of width. Widening the dialog (external.tsx) alone wouldn't have fixed
-   that on its own: capping each row's children to half its width is what
-   actually seats two fields side by side, and the wider dialog is what
-   gives that half-width room to be usable rather than cramped. Targets the
-   Tailwind classes directly (`.flex.gap-4.flex-wrap`) rather than editing
-   `create-new-contact.tsx` itself, which is shared by several other,
-   narrower callers (Leads, Phone console's contact pane, ...) that still
-   need their own single-column stack. */
-.gp-contact-form-dialog .flex.gap-4.flex-wrap > * {
-  flex: 1 1 calc(50% - 8px);
-  min-width: 0;
 }
 /* `CreateContactNew`'s own section headings ("Address Information",
    "Notes Information") — plain grey-900 text with nothing separating one
@@ -683,7 +605,14 @@
   height: 13px !important;
 }
 
-/* ---- table scroll area ---- */
+/* ---- table scroll area — the native scrollbar sits directly inside the
+   same rounded, clipped container as the sticky header, so its thumb ran
+   right up to the header with no breathing room. A slim custom scrollbar
+   with a gap from the edge reads as intentional instead of an accident of
+   the clip. */
+.gp-contact-table {
+  padding-right: 4px;
+}
 .gp-contact-table::-webkit-scrollbar {
   width: 8px;
 }
@@ -979,15 +908,6 @@
   box-shadow: none !important;
   border-radius: 0 !important;
   padding: 12px 22px 14px !important;
-}
-/* TableManager's own root wraps the table and this pager in a `gap-2` flex
-   column -- with the pager's card background stripped above, that 8px gap
-   opened a bare sliver of `.panel-card`'s own (slightly paler) fill between
-   the two. Closing it sits the pager flush under the table, matching every
-   other Directory pager (`.gp-people-pager` etc., which has no such gap to
-   begin with). */
-.gp-external div:has(> .gp-contact-table) {
-  gap: 0 !important;
 }
 .dark .gp-external div:has(> div > .mcm-pager) {
   border-top-color: rgba(255, 171, 94, 0.12) !important;
