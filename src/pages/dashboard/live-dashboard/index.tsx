@@ -29,6 +29,7 @@ import {
   Bell,
   Bot,
   CheckCircle2,
+  ChevronRight,
   Clock3,
   Gauge,
   Headset,
@@ -1487,15 +1488,20 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                           : ''
                       }`}
                     >
-                      {/* A 3px edge on the breaching cell only. Reads as a
-                          flag down the left of the panel from a distance,
-                          before any of the numbers are legible. */}
                       {stateStyle ? (
                         <span
                           aria-hidden="true"
                           className={`absolute inset-y-0 left-0 w-[3px] ${stateStyle.edge}`}
                         />
                       ) : null}
+                      {isClickableMetric && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-[0_1px_3px_rgba(154,78,30,0.22)] transition-transform duration-150 group-hover:scale-110"
+                        >
+                          <ChevronRight className="h-3 w-3 text-primary transition-transform duration-150 group-hover:translate-x-0.5" />
+                        </span>
+                      )}
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#475569] dark:text-mcm-ink-2">
                           {item.label}
@@ -1583,15 +1589,18 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                             : ''
                         }`}
                       >
-                        {/* 3px edge on the breaching cell only -- reads as a
-                            flag down the strip before the numbers are legible,
-                            matching how the panels above flag a breach. */}
                         {stateStyle ? (
                           <span
                             aria-hidden="true"
                             className={`absolute inset-y-0 left-0 w-[3px] ${stateStyle.edge}`}
                           />
                         ) : null}
+                        {isClickableMetric && (
+                          <ChevronRight
+                            aria-hidden="true"
+                            className="absolute top-2 right-2 h-3 w-3 text-primary transition-transform duration-150 group-hover:translate-x-0.5"
+                          />
+                        )}
                         <div
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
                             stateStyle ? 'bg-white/60' : 'bg-[#FFF1E0] dark:bg-mcm-accent-wash'
@@ -2164,7 +2173,15 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                   className="agent-roster-scroll block flex-1 min-h-0 overflow-auto overflow-x-auto lg:block"
                 >
                   <Table className="min-w-245 xl:min-w-280">
-                    <TableHeader className="sticky top-0 z-10">
+                    {/* The base `TableHeader` carries no background of its
+                        own, so a `sticky` head over scrolling rows let each
+                        row's colour (including the zebra stripe and hover
+                        tint) show straight through it as it passed
+                        underneath. A solid, opaque fill is required here —
+                        the card's own `rgba(...)/97` wash is translucent by
+                        design and does not stop that bleed-through on its
+                        own. */}
+                    <TableHeader className="sticky top-0 z-10 bg-[#FFFCF8] dark:bg-mcm-surface shadow-[0_1px_0_rgba(214,163,90,0.35)]">
                       <TableRow>
                         <TableHead>
                           Agent Info
@@ -2221,13 +2238,21 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
                                   <p className="text-[13px] font-semibold text-[#2E2D35] dark:text-mcm-ink">
                                     {agent?.first_name || ''} {agent?.last_name || ''}
                                   </p>
-                                  <p className="flex items-center gap-1 text-[11px] font-medium text-[#6b6459] dark:text-mcm-ink-3">
+                                  {/* A block-level status dot (a `<div>` from
+                                      `statusImageLookup`) can't legally sit
+                                      inside a `<p>` — browsers silently
+                                      close the paragraph early to recover,
+                                      and React logs a hydration warning for
+                                      the mismatch. A `<div>` carries the
+                                      same flex-row layout without either
+                                      problem. */}
+                                  <div className="flex items-center gap-1 text-[11px] font-medium text-[#6b6459] dark:text-mcm-ink-3">
                                     <span className="inline-flex items-center justify-center">
                                       {statusImageLookup[getAgentPresenceStatus(agent)] ||
                                         statusImageLookup.offline}
                                     </span>
                                     Ext: {agent?.extension || ''}
-                                  </p>
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
