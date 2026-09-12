@@ -5,26 +5,14 @@
 .gp-locations {
   position: relative;
   isolation: isolate;
-  /* Matches People's own `calc(100% + 22px)` (people-glass.css) -- a plain
-     `100%` falls 22px short of the true bottom edge for the same reason
-     documented there. */
-  min-height: calc(100% + 22px);
+  min-height: 100%;
   /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
      layered orange radial-gradient this used to carry — the two pages sit
      one click apart in the same nav and read as different products next
      to each other with it. */
   background: #fdf1e2;
   margin: -22px -26px -40px;
-  /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
-     (people-glass.css) so the gap below the table reads the same as the
-     22px this page opens with above the header. */
-  padding: 22px 26px 8px;
-}
-
-/* The real scroll container is this `.page` div sitting *inside*
-   `.gp-locations`, same as People's own (people-glass.css). */
-.gp-locations .page {
-  padding-bottom: 8px;
+  padding: 22px 26px 40px;
 }
 
 .gp-locations .page-head,
@@ -164,23 +152,23 @@
    zoom or width instead of leaving a blank strip or overflowing it. */
 .gp-locations th:nth-child(1),
 .gp-locations td:nth-child(1) {
-  width: 24%;
+  width: 30%;
 }
 .gp-locations th:nth-child(2),
 .gp-locations td:nth-child(2) {
-  width: 22%;
+  width: 20%;
 }
 .gp-locations th:nth-child(3),
 .gp-locations td:nth-child(3) {
-  width: 18%;
+  width: 16%;
 }
 .gp-locations th:nth-child(4),
 .gp-locations td:nth-child(4) {
-  width: 14%;
+  width: 13%;
 }
 .gp-locations th:nth-child(5),
 .gp-locations td:nth-child(5) {
-  width: 10%;
+  width: 9%;
 }
 .gp-locations th:nth-child(6),
 .gp-locations td:nth-child(6) {
@@ -676,143 +664,4 @@
    `placeholder:text-[#8a6f57]/70` class string and repaints it otherwise. */
 .dark .gp-locations .tbar .fchip input::placeholder {
   color: var(--mcm-ink, #eef2f9) !important;
-}
-
-/* ====================================================================
-   "New location" dialog's step rail -- `Stepper` (stepper.tsx), same
-   numbered-circle/connecting-line component Invite people's own rail
-   uses (`.mcm-invite-rail`, invite-glass.css), handed both
-   `gp-department-rail` (for that rail's box sizing -- width/height,
-   groups-glass.css) and this page's own `gp-location-rail` for
-   everything visual. Kept separate from `gp-department-rail`'s own
-   styling: that class is shared with Create group's plain-tab rail
-   (new-department/index.tsx), which keeps its bordered white card look
-   on purpose -- this rail is plain, no card, so the override has to sit
-   on a class only this page uses. */
-.gp-create-group-body .gp-location-rail {
-  /* Explicit white, not transparent -- transparent let whatever sits
-     behind it (the dialog's own off-white `#fffdfb`-family background)
-     show through as a faint cream tint against the form column's own
-     pure white. */
-  background: #ffffff !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  /* Pinned to the top of whichever ancestor actually ends up scrolling --
-     `.gp-create-group-body` still carries its own `overflow-y: auto`
-     (groups-glass.css) as a fallback for genuinely tall content, so a long
-     form (validation errors expanding a field, a long state/city list)
-     can still scroll the whole body rather than just the form column's
-     own inner scroll. Without this the rail -- a normal in-flow sibling --
-     would scroll away with it instead of staying in view beside whichever
-     step is showing. Inert (no visible effect) whenever only the form
-     column's own inner scroll is in use, which is the common case. */
-  position: sticky;
-  top: 0;
-  /* `gp-department-rail`'s own `align-self: flex-start` (groups-glass.css)
-     is a deliberate choice for Create group's plain-tab rail -- it sizes
-     to its own short content rather than stretching to match whatever
-     taller step is showing beside it. This divider needs the opposite:
-     without stretch, the box (and the border-right drawn on it) is only
-     as tall as the step list, so the line stopped partway down instead of
-     reaching the dialog's true bottom edge.
-
-     `align-self: stretch` alone, height left at its default `auto` --
-     NOT an explicit `height: 100%` alongside it. Stretch only fills the
-     cross size when the item's own height computes to `auto`; an explicit
-     height (even 100%, even if it resolved correctly) overrides stretch
-     rather than cooperating with it, and 100% here didn't resolve to the
-     row's real height anyway (a flex item's percentage height needs its
-     containing block to have a definite height set directly on it -- this
-     one only gets its size from being a flex item itself, `flex: 1`, not
-     from a plain `height` property, which is exactly the case percentage
-     resolution doesn't handle reliably). Plain `stretch` + `auto` sidesteps
-     the whole percentage question. */
-  align-self: stretch !important;
-  height: auto !important;
-  /* Still short of the dialog's true top/bottom edges even stretched:
-     that fills `.gp-create-group-body`'s own content box, which sits
-     inset from the real edges by its own padding (34px top -- room for
-     the floating close button, `.gp-create-group-head--bare` above; 18px
-     bottom, both groups-glass.css). Bleeding the box out by that same
-     amount on each side and adding it back as padding stretches the box
-     (and the border-right drawn on it) flush with the dialog's real top
-     and bottom, while the heading and step list inside land back where
-     they were. */
-  margin-top: -34px;
-  padding-top: 34px;
-  margin-bottom: -18px;
-  padding-bottom: 18px;
-  /* The one visual boundary left between rail and form, matching Invite
-     people's own `mcm-invite-rail` divider (invite-glass.css) now that
-     there's no card border doing that job instead. */
-  border-right: 1px solid rgba(242, 153, 74, 0.16) !important;
-  padding-right: 20px;
-}
-/* Belt-and-braces: if any descendant of the rail carries its own
-   background (none currently do, by inspection of stepper.tsx and this
-   file's own `.mcm-stepper-panel-head`/`ol`/`li` rules), it would sit
-   between this box's own white fill and the text, showing through as a
-   patch. Nothing to lose by pinning it here too. */
-.gp-create-group-body .gp-location-rail .mcm-stepper-panel-head {
-  background: #ffffff !important;
-}
-.dark .gp-create-group-body .gp-location-rail {
-  background: var(--mcm-surface, #111c26) !important;
-  border-right-color: #1b2934 !important;
-}
-/* Stepper's own un-horizontal `<ol>` only goes vertical BELOW the `sm`
-   (640px) breakpoint -- `sm:flex-row`, the opposite of what a narrow rail
-   column needs at ordinary desktop widths -- so left alone it renders
-   steps side by side, squeezed into ~230px and clipped. Forced vertical
-   here regardless of viewport width. */
-.gp-create-group-body .gp-location-rail ol {
-  position: relative;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 26px !important;
-  overflow: visible !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-/* One continuous line for the whole list, not a segment per step (which
-   left visible gaps between them) -- runs from the centre of the first
-   circle to the centre of the last, behind every step; each circle's own
-   opaque fill paints over it where they overlap, same as a real
-   connected-timeline stepper. Stepper's own horizontal-mode underline
-   (`li::after`, a border-bottom) is switched off below since it draws on
-   the wrong axis for a vertical rail. */
-.gp-create-group-body .gp-location-rail ol::before {
-  content: '';
-  position: absolute;
-  top: 20px;
-  bottom: 20px;
-  left: 20px;
-  width: 2px;
-  background: rgba(242, 153, 74, 0.35);
-}
-.dark .gp-create-group-body .gp-location-rail ol::before {
-  background: #1b2934;
-}
-.gp-create-group-body .gp-location-rail li {
-  width: 100% !important;
-  padding-right: 0 !important;
-}
-.gp-create-group-body .gp-location-rail li::after {
-  display: none !important;
-}
-.gp-create-group-body .gp-location-rail li > div {
-  min-height: 0 !important;
-}
-.gp-create-group-body .gp-location-rail li p {
-  white-space: normal !important;
-}
-.gp-create-group-body .gp-location-rail li > div > div:first-child {
-  position: relative;
-  width: 40px !important;
-  height: 40px !important;
-}
-.gp-create-group-body .gp-location-rail li > div > div:first-child p {
-  font-size: 16px !important;
-  font-weight: 800 !important;
 }
