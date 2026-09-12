@@ -25,12 +25,15 @@ const InteractionsTab = ({
   }, []);
 
   return (
-    <div className="perf-interactions flex w-full flex-col gap-3 px-[22px] py-4">
-      {/* `py-3` to match Agents' own stat grid (agents-tab.tsx): both tabs
-          share the same `py-4` root, but that grid adds this and this one
-          didn't, so Calls' cards sat 12px higher than Agents' when
-          switching between the two. */}
-      <div className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-3">
+    /* `pt-3 pb-4`, matching Queues' own root (queues-activity-tab.tsx) — a
+       tight ~12px top offset from the toolbar, not the looser `py-4` (16px
+       top) this tab used before. The hero grid below no longer carries its
+       own `py-3`: that was stacking a second 12px of padding *inside* the
+       grid on top of this root's own `gap-3` to the next sibling, which is
+       what read as a loose double gap between the cards and the search bar
+       row beneath them. One owner (this root's padding/gap) is enough. */
+    <div className="perf-interactions flex w-full flex-col gap-3 px-[22px] pt-3 pb-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <PerfStatCard
           label="Avg wait time"
           value={callStats.avgWaitSec === null ? '—' : formatSecsToClock(callStats.avgWaitSec)}
