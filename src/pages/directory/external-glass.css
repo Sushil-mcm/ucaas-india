@@ -5,13 +5,25 @@
 .gp-external {
   position: relative;
   isolation: isolate;
-  min-height: 100%;
+  /* Matches People's own `calc(100% + 22px)` (people-glass.css) -- a plain
+     `100%` falls 22px short of the true bottom edge for the same reason
+     documented there. */
+  min-height: calc(100% + 22px);
   /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
   background: #fdf1e2;
   margin: -22px -26px -40px;
-  padding: 22px 26px 40px;
+  /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
+     (people-glass.css) so the gap below the table reads the same as the
+     22px this page opens with above the header. */
+  padding: 22px 26px 8px;
+}
+
+/* The real scroll container is this `.page` div sitting *inside*
+   `.gp-external`, same as People's own (people-glass.css). */
+.gp-external .page {
+  padding-bottom: 8px;
 }
 
 .gp-external .page-head,
@@ -84,18 +96,19 @@
 .gp-external {
   max-height: 100%;
   overflow-y: auto;
+  /* No visible scroll indicator on this page -- its own content (tabs,
+     sync button, search row, table) is taller than People's, so this outer
+     scroll engages far more often, and even the same slim warm thumb every
+     other Directory page shares (people-glass.css) read as an unwanted
+     grey line at 35% opacity when it's on-screen this much. Scrolling
+     itself (wheel/trackpad/keyboard) is unaffected -- just nothing drawn
+     for it. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .gp-external::-webkit-scrollbar {
-  width: 10px;
-}
-.gp-external::-webkit-scrollbar-track {
-  background: transparent;
-}
-.gp-external::-webkit-scrollbar-thumb {
-  background: rgba(194, 111, 31, 0.35);
-  border-radius: 999px;
-  border: 3px solid transparent;
-  background-clip: padding-box;
+  width: 0;
+  height: 0;
 }
 .dark .gp-external::-webkit-scrollbar-thumb {
   background: rgba(255, 171, 94, 0.28);
@@ -640,14 +653,7 @@
   height: 13px !important;
 }
 
-/* ---- table scroll area — the native scrollbar sits directly inside the
-   same rounded, clipped container as the sticky header, so its thumb ran
-   right up to the header with no breathing room. A slim custom scrollbar
-   with a gap from the edge reads as intentional instead of an accident of
-   the clip. */
-.gp-contact-table {
-  padding-right: 4px;
-}
+/* ---- table scroll area ---- */
 .gp-contact-table::-webkit-scrollbar {
   width: 8px;
 }
