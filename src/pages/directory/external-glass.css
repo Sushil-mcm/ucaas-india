@@ -440,7 +440,17 @@
    correction as People's own header (people-glass.css `.gp-people th`):
    at 9.5px/normal-weight/`#8a6f57` the uppercase, wide-tracking labels
    read as a texture rather than column names. */
+/* `position: sticky` (`.gp-external th` above) is for a table that scrolls
+   its header along with the body in one box -- this one already renders
+   its header in its own separate, non-scrolling box (`splitStickyHeader`,
+   table-manager.tsx), so the header never needs to stick to anything.
+   Left on, it promotes th to its own compositing layer for no reason, and
+   that layer's own edge antialiasing against the translucent 3px border
+   below it was rendering as a soft vertical gradient/blur band rather than
+   a crisp line -- a rendering artifact, not an actual gradient anywhere in
+   the CSS. Static removes the layer and the artifact with it. */
 .gp-contact-table th {
+  position: static !important;
   color: #1a1a1a !important;
   font-weight: 800 !important;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4) !important;
