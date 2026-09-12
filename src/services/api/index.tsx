@@ -149,16 +149,38 @@ export const deleteContact = (data: any) => {
     data,
   });
 };
-export const fetchContact = (data?: any) => {
+export const fetchContact = async (data?: any) => {
   /* Every current caller reads the result as a number-keyed lookup map, not
-     a page of results - a small default page would silently drop contacts
-     past it. None of them pass a limit today, so give the request a page
-     large enough to cover a company's whole address book. */
-  return apiClient({
-    method: routes.FETCH_CONTACT.METHOD,
-    url: routes.FETCH_CONTACT.URL,
-    data: { page: 1, limit: 5000, ...data },
-  });
+     a page of results, so a small page would silently drop contacts past it.
+     The contact service caps a page at 200 and answers 422 above that, so
+     ask for the first page and then the remaining pages, and hand back one
+     response carrying every row. A caller that names its own page or limit
+     gets exactly that page. */
+  const PAGE_SIZE = 200;
+  const MAX_PAGES = 25;
+  const base = { page: 1, limit: PAGE_SIZE, ...(data || {}) };
+  const request = (page: number) =>
+    apiClient({
+      method: routes.FETCH_CONTACT.METHOD,
+      url: routes.FETCH_CONTACT.URL,
+      data: { ...base, page },
+    });
+  const first: any = await request(base.page);
+  if (data?.page || data?.limit) return first;
+  const result = first?.data?.data?.result;
+  const totalPages = Math.min(Number(result?.totalPages) || 1, MAX_PAGES);
+  if (totalPages <= 1) return first;
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => request(i + 2)),
+  );
+  const rows = [
+    ...(result?.rows || []),
+    ...rest.flatMap((r: any) => r?.data?.data?.result?.rows || []),
+  ];
+  return {
+    ...first,
+    data: { ...first.data, data: { ...first.data.data, result: { ...result, rows } } },
+  };
 };
 
 export const contactActivityList = (data: any) => {
