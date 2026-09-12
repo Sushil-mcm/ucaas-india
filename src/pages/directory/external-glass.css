@@ -6,19 +6,12 @@
   position: relative;
   isolation: isolate;
   min-height: 100%;
-  background:
-    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
-    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
-    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
-    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
-    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
-  /* No negative margin here. This pair -- `margin: -22px -26px -40px` with a
-     matching padding -- was written for a version where this element sat
-     INSIDE `.page` and had to cancel that padding. It wraps `.page` now, so the
-     margin pulled the whole panel outside its container: 22px above it, which
-     in Admin is straight over the page head, covering the title and buttons.
-     Wrapping `.page` already reaches the edges, and `.page` still supplies the
-     inset. */
+  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+     layered orange radial-gradient — every Directory tab now shares one
+     page background instead of each carrying its own gradient. */
+  background: #fdf1e2;
+  margin: -22px -26px -40px;
+  padding: 22px 26px 40px;
 }
 
 .gp-external .page-head,
@@ -69,18 +62,64 @@
   border-color: transparent !important;
 }
 
+/* No internal scroller, matching People's own `.panel-card`
+   (people-glass.css): with the table now paged at a fixed 10 rows
+   (`fixedPageRows={10}` on `AllNewContactsList`/`LeadsGroupList`, passed
+   from external.tsx), the card's height is bounded by the page size
+   itself, so it no longer needs to cap its own height and scroll — the
+   page scrolls as a whole instead (`.gp-external` below), the same way
+   People's does. */
 .gp-external .panel-card {
   background: #fffdfb;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  /* A near-white border is invisible against this card's own near-white
+     fill and the page's light peach backdrop — --glass-border (the app's
+     own token for a visible edge on a light glass card) instead, same fix
+     as People's panel-card (people-glass.css). */
+  border: 1px solid var(--glass-border);
   box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 260px);
 }
-.gp-external .tbl-wrap {
+.gp-external {
+  max-height: 100%;
   overflow-y: auto;
+}
+.gp-external::-webkit-scrollbar {
+  width: 10px;
+}
+.gp-external::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-external::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.dark .gp-external::-webkit-scrollbar-thumb {
+  background: rgba(255, 171, 94, 0.28);
+  background-clip: padding-box;
+}
+/* `TableManager`'s own outer box relies on Tailwind's `flex-1 min-h-0` to
+   size itself against its parent — those do nothing without a flex
+   ancestor, and `.tbl-wrap` wasn't one, so the box grew to its natural
+   height. No vertical scroll needed here any more (see above); horizontal
+   only, as a fallback for a narrow viewport. */
+.gp-external .tbl-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
   min-height: 0;
+}
+/* `AllNewContactsList`/`LeadsGroupList` each wrap their own return value in
+   `p-3 sm:p-4` (12px/16px) — right for their other, cardless call sites,
+   but a second layer of padding stacked on top of this page's own
+   `.panel-card`, showing as a visible gap between the card's border and
+   the table's actual header/rows. Zeroed only here, scoped to this page's
+   `.tbl-wrap`, so those other call sites keep their padding. */
+.gp-external .tbl-wrap > div {
+  padding: 0 !important;
 }
 .gp-external table {
   background: transparent;
@@ -88,7 +127,7 @@
 .gp-external th {
   background: #fffdfb;
   color: #8a6f57;
-  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -96,8 +135,10 @@
 .gp-external td {
   border-bottom-color: rgba(150, 100, 50, 0.1);
 }
+/* Same wash Performance ▸ Calls uses for its own row hover
+   (--ic-row-hover in interactions-theme.css). */
 .gp-external tbody tr:hover {
-  background: rgba(255, 205, 155, 0.14);
+  background: rgba(255, 241, 235, 0.55);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
@@ -116,7 +157,41 @@
    groups-glass.css for the cream/orange body, adding only what this
    contact's own content needs.
 
-   `.mcm-field`, `.mini` and `.ic` normally read `--line`/`--surface`/
+   The shell's own cream background (`#fffaf3`) read as an unwanted orange
+   wash behind this dialog — plain white instead, same fix as every other
+   Directory dialog (Invite people, Edit person, New role, New location). */
+.gp-external-dialog {
+  background: #ffffff !important;
+}
+.gp-external-dialog .gp-create-group-head {
+  background: #ffffff;
+}
+
+/* ---- Contact Notes — centered popup (moved off the right-side
+   SideDrawer), same shell and cream/orange header colours as the Add
+   Contact dialog above. */
+.gp-notes-dialog {
+  background: #ffffff !important;
+}
+.gp-notes-dialog .gp-create-group-head {
+  background: #fff6e9;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+
+/* ---- Send WhatsApp Message — centered popup (moved off the right-side
+   SideDrawer), same shell and cream/orange header colours as the dialogs
+   above. `SendWhatsappMessage` has no header of its own (every other
+   caller relies entirely on its wrapper for one), so this dialog's own
+   head is the only title shown, not a replacement for a duplicate. */
+.gp-whatsapp-dialog {
+  background: #ffffff !important;
+}
+.gp-whatsapp-dialog .gp-create-group-head {
+  background: #fff6e9;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+
+/* `.mcm-field`, `.mini` and `.ic` normally read `--line`/`--surface`/
    `--ink-2`/`--ai` etc, tokens defined only within `.mcm-page` — this
    dialog sits outside that ancestor, so every one of those variables is
    undefined here rather than falling back to anything, and a `border: 1px
@@ -239,11 +314,21 @@
   background: #c96f1f;
   border-color: #c96f1f;
 }
+/* Icon and label side by side, not stacked — the base `.mcm-page .mini`
+   rule already lays them out this way, but this dialog sits outside
+   `.mcm-page` (portaled to `document.body`), so that rule never reaches it
+   and the button fell back to default block flow: icon on its own line
+   above the text, and much taller than intended. */
 .gp-external-dialog .mini {
-  height: auto;
-  padding: 10px 18px;
-  border-radius: 9px;
-  gap: 8px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  gap: 6px;
+  font-size: 12px;
   white-space: nowrap;
   flex: none;
 }
@@ -256,6 +341,9 @@
   border-top: 1px solid rgba(242, 153, 74, 0.2);
 }
 .gp-ext-dialog-close {
+  /* Same solid orange-outline-until-filled-on-hover treatment as Cancel on
+     every other Directory dialog (Invite people, Edit person, New role,
+     New location) — not the fainter grey-text-until-hover look this had. */
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -265,13 +353,13 @@
   font-size: 13px;
   font-weight: 700;
   background: transparent;
-  border: 1px solid rgba(242, 153, 74, 0.3);
-  color: #6b5c4d;
+  border: 1px solid #f2994a;
+  color: #f2994a;
   cursor: pointer;
 }
 .gp-ext-dialog-close:hover {
-  border-color: #f2994a;
-  color: #c96f1f;
+  background: #f2994a;
+  color: #ffffff;
 }
 .gp-ext-dialog-edit {
   display: inline-flex;
@@ -289,4 +377,605 @@
 }
 .gp-ext-dialog-edit:hover {
   background: #c96f1f;
+}
+
+/* ---- Contacts table — restyled to match Directory ▸ People's own table
+   (`people-glass.css`: solid off-white sticky header, warm hover rows)
+   instead of the platform's default peach header / cream body. Scoped via
+   `tableWrapperClassName="gp-contact-table"`, the class `TableManager`
+   applies to the scroll wrapper around its own `<table>`, so no other
+   `AllNewContactsList`/`LeadsGroupList` consumer is affected. */
+/* With `splitStickyHeader` (this page's path), `gp-contact-table` lands on
+   TableManager's own OUTER box — `rounded-[20px] border border-[#efe2cf]
+   bg-white` in the markup — not an inner scroll wrapper. That is a second
+   card in its own right, nested one level inside this page's `.panel-card`
+   (external-glass.css below), which already carries its own border/
+   radius/shadow/background — the two stacked read as a card inside a
+   card, with the page's peach backdrop visible as a sliver between their
+   two borders. Flattened here so `.panel-card` is the only card and the
+   table sits flush inside it, same as every other Directory table. */
+.gp-contact-table {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.gp-contact-table thead {
+  background-color: #fffdfb !important;
+}
+.gp-contact-table > div:first-child {
+  background: transparent !important;
+}
+/* TableManager's own body/rows default to a translucent
+   `rgba(251,249,246,0.88)` fill plus a 12px backdrop-blur (its "glass"
+   look, table-manager.tsx) -- with nothing colourful behind them to blur
+   (`.panel-card` above is a plain near-white card, not the layered
+   backdrop that treatment was designed to sit over), the transparency
+   just dulled the white into a flatter, slightly grey tone instead.
+   People's own table (`.gp-people`, people-glass.css) never carries this
+   -- solid `#fffdfb`, no blur -- so matching that here instead. */
+.gp-contact-table .table-scroll,
+.gp-contact-table tbody {
+  background: #fffdfb !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* With `splitStickyHeader`, the scrollable body is its own box directly
+   under the (separate, non-scrolling) header box — and that body box
+   carries its own `border-radius: 18px` on every corner, same as any other
+   TableManager instance. Sitting flush under the header with no gap, its
+   rounded top corners show up as a visible curve right below the column
+   headings. Bottom corners get the same treatment now that the pager below
+   (external-glass.css's own pager override, further down) is a plain flush
+   bar rather than TableManager's default opaque card -- that used to sit
+   directly against this box with no gap and hid the mismatch; stripped
+   down, the leftover 18px bottom curve poked out past `.gp-contact-table`'s
+   own flattened (0px) corner, showing `.panel-card`'s paler fill through
+   the sliver. `.panel-card` owns the whole card's real rounding (20px,
+   above), this box just needs to sit flush inside it. */
+.gp-contact-table .table-scroll {
+  border-radius: 0 !important;
+}
+/* Near-black instead of the washed brown, bolder and a size up -- same
+   correction as People's own header (people-glass.css `.gp-people th`):
+   at 9.5px/normal-weight/`#8a6f57` the uppercase, wide-tracking labels
+   read as a texture rather than column names. */
+/* `position: sticky` (`.gp-external th` above) is for a table that scrolls
+   its header along with the body in one box -- this one already renders
+   its header in its own separate, non-scrolling box (`splitStickyHeader`,
+   table-manager.tsx), so the header never needs to stick to anything.
+   Left on, it promotes th to its own compositing layer for no reason, and
+   that layer's own edge antialiasing against the translucent 3px border
+   below it was rendering as a soft vertical gradient/blur band rather than
+   a crisp line -- a rendering artifact, not an actual gradient anywhere in
+   the CSS. Static removes the layer and the artifact with it. */
+.gp-contact-table th {
+  position: static !important;
+  color: #1a1a1a !important;
+  font-weight: 800 !important;
+  /* Same visible colour as People/Locations' translucent
+     rgba(242,153,74,0.4) border -- rgba(242,153,74,0.4) composited over
+     this header's own solid #fffdfb background works out to this exact
+     opaque value -- but flat/opaque instead of alpha-blended, so there's
+     no antialiased blend zone at the border's own top/bottom edge for a
+     tight zoom to expose as a "gradient." Looks identical at any normal
+     zoom, without the artifact the real alpha version left behind. */
+  border-bottom: 3px solid #fad5b4 !important;
+  height: 40px !important;
+  font-size: 11.5px !important;
+}
+.gp-contact-table td {
+  border-bottom-color: rgba(150, 100, 50, 0.1) !important;
+}
+/* Same wash Performance ▸ Calls uses for its own row hover
+   (--ic-row-hover in interactions-theme.css), plus the same left accent
+   bar People's own row hover carries (`.gp-people tbody tr:hover`) so a
+   hovered row reads identically on both tables. */
+.gp-contact-table tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55) !important;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* Action column's "..." menu trigger (`AllNewContactsList`'s own markup,
+   not a `.mini` button) — no chrome at rest, pale rounded-square wash on
+   hover, matching People's own action buttons exactly
+   (`.gp-people td:last-child .mini:not(.mcm-fav-on)`, people-glass.css)
+   instead of the outlined circle this used to carry at rest.
+   (interactions-theme.css uses this identical `[rounded-full][w-8]`
+   selector pattern for the same reason: no stable class to hook.) */
+.gp-contact-table [class*='rounded-full'][class*='w-8'] {
+  background: transparent !important;
+  border: 1px solid transparent;
+  box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.gp-contact-table [class*='rounded-full'][class*='w-8']:hover {
+  background: #fdf1e2 !important;
+  border: 1px solid rgba(242, 153, 74, 0.35);
+  border-radius: 14px !important;
+  color: #c96f1f;
+  box-shadow: none;
+}
+
+/* ---- toolbar (Contact view/Contact Group tabs, Sync/Search/Group/Tag) —
+   the platform's own bar already reads warm/cream; only the active tab and
+   the two dropdowns' idle border picked up Directory's orange instead of
+   the platform's generic blue/grey. */
+.gp-contact-toolbar [data-slot='tabs-trigger'][data-state='active'] {
+  background: #f2994a !important;
+  color: #ffffff !important;
+}
+/* Inactive tabs carry no hover styling at all in the shared `TabsTrigger`
+   base (`components/ui/tabs.tsx`) — nothing to override, just nothing
+   there to begin with. */
+.gp-contact-toolbar [data-slot='tabs-trigger']:not([data-state='active']):hover {
+  background: #fff1e0 !important;
+  color: #c96f1f !important;
+}
+
+/* A global `.mcm-page [class*="rounded-"]:not([class*="rounded-full"]).bg-white`
+   rule (a "glass surface" treatment meant for other rounded white buttons)
+   matches this one too — `rounded-lg` + `bg-white` — and its selector is
+   specific enough to beat both the plain `bg-white` utility and any
+   `hover:` utility on this button, pinning it to a translucent glass
+   surface that never visibly changes on hover. Needs a marker class + its
+   own `!important` to win back both states. */
+.gp-sync-btn {
+  background: #ffffff !important;
+}
+.gp-sync-btn:hover {
+  background: #fff1e0 !important;
+  color: #f2994a !important;
+}
+
+/* ---- Add/Update Contact — centered popup (moved off the right-side
+   SideDrawer per request), reusing the shared `.gp-create-group-dialog`
+   shell the same way the New role / New location dialogs do. Header keeps
+   the cream/orange combination the side-drawer version already had. */
+.gp-contact-form-dialog {
+  background: #ffffff !important;
+}
+.gp-contact-form-dialog .gp-create-group-head {
+  background: #fff6e9;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+/* `CreateContactNew`'s own section headings ("Address Information",
+   "Notes Information") — plain grey-900 text with nothing separating one
+   group of fields from the next. */
+.gp-form-section-h {
+  color: #c96f1f;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-contact-toolbar .contact-toolbar-select.custom-react-select__control {
+  border-color: rgba(242, 153, 74, 0.3) !important;
+}
+.gp-contact-toolbar .contact-toolbar-select.custom-react-select__control:hover,
+.gp-contact-toolbar .contact-toolbar-select.custom-react-select__control--is-focused {
+  border-color: #f2994a !important;
+}
+/* Its own rounded card with a visible gap before the table's panel-card
+   below, instead of sitting flush against it — the platform's bar has no
+   bottom radius of its own, so its square corner ran straight into the
+   panel-card's rounded top corner with nothing between them. Values copied
+   exactly from Locations' own `.tbar` (locations-glass.css) rather than
+   the markup's own `border-b border-[rgba(225,200,165,0.9)]
+   bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]` classes, which read as
+   a flatter, cooler strip next to it -- `!important` since those inline
+   Tailwind utilities carry the same specificity as the class selector
+   here and would otherwise win on source order. */
+.gp-contact-toolbar {
+  background: rgba(255, 251, 246, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  border: 1px solid rgba(242, 153, 74, 0.18) !important;
+  box-shadow:
+    0 6px 22px rgba(160, 95, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+/* The bar's own inner padding — Locations' `.tbar` uses `16px 22px`
+   directly on the bordered card; this page nests one more div
+   (`px-4 py-2.5` in the markup) between `.gp-contact-toolbar` and its
+   contents, so the equivalent padding is set there instead. */
+.gp-contact-toolbar > div:first-child {
+  padding: 16px 22px !important;
+}
+
+/* Search field — restyled as the same pill every other Directory list's
+   `SearchChip` renders (`.tbar .fchip` — see Locations' own
+   locations-glass.css for the reference values). This is a plain
+   `<input>` behind a wrapper `Input` component, not a `SearchChip`, so the
+   look is rebuilt here with `!important` over the inline Tailwind classes
+   the component ships with rather than swapping the component itself. */
+/* The wrapper `Input` renders around its own `<input>` (`div.flex.flex-col`)
+   is what actually sits in the toolbar's flex row -- the marker class lands
+   on the `<input>` itself, two levels too deep to size the row. Grown here
+   on a wrapper div added in external.tsx around the whole `Input`, the same
+   way People's own search chip claims the middle of its bar instead of
+   sitting at its own min-width next to Group/Tag. */
+.gp-contact-search-wrap {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 420px;
+}
+.gp-contact-toolbar input.gp-contact-search {
+  height: 33px !important;
+  min-height: 33px !important;
+  width: 100% !important;
+  max-width: none !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(150, 100, 50, 0.12) !important;
+  font-size: 13.5px !important;
+  font-weight: 700;
+  color: #1a1a1a;
+  box-shadow: none !important;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.gp-contact-toolbar input.gp-contact-search:hover {
+  background: #fff !important;
+  border-color: var(--accent-edge) !important;
+}
+.gp-contact-toolbar input.gp-contact-search:focus {
+  background: #fff !important;
+  border-color: #f2994a !important;
+  box-shadow: none !important;
+}
+/* `#8a6f57`/70 — the same warm-brown SearchChip's own markup class carries
+   (`placeholder:text-[#8a6f57]/70`, page-shell.tsx), matched here in plain
+   CSS since this field isn't a SearchChip. */
+.gp-contact-toolbar input.gp-contact-search::placeholder {
+  color: rgba(138, 111, 87, 0.7) !important;
+  opacity: 1 !important;
+  font-weight: 400;
+}
+.gp-contact-toolbar .gp-contact-search-icon {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+/* ---- table scroll area — the native scrollbar sits directly inside the
+   same rounded, clipped container as the sticky header, so its thumb ran
+   right up to the header with no breathing room. A slim custom scrollbar
+   with a gap from the edge reads as intentional instead of an accident of
+   the clip. */
+.gp-contact-table {
+  padding-right: 4px;
+}
+.gp-contact-table::-webkit-scrollbar {
+  width: 8px;
+}
+.gp-contact-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-contact-table::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.gp-contact-table::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+
+/* ---- pagination bar — `.mcm-pager`/`.mcm-pager-btn`/`.mcm-pager-page`
+   are shared, unscoped classes used by every `TableManager` in the app, so
+   these overrides are scoped under `.gp-external` (an ancestor here, since
+   this page — unlike a portaled dialog — sits inside `.mcm-page` normally)
+   rather than changing the shared rules themselves. */
+.gp-external .mcm-pager {
+  border-color: rgba(242, 153, 74, 0.25);
+  box-shadow: 0 2px 8px rgba(160, 95, 30, 0.08);
+}
+.gp-external .mcm-pager-btn:not(:disabled):hover,
+.gp-external .mcm-pager-page:not(.is-current):hover {
+  background: #fff1e0 !important;
+  color: #c96f1f !important;
+}
+.gp-external .mcm-pager-page.is-current {
+  background: #f2994a !important;
+  box-shadow: 0 2px 6px rgba(242, 153, 74, 0.4) !important;
+}
+
+/* ====================================================================
+   DARK
+   Like Favourites, this file carried no `.dark` layer. The table itself
+   came out dark anyway (its markup brings its own `dark:` utilities), which
+   is why the gap read as "half themed" rather than obviously broken: the
+   page head, toolbar and pager stayed light around a dark table. Same
+   values as people-glass.css's dark block, since the pages share the
+   structural vocabulary.
+   ==================================================================== */
+/* Flat deep-navy in place of the four orange radial gradients the light
+   rule paints — same "orange never washes a full surface" correction as
+   `.dark body` in index.css. */
+.dark .gp-external {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 138, 46, 0.1), transparent 60%),
+    radial-gradient(900px 700px at 100% -2%, rgba(255, 120, 40, 0.07), transparent 55%),
+    radial-gradient(900px 640px at 50% 118%, rgba(255, 160, 80, 0.06), transparent 60%),
+    var(--mcm-ground, #080d12);
+}
+.dark .gp-external .page-head,
+.dark .gp-external .tbar .fchip {
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-external .page-head {
+  background: linear-gradient(180deg, #17212d 0%, #111a24 100%);
+}
+.dark .gp-external .page-head h1 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-external .page-head p {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-external .panel-card {
+  background: linear-gradient(180deg, #141d28 0%, #101922 100%);
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+}
+/* Opaque, not translucent: at 0.75 this bar composited with the page
+   behind it and read as a flat light grey panel rather than a dark one. */
+.dark .gp-external .tbar {
+  background: #141d28;
+  border: 1px solid rgba(255, 171, 94, 0.12);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-external .tbar .fchip {
+  background: #111a24;
+  border-color: #293746;
+}
+.dark .gp-external .tbar .fchip:hover {
+  background: #1e293e;
+  border-color: var(--mcm-accent-edge);
+}
+.dark .gp-external .tbar .fchip > span:first-child {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-external .tbar .fchip input {
+  color: var(--mcm-ink, #f3f6f9) !important;
+}
+/* Pale-mint fill is `!important` in the light rule, so this needs the flag
+   too; the teal ink is kept and only the wash moves. */
+.dark .gp-external .fchip.live {
+  /* Same treatment Roles settled on (roles-glass.css): a solid muted-teal
+     fill rather than the faint `--live-wash` tint, which nearly disappears
+     against a dark toolbar. `!important` because the light rule sets these
+     with the flag on some pages -- carried on all three for consistency. */
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  border-color: transparent !important;
+  color: #f3f6f9;
+}
+.dark .gp-external th {
+  background: #1a232f;
+  color: var(--mcm-accent, #ffab5e);
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35);
+}
+.dark .gp-external td {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-external tbody tr:hover {
+  background: rgba(255, 171, 94, 0.06);
+}
+/* The pager's own hover/current rules are `!important` (they have to beat
+   the shared `.mcm-pager` base), so the dark counterparts carry it too.
+   The current-page pill keeps its orange fill — it reads as the accent in
+   both themes; only the neutral hover wash needs a dark value. */
+.dark .gp-external .mcm-pager {
+  background: rgba(14, 24, 33, 0.75);
+  border-color: #293746;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.dark .gp-external .mcm-pager-btn:not(:disabled):hover,
+.dark .gp-external .mcm-pager-page:not(.is-current):hover {
+  background: var(--mcm-surface-3, #1a2733) !important;
+  color: var(--mcm-accent-ink, #ffc98a) !important;
+}
+/* The table body is rendered by the shared `all-contacts-list` component,
+   whose cells hardcode the light palette as Tailwind arbitrary values
+   (`text-[#2E2D35]` for names, `bg-[#FBE2C8]/40 text-[#2E2D35]/80` for the
+   row action button) with no `dark:` counterparts. Two reasons this is
+   corrected here rather than by adding `dark:` utilities to that file:
+   the component is shared with other pages that may not want this page's
+   treatment, and long className lines are exactly what merges silently
+   revert (see the dark: layer lost twice already). Matching on the class
+   ATTRIBUTE is the same compat idiom index.css already uses for #8a6f57. */
+.dark .gp-external [class*='#2E2D35'] {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+.dark .gp-external [class*='#FBE2C8'] {
+  background: rgba(30, 41, 62, 0.75) !important;
+  border: 1px solid rgba(255, 171, 94, 0.35);
+  color: var(--mcm-accent-ink, #ffc98a) !important;
+}
+.dark .gp-external [class*='#FBE2C8']:hover {
+  background: linear-gradient(135deg, var(--accent, #ffab5e) 0%, var(--accent-ink, #ffc98a) 100%) !important;
+  border-color: transparent;
+  color: #1a1204 !important;
+}
+/* The Contact view / Contact Group strip is a shadcn TabsList carrying a
+   hardcoded `bg-[rgba(255,255,255,0.55)]` with a cream border and no dark
+   counterpart -- the one light bar left on this page in dark. Matched on
+   that literal, scoped to this page, so no other TabsList is touched. */
+.dark .gp-external [class*='rgba(255,255,255,0.55)'] {
+  /* Opaque, not the 0.75 alpha it started as: translucent, it composites
+     with whatever sits behind, which is what left it reading grey. */
+  background-color: #141d28 !important;
+  border-color: rgba(255, 171, 94, 0.14) !important;
+}
+/* The inactive tab's label rides on `text-muted-foreground` from the list
+   itself -- a mid grey that looked like part of the bar rather than a
+   control next to the orange active pill. */
+.dark .gp-external [class*='rgba(255,255,255,0.55)'] [data-slot='tabs-trigger'] {
+  color: var(--mcm-ink-2, #c3cddf) !important;
+}
+.dark .gp-external [class*='rgba(255,255,255,0.55)'] [data-slot='tabs-trigger'][data-state='active'] {
+  color: #fff !important;
+}
+/* The row hover that actually applies here is `.gp-contact-table tbody
+   tr:hover`, set `!important` on the inner table -- not the `.gp-external`
+   rule above it, which is why the hovered row stayed a light peach wash in
+   dark. Same warm tint the other Directory tables use. */
+.dark .gp-contact-table tbody tr:hover,
+.dark .gp-contact-table tbody tr[data-state='selected'] {
+  /* 0.08 over this table's near-black composited to about #1d2229 -- warm
+     in theory, plain grey to the eye. 0.18 is unmistakably the accent. */
+  background: rgba(255, 171, 94, 0.18) !important;
+}
+
+/* ---- The toolbar strip, for real this time ----------------------------
+   Every dark rule above targets `.tbar` -- a class this page does not use.
+   The strip is `.gp-contact-toolbar`, painted a cream `rgba(251,249,246,
+   0.88)` in the markup, with white pills and a `bg-[#faf5ee]` thead band
+   beside it. That is the light section; the `.tbar` rules were dead code
+   against it. All opaque, since translucent surfaces over this page read
+   as flat grey. */
+.dark .gp-external .gp-contact-toolbar {
+  background: #141d28 !important;
+  border-bottom-color: rgba(255, 171, 94, 0.14) !important;
+}
+/* Search / Group / Tag match the Groups page's own search field rather than
+   carrying the orange edge the rest of this toolbar uses: a soft
+   translucent white fill with a faint white hairline (measured there:
+   `oklch(1 0 0 / 0.15)` on a `oklch(1 0 0 / 0.1)` border). Orange is left
+   for the actions -- Sync With Google, the tabs -- so the inputs read as
+   fields rather than buttons. */
+/* Group / Tag keep the dark toolbar fill -- the translucent white the
+   Search field uses read as a light grey chip at this width. Their labels
+   go white so they stay legible on it. */
+/* NOTE the compound selectors: `contact-toolbar-select` is applied to the
+   very elements react-select classes land on, not to a wrapper around them,
+   so `.contact-toolbar-select .custom-react-select__control` (descendant)
+   matches nothing -- which is why these kept their `rgba(255,255,255,0.7)`
+   markup fill through two attempts. Targeting inside `.gp-contact-toolbar`
+   instead sidesteps it entirely. */
+.dark .gp-external .gp-contact-toolbar .custom-react-select__control {
+  background: #111a24 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .gp-external .gp-contact-toolbar .custom-react-select__placeholder,
+.dark .gp-external .gp-contact-toolbar .custom-react-select__single-value,
+.dark .gp-external .gp-contact-toolbar .custom-react-select__input-container,
+.dark .gp-external .gp-contact-toolbar .custom-react-select__indicator {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+.dark .gp-external .gp-contact-toolbar input:not([type='checkbox']) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .gp-external .gp-contact-toolbar button[class*='bg-white'] {
+  background: #111a24 !important;
+  border-color: #f2994a !important;
+  color: #f2994a !important;
+}
+.dark .gp-external .gp-contact-toolbar button[class*='bg-white']:hover {
+  background: #f2994a !important;
+  color: #fff !important;
+}
+/* The table's own header band and any other `#faf5ee` surface on the page. */
+.dark .gp-external [class*='#faf5ee'] {
+  background: #16202c !important;
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+/* Search / Group / Tag placeholders: they sat on a dim slate that all but
+   disappeared once the strip behind them went opaque dark. */
+/* `contact-toolbar-select` and `custom-react-select__placeholder` sit on
+   the SAME element, so the descendant form of this selector matched
+   nothing -- Group and Tag stayed dim while the Search field went white. */
+/* Placeholders on the reference field's own muted tone, not pure white --
+   white reads as a filled value rather than a prompt. */
+.dark .gp-external .gp-contact-toolbar input::placeholder,
+.dark .gp-external .gp-contact-toolbar .custom-react-select__placeholder {
+  color: var(--mcm-ink-3, #93a1ba) !important;
+  opacity: 1 !important;
+}
+.dark .gp-external .gp-contact-toolbar input,
+.dark .gp-external .contact-toolbar-select .custom-react-select__single-value {
+  color: #fff !important;
+}
+.dark .gp-external .gp-contact-toolbar svg {
+  color: #fff !important;
+}
+/* The inactive tab's hover was a near-white fill (its light-theme value),
+   which flashed a cream chip next to the orange active pill. */
+.dark .gp-external [class*='rgba(255,255,255,0.55)'] [data-slot='tabs-trigger']:hover:not([data-state='active']) {
+  background-color: rgba(255, 171, 94, 0.18) !important;
+  color: #fff !important;
+}
+/* The header ink here comes from `.gp-contact-table th` (the inner table,
+   set `!important`), not from the `.gp-external th` rule above -- same
+   split that hid the row hover. Orange labels on the orange underline, as
+   People's table. */
+.dark .gp-contact-table th {
+  background: #1a232f !important;
+  color: var(--mcm-accent, #ffab5e) !important;
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35) !important;
+}
+
+/* ---- Pager row ----
+   Both tabs here (Contacts, Groups) render through the shared TableManager
+   (table-manager.tsx), whose own pager is a bordered, backdrop-blurred card
+   with a refresh button and a "per page" selector -- a different look from
+   every other Directory table's plain pager (`.gp-people-pager` etc.,
+   people-glass.css). No `customClass`/prop on TableManager reaches that
+   bar, so this strips its card chrome and extra controls from here instead,
+   leaving the same prev/number/next control (`.mcm-pager-*`, index.css)
+   every other Directory pager already shares. */
+.gp-external div:has(> div > .mcm-pager) {
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid rgba(150, 100, 50, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 12px 22px 14px !important;
+}
+/* TableManager's own root wraps the table and this pager in a `gap-2` flex
+   column -- with the pager's card background stripped above, that 8px gap
+   opened a bare sliver of `.panel-card`'s own (slightly paler) fill between
+   the two. Closing it sits the pager flush under the table, matching every
+   other Directory pager (`.gp-people-pager` etc., which has no such gap to
+   begin with). */
+.gp-external div:has(> .gp-contact-table) {
+  gap: 0 !important;
+}
+.dark .gp-external div:has(> div > .mcm-pager) {
+  border-top-color: rgba(255, 171, 94, 0.12) !important;
+}
+/* Record count -- same size/weight/colour as People's own
+   `.gp-people-pager-count`, not the bar's bold default label. */
+.gp-external div:has(> div > .mcm-pager) label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a6f57;
+}
+.dark .gp-external div:has(> div > .mcm-pager) label {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+/* Refresh button and the "N per page" selector -- neither exists on any
+   other Directory pager; this table pages a fixed size like the rest. */
+.gp-external .table-refresh-btn,
+.gp-external div:has(> .tableSelect) {
+  display: none !important;
+}
+/* First/last (double-chevron) jump buttons -- People's own pager only ever
+   offers prev/number/next. Both are `.mcm-pager-btn` with no class of their
+   own, but they're always the first and last control in the group. */
+.gp-external .mcm-pager > .mcm-pager-btn:first-child,
+.gp-external .mcm-pager > .mcm-pager-btn:last-child {
+  display: none !important;
 }
