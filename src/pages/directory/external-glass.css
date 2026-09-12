@@ -406,6 +406,20 @@
 .gp-contact-table > div:first-child {
   background: transparent !important;
 }
+/* TableManager's own body/rows default to a translucent
+   `rgba(251,249,246,0.88)` fill plus a 12px backdrop-blur (its "glass"
+   look, table-manager.tsx) -- with nothing colourful behind them to blur
+   (`.panel-card` above is a plain near-white card, not the layered
+   backdrop that treatment was designed to sit over), the transparency
+   just dulled the white into a flatter, slightly grey tone instead.
+   People's own table (`.gp-people`, people-glass.css) never carries this
+   -- solid `#fffdfb`, no blur -- so matching that here instead. */
+.gp-contact-table .table-scroll,
+.gp-contact-table tbody {
+  background: #fffdfb !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 /* With `splitStickyHeader`, the scrollable body is its own box directly
    under the (separate, non-scrolling) header box — and that body box
    carries its own `border-radius: 18px` on every corner, same as any other
