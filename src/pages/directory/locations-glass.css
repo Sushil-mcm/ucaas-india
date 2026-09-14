@@ -153,6 +153,10 @@
 .gp-locations th:nth-child(1),
 .gp-locations td:nth-child(1) {
   width: 24%;
+  /* Matches People/Groups/Roles' own left inset (people-glass.css etc.) --
+     22px lines the first column up under the toolbar's own side padding
+     above it, rather than sitting flush against the card's left edge. */
+  padding-left: 22px;
 }
 .gp-locations th:nth-child(2),
 .gp-locations td:nth-child(2) {

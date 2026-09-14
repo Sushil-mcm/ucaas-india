@@ -180,6 +180,10 @@
 .gp-blocked th:nth-child(1),
 .gp-blocked td:nth-child(1) {
   width: 28%;
+  /* Matches People/Groups/Roles' own left inset (people-glass.css etc.) --
+     22px lines the first column up under the toolbar's own side padding
+     above it, rather than sitting flush against the card's left edge. */
+  padding-left: 22px;
 }
 /* Matches People's own 38px avatar bump (people-glass.css) -- see
    groups-glass.css's own copy of this rule for why the plain `size="30"`
@@ -206,12 +210,15 @@
   width: 14%;
   min-width: 110px;
 }
+/* Matches People's own header exactly (people-glass.css) -- near-black
+   and bold instead of the washed `#8a6f57`/9.5px this still carried. */
 .gp-blocked th {
   background: #fffdfb;
-  color: #8a6f57;
+  color: #1a1a1a;
+  font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   height: 40px;
-  font-size: 9.5px;
+  font-size: 11.5px;
 }
 .gp-blocked td {
   border-bottom-color: rgba(150, 100, 50, 0.1);
