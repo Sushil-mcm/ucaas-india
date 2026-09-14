@@ -128,10 +128,6 @@ const LINKED_REPORTS: { group: string; reports: LinkedReport[] }[] = [
   },
 ];
 
-const toCsvValue = (value: unknown) => {
-  const text = String(value ?? '');
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-};
 import QueueSeriesReport from './reports/queue-series-report';
 import ScriptAnswersReportScreen from './reports/script-answers-report';
 import { useSearchParamManager } from '@/hooks/use-search-params';
@@ -209,6 +205,9 @@ const ReportsTab = ({
   // The dropdown is the primary picker; the full catalog opens on demand,
   // matching the console.
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  // Which linked report (Call History, Call Volume, etc.) is open in the
+  // dialog below — null when the dialog is closed.
+  const [openReport, setOpenReport] = useState<LinkedReport | null>(null);
   // The catalog's 24 cards push the report table well down the page, so
   // closing the catalog should bring the table back into view — but only
   // when the catalog was actually open to begin with (picking a report from

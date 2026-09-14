@@ -245,7 +245,6 @@ const AllCallMonitoring = () => {
         })) || [],
     [liveCallsData],
   );
-  console.log('🚀 ~ AllCallMonitoring ~ filteredActiveCalls:', filteredActiveCalls);
   const { features } = useCompanyFeatures();
   const { sessions } = useDialpad();
   const monitoringAccessActions = features?.plan_features?.monitoring_features?.action;

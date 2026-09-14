@@ -290,21 +290,6 @@ const AgentRunningCampign = () => {
 
   const handleMakeCall = (data: any) => {
     setSelectedContact(data);
-    const number = data?.contacts?.[0]?.phone;
-    console.log('🚀 ~ handleMakeCall ~ number:', number);
-    const _name = `${user?.user_info?.first_name} ${user?.user_info?.last_name}`;
-    console.log('🚀 ~ handleMakeCall ~ _name:', _name);
-    const extraHeaders = [
-      `X-CampaignUuid: ${data?.campaignId} `,
-      `X-CampaignName: ${selectedCampaign?.label} `,
-      `X-CampaignType: ${selectedCampaign?.dialMethod} `,
-      `X-ContactName: ${user?.user_info?.first_name || ''} ${user?.user_info?.last_name || ''} `,
-      `X-ContactUuid: ${data?.contactId} `,
-      `X-CampaignNumberUuid: ${data?._id} `,
-      `X-CallerId: ${selectedCampaign?.callerId} `,
-    ];
-    console.log('🚀 ~ handleMakeCall ~ extraHeaders:', extraHeaders);
-    // _makeCall(_name, number, '', extraHeaders);
 
     setSkipState((prev: any) => ({
       ...prev,

@@ -21,7 +21,7 @@ import AudioModal from '@/pages/phone/audio-dialog';
 import CommonFilter, { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
-import { Loader2, Merge, Sparkles, X } from 'lucide-react';
+import { Merge, Sparkles, X } from 'lucide-react';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -316,10 +316,15 @@ const CallHistory = ({
   const handleRefetchTableData = () => {
     if (!tableRef?.current) return;
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 450);
-    tableRef.current.refetchTable().then(() => {
-      handleAlert({ text: 'Refreshed', type: 'success' });
-    });
+    tableRef.current
+      .refetchTable()
+      .then(() => {
+        handleAlert({ text: 'Refreshed', type: 'success' });
+      })
+      .catch(() => {
+        handleAlert({ text: 'Could not refresh', type: 'error' });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const formatCallLogsForCSV = (data = []) => {

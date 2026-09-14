@@ -76,7 +76,8 @@ export const PERF_QUERY_KEYS = {
   queueStats: 'performanceQueueStatsList',
 } as const;
 
-export const useLiveContactCentre = (selectedRange: any) => {
+export const useLiveContactCentre = (selectedRange: any, options?: { enabled?: boolean }) => {
+  const isEnabled = options?.enabled ?? true;
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const { liveCalls, eventLiveCallsData, usersOnlineStatus, liveQueueCalls, campaignLiveCallsData } =
@@ -88,11 +89,18 @@ export const useLiveContactCentre = (selectedRange: any) => {
     [liveCalls, eventLiveCallsData],
   );
 
-  const { data: queueRows = [], isPending: isQueuesLoading } = useQuery({
+  const {
+    data: queueRows = [],
+    isPending: isQueuesLoading,
+    isError: isQueuesError,
+    dataUpdatedAt: queuesUpdatedAt,
+    refetch: refetchQueues,
+  } = useQuery({
     queryKey: ['performanceQueueList'],
     queryFn: () => callQueueList({ page: 1, limit: 200, filters: [], search: '' }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
     refetchInterval: CONFIG_REFRESH_MS,
+    enabled: isEnabled,
   });
 
   const queues: LiveQueue[] = useMemo(
@@ -137,7 +145,12 @@ export const useLiveContactCentre = (selectedRange: any) => {
      are not on a channel, so the live-call feed cannot see them; the queue
      service's ledger is the only source. Ten seconds is the same cadence the
      other summaries here use. */
-  const { data: callbacks = { count: 0, by_queue: {}, rows: [] } } = useQuery({
+  const {
+    data: callbacks = { count: 0, by_queue: {}, rows: [] },
+    isError: isCallbacksError,
+    dataUpdatedAt: callbacksUpdatedAt,
+    refetch: refetchCallbacks,
+  } = useQuery({
     queryKey: ['performanceQueueCallbacks'],
     queryFn: () => callQueueCallbacksList({}),
     select: (res: any) => {
@@ -149,16 +162,29 @@ export const useLiveContactCentre = (selectedRange: any) => {
       };
     },
     refetchInterval: 10000,
+    enabled: isEnabled,
   });
 
-  const { data: roster = [], isPending: isRosterLoading } = useQuery({
+  const {
+    data: roster = [],
+    isPending: isRosterLoading,
+    isError: isRosterError,
+    dataUpdatedAt: rosterUpdatedAt,
+    refetch: refetchRoster,
+  } = useQuery({
     queryKey: ['performanceUserRoster'],
     queryFn: () => getUserList({ page: 1, limit: 200 }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
     refetchInterval: CONFIG_REFRESH_MS,
+    enabled: isEnabled,
   });
 
-  const { data: agentStatsRows = [] } = useQuery({
+  const {
+    data: agentStatsRows = [],
+    isError: isAgentReportError,
+    dataUpdatedAt: agentReportUpdatedAt,
+    refetch: refetchAgentReport,
+  } = useQuery({
     queryKey: ['performanceAgentReportList', selectedRange],
     queryFn: () =>
       callReportAgentList({
@@ -172,6 +198,7 @@ export const useLiveContactCentre = (selectedRange: any) => {
       }),
     select: (res: any) => res?.data?.data?.result?.rows || [],
     refetchInterval: KPI_REFRESH_MS,
+    enabled: isEnabled,
   });
 
   const agentStatsByName = useMemo(() => {
@@ -193,7 +220,12 @@ export const useLiveContactCentre = (selectedRange: any) => {
   );
   const isAgentsLoading = isRosterLoading;
 
-  const { data: queueStatsRows = [] } = useQuery({
+  const {
+    data: queueStatsRows = [],
+    isError: isQueueStatsError,
+    dataUpdatedAt: queueStatsUpdatedAt,
+    refetch: refetchQueueStats,
+  } = useQuery({
     queryKey: ['performanceQueueStatsList', selectedRange],
     queryFn: () =>
       callLogQueueList({
@@ -204,6 +236,7 @@ export const useLiveContactCentre = (selectedRange: any) => {
       }),
     select: (res: any) => res?.data?.rows || res?.data?.data?.result?.rows || [],
     refetchInterval: KPI_REFRESH_MS,
+    enabled: isEnabled,
   });
 
   const queueStatsByUuid = useMemo(() => {
@@ -298,7 +331,7 @@ export const useLiveContactCentre = (selectedRange: any) => {
   const { data: seriesForRange } = useQueueSeries(selectedRange, {
     granularity: 'day',
     queueUuids,
-    enabled: queueUuids.length > 0,
+    enabled: isEnabled && queueUuids.length > 0,
     refetchMs: SERIES_REFRESH_MS,
   });
   const serviceLevel = useMemo(() => {
@@ -356,6 +389,41 @@ export const useLiveContactCentre = (selectedRange: any) => {
     ? Math.max(0, Math.round((Date.now() - longestWaitTimestamp) / 1000))
     : 0;
 
+  /* Which of the 5 REST sources behind this hook last failed, and when any
+     of them last succeeded — the hero banner's "N of 5 sources failed" copy
+     and the freshness badge both read off this. */
+  const SOURCES = [
+    { name: 'Queues', isError: isQueuesError, updatedAt: queuesUpdatedAt, refetch: refetchQueues },
+    { name: 'Roster', isError: isRosterError, updatedAt: rosterUpdatedAt, refetch: refetchRoster },
+    {
+      name: 'Agent report',
+      isError: isAgentReportError,
+      updatedAt: agentReportUpdatedAt,
+      refetch: refetchAgentReport,
+    },
+    {
+      name: 'Queue stats',
+      isError: isQueueStatsError,
+      updatedAt: queueStatsUpdatedAt,
+      refetch: refetchQueueStats,
+    },
+    {
+      name: 'Callbacks',
+      isError: isCallbacksError,
+      updatedAt: callbacksUpdatedAt,
+      refetch: refetchCallbacks,
+    },
+  ];
+  const failedSources = SOURCES.filter((source) => source.isError).map((source) => source.name);
+  const hasSourceError = failedSources.length > 0;
+  const lastUpdatedAt =
+    SOURCES.reduce((latest, source) => Math.max(latest, source.updatedAt || 0), 0) || null;
+  const retryFailedSources = () => {
+    SOURCES.forEach((source) => {
+      if (source.isError) source.refetch();
+    });
+  };
+
   return {
     // raw feeds
     activeQueueCalls,
@@ -391,5 +459,10 @@ export const useLiveContactCentre = (selectedRange: any) => {
     // loading
     isQueuesLoading,
     isAgentsLoading,
+    // source health
+    failedSources,
+    hasSourceError,
+    lastUpdatedAt,
+    retryFailedSources,
   };
 };

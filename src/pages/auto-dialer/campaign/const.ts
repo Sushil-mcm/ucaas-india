@@ -7,6 +7,8 @@ export const CAMPAIGN_UPSERT_TAB_CONSTANT = {
   SETTING: 'Campaign Settings',
   AGENTS: 'Agents',
   MEDIA: 'Media',
+  INBOUND: 'Inbound Routing',
+  REVIEW: 'Review',
 };
 
 export const CAMPAIGN_STATUS_CONST = {

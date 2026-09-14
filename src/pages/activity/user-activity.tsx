@@ -83,13 +83,13 @@ const UserActivity = () => {
     if (id) {
       handleApply();
     }
-  }, [id]);
+  }, [id, handleApply]);
 
   useEffect(() => {
     if (!id && userActivity) {
       handleApply();
     }
-  }, [userActivity]);
+  }, [userActivity, id, handleApply]);
 
   return (
     <section className="mcm-page mcm-admin">

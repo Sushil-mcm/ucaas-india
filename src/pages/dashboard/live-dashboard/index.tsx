@@ -511,8 +511,7 @@ const LiveDashboard = ({ selectedRange }: { selectedRange?: { from: string; to: 
     // through getCampaignLiveCalls either way, which now re-seeds demo data.
     if (isDemoMode() || (user?.sip_credentials?.domain && isSocketConnected)) {
       setIsRefreshing(true);
-      getCampaignLiveCalls({ domain: user?.sip_credentials?.domain }, (res: any) => {
-        console.log('campaign-live-calls response:', res);
+      getCampaignLiveCalls({ domain: user?.sip_credentials?.domain }, () => {
         setIsRefreshing(false);
       });
       setTimeout(() => {

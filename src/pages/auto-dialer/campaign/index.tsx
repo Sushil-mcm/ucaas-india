@@ -6,7 +6,6 @@ import moment from 'moment';
 
 import TableManager from '@/components/custom/table-manager';
 import SideDrawer from '@/components/custom/side-drawer';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
@@ -205,6 +204,7 @@ const MODE_FILTERS: Array<[string, string]> = [
 const Campaign = ({
   embedded = false,
   globalSearch,
+  onReady,
 }: {
   embedded?: boolean;
   /* Performance ▸ Campaigns' centralized toolbar search (index.tsx →
@@ -213,6 +213,11 @@ const Campaign = ({
      local box is empty, so typing locally still wins without either input
      needing to know about the other. */
   globalSearch?: string;
+  /* Embedded mode drops this component's own "New campaign" button (it's
+     inside the `!embedded` header block below), so the caller gets a handle
+     to open the same create-drawer instead — Performance ▸ Campaigns' own
+     header button calls it. */
+  onReady?: (openCreateCampaign: () => void) => void;
 }) => {
   const navigate = useNavigate();
   const queryClient: any = useQueryClient();
@@ -231,6 +236,9 @@ const Campaign = ({
     selectedCampaign: null,
   });
   const [refreshingCampaignIds, setRefreshingCampaignIds] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    onReady?.(() => setDrawerState({ selectedCampaign: null, isModalOpen: true }));
+  }, [onReady]);
   const { socketEventsManager } = useContext(SocketEvents);
   /* The dialer service pushes a board per running campaign every few seconds
      on "campaign-live-stats". Kept here by campaign id so each row can show

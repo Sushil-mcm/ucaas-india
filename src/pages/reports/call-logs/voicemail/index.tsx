@@ -1,8 +1,9 @@
 import { timeStringToSeconds } from '@/pages/performance/format';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { useNavigate } from 'react-router-dom';
 import { USD_TO_INR_RATE } from '@/lib/billing-money';
+import { normalizeCallNumber, pickCounterpartNumber } from '@/lib/call-number';
 import { ReportsPageLayout } from '../../reports-content-layout';
 import { convertDateFormateApis, formatSecondsToMMSS, handleAlert, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
@@ -34,6 +35,14 @@ import DetailsModal from '@/components/activity-list/side-drawers/details-modal'
 import TableManager from '@/components/custom/table-manager';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 
+const TERMINAL_DIALPAD_SESSION_STATUSES = new Set(['ended', 'failed']);
+
+const normalizeCallTarget = (value: unknown) =>
+  normalizeCallNumber(value).toLowerCase().replace(/^\+/, '');
+
+const isLiveDialpadSession = (session: any) =>
+  !TERMINAL_DIALPAD_SESSION_STATUSES.has(String(session?.status || '').toLowerCase());
+
 const Voicemail = ({
   // Only true when this report renders inside another already-open modal
   // (the "Open a full report page" dialog, reports-tab.tsx) — a "To"
@@ -44,7 +53,7 @@ const Voicemail = ({
 }: { detailsAsModal?: boolean } = {}) => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
-  const { makeCall } = useDialpad();
+  const { makeCall, sessions } = useDialpad();
   /* Whether this person may play this particular recording, on top of the
      plan permission above. */
   const { canPlayRecording } = useRecordingAccess();
@@ -80,7 +89,29 @@ const Voicemail = ({
   const extension = user?.user_info?.extension;
   const isMeOnCall = usersOnlineStatus?.find((user) => user?.userId == extension)?.onCall;
 
+  const activeDialpadSessions = useMemo(
+    () => Object.values(sessions || {}).filter(isLiveDialpadSession),
+    [sessions],
+  );
+  const activeDialpadTargets = useMemo(() => {
+    const targets = new Set<string>();
+    activeDialpadSessions.forEach((session: any) => {
+      const remoteNumber = normalizeCallTarget(session?.remoteNumber);
+      const extension = normalizeCallTarget(session?.extension);
+      if (remoteNumber) targets.add(remoteNumber);
+      if (extension) targets.add(extension);
+    });
+    return targets;
+  }, [activeDialpadSessions]);
+
+  const isOnCallWithUser = (data: any) => {
+    const target = normalizeCallTarget(pickCounterpartNumber(data || {}));
+    return Boolean(target && activeDialpadTargets.has(target));
+  };
+
   const handleMakeCall = (data: any) => {
+    if (isMeOnCall || isOnCallWithUser(data)) return;
+
     let number = '';
     if (data?.direction === 'Outbound') {
       number = data?.destination_number;
@@ -93,19 +124,6 @@ const Voicemail = ({
 
     const extraHeaders = data?.via_did ? [`X-CallerId: ${data?.via_did}`] : [];
     makeCall(normalizedNumber, { extraHeaders });
-  };
-
-  const isOnCallWithUser = (data: any) => {
-    console.log('🚀 ~ isOnCallWithUser ~ data:', data);
-    // let number = '';
-    // if (data?.direction === 'Outbound') {
-    //   number = data?.destination_number;
-    // } else {
-    //   number = data?.caller_id_number;
-    // }
-    // const checkCall = Object.values(_uiSessions).find((call: any) => call?._number === number);
-
-    // return checkCall ? true : false;
   };
 
   const filterFields = [
@@ -143,10 +161,15 @@ const Voicemail = ({
   const handleRefetchTableData = () => {
     if (!tableRef?.current) return;
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 450);
-    tableRef.current.refetchTable().then(() => {
-      handleAlert({ text: 'Refreshed', type: 'success' });
-    });
+    tableRef.current
+      .refetchTable()
+      .then(() => {
+        handleAlert({ text: 'Refreshed', type: 'success' });
+      })
+      .catch(() => {
+        handleAlert({ text: 'Could not refresh', type: 'error' });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const handleFilter = () => {

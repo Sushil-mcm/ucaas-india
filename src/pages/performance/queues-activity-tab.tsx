@@ -3,7 +3,6 @@ import {
   Clock,
   Timer as TimerIcon,
   PhoneCall,
-  PhoneForwarded,
   Users,
   CheckCircle2,
   Target,

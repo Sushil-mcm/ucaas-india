@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { useNavigate } from 'react-router-dom';
 import { ReportsPageLayout } from '../../reports-content-layout';
 import { convertDateFormateApis, formatSecondsToMMSS, MEDIA_URL } from '@/lib/utils';
+import { normalizeCallNumber, pickCounterpartNumber } from '@/lib/call-number';
 import { useUser } from '@/hooks/use-user';
 import { FilterIcon, SearchLine } from '@/assets/icons';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,14 @@ import QueueDetailsView from '@/components/activity-list/side-drawers/queue-deta
 import TableManager from '@/components/custom/table-manager';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
+
+const TERMINAL_DIALPAD_SESSION_STATUSES = new Set(['ended', 'failed']);
+
+const normalizeCallTarget = (value: unknown) =>
+  normalizeCallNumber(value).toLowerCase().replace(/^\+/, '');
+
+const isLiveDialpadSession = (session: any) =>
+  !TERMINAL_DIALPAD_SESSION_STATUSES.has(String(session?.status || '').toLowerCase());
 
 const CallRecording = () => {
   const tableRef = useRef<any>(null);
@@ -58,11 +67,34 @@ const CallRecording = () => {
   const { usersOnlineStatus } = useSocketEvents();
   const extension = user?.user_info?.extension;
   const isMeOnCall = usersOnlineStatus?.find((user) => user?.userId == extension)?.onCall;
-  const { makeCall } = useDialpad();
+  const { makeCall, sessions } = useDialpad();
   /* Whether this person may play this particular recording, on top of the
      plan permission above. */
   const { canPlayRecording } = useRecordingAccess();
+
+  const activeDialpadSessions = useMemo(
+    () => Object.values(sessions || {}).filter(isLiveDialpadSession),
+    [sessions],
+  );
+  const activeDialpadTargets = useMemo(() => {
+    const targets = new Set<string>();
+    activeDialpadSessions.forEach((session: any) => {
+      const remoteNumber = normalizeCallTarget(session?.remoteNumber);
+      const extension = normalizeCallTarget(session?.extension);
+      if (remoteNumber) targets.add(remoteNumber);
+      if (extension) targets.add(extension);
+    });
+    return targets;
+  }, [activeDialpadSessions]);
+
+  const isOnCallWithUser = (data: any) => {
+    const target = normalizeCallTarget(pickCounterpartNumber(data || {}));
+    return Boolean(target && activeDialpadTargets.has(target));
+  };
+
   const handleMakeCall = (data: any) => {
+    if (isMeOnCall || isOnCallWithUser(data)) return;
+
     let number = '';
     if (data?.direction === 'Outbound') {
       number = data?.destination_number;
@@ -75,19 +107,6 @@ const CallRecording = () => {
 
     const extraHeaders = data?.via_did ? [`X-CallerId: ${data?.via_did}`] : [];
     makeCall(normalizedNumber, { extraHeaders });
-  };
-
-  const isOnCallWithUser = (data: any) => {
-    console.log('🚀 ~ isOnCallWithUser ~ data:', data);
-    // let number = '';
-    // if (data?.direction === 'Outbound') {
-    //   number = data?.destination_number;
-    // } else {
-    //   number = data?.caller_id_number;
-    // }
-    // const checkCall = Object.values(_uiSessions).find((call: any) => call?._number === number);
-
-    // return checkCall ? true : false;
   };
 
   const filterFields = [

@@ -123,10 +123,15 @@ const LocalCallList = ({
   const handleRefetchTableData = () => {
     if (!tableRef?.current) return;
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 450);
-    tableRef.current.refetchTable().then(() => {
-      handleAlert({ text: 'Refreshed', type: 'success' });
-    });
+    tableRef.current
+      .refetchTable()
+      .then(() => {
+        handleAlert({ text: 'Refreshed', type: 'success' });
+      })
+      .catch(() => {
+        handleAlert({ text: 'Could not refresh', type: 'error' });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const columns = [

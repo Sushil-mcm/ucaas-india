@@ -90,9 +90,6 @@ const CallQueueMonitoring = ({ queueType }: { queueType: string }) => {
   const { features } = useCompanyFeatures();
   const monitoringAccessActions = features?.plan_features?.monitoring_features?.action;
 
-  // const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // console.log(intervalRef, setQueueData);
-
   const liveCallsData = getMonitoringLiveCalls(liveCalls, eventLiveCallsData);
   const isCampaignMonitoring = queueType === QUEUE_TYPE.campaign;
   const activeForwardType = isCampaignMonitoring ? QUEUE_TYPE.campaign : QUEUE_TYPE.queue;
