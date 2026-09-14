@@ -428,12 +428,59 @@ const readStore = (): Store => {
         const present = new Set((existing ?? []).map((row) => row.uuid));
         return [...(existing ?? []), ...seed.filter((row) => !present.has(row.uuid))];
       };
+      /* `site`/`forward_call_actions` were added to the department seed after
+         some browsers had already written a store, so those browsers'
+         departments carry neither -- opening one to edit showed Location,
+         Member Ring Timeout and "If no one answer" all blank forever, since
+         nothing here ever revisited a row already saved. Every stored
+         department, seeded or user-created, gets whichever of the two it is
+         missing filled in once: the matching seed row's for the four
+         original demo departments, and a generic one (Mumbai HQ, this
+         department's own saved manager as the no-answer forward) for
+         anything else, so the edit form is never handed a blank required
+         field a real save would already have filled in. */
+      const departmentSeedByUuid = new Map(demoDepartmentRows().map((row) => [row.uuid, row]));
+      const backfillDepartment = (row: any) => {
+        if (row?.site && row?.forward_call_actions) return row;
+        const seeded = departmentSeedByUuid.get(row?.uuid);
+        const manager = (() => {
+          try {
+            return typeof row?.manager === 'string' ? JSON.parse(row.manager) : row?.manager;
+          } catch {
+            return null;
+          }
+        })();
+        return {
+          ...row,
+          site: row?.site || seeded?.site || JSON.stringify({ label: 'Mumbai HQ', value: 'demo-site-mumbai' }),
+          forward_call_actions: row?.forward_call_actions ||
+            seeded?.forward_call_actions || {
+              call_handling: {
+                timeout: 10,
+                failover: manager?.uuid
+                  ? {
+                      type: 'EXTENSION',
+                      value: manager?.extension || '',
+                      label: manager?.name || '',
+                    }
+                  : { type: '', value: '', label: '' },
+              },
+              ring_strategy: 'ring_all',
+              operational_hours: {},
+              media: {},
+              recording: {},
+              display_number: {},
+              transcription: false,
+              ai_call_monitoring: false,
+            },
+        };
+      };
       return {
         ...parsed,
         users: mergeSeed(parsed.users, USER_SEED),
         receptionists: parsed.receptionists ?? [],
         chatAgents: parsed.chatAgents ?? [],
-        departments: parsed.departments ?? demoDepartmentRows(),
+        departments: (parsed.departments ?? demoDepartmentRows()).map(backfillDepartment),
         sites: parsed.sites ?? demoSiteRows(),
         templates: mergeSeed(parsed.templates, demoTemplateRows()),
       };

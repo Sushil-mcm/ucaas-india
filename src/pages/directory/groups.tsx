@@ -330,7 +330,7 @@ const Groups = () => {
                     </td>
                     <td className="num">{row?.extension || '—'}</td>
                     <td onClick={(event) => event.stopPropagation()}>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-2.5">
                         {canEditGroup ? (
                           <button
                             type="button"
