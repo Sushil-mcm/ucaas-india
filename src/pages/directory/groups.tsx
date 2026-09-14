@@ -4,7 +4,7 @@ import { getDepartmentList, updateMemberForwading } from '@/services/api';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import { Ic } from '@/components/mcm/icons';
-import { handleAlert } from '@/lib/utils';
+import { handleAlert, withIndianDialCode } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useNavigate } from 'react-router-dom';
@@ -569,7 +569,7 @@ const Groups = () => {
                         onChange={(value) =>
                           setPersonForm((prev) => ({
                             ...prev,
-                            phone: `+${value.startsWith('91') ? value : '91'}`,
+                            phone: `+${withIndianDialCode(value)}`,
                           }))
                         }
                       />

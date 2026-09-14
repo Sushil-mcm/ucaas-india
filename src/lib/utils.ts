@@ -1397,6 +1397,34 @@ export const generateRandomExtension = (): string => {
   return randomNumber.toString();
 };
 
+/**
+ * What every India-only `react-phone-input-2` field (Invite people, the
+ * People/Groups/Department edit-person popups, Create Contact) passes its
+ * `onChange` value through before saving it.
+ *
+ * `disableDropdown` alone doesn't stop the dial code from being edited or
+ * backspaced into -- `countryCodeEditable={false}` would, but combined with
+ * `disableDropdown` it freezes the whole input instead (can't type or
+ * delete at all). So every one of those fields protects "91" by hand: keep
+ * `value` as-is once it already carries the dial code, otherwise treat
+ * whatever's there as digits still missing it and prepend "91" rather than
+ * discarding them. A field the user has fully cleared reduces to the same
+ * `'91' + '' = '91'`, which is the intended "snap back to a bare dial code"
+ * behaviour for that case.
+ *
+ * The earlier version of this (`value.startsWith('91') ? value : '91'`,
+ * copy-pasted into five call sites) threw the typed digits away outright
+ * whenever `value` didn't start with "91" -- which is also what a
+ * select-all-and-retype produces on its very first keystroke, since the
+ * library hands back only the freshly typed characters. That silently
+ * reverted the field to "+91" the moment someone tried to correct a wrong
+ * number, with no visible sign anything had gone wrong.
+ */
+export const withIndianDialCode = (value: string): string => {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits.startsWith('91') ? digits : `91${digits}`;
+};
+
 export const getDateOnly = (date: any) => moment(date).format('YYYY-MM-DD');
 
 export const showPushNotification = async ({

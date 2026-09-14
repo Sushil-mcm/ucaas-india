@@ -2,24 +2,39 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import CustomSelect from '@/components/custom/custom-select';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/hooks/use-user';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { userInitialState } from '../../../constants';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getRoleList, getUserList, validateUser } from '@/services/api';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import type { ISELECTVALUE } from '@/interfaces/api-interfaces';
+import { Minus, Plus, TrashBin } from '@/assets/icons';
 import { useGetSite } from '@/hooks/common';
 import OrderSummary from '../order-summary';
 import { Label } from '@/components/ui/label';
 import ErrorTooltip from '@/components/custom/error-tooltip';
-import { generateRandomExtension, handleAlert } from '@/lib/utils';
+import { generateRandomExtension, handleAlert, withIndianDialCode } from '@/lib/utils';
 import CustomTooltip from '@/components/custom/custom-tooltip';
-import { AlertTriangle, Info, Minus, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  InfoIcon,
+  Layers,
+  Mail,
+  MapPin,
+  ShieldCheck,
+  User as UserIcon,
+  Phone as PhoneIcon,
+} from 'lucide-react';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { NEW_PERSON_ROLE_KEY, readNewPersonRole } from '@/lib/role-permission-defaults';
-import { decideInviteRole, describeRole, roleWarning, toRoleChoice } from '@/lib/invite-role';
-import { roleDisplayName } from '@/pages/admin-settings/roles/role-names';
+import {
+  decideInviteRole,
+  describeRole,
+  roleWarning,
+  toRoleChoice,
+} from '@/lib/invite-role';
 import {
   blocksInvite,
   clashForField,
@@ -37,21 +52,6 @@ type ValidationErrorMap = {
     extension?: string;
   };
 };
-/* Solid triangles rather than chevrons: at 12px a stroked chevron in a 26px
-   circle reads as a hairline, and these two are the whole way through the
-   list. */
-const TriangleLeft = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M15 4.5 7.5 12l7.5 7.5z" />
-  </svg>
-);
-
-const TriangleRight = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M9 4.5 16.5 12 9 19.5z" />
-  </svg>
-);
-
 const debounce = (fn: any, delay: any) => {
   let timer: any;
   return (...args: any) => {
@@ -66,21 +66,19 @@ const AddUserInfo = ({
   setIsUserValidatorError,
   dataGetMyPlanDetails,
   setPaymentCalculation,
+  onLicenseStatsChange,
 }: any) => {
   const {
     register,
     watch,
     setValue,
     control,
-    formState: { errors, submitCount },
+    formState: { errors },
   }: any = useFormContext<any>();
   const { user } = useUser();
-
-  /* Which person is on screen. Ten of them stacked was a long scroll in a
-     drawer, and the fields of person nine looked exactly like the fields of
-     person two; a page each means the form is always the same height and the
-     card header says whose it is. */
-  const [page, setPage] = useState(0);
+  // const [errorType, setErrorType] = useState(null);
+  // const [errIndex, setErrIndex] = useState(null);
+  // const [validatorErrors, setValidatorErrors] = useState(null);
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrorMap>({});
   const formFieldArrayInstance = useFieldArray({
@@ -135,7 +133,16 @@ const AddUserInfo = ({
 
   const { fields, append, remove } = formFieldArrayInstance;
 
-  const [users] = watch(['users']) as [User[]];
+  /* Which invitee card is showing -- one at a time, like the reference,
+     rather than every card stacked in one long scroll. Clamped whenever
+     the list shrinks (removing the last card) so it never points past the
+     end. */
+  const [activeIndex, setActiveIndex] = useState(0);
+  useEffect(() => {
+    if (activeIndex > fields.length - 1) setActiveIndex(Math.max(0, fields.length - 1));
+  }, [activeIndex, fields.length]);
+
+  const users = watch('users') as User[];
 
   useEffect(() => {
     const picked = roleDecision.role;
@@ -161,9 +168,7 @@ const AddUserInfo = ({
     const value = (users as any[])?.[index]?.role?.value;
     if (!value) return null;
     return toRoleChoice(
-      roleList.find(
-        (item: any) => (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === value,
-      ),
+      roleList.find((item: any) => (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === value),
     );
   };
 
@@ -220,6 +225,53 @@ const AddUserInfo = ({
       cost,
     };
   }, [users, dataGetMyPlanDetails, planCost]);
+
+  /* Every already-filled-in person before the one on screen, so they stay
+     visible on the rail while a later card (Person 2, 3, ...) is being
+     filled in -- once the pager moves off a card, its own fields scroll out
+     of view with nothing on screen to check against while filling the next
+     one. Only people before the active card, not all of them: the ones
+     after haven't been touched yet and have nothing worth showing. */
+  const precedingNames = (users || [])
+    .slice(0, activeIndex)
+    .map((person) => [person?.first_name, person?.last_name].filter(Boolean).join(' ').trim());
+  const precedingNamesKey = precedingNames.join('|');
+
+  /* Handed up to the step rail (Directory's invite dialog only -- every
+     other caller of this wizard leaves `onLicenseStatsChange` undefined) so
+     the pills sit under "Invite people" instead of inside this form. No
+     "Add Multiple Users" action to keep fresh here any more -- the stepper
+     itself adds/removes cards immediately (see `applyPeopleCount`). */
+  useEffect(() => {
+    if (!onLicenseStatsChange) return;
+    onLicenseStatsChange(
+      <>
+        {precedingNames.some(Boolean) ? (
+          <div className="mcm-invite-person1-ref">
+            {precedingNames.map((name, index) =>
+              name ? (
+                <p key={index} className="mcm-invite-person1-ref-name">
+                  {index + 1}. {name}
+                </p>
+              ) : null,
+            )}
+          </div>
+        ) : null}
+        <div className="mcm-license-stats flex flex-col items-start gap-2">
+          <span className="mcm-invite-stat">
+            Unused licenses: <strong>{licenseInfo?.available || 0}</strong>
+            <CustomTooltip text="License purchased" side="top">
+              <InfoIcon className="w-3.5 h-3.5 cursor-pointer" />
+            </CustomTooltip>
+          </span>
+          <span className="mcm-invite-stat">
+            New licenses purchased: <strong>{licenseInfo?.extraUnits || 0}</strong>
+          </span>
+        </div>
+      </>,
+    );
+  }, [licenseInfo?.available, licenseInfo?.extraUnits, onLicenseStatsChange, precedingNamesKey]);
+
   const { mutate: mutateValidateUser } = useMutation({
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mutationFn: ({ index, ...payload }: any) => validateUser(payload),
@@ -297,18 +349,32 @@ const AddUserInfo = ({
     errors?.users?.[index]?.phone?.message ||
     validationErrors?.[index]?.phone;
 
-  /* Whether anything on this one person is wrong. Ten collapsed-looking cards
-     and one bad field in the middle is the case this is for: the card says so
-     on its own header, so the problem is findable without opening each one. */
-  const rowProblem = (index: number) =>
-    Boolean(
-      emailProblem(index) ||
-        phoneProblem(index) ||
-        extensionProblem(index) ||
-        errors?.users?.[index]?.first_name?.message ||
-        errors?.users?.[index]?.last_name?.message ||
-        errors?.users?.[index]?.role?.value?.message,
-    );
+  // const { mutate: mutateValidateUser } = useMutation({
+  //   mutationFn: validateUser,
+  //   onSuccess: () => {
+  //     setErrorType(null);
+  //     setErrIndex(null);
+  //     setIsUserValidatorError(false);
+  //     setValidatorErrors(null);
+  //   },
+  //   onError: (err: any) => {
+  //     const errMsg = err?.response?.data?.message;
+  //     setIsUserValidatorError(true);
+  //     setValidatorErrors(errMsg);
+  //   },
+  // });
+
+  // const useDebouncedValidateUser = (mutateValidateUser: any, delay = 500) => {
+  //   return useCallback(
+  //     debounce((value: any, index: any) => {
+  //       setErrIndex(index);
+  //       setErrorType(value?.type);
+  //       mutateValidateUser({ ...value });
+  //     }, delay),
+  //     [mutateValidateUser, delay],
+  //   );
+  // };
+  // const handleValidateUser = useDebouncedValidateUser(mutateValidateUser);
 
   const useDebouncedValidateUser = (mutateFn: any, delay = 500) => {
     return useCallback(
@@ -323,58 +389,24 @@ const AddUserInfo = ({
 
   const MAX_USERS = 10;
 
-  /* How many more seats the plan itself will sell, as opposed to how many are
-     already paid for and idle. "Unlimited" is a real answer here. */
-  const purchasableSeats =
-    plan_info?.dataValues?.licenses !== 0
-      ? (plan_info?.dataValues?.licenses || 0) -
-        (dataGetMyPlanDetails?.license_detail?.total_licenses || 0)
-      : 'Unlimited';
+  /* How many licenses are actually left to buy -- `null` (not 0) when the
+     plan/license data simply hasn't loaded yet, so a slow API response
+     reads as "unknown, don't block" rather than "zero, block everything".
+     `licenses === 0` from the plan itself is the one case that genuinely
+     means unlimited (an unmetered plan), kept as-is from the original
+     check this replaces. */
+  const availableLicensesToPurchase = useMemo(() => {
+    const licenses = plan_info?.dataValues?.licenses;
+    const totalLicenses = dataGetMyPlanDetails?.license_detail?.total_licenses;
+    if (licenses === 0) return 'Unlimited';
+    if (licenses == null || totalLicenses == null) return 'Unlimited';
+    return licenses - totalLicenses;
+  }, [plan_info?.dataValues?.licenses, dataGetMyPlanDetails?.license_detail?.total_licenses]);
 
-  /* The person as they are being typed, for the card header. Falls back to the
-     position so a card is never nameless. */
-  const rowName = (index: number) => {
-    const row: any = (users as any[])?.[index] || {};
-    const full = [row?.first_name, row?.last_name].filter(Boolean).join(' ').trim();
-    return full || `Person ${index + 1}`;
-  };
-
-  const rowInitials = (index: number) => {
-    const row: any = (users as any[])?.[index] || {};
-    const first = String(row?.first_name || '').trim().charAt(0);
-    const last = String(row?.last_name || '').trim().charAt(0);
-    const initials = `${first}${last}`.toUpperCase();
-    return initials || String(index + 1);
-  };
-
-  const addRows = (count: number) => {
-    Array.from({ length: count }).forEach(() => {
-      append({ ...userInitialState });
-    });
-    /* Stay where you are. The plus adds a page at the end and the chip for it
-       appears in the strip, but it does not move you: being thrown onto an
-       empty form loses your place in the one you were part-way through
-       filling in. You go to the new person by clicking their chip. */
-  };
-
-  /* The last person off the end. Never the only one — a form with nobody on it
-     has nothing to submit, so the minus is disabled at one rather than leaving
-     an empty list behind. */
-  const removeLastRow = () => {
-    if (fields.length <= 1) return;
-    remove(fields.length - 1);
-  };
-
-  /* Remove whoever is on screen, then stay in range. */
-  const removeRow = (index: number) => {
-    if (fields.length <= 1) return;
-    remove(index);
-  };
-
-  /* Every route that adds people comes through here, so none of them can
-     disagree about what the plan allows. `requested` is how many rows the
-     admin is asking for. */
-  const handleAddUser = (requested: number) => {
+  /* Number of users now IS the person count -- the stepper (and typing in
+     the box) add or remove cards immediately, rather than staging a count
+     for a separate "Add Multiple Users" click. */
+  const applyPeopleCount = (rawNext: number) => {
     if (isPlanExpired) {
       handleAlert({
         text: 'You cannot add users until your subscription is renewed.',
@@ -391,75 +423,71 @@ const AddUserInfo = ({
       return;
     }
 
-    if (requested < 1 || requested > MAX_USERS) {
-      handleAlert({
-        text: `Please enter a number between 1 and ${MAX_USERS}.`,
-        type: 'warning',
-      });
+    const current = fields.length;
+    const target = Math.min(MAX_USERS, Math.max(1, rawNext));
+    if (target === current) return;
+
+    if (target < current) {
+      for (let i = current - 1; i >= target; i -= 1) remove(i);
+      setActiveIndex((i) => Math.min(i, target - 1));
       return;
     }
-
-    const currentCount = users?.length;
-
-    const availableLicensesToPurchase =
-      plan_info?.dataValues?.licenses !== 0
-        ? (plan_info?.dataValues?.licenses || 0) -
-          (dataGetMyPlanDetails?.license_detail?.total_licenses || 0)
-        : 'Unlimited';
 
     const maxAllowed =
       availableLicensesToPurchase !== 'Unlimited'
         ? Math.min(MAX_USERS, availableLicensesToPurchase)
         : MAX_USERS;
 
-    if (currentCount >= maxAllowed) {
+    if (current >= maxAllowed) {
       handleAlert({
         text:
-          availableLicensesToPurchase !== 'Unlimited' && currentCount >= availableLicensesToPurchase
+          availableLicensesToPurchase !== 'Unlimited'
             ? `You have reached the maximum limit of available licenses.`
-            : `Maximum of 10 users can be added at once.`,
+            : `Maximum of ${MAX_USERS} users can be added at once.`,
         type: 'warning',
       });
       return;
     }
 
-    if (requested > maxAllowed) {
+    const cappedTarget = Math.min(target, maxAllowed);
+    if (cappedTarget < target) {
       handleAlert({
-        text:
-          availableLicensesToPurchase !== 'Unlimited' && requested > availableLicensesToPurchase
-            ? `You can only add up to ${availableLicensesToPurchase} users based on available licenses.`
-            : `Maximum of 10 users can be added at once.`,
+        text: `You can only add up to ${maxAllowed} users based on available licenses.`,
         type: 'warning',
       });
-      return;
     }
 
-    const remainingSlots = maxAllowed - currentCount;
+    const toAdd = cappedTarget - current;
+    if (toAdd <= 0) return;
 
-    if (requested > remainingSlots) {
-      if (currentCount === 1 && requested === maxAllowed) {
-        // Silently allow it if there's only the default row and they entered the max allowed,
-        // it will append (maxAllowed - 1) rows, bringing the total exactly to maxAllowed.
-      } else {
-        handleAlert({
-          text:
-            availableLicensesToPurchase !== 'Unlimited' && remainingSlots < MAX_USERS - currentCount
-              ? `You can only add ${remainingSlots} more user${remainingSlots === 1 ? '' : 's'} based on available licenses.`
-              : `You can only add ${remainingSlots} more user${remainingSlots === 1 ? '' : 's'}.`,
-          type: 'warning',
-        });
-        return;
-      }
-    }
-
-    const count = Math.min(requested, remainingSlots);
-    if (count <= 0) return;
-
-    addRows(count);
+    Array.from({ length: toAdd }).forEach(() => {
+      append({ ...userInitialState });
+    });
+    // Jump to the first of the newly-added cards, same as clicking its pager number.
+    setActiveIndex(current);
   };
 
+  /* A random 4-digit extension has a real chance of repeating somebody else
+     already on this same invite -- ~1 in 9000 per pair, but with several
+     rows generated back-to-back that shows up often enough to trip the
+     duplicate-extension check before anybody has typed a thing. Re-roll
+     against the extensions already sitting on other rows instead of
+     trusting one draw to be unique. Reads `watch('users')` fresh rather
+     than the `users` closed over from render: several rows can get their
+     extension generated in the same pass (see the effect below), and each
+     one needs to see the ones just assigned to the rows before it, not the
+     snapshot from before any of them ran. */
   const generateNewExtension = (index: number) => {
-    const newExtension = generateRandomExtension();
+    const liveUsers = watch('users') as User[];
+    const taken = new Set(
+      (liveUsers || [])
+        .map((row, rowIndex) => (rowIndex === index ? '' : String(row?.extension || '')))
+        .filter(Boolean),
+    );
+    let newExtension = generateRandomExtension();
+    while (taken.has(newExtension)) {
+      newExtension = generateRandomExtension();
+    }
     setValue(`users.[${index}].extension`, newExtension, { shouldValidate: true });
     handleValidateUser({ value: newExtension, type: 'extension' }, index);
   };
@@ -494,410 +522,385 @@ const AddUserInfo = ({
     });
   }, [fields?.length]);
 
-  /* Never point at a person who is no longer there — deleting the last one
-     while looking at them would otherwise leave the page blank. */
-  useEffect(() => {
-    setPage((current) => Math.min(current, Math.max(0, fields.length - 1)));
-  }, [fields.length]);
-
-  /* One person at a time hides the others, and with them their errors: filling
-     in person one and pressing Continue would look like nothing had happened
-     when it was person three that was incomplete. On a refused submit, go to
-     the first person who needs something. */
-  const handledSubmit = useRef(0);
-  useEffect(() => {
-    if (!submitCount || submitCount === handledSubmit.current) return;
-    handledSubmit.current = submitCount;
-
-    const firstBad = fields.findIndex((_, index) => rowProblem(index));
-    if (firstBad >= 0) setPage(firstBad);
-  }, [submitCount]);
-
   return (
-    <div className="mcm-invite-step flex min-h-0 flex-col gap-4 overflow-y-auto pb-1 pr-0.5">
-      {/* Where these people work, and how many of them there are. Both are
-          true of the whole form, so they sit on one line above the list rather
-          than being repeated per person. The count is the control: it adds and
-          removes the cards below it, which is what the unlabelled "Enter no."
-          box and its Add button used to do in two steps. */}
-      <section className="mcm-invite-bar">
-        <div className="mcm-invite-loc">
-          <CustomSelect
-            label="Location"
-            options={companySiteList?.map((site: { name: string; uuid: string }) => ({
-              label: site?.name,
-              value: site?.uuid,
-            }))}
-            placeholder="Select location"
-            isLoading={isLoading}
-            handleChange={(e: ISELECTVALUE | null) => {
-              setValue(`site`, e || { label: '', value: '' }, { shouldValidate: true });
-            }}
-            value={watch('site')}
-            error={errors?.site?.value?.message}
-          />
-        </div>
-
-        <div className="mcm-count">
-          <span className="mcm-count-label">People</span>
-          <div className="mcm-count-ctrl">
-            <button
-              type="button"
-              className="mcm-count-btn"
-              aria-label="Remove the last person"
-              title="Remove the last person"
-              disabled={fields.length <= 1}
-              onClick={removeLastRow}
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="mcm-count-value" aria-live="polite">
-              {fields.length}
-            </span>
-            <button
-              type="button"
-              className="mcm-count-btn"
-              aria-label="Add another person"
-              title="Add another person"
-              disabled={fields.length >= MAX_USERS}
-              onClick={() => handleAddUser(1)}
-            >
-              <Plus className="h-4 w-4" />
-            </button>
+    <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
+      <div className="mcm-invite-summary flex flex-col gap-1 mt-3">
+        <div className="mcm-invite-banner">
+          <span className="mcm-invite-banner-icon">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-gray-900 dark:text-mcm-ink">
+              Licenses available to purchase:{' '}
+              <strong className="mcm-invite-count">
+                {plan_info?.dataValues?.licenses !== 0
+                  ? plan_info?.dataValues?.licenses -
+                    dataGetMyPlanDetails?.license_detail?.total_licenses
+                  : 'Unlimited'}
+              </strong>
+            </p>
+            <p className="text-xs text-gray-500 dark:text-mcm-ink-3">
+              Add one or more users and assign a location.
+            </p>
           </div>
-          <CustomTooltip
-            text={
-              purchasableSeats === 'Unlimited'
-                ? 'Your plan has no cap on the number of seats you can buy.'
-                : `Your plan will sell you up to ${purchasableSeats} more seat${purchasableSeats === 1 ? '' : 's'}.`
-            }
-            side="left"
-          >
-            <Info className="mcm-count-info" />
-          </CustomTooltip>
         </div>
-      </section>
+      </div>
 
-      {roleDecision.reason ? (
-        <p className="mcm-invite-rolenote">{roleDecision.reason}</p>
-      ) : null}
-      {roleDecision.warning ? (
-        <p className="mcm-note is-warn">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>{roleDecision.warning}</span>
+      <div className="mcm-invite-users flex flex-col gap-1">
+        <h4 className="mcm-invite-heading text-center">Add Users</h4>
+        <div className="mcm-bulk-add grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <span className="mcm-field-label">Number of users</span>
+            <div className="mcm-count-stepper flex items-center">
+              <button
+                type="button"
+                aria-label="Fewer users"
+                disabled={fields.length <= 1}
+                onClick={() => applyPeopleCount(fields.length - 1)}
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="1"
+                value={String(fields.length)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  const sanitized = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                  if (!sanitized) return;
+                  applyPeopleCount(Number(sanitized));
+                }}
+                maxLength={2}
+              />
+              <button
+                type="button"
+                aria-label="More users"
+                disabled={fields.length >= MAX_USERS}
+                onClick={() => applyPeopleCount(fields.length + 1)}
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+            <p className="text-[10px] ps-[2px] pt-1 text-gray-500 dark:text-mcm-ink-3">
+              Enter number between 1-{MAX_USERS}
+            </p>
+          </div>
+          <div className="mcm-icon-select-field relative w-full">
+            <MapPin className="mcm-icon-select-field-icon" />
+            <CustomSelect
+              label="Location"
+              options={companySiteList?.map((site: { name: string; uuid: string }) => ({
+                label: site?.name,
+                value: site?.uuid,
+              }))}
+              placeholder="Select location"
+              isLoading={isLoading}
+              handleChange={(e: ISELECTVALUE | null) => {
+                setValue(`site`, e || { label: '', value: '' }, { shouldValidate: true });
+              }}
+              value={watch('site')}
+              error={errors?.site?.value?.message}
+            />
+          </div>
+        </div>
+
+        {/* {licenseInfo.extraCharge && (
+        <p className="text-grey-700 text-center text-sm">
+          Additional licenses to purchase: {licenseInfo.extraUnits}
         </p>
-      ) : null}
-      {licenseInfo?.hasLicenseMismatch ? (
-        <p className="mcm-note is-warn">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>
+      )} */}
+        {licenseInfo?.hasLicenseMismatch ? (
+          <p className="text-amber-600 text-center text-xs">
             Your plan lists {licenseInfo?.reportedFree} unused licence
             {licenseInfo?.reportedFree === 1 ? '' : 's'}, but billing can only confirm{' '}
             {licenseInfo?.enforcedFree}. We use the lower number so you are not blocked at checkout.
-          </span>
-        </p>
-      ) : null}
+          </p>
+        ) : null}
 
-      {/* One line saying what is wrong with the list as a whole, so somebody
-          scrolling ten rows knows there is something to find. */}
-      {clashes.length ? (
-        <p role="status" className="mcm-note is-warn is-block">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>{summariseClashes(clashes)}</span>
-        </p>
-      ) : null}
+        {/* Which role everybody on this form starts on, and why that one. Said
+            once at the top rather than repeated on every row: it is the same
+            answer for all of them, and it is a company-wide setting somebody
+            can go and change. */}
+        {roleDecision.reason ? (
+          <p className="mx-auto mt-1 max-w-3xl text-center text-xs text-gray-600 dark:text-mcm-ink-3">
+            {roleDecision.reason}
+          </p>
+        ) : null}
+        {roleDecision.warning ? (
+          <p className="mx-auto max-w-3xl text-center text-xs font-medium text-amber-600">
+            {roleDecision.warning}
+          </p>
+        ) : null}
 
-      {/* ----------------------------------------------------------------
-          The people. A card each, headed by who they are rather than by
-          nothing: the initials, the name as it is typed, the role and
-          extension underneath, and the remove button on that person's own
-          header instead of loose in the field grid.
-          ---------------------------------------------------------------- */}
-      {/* One page per person. The dots are the reason this is safe: with the
-          others off screen there would otherwise be nothing to say that
-          person three is the one still missing an e-mail address. */}
-      {/* Always on screen, even for one person. Appearing only at two moved
-          everything below it down the moment somebody pressed the plus, and
-          the row you were reading jumped as you added to it. */}
-      <div className="mcm-pager">
-        <span className="mcm-pager-count">
-          Person {page + 1} of {fields.length}
-        </span>
-
-          <div className="mcm-pager-nav">
-            <button
-              type="button"
-              className="mcm-pager-btn"
-              aria-label="Previous person"
-              title="Previous person"
-              disabled={page === 0}
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-            >
-              <TriangleLeft className="mcm-pager-tri" />
-            </button>
-
-            {/* Numbered, not dots. Seven identical 7px circles said nothing
-                about what they were or what clicking one would do; the number
-                is the person's position, which is the same thing the card
-                header and the count already say. */}
-            <div className="mcm-pager-chips">
-              {fields.map((field: any, index: number) => {
-                const bad = rowProblem(index);
-                return (
+        {/* One line saying what is wrong with the list as a whole, so somebody
+            scrolling ten rows knows there is something to find. */}
+        {clashes.length ? (
+          <p
+            role="status"
+            className="mx-auto mt-2 max-w-3xl rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-800"
+          >
+            {summariseClashes(clashes)}
+          </p>
+        ) : null}
+      </div>
+      {/* Two columns from here down: the invitee cards on the left, the
+          running cost pinned on the right — so the total is still visible
+          while scrolling a long list of people, instead of buried below
+          all of them. Collapses to one column under `lg` (this dialog is
+          also used at its old 600px width in narrower contexts), where the
+          summary just falls in after the last card. */}
+      <div
+        className={`mcm-invite-columns flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-10 ${
+          fields.length > 1 ? 'mcm-invite-columns--paged' : ''
+        }`}
+      >
+        <div className="mcm-invite-main min-w-0 flex-1">
+          <h4 className="mcm-invite-heading">User Information</h4>
+          {fields.length > 1 ? (
+            <div className="mcm-invitee-pager flex items-center justify-between">
+              <span className="mcm-invitee-pager-label">
+                Person {activeIndex + 1} of {fields.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Previous person"
+                  disabled={activeIndex === 0}
+                  onClick={() => setActiveIndex((i) => Math.max(0, i - 1))}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {fields.map((field, i) => (
                   <button
-                    key={field?.id || index}
+                    key={field.id}
                     type="button"
-                    aria-label={`Go to ${rowName(index)}${bad ? ', needs a fix' : ''}`}
-                    aria-current={index === page ? 'true' : undefined}
-                    title={`${rowName(index)}${bad ? ' — needs a fix' : ''}`}
-                    className={`mcm-pager-chip ${index === page ? 'is-current' : ''} ${
-                      bad ? 'is-bad' : ''
-                    }`}
-                    onClick={() => setPage(index)}
+                    aria-label={`Person ${i + 1}`}
+                    aria-current={i === activeIndex}
+                    className={i === activeIndex ? 'is-active' : ''}
+                    onClick={() => setActiveIndex(i)}
                   >
-                    {index + 1}
+                    {i + 1}
                   </button>
-                );
-              })}
+                ))}
+                <button
+                  type="button"
+                  aria-label="Next person"
+                  disabled={activeIndex === fields.length - 1}
+                  onClick={() => setActiveIndex((i) => Math.min(fields.length - 1, i + 1))}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
+          <div className="mcm-invite-list flex flex-col my-2 gap-3 pr-0 md:pr-3 lg:gap-2">
+            {(() => {
+              const index = activeIndex;
+              const field = fields[index];
+              if (!field) return null;
+              return (
+          <div
+            key={field.id}
+            className="mcm-invitee grid grid-cols-1 gap-3 rounded-xl border border-gray-200 p-3 md:grid-cols-2 xl:grid-cols-3"
+          >
+            <div className="w-full">
+              <Input
+                label="First Name"
+                required
+                type="text"
+                placeholder="First name"
+                Icon={<UserIcon className="w-4 h-4" />}
+                IconPosition="left-0 inset-y-0 pl-3"
+                className="pl-9"
+                {...register(`users.${index}.first_name`)}
+                error={errors?.users?.[index]?.first_name?.message}
+                maxLength={50}
+              />
+            </div>
+            <div className="w-full">
+              <Input
+                label="Last Name"
+                required
+                type="text"
+                placeholder="Last name"
+                Icon={<UserIcon className="w-4 h-4" />}
+                IconPosition="left-0 inset-y-0 pl-3"
+                className="pl-9"
+                {...register(`users.${index}.last_name`)}
+                error={errors?.users?.[index]?.last_name?.message}
+                maxLength={50}
+              />
+            </div>
+            <div className="mcm-invitee-email w-full">
+              <Input
+                label="Email"
+                required
+                type="email"
+                placeholder="you@company.com"
+                Icon={<Mail className="w-4 h-4" />}
+                IconPosition="left-0 inset-y-0 pl-3"
+                className="pl-9"
+                {...register(`users.${index}.email`)}
+                error={emailProblem(index)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setValue(`users.[${index}].email`, value, {
+                    shouldValidate: true,
+                  });
+                  handleValidateUser({ value, type: 'email' }, index);
+                }}
+              />
             </div>
 
-            <button
-              type="button"
-              className="mcm-pager-btn"
-              aria-label="Next person"
-              title="Next person"
-              disabled={page >= fields.length - 1}
-              onClick={() => setPage((current) => Math.min(fields.length - 1, current + 1))}
-            >
-              <TriangleRight className="mcm-pager-tri" />
-            </button>
-          </div>
-      </div>
-
-      <ol className="mcm-invitee-list">
-        {fields?.map((field: any, index: number) => {
-          const chosen = chosenRoleOf(index);
-          const caution = roleWarning(chosen);
-          const extension = watch(`users.[${index}].extension`);
-          const flagged = rowProblem(index);
-
-          return (
-            /* Hidden rather than unmounted. Every person stays registered with
-               the form, so their answers and their errors survive being paged
-               away from — unmounting them would quietly drop both. */
-            <li
-              key={field?.id || index}
-              hidden={index !== page}
-              style={{ display: index === page ? undefined : 'none' }}
-              className={`mcm-invitee ${flagged ? 'is-flagged' : ''}`}
-            >
-              <header className="mcm-invitee-head">
-                <span className="mcm-invitee-avatar" aria-hidden="true">
-                  {rowInitials(index)}
-                </span>
-                <div className="mcm-invitee-id">
-                  <p className="mcm-invitee-name">{rowName(index)}</p>
-                  <p className="mcm-invitee-meta">
-                    <span>{chosen?.name || (users as any[])?.[index]?.role?.label || 'No role yet'}</span>
-                    {extension ? (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span>Ext {extension}</span>
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-
-                {flagged ? (
-                  <span className="mcm-invitee-flag">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Needs a fix
-                  </span>
-                ) : null}
-
-                {fields.length > 1 && (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${rowName(index)}`}
-                    title="Remove this person"
-                    className="mcm-invitee-remove"
-                    onClick={() => removeRow(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </header>
-
-              <div className="mcm-invitee-body">
-                <Input
-                  label="First name"
-                  type="text"
-                  placeholder="First name"
-                  {...register(`users.${index}.first_name`)}
-                  error={errors?.users?.[index]?.first_name?.message}
-                  maxLength={50}
-                />
-
-                <Input
-                  label="Last name"
-                  type="text"
-                  placeholder="Last name"
-                  {...register(`users.${index}.last_name`)}
-                  error={errors?.users?.[index]?.last_name?.message}
-                  maxLength={50}
-                />
-
-                <Input
-                  label="Email"
-                  type="email"
-                  placeholder="name@company.com"
-                  {...register(`users.${index}.email`)}
-                  error={emailProblem(index)}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setValue(`users.[${index}].email`, value, {
-                      shouldValidate: true,
-                    });
-                    handleValidateUser({ value, type: 'email' }, index);
-                  }}
-                />
-
-                <div className="flex w-full flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label>
-                      Phone <span className="text-[10.5px] font-normal text-gray-400">optional</span>
-                    </Label>
-                    <div className="flex items-start">
-                      {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
-                    </div>
-                  </div>
-                  <PhoneInput
-                    country={'in'}
-                    onlyCountries={['in']}
-                    disableDropdown
-                    value={watch(`users.${index}.phone`)}
-                    onChange={(value) => {
-                      /* ucaas.in: countryCodeEditable={false} freezes this library's input entirely
-                         (can't type or delete at all), so +91 is protected here instead:
-                         if editing eats into the dial code, snap back to a bare 91 rather
-                         than let it disappear. */
-                      const next = value.startsWith('91') ? value : '91';
-                      setValue(`users.[${index}].phone`, next, {
-                        shouldValidate: true,
-                      });
-                      /* An empty box is a valid answer now, and must not be
-                         sent to be checked for duplicates: every blank row
-                         would clash with every other blank row. */
-                      if (String(next || '').replace(/\D/g, '').length >= 9)
-                        handleValidateUser({ value: next, type: 'phone' }, index);
-                    }}
-                    containerClass={`w-full ${phoneProblem(index) ? 'phone-error' : ''}`}
-                  />
-                </div>
-
-                <div className="w-full">
-                  <CustomSelect
-                    label="Role"
-                    value={watch(`users.${index}.role`)}
-                    options={roleList.map(
-                      (role: { name: string; role_uuid: string; type: string; uuid: string }) => ({
-                        /* The same friendly name every other People screen shows
-                           ("Location admin", not MANAGER). A custom role keeps
-                           the name the company gave it. */
-                        label: roleDisplayName(role?.name),
-                        value: role?.type === 'custom' ? role?.uuid : role?.role_uuid,
-                      }),
-                    )}
-                    handleChange={(e: ISELECTVALUE | null) => {
-                      setValue(`users.${index}.role`, e || { label: '', value: '' }, {
-                        shouldValidate: true,
-                      });
-                      /* Branch on the role's `type`, not on its display name: a custom
-                         role may legitimately be called "ADMIN", and the old test
-                         would then have written it into role_uuid. Both fields are
-                         set every time — one to the id, the other cleared — because
-                         leaving the previous one behind meant switching from a custom
-                         role back to a system role silently kept the custom role, the
-                         backend checking custom_role_uuid first. */
-                      const picked = roleList.find(
-                        (item: any) =>
-                          (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === e?.value,
-                      );
-                      const isCustomRole = picked?.type === 'custom';
-                      setValue(`users.${index}.role_uuid`, isCustomRole ? '' : e?.value || '', {
-                        shouldValidate: true,
-                      });
-                      setValue(
-                        `users.${index}.custom_role_uuid`,
-                        isCustomRole ? e?.value || '' : '',
-                        {
-                          shouldValidate: true,
-                        },
-                      );
-                    }}
-                    error={errors?.users?.[index]?.role?.value?.message}
-                    isLoading={isPending}
-                  />
-                  {/* What that role actually allows. The names the platform ships
-                      with — AGENT, MANAGER, SUB-ADMIN — do not say, and the
-                      permissions behind them barely differ, so the box on its own is
-                      a guess dressed up as a decision. The words come from the same
-                      place the Default permissions screen reads them, so the two
-                      screens describe a role identically. */}
-                  {chosen ? (
-                    <p className="mcm-role-hint">{describeRole(chosen)}</p>
-                  ) : null}
-                  {chosen && caution ? (
-                    <p className="mcm-role-hint is-warn">{caution}</p>
-                  ) : null}
-                </div>
-
-                {/* Extension, with its dice next to it rather than adrift in the
-                    grid — the button acts on this field and nothing else. */}
-                <div className="mcm-ext-field">
-                  <Input
-                    label="Extension"
-                    type="text"
-                    placeholder="Extension"
-                    value={extension}
-                    error={extensionProblem(index)}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setValue(`users.[${index}].extension`, value, {
-                        shouldValidate: true,
-                      });
-                      handleValidateUser({ value, type: 'extension' }, index);
-                    }}
-                    maxLength={5}
-                  />
-                  <button
-                    type="button"
-                    className="mcm-ext-regen"
-                    aria-label="Pick a different extension"
-                    title="Pick a different extension"
-                    onClick={() => generateNewExtension(index)}
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
+            <div className="mcm-invitee-full flex flex-col gap-1.5 w-full">
+              <div className="flex items-center justify-between">
+                <Label required>Phone</Label>
+                <div className="flex items-start">
+                  {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
                 </div>
               </div>
-            </li>
-          );
-        })}
-      </ol>
+              <div className="flex w-full gap-1">
+                <PhoneInput
+                  country={'in'}
+                  onlyCountries={['in']}
+                  disableDropdown
+                  placeholder="Phone number"
+                  value={watch(`users.${index}.phone`)}
+                  onChange={(value) => {
+                    const next = withIndianDialCode(value);
+                    setValue(`users.[${index}].phone`, next, {
+                      shouldValidate: true,
+                    });
+                    handleValidateUser({ value: next, type: 'phone' }, index);
+                  }}
+                  containerClass={`w-full ${errors?.users?.[index]?.phone?.message ? 'phone-error' : ''}`}
+                />
+              </div>
+            </div>
 
-      {licenseInfo.extraCharge ? (
-        <OrderSummary
-          customClass="w-full"
-          orderSummary={{
-            watchUserLength: users?.length,
-            availableLicenses: licenseInfo?.available,
-            totalPayableUnit: licenseInfo?.extraUnits,
-          }}
-          dataGetMyPlanDetails={dataGetMyPlanDetails}
-          onCalculationChange={setPaymentCalculation}
-        />
-      ) : null}
+            <div className="mcm-icon-select-field mcm-invitee-full relative w-full">
+              <ShieldCheck className="mcm-icon-select-field-icon" />
+              <CustomSelect
+                label="Role"
+                required
+                placeholder="Select role"
+                value={watch(`users.${index}.role`)}
+                options={roleList.map(
+                  (role: { name: string; role_uuid: string; type: string; uuid: string }) => ({
+                    label: role?.name,
+                    value: role?.type === 'custom' ? role?.uuid : role?.role_uuid,
+                  }),
+                )}
+                handleChange={(e: ISELECTVALUE | null) => {
+                  setValue(`users.${index}.role`, e || { label: '', value: '' }, {
+                    shouldValidate: true,
+                  });
+                  /* Branch on the role's `type`, not on its display name: a custom
+                     role may legitimately be called "ADMIN", and the old test
+                     would then have written it into role_uuid. Both fields are
+                     set every time — one to the id, the other cleared — because
+                     leaving the previous one behind meant switching from a custom
+                     role back to a system role silently kept the custom role, the
+                     backend checking custom_role_uuid first. */
+                  const picked = roleList.find(
+                    (item: any) =>
+                      (item?.type === 'custom' ? item?.uuid : item?.role_uuid) === e?.value,
+                  );
+                  const isCustomRole = picked?.type === 'custom';
+                  setValue(`users.${index}.role_uuid`, isCustomRole ? '' : e?.value || '', {
+                    shouldValidate: true,
+                  });
+                  setValue(`users.${index}.custom_role_uuid`, isCustomRole ? e?.value || '' : '', {
+                    shouldValidate: true,
+                  });
+                }}
+                error={errors?.users?.[index]?.role?.value?.message}
+                isLoading={isPending}
+              />
+              {/* What that role actually allows. The names the platform ships
+                  with — AGENT, MANAGER, SUB-ADMIN — do not say, and the
+                  permissions behind them barely differ, so the box on its own is
+                  a guess dressed up as a decision. The words come from the same
+                  place the Default permissions screen reads them, so the two
+                  screens describe a role identically. */}
+              {(() => {
+                const chosen = chosenRoleOf(index);
+                const caution = roleWarning(chosen);
+                return chosen ? (
+                  <>
+                    <p className="mt-1 text-[11px] leading-snug text-gray-500 dark:text-mcm-ink-3">
+                      {describeRole(chosen)}
+                    </p>
+                    {caution ? (
+                      <p className="mt-0.5 text-[11px] font-medium leading-snug text-amber-600">
+                        {caution}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null;
+              })()}
+            </div>
+
+            <div className="w-full">
+              <Input
+                label="Extension"
+                required
+                type="text"
+                placeholder="Extension"
+                Icon={<PhoneIcon className="w-4 h-4" />}
+                IconPosition="left-0 inset-y-0 pl-3"
+                className="pl-9"
+                value={watch(`users.[${index}].extension`)}
+                error={extensionProblem(index)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setValue(`users.[${index}].extension`, value, {
+                    shouldValidate: true,
+                  });
+                  handleValidateUser({ value, type: 'extension' }, index);
+                }}
+                maxLength={5}
+              />
+            </div>
+
+            <div className="mcm-invitee-actions flex items-center justify-end gap-2">
+              {fields.length > 1 && (
+                <div
+                  className="border-0 cursor-pointer min-w-10 w-10 h-10 text-red-500 hover:text-red-700 flex items-center justify-center"
+                  onClick={() => {
+                    remove(index);
+                    // Stay on the same position unless the last card was removed.
+                    setActiveIndex((i) => Math.min(i, fields.length - 2));
+                  }}
+                >
+                  <TrashBin className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {licenseInfo.extraCharge ? (
+          <div className="mcm-invite-side lg:sticky lg:top-0 lg:w-[280px] lg:shrink-0">
+            <OrderSummary
+              customClass="w-full mcm-order-summary"
+              subtitle="Review your license details"
+              note="Final amount may vary based on selected location and license type."
+              orderSummary={{
+                watchUserLength: users?.length,
+                availableLicenses: licenseInfo?.available,
+                totalPayableUnit: licenseInfo?.extraUnits,
+              }}
+              dataGetMyPlanDetails={dataGetMyPlanDetails}
+              onCalculationChange={setPaymentCalculation}
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };

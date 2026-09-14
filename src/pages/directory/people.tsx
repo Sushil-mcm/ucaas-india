@@ -14,7 +14,7 @@ import { useDirectoryFavourites } from './use-directory-favourites';
 import { useUser } from '@/hooks/use-user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteMember, removeAssignNumber, updateMemberForwading } from '@/services/api';
-import { handleAlert } from '@/lib/utils';
+import { handleAlert, withIndianDialCode } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import RemovalWarning, { useRemovalImpact } from '@/components/mcm/removal-warning';
@@ -792,13 +792,9 @@ const People = () => {
                     disableDropdown
                     value={personForm.phone}
                     onChange={(value) =>
-                      /* countryCodeEditable={false} freezes this library's input entirely
-                         (can't type or delete at all), so +91 is protected here instead:
-                         if editing eats into the dial code, snap back to a bare +91 rather
-                         than let it disappear. */
                       setPersonForm((prev) => ({
                         ...prev,
-                        phone: `+${value.startsWith('91') ? value : '91'}`,
+                        phone: `+${withIndianDialCode(value)}`,
                       }))
                     }
                   />

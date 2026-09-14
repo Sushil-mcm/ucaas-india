@@ -11,6 +11,7 @@ import {
   MEDIA_URL,
   handleAlert,
   MAX_FILE_SIZE,
+  withIndianDialCode,
 } from '@/lib/utils';
 import { mediaUploadUrl, addContact, upsertContact } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
@@ -757,11 +758,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                   disableDropdown
                   value={watch('phone')}
                   onChange={(value) => {
-                    /* countryCodeEditable={false} freezes this library's input entirely
-                       (can't type or delete at all), so +91 is protected here instead:
-                       if editing eats into the dial code, snap back to a bare 91 rather
-                       than let it disappear. */
-                    setValue('phone', value.startsWith('91') ? value : '91', {
+                    setValue('phone', withIndianDialCode(value), {
                       shouldValidate: true,
                     });
                   }}

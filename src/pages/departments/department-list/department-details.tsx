@@ -7,7 +7,7 @@ import SideDrawer from '@/components/custom/side-drawer';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { capitalizeFirstLetter, getObjectLength, handleAlert } from '@/lib/utils';
+import { capitalizeFirstLetter, getObjectLength, handleAlert, withIndianDialCode } from '@/lib/utils';
 import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
 import { deleteDepartment, getUserList, updateMemberForwading } from '@/services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -487,7 +487,7 @@ const DepartmentDetails = () => {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
                       <div className="[&_.react-tel-input_.form-control]:!h-10 [&_.react-tel-input_.form-control]:!rounded-lg [&_.react-tel-input_.form-control]:!border-gray-200 [&_.react-tel-input_.form-control]:!text-sm [&_.react-tel-input_.form-control]:!w-full [&_.react-tel-input_.flag-dropdown]:!rounded-l-lg [&_.react-tel-input_.flag-dropdown]:!border-gray-200">
-                        <PhoneInput country={'in'} onlyCountries={['in']} disableDropdown value={personForm.phone} onChange={(value) => setPersonForm((p) => ({ ...p, phone: `+${value.startsWith('91') ? value : '91'}` }))} />
+                        <PhoneInput country={'in'} onlyCountries={['in']} disableDropdown value={personForm.phone} onChange={(value) => setPersonForm((p) => ({ ...p, phone: `+${withIndianDialCode(value)}` }))} />
                       </div>
                     </div>
                   </div>
