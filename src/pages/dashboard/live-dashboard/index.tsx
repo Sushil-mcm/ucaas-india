@@ -71,6 +71,17 @@ import {
 import { CallPathCell, CallPathDialog } from '@/pages/monitoring/call-path-cell';
 import CallHistory from '@/pages/reports/call-logs/call-history';
 import { useCallStats } from '@/hooks/use-call-stats';
+/* Written for this board (and referenced in several comments below) but
+   never actually wired up with an import — the file existed, its
+   `.dash-legacy table[data-slot='table'] thead th` rules were completely
+   inert, and the roster's `<thead>` (sticky, `top-0`) rendered fully
+   transparent as a result. A transparent sticky header has nothing wrong
+   with its own layout — it still reserves its own 40px row — but every
+   row that scrolls underneath it (inside `.agent-roster-scroll`) shows
+   straight through the see-through header cells, reading as the header
+   labels and a data row colliding in the same space. This one import is
+   the actual fix; the CSS itself was already correct. */
+import '@/pages/performance/legacy-table-theme.css';
 
 type Trend = 'up' | 'down' | 'flat';
 type DashboardCallListKey = 'total' | 'inbound' | 'outbound' | 'missed';
