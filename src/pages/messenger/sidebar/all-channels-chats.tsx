@@ -59,6 +59,8 @@ const AllChannelsChats = ({
     select: (json: any) => json?.data ?? [],
   });
 
+  const loggedInName = `${user?.user_info?.first_name || user?.first_name || ''} ${user?.user_info?.last_name || user?.last_name || ''}`.trim();
+
   const merged: MergedRow[] = useMemo(() => {
     const internalRows: MergedRow[] = (Array.isArray(allChats) ? allChats : [])
       .filter((chat: any) => !chat?.isDeleted)
@@ -66,17 +68,24 @@ const AllChannelsChats = ({
         const otherUser = chat?.users?.find((u: any) => u?.uuid !== user?.uuid);
         const name = chat?.isGroupChat
           ? chat?.name || 'Group'
-          : `${otherUser?.first_name || ''} ${otherUser?.last_name || ''}`.trim() || 'Unknown';
+          : otherUser?.name ||
+            `${otherUser?.first_name || ''} ${otherUser?.last_name || ''}`.trim() ||
+            otherUser?.email ||
+            'Unknown';
         const ts = chat?.lastMessage?.createdAt
           ? new Date(chat.lastMessage.createdAt).getTime()
           : chat?.createdAt
             ? new Date(chat.createdAt).getTime()
             : 0;
+        let preview = extractPreviewText(chat?.lastMessage?.message) || 'Attachment';
+        if (loggedInName && preview.includes('undefined undefined')) {
+          preview = preview.replace('undefined undefined', loggedInName);
+        }
         return {
           key: `internal-${chat.chatId}`,
           kind: 'internal',
           name,
-          preview: extractPreviewText(chat?.lastMessage?.message) || 'Attachment',
+          preview,
           timestamp: ts,
           raw: chat,
         };
@@ -92,7 +101,7 @@ const AllChannelsChats = ({
     }));
 
     return [...internalRows, ...captainRows].sort((a, b) => b.timestamp - a.timestamp);
-  }, [allChats, captainConversations, user?.uuid]);
+  }, [allChats, captainConversations, user?.uuid, loggedInName]);
 
   if (!merged.length) {
     return <div className="flex h-full items-center justify-center p-6 text-sm text-gray-400">No conversations yet</div>;
@@ -111,7 +120,7 @@ const AllChannelsChats = ({
             className={`flex items-center gap-3 border-b border-gray-100 p-3 text-left hover:bg-gray-50 ${isActive ? 'bg-indigo-50' : ''}`}
           >
             <div className="relative shrink-0">
-              <CustomAvatar name={row.name} size="36" showPresence={false} />
+              <CustomAvatar name={row.name} size="44" showPresence={false} />
               {row.kind === 'captain' && (
                 <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-white ring-2 ring-white">
                   <Globe className="size-2.5" />

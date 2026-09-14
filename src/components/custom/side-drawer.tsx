@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from '@/assets/icons/icon';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,22 @@ interface SideDrawerProps {
   enableResponsive?: boolean;
   isCloseIcon?: boolean;
   headerClassName?: string;
+  /* Render into <body> instead of where it sits in the tree.
+
+     This panel and its backdrop are `position: fixed`, which anchors them to
+     the viewport -- but only while no ancestor is a containing block for fixed
+     descendants. `backdrop-filter` (Tailwind's `backdrop-blur-*`) makes an
+     ancestor exactly that, and then "fixed" resolves against that ancestor
+     instead. The Chat sidebar is a 19rem column with `backdrop-blur-[12px]`,
+     so a 450px drawer opened from inside it was laid out against the column:
+     right-aligned to its edge, overflowing 66px past the left, and clipped by
+     the grandparent's `overflow-hidden`. The backdrop dimmed only that column
+     too. Portalling past it restores the viewport as the reference.
+
+     Opt-in rather than always-on: the other drawers in the app are not inside
+     a filtered ancestor, and moving them out of their subtree would change
+     which stacking context they belong to. */
+  portal?: boolean;
 }
 
 const SideDrawer: FC<SideDrawerProps> = ({
@@ -32,6 +49,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
   enableResponsive = false,
   isCloseIcon = true,
   headerClassName = '',
+  portal = false,
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -50,7 +68,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
       ? responsiveWidth || width || '90%'
       : width
     : width;
-  return (
+  const drawer = (
     <>
       {isHeader && (
         <div
@@ -131,7 +149,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
 
         <div
           className={cn(
-            'flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto md:overflow-hidden px-4 lg:px-5 pb-5',
+            'flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto px-4 lg:px-5 pb-5',
             /* No title row means nothing reserves space for the floating
                close button above, so the content's own heading runs
                underneath it - give the content the same clearance a title
@@ -144,6 +162,8 @@ const SideDrawer: FC<SideDrawerProps> = ({
       </div>
     </>
   );
+
+  return portal ? createPortal(drawer, document.body) : drawer;
 };
 
 export default SideDrawer;

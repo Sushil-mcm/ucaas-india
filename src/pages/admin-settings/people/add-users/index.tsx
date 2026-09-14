@@ -1,4 +1,5 @@
-import { useRef, useState, type FC } from 'react';
+import { useRef, useState, type FC, type ReactNode } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { formInitialState } from '../../constants';
 import AddUserInfo from './add-user-info';
@@ -23,14 +24,24 @@ import { handleAlert } from '@/lib/utils';
 
 interface AddUsersProps {
   setDrawerState: (state: boolean) => void;
+  /* Optional, undefined at the other 3 places this wizard renders (Admin
+     People / Departments / License management, each already titled by
+     their own page chrome) -- only Directory's dialog passes these, to
+     show a heading on the step rail instead of a separate dialog header. */
+  railTitle?: string;
+  railSubtitle?: string;
 }
 
-const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
+const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }) => {
   const { data: dataGetMyPlanDetails } = useGetMyPlanDetails();
   const { refetch: refetchUserApi } = useUser();
 
   const [isPaymentRequired, setIspaymentRequired] = useState<any>(false);
   const [orderSummary, setOrderSummary] = useState<any>(null);
+  /* Rendered on the step rail below the title, via `Stepper`'s `panelFooter`
+     -- only Directory's dialog has a rail to put it on, everywhere else this
+     stays null and nothing changes. */
+  const [licenseStats, setLicenseStats] = useState<ReactNode>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [typeOfPassword, setTypeOfPassword] = useState('common');
   const [isUserValidatorError, setIsUserValidatorError] = useState(false);
@@ -150,10 +161,12 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
     {
       number: 1,
       title: 'Add User Info',
+      description: 'Enter details and assign licenses',
     },
     {
       number: 2,
       title: 'Setup Options',
+      description: 'Set permissions and preferences',
     },
   ];
 
@@ -260,6 +273,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
           setIsUserValidatorError,
           dataGetMyPlanDetails,
           setPaymentCalculation,
+          onLicenseStatsChange: railTitle ? setLicenseStats : undefined,
         }}
       />
     ),
@@ -287,7 +301,15 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
     <>
       <FormProvider {...formInstance}>
         <div className="mcm-page mcm-invite w-full h-full min-h-0 overflow-hidden flex flex-col justify-between">
-          <Stepper steps={StepContent} currentStep={currentStep} mobileHorizontal />
+          <Stepper
+            steps={StepContent}
+            currentStep={currentStep}
+            mobileHorizontal
+            customClass="mcm-invite-rail"
+            panelTitle={railTitle}
+            panelSubtitle={railSubtitle}
+            panelFooter={currentStep === 1 ? licenseStats : null}
+          />
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
@@ -323,7 +345,10 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState }) => {
                     ) : currentStep === 2 ? (
                       'Submit'
                     ) : (
-                      'Save & Continue'
+                      <span className="mcm-invite-submit-label">
+                        Save & Continue
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
                     )}
                   </button>
                 )}

@@ -153,8 +153,8 @@ const PageSidebarLayout = ({
               <span>{icon}</span>
               {hideHeading ? null : (
                 <h4
-                  className={cn('font-semibold text-lg', !isGlassSidebar && 'text-gray-900')}
-                  style={isGlassSidebar ? { color: '#8A3F1C' } : undefined}
+                  className={cn('font-semibold text-lg')}
+                  style={{ color: '#000' }}
                 >
                   {title}
                 </h4>

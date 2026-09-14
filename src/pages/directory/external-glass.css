@@ -2,6 +2,30 @@
    as People/Groups/Roles/Locations' own `*-glass.css`, scoped under
    `.gp-external` so no other `.mcm-page` screen is affected. */
 
+.gp-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--accent, #f2994a);
+  background: transparent;
+  color: var(--accent, #f2994a);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.gp-action-btn:hover {
+  background: var(--accent, #f2994a);
+  color: #fff;
+}
+.gp-action-btn:active {
+  background: #e0872e;
+  color: #fff;
+}
+
 .gp-external {
   position: relative;
   isolation: isolate;
@@ -80,6 +104,7 @@
   border-radius: 20px;
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
 }
 .gp-external {
   max-height: 100%;

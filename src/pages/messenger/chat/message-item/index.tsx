@@ -343,8 +343,8 @@ const MessageItem = ({
 
   const seenByCondition = useMemo(() => senderId === actorUuid, [senderId, actorUuid]);
   const showSeenIcon = useMemo(
-    () => Boolean(seenByCondition && isHovered),
-    [isHovered, seenByCondition],
+    () => Boolean(seenByCondition),
+    [seenByCondition],
   );
 
   useEffect(() => {
@@ -693,6 +693,7 @@ const MessageItem = ({
     const callMetadataDuration = formatCallMetadataDuration(msgObj?.callMetaData?.duration);
 
     let content = messageText || 'System Message';
+    content = content.replace(/\bundefined undefined\b/g, currentUserDisplayName);
 
     if (isCall) {
       const { callStatus, createdAt, updatedAt } = alertContent || {};
@@ -712,7 +713,7 @@ const MessageItem = ({
         content = `Call ${callStatus}`;
       }
     } else if (updateMessage) {
-      content = updateMessage;
+      content = String(updateMessage).replace(/\bundefined undefined\b/g, currentUserDisplayName);
     }
 
     if (isAgentChat) {
@@ -1169,7 +1170,7 @@ const MessageItem = ({
                           ? 'rounded-2xl border border-border bg-muted px-3 py-2 text-foreground shadow-sm'
                           : 'rounded-2xl border border-border bg-white px-3 py-2 text-foreground shadow-sm'
                       : isMine
-                        ? 'bg-ucass-primary-200 text-black '
+                        ? 'bg-ucass-active text-white border border-ucass-active'
                         : 'bg-white text-black',
                   )}
                   onMouseEnter={handleMouseEnter}
@@ -1246,7 +1247,8 @@ const MessageItem = ({
                         <button
                           type="button"
                           className={cn(
-                            'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 text-[#9A948F] hover:text-ucass-active',
+                            'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 hover:text-ucass-active',
+                            'text-[#1a1a1a]',
                             isMine ? '-left-7' : '-right-7',
                           )}
                         >
@@ -1392,7 +1394,7 @@ const MessageItem = ({
                           <span
                             className={cn(
                               'block min-w-0 max-w-full text-xs break-words',
-                              isMine ? 'text-black' : 'text-gray-700',
+                              isMine ? 'text-white' : 'text-gray-700',
                             )}
                           >
                             {insertSoftBreaksIntoLongWords(
@@ -1428,7 +1430,7 @@ const MessageItem = ({
                                     ? 'break-words [&_*]:break-words [&_a]:text-white [&_code]:text-white [&_code]:bg-white/20 [&_*]:text-white'
                                     : 'break-words [&_*]:break-words [&_a]:text-foreground [&_code]:text-foreground [&_code]:bg-black/10'
                                   : isMine
-                                    ? 'break-words [&_*]:break-words [&_a]:text-black [&_code]:text-black [&_code]:bg-black/15'
+                                    ? 'break-words [&_*]:break-words [&_a]:text-white [&_code]:text-white [&_code]:bg-white/20 [&_*]:text-white'
                                     : 'break-words [&_*]:break-words'
                               }
                             />
@@ -1453,7 +1455,7 @@ const MessageItem = ({
                               className={cn(
                                 'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer',
                                 isMine
-                                  ? 'border-black/20 bg-black/5 text-black hover:bg-black/10'
+                                  ? 'border-white/30 bg-white/15 text-white hover:bg-white/25'
                                   : 'border-border bg-white text-ucass-active hover:bg-muted',
                               )}
                               onClick={() => setIsMessageExpanded((prev) => !prev)}

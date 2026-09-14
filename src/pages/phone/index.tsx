@@ -101,22 +101,25 @@ const InnerSidebarPhone = ({ logData, setLogData, setTabType, callAccess, filter
         <div className="border-b border-[#EEE7DD] w-full">
           <TabsList className="flex text-sm font-semibold text-center  p-0 rounded-none min-h-10 w-full">
             <TabsTrigger
-              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary  data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4   m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs "
+              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary border-b-2 px-4 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs"
               value="calls"
+              style={{ color: '#000' }}
             >
               Calls
             </TabsTrigger>
             {callAccess?.RECORDING && (
               <TabsTrigger
-                className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
+                className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary border-b-2 px-4 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs"
                 value="recordings"
+                style={{ color: '#000' }}
               >
                 Recordings
               </TabsTrigger>
             )}
             <TabsTrigger
-              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 px-4 text-[#2E2D35] cursor-pointer h-full rounded-none w-2/4  m-auto relative flex gap-1 bg-transparent font-semibold  data-[state=active]:shadow-2xs"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary border-b-2 px-4 cursor-pointer h-full rounded-none w-2/4 m-auto relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-2xs"
               value="voicemails"
+              style={{ color: '#000' }}
             >
               Voicemails
             </TabsTrigger>
@@ -341,13 +344,13 @@ export const LogContent = ({
                 <button
                   type="button"
                   onClick={handleHeaderBack}
-                  className="flex items-center justify-center rounded-full w-9 h-9 text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] shrink-0"
+                  className="flex items-center justify-center rounded-full w-9 h-9 text-black/50 hover:bg-[#FBE2C8]/40 hover:text-black shrink-0"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               </CustomTooltip>
-              <p className="font-semibold text-[#2E2D35] text-md">Call Intelligence</p>
+              <p className="font-semibold text-black text-md">Call Intelligence</p>
             </div>
           ) : (
             <div className="flex items-center w-full px-3 h-16 gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-none border-b border-[rgba(225,200,165,0.9)] min-h-[65px] ">
@@ -355,7 +358,7 @@ export const LogContent = ({
                 <button
                   type="button"
                   onClick={handleHeaderBack}
-                  className="flex items-center justify-center rounded-full w-9 h-9 text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] shrink-0"
+                  className="flex items-center justify-center rounded-full w-9 h-9 text-black/50 hover:bg-[#FBE2C8]/40 hover:text-black shrink-0"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -372,7 +375,7 @@ export const LogContent = ({
               </div>
               <div className="flex items-center justify-between w-full">
                 <div className="flex flex-col">
-                  <p className="font-semibold text-[#2E2D35] truncate text-md max-w-[calc(100vw_-_38rem)] w-full">
+                  <p className="font-semibold text-black truncate text-md max-w-[calc(100vw_-_38rem)] w-full">
                     {resolvedHeaderName}{' '}
                     {isMeaningfulValue(logData?.main?.contact_type) && (
                       <span className="inline-flex items-center rounded bg-[#EFF8FF] border border-[#B2DDFF] px-1.5 py-0.5 text-[10px] font-bold text-[#175CD3] uppercase tracking-wider">
@@ -380,7 +383,7 @@ export const LogContent = ({
                       </span>
                     )}
                   </p>
-                  <p className="text-[#2E2D35] truncate text-sm">
+                  <p className="text-black truncate text-sm">
                     {logData?.main?.display_caller_number}
                   </p>
                 </div>
@@ -403,7 +406,7 @@ export const LogContent = ({
                         navigate(`/inbox?formState=contact&number=${normalizedContactNumber}`);
                       }}
                       role="button"
-                      className={`${canCallOrMessage ? 'cursor-pointer bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white' : 'cursor-not-allowed bg-[#F0DFC5] text-[#9A948F]'} flex items-center justify-center rounded-full w-8 h-8`}
+                      className={`${canCallOrMessage ? 'cursor-pointer bg-[#FBE2C8]/40 text-black/80 hover:bg-primary hover:text-white' : 'cursor-not-allowed bg-[#F0DFC5] text-black/50'} flex items-center justify-center rounded-full w-8 h-8`}
                     >
                       <Icon name="Letter" className="w-5 h-5" />
                     </span>
@@ -522,7 +525,7 @@ export const LogContent = ({
                                   <p className="text-sm">{viaDid}</p>
                                 </div>
                                 <div className="flex gap-0.5 justify-end items-center">
-                                  <p className="text-[#9A948F] flex items-center gap-0.5 text-xs">
+                                  <p className="text-black/50 flex items-center gap-0.5 text-xs">
                                     {hasRecording && reportsActionAccess?.call_recording_listen && (
                                       <span>
                                         <Icon name="SoundWave" className="w-4" />
@@ -714,8 +717,8 @@ export const LogContent = ({
                 ) : (
                   <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-[#EEE7DD] bg-white px-4">
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-[#2E2D35]">No logs available</p>
-                      <p className="mt-1 text-xs text-[#9A948F]">
+                      <p className="text-sm font-semibold text-black">No logs available</p>
+                      <p className="mt-1 text-xs text-black/50">
                         Call records will appear here once this contact has activity.
                       </p>
                     </div>
@@ -762,7 +765,7 @@ const Phone = () => {
       <div className="lg:hidden flex border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shrink-0 shadow-[0_12px_28px_-6px_rgba(194,98,46,0.22),0_2px_8px_rgba(194,98,46,0.12)] z-10 w-full">
         <button
           className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-            mobileView === 'dialpad' ? 'border-b-2 border-primary text-primary' : 'text-[#9A948F]'
+            mobileView === 'dialpad' ? 'border-b-2 border-primary text-primary' : 'text-black/50'
           }`}
           onClick={() => setMobileView('dialpad')}
         >
@@ -770,7 +773,7 @@ const Phone = () => {
         </button>
         <button
           className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
-            mobileView === 'listing' ? 'border-b-2 border-primary text-primary' : 'text-[#9A948F]'
+            mobileView === 'listing' ? 'border-b-2 border-primary text-primary' : 'text-black/50'
           }`}
           onClick={() => setMobileView('listing')}
         >

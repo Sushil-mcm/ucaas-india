@@ -71,26 +71,30 @@ const Calls = ({
         <div className="border-b border-gray-200 w-full">
           <TabsList className=" w-full bg-white p-0 rounded-none  ">
             <TabsTrigger
-              className="cursor-pointer  data-[state=active]:text-primary data-[state=active]:shadow-none  data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold data-[state=inactive]:text-gray-700"
+              className="cursor-pointer data-[state=active]:shadow-none data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold"
               value="all"
+              style={{ color: '#000' }}
             >
               All
             </TabsTrigger>
             <TabsTrigger
-              className="cursor-pointer  data-[state=active]:text-primary data-[state=active]:shadow-none  data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold data-[state=inactive]:text-gray-700"
+              className="cursor-pointer data-[state=active]:shadow-none data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold"
               value="outgoing"
+              style={{ color: '#000' }}
             >
               Outgoing
             </TabsTrigger>
             <TabsTrigger
-              className="cursor-pointer  data-[state=active]:text-primary data-[state=active]:shadow-none  data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold data-[state=inactive]:text-gray-700"
+              className="cursor-pointer data-[state=active]:shadow-none data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold"
               value="incoming"
+              style={{ color: '#000' }}
             >
               Incoming
             </TabsTrigger>
             <TabsTrigger
-              className="cursor-pointer  data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2  px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold data-[state=inactive]:text-gray-700"
+              className="cursor-pointer data-[state=active]:shadow-none data-[state=active]:border-b-2 px-4 data-[state=active]:border-b-primary data-[state=active]:rounded-none border-b-2 h-full font-semibold"
               value="missed"
+              style={{ color: '#000' }}
             >
               Missed
             </TabsTrigger>

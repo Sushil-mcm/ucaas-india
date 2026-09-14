@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FC, useState } from 'react';
 import AlertConfirm from '@/components/custom/alert-confirm.tsx';
 import SideDrawer from '@/components/custom/side-drawer.tsx';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
 import AllLeadsList from './all-leads-list/index.tsx';
 import LeadsGroupList from './lead-group-list/index.tsx';
@@ -323,36 +324,34 @@ const Leads: FC = () => {
         drawerState={drawerState.exportContacts}
         setDrawerState={(val) => setDrawerState((prev) => ({ ...prev, exportContacts: val }))}
       />
-      {drawerState?.addContact && (
-        <SideDrawer
-          width="min(500px, 94vw)"
-          isHeader
-          isOpen={drawerState?.addContact}
-          title={
-            drawerState?.selectedContact
-              ? `Update Lead (${drawerState?.selectedContact?.name?.first || ''} ${drawerState?.selectedContact?.name?.last || ''})`
-              : 'Add Lead'
-          }
-          handleClose={() => setDrawerState((prev) => ({ ...prev, addContact: false }))}
-          content={
-            <CreateContactNew
-              contactData={drawerState?.selectedContact}
-              isDisable={false}
-              setIsDisable={() => void 0}
-              setDrawerState={() => void 0}
-              keepFormDataAfterSave
-              isLead={true}
-              handleClose={() => setDrawerState((prev) => ({ ...prev, addContact: false }))}
-            />
-            // <AddContact
-            //   drawerState={drawerState.addContact}
-            //   setDrawerState={(val) => setDrawerState((prev) => ({ ...prev, addContact: val }))}
-            //   // groupId={id}
-            //   contactData={drawerState?.selectedContact}
-            // />
-          }
-        />
-      )}
+      <Dialog
+        open={!!drawerState?.addContact}
+        onOpenChange={(open) => {
+          if (!open) setDrawerState((prev) => ({ ...prev, addContact: false }));
+        }}
+      >
+        <DialogContent
+          className="sm:w-[38rem] lg:w-[40rem] p-5"
+          showCloseButton
+        >
+          <div className="flex flex-col gap-1.5 text-900/80 mb-2">
+            <h2 className="font-semibold text-lg text-[#2E2D35]">
+              {drawerState?.selectedContact
+                ? `Update Lead (${drawerState?.selectedContact?.name?.first || ''} ${drawerState?.selectedContact?.name?.last || ''})`
+                : 'Add Lead'}
+            </h2>
+          </div>
+          <CreateContactNew
+            contactData={drawerState?.selectedContact}
+            isDisable={false}
+            setIsDisable={() => void 0}
+            setDrawerState={() => void 0}
+            keepFormDataAfterSave
+            isLead={true}
+            handleClose={() => setDrawerState((prev) => ({ ...prev, addContact: false }))}
+          />
+        </DialogContent>
+      </Dialog>
 
       {!!showDeleteConfirmation && (
         <AlertConfirm

@@ -569,6 +569,16 @@
   color: #c96f1f;
   box-shadow: none;
 }
+.gp-people .mini.solid {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+.gp-people .mini.solid:hover {
+  background: var(--accent-ink) !important;
+  border-color: var(--accent-ink) !important;
+  color: #fff !important;
+}
 
 /* "Groups" / "Export" — `.btn.ghost` is normally a neutral grey action
    button (used all over the app outside this page), so left alone it reads

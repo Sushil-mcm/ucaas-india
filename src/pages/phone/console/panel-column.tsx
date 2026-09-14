@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getEnv } from '@/lib/utils';
 import type { DialpadSession } from '@/context/dialpad-context';
 import type { ConsoleCallRow } from './call-list-column';
+import { useGetExtensions } from '@/hooks/common';
+import { callAgentName, callExtension, callOurNumber, isInboundLog } from './call-attribution';
 import { Ic } from './icons';
 import { isNumberLike } from './copilot-adapter';
 import { isExtensionDialTarget } from '@/lib/extension-utility';
@@ -143,7 +145,21 @@ const AskDock = ({ session }: { session: DialpadSession | null }) => {
 
   return (
     <>
-      <div className="pscroll" style={{ borderTop: '1px solid var(--line)' }}>
+      {/* The Q&A transcript. It is a second `.pscroll` in the same column as the
+          pane's own one, and `.pscroll` is `flex: 1` with a 120px floor -- so
+          with no questions asked it still claimed half the panel and 120px of
+          nothing, squeezing the pane above it. That is what cut the Selected
+          call card off mid-row while leaving blank space underneath. With
+          nothing to show it now takes no room at all, and the pane above gets
+          the full height. */}
+      <div
+        className="pscroll"
+        style={
+          messages.length
+            ? { borderTop: '1px solid var(--line)' }
+            : { flex: 'none', minHeight: 0, padding: 0 }
+        }
+      >
         {messages.length
           ? messages.map((m, i) => (
               <div className="qa" key={i}>
@@ -164,16 +180,24 @@ const AskDock = ({ session }: { session: DialpadSession | null }) => {
             ))
           : null}
       </div>
+      {/* Compact notice when no agent is available; full dock otherwise */}
+      {(socketOffline || noAgent) && !canAsk ? (
+        <div className="askdock" style={{ padding: '8px 12px' }}>
+          <div className="scope" style={{ marginBottom: 0 }}>
+            {socketOffline ? (
+              <span className="scopebtn offline">
+                <Ic n="alert" size={10} /> AI service not connected
+              </span>
+            ) : (
+              <span className="scopebtn">No AI agent configured</span>
+            )}
+          </div>
+        </div>
+      ) : (
       <div className="askdock">
         <div className="scope">
-          {socketOffline ? (
-            <span className="scopebtn offline">
-              <Ic n="alert" size={10} /> AI service not connected
-            </span>
-          ) : agentsLoading ? (
+          {agentsLoading ? (
             <span className="scopebtn">Loading agents…</span>
-          ) : noAgent ? (
-            <span className="scopebtn">No AI agent configured</span>
           ) : (
             agentOptions.map((a: any) => (
               <button
@@ -191,13 +215,9 @@ const AskDock = ({ session }: { session: DialpadSession | null }) => {
           <textarea
             rows={1}
             placeholder={
-              socketOffline
-                ? 'Copilot is offline — the AI socket is not connected'
-                : noAgent
-                  ? 'No AI agent available'
-                  : canAsk
-                    ? 'Ask the Copilot about this call…'
-                    : 'Available once a call is connected'
+              canAsk
+                ? 'Ask the Copilot about this call…'
+                : 'Available once a call is connected'
             }
             value={text}
             disabled={!canAsk}
@@ -238,6 +258,7 @@ const AskDock = ({ session }: { session: DialpadSession | null }) => {
           </div>
         ) : null}
       </div>
+      )}
     </>
   );
 };
@@ -270,6 +291,19 @@ const CopilotPane = ({
   const sayNext = live.sayNext || derivedSayNext;
   const brief = useMemo(() => liveBrief || buildBrief(session), [liveBrief, session]);
 
+  /* Who handled the selected call and on which company number. Read from the
+     CDR row the list already carries, through the shared reader so this panel
+     and the stage cannot name different agents for the same call. */
+  const { data: extensionList } = useGetExtensions({ page: 1, limit: 500 });
+  const selectedLog = (selectedCall?.logData?.main ?? selectedCall?.raw) as any;
+  const selectedAgent = useMemo(
+    () => (selectedLog ? callAgentName(selectedLog, extensionList) : ''),
+    [selectedLog, extensionList],
+  );
+  const selectedExtension = selectedLog ? callExtension(selectedLog) : '';
+  const selectedVia = selectedLog ? callOurNumber(selectedLog) : '';
+  const selectedInbound = selectedLog ? isInboundLog(selectedLog) : false;
+
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [turns.length, cards.length]);
@@ -289,8 +323,12 @@ const CopilotPane = ({
                 <div className="kv">
                   <span className="k">Contact</span>
                   <span className="v">
+                    {/* The Number row below already carries the digits. Printing
+                        them here too said the same thing twice and left the
+                        actual answer -- that nobody is saved under this number
+                        -- unsaid. Same wording as the list and the stage. */}
                     {isNumberLike(selectedCall.name) ? (
-                      <NumberWithFlag number={selectedCall.name} className="num" />
+                      <span style={{ color: 'var(--ink-4)' }}>Not in contacts</span>
                     ) : (
                       selectedCall.name
                     )}
@@ -302,6 +340,34 @@ const CopilotPane = ({
                     <NumberWithFlag number={selectedCall.number} className="num" />
                   </span>
                 </div>
+                {/* Who dealt with it and on which of our numbers. Both were in
+                    the CDR row and shown only on the stage, so this panel could
+                    not answer the first thing asked about a past call. */}
+                {selectedAgent ? (
+                  <div className="kv">
+                    <span className="k">Handled by</span>
+                    <span className="v">
+                      {selectedAgent}
+                      {selectedExtension ? (
+                        <span style={{ color: 'var(--ink-4)' }} className="num">
+                          {' '}
+                          · {selectedExtension}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                ) : null}
+                {selectedVia ? (
+                  <div className="kv">
+                    {/* Whose number this is depends on the direction: on an
+                        outbound call it is the number we showed them, on an
+                        inbound one it is the number they rang. */}
+                    <span className="k">{selectedInbound ? 'Called to' : 'Called from'}</span>
+                    <span className="v">
+                      <NumberWithFlag number={selectedVia} className="num" />
+                    </span>
+                  </div>
+                ) : null}
                 <div className="kv">
                   <span className="k">Direction</span>
                   <span className="v">

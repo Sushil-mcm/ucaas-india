@@ -54,7 +54,16 @@ export const useConsoleCall = () => {
   useEffect(() => {
     const prev = prevRef.current;
     const current = prev ? sessions?.[prev.id] : null;
-    if (prev && !isTerminalSession(prev) && isTerminalSession(current) && prev.hasAnswered) {
+    /* `prev.hasAnswered` used to be required here, so a call that never
+       connected went straight back to the idle dialler and the agent was told
+       nothing at all -- not that it failed, nor why. That is the one case where
+       the reason matters most: a busy number is worth redialling, a
+       disconnected one never is.
+
+       Unanswered INCOMING calls do not reach this point: the dialpad context
+       clears those sessions before marking them terminal, so this only brings
+       in outbound calls that failed or were never picked up. */
+    if (prev && !isTerminalSession(prev) && isTerminalSession(current)) {
       setWrapupId(prev.id);
     }
     prevRef.current = liveSession || (prev && sessions?.[prev.id]) || null;

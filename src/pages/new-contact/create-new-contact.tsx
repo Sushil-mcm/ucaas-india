@@ -588,8 +588,8 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
             htmlFor="file-upload"
             className={
               largeAvatar
-                ? 'rounded-full border border-gray-200 relative w-20 h-20 cursor-pointer shrink-0'
-                : 'rounded-full border border-gray-200 relative w-14 h-14 cursor-pointer'
+                ? 'rounded-full border border-dashed border-gray-300 relative w-20 h-20 cursor-pointer shrink-0 hover:border-primary transition-colors'
+                : 'rounded-full border border-dashed border-gray-300 relative w-16 h-16 cursor-pointer hover:border-primary transition-colors'
             }
           >
             {watch('avatar') || imagePreview || avatar ? (
@@ -598,7 +598,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                   <CustomAvatar
                     name={`${watch('first_name') || ''} ${watch('last_name') || ''}`.trim()}
                     image={existingProfilePic}
-                    size={largeAvatar ? '80' : '56'}
+                    size={largeAvatar ? '80' : '64'}
                     type="contact"
                     isActivityInfo={false}
                   />
@@ -616,7 +616,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                     className={
                       largeAvatar
                         ? 'rounded-full object-cover h-20 w-20'
-                        : 'rounded-full object-cover h-14 w-14'
+                        : 'rounded-full object-cover h-16 w-16'
                     }
                     loading="lazy"
                   />
@@ -656,11 +656,12 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               <div
                 className={
                   largeAvatar
-                    ? 'h-20 w-20 bg-gray-500 rounded-full flex items-center justify-center'
-                    : 'h-14 w-14 bg-gray-500 rounded-full flex items-center justify-center'
+                    ? 'h-20 w-20 bg-gray-100 rounded-full flex flex-col items-center justify-center gap-0.5'
+                    : 'h-16 w-16 bg-gray-100 rounded-full flex flex-col items-center justify-center gap-0.5'
                 }
               >
-                <Icon name="User" className={largeAvatar ? 'text-white w-12 h-12' : 'text-white w-10 h-10'} />
+                <Icon name="User" className={largeAvatar ? 'text-gray-400 w-8 h-8' : 'text-gray-400 w-6 h-6'} />
+                <span className="text-[9px] text-gray-400 font-medium">Photo</span>
               </div>
             )}
 
@@ -716,7 +717,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
         )}
 
         <div className="flex gap-4 flex-col">
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={'First Name'}
               {...register('first_name')}
@@ -737,7 +738,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               maxLength={50}
             />
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               {...register('email')}
               placeholder="Enter email"
@@ -793,7 +794,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               </ul>
             </div>
           ) : null}
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="Enter company"
               {...register('company')}
@@ -815,7 +816,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
           </button>
           {showMore ? (
           <>
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <CustomSelect
               label={'Gender'}
               options={genderOptions}
@@ -845,7 +846,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               />
             </div>
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="Enter webpage"
               {...register('webpage')}
@@ -855,7 +856,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               maxLength={150}
             />
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="Enter title"
               {...register('title')}
@@ -874,7 +875,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
             />
           </div>
 
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="Enter facebook ID"
               {...register('facebook')}
@@ -895,7 +896,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
               `social` map as the profiles above — the server takes whatever
               keys it is given — so Directory can offer a real action per
               channel instead of only dialling a number. */}
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="e.g. +1 256 808 1010"
               {...register('whatsapp')}
@@ -912,7 +913,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
             />
           </div>
 
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               placeholder="e.g. @acme"
               {...register('telegram')}
@@ -924,7 +925,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
 
           <div className="flex flex-col w-full gap-4">
             <p className="font-semibold text-gray-900">Address Information</p>
-            <div className="flex gap-4 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 placeholder="Enter street"
                 {...register('street')}
@@ -942,7 +943,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                 maxLength={50}
               />
             </div>
-            <div className="flex gap-4 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 placeholder="Enter state"
                 {...register('state')}
@@ -1078,7 +1079,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
         </div>
       </div>
       {!isDisable && (
-        <div className="flex shrink-0 pt-2 justify-end gap-2 border-t border-gray-100 bg-white">
+        <div className="flex shrink-0 pt-2 justify-end gap-2 border-t border-gray-100">
           {!hideCancelButton ? (
             <Button
               type="button"

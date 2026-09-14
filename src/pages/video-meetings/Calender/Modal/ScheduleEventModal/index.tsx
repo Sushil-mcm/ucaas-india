@@ -753,6 +753,35 @@ const ScheduleEventModal = ({
     return todayInTZ === selectedDate;
   };
 
+  const calHourOptions = useMemo(
+    () =>
+      startMeetHourArr.map((item) => {
+        const shouldDisable =
+          isTodayInTimezone(WatchDate, watchTimezone?.value) &&
+          currentHourTZ !== null &&
+          Number(item.val) < Number(currentHourTZ);
+        return { label: item.val, value: item.val, isDisabled: shouldDisable };
+      }),
+    [WatchDate, watchTimezone?.value, currentHourTZ],
+  );
+
+  const calMinuteOptions = useMemo(
+    () =>
+      startMeetMinutesArr.map((item) => {
+        const isToday = isTodayInTimezone(WatchDate, watchTimezone?.value);
+        const isCurrentHour =
+          currentHourTZ !== null &&
+          Number(WatchHour?.value) === Number(currentHourTZ);
+        const shouldDisable =
+          isToday &&
+          isCurrentHour &&
+          currentMinuteTZ !== null &&
+          Number(item.val) < Number(currentMinuteTZ);
+        return { label: item.val, value: item.val, isDisabled: shouldDisable };
+      }),
+    [WatchDate, watchTimezone?.value, WatchHour?.value, currentHourTZ, currentMinuteTZ],
+  );
+
   const submitSchedulePayload = async (data: any) => {
     if (isVideoCreateRestricted) return;
 
@@ -958,18 +987,7 @@ const ScheduleEventModal = ({
                       <CustomSelect
                         inputClass="mcm-time-select"
                         placeholder="Hours"
-                        options={startMeetHourArr?.map((item) => {
-                          const shouldDisable =
-                            isTodayInTimezone(WatchDate, watchTimezone?.value) &&
-                            currentHourTZ !== null &&
-                            Number(item.val) < Number(currentHourTZ);
-
-                          return {
-                            label: item?.val,
-                            value: item?.val,
-                            isDisabled: shouldDisable,
-                          };
-                        })}
+                        options={calHourOptions}
                         handleChange={(value) => setValue('hr', value)}
                         value={watch('hr')}
                         isDisabled={!watchTimezone}
@@ -977,23 +995,7 @@ const ScheduleEventModal = ({
                       <CustomSelect
                         inputClass="mcm-time-select"
                         placeholder="Mins"
-                        options={startMeetMinutesArr?.map((item) => {
-                          const isToday = isTodayInTimezone(WatchDate, watchTimezone?.value);
-                          const isCurrentHour =
-                            currentHourTZ !== null &&
-                            Number(WatchHour?.value) === Number(currentHourTZ);
-                          const shouldDisable =
-                            isToday &&
-                            isCurrentHour &&
-                            currentMinuteTZ !== null &&
-                            Number(item.val) < Number(currentMinuteTZ);
-
-                          return {
-                            label: item?.val,
-                            value: item?.val,
-                            isDisabled: shouldDisable,
-                          };
-                        })}
+                        options={calMinuteOptions}
                         handleChange={(value) => setValue('mins', value)}
                         value={watch('mins')}
                         isDisabled={!watchTimezone}

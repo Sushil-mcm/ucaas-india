@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
+import RemovedPeople from './people-removed';
 import './people-glass.css';
 import './groups-glass.css';
 import './edit-person-glass.css';
@@ -172,6 +173,7 @@ const People = () => {
   const [assigningCallerId, setAssigningCallerId] = useState<PersonRow | null>(null);
   const [inviting, setInviting] = useState(false);
 
+  const [tab, setTab] = useState<'people' | 'removed'>('people');
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('All');
   const { isFavourite, toggleFavourite } = useDirectoryFavourites();
@@ -410,6 +412,39 @@ const People = () => {
           </div>
         }
       >
+        <div
+          className="flex items-center gap-1"
+          role="tablist"
+          aria-label="People or removed people"
+          style={{ padding: '8px 12px', borderBottom: '1px solid var(--line)' }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'people'}
+            className={tab === 'people' ? 'mini solid' : 'mini'}
+            onClick={() => setTab('people')}
+          >
+            <Ic n="users" size={12} />
+            People
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'removed'}
+            className={tab === 'removed' ? 'mini solid' : 'mini'}
+            title="People removed in the last 72 hours, who can still be restored"
+            onClick={() => setTab('removed')}
+          >
+            <Ic n="trash" size={12} />
+            Removed
+          </button>
+        </div>
+
+        {tab === 'removed' ? (
+          <RemovedPeople canRestore={canDelete} />
+        ) : (
+        <>
         {selectedIds.size > 0 ? (
           <div className="gp-bulk-bar">
             <span className="gp-bulk-count">
@@ -733,6 +768,8 @@ const People = () => {
             </div>
           </div>
         ) : null}
+        </>
+        )}
 
         {open ? (
           <Dialog open={Boolean(open)} onOpenChange={(next) => !next && setOpen(null)}>
@@ -874,11 +911,6 @@ const People = () => {
           className="gp-create-group-dialog gp-invite-dialog sm:max-w-[600px] lg:max-w-[1120px]"
           showCloseButton={false}
         >
-          {/* The title lives on the step rail now (`AddUsers`'s
-              `railTitle`/`railSubtitle`, matching the reference layout),
-              so this bar is just the close control -- kept rather than
-              removed since every other `gp-create-group-dialog` still
-              needs somewhere for it to sit. */}
           <div className="gp-create-group-head gp-create-group-head--bare">
             <button
               type="button"

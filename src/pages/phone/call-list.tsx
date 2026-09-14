@@ -222,6 +222,16 @@ const CallList = forwardRef(
                   }
                   members = members?.map((item: any) => `${item?.name} (${item?.extension})`);
 
+                  const isMissed = main?.direction === 'Missed' || (main?.direction === 'Inbound' && main?.billsec === '00:00:00');
+                  const isOutbound = main?.direction === 'Outbound';
+                  const isSelected = selectedId === main?.id;
+                  const contactName = main?.contact_name
+                    || main?.contact_username
+                    || (['Missed', 'Inbound'].includes(main?.direction)
+                      ? (main?.caller_id_number !== main?.display_caller_number ? main?.display_caller_number : main?.caller_id_number)
+                      : main?.destination_number);
+                  const hasContact = Boolean(main?.contact_name || main?.contact_username);
+
                   return (
                     <div
                       onClick={() => {
@@ -229,186 +239,81 @@ const CallList = forwardRef(
                         setSelectedId(main?.id);
                       }}
                       key={main?.id}
-                      className={`flex cursor-pointer ${selectedId === main?.id ? 'bg-gray-100' : 'bg-white'}`}
+                      className="cursor-pointer transition-colors group"
+                      style={{
+                        background: isSelected ? '#fff7ed' : '#fff',
+                        borderLeft: isSelected ? '3px solid #f2994a' : '3px solid transparent',
+                        borderBottom: '1px solid #f5f5f4',
+                      }}
                     >
-                      <div className="flex items-center w-full px-3 h-16 gap-2">
-                        <div className="relative">
+                      <div className="flex items-center w-full px-3 py-3 gap-3">
+                        {/* Direction indicator + Avatar */}
+                        <div className="relative shrink-0">
                           {main?.contact_username ? (
-                            <CustomAvatar name={main?.contact_username} />
+                            <CustomAvatar name={main?.contact_username} size="36" />
                           ) : (
-                            <div className="rounded-full bg-gray-500 flex items-center justify-center">
-                              <User className="h-9 w-9" />
+                            <div className="rounded-full flex items-center justify-center" style={{ width: 36, height: 36, background: '#f3f4f6' }}>
+                              <User className="h-5 w-5" style={{ color: '#9ca3af' }} />
                             </div>
                           )}
+                          <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full" style={{ width: 16, height: 16, background: '#fff', boxShadow: '0 0 0 1.5px #fff' }}>
+                            {isOutbound ? (
+                              <Icon name="OutgoingCallStrokeIcon" className="w-3.5 h-3.5 text-green-500" />
+                            ) : isMissed ? (
+                              <Icon name="MissedCallStrokeIcon" className="w-3.5 h-3.5 text-red-500" />
+                            ) : (
+                              <Icon name="IncomingCallStrokeIcon" className="w-3.5 h-3.5 text-green-500" />
+                            )}
+                          </span>
                         </div>
-                        <div className="flex flex-col justify-between text-sm w-[calc(100%_-_3rem)] gap-1">
-                          <div className="flex justify-between gap-2">
-                            <p className=" text-gray-900 font-medium truncate">
-                              {main?.contact_name
-                                ? main?.contact_name
-                                : main?.contact_username
-                                  ? main?.contact_username
-                                  : ['Missed', 'Inbound'].includes(main?.direction)
-                                    ? main?.caller_id_number !== main?.display_caller_number
-                                      ? main?.display_caller_number
-                                      : main?.caller_id_number
-                                    : main?.destination_number}{' '}
-                              {main?.count ? `(${main?.count})` : ''}
+
+                        {/* Content */}
+                        <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-semibold truncate" style={{ color: isMissed ? '#ef4444' : '#111' }}>
+                              {contactName}{main?.count ? ` (${main?.count})` : ''}
                             </p>
-                            <p className="text-gray-500 text-end  whitespace-nowrap text-xs">
-                              {relativeTime}
-                            </p>
+                            <span className="text-[11px] whitespace-nowrap shrink-0" style={{ color: '#888' }}>{relativeTime}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <div className="flex gap-1">
-                              <div className="text-gray-900/80 truncate pr-2 text-xs">
-                                {['Missed', 'Inbound'].includes(main?.direction) ? (
-                                  <NumberWithFlag number={main?.display_caller_number} />
-                                ) : (
-                                  <>
-                                    {main?.is_voicemail ? (
-                                      <div className="flex">
-                                        <div>
-                                          {main?.forward_type === 'VOICEMAILGROUP' ? (
-                                            main?.forward_name ? (
-                                              <Tooltip>
-                                                <TooltipTrigger>
-                                                  {main?.forward_name}
-                                                </TooltipTrigger>
-                                                <TooltipContent side="right">
-                                                  {members?.join(', ')}
-                                                </TooltipContent>
-                                              </Tooltip>
-                                            ) : (
-                                              <p>Department Voicemail</p>
-                                            )
-                                          ) : main?.forward_type === 'VOICEMAIL' ? (
-                                            main?.forward_name ? (
-                                              <div className="flex items-start gap-1 flex-col font-semibold">
-                                                <p>{main?.forward_name}</p>
-                                                <p>{`Ext. ${main?.forward_value}`}</p>
-                                              </div>
-                                            ) : (
-                                              <p>Voicemail</p>
-                                            )
-                                          ) : (
-                                            <p>{main?.forward_type?.toLowerCase()}</p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        {main?.display_caller_number ? (
-                                          <div className="flex items-center justify-start gap-2">
-                                            <div className="flex flex-col">
-                                              {/* {['Outbound'].includes(main?.direction) && (
-                                                <p color="textPrimary">{main?.contact_name}</p>
-                                              )} */}
-                                              {main?.display_caller_number?.length < 5 && (
-                                                <p className="text-gray-900/80 truncate">{`${main?.display_caller_number}`}</p>
-                                              )}
-                                              {main?.display_caller_number?.length > 5 && (
-                                                <div className="text-gray-900/80 truncate">
-                                                  {
-                                                    <NumberWithFlag
-                                                      number={main?.display_caller_number}
-                                                    />
-                                                  }
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <div className="flex justify-start items-center">
-                                            {main?.forward_type === 'EXTENSION' ? (
-                                              <div className="flex items-center gap-2">
-                                                {main?.forward_value?.length < 5 && <></>}
-                                                <div className="flex flex-col">
-                                                  <p>{main?.forward_value}</p>
-                                                  {main?.forward_value?.length < 5 && (
-                                                    <p>{`Ext. ${main?.forward_value}`}</p>
-                                                  )}
-                                                  {main?.forward_value?.length > 5 && (
-                                                    <p>{`Ph. ${main?.forward_value}`}</p>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            ) : main?.forward_type === 'DEPARTMENT' ||
-                                              main?.forward_type === 'VOICEMAILGROUP' ? (
-                                              <Tooltip>
-                                                <TooltipTrigger>
-                                                  {main?.forward_name}
-                                                </TooltipTrigger>
-                                                <TooltipContent side="right">
-                                                  {members?.join(', ')}
-                                                </TooltipContent>
-                                              </Tooltip>
-                                            ) : main?.forward_type === 'IVR' ? (
-                                              <div className="flex items-center gap-1"></div>
-                                            ) : main?.forward_type === 'NUMBER' ? (
-                                              <div className="flex flex-col">
-                                                <p>{main?.forward_type?.toLowerCase()}</p>
-                                                <p>{main?.forward_value}</p>
-                                              </div>
-                                            ) : (
-                                              <>
-                                                <p>{main?.forward_type?.toLowerCase()}</p>
-                                                <p>{handleMembers(main?.members)}</p>
-                                              </>
-                                            )}
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </>
-                                )}
-                              </div>
+
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-[11px] truncate" style={{ color: '#666' }}>
+                              {!hasContact ? (
+                                <span style={{ color: '#9ca3af' }}>Not in contacts</span>
+                              ) : ['Missed', 'Inbound'].includes(main?.direction) ? (
+                                <NumberWithFlag number={main?.display_caller_number} />
+                              ) : main?.is_voicemail ? (
+                                main?.forward_type === 'VOICEMAILGROUP' ? (
+                                  main?.forward_name ? (
+                                    <Tooltip><TooltipTrigger>{main?.forward_name}</TooltipTrigger><TooltipContent side="right">{members?.join(', ')}</TooltipContent></Tooltip>
+                                  ) : 'Department Voicemail'
+                                ) : main?.forward_type === 'VOICEMAIL' ? (
+                                  main?.forward_name || 'Voicemail'
+                                ) : main?.forward_type?.toLowerCase()
+                              ) : main?.display_caller_number ? (
+                                <NumberWithFlag number={main?.display_caller_number} />
+                              ) : main?.forward_type === 'EXTENSION' ? (
+                                `Ext. ${main?.forward_value}`
+                              ) : main?.forward_type === 'DEPARTMENT' || main?.forward_type === 'VOICEMAILGROUP' ? (
+                                <Tooltip><TooltipTrigger>{main?.forward_name}</TooltipTrigger><TooltipContent side="right">{members?.join(', ')}</TooltipContent></Tooltip>
+                              ) : main?.forward_type === 'NUMBER' ? (
+                                main?.forward_value
+                              ) : (
+                                main?.forward_type?.toLowerCase()
+                              )}
                             </div>
-                            <div className="flex gap-0.5 justify-end items-center">
-                              <p className="text-gray-500 flex items-center gap-0.5 text-xs">
-                                {main?.recording_file &&
-                                reportsActionAccess?.call_recording_listen ? (
-                                  <span>
-                                    <Icon name="SoundWave" className="w-4" />
-                                  </span>
-                                ) : null}
-                                {main?.is_voicemail && main?.recording_file ? (
-                                  <span>
-                                    <Icon name="VoicemailLineIcon" className="w-4" />
-                                  </span>
-                                ) : null}
-                                <span>{duration?.slice(3)}</span>
-                              </p>
-                              <div
-                                className={`flex ${
-                                  main?.direction === 'Inbound'
-                                    ? main?.billsec !== '00:00:00'
-                                      ? 'text-green-400'
-                                      : 'text-red'
-                                    : main?.direction === 'Outbound'
-                                      ? 'text-green-400'
-                                      : null
-                                }`}
-                              >
-                                {main?.direction === 'Outbound' ? (
-                                  <Icon
-                                    name="OutgoingCallStrokeIcon"
-                                    className="text-green-400 w-4.5 h-4.5"
-                                  />
-                                ) : ['Inbound', 'Missed'].includes(main?.direction) ? (
-                                  main?.billsec === '00:00:00' ? (
-                                    <Icon
-                                      name="MissedCallStrokeIcon"
-                                      className="text-red-500 w-4.5 h-4.5"
-                                    />
-                                  ) : (
-                                    <Icon
-                                      name="IncomingCallStrokeIcon"
-                                      className="text-primary w-4.5 h-4.5"
-                                    />
-                                  )
-                                ) : null}
-                              </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {main?.recording_file && reportsActionAccess?.call_recording_listen ? (
+                                <Icon name="SoundWave" className="w-3.5 h-3.5" style={{ color: '#aaa' }} />
+                              ) : null}
+                              {main?.is_voicemail && main?.recording_file ? (
+                                <Icon name="VoicemailLineIcon" className="w-3.5 h-3.5" style={{ color: '#aaa' }} />
+                              ) : null}
+                              <span className="text-[11px]" style={{ color: '#888' }}>{duration?.slice(3)}</span>
+                              {isMissed && (
+                                <span className="text-[10px] font-semibold rounded-full px-1.5 py-0.5" style={{ background: '#fef2f2', color: '#ef4444' }}>Missed</span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -423,7 +328,7 @@ const CallList = forwardRef(
             ) : (
               <div className="flex flex-col justify-center items-center gap-1 py-5 h-full w-full mx-auto">
                 <img src={NotFound} alt="BusyImage" className="min-w-28 w-28" />
-                <p className="text-md font-medium text-gray-900">
+                <p className="text-md font-medium text-black">
                   {tabType == 'call' ? `No recent ${tabType}s available` : `No ${tabType}s yet`}
                 </p>
                 <p className="text-sm text-gray-700">

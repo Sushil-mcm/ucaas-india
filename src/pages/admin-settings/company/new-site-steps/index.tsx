@@ -210,7 +210,8 @@ const NewSiteSteps = ({
           <Stepper
             steps={StepContent}
             currentStep={currentStep}
-            customClass="gp-department-rail gp-location-rail h-full shrink-0 overflow-y-auto"
+            customClass="gp-department-rail gp-location-rail shrink-0"
+            stickyPanel
             panelTitle={railTitle}
             panelSubtitle={railSubtitle}
           />

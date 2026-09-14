@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,8 @@ export function CustomDatePicker({
   label = null,
   error = '',
 }: CustomDatePickerProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {(label || error) && (
@@ -35,7 +38,7 @@ export function CustomDatePicker({
         </div>
       )}
 
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
@@ -55,7 +58,10 @@ export function CustomDatePicker({
           <Calendar
             mode="single"
             selected={new Date(value || '') as Date}
-            onSelect={onChange}
+            onSelect={(date) => {
+              onChange(date);
+              setOpen(false);
+            }}
             initialFocus
             disabled={(date) => {
               if (minDate) {

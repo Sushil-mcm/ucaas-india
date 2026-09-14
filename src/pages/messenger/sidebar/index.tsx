@@ -88,6 +88,7 @@ const Sidebar = ({
 
   return (
     <PageSidebarLayout
+      collapsible={false}
       headerCustomClass={
         ['whatsapp', 'instagram', 'facebook', 'messenger', 'telegram'].includes(chatType)
           ? 'w-[calc(100%-90px)]'
@@ -160,19 +161,17 @@ const Sidebar = ({
           {(chatAccess?.access?.DIRECT_MESSAGE || chatAccess?.access?.TEAM_MESSAGE) &&
           !['instagram', 'facebook', 'messenger', 'telegram'].includes(chatType) ? (
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                {
+              <DropdownMenuTrigger asChild>
                   <div
                     className={
                       'cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white'
                     }
-                    onClick={handleAddButtonClick}
+                    onClick={!['chat', 'all_channels'].includes(chatType) ? handleAddButtonClick : undefined}
                   >
                     <Plus width={18} height={18} />
                   </div>
-                }
               </DropdownMenuTrigger>
-              {chatType === 'chat' && (
+              {(chatType === 'chat' || chatType === 'all_channels') && (
                 <DropdownMenuContent>
                   {chatAccess?.access?.DIRECT_MESSAGE && (
                     <DropdownMenuItem
@@ -284,6 +283,7 @@ const Sidebar = ({
           </div>
           {showCreateChatModal === 'direct' && (
             <SideDrawer
+              portal
               width="45%"
               isHeader
               isOpen={showCreateChatModal === 'direct'}
@@ -299,6 +299,7 @@ const Sidebar = ({
           )}
           {showCreateChatModal === 'team' && (
             <SideDrawer
+              portal
               width="450px"
               isHeader
               isOpen={showCreateChatModal === 'team'}
@@ -314,6 +315,7 @@ const Sidebar = ({
           )}
           {showCreateChatModal === 'whatsapp' && (
             <SideDrawer
+              portal
               width="45%"
               title="Send WhatsApp Message"
               isOpen={showCreateChatModal === 'whatsapp'}

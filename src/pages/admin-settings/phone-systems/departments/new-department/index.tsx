@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useEffect, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import DepartmentInfo from './department-info';
@@ -36,7 +37,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ErrorTooltip from '@/components/custom/error-tooltip';
 import { requiredString } from '@/lib/schema';
 import { useGetSite } from '@/hooks/common';
-import { dedupeMembers } from '@/lib/queue-members';
 
 const baseValueSchema = yup.object({
   label: yup.string(),
@@ -60,10 +60,10 @@ const validationSchema: Record<string, yup.AnyObjectSchema> = {
     name: requiredString('Name', 2, 50),
     extension: requiredExtension(),
     timeout: yup.object().shape({
-      value: yup.string().required('Ring time is required'),
+      value: yup.string().required('Member Ring Timeout is required'),
     }),
     site: yup.object().shape({
-      value: yup.string().required('Location is required'),
+      value: yup.string().required('Site is required'),
     }),
     description: yup
       .string()
@@ -102,18 +102,15 @@ const validationSchema: Record<string, yup.AnyObjectSchema> = {
       .array()
       .of(
         yup.object({
-          value: yup.string().trim().required('Person is required'),
+          value: yup.string().trim().required('Member is required'),
         }),
       )
-      .min(1, 'Add at least one person'),
+      .min(1, 'At least one member is required'),
   }),
   [DEPARTMENT_TAB_CONSTANT.RING_STRETEGY]: yup.object().shape({
     ring_strategy: yup.object().shape({
       value: yup.string().required('Ring Strategy is required'),
     }),
-    /* Call waiting for members: on (default) rings a member even while they
-       are on a call; off leaves busy members out of the ring. */
-    call_waiting: yup.boolean().optional(),
   }),
   [DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION]: yup.object().shape({
     media: yup.object({
@@ -137,7 +134,18 @@ const TABS_ORDER = [
   DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION,
 ];
 
-const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
+const NewDepartment = ({
+  rowData,
+  setDrawerState,
+  setTabData,
+  /* Optional, undefined at the other 2 places this wizard renders (Admin ▸
+     Phone Systems ▸ Departments), where the page's own title already sits
+     above the whole form -- only Directory's Create-group dialog passes
+     these, to show a heading on the step rail instead of a separate dialog
+     header (same pattern Invite people's own rail uses). */
+  railTitle,
+  railSubtitle,
+}: any) => {
   const queryClient = useQueryClient();
   const { user } = useUser();
   const { user_info } = user || {};
@@ -178,7 +186,6 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
       label: 'Ring All',
       value: 'ring_all',
     },
-    call_waiting: true,
     failover: {
       type: { label: 'Send to Voicemail', value: 'VOICEMAIL' },
       value: { label: 'Select', value: user_info?.extension },
@@ -211,8 +218,47 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
     watch,
     trigger,
     setValue,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = formInstance;
+
+  /* Which tabs are finished, for the tick in the strip. Each tab already
+     owns a schema (`validationSchema`), and `handleTabChange` validates
+     against exactly these when moving forward -- so "complete" here means
+     the same thing as "you would be allowed past this tab", rather than a
+     second, drifting definition of done.
+
+     `watch()` with no argument re-renders on every keystroke, which is what
+     keeps the ticks live; five small sync schemas per keystroke is
+     affordable on a form this size. A schema with an async test would make
+     validateSync throw, and the catch simply leaves that tab unticked
+     rather than breaking the strip. */
+  const watchedValues = watch();
+  const completedTabs = useMemo(() => {
+    const done: Record<string, boolean> = {};
+    TABS_ORDER.forEach((tab) => {
+      /* Schema-valid alone isn't "done": Ring Strategy and Media pass with
+         the form's own defaults, so they ticked before the user had opened
+         them. The tab also has to hold something the user actually entered.
+         Which fields belong to a tab comes from that tab's schema rather
+         than a hand-kept list, so the two can't drift apart. */
+      const tabFields = Object.keys(validationSchema[tab]?.fields || {});
+      const hasInput = tabFields.some((field) => (dirtyFields as any)?.[field]);
+      if (!hasInput) {
+        done[tab] = false;
+        return;
+      }
+      try {
+        validationSchema[tab].validateSync(watchedValues, {
+          abortEarly: true,
+          context: { activeTab: tab, schemaContext },
+        });
+        done[tab] = true;
+      } catch {
+        done[tab] = false;
+      }
+    });
+    return done;
+  }, [watchedValues, schemaContext, dirtyFields]);
 
   const handleTabChange = async (nextTab: string) => {
     const currentIndex = TABS_ORDER.indexOf(currentStep);
@@ -339,21 +385,11 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
   };
 
   const onSubmit = (data: any) => {
-    const {
-      site,
-      timeout,
-      failover,
-      settings,
-      media,
-      ring_strategy,
-      members,
-      call_waiting,
-      ...rest
-    } = data || {};
-    /* Keyed on the id, falling back to the extension. Keying on user_uuid alone
-       collapsed the whole group to one person whenever the people list came
-       back under the other id spelling and every member's was blank. */
-    const uniqueMembers = dedupeMembers(members);
+    const { site, timeout, failover, settings, media, ring_strategy, members, ...rest } =
+      data || {};
+    const uniqueMembers = members?.length
+      ? Array.from(new Map(members.map((m: any) => [m.user_uuid, m])).values())
+      : [];
     const payload = {
       site: JSON.stringify(site),
       forward_call_actions: {
@@ -390,9 +426,6 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
             label: failover?.value?.label,
             name: failover?.value?.name,
           },
-          /* Read by the router's group branch: false leaves members already
-             on a call out of the ring. Anything else rings everybody. */
-          call_waiting: call_waiting !== false,
         },
         media: {
           welcome: {
@@ -443,7 +476,9 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
         ai_call_monitoring = false,
       } = forward_call_actions || {};
       const parsedMembers = typeof members === 'string' ? parseJSON(members) : members;
-      const uniqueMembers = dedupeMembers(parsedMembers);
+      const uniqueMembers = Array.isArray(parsedMembers)
+        ? Array.from(new Map(parsedMembers.map((m: any) => [m.user_uuid, m])).values())
+        : [];
       reset({
         name,
         extension,
@@ -516,7 +551,6 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
         //   ...parseJSON(caller_id),
         // },
         ring_strategy: MEMBER_RING_STRATEGY_OPTIONS.find(({ value }) => value === ring_strategy),
-        call_waiting: call_handling?.call_waiting !== false,
       });
     } else {
       const obj = {
@@ -527,111 +561,135 @@ const NewDepartment = ({ rowData, setDrawerState, setTabData }: any) => {
       setValue('settings.operational_hours.regional', user?.settings?.operational_hours?.regional);
     }
   }, [rowData, isEdit, user_info]);
+  /* Plain left-aligned list of step titles -- no numbered circle, just the
+     current step picked out in orange and a tick once that step's own
+     validation passes. */
+  const tabsList = (
+    <Tabs value={currentStep} onValueChange={handleTabChange} className="w-full">
+      <TabsList className="gp-department-tabs flex h-auto w-full flex-col items-stretch gap-3 overflow-visible rounded-none bg-transparent p-0 text-left text-sm font-semibold">
+        {Object.entries(DEPARTMENT_TAB_CONSTANT).map(([key, value]) => (
+          <TabsTrigger
+            className="gp-department-tab relative flex w-full shrink-0 items-center justify-between gap-2 rounded-none border-0 bg-transparent p-0 text-left text-sm font-semibold text-muted-foreground data-[state=active]:shadow-none focus-visible:outline-0 focus-visible:ring-0 focus-visible:border-0"
+            key={key}
+            value={value}
+          >
+            <span className="truncate text-left">{value}</span>
+            {(errors as any)[ERROR_TYPES[value]] ? (
+              <ErrorTooltip text={DEPARTMENT_ERROR_TYPES_MESSAGES[value]} />
+            ) : completedTabs[value] ? (
+              <span className="flex items-center justify-center rounded-full bg-primary/15 p-0.5 text-primary">
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </span>
+            ) : null}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  );
+
   return (
     <>
-      <div className="flex h-full min-h-0 w-full flex-col justify-between gap-3 pt-2 sm:pt-3">
-        {!isEdit && (
-          <span className="text-sm leading-5 text-gray-700">
-            Create a department to organize your company’s workflow. This allows you to route calls
-            to specific teams (e.g., Support or Billing) and assign multiple users to a single
-            extension so they can handle incoming calls together.
-          </span>
-        )}
-        <Tabs
-          value={currentStep}
-          onValueChange={handleTabChange}
-          className="flex w-full flex-col overflow-x-hidden overflow-y-hidden"
-        >
-          <div className="w-full overflow-x-auto overflow-y-hidden border-b border-gray-200">
-            <TabsList className="flex min-w-max min-h-12 items-stretch overflow-y-hidden rounded-none bg-transparent p-0 text-center text-sm font-semibold">
-              {Object.entries(DEPARTMENT_TAB_CONSTANT).map(([key, value]) => (
-                <TabsTrigger
-                  className="relative flex h-full shrink-0 items-center gap-1 rounded-none border-b-2 bg-transparent px-4 py-3 text-sm font-semibold text-gray-700 data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary data-[state=active]:shadow-2xs sm:px-6 focus-visible:outline-0 focus-visible:ring-0 focus-visible:border-0 "
-                  key={key}
-                  value={value}
-                >
-                  {value}{' '}
-                  {(errors as any)[ERROR_TYPES[value]] && (
-                    <div className="flex justify-end">
-                      <ErrorTooltip text={DEPARTMENT_ERROR_TYPES_MESSAGES[value]} />
-                    </div>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-        </Tabs>
+      <div className="flex h-full min-h-0 w-full flex-col gap-3 pt-2 sm:pt-3">
         <FormProvider {...formInstance}>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex h-full min-h-0 w-full flex-col justify-between gap-4"
+            className="flex h-full min-h-0 w-full flex-1 flex-col"
           >
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">{stepLookUp?.[currentStep]}</div>
-            <div className="border-t border-gray-200 pt-2 sm:pt-3">
-              <div className="hidden items-center justify-between gap-2 lg:flex">
-                <Button variant={'transparent'} type="button" onClick={() => setDrawerState(false)}>
-                  Cancel
-                </Button>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={'outline'}
-                    type="button"
-                    onClick={handlePrev}
-                    disabled={currentStep === TABS_ORDER[0]}
-                  >
-                    Prev
-                  </Button>
-                  {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
-                    <Button variant={'outline'} type="button" onClick={handleNext}>
-                      Next
-                    </Button>
-                  )}
-                  {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
-                    <Button variant={'primary'} type="submit" disabled={isPending}>
-                      {isPending ? 'Submiting...' : 'Submit'}
-                    </Button>
-                  )}
-                </div>
+            {/* Rail on the left (tab list, plus the intro blurb on create),
+                form content + footer on the right -- same shape as Invite
+                people's step rail, rather than a horizontal tab strip
+                stacked above the form. Stacks back to a column below `lg`,
+                same breakpoint the footer's own two layouts already switch
+                on. */}
+            <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+              <div className="gp-department-rail flex h-full shrink-0 flex-col gap-4 overflow-y-auto lg:w-[230px]">
+                {railTitle ? (
+                  <div className="mcm-stepper-panel-head">
+                    <h3>{railTitle}</h3>
+                    {railSubtitle ? <p>{railSubtitle}</p> : null}
+                  </div>
+                ) : !isEdit ? (
+                  <span className="text-sm leading-5 text-muted-foreground">
+                    Route calls to a team and assign it a shared extension.
+                  </span>
+                ) : null}
+                {tabsList}
               </div>
-              <div className="overflow-x-auto overflow-y-hidden pb-1 lg:hidden">
-                <div className="flex min-w-max items-center gap-2">
-                  <Button
-                    variant={'transparent'}
-                    type="button"
-                    onClick={() => setDrawerState(false)}
-                    className="shrink-0"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant={'outline'}
-                    type="button"
-                    onClick={handlePrev}
-                    disabled={currentStep === TABS_ORDER[0]}
-                    className="shrink-0"
-                  >
-                    Prev
-                  </Button>
-                  {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
+              <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                  {stepLookUp?.[currentStep]}
+                </div>
+                <div className="border-t border-border pt-2 sm:pt-3">
+                  <div className="hidden items-center justify-between gap-2 lg:flex">
                     <Button
-                      variant={'outline'}
+                      variant={'transparent'}
                       type="button"
-                      onClick={handleNext}
-                      className="shrink-0"
+                      onClick={() => setDrawerState(false)}
                     >
-                      Next
+                      Cancel
                     </Button>
-                  )}
-                  {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
-                    <Button
-                      variant={'primary'}
-                      type="submit"
-                      disabled={isPending}
-                      className="shrink-0"
-                    >
-                      {isPending ? 'Submiting...' : 'Submit'}
-                    </Button>
-                  )}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={'outline'}
+                        type="button"
+                        onClick={handlePrev}
+                        disabled={currentStep === TABS_ORDER[0]}
+                      >
+                        Prev
+                      </Button>
+                      {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
+                        <Button variant={'outline'} type="button" onClick={handleNext}>
+                          Next
+                        </Button>
+                      )}
+                      {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
+                        <Button variant={'primary'} type="submit" disabled={isPending}>
+                          {isPending ? 'Submiting...' : 'Submit'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto overflow-y-hidden pb-1 lg:hidden">
+                    <div className="flex min-w-max items-center gap-2">
+                      <Button
+                        variant={'transparent'}
+                        type="button"
+                        onClick={() => setDrawerState(false)}
+                        className="shrink-0"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant={'outline'}
+                        type="button"
+                        onClick={handlePrev}
+                        disabled={currentStep === TABS_ORDER[0]}
+                        className="shrink-0"
+                      >
+                        Prev
+                      </Button>
+                      {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
+                        <Button
+                          variant={'outline'}
+                          type="button"
+                          onClick={handleNext}
+                          className="shrink-0"
+                        >
+                          Next
+                        </Button>
+                      )}
+                      {currentStep === DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
+                        <Button
+                          variant={'primary'}
+                          type="submit"
+                          disabled={isPending}
+                          className="shrink-0"
+                        >
+                          {isPending ? 'Submiting...' : 'Submit'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

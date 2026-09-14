@@ -6,6 +6,7 @@ import moment from 'moment';
 
 import TableManager from '@/components/custom/table-manager';
 import SideDrawer from '@/components/custom/side-drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';

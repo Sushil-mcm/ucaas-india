@@ -3421,7 +3421,7 @@ export const ChatFooter = ({
   );
 
   const baseComposerClasses =
-    'w-full flex flex-col border-t-2 border-r border-l border-t-primary/70 focus-visible:border-t-primary focus-within:border-t-primary border-r-[#EEE7DD] border-l-[#EEE7DD] rounded-md shadow-sm min-h-[120px] pb-8 relative';
+    'w-full flex flex-col rounded-lg min-h-[120px] pb-8 relative';
   const attachmentPreviewMeta = [
     activeAttachment?.name,
     activeAttachment?.sizeLabel,
@@ -3608,7 +3608,7 @@ export const ChatFooter = ({
           {renderReplyBanner()}
 
           {isRecording && !fromMeetChat && !isGuestRestrictedFooter && canUseFileUploadControls ? (
-            <div className="min-h-[150px] flex items-center justify-center border-t-2 border-ucass-active/70 border-r border-l border-r-[#EEE7DD] border-l-[#EEE7DD] rounded-md shadow-sm">
+            <div className="min-h-[150px] flex items-center justify-center border-none rounded-md">
               <div className="w-auto max-w-md mx-auto transition-all duration-300 flex items-center justify-center">
                 <AudioRecorder
                   isLoading={isComposerBusy}
@@ -3622,7 +3622,7 @@ export const ChatFooter = ({
               {typingText ? (
                 <div className="text-xs text-ucass-active px-1 py-1">{typingText}</div>
               ) : null}
-              <div className={baseComposerClasses}>{renderComposerEditor()}</div>
+              <div className={baseComposerClasses} style={{ border: '1px solid #e5e7eb', outline: 'none', borderRadius: '12px' }}>{renderComposerEditor()}</div>
               <div className="absolute right-0 bottom-1 z-[12]">
                 <div className="flex gap-1.5 items-center px-2  pointer-events-auto rounded-full">
                   {!isGuestRestrictedFooter && chatFeatures.canUseAttachmentAndRichComposer ? (

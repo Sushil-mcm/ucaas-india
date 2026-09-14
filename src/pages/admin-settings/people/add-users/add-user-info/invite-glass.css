@@ -17,13 +17,193 @@
 /* Transparent was tried and reverted — with the dialog's own surface
    removed, the People page's buttons and table showed straight through the
    header, making it unreadable. Plain white keeps the "no cream tint"
-   result without that problem. */
+   result without that problem -- the rail's own peach card (below) is
+   bled to the dialog's edges instead of tinting the whole dialog, so only
+   the left column carries the colour, matching the reference. */
 .gp-invite-dialog {
   max-height: 88vh;
   background: #ffffff !important;
 }
+.dark .gp-invite-dialog {
+  background: var(--mcm-surface, #1e293b) !important;
+}
 .gp-invite-dialog .gp-create-group-head {
-  background: #ffffff;
+  /* Transparent, not white: the rail's peach (below) is painted behind
+     everything via a pseudo-element on the dialog itself so it can reach
+     the very top edge, above the close-button bar too -- a solid white
+     here would paint over it again in exactly that strip. */
+  background: transparent;
+}
+.dark .gp-invite-dialog .gp-create-group-head {
+  background: var(--mcm-surface, #1e293b);
+}
+.gp-invite-dialog .gp-create-group-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #8a6f57;
+}
+.dark .gp-invite-dialog .gp-create-group-subtitle {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+/* The dialog title moved onto the rail itself (below), so this bar is down
+   to just the close button -- a thin strip instead of the usual title-
+   height header. */
+/* Floated out of normal flow entirely -- previously a full-width row above
+   `.gp-create-group-body`, which put the rail's own peach card a whole row
+   below the dialog's true top edge no matter how the rail's own background
+   was bled: that white strip was the actual head bar occupying real height,
+   not a margin that could be cancelled from below it. Absolute + zero
+   height in the flow means `.gp-create-group-body` (and the rail inside it)
+   now starts flush at the dialog's own top edge, and only a left/bottom
+   bleed on the rail itself (below) is needed to reach every edge. */
+.gp-invite-dialog .gp-create-group-head--bare {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
+  padding: 14px;
+  border-bottom: none;
+}
+
+/* The rail's own heading, above the step list -- the dialog's title and
+   intro line, rendered here instead of the shared header bar (see
+   `AddUsers`' `railTitle`/`railSubtitle`, threaded through to `Stepper`'s
+   own optional `panelTitle`/`panelSubtitle`). */
+.gp-invite-dialog .mcm-invite-rail .mcm-stepper-panel-head {
+  margin-bottom: 22px;
+}
+.gp-invite-dialog .mcm-invite-rail .mcm-stepper-panel-head h3 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.dark .gp-invite-dialog .mcm-invite-rail .mcm-stepper-panel-head h3 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-invite-rail .mcm-stepper-panel-head p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6b5c4d;
+}
+.dark .gp-invite-dialog .mcm-invite-rail .mcm-stepper-panel-head p {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+
+/* ---- section headings ("Add Users", "User Information") ---- */
+.gp-invite-dialog .mcm-invite-heading {
+  margin: 4px 0 2px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #2a2733;
+}
+.dark .gp-invite-dialog .mcm-invite-heading {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-field-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b5c4d;
+}
+.dark .gp-invite-dialog .mcm-field-label {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+
+/* ---- number-of-users stepper: −  [input]  + ---- */
+.gp-invite-dialog .mcm-count-stepper {
+  border: 1px solid rgba(242, 153, 74, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dark .gp-invite-dialog .mcm-count-stepper {
+  border-color: #1b2934;
+}
+.gp-invite-dialog .mcm-count-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 40px;
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.gp-invite-dialog .mcm-count-stepper button {
+  background: #fff6e9;
+  color: #c96f1f;
+}
+.gp-invite-dialog .mcm-count-stepper button:hover:not(:disabled) {
+  background: #ffedd2;
+}
+.dark .gp-invite-dialog .mcm-count-stepper button {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-count-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.gp-invite-dialog .mcm-count-stepper [data-slot='input'] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  text-align: center;
+}
+
+/* ---- two-column layout: invitee cards + sticky cost sidebar ---- */
+.gp-invite-dialog .mcm-invite-main {
+  padding-top: 18px;
+}
+.gp-invite-dialog .mcm-invite-side {
+  margin-top: 4px;
+}
+@media (min-width: 1024px) {
+  .gp-invite-dialog .mcm-invite-main {
+    padding-right: 2px;
+  }
+  .gp-invite-dialog .mcm-invite-side {
+    margin-top: 58px;
+    margin-right: 16px;
+  }
+  /* The pager bar (below) adds height above the invitee card only when
+     there's more than one person, which the Order Summary column has no
+     equivalent of -- without this, its fixed offset above only lines up
+     with the card when the pager is absent. */
+  .gp-invite-dialog .mcm-invite-columns--paged .mcm-invite-side {
+    margin-top: 122px;
+  }
+  /* Order Summary matched to the invitee card's height: `lg:items-start`
+     (the platform's own utility) only ever sized each column to its own
+     content, so the shorter Order Summary card always stopped short of the
+     six-field form beside it. Stretching the row, then the whole chain
+     down to the card itself, lets it grow to fill that same height instead. */
+  .gp-invite-dialog .mcm-invite-columns {
+    align-items: stretch !important;
+  }
+  .gp-invite-dialog .mcm-invite-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .gp-invite-dialog .mcm-invite-list {
+    flex: 1;
+  }
+  .gp-invite-dialog .mcm-invitee {
+    height: 100%;
+  }
+  .gp-invite-dialog .mcm-invite-side {
+    display: flex;
+    flex-direction: column;
+  }
+  .gp-invite-dialog .mcm-invite-side > div {
+    flex: 1;
+    align-items: stretch;
+  }
+  .gp-invite-dialog .mcm-order-summary {
+    height: 100%;
+  }
 }
 
 /* The platform's own wrapper (`add-users/index.tsx`) is `h-full ...
@@ -54,6 +234,144 @@
   padding: 0 4px !important;
 }
 
+/* ---- three columns: step rail / form / running cost ----
+   `Stepper` and `AddUserInfo` are both the platform's own shared
+   components (also rendered full-page in Admin ▸ People, Departments and
+   License management), so nothing about their own markup or behaviour
+   changes here -- `mcm-invite-rail` is just a class handed to `Stepper`
+   through its existing `customClass` prop, inert everywhere it does not
+   sit inside `.gp-invite-dialog`. `.mcm-invite` itself becomes a two-row
+   grid: the rail spans both rows on the left, the step content and the
+   footer stack in the right column so the footer stays full-width under
+   the form+summary rather than being pushed right of the rail too. Below
+   `sm` (this dialog's own existing width threshold) it drops back to the
+   plain stacked layout the shared component ships with everywhere else. */
+@media (min-width: 640px) {
+  .gp-invite-dialog .mcm-invite {
+    display: grid !important;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 1fr auto;
+    column-gap: 22px;
+  }
+  .gp-invite-dialog .mcm-invite-rail {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    border-right: 1px solid rgba(242, 153, 74, 0.16);
+  }
+  .dark .gp-invite-dialog .mcm-invite-rail {
+    border-right-color: #1b2934;
+  }
+  /* `.mcm-invite > div:first-child` (above) already sets this same
+     element's padding at (0,2,1) specificity -- one class + a type
+     selector -- so a plain `.mcm-invite-rail` rule at (0,2,0) loses to it
+     regardless of source order. Matching that shape rather than adding
+     another `!important` fight.
+
+     Transparent, not its own peach fill: `.gp-create-group-body` has
+     `overflow-y: auto`, and CSS forces `overflow-x` to also compute as
+     `auto` whenever the other axis isn't `visible` -- a spec rule, not
+     something `overflow-x: visible !important` can override -- so any
+     bleed on the rail itself (negative margin past the body's own
+     padding) gets silently clipped at the body's edge even though the
+     rail's own layout box still reports the bled position. The pseudo-
+     element below paints the peach on `.gp-invite-dialog` instead, which
+     is not a descendant of the clipping body, so it is never clipped. */
+  .gp-invite-dialog .mcm-invite > div:first-child.mcm-invite-rail {
+    background: transparent !important;
+    padding: 24px 20px !important;
+  }
+  /* Paints the entire left column peach, top to bottom of the dialog's
+     true edges, as a sibling of the (also `overflow: hidden`, rounded)
+     dialog itself rather than a descendant of the part that clips.
+     `280px` = `.gp-create-group-body`'s 20px left padding + the rail's own
+     260px column. */
+  .gp-invite-dialog::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 280px;
+    background: #ffffff;
+    /* Negative, not 0: a positioned z-index:0 element paints *above* the
+       dialog's own static-flow content (the rail's text) regardless of
+       DOM order, which would hide it behind solid peach. */
+    z-index: -1;
+    pointer-events: none;
+  }
+  .dark .gp-invite-dialog::before {
+    background: var(--mcm-surface, #111c26);
+  }
+  /* The remaining top-level child of `.mcm-invite` -- a `<form>`, not a
+     `div`, which is why a `div:nth-child(2)` version of this rule never
+     actually matched it -- holds both the scrolling step content and the
+     footer itself (its own internal `flex flex-col justify-between`), so
+     one rule covers both; grid auto-placement already puts it in column 2
+     without an explicit rule. The close button floats over its top-right
+     corner now (see `.gp-create-group-head--bare` above), so the first
+     card needs some clearance to not sit right underneath it. */
+  .gp-invite-dialog .mcm-invite > form {
+    min-height: 0;
+    padding-top: 34px;
+  }
+}
+/* Forces the rail's own `ol` vertical regardless of viewport width: the
+   shared component's un-horizontal mode only goes vertical BELOW `sm`
+   (`sm:flex-row` at that breakpoint), which is the opposite of what a
+   narrow 190px sidebar column needs at desktop widths. `mobileHorizontal`
+   is still passed in (unchanged prop, unchanged behaviour for every other
+   caller) so this only overrides its layout, not its number-circle/current-
+   step logic. */
+.gp-invite-dialog .mcm-invite-rail ol {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 26px !important;
+  overflow: visible !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+.gp-invite-dialog .mcm-invite-rail li {
+  width: 100% !important;
+  padding-right: 0 !important;
+}
+.gp-invite-dialog .mcm-invite-rail li::after {
+  display: none !important;
+}
+.gp-invite-dialog .mcm-invite-rail li > div {
+  min-height: 0 !important;
+}
+.gp-invite-dialog .mcm-invite-rail li p {
+  white-space: normal !important;
+}
+/* Bigger circle, bolder number -- the reference's step markers read as the
+   focal point of this panel, not a small inline bullet. */
+.gp-invite-dialog .mcm-invite-rail li > div > div:first-child {
+  position: relative;
+  width: 40px !important;
+  height: 40px !important;
+}
+.gp-invite-dialog .mcm-invite-rail li > div > div:first-child p {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+/* The connecting line between step 1 and step 2 that `li::after` drew
+   before it was switched off above (that version was a horizontal
+   border-bottom, wrong axis for a vertical rail) -- a short vertical bar
+   hung off the circle's own bottom edge, through the row gap, into the
+   next one. Skipped on the last step, same as the platform's own
+   `last:after:w-0`. */
+.gp-invite-dialog .mcm-invite-rail li:not(:last-child) > div > div:first-child::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 40px;
+  background: rgba(242, 153, 74, 0.35);
+}
+.dark .gp-invite-dialog .mcm-invite-rail li:not(:last-child) > div > div:first-child::after {
+  background: #1b2934;
+}
+
 /* ---- license summary — a loose stack of centered paragraphs, rebuilt as
    one compact stat card so it reads as a single unit instead of five lines
    of separate text floating on the dialog background ---- */
@@ -65,47 +383,281 @@
   gap: 2px !important;
   margin-top: 4px !important;
   margin-bottom: 10px !important;
+  /* `.gp-create-group-body` starts flush at the dialog's true top edge (see
+     `.gp-create-group-head--bare` above), the same row the close button
+     sits on -- this card is the only thing that starts that high, so its
+     top-right corner ran directly under the button (measured ~29px of
+     actual overlap) instead of past it. */
+  margin-right: 44px !important;
 }
-.gp-invite-dialog .mcm-invite-summary > p {
+.dark .gp-invite-dialog .mcm-invite-summary {
+  background: var(--mcm-surface, #1e293b);
+  border-color: rgba(100, 116, 139, 0.2);
+}
+.gp-invite-dialog .mcm-invite-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gp-invite-dialog .mcm-invite-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff1e0;
+  color: #c96f1f;
+  flex-shrink: 0;
+}
+.dark .gp-invite-dialog .mcm-invite-banner-icon {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-invite-banner p {
   font-size: 12.5px !important;
   color: #6b5c4d !important;
+  text-align: left !important;
 }
-.gp-invite-dialog .mcm-invite-summary > p:first-child {
+.dark .gp-invite-dialog .mcm-invite-banner p {
+  color: var(--mcm-ink-3, #94a3b8) !important;
+}
+.gp-invite-dialog .mcm-invite-banner > div > p:first-child {
   font-size: 13px !important;
   font-weight: 700 !important;
   color: #2a2733 !important;
   margin-bottom: 2px !important;
 }
+.dark .gp-invite-dialog .mcm-invite-banner > div > p:first-child {
+  color: var(--mcm-ink, #f8fafc) !important;
+}
+/* The licence count itself, picked out from the sentence around it — the
+   one number on this card somebody is actually here to check. */
+.gp-invite-dialog .mcm-invite-count {
+  font-size: 16px;
+  font-weight: 800;
+  color: #c96f1f;
+}
+.dark .gp-invite-dialog .mcm-invite-count {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+/* "Unused licenses" / "New licenses purchased" — two small pills instead of
+   one sentence with a mid-dot between them, so each reads as its own stat
+   rather than a run-on line. */
+.gp-invite-dialog .mcm-invite-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff1e0;
+  color: #8a6f57;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.dark .gp-invite-dialog .mcm-invite-stat {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.gp-invite-dialog .mcm-invite-stat strong {
+  color: #c96f1f;
+  font-weight: 800;
+}
+.dark .gp-invite-dialog .mcm-invite-stat strong {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-invite-stat svg {
+  color: #b09075;
+}
+.dark .gp-invite-dialog .mcm-invite-stat svg {
+  color: var(--mcm-ink-3, #94a3b8);
+}
 
-/* ---- bulk "Enter no. / Add Users / Select location" row — stacked full
-   width instead of the platform's inline row, which no longer fits at this
-   dialog's reduced width ---- */
+/* ---- "Add Users" heading row + "Number of users / Location" card — the
+   reference puts the "+ Add Multiple Users" action beside the heading as a
+   plain text link, and the two fields sit in a plain two-column card below
+   it, rather than the stepper and button sharing a row with the location
+   field crammed on the end. ---- */
+.gp-invite-dialog .mcm-invite-users {
+  margin-top: 10px;
+}
+.gp-invite-dialog .mcm-invite-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f2994a;
+  cursor: pointer;
+}
+.gp-invite-dialog .mcm-invite-link:hover {
+  color: #c96f1f;
+}
+.dark .gp-invite-dialog .mcm-invite-link {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
 .gp-invite-dialog .mcm-bulk-add {
-  background: #fff6e9;
-  border: 1px solid rgba(242, 153, 74, 0.25);
+  margin: 8px auto 0;
+  max-width: 480px;
+}
+/* "Location" comes from `CustomSelect`'s own `Label` (`text-sm font-medium`,
+   shared by every select on the platform), which reads visibly bigger next
+   to "Number of users" (`.mcm-field-label`, 12px/600) right beside it --
+   matched here rather than changing the shared Label everywhere else. */
+.gp-invite-dialog .mcm-bulk-add [data-slot='label'],
+.gp-invite-dialog .mcm-bulk-add .mcm-field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b5c4d;
+  /* `[data-slot='label']` (the shared `Label` component) sets its own
+     `leading-none` (line-height: 1); `.mcm-field-label` is a plain `span`
+     with the browser's normal ~1.4 line-height and its own 4px
+     margin-bottom, so at the same font-size it still rendered taller,
+     pushing the stepper below it out of line with the select beside it.
+     Matched here instead of touching the shared `Label` everywhere else. */
+  line-height: 1;
+  margin-bottom: 0;
+}
+.gp-invite-dialog .mcm-bulk-add .mcm-field-label {
+  margin-bottom: 6px;
+}
+.dark .gp-invite-dialog .mcm-bulk-add [data-slot='label'],
+.dark .gp-invite-dialog .mcm-bulk-add .mcm-field-label {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+/* Vertical rule between "Number of users" and "Location" -- the reference
+   separates the two fields with a divider rather than gap alone. */
+@media (min-width: 640px) {
+  .gp-invite-dialog .mcm-bulk-add {
+    column-gap: 24px;
+  }
+  .gp-invite-dialog .mcm-bulk-add > div:first-child {
+    padding-right: 24px;
+    border-right: 1px solid rgba(242, 153, 74, 0.18);
+  }
+  .dark .gp-invite-dialog .mcm-bulk-add > div:first-child {
+    border-right-color: #1b2934;
+  }
+}
+/* License stats — a separate card of its own, not tucked inside the
+   "Add Users" card's own bottom edge. */
+.gp-invite-dialog .mcm-license-stats {
+  background: #fffdfb;
+  border: 1px solid rgba(242, 153, 74, 0.2);
   border-radius: 12px;
-  padding: 12px 14px;
-  flex-direction: column !important;
-  align-items: stretch !important;
+  padding: 10px 14px;
+  flex-wrap: wrap;
 }
-.gp-invite-dialog .mcm-bulk-add > div {
-  width: 100% !important;
-  max-width: none !important;
+.dark .gp-invite-dialog .mcm-license-stats {
+  background: var(--mcm-surface, #1e293b);
+  border-color: rgba(100, 116, 139, 0.2);
 }
-.gp-invite-dialog .mcm-bulk-add > div:first-child {
-  flex-direction: row !important;
+/* On the step rail (below "Invite people") the pills stack full-width
+   instead of sitting in a bordered card, since the rail already has its own
+   background and is too narrow for the two pills side by side. */
+.gp-invite-dialog .mcm-invite-rail .mcm-license-stats {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-top: 14px;
+  align-items: flex-start;
 }
-.gp-invite-dialog .mcm-bulk-add [data-slot='button'] {
-  white-space: nowrap;
+.gp-invite-dialog .mcm-invite-rail .mcm-invite-rail-link {
+  display: flex;
+}
+.gp-invite-dialog .mcm-invite-rail .mcm-invite-stat {
+  width: 100%;
+}
+
+/* Names of the people already filled in before the one on screen, shown on
+   the rail so they're there to check against without paging back. Sits
+   above the license pills, so the divider belongs to whatever follows it
+   rather than to this block itself. */
+.gp-invite-dialog .mcm-invite-rail .mcm-invite-person1-ref {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  width: 100%;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.gp-invite-dialog .mcm-invite-rail .mcm-invite-person1-ref + .mcm-license-stats {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(242, 153, 74, 0.25);
+}
+.dark .gp-invite-dialog .mcm-invite-rail .mcm-invite-person1-ref + .mcm-license-stats {
+  border-top-color: #1b2934;
+}
+.gp-invite-dialog .mcm-invite-person1-ref-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a3330;
+}
+.dark .gp-invite-dialog .mcm-invite-person1-ref-name {
+  color: var(--mcm-ink, #e2e8f0);
+}
+
+/* ---- select-field leading icon (Location, Role) — the reference shows a
+   pin/shield inside the select control; react-select's own DOM has no icon
+   slot, so the icon is an absolutely-positioned sibling and the value
+   container gets left padding to clear it, instead of touching the shared
+   CustomSelect. Shared by any `.mcm-icon-select-field` wrapper. ---- */
+.gp-invite-dialog .mcm-icon-select-field-icon {
+  position: absolute;
+  left: 12px;
+  top: 34px;
+  width: 15px;
+  height: 15px;
+  color: #b09075;
+  pointer-events: none;
+  z-index: 1;
+}
+.dark .gp-invite-dialog .mcm-icon-select-field-icon {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+/* Layered (not just unimportant) because the shared select's own
+   `@layer base { .custom-react-select__value-container { padding: 0 !important } }`
+   otherwise wins regardless of specificity -- a layered !important beats an
+   unlayered one no matter how specific the selector is. */
+@layer base {
+  .gp-invite-dialog .mcm-icon-select-field .custom-react-select__value-container {
+    padding-left: 30px !important;
+  }
+}
+.gp-invite-dialog .mcm-icon-select-field .custom-react-select__placeholder,
+.gp-invite-dialog .mcm-icon-select-field .custom-react-select__single-value {
+  margin-left: 2px;
 }
 
 .gp-invite-dialog .mcm-invite [data-slot='input'] {
   border-color: rgba(242, 153, 74, 0.25);
   background: #fffdfb;
 }
+.dark .gp-invite-dialog .mcm-invite [data-slot='input'] {
+  border-color: #1b2934;
+  background: var(--mcm-surface, #111c26);
+}
 .gp-invite-dialog .mcm-invite [data-slot='input']:hover,
 .gp-invite-dialog .mcm-invite [data-slot='input']:focus {
   border-color: #f2994a;
+}
+.dark .gp-invite-dialog .mcm-invite [data-slot='input']:hover,
+.dark .gp-invite-dialog .mcm-invite [data-slot='input']:focus {
+  border-color: #f97316;
+}
+/* The base layer's `outline-ring/50` reset (src/index.css) wins over the
+   Input component's own `focus:outline-none` here, so a focused field
+   showed both: the component's 1px orange border AND the browser's 2px
+   orange outline half a pixel further out -- one field, two rings. The
+   border alone already says "focused". */
+.gp-invite-dialog .mcm-invite [data-slot='input']:focus,
+.gp-invite-dialog .mcm-invite [data-slot='input']:focus-visible {
+  outline: none !important;
 }
 
 /* ---- duplicate/role notices — same warm card language as the summary
@@ -114,6 +666,10 @@
   background: #fff1e0 !important;
   border-color: rgba(242, 153, 74, 0.35) !important;
   border-radius: 10px !important;
+}
+.dark .gp-invite-dialog .mcm-invite-summary p[role='status'] {
+  background: var(--mcm-surface-3, #1a2733) !important;
+  border-color: rgba(249, 115, 22, 0.35) !important;
 }
 
 /* ---- invitee cards — forced to one column regardless of viewport width.
@@ -125,6 +681,17 @@
 }
 .gp-invite-dialog .mcm-invitee {
   grid-template-columns: 1fr !important;
+}
+@media (min-width: 480px) {
+  .gp-invite-dialog .mcm-invitee {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .gp-invite-dialog .mcm-invitee-email,
+  .gp-invite-dialog .mcm-invitee-full {
+    grid-column: 1 / -1 !important;
+  }
+}
+.gp-invite-dialog .mcm-invitee {
   background: #fffdfb;
   border-color: rgba(242, 153, 74, 0.22) !important;
   border-radius: 16px !important;
@@ -133,6 +700,80 @@
   padding: 16px !important;
   box-shadow: 0 4px 14px rgba(160, 95, 30, 0.08);
   position: relative;
+}
+.dark .gp-invite-dialog .mcm-invitee {
+  background: var(--mcm-surface, #111c26);
+  border-color: #1b2934 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- invitee pager — one card visible at a time once "Add Multiple
+   Users" brings in more than one, instead of every card stacked in a long
+   scroll. ---- */
+.gp-invite-dialog .mcm-invitee-pager {
+  margin: 8px 0 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fff1e0;
+}
+.dark .gp-invite-dialog .mcm-invitee-pager {
+  background: var(--mcm-surface-3, #263241);
+}
+.gp-invite-dialog .mcm-invitee-pager-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a3330;
+}
+.dark .gp-invite-dialog .mcm-invitee-pager-label {
+  color: var(--mcm-ink, #e2e8f0);
+}
+.gp-invite-dialog .mcm-invitee-pager button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6b5c4d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+/* `:not(.is-active)` because plain `:hover:not(:disabled)` has *higher*
+   specificity than `.is-active` below it (3 pseudo/class checks vs 2) --
+   without this, resting the pointer on the current page (exactly where a
+   click just left it) repainted it back to the pager's own peach behind
+   the white number, so the number all but vanished. */
+.gp-invite-dialog .mcm-invitee-pager button:hover:not(:disabled):not(.is-active) {
+  background: #fff1e0;
+}
+.gp-invite-dialog .mcm-invitee-pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: transparent;
+}
+.gp-invite-dialog .mcm-invitee-pager button.is-active {
+  background: #f2994a;
+  color: #ffffff;
+}
+.dark .gp-invite-dialog .mcm-invitee-pager button {
+  background: var(--mcm-surface, #111c26);
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.dark .gp-invite-dialog .mcm-invitee-pager button:disabled {
+  background: transparent;
+}
+.dark .gp-invite-dialog .mcm-invitee-pager button:hover:not(:disabled):not(.is-active) {
+  background: var(--mcm-surface-2, #1a2733);
+}
+.dark .gp-invite-dialog .mcm-invitee-pager button.is-active {
+  background: var(--mcm-accent, #ffab5e);
+  color: #2b1f12;
 }
 /* Taken out of grid flow entirely and pinned to the card's corner instead
    of `order: -1` — as a grid item it still claimed a full row of its own
@@ -159,6 +800,9 @@
 .gp-invite-dialog .mcm-invite .flag-dropdown {
   border-color: rgba(242, 153, 74, 0.25) !important;
 }
+.dark .gp-invite-dialog .mcm-invite .flag-dropdown {
+  border-color: #1b2934 !important;
+}
 
 /* "Select location" / "Role" dropdowns — matched to the same rounded warm
    border every plain input in this dialog already has, instead of the
@@ -168,9 +812,17 @@
   background-color: #fffdfb !important;
   border-radius: 12px !important;
 }
+.dark .gp-invite-dialog .mcm-invite .custom-react-select__control {
+  border-color: #1b2934 !important;
+  background-color: var(--mcm-surface, #111c26) !important;
+}
 .gp-invite-dialog .mcm-invite .custom-react-select__control:hover,
 .gp-invite-dialog .mcm-invite .custom-react-select__control--is-focused {
   border-color: #f2994a !important;
+}
+.dark .gp-invite-dialog .mcm-invite .custom-react-select__control:hover,
+.dark .gp-invite-dialog .mcm-invite .custom-react-select__control--is-focused {
+  border-color: #f97316 !important;
 }
 
 /* ---- footer ---- */
@@ -184,16 +836,117 @@
   color: #f2994a !important;
   border-radius: 9px !important;
 }
+.dark .gp-invite-dialog .btn.ghost {
+  border-color: #f97316 !important;
+  color: #ff8a2a !important;
+}
 .gp-invite-dialog .btn.ghost:hover {
   background: #f2994a !important;
   border-color: #f2994a !important;
   color: #ffffff !important;
+}
+.dark .gp-invite-dialog .btn.ghost:hover {
+  background: #f97316 !important;
+  border-color: #f97316 !important;
+  color: #1a0f06 !important;
 }
 .gp-invite-dialog .btn.primary {
   background: #f2994a;
   border-color: #f2994a;
   border-radius: 9px;
 }
+.dark .gp-invite-dialog .btn.primary {
+  background: #f97316;
+  border-color: #f97316;
+}
 .gp-invite-dialog .btn.primary:hover {
   background: #c96f1f;
+}
+.dark .gp-invite-dialog .btn.primary:hover {
+  background: #475569;
+}
+
+/* ---- Order Summary — the platform's own component (`order-summary.tsx`,
+   shared with the standalone Admin ▸ People page) ships a bare
+   `border-grey-200` box with no warmth at all, the one thing in this dialog
+   that still looked like a different product. `mcm-order-summary` is
+   passed in through its existing `customClass` prop rather than editing
+   the shared component, so the full-page version elsewhere is untouched. */
+.gp-invite-dialog .mcm-order-summary {
+  background: #fffdfb !important;
+  border: 1px solid rgba(242, 153, 74, 0.22) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.dark .gp-invite-dialog .mcm-order-summary {
+  background: var(--mcm-surface, #111c26) !important;
+  border-color: #1b2934 !important;
+  box-shadow: none !important;
+}
+.gp-invite-dialog .mcm-order-summary h5 {
+  border-color: rgba(242, 153, 74, 0.2) !important;
+}
+.dark .gp-invite-dialog .mcm-order-summary h5 {
+  border-color: #1b2934 !important;
+}
+/* The Total row is the one number that matters at the bottom of a list of
+   working-out — set apart with its own rule and weight instead of reading
+   as just the last line of the same list. */
+.gp-invite-dialog .mcm-order-summary ul > li:last-child {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(242, 153, 74, 0.3);
+  font-size: 15px;
+}
+.dark .gp-invite-dialog .mcm-order-summary ul > li:last-child {
+  border-top-color: #1b2934;
+}
+.gp-invite-dialog .mcm-order-summary ul > li:last-child span,
+.gp-invite-dialog .mcm-order-summary ul > li:last-child > *:last-child {
+  color: #c96f1f;
+  font-weight: 800;
+}
+.dark .gp-invite-dialog .mcm-order-summary ul > li:last-child span,
+.dark .gp-invite-dialog .mcm-order-summary ul > li:last-child > *:last-child {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-order-summary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  background: #fff1e0;
+  color: #c96f1f;
+}
+.dark .gp-invite-dialog .mcm-order-summary-icon {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-order-summary-note {
+  color: #8a6f57;
+  border-top: 1px solid rgba(242, 153, 74, 0.15);
+  padding-top: 10px;
+}
+.dark .gp-invite-dialog .mcm-order-summary-note {
+  color: var(--mcm-ink-3, #94a3b8);
+  border-top-color: #1b2934;
+}
+.gp-invite-dialog .mcm-order-summary-note svg {
+  color: #c96f1f;
+}
+.dark .gp-invite-dialog .mcm-order-summary-note svg {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+
+/* The "Save & Continue" arrow — a global rule, deliberately: this button is
+   the shared wizard's own (`add-users/index.tsx`), which also renders as a
+   full Admin page outside this dialog, and the icon should look right
+   there too rather than only inside `.gp-invite-dialog`. */
+.mcm-invite-submit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }

@@ -907,8 +907,9 @@ const StageColumn = ({
                 Both groups share one scroller: capping each list separately let
                 two full lists stack past the card and push the keypad out of
                 view. */}
+            <div style={{ position: 'relative' }}>
             {dial.trim() && (contactHits.length || directoryHits.length || /[a-z]/i.test(dial)) ? (
-              <div className="dres-scroll">
+              <div className="dres-scroll" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5, background: 'var(--surface, #fff)', borderRadius: 'var(--r, 12px)', boxShadow: '0 4px 16px rgba(0,0,0,.10)' }}>
                 {contactHits.length ? (
                   <div className="dres">
                     <div className="dres-group">
@@ -916,10 +917,6 @@ const StageColumn = ({
                     </div>
                     {contactHits.map((c) => (
                       <div className="dres-row" key={c.id || c.phone}>
-                        {/* Picking a suggestion FILLS the field — it does not
-                            dial. Brushing a name while scanning used to place a
-                            real call; the phone button is now the only thing
-                            that starts one. */}
                         <button
                           type="button"
                           className="dres-pick"
@@ -997,7 +994,7 @@ const StageColumn = ({
               </div>
             ) : null}
 
-            <div className="keypad">
+            <div className="keypad" style={{ position: 'relative', zIndex: 1, marginBottom: -6 }}>
               {KEYS.map(([d, l]) => (
                 <button type="button" className="key" key={d} onClick={() => pressKey(d)}>
                   <b>{d}</b>
@@ -1005,11 +1002,11 @@ const StageColumn = ({
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button
                 type="button"
                 className="btn primary"
-                style={{ flex: 1 }}
+                style={{ flex: 1, color: '#fff', fontWeight: 600 }}
                 disabled={Boolean(dialIssue)}
                 title={dialIssue || `Call ${dial}`}
                 onClick={() => placeCall(dial)}
@@ -1025,6 +1022,7 @@ const StageColumn = ({
               >
                 <Ic n="x" />
               </button>
+            </div>
             </div>
           </div>
 

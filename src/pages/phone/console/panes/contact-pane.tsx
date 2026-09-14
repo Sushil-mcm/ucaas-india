@@ -11,6 +11,8 @@ import { useCallerName } from '../use-caller-name';
 import type { ConsoleCallRow } from '../call-list-column';
 import { DEMO_ENABLED, demoProfile } from '../demo-data';
 import DemoChip from './demo-chip';
+import { useGetExtensions } from '@/hooks/common';
+import { callAgentName, callExtension, callOurNumber, isInboundLog } from '../call-attribution';
 
 /**
  * Contact — laid out as `paneContact` in the design artifact: an identity card,
@@ -32,6 +34,7 @@ const ContactPane = ({
   const [editing, setEditing] = useState(false);
 
   const { callerName } = useCallerName();
+  const { data: extensionList } = useGetExtensions({ page: 1, limit: 500 });
   const number = session?.remoteNumber || selectedCall?.number || '';
   const name = session ? callerName(session) : selectedCall?.name || '';
   const contact = session?.contactInfo;
@@ -93,6 +96,13 @@ const ContactPane = ({
   const company = contact?.company || '';
   const queue = session?.queueMetaData?.response?.name || '';
 
+  const log = (selectedCall?.logData?.main ?? selectedCall?.raw) as any;
+  const agentName = log ? callAgentName(log, extensionList) : '';
+  const agentExtension = log ? callExtension(log) : '';
+  const viaDid = log ? callOurNumber(log) : '';
+  /* The row's own direction when there is one; the live session's otherwise. */
+  const isOutbound = log ? !isInboundLog(log) : session ? session.direction !== 'incoming' : true;
+
   return (
     <div className="pscroll">
       {/* identity */}
@@ -102,10 +112,17 @@ const ContactPane = ({
           {/* The heading falls back to the number when nobody is saved under
               it, so it needs the same +91 / flag treatment as the row below. */}
           <div className="contact-name">
-            {isNumberLike(name) ? <NumberWithFlag number={name} /> : name || 'Unknown contact'}
+            {/* The number is on the Contact record row below and on every other
+                surface; printing it as the heading answered "who is this?" with
+                the same digits that were asked about. */}
+            {isNumberLike(name) ? 'Not in contacts' : name || 'Unknown contact'}
           </div>
           <div className="contact-sub">
-            {company || (contact ? 'Contact' : 'Not in the contact book')}
+            {isNumberLike(name) ? (
+              <NumberWithFlag number={number} />
+            ) : (
+              company || (contact ? 'Contact' : 'Not in the contact book')
+            )}
           </div>
           <div className="contact-tags">
             {contact ? (
@@ -132,6 +149,47 @@ const ContactPane = ({
           Call
         </DialNumber>
       </div>
+
+      {/* Who dealt with this call, and on which of our numbers. The CDR row
+          carries both and only the stage was showing them, so the tab people
+          open to ask "who is this and who spoke to them?" could answer only
+          half of it. */}
+      {agentName || viaDid || queue ? (
+        <div className="panel-card">
+          <div className="pc-head">
+            <h3>This call</h3>
+            <span className="src live">live</span>
+          </div>
+          {agentName ? (
+            <div className="kv">
+              <span className="k">Handled by</span>
+              <span className="v">
+                {agentName}
+                {agentExtension ? (
+                  <span style={{ color: 'var(--ink-4)' }} className="num">
+                    {' '}
+                    · {agentExtension}
+                  </span>
+                ) : null}
+              </span>
+            </div>
+          ) : null}
+          {viaDid ? (
+            <div className="kv">
+              <span className="k">{isOutbound ? 'Called from' : 'Called to'}</span>
+              <span className="v">
+                <NumberWithFlag number={viaDid} className="num" />
+              </span>
+            </div>
+          ) : null}
+          {queue ? (
+            <div className="kv">
+              <span className="k">Queue</span>
+              <span className="v">{queue}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* the platform's own record */}
       <div className="panel-card">

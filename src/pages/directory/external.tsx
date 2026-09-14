@@ -21,6 +21,8 @@ import AllNewContactsList from '@/pages/new-contact/all-contacts-list';
 import CreateContactNew from '@/pages/new-contact/create-new-contact';
 import NotesWidget from '@/components/notes';
 import AlertConfirm from '@/components/custom/alert-confirm';
+import UploadContacts from '@/pages/leads/upload-contacts.tsx/index.tsx';
+import ExportContacts from '@/pages/leads/export-contacts.tsx/index.tsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -62,6 +64,7 @@ const ExternalInner = () => {
   const contactActions = contactFeature?.action || {};
   const canViewContact = Boolean(contactFeature?.IS_SHOW && contactActions?.view);
   const canEditContact = Boolean(contactActions?.edit);
+  const canAddContact = Boolean(contactActions?.add);
   const canDeleteContact = Boolean(contactActions?.delete);
 
   const [tabName, setTabName] = useState<string>(CONTACT_TABS_CONST.CONTACT_LIST);
@@ -82,11 +85,15 @@ const ExternalInner = () => {
     selectedContact: any;
     addLead: boolean;
     selectedGroup: any;
+    updateContacts: boolean;
+    exportContacts: boolean;
   }>({
     addContact: false,
     selectedContact: null,
     addLead: false,
     selectedGroup: null,
+    updateContacts: false,
+    exportContacts: false,
   });
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<any>(null);
   const [notesContact, setNotesContact] = useState<any>(null);
@@ -209,29 +216,52 @@ const ExternalInner = () => {
         title="External Contacts"
         description="People outside the organisation — who they work for, how to reach them, and every channel you can use."
         actions={
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() =>
-              tabName === CONTACT_TABS_CONST.CONTACT_GROUP_LIST
-                ? setDrawerState((prev) => ({ ...prev, addLead: true, selectedGroup: null }))
-                : setDrawerState((prev) => ({ ...prev, addContact: true, selectedContact: null }))
-            }
-          >
-            <Icon name="Plus" className="h-3 w-3" />
-            {addActionLabel}
-          </button>
+          <div className="flex items-center gap-2">
+            {canAddContact && (
+              <>
+                <button
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', borderRadius: 10, border: '1px solid #f2994a', background: 'transparent', color: '#f2994a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => setDrawerState((prev) => ({ ...prev, updateContacts: true }))}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f2994a'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f2994a'; }}
+                >
+                  <Icon name="UploadLineIcon" className="w-4 h-4" />
+                  Upload
+                </button>
+                <button
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px', borderRadius: 10, border: '1px solid #f2994a', background: 'transparent', color: '#f2994a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => setDrawerState((prev) => ({ ...prev, exportContacts: true }))}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f2994a'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#f2994a'; }}
+                >
+                  <Icon name="DownloadLine" className="w-4 h-4" />
+                  Export
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() =>
+                tabName === CONTACT_TABS_CONST.CONTACT_GROUP_LIST
+                  ? setDrawerState((prev) => ({ ...prev, addLead: true, selectedGroup: null }))
+                  : setDrawerState((prev) => ({ ...prev, addContact: true, selectedContact: null }))
+              }
+            >
+              <Icon name="Plus" className="h-3 w-3" />
+              {addActionLabel}
+            </button>
+          </div>
         }
-        beforeTable={
-          <div className="gp-contact-toolbar border-b border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]">
-            <div className="flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="w-full shrink-0 overflow-x-auto lg:w-auto lg:min-w-0 lg:shrink lg:flex-1">
+        filters={
+          <div className="gp-contact-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 12px' }}>
                 <Tabs
                   value={tabName}
                   onValueChange={handleTabChange}
-                  className="flex w-max min-w-full lg:min-w-0"
+                  className="flex"
                 >
-                  <div className="h-full min-w-max">
                     <TabsList
                       className="gap-1 rounded-lg border border-[rgba(225,200,165,0.7)] bg-[rgba(255,255,255,0.55)] p-1"
                       style={{ margin: 0 }}
@@ -245,24 +275,20 @@ const ExternalInner = () => {
                         </span>
                       </TabsTrigger>
                     </TabsList>
-                  </div>
                 </Tabs>
-              </div>
 
-              <div className="flex w-full flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-end sm:pb-0 lg:w-auto lg:min-w-0 lg:flex-none lg:pb-0">
                 <Button
                   onClick={() => login()}
                   variant="outline"
-                  className="gp-sync-btn h-9 min-h-9 w-full rounded-lg border-primary bg-white font-medium text-primary shadow-sm sm:w-auto"
+                  className="gp-sync-btn h-9 min-h-9 rounded-lg border-primary bg-white font-medium text-primary shadow-sm"
                 >
                   Sync With Google
                 </Button>
 
-                <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center lg:w-auto lg:min-w-0 lg:flex-nowrap">
-                  <div className="gp-contact-search-wrap">
+                  <div className="gp-contact-search-wrap" style={{ flex: '1 1 120px', minWidth: 120 }}>
                     <Input
                       placeholder="Search"
-                      className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow sm:min-w-[6rem] lg:min-w-[18rem] xl:min-w-[24rem]"
+                      className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow"
                       IconPosition="left-0 pl-3 inset-y-0"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
@@ -271,7 +297,7 @@ const ExternalInner = () => {
                   </div>
                   {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
                     <>
-                      <div className="w-full sm:w-44">
+                      <div style={{ width: 160 }}>
                         <CustomSelect
                           isClearable
                           placeholder="Group"
@@ -291,7 +317,7 @@ const ExternalInner = () => {
                           inputClass="contact-toolbar-select"
                         />
                       </div>
-                      <div className="w-full sm:w-40">
+                      <div style={{ width: 140 }}>
                         <CustomSelect
                           isClearable
                           placeholder="Tag"
@@ -312,9 +338,6 @@ const ExternalInner = () => {
                       </div>
                     </>
                   )}
-                </div>
-              </div>
-            </div>
           </div>
         }
       >
@@ -336,7 +359,6 @@ const ExternalInner = () => {
             search={debouncedSearch}
             tableWrapperClassName="gp-contact-table"
             splitStickyHeader
-            fixedPageRows={10}
             showRecordRange
           />
         ) : (
@@ -346,7 +368,6 @@ const ExternalInner = () => {
             payloadExtraParams={payloadExtraParams}
             tableWrapperClassName="gp-contact-table"
             splitStickyHeader
-            fixedPageRows={10}
             showRecordRange
             avatarSize="38"
             permissionAccess={{
@@ -487,6 +508,15 @@ const ExternalInner = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <UploadContacts
+        drawerState={drawerState.updateContacts}
+        setDrawerState={(val: boolean) => setDrawerState((prev) => ({ ...prev, updateContacts: val }))}
+      />
+      <ExportContacts
+        drawerState={drawerState.exportContacts}
+        setDrawerState={(val: boolean) => setDrawerState((prev) => ({ ...prev, exportContacts: val }))}
+      />
 
       {canDeleteContact && showDeleteConfirmation ? (
         <AlertConfirm

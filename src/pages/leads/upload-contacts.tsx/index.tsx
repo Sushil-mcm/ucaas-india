@@ -205,7 +205,7 @@ const UploadContacts: FC<IUploadContactProps> = ({
         }}
       >
         <DialogContent
-          className="sm:w-1/2 lg:w-1/4 p-3 min-h-[26rem] max-h-[99%] overflow-y-auto"
+          className="sm:w-[36rem] lg:w-[38rem] p-4"
           showCloseButton={false}
         >
           <form
@@ -321,7 +321,7 @@ const UploadContacts: FC<IUploadContactProps> = ({
               <div className="flex gap-4 flex-row">
                 <label
                   htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer bg-white hover:border-gray-400"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer bg-white hover:border-gray-400"
                 >
                   <div className="flex flex-col items-center">
                     <UploadIcon className="w-5 h-5" />

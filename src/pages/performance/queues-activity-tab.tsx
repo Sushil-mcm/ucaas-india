@@ -613,19 +613,6 @@ const QueuesActivityTab = ({
                 : 'nobody asked to be called back',
           },
           {
-            /* No live callbacks-queue count is wired into
-               useLiveContactCentre yet — this card shows a static 0 rather
-               than inventing a number, per the fallback the design spec
-               itself allows ("0, or dynamic callbacks count if state
-               exists"). Swap in a real count here once that data source
-               exists. */
-            key: 'callbacks-waiting',
-            label: 'Callbacks waiting',
-            value: 0,
-            sub: 'nobody asked to be called back',
-            icon: PhoneForwarded,
-          },
-          {
             key: 'longest-waiting',
             label: 'Longest waiting',
             value:

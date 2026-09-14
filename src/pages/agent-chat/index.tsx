@@ -859,9 +859,9 @@ const SidebarContent = ({
         <div className="mt-3 flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <Input
-              Icon={<SearchLine className="text-muted-foreground" />}
-              IconPosition="left-0 pl-4 inset-y-0"
-              className="rounded-[12px] border-ucass-primary-200 pl-11 text-[14px]"
+              Icon={<SearchLine className="text-gray-500 w-5 h-5" />}
+              IconPosition="left-0 pl-3 inset-y-0 z-10"
+              className="rounded-[12px] border-ucass-primary-200 pl-10 text-[14px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chats, users..."

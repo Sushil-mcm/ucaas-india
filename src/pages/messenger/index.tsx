@@ -1,6 +1,5 @@
 import { SearchLine, UserLine, UsersGroupLine, FilterIcon, LetterOpenedLine } from '@/assets/icons';
 import CustomAvatar from '@/components/custom/custom-avatar';
-import SideDrawer from '@/components/custom/side-drawer';
 import CreateDirectChat from './drawers/create-direct-chat';
 import CreateTeamChat from './drawers/create-team-chat';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -345,12 +344,17 @@ const ListItem = ({
     return 'Typing...';
   }, [isTyping, isGroupChat, chat?.users, typingUsers]);
 
+  const currentUserDisplayName = `${user?.user_info?.first_name || user?.first_name || ''} ${user?.user_info?.last_name || user?.last_name || ''}`.trim() || 'Someone';
+
   const lastMessageText = useMemo(() => {
     const rawMessage = chat?.lastMessage?.messageType
       ? chat.lastMessage
       : chat?.lastMessage?.message || chat?.metaData?.lastMessage || chat?.lastMessage;
-    const preview = getMessagePreviewText(rawMessage);
-    if (preview && preview !== '') return preview;
+    let preview = getMessagePreviewText(rawMessage);
+    if (preview && preview !== '') {
+      preview = preview.replace(/\bundefined undefined\b/g, currentUserDisplayName);
+      return preview;
+    }
 
     return Array.isArray(chat?.lastMessage?.attachments) && chat.lastMessage.attachments.length
       ? 'Attachment'
@@ -360,13 +364,14 @@ const ListItem = ({
     chat?.lastMessage?.message,
     chat?.lastMessage,
     chat?.lastMessage?.attachments,
+    currentUserDisplayName,
   ]);
 
   // Handle available user case
   if (chat?.isAvailableUser) {
     return (
       <div className="flex hover:bg-[#FBE2C8]/40 cursor-pointer" onClick={() => onChatSelect(chat)}>
-        <div className="flex items-center w-full px-3 h-16 gap-2">
+        <div className="flex items-center w-full px-2 h-12 gap-2">
           <div className="relative">
             <CustomAvatar
               name={`${otherUserData?.first_name} ${otherUserData?.last_name}`}
@@ -452,24 +457,24 @@ const ListItem = ({
       className="text-xs text-[var(--color-text-black)] pb-0 cursor-pointer"
       onClick={() => handleClickItem(chat)}
     >
-      <div className="w-full flex flex-col gap-1 ">
+      <div className="w-full flex flex-col">
         <div
-          className={`flex justify-between w-full items-center pl-3 pr-2 min-h-[60px] group relative  transition-all border-b border-[#EEE7DD] duration-200
-             ${isChatOpened ? 'bg-[#FBE2C8]/40  ' : 'bg-transparent hover:bg-[#FBE2C8]/40 '}`}
+          className={`flex justify-between w-full items-center pl-2 pr-1.5 min-h-[48px] group relative transition-all border-b border-[#EEE7DD] duration-200
+             ${isChatOpened ? 'bg-[#FBE2C8]/40' : 'bg-transparent hover:bg-[#FBE2C8]/40'}`}
         >
           <div className="flex w-full min-w-0 items-center gap-2">
             <div className="text-xs font-medium flex items-center gap-1">
               <CustomAvatar
                 name={nameToShow || ''}
                 showPresence={!isGroupChat && !isOwnChat}
-                size="36"
+                size="32"
                 extension={!isGroupChat ? otherUserData?.extension : ''}
                 image={isGroupChat ? chat?.avatar : getUserProfileByUuid(otherUserData?.uuid) || ''}
               />
             </div>
-            <div className="flex w-full min-w-0 flex-col gap-1">
-              <div className="flex min-w-0 items-center gap-2 text-sm">
-                <div className=" min-w-0 truncate">{nameToShow || ''}</div>
+            <div className="flex w-full min-w-0 flex-col gap-0.5">
+              <div className="flex min-w-0 items-center gap-1.5 text-xs">
+                <div className="min-w-0 truncate font-medium">{nameToShow || ''}</div>
                 {isFavorited ? (
                   <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 shrink-0" />
                 ) : null}
@@ -482,7 +487,7 @@ const ListItem = ({
                 <div className="text-[#9A948F] italic">(You)</div>
               ) : (
                 <div
-                  className={`truncate text-xs ${isTyping ? 'text-primary' : shouldShowDraftPreview ? 'text-amber-600 font-medium' : 'text-[#9A948F]'}`}
+                  className={`truncate text-[11px] ${isTyping ? 'text-primary' : shouldShowDraftPreview ? 'text-amber-600 font-medium' : 'text-[#9A948F]'}`}
                 >
                   {isTyping
                     ? typingText
@@ -501,8 +506,8 @@ const ListItem = ({
                   className="focus:outline-none"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="min-w-6 max-h-10 max-w-6 cursor-pointer invisible flex items-center justify-end group-hover:visible group-focus-within:flex text-[#9A948F]">
-                    <EllipsisVertical width={18} height={18} />
+                  <div className="min-w-6 max-h-10 max-w-6 cursor-pointer flex items-center justify-end text-[#9A948F]">
+                    <EllipsisVertical width={16} height={16} />
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg shadow-lg border border-[rgba(225,200,165,0.9)] p-1 min-w-[200px]">
@@ -582,7 +587,7 @@ const ListItem = ({
             )}
 
             {(chat?.lastMessage?.createdAt || chat?.metaData?.lastMessageTimeStamp) && (
-              <div className="text-xs whitespace-nowrap text-[#9A948F]">
+              <div className="text-[10px] whitespace-nowrap text-[#9A948F]">
                 {getSimpleDateString(
                   chat?.lastMessage?.createdAt || chat?.metaData?.lastMessageTimeStamp,
                 )}
@@ -1101,17 +1106,15 @@ const SidebarContent = ({
   ]);
 
   return (
-    <div className="w-full h-full min-h-0 bg-white flex flex-col">
+    <div className="relative w-full h-full min-h-0 bg-white flex flex-col">
       {!isAgentChat ? (
-        <div className="border-b border-[#EEE7DD] px-2">
-          <div className="flex min-h-10 items-center gap-2">
-            {/* `no-scrollbar` keeps the tabs scrollable on a narrow panel
-                without drawing the bar itself, which sat right under them. */}
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="border-b border-[#EEE7DD] px-1.5">
+          <div className="flex min-h-8 items-center gap-1">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
-                  className={`px-2 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                  className={`px-1.5 py-2 text-xs font-medium border-b-2 transition-colors cursor-pointer ${
                     activeTab === tab.value
                       ? 'text-primary border-primary'
                       : 'text-[#2E2D35] border-transparent hover:text-primary'
@@ -1133,12 +1136,12 @@ const SidebarContent = ({
             {/* New chat and channel filter live here rather than in a row of
                 their own: the row above them held nothing else once the
                 duplicated title went, so it was a strip of empty space. */}
-            <div className="flex gap-2 shrink-0">
+            <div className="flex gap-1.5 shrink-0">
               {chatAccess?.access?.DIRECT_MESSAGE || chatAccess?.access?.TEAM_MESSAGE ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
+                      className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
                       aria-label="Add"
                     >
                       <Plus width={18} height={18} />
@@ -1170,7 +1173,7 @@ const SidebarContent = ({
                 </DropdownMenu>
               ) : (
                 <button
-                  className="flex items-center justify-center cursor-pointer w-10 h-10 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
+                  className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
                   aria-label="Add"
                 >
                   <Plus width={18} height={18} />
@@ -1178,7 +1181,7 @@ const SidebarContent = ({
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <div className="cursor-pointer flex items-center justify-center rounded-full w-10 h-10 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
+                  <div className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
                     <FilterIcon className="w-6 h-6" />
                   </div>
                 </DropdownMenuTrigger>
@@ -1217,7 +1220,7 @@ const SidebarContent = ({
         </div>
       ) : null}
 
-      <div className="px-3 py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100">
+      <div className="px-2 py-1.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 border-b border-gray-100">
         <Input
           Icon={<SearchLine className="text-[#9A948F]" />}
           IconPosition="left-0 pl-3 inset-y-0"
@@ -1261,13 +1264,13 @@ const SidebarContent = ({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 py-2 pb-[45px] overflow-auto">
+          <div className="flex flex-col gap-1 py-1 pb-[45px] overflow-auto">
             {groupList.map((group: any) => {
               if (!group?.shouldVisible || !group?.data?.length) return null;
               return (
                 <div key={group?.label} className="w-full">
                   {group?.label && !isAgentChat ? (
-                    <div className="text-xs uppercase tracking-wider font-medium text-[#9A948F] flex gap-2 py-0 items-center bg-transparent min-h-9 justify-start max-h-9 px-2">
+                    <div className="text-[10px] uppercase tracking-wider font-medium text-[#9A948F] flex gap-1.5 py-0 items-center bg-transparent min-h-7 justify-start max-h-7 px-2">
                       {group?.label}
                     </div>
                   ) : null}
@@ -1297,37 +1300,33 @@ const SidebarContent = ({
         ) : null}
       </div>
 
-      {showCreateChatModal === 'direct' && (
-        <SideDrawer
-          width="450px"
-          isHeader
-          isOpen={showCreateChatModal === 'direct'}
-          handleClose={() => setShowCreateChatModal('')}
-          content={
+      {showCreateChatModal && (
+        /* New Message and Create New Team open over this column, where the
+           chat list is, rather than as a drawer across the app. The list stays
+           mounted underneath, so closing comes back to it with its tab, search
+           and scroll position as they were. */
+        <div className="mcm-chat-panel absolute inset-0 z-20 flex flex-col overflow-hidden bg-[rgba(251,249,246,0.98)] px-3 pb-4">
+          <button
+            type="button"
+            onClick={() => setShowCreateChatModal('')}
+            aria-label="Close"
+            title="Close"
+            className="absolute right-3 top-3 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] text-[#9A948F] shadow-sm transition-colors hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]"
+          >
+            <XIcon className="h-4 w-4" />
+          </button>
+          {showCreateChatModal === 'direct' ? (
             <CreateDirectChat
-              handleClose={() => {
-                setShowCreateChatModal('');
-              }}
+              handleClose={() => setShowCreateChatModal('')}
               onChatSelect={onChatSelect}
             />
-          }
-        />
-      )}
-      {showCreateChatModal === 'team' && (
-        <SideDrawer
-          width="450px"
-          isHeader
-          isOpen={showCreateChatModal === 'team'}
-          handleClose={() => setShowCreateChatModal('')}
-          content={
+          ) : (
             <CreateTeamChat
-              handleClose={() => {
-                setShowCreateChatModal('');
-              }}
+              handleClose={() => setShowCreateChatModal('')}
               onChatSelect={onChatSelect}
             />
-          }
-        />
+          )}
+        </div>
       )}
     </div>
   );
@@ -1355,7 +1354,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
 
   const rawChatTypeInUrl = searchParams.get('chatType');
   const normalizedChatTypeInUrl =
-    rawChatTypeInUrl === 'all_channels' ? 'chat' : rawChatTypeInUrl || 'chat';
+    rawChatTypeInUrl === 'all_channels' ? 'all_channels' : rawChatTypeInUrl || 'chat';
 
   const [chatType, setChatType] = useState<MessengerChatType>(
     isAgentChat ? 'chat' : (normalizedChatTypeInUrl as MessengerChatType),
@@ -1396,16 +1395,6 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
       setSelectedChat(null);
       setselectedChannelType(null);
       setChatType('chat');
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete('chatType');
-      const nextSearch = nextParams.toString();
-      navigate(nextSearch ? `${location.pathname}?${nextSearch}` : location.pathname, {
-        replace: true,
-      });
-      return;
-    }
-
-    if (rawChatTypeInUrl === 'all_channels') {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete('chatType');
       const nextSearch = nextParams.toString();

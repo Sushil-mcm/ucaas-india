@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { getNextFiveMinute, getTodayInTimeZone, handleAlert } from '@/lib/utils';
 import { createEventAndTask, createMeeting, meetingDetailList } from '@/services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -274,6 +274,29 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
     return todayInTZ === selectedDate;
   };
 
+  const hourOptions = useMemo(
+    () =>
+      startMeetHourArr.map((item) => {
+        const shouldDisable =
+          isTodayInTimezone(WatchDate, watchTimezone?.value) &&
+          Number(item.val) < currentHourTZ;
+        return { label: item.val, value: item.val, isDisabled: shouldDisable };
+      }),
+    [WatchDate, watchTimezone?.value, currentHourTZ],
+  );
+
+  const minuteOptions = useMemo(
+    () =>
+      startMeetMinutesArr.map((item) => {
+        const isToday = isTodayInTimezone(WatchDate, watchTimezone?.value);
+        const isCurrentHour = Number(WatchHour?.value) === Number(currentHourTZ);
+        const shouldDisable =
+          isToday && isCurrentHour && Number(item.val) < currentMinuteTZ;
+        return { label: item.val, value: item.val, isDisabled: shouldDisable };
+      }),
+    [WatchDate, watchTimezone?.value, WatchHour?.value, currentHourTZ, currentMinuteTZ],
+  );
+
   const onSubmit = (data: any) => {
     const { name, meeting_date, timezone, pin, need_password, allowHost, hr, mins } = data;
     const startTime = `${meeting_date} ${hr?.value}:${mins?.value}:00`;
@@ -371,16 +394,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
               label={'Start Time'}
               placeholder="Hours"
               className="w-full md:max-w-[120px]"
-              options={startMeetHourArr?.map((item) => {
-                const shouldDisable =
-                  isTodayInTimezone(WatchDate, watchTimezone?.value) &&
-                  Number(item.val) < currentHourTZ;
-                return {
-                  label: item?.val,
-                  value: item?.val,
-                  isDisabled: shouldDisable,
-                };
-              })}
+              options={hourOptions}
               handleChange={(value) => setValue('hr', value)}
               value={watch('hr')}
               isDisabled={!watchTimezone}
@@ -388,19 +402,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
             <CustomSelect
               placeholder="Minutes"
               className="w-full md:max-w-[120px]"
-              options={startMeetMinutesArr?.map((item) => {
-                const isToday = isTodayInTimezone(WatchDate, watchTimezone?.value);
-                const isCurrentHour = Number(WatchHour?.value) === Number(currentHourTZ);
-
-                const shouldDisable =
-                  isToday && isCurrentHour && Number(item.val) < currentMinuteTZ;
-
-                return {
-                  label: item?.val,
-                  value: item?.val,
-                  isDisabled: shouldDisable,
-                };
-              })}
+              options={minuteOptions}
               handleChange={(value) => {
                 setValue('mins', value);
               }}

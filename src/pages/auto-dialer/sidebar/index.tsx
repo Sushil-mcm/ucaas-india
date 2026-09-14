@@ -199,9 +199,14 @@ const Tile = ({ label, path, icon, children, extraPaths = [], enabled }: any) =>
         isActive
           ? isChildrenExist
             ? 'text-[#B5642F]'
-            : 'text-[#B5642F] bg-[#E78B50]/10 border-b-2 border-b-[#E78B50] lg:border-b-0 lg:border-r-2 lg:border-r-[#E78B50]'
+            : 'text-[#B5642F] bg-[#E78B50]/10'
           : 'text-gray-900/80'
       } ${isChildrenExist ? 'pl-10 lg:pl-10' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
+      style={
+        isActive && !isChildrenExist
+          ? { borderRight: '3px solid #E78B50', borderBottom: 'none' }
+          : { borderRight: 'none' }
+      }
       {...getRoutePrefetchHandlers(path)}
       onClick={() => {
         if (!isEnabled || !path) return;

@@ -259,40 +259,6 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
   }, [user_info, selectedCampaign, isEditMode]);
 
   const handleTabChange = async (nextTab: string) => {
-    const currentIndex = TABS_ORDER.indexOf(activeTab);
-    const nextIndex = TABS_ORDER.indexOf(nextTab);
-
-    if (nextIndex <= currentIndex) {
-      setActiveTab(nextTab);
-      return;
-    }
-    const values = formInstance.getValues();
-
-    for (let i = currentIndex; i < nextIndex; i++) {
-      const tabKey = TABS_ORDER[i];
-      const schema = CAMPAIGN_SCEHAM[tabKey];
-
-      try {
-        await schema.validate(values, {
-          abortEarly: false,
-        });
-      } catch (err: any) {
-        if (err?.inner) {
-          err.inner.forEach((validationError: any) => {
-            if (validationError.path) {
-              formInstance.setError(validationError.path as any, {
-                type: 'manual',
-                message: validationError.message,
-              });
-            }
-          });
-        }
-        notifyValidationErrors(err?.inner?.[0]?.message || err?.message);
-
-        return;
-      }
-    }
-
     setActiveTab(nextTab);
   };
 
@@ -486,7 +452,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           isFetchingCampaignDetail
         }
       >
-        <div className="flex h-full w-full flex-col gap-4 justify-between">
+        <div className="flex h-full w-full min-h-0 flex-col gap-4 justify-between">
           <RadioGroup
             value={dialMethod}
             disabled={isEditMode}
@@ -495,7 +461,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
               setValue('dialMethod', val);
               setValue('script', { label: '', value: '' });
             }}
-            className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-4"
+            className="grid w-full grid-cols-1 gap-3 sm:grid-cols-4"
           >
             {CAMPAIGN_TYPE_LIST.map((item, index) => {
               const id = `dial-option-${index}`;
@@ -547,10 +513,10 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           <FormProvider {...formInstance}>
             <form
               onSubmit={formInstance.handleSubmit(onSubmit)}
-              className="flex h-full w-full flex-col gap-4 justify-between"
+              className="flex h-full w-full min-h-0 flex-col gap-4 justify-between"
             >
-              {stepLookUp?.[activeTab]}
-              <div className="flex flex-row items-center justify-between gap-2">
+              <div className="flex-1 min-h-0 overflow-y-auto">{stepLookUp?.[activeTab]}</div>
+              <div className="flex shrink-0 flex-row items-center justify-between gap-2 border-t border-gray-100 pt-3 pb-1">
                 <Button variant={'transparent'} type="button" onClick={() => setDrawerState(false)}>
                   Cancel
                 </Button>

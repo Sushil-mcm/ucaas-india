@@ -1738,7 +1738,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--line-2);
   font-size: 12.5px;
 }
@@ -4091,6 +4091,8 @@
   height: 44px;
   border-radius: 22px;
   font-size: 14px;
+  font-weight: 600;
+  color: #fff;
   background: linear-gradient(135deg, var(--accent), var(--accent-ink));
   box-shadow: 0 6px 16px rgba(234, 124, 30, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }

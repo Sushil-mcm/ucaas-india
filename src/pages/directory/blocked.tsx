@@ -1,510 +1,540 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
-import { getContactList, updateContactTag } from '@/services/api';
-import CustomAvatar from '@/components/custom/custom-avatar';
-import CustomSelect from '@/components/custom/custom-select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import CreateContactNew from '@/pages/new-contact/create-new-contact';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
+import { addBlockedNumbers, getBlockReach, getContactList, listBlockedNumbers, removeBlockedNumbers, updateContactTag } from '@/services/api';
+import { useUser } from '@/hooks/use-user';
+import { isAdminRole } from '@/lib/admin-scope';
 import { Ic } from '@/components/mcm/icons';
+import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import {
+  BLOCK_REASONS,
   DEFAULT_BLOCK_CHOICE,
+  KIND_LABELS,
+  LINE_LABELS,
   SCOPE_LABELS,
   TREATMENT_DESCRIPTIONS,
   TREATMENT_LABELS,
   type BlockChoice,
+  type BlockKind,
   type BlockLine,
   type BlockScope,
   type BlockTreatment,
+  type BlockReach,
   type BlockableContact,
+  type BlockedEntry,
+  type BlockedRow,
+  addRequest,
+  appliesTo,
   canBlock,
-  contactName,
+  lineChoices,
   describeChoice,
+  filterRows,
   planBlock,
-  tagRequest,
+  prettyNumber,
+  rowsFromContacts,
+  rowsFromEntries,
+  rowsToCsv,
 } from '@/lib/contact-blocking';
 import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import './list-page-glass.css';
 import './blocked-glass.css';
 
 /**
  * Directory ▸ Blocked — the numbers you have stopped hearing from.
  *
- * Blocking is spread across the app today: a menu on a row of the contacts
- * table marks somebody as Blocked, and after that the block is invisible.
- * Nothing lists what is blocked, so nobody can check whether a caller they are
- * no longer hearing from was blocked on purpose or is simply not calling.
+ * One list, one place to add to it. A block is a record of its own on the
+ * company's block list: the number (or a prefix, or "anyone who withholds
+ * their number"), what it stops, what the caller gets instead, whose numbers
+ * it protects, why, and who set it. The switch reads the list on every
+ * incoming call and the messaging gateway on every incoming text, and each
+ * entry counts how often it has done its job.
  *
- * This is that list, plus the one thing the row menu cannot do — block a number
- * you are looking at rather than a contact you have already opened. The form
- * for that lives in a dialog rather than permanently on the page: this screen's
- * job day to day is showing who is blocked, not filling in a settings form, so
- * the list is what's on screen and blocking someone is a deliberate action via
- * the button above it.
- *
- * The important honesty, and the reason the dialog's footer says so plainly:
- * marking a contact as blocked records the decision and nothing more. Nothing
- * in the call path reads it yet, so a blocked number can still ring through.
- * The screen is still worth having — the decision has to be recorded somewhere
- * before anything can act on it, and until then people deserve to know.
+ * Contacts tagged Blocked from the contacts table are shown here too, so
+ * nothing anybody blocked the old way is hidden.
  */
 
-/* Sample rows appended after any real blocked numbers, so the list always
-   has enough entries to show its design properly instead of looking sparse.
-   Real data always comes first and is never hidden or replaced by these.
-   Their `_id`s aren't real contact ids, so toggling one only ever updates
-   `statusOverride` below rather than calling the tag API. */
-const DEMO_BLOCKED_NUMBERS: (BlockableContact & { _demo: true })[] = [
-  {
-    _id: 'demo-1',
-    name: { first: 'Rahul', last: 'Sharma' },
-    contact: { phone: '+91 98765 43210', email: 'rahul.sharma@example.com' },
-    is_blocked: true,
-    _demo: true,
-  },
-  {
-    _id: 'demo-2',
-    name: { first: 'Priya', last: 'Verma' },
-    contact: { phone: '+91 91234 56789', email: 'priya.verma@example.com' },
-    is_blocked: true,
-    _demo: true,
-  },
-  {
-    _id: 'demo-3',
-    name: { first: 'Unknown', last: 'Caller' },
-    contact: { phone: '+1 202 555 0143' },
-    is_blocked: true,
-    _demo: true,
-  },
-  {
-    _id: 'demo-4',
-    name: { first: 'Amit', last: 'Patel' },
-    contact: { phone: '+91 90123 45678', email: 'amit.patel@example.com' },
-    is_blocked: true,
-    _demo: true,
-  },
-  {
-    _id: 'demo-5',
-    name: { first: 'Sara', last: 'Khan' },
-    contact: { phone: '+91 88990 11223', email: 'sara.khan@example.com' },
-    is_blocked: true,
-    _demo: true,
-  },
-  {
-    _id: 'demo-6',
-    name: { first: 'Telemarketer' },
-    contact: { phone: '+1 800 555 0192' },
-    is_blocked: true,
-    _demo: true,
-  },
-];
-
-const LINE_OPTIONS: { label: string; value: BlockLine }[] = [
-  { label: 'My line', value: 'personal' },
-  { label: 'A shared line', value: 'shared' },
-];
+const fmtWhen = (value: string): string => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 const Blocked = () => {
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [number, setNumber] = useState('');
-  const [blockFormOpen, setBlockFormOpen] = useState(false);
-  const [addingContact, setAddingContact] = useState(false);
-  const [scope, setScope] = useState<BlockScope>(DEFAULT_BLOCK_CHOICE.scope);
-  const [treatment, setTreatment] = useState<BlockTreatment>(DEFAULT_BLOCK_CHOICE.treatment);
-  const [line, setLine] = useState<BlockLine>(DEFAULT_BLOCK_CHOICE.line);
+  const [showAdd, setShowAdd] = useState(false);
+  const [choice, setChoice] = useState<BlockChoice>({ numbers: '', ...DEFAULT_BLOCK_CHOICE });
+  const set = <K extends keyof BlockChoice>(key: K, value: BlockChoice[K]) =>
+    setChoice((prev) => ({ ...prev, [key]: value }));
 
-  /* Two reads of the same list. The blocked one is filtered on the server, which
-     seeds the grid below; the whole book is what a typed number is matched
-     against, because the number you want to block is usually already saved. */
-  const { data: blocked = [], isPending } = useQuery({
+  const roleText = String(user?.role?.name || (typeof user?.role === 'string' ? user.role : '') || '');
+  const isAdmin = isAdminRole(roleText.toUpperCase() as any);
+  const myUuid = String(user?.uuid || '');
+  /* A number typed without a country code is read in the country of the
+     person's own caller ID: a US company types 415 555 1212, not +1. */
+  const myCallerId = String(user?.user_info?.caller_id || user?.caller_id || '').trim();
+  const country = useMemo(() => {
+    const parsed = parsePhoneNumberFromString(myCallerId);
+    return parsed?.country || 'US';
+  }, [myCallerId]);
+  const ownNumbers = useMemo(() => (myCallerId ? [myCallerId] : []), [myCallerId]);
+
+  const { data: entries = [], isPending, isError } = useQuery({
+    queryKey: ['blockedNumbers', 'all'],
+    queryFn: () => listBlockedNumbers({ line: 'all', limit: 1000 }),
+    select: (res: any) => (res?.data?.data?.rows || []) as BlockedEntry[],
+  });
+
+  /* What this person may block for: their own numbers, the lines they run, or
+     the whole company. The server derives it from the role and the numbers. */
+  const { data: reach = null } = useQuery({
+    queryKey: ['blockReach'],
+    queryFn: getBlockReach,
+    select: (res: any) => (res?.data?.data || null) as BlockReach | null,
+  });
+
+  const { data: taggedContacts = [] } = useQuery({
     queryKey: ['getContactList', 'directoryBlocked'],
     queryFn: () =>
       getContactList({ page: 1, limit: 200, filters: [{ key: 'tag', value: 'BLOCK' }] }),
     select: (res: any) => (res?.data?.data?.result?.rows || []) as BlockableContact[],
   });
 
-  const { data: everyone = [] } = useQuery({
-    queryKey: ['getContactList', 'directoryBlockedLookup'],
-    queryFn: () => getContactList({ page: 1, limit: 200 }),
-    select: (res: any) => (res?.data?.data?.result?.rows || []) as BlockableContact[],
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['blockedNumbers'] });
+    queryClient.invalidateQueries({ queryKey: ['getContactList'] });
+    queryClient.invalidateQueries({ queryKey: ['newContactListQuery'] });
+  };
+  const fail = (error: any) =>
+    toast.error(
+      error?.response?.data?.error?.message || error?.response?.data?.message || 'That did not save. Try again.',
+    );
+
+  const { mutate: add, isPending: isAdding } = useMutation({
+    mutationFn: addBlockedNumbers,
+    onSuccess: (res: any) => {
+      const data = res?.data?.data || {};
+      const added = data?.added?.length || 0;
+      const rejected: { number: string; reason: string }[] = data?.rejected || [];
+      if (added) toast.success(added === 1 ? 'Blocked.' : `${added} numbers blocked.`);
+      rejected.forEach((item) => toast.warn(`${item.number}: ${item.reason}`));
+      if (!added && data?.already?.length) toast.info('Already blocked.');
+      refresh();
+      setChoice((prev) => ({ ...prev, numbers: '', label: '', note: '' }));
+    },
+    onError: fail,
   });
 
-  /* The grid's own copy of who's blocked, keyed by contact id (falling back
-     to phone for the demo rows, which have no real id). Unblocking someone
-     is meant to flip their card in place — tag switches to "Unblocked", the
-     button switches to "Block" — rather than the row vanishing the moment
-     the server confirms it. Since the `blocked` query above is filtered to
-     tag=BLOCK, a plain refetch after unblocking would drop the row entirely;
-     this state is what keeps it on screen so the toggle is visible. Seeded
-     once from the query (real rows) plus the demo rows, then only ever
-     updated locally by `toggleBlock` — a second admin blocking/unblocking
-     elsewhere won't live-update this screen, which is fine for what is
-     already a "coming soon" feature. */
-  const [rows, setRows] = useState<(BlockableContact & { _demo?: boolean })[] | null>(null);
-  const [statusOverride, setStatusOverride] = useState<Record<string, 'BLOCK' | 'STANDARD'>>({});
+  const { mutate: remove, isPending: isRemoving } = useMutation({
+    mutationFn: removeBlockedNumbers,
+    onSuccess: () => {
+      toast.success('Unblocked.');
+      refresh();
+    },
+    onError: fail,
+  });
 
-  useEffect(() => {
-    if (rows === null && !isPending) {
-      setRows([...blocked, ...DEMO_BLOCKED_NUMBERS]);
-    }
-  }, [isPending, blocked, rows]);
-
-  const rowKey = (row: BlockableContact) => row?._id || row?.contact?.phone || '';
-
-  const { mutate: setTag, isPending: isSaving } = useMutation({
+  const { mutate: untag, isPending: isUntagging } = useMutation({
     mutationFn: updateContactTag,
     onSuccess: () => {
-      /* Every contact list in the app shares this prefix, so toggling here
-         also corrects the tag shown on the contacts table and the directory. */
-      queryClient.invalidateQueries({ queryKey: ['getContactList'] });
-      queryClient.invalidateQueries({ queryKey: ['newContactListQuery'] });
+      toast.success('Unblocked.');
+      refresh();
     },
-    onError: (error: any) =>
-      toast.error(error?.response?.data?.message || 'That did not save. Try again.'),
+    onError: fail,
   });
 
-  const choice: BlockChoice = { number, scope, treatment, line };
-  const plan = useMemo(() => planBlock(choice, everyone), [number, scope, treatment, line, everyone]);
-  const typed = number.trim().length > 0;
+  const plan = useMemo(() => planBlock(choice, entries, ownNumbers, reach), [choice, entries, ownNumbers, reach]);
+  const lines = lineChoices(reach);
+  const toggleLine = (number: string) =>
+    set('dids', choice.dids.includes(number) ? choice.dids.filter((d) => d !== number) : [...choice.dids, number]);
+  const typed = choice.kind === 'anonymous' || choice.numbers.trim().length > 0;
 
-  const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    const base = rows ?? [];
-    if (!needle) return base;
-    return base.filter((row) =>
-      [contactName(row), row?.contact?.phone, row?.contact?.email]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle)),
-    );
-  }, [rows, search]);
-
-  /* Same paging as People: a fixed 10 rows with a pager below, rather than
-     every blocked number rendered at once with nothing to page through. */
-  const PAGE_SIZE = 10;
-  const [page, setPage] = useState(1);
-  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const paged = useMemo(
-    () => visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [visible, currentPage],
+  const rows = useMemo<BlockedRow[]>(
+    () => [...rowsFromEntries(entries, myUuid, isAdmin), ...rowsFromContacts(taggedContacts, isAdmin)],
+    [entries, taggedContacts, myUuid, isAdmin],
   );
+  const visible = useMemo(() => filterRows(rows, search), [rows, search]);
+  const stopped = rows.reduce((sum, row) => sum + row.hits, 0);
 
-  const blockedCount = useMemo(
-    () => (rows ?? []).filter((row) => (statusOverride[rowKey(row)] ?? 'BLOCK') === 'BLOCK').length,
-    [rows, statusOverride],
-  );
-
-  const block = () => {
-    if (!canBlock(plan)) return;
-    setTag(tagRequest(plan.targets, 'BLOCK'), {
-      onSuccess: () => {
-        toast.success(`${plan.targets.length === 1 ? 'That number is' : 'Those numbers are'} blocked.`);
-        setStatusOverride((prev) => {
-          const next = { ...prev };
-          for (const target of plan.targets) next[rowKey(target)] = 'BLOCK';
-          return next;
-        });
-        /* A freshly-blocked contact may not be in `rows` yet (it wasn't
-           tagged BLOCK when the grid was seeded) — add it so the card
-           appears immediately instead of only after a page reload. */
-        setRows((prev) => {
-          const existing = new Set((prev ?? []).map(rowKey));
-          const additions = plan.targets.filter((target) => !existing.has(rowKey(target)));
-          return [...(prev ?? []), ...additions];
-        });
-        setNumber('');
-        setBlockFormOpen(false);
-      },
-    });
+  const exportCsv = () => {
+    const blob = new Blob([rowsToCsv(visible)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `blocked-numbers-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  const toggleBlock = (row: BlockableContact & { _demo?: boolean }) => {
-    const key = rowKey(row);
-    const currentlyBlocked = (statusOverride[key] ?? 'BLOCK') === 'BLOCK';
-    const nextTag: 'BLOCK' | 'STANDARD' = currentlyBlocked ? 'STANDARD' : 'BLOCK';
-    const applyLocally = () => {
-      setStatusOverride((prev) => ({ ...prev, [key]: nextTag }));
-      toast.success(
-        `${contactName(row) || 'That number'} is ${currentlyBlocked ? 'unblocked' : 'blocked'}.`,
-      );
-    };
-    /* Demo rows have no real contact id, so there's nothing for the API to
-       tag — toggle the card's own state directly instead of calling it. */
-    if (row._demo) {
-      applyLocally();
-      return;
-    }
-    setTag(tagRequest([row], nextTag), { onSuccess: applyLocally });
+  const unblock = (row: BlockedRow) => {
+    if (row.id) remove({ ids: [row.id] });
+    else if (row.contactId) untag({ contact_uuid: [row.contactId], tag: 'STANDARD' });
   };
+
+  const busy = isAdding || isRemoving || isUntagging;
 
   return (
-    <>
-      <div className="gp-blocked">
-      <DirectoryPage
-        title="Blocked Numbers"
-        description="Everyone you have stopped hearing from, and one place to block someone new."
-        actions={
-          <button type="button" className="btn primary" onClick={() => setBlockFormOpen(true)}>
-            <Ic n="shield" />
+    <div className="gp-blocked">
+    <div className="gp-dirlist">
+    <DirectoryPage
+      title="Blocked Numbers"
+      description="Everyone you have stopped hearing from, and one place to block someone new."
+      actions={
+        <span className="flex items-center gap-2">
+          <button type="button" className="btn ghost" onClick={exportCsv} disabled={!visible.length}>
+            Export
+          </button>
+          <button type="button" className="btn primary" onClick={() => setShowAdd((v) => !v)}>
+            <Ic n="shield" size={14} />
             Block a number
           </button>
-        }
-        filters={
-          <>
-            <SearchChip value={search} onChange={setSearch} placeholder="Search blocked numbers" />
-            <span className="fchip live" style={{ marginLeft: 'auto' }}>
-              <span className="num">{blockedCount}</span> blocked
-            </span>
-          </>
-        }
-      >
-        <table>
-          <thead>
-            <tr>
-              <th>Contact</th>
-              <th>Number</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isPending || rows === null ? (
-              <EmptyRow span={5} message="Loading blocked numbers…" />
-            ) : paged.length ? (
-              paged.map((row) => {
-                const key = rowKey(row);
-                const name = contactName(row) || 'Unknown';
-                const isDemo = Boolean((row as { _demo?: boolean })._demo);
-                const isBlocked = (statusOverride[key] ?? 'BLOCK') === 'BLOCK';
-                return (
-                  <tr key={key}>
-                    <td>
-                      <span className="flex items-center gap-2.5">
-                        <CustomAvatar name={name} type="contact" size="30" />
-                        <span style={{ fontWeight: 700 }}>{name}</span>
-                        {isDemo ? <span className="tag neu">Demo</span> : null}
-                      </span>
-                    </td>
-                    <td className="num">{row?.contact?.phone || '—'}</td>
-                    <td>{row?.contact?.email || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
-                    <td>
-                      <span className={`tag ${isBlocked ? 'acc' : 'neu'}`}>
-                        {isBlocked ? 'Blocked' : 'Unblocked'}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="mini"
-                        disabled={isSaving}
-                        title={isBlocked ? `Unblock ${name}` : `Block ${name}`}
-                        aria-label={isBlocked ? `Unblock ${name}` : `Block ${name}`}
-                        onClick={() => toggleBlock(row)}
-                      >
-                        <Ic n={isBlocked ? 'check' : 'shield'} size={12} />
-                        {isBlocked ? 'Unblock' : 'Block'}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <EmptyRow
-                span={5}
-                message={
-                  (rows ?? []).length
-                    ? 'No blocked numbers match that search.'
-                    : 'Nobody is blocked yet. Numbers you block will show up here.'
+        </span>
+      }
+      filters={
+        <>
+          <SearchChip value={search} onChange={setSearch} placeholder="Search by number, name, reason or who" />
+          <span className="fchip live" style={{ marginLeft: 'auto' }}>
+            <span className="num">{rows.length}</span> blocked
+          </span>
+          <span className="fchip">
+            <span className="num">{stopped}</span> calls and texts stopped
+          </span>
+        </>
+      }
+    >
+      {showAdd ? (
+        <div style={{ padding: 14 }}>
+          <SettingCard
+            title="Block a number"
+            description="Read on every incoming call by the phone system and on every incoming text by the messaging service."
+            icon={<Ic n="shield" size={16} />}
+            status="active"
+            note={
+              <>
+                Emergency numbers, short codes and your own numbers cannot be blocked. A block on
+                your numbers stops that caller reaching you; a block for the company stops them
+                reaching any number the company owns and takes an admin. Texts from a blocked
+                sender are never delivered, whatever the caller is set to hear.
+              </>
+            }
+          >
+            <SettingRow
+              label="Who to block"
+              description="A single number, several at once, everyone from an area or country, or callers who hide their number."
+              control={
+                <select
+                  className="mcm-field"
+                  value={choice.kind}
+                  onChange={(event) => set('kind', event.target.value as BlockKind)}
+                  aria-label="Who to block"
+                >
+                  {(Object.keys(KIND_LABELS) as BlockKind[]).map((key) => (
+                    <option key={key} value={key}>
+                      {KIND_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+
+            {choice.kind !== 'anonymous' ? (
+              <SettingRow
+                label={choice.kind === 'prefix' ? 'Prefix' : 'Number'}
+                description={
+                  choice.kind === 'prefix'
+                    ? 'The country code and, usually, the area code: +1 415 stops every San Francisco number, +44 every UK number.'
+                    : `Type it the way it was shown to you. Paste several separated by commas or new lines. A number without a country code is read as ${country}.`
+                }
+                control={
+                  choice.kind === 'prefix' ? (
+                    <input
+                      className="mcm-field"
+                      value={choice.numbers}
+                      onChange={(event) => set('numbers', event.target.value)}
+                      placeholder="+1 415"
+                      inputMode="tel"
+                      aria-label="Prefix to block"
+                    />
+                  ) : (
+                    <textarea
+                      className="mcm-field"
+                      rows={2}
+                      value={choice.numbers}
+                      onChange={(event) => set('numbers', event.target.value)}
+                      placeholder="+1 415 555 1212"
+                      aria-label="Number to block"
+                    />
+                  )
                 }
               />
-            )}
-          </tbody>
-        </table>
+            ) : null}
 
-        {/* Pager. Reuses the app's own `.mcm-pager` classes (index.css), same
-            as People's -- hidden on a single page, one inert control is
-            noise. */}
-        {!isPending && pageCount > 1 ? (
-          <div className="gp-blocked-pager">
-            <span className="gp-blocked-pager-count">
-              {(currentPage - 1) * PAGE_SIZE + 1}–
-              {Math.min(currentPage * PAGE_SIZE, visible.length)} of {visible.length}
-            </span>
-            <div className="mcm-pager flex items-center">
-              <button
-                type="button"
-                className="mcm-pager-btn"
-                onClick={() => setPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                aria-label="Previous page"
-              >
-                &#8249;
-              </button>
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
-                <button
-                  key={number}
-                  type="button"
-                  className={`mcm-pager-page${number === currentPage ? ' is-current' : ''}`}
-                  onClick={() => setPage(number)}
-                  aria-current={number === currentPage ? 'page' : undefined}
+            <SettingRow
+              label="What to stop"
+              description="Blocking calls blocks faxes too — they arrive over the same line."
+              control={
+                <select
+                  className="mcm-field"
+                  value={choice.scope}
+                  onChange={(event) => set('scope', event.target.value as BlockScope)}
+                  aria-label="What to stop"
                 >
-                  {number}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="mcm-pager-btn"
-                onClick={() => setPage(currentPage + 1)}
-                disabled={currentPage === pageCount}
-                aria-label="Next page"
+                  {(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => (
+                    <option key={key} value={key}>
+                      {SCOPE_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+
+            {choice.scope !== 'messages' ? (
+              <SettingRow
+                label="What the caller gets"
+                description={TREATMENT_DESCRIPTIONS[choice.treatment]}
+                control={
+                  <select
+                    className="mcm-field"
+                    value={choice.treatment}
+                    onChange={(event) => set('treatment', event.target.value as BlockTreatment)}
+                    aria-label="What the caller gets"
+                  >
+                    {(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => (
+                      <option key={key} value={key}>
+                        {TREATMENT_LABELS[key]}
+                      </option>
+                    ))}
+                  </select>
+                }
+              />
+            ) : null}
+
+            <SettingRow
+              label="Whose numbers"
+              description={reach?.message || 'Your own numbers, or the lines you run, or the whole company - whichever your role reaches.'}
+              control={
+                <select
+                  className="mcm-field"
+                  value={choice.line}
+                  onChange={(event) => set('line', event.target.value as BlockLine)}
+                  aria-label="Whose numbers"
+                >
+                  {lines.map((key) => (
+                    <option key={key} value={key}>
+                      {LINE_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+
+            {choice.line === 'shared' && reach?.lines?.length ? (
+              <SettingRow
+                label="Which lines"
+                description="The block applies only to calls and texts arriving on the lines you tick."
               >
-                &#8250;
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </DirectoryPage>
-      </div>
+                <div className="flex flex-col gap-1.5" role="group" aria-label="Which lines">
+                  {reach.lines.map((line) => (
+                    <label key={line.number} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={choice.dids.includes(line.number)}
+                        onChange={() => toggleLine(line.number)}
+                      />
+                      <span className="num">{prettyNumber(line.number)}</span>
+                      {line.label ? <span style={{ color: 'var(--ink-3)' }}>{line.label}</span> : null}
+                    </label>
+                  ))}
+                </div>
+              </SettingRow>
+            ) : null}
 
-      <Dialog open={blockFormOpen} onOpenChange={setBlockFormOpen}>
-        <DialogContent
-          className="gp-create-group-dialog gp-block-dialog sm:max-w-[620px]"
-          showCloseButton={false}
-        >
-          <div className="gp-create-group-head">
-            <h2>Block a number</h2>
-            <button
-              type="button"
-              aria-label="Close"
-              className="gp-create-group-close"
-              onClick={() => setBlockFormOpen(false)}
-            >
-              <Ic n="x" size={14} />
-            </button>
-          </div>
-          <div className="gp-create-group-body gp-block-body">
-            <p className="gp-block-intro">
-              Blocking covers calls, faxes and messages from that number.
-            </p>
+            <SettingRow
+              label="Reason"
+              description="Why — so the list still makes sense in six months."
+              control={
+                <select
+                  className="mcm-field"
+                  value={choice.reason}
+                  onChange={(event) => set('reason', event.target.value)}
+                  aria-label="Reason"
+                >
+                  <option value="">Not given</option>
+                  {BLOCK_REASONS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
 
-            <label className="gp-block-field">
-              <span className="gp-block-label">Number</span>
-              <input
-                className="gp-block-input"
-                value={number}
-                onChange={(event) => setNumber(event.target.value)}
-                placeholder="+44 20 7946 0000"
-                inputMode="tel"
-                aria-label="Number to block"
-              />
-              <span className="gp-block-hint">Has to be saved as a contact first.</span>
-            </label>
-
-            <label className="gp-block-field">
-              <span className="gp-block-label">What to stop</span>
-              <CustomSelect
-                value={{ label: SCOPE_LABELS[scope], value: scope }}
-                options={(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => ({
-                  label: SCOPE_LABELS[key],
-                  value: key,
-                }))}
-                handleChange={(option: any) => setScope(option.value)}
-                inputClass="gp-block-select"
-              />
-              <span className="gp-block-hint">Blocking calls blocks faxes too — same line.</span>
-            </label>
-
-            <label className="gp-block-field">
-              <span className="gp-block-label">What the caller gets</span>
-              <CustomSelect
-                value={{ label: TREATMENT_LABELS[treatment], value: treatment }}
-                options={(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => ({
-                  label: TREATMENT_LABELS[key],
-                  value: key,
-                }))}
-                handleChange={(option: any) => setTreatment(option.value)}
-                inputClass="gp-block-select"
-              />
-              <span className="gp-block-hint">{TREATMENT_DESCRIPTIONS[treatment]}</span>
-            </label>
-
-            <label className="gp-block-field">
-              <span className="gp-block-label">Whose line</span>
-              <CustomSelect
-                value={LINE_OPTIONS.find((option) => option.value === line)}
-                options={LINE_OPTIONS}
-                handleChange={(option: any) => setLine(option.value)}
-                inputClass="gp-block-select"
-              />
-              <span className="gp-block-hint">
-                A shared line has to be blocked for everyone who answers it.
-              </span>
-            </label>
+            <SettingRow
+              label="Label and note"
+              description="A name for the list, and anything worth remembering."
+              control={
+                <span className="flex flex-col gap-2">
+                  <input
+                    className="mcm-field"
+                    value={choice.label}
+                    onChange={(event) => set('label', event.target.value)}
+                    placeholder="Roof repair scam"
+                    aria-label="Label"
+                    maxLength={120}
+                  />
+                  <input
+                    className="mcm-field"
+                    value={choice.note}
+                    onChange={(event) => set('note', event.target.value)}
+                    placeholder="Called four times on Monday"
+                    aria-label="Note"
+                    maxLength={500}
+                  />
+                </span>
+              }
+            />
 
             {typed ? (
-              <div className="gp-block-summary">
-                <p>{describeChoice(choice)}</p>
-                {plan.problems.map((problem) => (
-                  <p key={problem.message} className={problem.blocking ? 'is-blocking' : 'is-warning'}>
-                    {problem.message}
+              <div className="mcm-setrow mcm-setrow-stack">
+                <div className="mcm-setrow-full">
+                  <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 8px' }}>
+                    {describeChoice(choice)}
                   </p>
-                ))}
-                {plan.notStored.length ? (
-                  <p className="is-muted">
-                    Recorded on this screen but not saved with the contact:{' '}
-                    {plan.notStored.join(', ')}.
-                  </p>
-                ) : null}
+                  {plan.problems.map((problem) => (
+                    <p
+                      key={problem.message}
+                      style={{
+                        fontSize: 12,
+                        margin: '0 0 6px',
+                        color: problem.blocking ? 'var(--crit)' : 'var(--ink-3)',
+                      }}
+                    >
+                      {problem.message}
+                    </p>
+                  ))}
+                  <span className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn primary"
+                      disabled={!canBlock(plan) || busy}
+                      onClick={() => add(addRequest(choice, plan, country))}
+                    >
+                      <Ic n="shield" />
+                      {choice.kind === 'anonymous'
+                        ? 'Block anonymous callers'
+                        : plan.numbers.length > 1
+                          ? `Block ${plan.numbers.length} numbers`
+                          : 'Block this number'}
+                    </button>
+                    <button type="button" className="btn ghost" onClick={() => setShowAdd(false)}>
+                      Close
+                    </button>
+                  </span>
+                </div>
               </div>
             ) : null}
+          </SettingCard>
+        </div>
+      ) : null}
 
-            <p className="gp-block-note">
-              Coming soon — recorded against the contact only, nothing in the call path reads it
-              yet, so a blocked number can still ring through.
-            </p>
-          </div>
-          <div className="gp-block-foot">
-            <button type="button" className="gp-block-cancel" onClick={() => setBlockFormOpen(false)}>
-              Cancel
-            </button>
-            {typed && plan.needsContact ? (
-              <button
-                type="button"
-                className="gp-block-secondary"
-                onClick={() => setAddingContact(true)}
-              >
-                Save as a contact
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className="gp-block-submit"
-              disabled={!typed || !canBlock(plan) || isSaving}
-              onClick={block}
-            >
-              <Ic n="shield" />
-              Block this number
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={addingContact} onOpenChange={setAddingContact}>
-        <DialogContent className="max-w-[520px] max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Contact</DialogTitle>
-          </DialogHeader>
-          <CreateContactNew
-            isDisable={false}
-            keepFormDataAfterSave
-            isLead={false}
-            prefillPhone={number.trim()}
-            handleClose={() => setAddingContact(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+      <table>
+        <thead>
+          <tr>
+            <th>Blocked</th>
+            <th>Stops</th>
+            <th>Caller gets</th>
+            <th>Applies to</th>
+            <th>Reason</th>
+            <th>Blocked by</th>
+            <th>Stopped</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isPending ? (
+            <EmptyRow span={8} message="Loading blocked numbers…" />
+          ) : isError ? (
+            <EmptyRow span={8} message="The block list could not be loaded. Try again in a moment." />
+          ) : visible.length ? (
+            visible.map((row) => (
+              <tr key={row.key}>
+                <td>
+                  <span style={{ fontWeight: 700 }}>{row.title}</span>
+                  {row.number && row.title !== prettyNumber(row.number) ? (
+                    <div className="num" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                      {prettyNumber(row.number)}
+                    </div>
+                  ) : null}
+                  {row.note ? (
+                    <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>{row.note}</div>
+                  ) : null}
+                </td>
+                <td>{SCOPE_LABELS[row.scope]}</td>
+                <td>{row.scope === 'messages' ? '—' : TREATMENT_LABELS[row.treatment]}</td>
+                <td>
+                  <span
+                    className={`tag ${row.line === 'company' ? 'neg' : ''}`}
+                    title={row.line === 'shared' ? row.dids.map(prettyNumber).join(', ') : undefined}
+                  >
+                    {appliesTo(row)}
+                  </span>
+                </td>
+                <td>{row.reason || <span style={{ color: 'var(--ink-4)' }}>—</span>}</td>
+                <td>
+                  {row.blockedBy || <span style={{ color: 'var(--ink-4)' }}>—</span>}
+                  {row.blockedAt ? (
+                    <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>{fmtWhen(row.blockedAt)}</div>
+                  ) : null}
+                </td>
+                <td>
+                  {row.kind === 'contact' ? (
+                    <span style={{ color: 'var(--ink-4)' }}>—</span>
+                  ) : (
+                    <>
+                      <span className="num">{row.hits}</span>
+                      {row.lastHit ? (
+                        <div style={{ fontSize: 12, color: 'var(--ink-4)' }}>last {fmtWhen(row.lastHit)}</div>
+                      ) : null}
+                    </>
+                  )}
+                </td>
+                <td>
+                  {row.mine ? (
+                    <button
+                      type="button"
+                      className="mini"
+                      disabled={busy}
+                      title={`Unblock ${row.title}`}
+                      aria-label={`Unblock ${row.title}`}
+                      onClick={() => unblock(row)}
+                    >
+                      <Ic n="check" size={12} />
+                      Unblock
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>Not yours to remove</span>
+                  )}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <EmptyRow
+              span={8}
+              message={
+                rows.length
+                  ? 'No blocked numbers match that search.'
+                  : 'Nobody is blocked. Numbers you block will be listed here.'
+              }
+            />
+          )}
+        </tbody>
+      </table>
+    </DirectoryPage>
+    </div>
+    </div>
   );
 };
 

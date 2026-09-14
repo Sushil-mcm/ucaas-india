@@ -77,32 +77,11 @@ body.perf-warm-backdrop .perf-campaigns {
 }
 
 /* ------------------------------------------------------------
-   1. Metric summary cards (Performance's own stat grid — the embedded
-   Campaign component's KPI strip is hidden while embedded, so this is the
-   only stat row on screen)
+   1. Metric summary cards — see section 4 below (`.ca-kpi*`) for the eight
+   individually-styled KPI tiles. The embedded Campaign component's own
+   `.kpi`/`.stat` strip stays hidden while embedded, so nothing here needs
+   to style those classes any more.
    ------------------------------------------------------------ */
-.perf-campaigns .stat {
-  background: var(--ca-glass);
-  backdrop-filter: var(--ca-glass-blur);
-  -webkit-backdrop-filter: var(--ca-glass-blur);
-  border: 1px solid var(--ca-glass-border);
-  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
-     use for their own KPI cards — this view's own 18px was the one gap. */
-  border-radius: 20px;
-  box-shadow: var(--ca-glass-shadow);
-}
-.perf-campaigns .stat .k {
-  color: var(--ca-muted);
-  letter-spacing: 0.1em;
-}
-.perf-campaigns .stat .v {
-  color: var(--ca-ink);
-  font-weight: 800;
-}
-.perf-campaigns .stat .d {
-  color: var(--ca-muted) !important;
-  font-weight: 600;
-}
 
 /* ------------------------------------------------------------
    2. Filter toolbar — search box and status/dial-mode pills
@@ -112,12 +91,16 @@ body.perf-warm-backdrop .perf-campaigns {
    one you could tell was empty vs. focused. Opaque background, a border
    with actual contrast, and dark/muted text so it reads as a real field. */
 .perf-campaigns .cmp-search input {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: var(--ca-glass-blur);
-  -webkit-backdrop-filter: var(--ca-glass-blur);
-  border: 1px solid rgba(249, 115, 22, 0.3) !important;
-  box-shadow: 0 1px 2px rgba(60, 40, 30, 0.05);
+  background: #fffdfb !important;
+  border: 1.5px solid rgba(211, 129, 74, 0.16) !important;
+  border-radius: 12px !important;
+  height: 38px !important;
+  padding-left: 34px !important;
+  box-shadow: 0 2px 6px -2px rgba(120, 80, 45, 0.08);
   color: var(--ca-ink) !important;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 .dark .perf-campaigns .cmp-search input {
   background: rgba(17, 24, 39, 0.7) !important;
@@ -129,38 +112,112 @@ body.perf-warm-backdrop .perf-campaigns {
 }
 .perf-campaigns .cmp-search .ic {
   color: var(--ca-accent-ink) !important;
-  opacity: 0.7;
+  opacity: 0.8;
+  left: 11px !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  width: 15px !important;
+  height: 15px !important;
+  /* The input's own `backdrop-filter: blur(...)` (campaign.css) forces it
+     into a compositing layer that otherwise paints over this icon despite
+     being static and later only in source order — an explicit stacking
+     context on the icon wins that regardless of paint-order rules on
+     paper. */
+  z-index: 1;
 }
 .perf-campaigns .cmp-search input:focus {
-  border-color: #f97316 !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  border-color: #d3814a !important;
+  box-shadow: 0 0 0 3.5px rgba(211, 129, 74, 0.14);
 }
 
+/* Filter chips — a taller, bolder pill (matching the search field's own
+   38px height so the whole toolbar sits on one line) with a solid
+   gradient fill when active instead of a faint wash, so "this is the
+   applied filter" reads at a glance rather than blending into the row. */
 .perf-campaigns .fchip {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(249, 115, 22, 0.15);
-  color: #64748b;
-  font-weight: 600;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: #fffdfb;
+  border: 1.5px solid rgba(211, 129, 74, 0.16);
+  color: #8a8478;
+  font-weight: 700;
+  font-size: 12px;
   transition:
     background-color 0.16s ease,
     color 0.16s ease,
-    border-color 0.16s ease;
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 .perf-campaigns .fchip:hover {
-  background: rgba(255, 241, 235, 0.75);
+  background: #faeadc;
   color: var(--ca-accent-ink);
-  border-color: rgba(249, 115, 22, 0.25);
+  border-color: rgba(211, 129, 74, 0.3);
 }
 .perf-campaigns .fchip.on {
-  /* Flat soft peach wash, not a gradient block — the same tone-down every
-     other "this is the active one" surface in Performance got (Reports'
-     catalog toggle, Callbacks' sub-tab). */
-  background: rgba(249, 115, 22, 0.12);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  box-shadow: none;
-  color: #ea580c;
-  font-weight: 700;
+  background: linear-gradient(135deg, #eb9c68, #d3814a);
+  border-color: transparent;
+  box-shadow: 0 4px 12px -4px rgba(211, 129, 74, 0.5);
+  color: #fff;
+  font-weight: 800;
   border-radius: 999px;
+}
+.perf-campaigns .fchip.on .dot.green {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+/* Each status filter picks up the same colour its pill has in the table
+   rows below, instead of every chip turning the same generic orange when
+   active — "Running" active looks like the Running tag, etc. "All" and
+   the dial-mode chips keep the plain orange active fill. */
+.perf-campaigns .fchip[data-status='PROCESSING'].on {
+  background: linear-gradient(135deg, #8bb89e, #6ea082);
+  box-shadow: 0 4px 12px -4px rgba(110, 160, 130, 0.5);
+}
+.perf-campaigns .fchip[data-status='PAUSE'].on {
+  background: linear-gradient(135deg, #e0bb85, #c99a5c);
+  box-shadow: 0 4px 12px -4px rgba(201, 154, 92, 0.5);
+}
+.perf-campaigns .fchip[data-status='NEW'].on {
+  background: linear-gradient(135deg, #a9c0d9, #7d9cbd);
+  box-shadow: 0 4px 12px -4px rgba(125, 156, 189, 0.5);
+}
+.perf-campaigns .fchip[data-status='COMPLETED'].on {
+  background: #b3aca0;
+  box-shadow: 0 4px 12px -4px rgba(179, 172, 160, 0.5);
+}
+/* A dot on Paused/Scheduled/Completed too, not only "Running" (which
+   already has its own pulsing dot) — same colour the chip turns when
+   active, so each one previews its own colour before you even pick it. */
+.perf-campaigns .fchip[data-status='PAUSE']::before,
+.perf-campaigns .fchip[data-status='NEW']::before,
+.perf-campaigns .fchip[data-status='COMPLETED']::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.perf-campaigns .fchip[data-status='PAUSE']::before {
+  background: #c99a5c;
+}
+.perf-campaigns .fchip[data-status='NEW']::before {
+  background: #7d9cbd;
+}
+.perf-campaigns .fchip[data-status='COMPLETED']::before {
+  background: #b3aca0;
+}
+.perf-campaigns .fchip[data-status].on::before {
+  background: #fff;
+}
+/* The vertical rule splitting the status chips from the dial-mode
+   chips — taller and a touch darker so the toolbar visibly reads as two
+   grouped clusters, not one long unbroken row of pills. */
+.perf-campaigns .tbar-divider {
+  height: 22px !important;
+  background: rgba(211, 129, 74, 0.22) !important;
 }
 
 /* ------------------------------------------------------------
@@ -380,11 +437,17 @@ body.perf-warm-backdrop .perf-campaigns {
    component shared with the standalone dialer) still paints them inline
    via CSS variables, which this file can't reach any other way, the same
    trick used for the topic Volume bars on Speech & Text. */
+/* Muted, one warm family instead of a saturated green/blue/red traffic
+   light — that combination read as generic/gaudy ("MLM dashboard") rather
+   than belonging to this page's own palette. Each segment now keeps a
+   thin light seam against its neighbour (the `outline`) so the three
+   outcomes read as distinct, deliberately-sized sections of the bar
+   rather than one blurred gradient — the "locked-in sections" look. */
 .perf-campaigns .segbar {
-  height: 10px;
+  height: 11px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(249, 115, 22, 0.1);
+  background: rgba(211, 129, 74, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: inset 0 1px 2px 0 rgba(60, 40, 30, 0.08);
 }
@@ -392,14 +455,21 @@ body.perf-warm-backdrop .perf-campaigns {
   background: rgba(251, 146, 60, 0.14);
   border-color: rgba(251, 146, 60, 0.16);
 }
+.perf-campaigns .segbar i {
+  outline: 1.5px solid #fffdfb;
+  outline-offset: -1.5px;
+}
+.dark .perf-campaigns .segbar i {
+  outline-color: #171310;
+}
 .perf-campaigns .segbar i.ans {
-  background: linear-gradient(90deg, #34d399 0%, #059669 100%) !important;
+  background: linear-gradient(90deg, #a3c9b3 0%, #7fa98f 100%) !important;
 }
 .perf-campaigns .segbar i.na {
-  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(90deg, #adb4c2 0%, #8891a3 100%) !important;
 }
 .perf-campaigns .segbar i.dnc {
-  background: linear-gradient(90deg, #fb7185 0%, #e11d48 100%) !important;
+  background: linear-gradient(90deg, #d99a8e 0%, #bd6c5c 100%) !important;
 }
 
 /* Legend dots (OutcomeLegend, in the table's pc-foot) — gradient swatches
@@ -408,41 +478,70 @@ body.perf-warm-backdrop .perf-campaigns {
    bar's empty track colour, not a painted segment, so a gradient there
    would describe a segment that doesn't exist. */
 .perf-campaigns .legend:nth-of-type(1) .swatch {
-  background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+  background: linear-gradient(135deg, #a3c9b3 0%, #7fa98f 100%) !important;
 }
 .perf-campaigns .legend:nth-of-type(2) .swatch {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #adb4c2 0%, #8891a3 100%) !important;
 }
 .perf-campaigns .legend:nth-of-type(3) .swatch {
-  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+  background: linear-gradient(135deg, #d99a8e 0%, #bd6c5c 100%) !important;
 }
 
-/* Row action buttons (`.mini.ic` — e.g. "Refresh analytics") default to a
-   flat white/gray chip with a violet hover (`--ai-edge`/`--ai-ink`, the
-   design system's AI accent) — both mismatched here. Warm glass circle to
-   match every other row action on this view (Live's monitor buttons,
-   Callbacks' Play button). */
+/* Row action buttons — Directory ▸ People's own icon row (plain glyphs,
+   no border, a soft tint on hover rather than a full colour fill) rather
+   than this view's earlier bordered, orange-filled-on-hover chip. Bigger
+   (28px) and more spaced (row gap below) to match that row's more open
+   feel. */
 .perf-campaigns .mini.ic {
-  width: 26px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   justify-content: center;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  color: var(--ca-accent-ink);
-  box-shadow: 0 1px 2px rgba(249, 115, 22, 0.06);
+  background: transparent;
+  border: none;
+  color: #8a8478;
+  box-shadow: none;
   transition:
     background-color 0.16s ease,
-    color 0.16s ease,
-    border-color 0.16s ease;
+    color 0.16s ease;
 }
 .perf-campaigns .mini.ic:hover {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border-color: transparent;
-  color: #fff;
+  background: rgba(211, 129, 74, 0.12);
+  color: var(--ca-accent-ink);
 }
 .perf-campaigns .mini.ic:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
+}
+.perf-campaigns .rowacts {
+  gap: 4px !important;
+}
+
+/* Status pill — Directory ▸ People's own role/presence badges are solid
+   filled colour with white text, not this design system's default soft
+   "wash" pill (light tint background, coloured text). Matches that solid
+   look for the four campaign states specifically, without touching
+   `.state` anywhere else in the app. */
+.perf-campaigns .state {
+  color: #fff !important;
+  font-weight: 700;
+  padding: 3px 10px !important;
+}
+.perf-campaigns .state.q {
+  background: linear-gradient(135deg, #8bb89e, #6ea082) !important;
+}
+.perf-campaigns .state.acw {
+  background: linear-gradient(135deg, #e0bb85, #c99a5c) !important;
+}
+.perf-campaigns .state.busy {
+  background: linear-gradient(135deg, #a9c0d9, #7d9cbd) !important;
+}
+.perf-campaigns .state.away {
+  background: #b3aca0 !important;
+}
+.perf-campaigns .state .dot.green {
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35) !important;
 }
 
 /* Pagination footer's own refresh button (table-manager.tsx,
@@ -456,3 +555,1205 @@ body.perf-warm-backdrop .perf-campaigns {
    (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
    page — per explicit request to match that look exactly rather than
    re-theming it warm like the rest of this page. */
+
+/* ============================================================
+   4. Section 1 — page header (title, live dot, Create campaign)
+   ============================================================ */
+.perf-campaigns .pc-hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: pc-fade-slide 0.45s ease both;
+}
+.perf-campaigns .pc-hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.perf-campaigns .pc-hero-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  letter-spacing: -0.01em;
+}
+.perf-campaigns .pc-hero-sub {
+  font-size: 12.5px;
+  color: var(--ca-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.perf-campaigns .pc-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #7fa98f;
+  flex: none;
+  box-shadow: 0 0 0 0 rgba(127, 169, 143, 0.32);
+  /* Its own keyframe, not `perf-campaigns-live-pulse` below (the table's
+     "live" chip) — that one's ring colour is baked into the keyframe
+     itself, still the old saturated green, and this dot's muted tone
+     shouldn't flash back to it every cycle. */
+  animation: pc-live-dot-pulse 2s ease-out infinite;
+}
+@keyframes pc-live-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(127, 169, 143, 0.32);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(127, 169, 143, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(127, 169, 143, 0);
+  }
+}
+.perf-campaigns .pc-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eb9c68 0%, #d3814a 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  border: none;
+  box-shadow: 0 8px 18px -8px rgba(211, 129, 74, 0.55);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+  cursor: pointer;
+}
+.perf-campaigns .pc-create-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -8px rgba(211, 129, 74, 0.6);
+}
+
+@keyframes pc-fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   4b. KPI strip — 8 tiles, each its own visual identity
+   ============================================================ */
+.perf-campaigns .ca-kpi {
+  background: var(--ca-glass);
+  backdrop-filter: var(--ca-glass-blur);
+  -webkit-backdrop-filter: var(--ca-glass-blur);
+  border: 1px solid var(--ca-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--ca-glass-shadow);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 108px;
+  animation: pc-fade-slide 0.45s ease both;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.perf-campaigns .ca-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px -10px rgba(211, 129, 74, 0.22),
+    var(--ca-glass-shadow);
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(1) {
+  animation-delay: 0ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(2) {
+  animation-delay: 40ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(3) {
+  animation-delay: 80ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(4) {
+  animation-delay: 120ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(5) {
+  animation-delay: 160ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(6) {
+  animation-delay: 200ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(7) {
+  animation-delay: 240ms;
+}
+.perf-campaigns .ca-kpi-grid > .ca-kpi:nth-child(8) {
+  animation-delay: 280ms;
+}
+
+.perf-campaigns .ca-kpi-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.perf-campaigns .ca-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  flex: none;
+  background: #faeadc;
+  color: #c07c49;
+}
+.dark .perf-campaigns .ca-kpi-icon {
+  background: rgba(211, 129, 74, 0.18);
+}
+.perf-campaigns .ca-kpi-icon--warn {
+  background: #f3e6d2;
+  color: #b3853f;
+}
+.perf-campaigns .ca-kpi-icon--slate {
+  background: #ece8e0;
+  color: #8a8478;
+}
+.perf-campaigns .ca-kpi-icon--done {
+  background: #e9f1ec;
+  color: #6a9a7d;
+}
+.perf-campaigns .ca-kpi-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+}
+.perf-campaigns .ca-kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.perf-campaigns .ca-kpi-value--warn {
+  color: #ba8a45;
+}
+.perf-campaigns .ca-kpi-sub {
+  font-size: 10.5px;
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+
+/* 1. Total leads — number + sparkline */
+.perf-campaigns .ca-kpi--spark {
+  justify-content: space-between;
+}
+.perf-campaigns .ca-spark {
+  width: 100%;
+  height: 26px;
+  margin-top: 2px;
+}
+
+/* 2. Answered leads — progress bar */
+.perf-campaigns .ca-kpi-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(211, 129, 74, 0.12);
+  overflow: hidden;
+  margin: 3px 0 1px;
+}
+.perf-campaigns .ca-kpi-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eb9c68, #d3814a);
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 3 & 4. Connect rate / No-answer rate — a shared "ring + supporting
+   figures" layout (a real ring gauge, plus the two counts behind the
+   percentage), so the pair reads as one performance-KPI language rather
+   than two differently-built tiles bolted together. */
+.perf-campaigns .ca-kpi-ring-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.perf-campaigns .ca-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: default;
+}
+.perf-campaigns .ca-kpi-trend.is-good {
+  background: rgba(127, 169, 143, 0.16);
+  color: #5f9075;
+}
+.perf-campaigns .ca-kpi-trend.is-bad {
+  background: rgba(201, 154, 92, 0.2);
+  color: #a97b3d;
+}
+.perf-campaigns .ca-kpi-ring-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  margin-top: 4px;
+}
+.perf-campaigns .ca-kpi-ring-wrap {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.perf-campaigns .ca-ring-arc {
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.perf-campaigns .ca-ring {
+  transition: transform 0.2s ease;
+}
+.perf-campaigns .ca-kpi:hover .ca-ring {
+  transform: scale(1.06);
+}
+.perf-campaigns .ca-kpi-ring-mid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ca-ink);
+}
+.perf-campaigns .ca-kpi-ring-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.perf-campaigns .ca-kpi-ring-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--ca-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.perf-campaigns .ca-kpi-ring-stat b {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 4. No-answer rate — same ring layout, warm caution wash instead of the
+   connect rate's green, and a softer amber than the page's own accent
+   orange so the two don't compete for the same hue. */
+.perf-campaigns .ca-kpi--warn {
+  background: linear-gradient(180deg, rgba(243, 230, 210, 0.5), var(--ca-glass));
+}
+
+/* 5. DNC skips — compact status indicator */
+.perf-campaigns .ca-kpi-mini-track {
+  height: 5px;
+  width: 60%;
+  border-radius: 999px;
+  background: rgba(138, 132, 120, 0.15);
+  overflow: hidden;
+  margin: 3px 0 1px;
+}
+.perf-campaigns .ca-kpi-mini-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #a39a89;
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 6. Members assigned — avatar stack */
+.perf-campaigns .ca-avatars {
+  display: flex;
+  margin: 2px 0 1px;
+}
+.perf-campaigns .ca-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #eb9c68, #d3814a);
+  border: 2px solid #fffaf5;
+  margin-left: -7px;
+}
+.dark .perf-campaigns .ca-avatar {
+  border-color: #171310;
+}
+.perf-campaigns .ca-avatar:first-child {
+  margin-left: 0;
+}
+.perf-campaigns .ca-avatar-more {
+  background: #c9c2b6;
+  font-size: 8.5px;
+}
+
+/* 7. Active campaigns — live pulse */
+.perf-campaigns .ca-kpi--pulse {
+  align-items: flex-start;
+}
+.perf-campaigns .ca-kpi-pulse-ring {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.perf-campaigns .ca-kpi-pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #7fa98f;
+  flex: none;
+  box-shadow: 0 0 0 0 rgba(127, 169, 143, 0.35);
+  animation: pc-live-dot-pulse 2s ease-out infinite;
+}
+
+/* 8. Completed campaigns — badge */
+.perf-campaigns .ca-kpi--badge {
+  background: linear-gradient(180deg, rgba(233, 241, 236, 0.55), var(--ca-glass));
+}
+
+/* ============================================================
+   5. Section 3 — large analytics cards
+   ============================================================ */
+.perf-campaigns .ac-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 980px) {
+  .perf-campaigns .ac-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.perf-campaigns .ac-card {
+  background: var(--ca-glass);
+  backdrop-filter: var(--ca-glass-blur);
+  -webkit-backdrop-filter: var(--ca-glass-blur);
+  border: 1px solid var(--ca-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--ca-glass-shadow);
+  padding: 16px 18px 18px;
+  animation: pc-fade-slide 0.5s ease both;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.perf-campaigns .ac-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px -10px rgba(211, 129, 74, 0.22);
+}
+
+.perf-campaigns .ac-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+/* Timeline card only — sits over a centre rail, so the header centres too. */
+.perf-campaigns .ac-card-head.is-centered {
+  justify-content: center;
+  text-align: center;
+}
+.perf-campaigns .ac-card-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  flex: none;
+  /* Default before the inline `accent` prop paints its own colour —
+     AnalyticsCard always passes one, so this only shows mid-hot-reload. */
+  background: #faeadc;
+  color: #c07c49;
+}
+.dark .perf-campaigns .ac-card-icon {
+  background: rgba(211, 129, 74, 0.16);
+}
+.perf-campaigns .ac-card-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ca-ink);
+}
+.perf-campaigns .ac-card-sub {
+  font-size: 11px;
+  color: var(--ca-muted);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.perf-campaigns .ac-chart {
+  height: 228px;
+  width: 100%;
+}
+
+/* Custom area-chart tooltip (AreaChartTooltip) — same card as
+   CHART_TOOLTIP_STYLE's border/radius, laid out as a small stat list
+   instead of recharts' default single-line-per-series text. */
+.perf-campaigns .ac-chart-tip {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.perf-campaigns .ac-chart-tip-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-chart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ca-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-chart-tip-row i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex: none;
+}
+.perf-campaigns .ac-chart-tip-row b {
+  color: var(--ca-ink);
+  font-weight: 800;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.perf-campaigns .ac-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.perf-campaigns .ac-chart-donut {
+  height: 215px;
+  position: relative;
+  flex: 0 0 215px;
+}
+.perf-campaigns .ac-donut-mid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.perf-campaigns .ac-donut-big {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  line-height: 1.1;
+}
+.perf-campaigns .ac-donut-lbl {
+  font-size: 10px;
+  color: var(--ca-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* The hover detail panel — pinned under the donut, outside the ring, so it
+   can never sit over the centre figure the way a cursor-following tooltip
+   does. Reserves no layout space (absolute), fades rather than pops. */
+.perf-campaigns .ac-donut-tip {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translate(-50%, 6px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(255, 253, 251, 0.97);
+  border: 1px solid rgba(211, 129, 74, 0.22);
+  box-shadow: 0 6px 16px -8px rgba(120, 80, 45, 0.35);
+  font-size: 11px;
+  color: var(--ca-muted);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.dark .perf-campaigns .ac-donut-tip {
+  background: rgba(23, 19, 16, 0.97);
+}
+.perf-campaigns .ac-donut-tip.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.perf-campaigns .ac-donut-tip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: none;
+}
+.perf-campaigns .ac-donut-tip b {
+  font-weight: 800;
+  color: var(--ca-ink);
+}
+
+.perf-campaigns .ac-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.perf-campaigns .ac-donut-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  cursor: default;
+  transition: background-color 0.16s ease;
+}
+.perf-campaigns .ac-donut-legend-row.is-on {
+  background: rgba(211, 129, 74, 0.09);
+}
+.perf-campaigns .ac-donut-legend-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ca-ink);
+  flex: 1;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-donut-legend-count {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.perf-campaigns .ac-legend-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+.perf-campaigns .ac-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ca-muted);
+  white-space: nowrap;
+}
+.perf-campaigns .ac-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: none;
+}
+
+/* Lead Conversion Funnel — a real continuous cone (FunnelDiagram, one SVG,
+   in campaign-analytics-cards.tsx) instead of four separate pill-shaped
+   bars, with the stage name/value/conversion-% read off to the side rather
+   than crammed inside a band that gets too narrow to hold text by the
+   third stage. */
+.perf-campaigns .ac-funnel-diagram {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.perf-campaigns .ac-funnel-svg {
+  flex: 0 0 auto;
+  width: 52%;
+  max-width: 260px;
+  /* Matches the viewBox's own ratio (250 wide x 4 stages of 54), so the
+     CSS box never disagrees with the content's aspect ratio and the shape
+     can't sit off-centre inside its own box. */
+  aspect-ratio: 250 / 216;
+  height: auto;
+  overflow: visible;
+}
+/* Each stage builds in from the top down, and hovering one dims the rest
+   (rather than only brightening the hovered one — dimming is what makes a
+   single stage actually read as selected against three neighbours). */
+.perf-campaigns .ac-fnl-stage {
+  opacity: 0;
+  animation: ac-fnl-stage-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+  cursor: pointer;
+}
+.perf-campaigns .ac-fnl-stage:hover {
+  filter: brightness(1.06);
+}
+.perf-campaigns .ac-fnl-stage.is-dim {
+  opacity: 0.42;
+}
+@keyframes ac-fnl-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(-9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.perf-campaigns .ac-fnl-value {
+  font-size: 15px;
+  font-weight: 800;
+  fill: #fffaf5;
+  letter-spacing: 0.01em;
+  paint-order: stroke;
+  pointer-events: none;
+}
+
+/* Conversion pill sitting on the seam between two stages — the drop-off
+   read where it happens, not only in the panel. */
+.perf-campaigns .ac-fnl-seam {
+  opacity: 0;
+  animation: pc-fade-slide 0.45s ease both;
+  pointer-events: none;
+}
+.perf-campaigns .ac-fnl-seam-pill {
+  fill: #fffdfb;
+  stroke: rgba(189, 92, 54, 0.25);
+  stroke-width: 1;
+}
+.dark .perf-campaigns .ac-fnl-seam-pill {
+  fill: #221a15;
+}
+.perf-campaigns .ac-fnl-seam-text {
+  font-size: 10px;
+  font-weight: 800;
+  fill: #b06a3d;
+}
+
+/* Stage breakdown panel — one block per stage: name + conversion badge,
+   the figure, and a bar whose length is that stage's share of the book. */
+.perf-campaigns .ac-funnel-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: stretch;
+  min-width: 0;
+  padding: 2px 0;
+}
+.perf-campaigns .ac-funnel-legend-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 9px;
+  border-radius: 11px;
+  animation: pc-fade-slide 0.5s ease both;
+  transition:
+    background-color 0.18s ease,
+    opacity 0.18s ease;
+}
+.perf-campaigns .ac-funnel-legend-row.is-on {
+  background: rgba(189, 92, 54, 0.07);
+}
+.perf-campaigns .ac-funnel-legend-row.is-dim {
+  opacity: 0.5;
+}
+.perf-campaigns .ac-funnel-legend-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.perf-campaigns .ac-funnel-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  flex: none;
+}
+.perf-campaigns .ac-funnel-legend-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--ca-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  flex: 1;
+}
+.perf-campaigns .ac-funnel-legend-value {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.perf-campaigns .ac-funnel-legend-pct {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(189, 92, 54, 0.12);
+  color: #b06a3d;
+  white-space: nowrap;
+  flex: none;
+  animation: ac-fnl-badge-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: inherit;
+}
+@keyframes ac-fnl-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.perf-campaigns .ac-funnel-legend-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 124, 102, 0.13);
+  overflow: hidden;
+  margin-top: 1px;
+}
+.perf-campaigns .ac-funnel-legend-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Top Performing Campaigns — ranked list, medal tones on the top 3. */
+.perf-campaigns .ac-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.perf-campaigns .ac-rank-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  animation: pc-fade-slide 0.5s ease both;
+}
+/* A floating hairline between rows — inset from both ends rather than a
+   full-width rule, so the list reads as sectioned without turning into a
+   table. Drawn on the row's own ::after so the last row has none. */
+.perf-campaigns .ac-rank-row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -4px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(189, 92, 54, 0) 0%,
+    rgba(189, 92, 54, 0.16) 18%,
+    rgba(189, 92, 54, 0.16) 82%,
+    rgba(189, 92, 54, 0) 100%
+  );
+}
+.perf-campaigns .ac-rank-pos {
+  width: 21px;
+  height: 21px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  /* One orange for every rank — the gold/silver/bronze set read as a
+     different palette bolted onto an otherwise all-warm card. */
+  color: #fff;
+  background: linear-gradient(135deg, #d4744c, #bd5c36);
+}
+.perf-campaigns .ac-rank-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ca-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.perf-campaigns .ac-rank-leads {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ca-muted);
+  white-space: nowrap;
+}
+.perf-campaigns .ac-rank-rate {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6ea082;
+  white-space: nowrap;
+}
+
+/* Agent Performance — leaderboard: avatar + name + a bar sized against the
+   top agent, not just a third number column. */
+.perf-campaigns .ac-leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.perf-campaigns .ac-leader-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: pc-fade-slide 0.5s ease both;
+}
+.perf-campaigns .ac-leader-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #d4744c, #bd5c36);
+}
+.perf-campaigns .ac-leader-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.perf-campaigns .ac-leader-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.perf-campaigns .ac-leader-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ca-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-leader-leads {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ca-muted);
+  white-space: nowrap;
+  flex: none;
+}
+.perf-campaigns .ac-leader-track {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(189, 92, 54, 0.13);
+  overflow: hidden;
+}
+.perf-campaigns .ac-leader-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e0a170, #c06a41);
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.perf-campaigns .ac-leader-campaigns {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #b06a3d;
+  flex: none;
+}
+
+/* Dial Method Analytics — three full-width rows (a bigger ring, then the
+   bar stretching the rest of the card), stacked to fill the card's whole
+   box instead of three narrow columns with margin either side of them. */
+.perf-campaigns .ac-dial-rows {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  height: 100%;
+  padding-top: 2px;
+}
+.perf-campaigns .ac-dial-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 8px;
+  border-radius: 14px;
+  animation: pc-fade-slide 0.5s ease both;
+  transition: background-color 0.16s ease;
+}
+.perf-campaigns .ac-dial-row:hover {
+  background: rgba(211, 129, 74, 0.07);
+}
+.perf-campaigns .ac-dial-row-ring {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.perf-campaigns .ac-dial-row-mid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}
+.perf-campaigns .ac-dial-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.perf-campaigns .ac-dial-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.perf-campaigns .ac-dial-row-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  white-space: nowrap;
+}
+.perf-campaigns .ac-dial-row-value {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ca-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.perf-campaigns .ac-dial-row-track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 124, 102, 0.13);
+  overflow: hidden;
+}
+.perf-campaigns .ac-dial-row-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.perf-campaigns .ac-dial-row-count {
+  font-size: 10px;
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+
+/* Campaign Timeline — the list on the left, a click-through detail panel
+   filling what used to be empty space on the right. */
+.perf-campaigns .ac-timeline-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+.perf-campaigns .ac-timeline {
+  position: relative;
+  flex: 0 0 46%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.perf-campaigns .ac-timeline::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(105, 154, 122, 0.3), rgba(105, 154, 122, 0.04));
+}
+.perf-campaigns .ac-timeline-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: pc-fade-slide 0.5s ease both;
+  /* Reset the <button> it's built on — a clickable row, not styled as a
+     button. */
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 3px 6px 3px 0;
+  border-radius: 8px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+.perf-campaigns .ac-timeline-row:hover {
+  background: rgba(105, 154, 122, 0.08);
+}
+.perf-campaigns .ac-timeline-row.is-selected {
+  background: rgba(105, 154, 122, 0.13);
+}
+.perf-campaigns .ac-timeline-dot {
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-top: 4px;
+  flex: none;
+  box-shadow: 0 0 0 3px #fffaf5;
+}
+.dark .perf-campaigns .ac-timeline-dot {
+  box-shadow: 0 0 0 3px #171310;
+}
+.perf-campaigns .ac-timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.perf-campaigns .ac-timeline-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ca-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-timeline-meta {
+  font-size: 11px;
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+
+/* The detail panel — fades/slides in fresh on every selection change (the
+   `key={selected.id}` on it in the JSX remounts it), so switching events
+   feels like a deliberate reveal rather than a static box relabelling
+   itself. */
+.perf-campaigns .ac-timeline-detail {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(105, 154, 122, 0.14);
+  animation: pc-fade-slide 0.35s ease both;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dark .perf-campaigns .ac-timeline-detail {
+  background: rgba(255, 255, 255, 0.04);
+}
+.perf-campaigns .ac-tld-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.perf-campaigns .ac-tld-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.perf-campaigns .ac-tld-when {
+  font-size: 10.5px;
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+.perf-campaigns .ac-tld-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perf-campaigns .ac-tld-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 8px;
+}
+.perf-campaigns .ac-tld-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.perf-campaigns .ac-tld-stat-k {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ca-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.perf-campaigns .ac-tld-stat-v {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}
+.perf-campaigns .ac-tld-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(105, 154, 122, 0.14);
+  font-size: 11px;
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+.perf-campaigns .ac-tld-foot b {
+  color: var(--ca-ink);
+  font-weight: 800;
+}
+
+.perf-campaigns .ac-empty {
+  font-size: 12px;
+  color: var(--ca-muted);
+  font-weight: 600;
+  padding: 10px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .perf-campaigns .pc-hero-head,
+  .perf-campaigns .pc-live-dot,
+  .perf-campaigns .ca-kpi-pulse-dot,
+  .perf-campaigns .ca-kpi,
+  .perf-campaigns .ac-card,
+  .perf-campaigns .ac-funnel-band,
+  .perf-campaigns .ac-funnel-legend-row,
+  .perf-campaigns .ac-rank-row,
+  .perf-campaigns .ac-leader-row,
+  .perf-campaigns .ac-dial-row,
+  .perf-campaigns .ac-timeline-row {
+    animation: none;
+  }
+}

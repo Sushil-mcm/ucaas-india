@@ -4,7 +4,7 @@ import { DIRECTORY_VIEWS } from '@/components/custom/nav-areas';
 import Loader from '@/components/custom/loader';
 import People from './people';
 import Groups from './groups';
-import Contacts from '../new-contact';
+import Contacts from './external';
 import Locations from './locations';
 import Roles from './roles';
 import Favourites from './favourites';

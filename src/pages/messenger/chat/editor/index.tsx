@@ -600,7 +600,8 @@ const TextEditor = (
     <div
       key={readOnly ? JSON.stringify(validatedInitialValue) : chatId || 'editor'}
       id="slate-container"
-      className="w-full h-auto break-words "
+      className="w-full h-auto break-words"
+      style={{ border: 'none', outline: 'none' }}
       onDrop={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -647,7 +648,7 @@ const TextEditor = (
                 }`
               : 'overflow-x-hidden min-h-11 break-words max-h-[130px] xl:max-h-[170px] overflow-y-auto'
           } outline-0 text-black text-[13px] leading-5 h-auto py-0 px-2 ${fromThread ? 'break-words' : ''} ${className}`}
-          style={editorStyle}
+          style={{ ...editorStyle, border: 'none', outline: 'none', boxShadow: 'none' }}
           readOnly={readOnly}
           renderLeaf={(props) => <Leaf {...props} />}
           renderElement={(props) => <ElementRender {...props} />}

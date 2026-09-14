@@ -158,6 +158,7 @@ const RemovedPeople = ({ canRestore }: { canRestore: boolean }) => {
                     <button
                       type="button"
                       className="mini solid"
+                      style={{ paddingLeft: 20, paddingRight: 20, minWidth: 110 }}
                       title={`Restore ${row.name}`}
                       aria-label={`Restore ${row.name}`}
                       onClick={() => setRestoring(row)}
