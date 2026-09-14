@@ -313,6 +313,12 @@ const AllNewContactsList: FC<any> = ({
   visibleRowCount,
   fixedPageRows,
   showRecordRange = false,
+  /* Additive, undefined by default -- CustomAvatar's own default (40)
+     stays unchanged for every other caller (Leads, Phone console's
+     contact pane). Directory's own tables (People/Groups/Favourites/
+     Blocked) all use a 30px avatar in their own row; passing that same
+     value here matches this one to them. */
+  avatarSize,
 }) => {
   const navigate = useNavigate();
   const tableRef = useRef<any>(null);
@@ -491,6 +497,7 @@ const AllNewContactsList: FC<any> = ({
             name={`${row.original.name?.first || ''} ${row.original.name?.last || ''}`}
             type="contact"
             image={row.original.profile?.contactPic}
+            size={avatarSize}
           />
           <div>
             <span className="font-medium text-[#2E2D35]">

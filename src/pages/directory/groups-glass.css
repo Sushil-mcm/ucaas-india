@@ -194,6 +194,18 @@
   width: 24%;
   padding-left: 22px;
 }
+/* Matches People's own 38px avatar bump (people-glass.css) -- the `size`
+   prop passed to CustomAvatar (groups.tsx) is `30`, same literal value
+   People's own row passes, but People overrides it right back up with
+   this same `!important` rule (avatar size is inline style too, so
+   nothing lower-specificity reaches it). Without the matching override
+   here, this table's avatars stayed at that plain 30px and read smaller
+   than every other Directory table's. */
+.gp-groups td:nth-child(1) > span > div {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+}
 .gp-groups th:nth-child(2),
 .gp-groups td:nth-child(2) {
   width: 24%;

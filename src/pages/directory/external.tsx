@@ -348,6 +348,7 @@ const ExternalInner = () => {
             splitStickyHeader
             fixedPageRows={10}
             showRecordRange
+            avatarSize="38"
             permissionAccess={{
               canView: canViewContact,
               canEdit: canEditContact,

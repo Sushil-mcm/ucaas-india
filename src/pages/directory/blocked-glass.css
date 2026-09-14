@@ -181,6 +181,14 @@
 .gp-blocked td:nth-child(1) {
   width: 28%;
 }
+/* Matches People's own 38px avatar bump (people-glass.css) -- see
+   groups-glass.css's own copy of this rule for why the plain `size="30"`
+   prop alone isn't enough. */
+.gp-blocked td:nth-child(1) > span > div {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+}
 .gp-blocked th:nth-child(2),
 .gp-blocked td:nth-child(2) {
   width: 18%;

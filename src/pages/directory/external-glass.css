@@ -460,6 +460,15 @@
 .gp-contact-table td {
   border-bottom-color: rgba(150, 100, 50, 0.1) !important;
 }
+/* Name column's avatar+text wrapper carries a plain `gap-2` (8px,
+   all-contacts-list/index.tsx) -- People/Groups/Favourites/Blocked's own
+   equivalent row (people.tsx, groups.tsx, favourites.tsx, blocked.tsx)
+   all use `gap-2.5` (10px) beside their own 30px avatar. Matched here
+   rather than in the shared component, which Leads/Phone console's
+   contact pane also render through. */
+.gp-contact-table td .flex.items-center.gap-2 {
+  gap: 10px;
+}
 /* Same wash Performance ▸ Calls uses for its own row hover
    (--ic-row-hover in interactions-theme.css), plus the same left accent
    bar People's own row hover carries (`.gp-people tbody tr:hover`) so a
