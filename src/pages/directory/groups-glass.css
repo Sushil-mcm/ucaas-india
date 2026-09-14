@@ -221,7 +221,7 @@
 .gp-groups th:nth-child(5),
 .gp-groups td:nth-child(5) {
   width: 22%;
-  min-width: 100px;
+  min-width: 132px;
 }
 .gp-groups th {
   background: #fffdfb;
@@ -259,6 +259,25 @@
 }
 .gp-groups .gp-group-open:hover {
   color: #f2994a;
+}
+/* Edit -- a plain icon circle, same treatment Locations/People give their
+   own row-action buttons; `:not(.gp-group-open)` keeps this out of Open's
+   own chevron-plus-label styling above despite sharing the `.mini` base
+   class. */
+.gp-groups td:last-child .mini:not(.gp-group-open) {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 9999px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(225, 200, 165, 0.5);
+  color: #6b5c4d;
+}
+.gp-groups td:last-child .mini:not(.gp-group-open):hover {
+  background: #f2994a;
+  border-color: #f2994a;
+  color: #fff;
 }
 
 /* ---- Pager row -- same shape as People's/Roles' (people-glass.css /
@@ -990,6 +1009,16 @@
 }
 .dark .gp-groups .gp-group-open:hover {
   color: var(--mcm-accent-ink, #ff8a2a);
+}
+.dark .gp-groups td:last-child .mini:not(.gp-group-open) {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+  color: #fff;
+}
+.dark .gp-groups td:last-child .mini:not(.gp-group-open):hover {
+  background: #f2994a;
+  border-color: #f2994a;
+  color: #fff;
 }
 
 .dark .gp-group-detail-dialog {

@@ -1228,6 +1228,30 @@ export const demoDepartmentRows = () => {
           };
         }),
       ),
+      /* Same JSON-string shape a real "Create group" save writes -- without
+         it, opening one of these seeded departments to edit shows the Basic
+         Information tab's Location, and the If-no-one-answers/Ring
+         Strategy tabs, all coming back blank (nothing here to `reset()` the
+         form to), even though a department created through the app's own
+         form always carries them. */
+      site: JSON.stringify({ label: 'Mumbai HQ', value: 'demo-site-mumbai' }),
+      forward_call_actions: {
+        call_handling: {
+          timeout: 10,
+          failover: {
+            type: 'EXTENSION',
+            value: manager.extension,
+            label: `${manager.first_name} ${manager.last_name} (${manager.extension})`,
+          },
+        },
+        ring_strategy: 'ring_all',
+        operational_hours: {},
+        media: {},
+        recording: {},
+        display_number: {},
+        transcription: false,
+        ai_call_monitoring: false,
+      },
     };
   });
 };

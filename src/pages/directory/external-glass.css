@@ -469,6 +469,19 @@
 .gp-contact-table td .flex.items-center.gap-2 {
   gap: 10px;
 }
+/* Name column's email line carries the shared `text-ucass-active` orange
+   (all-contacts-list/index.tsx) -- fine for the Tag pills further along
+   the same row, which lean on colour to read at a glance, but it made a
+   plain line of body text compete with the row's own accent colour for
+   attention. Muted grey instead, matching every other Directory table's
+   own secondary-line colour (`.gp-member-email` etc.). Scoped to the
+   Name column specifically (`nth-child(3)` -- a checkbox column sits
+   before Created Date, so Name is the third cell, not the second) so the
+   Tag column's own use of this same class, several columns over, is
+   untouched. */
+.gp-contact-table td:nth-child(3) .text-ucass-active {
+  color: #8a8a8a !important;
+}
 /* Same wash Performance ▸ Calls uses for its own row hover
    (--ic-row-hover in interactions-theme.css), plus the same left accent
    bar People's own row hover carries (`.gp-people tbody tr:hover`) so a

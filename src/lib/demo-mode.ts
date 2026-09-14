@@ -155,6 +155,7 @@ const PLAN_FEATURES = grant([
   'phone_system_action.access.QUEUE',
   'phone_system_action.action.view',
   'phone_system_action.action.add',
+  'phone_system_action.action.edit',
   'reports.IS_SHOW',
   'reports.action.call_recording_listen',
   'reports.action.sms',

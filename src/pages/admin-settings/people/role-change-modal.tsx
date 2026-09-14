@@ -16,21 +16,39 @@ interface RoleChangeModalProps {
   open: boolean;
   setOpen: (state: boolean) => void;
   userData: any;
+  /* Opt-in bulk mode: when a caller passes a list of user uuids, the modal
+     assigns the chosen role to all of them instead of the single `userData`
+     record. Every other caller (the per-row "Change role" action) leaves
+     this unset and keeps working exactly as before. */
+  bulkUsers?: string[];
+  onSuccess?: () => void;
 }
 
 const EMPTY_ROLE_LIST: Array<{ name: string; type: string; uuid: string; role_uuid: string }> = [];
 type RoleOption = ISELECTVALUE & { type: string };
 
-const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) => {
+const RoleChangeModal: FC<RoleChangeModalProps> = ({
+  open,
+  setOpen,
+  userData,
+  bulkUsers,
+  onSuccess,
+}) => {
+  const isBulk = Boolean(bulkUsers && bulkUsers.length);
   const queryClient: any = useQueryClient();
   const [search, setSearch] = useState('');
-  const currentRoleName =
-    userData?.custom_role_data?.name || userData?.role_data?.name || userData?.role || '';
+  /* In bulk mode the selected people can already hold different roles, so
+     there's no single "current role" to preselect -- the admin picks one
+     explicitly instead. */
+  const currentRoleName = isBulk
+    ? ''
+    : userData?.custom_role_data?.name || userData?.role_data?.name || userData?.role || '';
   const selectedUserUUID = userData?.uuid || userData?.user_uuid || '';
-  const fullName =
-    `${userData?.first_name || ''}${userData?.last_name ? ` ${userData?.last_name}` : ''}`.trim() ||
-    userData?.email ||
-    'Selected user';
+  const fullName = isBulk
+    ? `${bulkUsers!.length} people selected`
+    : `${userData?.first_name || ''}${userData?.last_name ? ` ${userData?.last_name}` : ''}`.trim() ||
+      userData?.email ||
+      'Selected user';
 
   const { data, isLoading } = useQuery({
     queryKey: ['useRolesList', false],
@@ -96,6 +114,7 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
       invalidateGlobalUsersDirectory(queryClient);
       setSearch('');
       setOpen(false);
+      onSuccess?.();
     },
     onError: (error: any) => {
       handleAlert({
@@ -144,14 +163,15 @@ const RoleChangeModal: FC<RoleChangeModalProps> = ({ open, setOpen, userData }) 
       handleAlert({ text: 'Please select a role.', type: 'error' });
       return;
     }
-    if (!selectedUserUUID) {
+    const users = isBulk ? bulkUsers! : [selectedUserUUID];
+    if (!users.length || !users[0]) {
       handleAlert({ text: 'Unable to identify user for role change.', type: 'error' });
       return;
     }
 
     mutateAssignRoleBulkUsers({
       role_uuid: roleUUID,
-      users: [selectedUserUUID],
+      users,
     });
   };
 

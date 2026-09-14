@@ -4,34 +4,44 @@
 .gp-people {
   position: relative;
   isolation: isolate;
-  /* Fills the width of whatever column it is dropped into. Admin renders
-     these two Directory screens inside a flex row, where a plain block
-     child sizes to its own content -- so Roles, with four columns, drew
-     its panel and its tint only two-thirds of the way across and left
-     bare page beside it. People escaped it only because its table is
-     wide enough to reach the edge on its own. */
-  width: 100%;
-  min-width: 0;
   /* fills the whole scroll area, not just the height of its own content —
      otherwise the tint stops dead where the table ends and the page's plain
-     grey shows through underneath. */
-  min-height: 100%;
-  /* The same warm gradient backdrop `body` already uses site-wide for the
-     glassmorphism pass (src/index.css) — pulled in here rather than
-     reinvented, so this page's orange matches the rest of the app exactly. */
-  background:
-    radial-gradient(1000px 750px at 4% -6%, rgba(255, 154, 66, 0.55), transparent 58%),
-    radial-gradient(900px 700px at 102% -4%, rgba(255, 120, 40, 0.42), transparent 55%),
-    radial-gradient(950px 700px at 50% 118%, rgba(255, 190, 120, 0.45), transparent 60%),
-    radial-gradient(650px 500px at 100% 100%, rgba(255, 150, 70, 0.3), transparent 55%),
-    linear-gradient(160deg, #fffaf3 0%, #ffe6c7 100%);
-  /* No negative margin here. This pair -- `margin: -22px -26px -40px` with a
-     matching padding -- was written for a version where this element sat
-     INSIDE `.page` and had to cancel that padding. It wraps `.page` now, so the
-     margin pulled the whole panel outside its container: 22px above it, which
-     in Admin is straight over the page head, covering the title and buttons.
-     Wrapping `.page` already reaches the edges, and `.page` still supplies the
-     inset. */
+     grey shows through underneath. A plain `100%` falls 22px short of the
+     true bottom edge: negative margin-top pulls this box up by 22px (see
+     below) and a block box's height, unlike its width, does not
+     automatically grow to absorb that -- so this element ended 22px above
+     the viewport's own bottom, and `body`'s own radial-gradient background
+     (not this element's flat one) showed through as a strip along it. */
+  min-height: calc(100% + 22px);
+  /* Flat, not the layered radial-gradient backdrop this used to pull in from
+     `body` (src/index.css) -- that stack of warm pools is what read as "that
+     gradient effect". `#fdf1e2` is the live site's own `body` background
+     (rgb(253,241,226), pulled directly from ucaas-india.vercel.app), so this
+     is a real colour already shipped rather than one invented here. */
+  background: #fdf1e2;
+  /* cancel `.mcm-page .page`'s own padding so the background reaches the
+     page's real edges instead of stopping in a boxed-off inset. The
+     bottom margin still cancels the parent's full 40px (so the background
+     itself keeps reaching the true page edge), but this box's own
+     re-added bottom padding is trimmed down -- the parent's 40px was
+     leaving a visibly bigger gap below the pager than the 22px this page
+     opens with above the header. Safe to shrink on its own: whatever
+     shows through below is `body`'s own background, the exact same
+     #fdf1e2 this element paints, so there is no seam to reintroduce. */
+  margin: -22px -26px -40px;
+  padding: 22px 26px 8px;
+}
+
+/* The real scroll container turned out to be this `.page` div sitting
+   *inside* `.gp-people` (confirmed live: it's the element with
+   `overflow-y: auto` and the 40px `padding-bottom` actually clipping the
+   content, not an ancestor -- `.gp-people`'s own margin/padding trick
+   above was cancelling a different `.page`) -- so that's where the gap the
+   pager sits in front of actually comes from. Scoped here rather than
+   touching the shared `.page` class itself, which other `.mcm-page`
+   screens also use. */
+.gp-people .page {
+  padding-bottom: 8px;
 }
 
 .gp-people .page-head,
@@ -54,19 +64,294 @@
    through row after row would fight the text. */
 .gp-people .panel-card {
   background: #fffdfb;
+  /* A near-white border reads fine on Performance's darker glass cards
+     (interactions-theme.css's own --ic-glass-border), but white-on-white —
+     this card and the page's peach backdrop are both light — leaves no
+     actual edge, especially round the corner curve. --glass-border
+     (mcm-page.css) is the app's own token for exactly this — a visible
+     tan edge over a light glass card, already used the same way in
+     blocked-glass.css/date-picker-theme.css — rather than a one-off shade
+     invented for this rule. */
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+  border-radius: 20px;
+  /* The card used to cap its height and scroll its own rows. With the table
+     paged at 10 rows the height is bounded by the page size instead, so the
+     cap only served to clip the pager off the bottom (`overflow: hidden`
+     meant it was drawn over the last rows rather than below them). */
+  display: flex;
+  flex-direction: column;
+}
+/* With the card no longer capped, ten rows plus the header and setup panel
+   run past the viewport -- and `.mcm-page` above this clips at its own
+   height with `overflow: hidden`, so those rows and the pager were simply
+   unreachable. The page scrolls as a whole now, which is also what makes
+   the pager sit at the end of the list rather than floating over it. */
+.gp-people {
+  max-height: 100%;
+  overflow-y: auto;
+}
+/* Same slim warm scrollbar the tables use, rather than the OS default. */
+.gp-people::-webkit-scrollbar {
+  width: 10px;
+}
+.gp-people::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-people::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.dark .gp-people::-webkit-scrollbar-thumb {
+  background: rgba(255, 171, 94, 0.28);
+  background-clip: padding-box;
+}
+/* SetupGuide now renders as `DirectoryPage`'s `beforeTable` slot — a sibling
+   of `.panel-card`, not nested inside it — specifically so it can carry its
+   own card chrome (background, border, shadow, radius) instead of sitting
+   flush against the panel-card's edges with only a 1px border between its
+   bottom and the table's header row. Without this it read as one card with
+   a seam through it rather than two distinct things stacked. */
+.gp-people-setup {
+  background: #fffdfb;
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
   border-radius: 20px;
-  /* Scrolls its own rows instead of stretching the whole page — the roster
-     can run to hundreds of people, and the header/filter bar above should
-     stay put rather than scrolling away with row 40. */
+  padding: 4px;
+  margin-bottom: 16px;
+}
+/* SetupGuide returns null once setup is done (or is dismissed, or is still
+   loading) — but this wrapper around it is unconditional, so an established
+   account was left with the chrome and none of the content: a ~10px sliver
+   of card, reading as a stray rule above the table.
+
+   Hiding the empty wrapper rather than making it conditional in people.tsx:
+   the guide hides on `dismissed || isLoading || allDone`, all derived inside
+   `useSetupProgress`, and re-deriving that in the page would be a second
+   source of truth to keep in step. And rather than moving this chrome into
+   SetupGuide itself, because its other two call sites (Admin ▸ Company,
+   Admin ▸ People) deliberately render it with no card of their own. */
+.gp-people-setup:empty {
+  display: none;
+}
+/* A sticky `<thead>` doesn't change what its scrolling ancestor's own
+   scrollbar covers — the track still spans the ancestor's full height,
+   including the band "behind" the sticky header, so a slimmer scrollbar or
+   extra padding (tried first) only made that band narrower, not gone; the
+   bar still visibly started at the very top, touching the header. The
+   actual fix is to stop the header from being part of the scrolling box at
+   all: `<thead>`/`<tbody>` become independent block boxes (rather than
+   table-row-groups) inside a flex column, `<tbody>` alone scrolls, and each
+   `<tr>` becomes its own `display: table` so its cells still lay out and
+   size as table columns. Column widths are pinned explicitly below so the
+   header row's columns and the body rows' columns — now laid out by
+   separate anonymous tables — land in the same place. */
+.gp-people .tbl-wrap {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 260px);
-}
-.gp-people .tbl-wrap {
-  overflow-y: auto;
+  flex: 1;
   min-height: 0;
+  /* The percentage column widths below need real room to be proportions
+     of -- squeeze the row itself under ~1180px (a narrow window, not
+     ordinary zoom) and Action's five 36px icon buttons no longer fit on
+     one line no matter what fraction of the row they're given. Below that
+     point the row keeps its minimum width and this scrolls sideways
+     instead of wrapping every icon column onto two lines. */
+  overflow-x: auto;
+}
+.gp-people table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+.gp-people thead {
+  display: block;
+  flex: none;
+  width: 100%;
+}
+.gp-people tbody {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  /* No scroll box: the table pages 10 rows at a time (people.tsx), so the
+     body is as tall as its rows and the pager below says what is left.
+     The old `max-height: 450px; overflow-y: auto` capped it at ~5.5 rows
+     and hid the rest behind a scrollbar. */
+  width: 100%;
+  padding-bottom: 6px;
+}
+.gp-people thead tr,
+.gp-people tbody tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+  /* 236px (Action's own floor, see below) / 20% (its share) -- the width
+     below which that share would resolve under 236px and start wrapping
+     icons regardless of how the space is split. */
+  min-width: 1180px;
+}
+/* (A `width: calc(100% - 12px)` used to sit here to compensate for the
+   body's scrollbar, which made the body row narrower than the header and
+   shifted every column 12px left of its label. With the scroll box gone
+   both rows are the same width, so the compensation has to go too --
+   leaving it in would tilt the grid the other way.) */
+/* Person is the only auto-width column, so it absorbs whatever the fixed
+   columns leave -- often narrower than the email it holds. Padding alone
+   does nothing here: the name/email spans sit in nested flex boxes whose
+   default `min-width: auto` refuses to shrink below their content, so the
+   email simply overflowed the cell (measured 72px past its own right edge)
+   and ran under the Role badge. `min-width: 0` down the flex chain is what
+   lets them shrink; the ellipsis is what they do once they can. */
+.gp-people th:nth-child(1),
+.gp-people td:nth-child(1) {
+  /* Was `auto`, the only column without a fixed size -- it absorbed every
+     pixel the other columns didn't use, which on a wide monitor (or the
+     same monitor at less than 100% browser zoom, which reports a wider
+     CSS viewport) left name and email sitting in a cell hundreds of pixels
+     wider than either needs. A flat px cap fixed the overflow but traded
+     it for dead space at the table's own right edge instead -- still not
+     "responsive", just a different fixed number. Every column below is a
+     percentage of the table for the same reason: together they always sum
+     to 100%, so the row fills its container at any zoom or screen width
+     without over-feeding one column or leaving a blank strip after the
+     last one. */
+  width: 22%;
+  /* 22px matches `.tbar`'s own side padding, so the avatar column lines up
+     under the "Groups" pill above it rather than starting 10px to its
+     left. */
+  padding-left: 22px;
+  padding-right: 18px;
+}
+/* Header stays left-aligned, in line with the row's own avatar+name block --
+   both read at the same left edge, 22px in, matching the filter bar above. */
+.gp-people th:nth-child(1) {
+  text-align: left;
+}
+.gp-people td:nth-child(1) > span,
+.gp-people td:nth-child(1) > span > span:last-child {
+  min-width: 0;
+}
+.gp-people td:nth-child(1) > span > span:last-child {
+  overflow: hidden;
+}
+.gp-people td:nth-child(1) > span > span:last-child > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Percentages of the table, not px -- see Person above. Ratios keep each
+   column close to its old fixed-px share of a ~1220px card (Role 100,
+   Groups 130, Location 150, Numbers 80, ACD 130, Presence 130), so nothing
+   jumps in relative size, it just scales with the container from here on. */
+.gp-people th:nth-child(2),
+.gp-people td:nth-child(2) {
+  width: 8%;
+}
+.gp-people th:nth-child(3),
+.gp-people td:nth-child(3) {
+  width: 10%;
+}
+.gp-people th:nth-child(4),
+.gp-people td:nth-child(4) {
+  width: 12%;
+}
+.gp-people th:nth-child(5),
+.gp-people td:nth-child(5) {
+  width: 7%;
+}
+.gp-people th:nth-child(6),
+.gp-people td:nth-child(6) {
+  width: 10%;
+}
+.gp-people th:nth-child(7),
+.gp-people td:nth-child(7) {
+  width: 11%;
+}
+/* Five 36px icon buttons with 6px gaps measure 204px, plus the cell's own
+   12px side padding = 228px minimum -- under that the last button wraps
+   onto a second line and doubles the row height (measured at 215px). A
+   pure percentage can shrink past that floor on a narrow card or a high
+   zoom level the way the other columns are meant to; `min-width` keeps
+   this one column from ever going there while it still grows past 236px
+   as a percentage on anything wider. */
+.gp-people th:nth-child(8),
+.gp-people td:nth-child(8) {
+  width: 20%;
+  min-width: 236px;
+}
+/* This is the scrollbar that now actually starts where the rows do — same
+   slim styling already used for External Contacts' table. */
+.gp-people tbody::-webkit-scrollbar {
+  width: 8px;
+}
+.gp-people tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-people tbody::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.gp-people tbody::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+
+/* Row-select checkbox riding inside the Person cell rather than its own
+   table column -- keeps every `nth-child` width/alignment rule above
+   pointed at the same columns whether or not bulk selection is available,
+   since adding a real column would shift them by one only for admins (the
+   only ones who ever see a checkbox at all). */
+.gp-people th .gp-bulk-check-head {
+  display: inline-flex;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.gp-people td .gp-bulk-check-cell {
+  display: inline-flex;
+  align-items: center;
+}
+.gp-people td .gp-bulk-check-spacer {
+  display: inline-block;
+  width: 16px;
+}
+
+/* Bulk action bar -- appears above the table the moment a row is checked,
+   and disappears the moment selection is cleared, so it never eats space
+   on a page nobody is bulk-acting on. */
+.gp-people .gp-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(242, 153, 74, 0.12);
+  border: 1px solid rgba(242, 153, 74, 0.28);
+}
+.gp-people .gp-bulk-count {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+.gp-people .gp-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gp-people .gp-bulk-remove {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.3);
+}
+.gp-people .gp-bulk-remove:hover {
+  background: rgba(180, 35, 24, 0.08);
 }
 
 .gp-people .page-head {
@@ -83,16 +368,61 @@
 /* The filter bar reads as one frosted strip, not loose chips floating on the
    background — same glass treatment as the header and table panel. */
 .gp-people .tbar {
-  background: rgba(255, 255, 255, 0.55);
+  /* A very light wash of the brand orange rather than plain white glass --
+     the bar sits between two warm surfaces and read as the one cold thing
+     on the page. */
+  background: rgba(255, 251, 246, 0.85);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(242, 153, 74, 0.18);
   box-shadow:
     0 6px 22px rgba(160, 95, 30, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   border-radius: 16px;
-  padding: 8px 10px;
+  /* Side padding matched to `.page-head`'s own 22px so the count chip's
+     right edge lands on the same line as the "Invite person" button above
+     it -- at 10px it overhung the button by 12px. */
+  padding: 16px 22px;
   margin-bottom: 16px;
+}
+/* Taller pills to sit in the taller bar -- at 30px they looked stranded in
+   it. Height rather than padding: these chips run `padding: 0 11px` with
+   the label vertically centred, so the box height is what sets them. */
+/* A plain mid-grey placeholder, not the washed `#8a6f57`/70 the markup
+   asks for (too faint at this size) or the near-black this used to be
+   (read as a filled value). `!important` because index.css's compat net
+   matches that literal in the class string and repaints it. Light only:
+   the `.dark` rule further down still wins there. */
+.gp-people .tbar .fchip input::placeholder {
+  color: #8a8a8a !important;
+  opacity: 1 !important;
+}
+.gp-people .tbar .fchip {
+  height: 33px;
+  /* Wider than the base `0 11px`, so each pill has room around its label
+     rather than gripping it. */
+  padding-left: 18px;
+  padding-right: 18px;
+  /* Up from the base 12px -- the labels looked undersized once the pills
+     grew. Applied to the chip so the search input and the count chip's own
+     text inherit it too. */
+  font-size: 13.5px;
+  /* The shared `.fchip` rule carries a card-sized drop shadow
+     (`0 10px 34px rgba(160,95,30,0.16)`), which under a 33px pill reads as
+     a smudge rather than a lift. The inset top highlight goes with it --
+     it only made sense as part of that same glass treatment. */
+  box-shadow: none;
+}
+.gp-people .tbar .fchip input {
+  font-size: 13.5px;
+}
+/* A wider search field: 320px left the bar's middle mostly empty, and the
+   field is the one control here people type into. The cap is an INLINE
+   `flex: 1 1 220px; max-width: 320px` on the chip, so `!important` is the
+   only way to lift it from a stylesheet. */
+.gp-people .tbar .fchip:has(input) {
+  flex: 1 1 320px !important;
+  max-width: 460px !important;
 }
 
 .gp-people .tbar .fchip {
@@ -121,14 +451,22 @@
   background: transparent;
 }
 .gp-people th {
-  /* Solid, not transparent — this is what a sticky header needs to actually
-     cover the rows scrolling underneath it rather than showing them through. */
   background: #fffdfb;
-  color: #8a6f57;
-  border-bottom: 2px solid rgba(242, 153, 74, 0.25);
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  /* Was `#8a6f57`, a washed brown that sat between the header band and the
+     rows without belonging to either. Near-black instead -- the colour is
+     carried by the 3px orange underline beneath the row, so the labels
+     themselves only need to be legible. */
+  color: #1a1a1a;
+  font-weight: 800;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  /* Matches Performance's own table heading height (40px there vs ~33px
+     here from padding alone) — same `th` padding either way, just a
+     taller header row. */
+  height: 40px;
+  /* Up from 9.5px. These labels are uppercase with wide tracking, which
+     already costs legibility -- at that size they read as a texture rather
+     than as column names. */
+  font-size: 11.5px;
 }
 .gp-people td {
   border-bottom-color: rgba(150, 100, 50, 0.1);
@@ -140,28 +478,21 @@
 .gp-people th:last-child {
   text-align: center;
 }
-.gp-people td:last-child {
-  /* Was 280px, reserved back when this column held up to ten buttons on two
-     wrapped lines. It is three buttons and a menu now -- four 36px boxes and
-     three 6px gaps -- so the old width pushed the table wider than its column
-     and put a horizontal scrollbar under the whole list. */
-  min-width: 168px;
-  white-space: nowrap;
-}
 .gp-people td:last-child .flex {
   justify-content: center;
-  /* No wrapping: there is nothing left to wrap, and allowing it is what let
-     the row grow a second line. */
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  row-gap: 6px;
   gap: 6px;
 }
-/* Matches the top navbar's own round icon buttons exactly — 36px box,
-   18px glyph (50% ratio) — rather than a size invented for this column. */
+/* Matches the top navbar's own round icon button SIZE — 36px box, 18px
+   glyph (50% ratio) — but a full circle, not the navbar's own 10px
+   rounded-square, to match Performance ▸ Calls' action-button shape
+   (interactions-theme.css: `[rounded-full][w-8]`). */
 .gp-people td:last-child .mini {
   width: 36px;
   height: 36px;
   padding: 0;
-  border-radius: 10px;
+  border-radius: 9999px;
   flex: none;
   /* `.mini`'s base rule only sets `align-items: center` (vertical) — with a
      fixed width now wider than the icon, the icon hugs the button's left
@@ -169,16 +500,25 @@
      horizontal centering the base rule never needed before. */
   justify-content: center;
 }
-.gp-people td:last-child .mini .ic {
-  width: 32px;
-  height: 32px;
+/* These icons carry an INLINE `width: 16px; height: 16px` from the
+   component that renders them, so no plain stylesheet rule can touch them
+   -- the 32px rule that used to sit here had never had any effect for that
+   reason. `!important` is the only lever short of editing the shared
+   component. 20px in a 36px button is a ~55% fill: a real action, without
+   crowding the circle that appears on hover. */
+.gp-people td:last-child .mini .ic,
+.gp-people td:last-child .mini svg {
+  width: 16px !important;
+  height: 16px !important;
 }
 /* An inset box-shadow draws the accent bar without `position`, which is what
    broke the row's layout: a positioned `<tr>` with an absolutely-placed
    child is undefined by the table layout algorithm and Chromium responds by
    blowing the row up to its own stacking context on hover. */
+/* Same wash Performance ▸ Calls uses for its own row hover (--ic-row-hover
+   in interactions-theme.css). */
 .gp-people tbody tr:hover {
-  background: rgba(255, 205, 155, 0.14);
+  background: rgba(255, 241, 235, 0.55);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
@@ -186,10 +526,48 @@
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.75);
 }
-.gp-people .mini:hover {
-  background: var(--accent-wash);
-  border-color: var(--accent-edge);
-  color: var(--accent-ink);
+/* Action-column buttons only: glass circle at rest, filled sunset gradient
+   on hover — matching Performance ▸ Calls' own action buttons
+   (interactions-theme.css) rather than this page's plain tint-on-hover
+   `.mini` treatment used elsewhere (e.g. the filter chips). */
+/* `:not(.mcm-fav-on)` — the favourite star keeps its own persistent gold
+   "on" state (mcm-page.css) regardless of hover; without the exclusion,
+   this rule's extra `td:last-child` ancestor made it MORE specific than
+   `.mcm-page .mini.mcm-fav-on`'s 3 classes, silently overriding the gold
+   fill with plain glass even at rest, not just on hover. Confirmed via
+   computed style before this fix: an already-favourited star's background
+   came back as this rule's white glass, not the gold color-mix(). */
+.gp-people td:last-child .mini:not(.mcm-fav-on) {
+  /* No disc at rest either -- just the glyph on the row, the way dark mode
+     already does it. The sunset fill on hover is what marks the target. */
+  background: transparent;
+  /* No ring at rest -- five outlined circles in a row competed with the
+     row's own content. The glass fill still reads as a button, and the
+     hover fill below is what signals the target. (This replaces an
+     `rgba(249,115,22,0.4)` edge that was bumped up from
+     interactions-theme.css's 0.16 to be visible on this page's near-white
+     card.) */
+  border-color: transparent;
+  box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* Softer than the filled sunset gradient it replaces: a pale wash with the
+   glyph in brand orange. `#fdf1e2` is the live site's own `body` background
+   (rgb(253,241,226), pulled directly from ucaas-india.vercel.app) rather
+   than an invented tint, so the hover reads as this page's own warm colour
+   showing through instead of a new shade appearing from nowhere. */
+.gp-people td:last-child .mini:not(.mcm-fav-on):hover:not(:disabled) {
+  background: #fdf1e2;
+  /* Rounded square, not the button's own resting circle -- a visible
+     hairline border plus a softer corner radius reads as a distinct card
+     under the pointer rather than just a color change on the same shape. */
+  border: 1px solid rgba(242, 153, 74, 0.35);
+  border-radius: 14px;
+  color: #c96f1f;
+  box-shadow: none;
 }
 
 /* "Groups" / "Export" — `.btn.ghost` is normally a neutral grey action
@@ -290,7 +668,7 @@
   --mcm-accent-edge: #ffd9ad;
   --mcm-ink: #0d1526;
   --mcm-ink-2: #3d4a63;
-  background: #fffaf3;
+  background: #ffffff;
   border-color: rgba(242, 153, 74, 0.3);
 }
 .gp-person-fields {
@@ -326,6 +704,9 @@
 }
 input.gp-field-v:focus {
   border-color: #f2994a;
+}
+.dark input.gp-field-v:focus {
+  border-color: var(--mcm-accent, #f97316);
 }
 input.gp-field-v:disabled {
   color: var(--mcm-ink-2, #3d4a63);
@@ -374,12 +755,15 @@ input.gp-field-v:disabled {
   cursor: pointer;
 }
 .gp-person-dialog .btn.ghost {
-  background: #fff;
-  border-color: rgba(242, 153, 74, 0.3);
-  color: var(--mcm-ink-2, #3d4a63);
+  /* Same solid orange-outline-until-filled-on-hover treatment as every
+     other Cancel/Close in Directory. */
+  background: transparent;
+  border-color: #f2994a;
+  color: #f2994a;
 }
 .gp-person-dialog .btn.ghost:hover {
-  border-color: #f2994a;
+  background: #f2994a;
+  color: #ffffff;
 }
 .gp-person-dialog .btn.primary {
   background: #f2994a;
@@ -387,6 +771,35 @@ input.gp-field-v:disabled {
 }
 .gp-person-dialog .btn.primary:hover {
   background: #c96f1f;
+}
+/* "Assign Number", "Cancel" -- outline at rest, filled on hover, the same
+   idiom as Groups/Export and the invite dialog's own Cancel. They used to
+   be a slate-filled chip with a faint orange edge and grey label, which
+   read as three disabled controls in a row. */
+.dark .gp-person-dialog .btn.ghost {
+  background: transparent;
+  border: 1px solid #f2994a;
+  color: #f2994a;
+}
+.dark .gp-person-dialog .btn.ghost:hover:not(:disabled) {
+  background: #f2994a;
+  border-color: #f2994a;
+  color: #fff !important;
+}
+.dark .gp-person-dialog .btn.primary {
+  background: var(--mcm-accent, #f97316);
+  color: #f8fafc;
+}
+/* Save is inert on hover: fill, ink and every decoration restated from its
+   rest state. The background already matched -- it was the label flipping
+   to a dark #111c26 that made the button look like it was reacting. */
+.dark .gp-person-dialog .btn.primary:hover {
+  background: var(--mcm-accent, #f97316);
+  color: #f8fafc;
+  box-shadow: none;
+  transform: none;
+  filter: none;
+  opacity: 1;
 }
 .gp-person-dialog .btn:disabled {
   opacity: 0.6;
@@ -419,8 +832,310 @@ input.gp-field-v:disabled {
   border-radius: 6px;
 }
 .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive']):hover,
-.gp-person-menu
-  [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
+.gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
   background: #fff1e0;
   color: #c96f1f;
+}
+
+/* ====================================================================
+   Dark theme — this whole file is a bespoke "glass" look (warm cream
+   surfaces, orange-tinted glow) built entirely from literal hex/rgba, so
+   none of it was reachable through the shared --mcm-* tokens the rest of
+   the app repaints from. Redefining every rule above under `.dark` (same
+   selectors, dark-appropriate values) keeps the same warm, glassy DESIGN
+   rather than flattening it to plain slate — reusing the app's own dark
+   accent/surface tokens (--mcm-accent-wash, --mcm-surface, --mcm-ink-*)
+   wherever the light version reused a token, and translating the file's
+   own one-off literals (the browns, the whites-at-low-opacity) into their
+   dark equivalents everywhere it didn't. ==================================================================== */
+/* Flat canonical deep-navy, not the warm-orange ember glow — same
+   "orange never washes a full surface" correction as `.dark body` in
+   index.css, applied here since this page redeclares its own background
+   rather than inheriting body's. */
+.dark .gp-people {
+  background:
+    radial-gradient(1100px 780px at 4% -8%, rgba(255, 138, 46, 0.1), transparent 60%),
+    radial-gradient(900px 700px at 100% -2%, rgba(255, 120, 40, 0.07), transparent 55%),
+    radial-gradient(900px 640px at 50% 118%, rgba(255, 160, 80, 0.06), transparent 60%),
+    var(--mcm-ground, #080d12);
+}
+.dark .gp-people .page-head,
+.dark .gp-people .tbar .fchip {
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-people .page-head {
+  background: linear-gradient(180deg, #17212d 0%, #111a24 100%);
+}
+.dark .gp-people .tbar .fchip {
+  background: var(--mcm-accent-wash, #1a2733);
+}
+.dark .gp-people .panel-card {
+  background: linear-gradient(180deg, #141d28 0%, #101922 100%);
+  border: 1px solid rgba(255, 171, 94, 0.14);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+}
+.dark .gp-people .page-head h1 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .gp-people .page-head p {
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-people .tbar {
+  background: rgba(20, 29, 40, 0.75);
+  border: 1px solid rgba(255, 171, 94, 0.12);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .gp-people .tbar .fchip {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+}
+.dark .gp-people .tbar .fchip:hover {
+  background: var(--mcm-surface-3, #1a2733);
+  border-color: var(--mcm-accent-edge);
+}
+/* The chip label ("Groups:", "Location:", "Presence:") is a bare TEXT NODE
+   inside `.fchip`, not an element -- `> span:first-child` matches nothing
+   here, so the colour has to be set on the chip itself and inherited by
+   both the label and its `<strong>` value. Was `--mcm-ink-2`
+   (rgb(195,205,223)), a dim slate that read as disabled. */
+.dark .gp-people .tbar .fchip {
+  color: var(--mcm-ink, #f3f6f9);
+}
+/* The search placeholder deliberately does NOT get the white the chip
+   labels above have -- Roles, Locations, Favourites and Blocked all leave
+   it on the shared muted tone, and a bright placeholder here made People's
+   search look like a filled field next to theirs. `!important` still
+   required: index.css's compat net matches the raw
+   `placeholder:text-[#8a6f57]/70` class string and repaints it otherwise. */
+.dark .gp-people .tbar .fchip input::placeholder {
+  color: var(--mcm-ink, #eef2f9) !important;
+}
+/* The count chip's number sat on #0d9488 -- a dark teal on a teal fill,
+   the one unreadable thing left in the bar. */
+.dark .gp-people .fchip.live .num {
+  color: #fff;
+}
+/* The "Search people" field sits on `text-[#1a1a1a] placeholder:text-[#8a6f57]/70
+   dark:text-mcm-ink` (SearchChip in page-shell.tsx) — but the app-wide compat
+   safety net in index.css (`.dark [class*="#8a6f57"] { color: ... !important }`)
+   matches on the raw class ATTRIBUTE STRING, not the parsed utility, so it
+   fires on the `placeholder:text-[#8a6f57]/70` substring too and repaints
+   the field's real typed-text colour — not just the placeholder that literal
+   was actually meant for — to a dim slate tone, `!important`, beating
+   `dark:text-mcm-ink` outright (confirmed via getComputedStyle: the utility
+   class never won). Only `!important` at equal-or-higher specificity can
+   out-rank another `!important` rule, so this needs it too. */
+.dark .gp-people .tbar .fchip input {
+  color: var(--mcm-ink, #f3f6f9) !important;
+}
+.dark .gp-people th {
+  background: #1a232f;
+  color: var(--mcm-accent, #ffab5e);
+  border-bottom: 3px solid rgba(255, 171, 94, 0.35);
+}
+.dark .gp-people td {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-people tbody tr:hover {
+  background: rgba(255, 171, 94, 0.06);
+}
+.dark .gp-people .mini {
+  background: rgba(17, 29, 39, 0.6);
+  border-color: #293746;
+}
+/* The action column's own rest-state rule above
+   (`.gp-people td:last-child .mini:not(.mcm-fav-on)`) is four classes and a
+   type — more specific than the `.dark .gp-people .mini` line right above,
+   so in dark mode those circles kept their white glass and slate icon and
+   read as five disabled buttons on a dark table. Same idiom restated at
+   matching specificity with dark values. Hover needs no counterpart: it
+   paints `linear-gradient(--accent, --accent-ink)`, and this page's locals
+   already flip to #ffab5e/#ffc98a under `.dark`. */
+/* No chrome at rest -- just the white glyph on the row. The circle only
+   appears on hover (below), which is what makes the hovered action read as
+   the active one instead of five identical outlined discs competing with
+   the row's own content. */
+.dark .gp-people td:last-child .mini:not(.mcm-fav-on) {
+  background: transparent;
+  border-color: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+/* Filled brand orange on hover, white glyph. `#f2994a` rather than dark's
+   own `--accent` (#ffab5e) for the same reason as the Groups/Export
+   buttons: white needs the deeper orange under it to stay readable. The
+   light theme's gradient hover is replaced outright here -- in dark it
+   ran #ffab5e -> #ffc98a, which is pale enough to lose the glyph. */
+.dark .gp-people td:last-child .mini:not(.mcm-fav-on):hover:not(:disabled) {
+  background: #f2994a;
+  border-color: #f2994a;
+  /* Same rounded-square shape as the light hover, kept out of the shared
+     rule above since dark keeps a solid border colour instead of a
+     translucent hairline. */
+  border-radius: 14px;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(242, 153, 74, 0.28);
+}
+/* Same pale-mint fill as Favourites' count chip — legible in light, near
+   invisible on a dark table. Teal ink kept; only the wash moves. */
+.dark .gp-people .tbar .fchip.live {
+  /* Same treatment Roles settled on (roles-glass.css): a solid muted-teal
+     fill rather than the faint `--live-wash` tint, which nearly disappears
+     against a dark toolbar. `!important` because the light rule sets these
+     with the flag on some pages -- carried on all three for consistency. */
+  background: color-mix(in srgb, var(--live, #2dd4bf) 38%, #111c26) !important;
+  border-color: transparent !important;
+  color: #f3f6f9;
+}
+.dark .gp-people .btn.ghost {
+  background: rgba(17, 29, 39, 0.6);
+}
+/* Without this the dark rest rule above (`.dark .gp-people .btn.ghost`)
+   kept its flat surface fill on hover too, so Groups/Export just went a
+   shade lighter instead of filling. `#f2994a` rather than dark's own
+   `--accent` (#ffab5e): white text needs the deeper brand orange under it
+   to stay readable, and it matches what the same buttons do in light. */
+.dark .gp-people .btn.ghost:hover:not(:disabled) {
+  background: #f2994a;
+  border: 1px solid #f2994a;
+  color: #fff;
+}
+/* "Invite person" holds its fill on hover. The app-wide
+   `.mcm-page .btn.primary:hover` lightens to `--accent-ink`, which in dark
+   is #ffc98a -- the button went paler on hover, reading as a disabled
+   state rather than an active one. Restating the rest colour is enough to
+   cancel it; no `!important` needed, this selector is more specific. */
+.dark .gp-people .btn.primary:hover {
+  background: var(--accent);
+}
+.dark .gp-people .btn.ghost:disabled {
+  background: rgba(14, 24, 33, 0.6);
+  border: 1px solid #1b2934;
+}
+.dark .gp-people .role-manager {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--mcm-ink-3, #aab6c1);
+}
+.dark .gp-people .role-agent {
+  color: var(--mcm-ink-3, #aab6c1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+.dark .gp-person-dialog {
+  --mcm-accent-wash: #1a2733;
+  --mcm-accent-edge: rgba(249, 115, 22, 0.4);
+  --mcm-ink: #f3f6f9;
+  --mcm-ink-2: #aab6c1;
+  background: #111c26;
+  border-color: rgba(249, 115, 22, 0.3);
+}
+/* (A second `.dark .gp-person-dialog .btn.ghost` used to sit here, setting
+   the slate fill and a faint orange edge. It came later in the file than
+   the outline treatment above and silently won, which is why these buttons
+   stayed slate. Removed rather than retuned -- one rule per state.) */
+.dark .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive']):hover,
+.dark .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
+  background: var(--mcm-accent-wash, #1a2733);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+/* ---- Row avatars, dark ------------------------------------------------
+   The ink and wash are now decided by CustomAvatar itself (it reads the
+   theme), so the colour override that used to live here is gone -- only
+   the ring and lift remain, which are this table's own. */
+.dark .gp-people td:nth-child(1) > span > div {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* Avatar size is inline too (`width/min-width/height: 30px`), so the bump
+   needs `!important` for the same reason the colours did. 38px still fits
+   the row's 61px height with its 11px cell padding. */
+.gp-people td:nth-child(1) > span > div {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+}
+.gp-people td:nth-child(1) > span > div > div {
+  font-size: 15px;
+}
+
+/* (The invite dialog's step numeral used to be corrected here. That was the
+   shared stepper's bug -- an orange numeral on an orange fill in dark -- and
+   it is fixed in stepper.tsx itself now, for every wizard rather than this
+   one dialog.) */
+/* Cancel fills orange with white text on hover, matching Groups/Export on
+   the page behind it. Save & Continue holds its fill instead of lightening
+   to `--accent-ink` (#ffc98a in dark), which read as the button going
+   disabled at the moment you reach for it -- same correction as the
+   "Invite person" button that opens this dialog. */
+.dark .gp-invite-dialog .btn.ghost:hover:not(:disabled) {
+  background: #f2994a;
+  border-color: #f2994a;
+  color: #fff !important;
+}
+/* Save & Continue holds everything on hover, not just its fill -- the
+   shared `.btn` styles also move shadow/transform, and any of them reads as
+   the button reacting when it shouldn't. */
+/* Restates this dialog's own rest fill exactly (`.dark .gp-invite-dialog
+   .btn.primary` sets #f97316), so hover is a no-op. Two other rules were
+   competing for it: the shared `.mcm-page .btn.primary:hover` lightening to
+   `--accent-ink`, and an existing slate `rgb(71,85,105)` hover. `--accent`
+   is NOT the value to use here -- it is #ffab5e in dark, lighter than the
+   rest state, which is what made the button pale on hover. */
+.dark .gp-invite-dialog .btn.primary:hover {
+  background: #f97316;
+  box-shadow: none;
+  transform: none;
+  filter: none;
+  opacity: 1;
+}
+/* "+ Add Users" is a shadcn Button carrying `bg-white border-primary
+   text-primary hover:bg-primary/90 hover:text-white`. Those two hover
+   utilities don't reliably both land: `hover:text-white` turns the label
+   white while `bg-white` holds the fill, so the button goes blank on hover
+   in light. (In dark the fill that did apply was #ffab5e at 90% -- white on
+   pale orange, barely legible.) Stated explicitly for BOTH themes so the
+   pair can't come apart: solid #f2994a, white label and glyph, matching
+   Cancel and the page's other outline buttons. */
+.gp-invite-dialog button[class*='border-primary']:hover:not(:disabled) {
+  background-color: #f2994a !important;
+  border-color: #f2994a !important;
+  color: #fff !important;
+}
+.gp-invite-dialog button[class*='border-primary']:hover:not(:disabled) svg {
+  color: #fff !important;
+}
+
+/* ---- Pager row -------------------------------------------------------- */
+.gp-people-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid rgba(150, 100, 50, 0.12);
+}
+.gp-people-pager-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a6f57;
+}
+.dark .gp-people-pager {
+  border-top-color: rgba(255, 171, 94, 0.12);
+}
+.dark .gp-people-pager-count {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+/* The shared `.mcm-fav-on` chip (mcm-page.css) draws a gold-tinted circle
+   behind the star once a row is favourited. Matches Favourites' own star
+   now: just the glyph in `--warn` gold, no disc or ring. */
+.gp-people .mini.mcm-fav-on,
+.gp-people .mini.mcm-fav-on:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--warn);
 }
