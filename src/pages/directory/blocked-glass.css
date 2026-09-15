@@ -26,7 +26,7 @@
   /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
-  background: #fdf1e2;
+  background: #ffffffc7;
   margin: -22px -26px -40px;
   /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
      (people-glass.css) so the gap below the table reads the same as the

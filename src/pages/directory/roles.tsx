@@ -8,6 +8,7 @@ import { Ic } from '@/components/mcm/icons';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Icon } from '@/assets/icons/icon';
 import AlertConfirm from '@/components/custom/alert-confirm';
+import CustomAvatar from '@/components/custom/custom-avatar';
 import AddNewRole from '@/pages/admin-settings/roles/add-new-role';
 import AssignUsersModal from '@/pages/admin-settings/roles/assign-users-modal';
 import { AreaNav } from '@/pages/admin-settings/roles/area-nav';
@@ -17,7 +18,7 @@ import {
   roleDisplayDescription,
   roleDisplayName,
 } from '@/pages/admin-settings/roles/role-names';
-import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import './roles-glass.css';
 
 /**
@@ -74,6 +75,7 @@ const Roles = () => {
   const inAdminArea = pathname.startsWith('/admin-settings');
 
   const [search, setSearch] = useState('');
+  const [type, setType] = useState('All');
   const [editing, setEditing] = useState<Role | null>(null);
   const [creating, setCreating] = useState(false);
   const [assigning, setAssigning] = useState<Role | null>(null);
@@ -124,14 +126,17 @@ const Roles = () => {
   });
 
   const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    if (!needle) return roles;
-    return roles.filter((role: Role) =>
-      [role?.name, roleDisplayName(role?.name), role?.description]
+    return roles.filter((role: Role) => {
+      const system = isSystemRole(role);
+      if (type === 'System' && !system) return false;
+      if (type === 'Custom' && system) return false;
+      const needle = search.trim().toLowerCase();
+      if (!needle) return true;
+      return [role?.name, roleDisplayName(role?.name), role?.description]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(needle)),
-    );
-  }, [roles, search]);
+        .some((value) => String(value).toLowerCase().includes(needle));
+    });
+  }, [roles, search, type]);
 
   const closeForm = () => {
     setCreating(false);
@@ -149,15 +154,6 @@ const Roles = () => {
            routes, media, devices and company settings, plus admin scope on
            remove / edit / role change / restore / suspend. Roles management
            itself has no tree key yet, so it stays owner-and-admin only. */
-        note={
-          <>
-            A role decides what a person can see and open <b>in this app</b>. The server checks a
-            role's permissions on the People routes, media, devices and company settings, and
-            checks admin scope on remove, edit, role change, restore and suspend. Roles themselves
-            can only be managed by the <b>Account owner</b> and admins; the owner role is built in
-            and cannot be changed here.
-          </>
-        }
         actions={
           <div className="flex flex-wrap items-center gap-2">
             {/* Step 2 of the access-control tour. Steps 1 and 3 and the
@@ -174,6 +170,12 @@ const Roles = () => {
         }
         filters={
           <>
+            <FilterChip
+              label="Type"
+              value={type}
+              options={['All', 'System', 'Custom']}
+              onChange={setType}
+            />
             <SearchChip value={search} onChange={setSearch} placeholder="Search roles" />
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               {visible.length} of {roles.length}
@@ -196,139 +198,61 @@ const Roles = () => {
             ) : visible.length ? (
               visible.map((role: Role) => {
                 const system = isSystemRole(role);
-                const owner = isOwnerRole(role?.name);
                 return (
                   <tr key={role?.uuid || role?.role_uuid || role?.name}>
                     <td>
-                      {/* The stored name is an authorisation gate - the platform
-                          compares role strings directly - so only the label
-                          changes here, never the value. */}
-                      <div className="list-row-name">{roleDisplayName(role?.name)}</div>
-                      <div className="list-row-sub">
-                        {roleDisplayDescription(role?.name, role?.description) || 'No description'}
-                      </div>
+                      <span className="flex items-center gap-2.5">
+                        <CustomAvatar name={roleDisplayName(role?.name)} size="30" />
+                        <div>
+                          <div className="list-row-name">{roleDisplayName(role?.name)}</div>
+                          <div className="list-row-sub">
+                            {roleDisplayDescription(role?.name, role?.description) || 'No description'}
+                          </div>
+                        </div>
+                      </span>
                     </td>
                     <td>
                       <span className={system ? 'tag neu' : 'tag acc'}>
-                        {owner ? 'Built in · owner' : system ? 'Built in' : 'Custom'}
+                        {system ? 'System' : 'Custom'}
                       </span>
                     </td>
-                    <td className="num">
-                      {owner && role?.user_count === undefined ? '—' : usersOn(role)}
-                    </td>
+                    <td className="num">{usersOn(role)}</td>
                     <td className="gp-role-actions-cell">
-                      <span className="flex items-center gap-2 gp-role-actions">
-                        {/* The owner role is read-only on purpose: the server
-                            decides what ADMIN can do, and assigning it from
-                            here is refused by the assign dialog anyway. */}
-                        {owner ? (
-                          <span className="list-row-sub">Cannot be changed</span>
-                        ) : null}
-                        {isAdmin && !owner ? (
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`Assign people to ${roleDisplayName(role?.name)}`}
-                            aria-label={`Assign people to ${roleDisplayName(role?.name)}`}
-                            onClick={() => setAssigning(role)}
-                          >
-                            <Ic n="users" size={16} />
-                          </button>
-                        ) : null}
-                        {/* Looking at a built-in role.
-
-                            Manager, Agent and Sub-admin showed one button —
-                            assign people — and nothing else, so there was no way
-                            to see what they actually permit. The drawer already
-                            copes: it hides its Save button for a platform role,
-                            so opening one is read-only without any extra work.
-                            It simply had nothing to open it. */}
-                        {isAdmin && system && !owner ? (
-                          <button
-                            type="button"
-                            className="mini"
-                            title={`See what ${roleDisplayName(role?.name)} can do`}
-                            aria-label={`See what ${roleDisplayName(role?.name)} can do`}
-                            onClick={() => setEditing(role)}
-                          >
-                            <Ic n="eye" size={12} />
-                          </button>
-                        ) : null}
-
-                        {/* Copying any role into one you own.
-
-                            A built-in role cannot be edited, and that is right:
-                            its owner is the literal string PREDEFINED rather
-                            than any company, so it is shared by every company on
-                            the platform and changing it would change it for all
-                            of them. What was missing was the way forward —
-                            "Manager, but without billing" meant rebuilding it
-                            from nothing.
-
-                            Passing the role WITHOUT its uuid is what makes this
-                            a copy rather than an edit: the form sends a uuid
-                            only when it has one. Leaving the company off is what
-                            brings the Save button back. */}
-                        {isAdmin && !owner ? (
-                          <button
-                            type="button"
-                            className="mini"
-                            title={
-                              system
-                                ? `Make my own copy of ${roleDisplayName(role?.name)}`
-                                : `Duplicate ${roleDisplayName(role?.name)}`
-                            }
-                            aria-label={`Duplicate ${roleDisplayName(role?.name)}`}
-                            onClick={() =>
-                              setEditing({
-                                /* The name people see, not the one stored. A copy
-                                   of Manager opened as "MANAGER (copy)" carrying
-                                   "Default features for MANAGER (Ultimate)" --
-                                   the platform's own wording for a role this
-                                   company never named that. The list shows the
-                                   friendly name; the copy has to agree with it
-                                   or the rename only went half way. */
-                                name: `${roleDisplayName(role?.name)} (copy)`,
-                                description: roleDisplayDescription(
-                                  role?.name,
-                                  role?.description,
-                                ),
-                                permission: (role as any)?.permission,
-                              } as Role)
-                            }
-                          >
-                            <Ic n="copy" size={12} />
-                          </button>
-                        ) : null}
-
-                        {/* Predefined roles belong to the platform — the
-                            platform's own screen refuses these too. Shown
-                            disabled rather than hidden, so the column reads
-                            the same width and shape on every row. */}
+                      <span className="flex items-center gap-2.5 gp-role-actions">
                         {isAdmin ? (
                           <button
                             type="button"
                             className="mini"
-                            disabled={system}
-                            title={system ? `${role?.name} is a system role and can't be edited` : `Edit ${role?.name}`}
-                            aria-label={`Edit ${role?.name}`}
+                            title={`Edit ${roleDisplayName(role?.name)}`}
+                            aria-label={`Edit ${roleDisplayName(role?.name)}`}
                             onClick={() => setEditing(role)}
                           >
-                            <Ic n="sliders" size={16} />
+                            <Ic n="sliders" size={14} />
                           </button>
                         ) : null}
-                        {isAdmin ? (
+                        {/* System roles (company_uuid PREDEFINED) can't be
+                            deleted - the platform owns them, not this
+                            company - so the button is left off entirely
+                            rather than shown disabled. */}
+                        {isAdmin && !system ? (
                           <button
                             type="button"
                             className="mini"
-                            disabled={system}
-                            title={system ? `${role?.name} is a system role and can't be deleted` : `Delete ${role?.name}`}
-                            aria-label={`Delete ${role?.name}`}
+                            title={`Delete ${roleDisplayName(role?.name)}`}
+                            aria-label={`Delete ${roleDisplayName(role?.name)}`}
                             onClick={() => setDeleting(role)}
                           >
-                            <Ic n="trash" size={16} />
+                            <Ic n="trash" size={14} />
                           </button>
                         ) : null}
+                        <button
+                          type="button"
+                          className="mini gp-role-open"
+                          onClick={() => setAssigning(role)}
+                        >
+                          <Ic n="chev" size={12} />
+                          Open
+                        </button>
                       </span>
                     </td>
                   </tr>

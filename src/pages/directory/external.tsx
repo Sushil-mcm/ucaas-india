@@ -256,88 +256,90 @@ const ExternalInner = () => {
           </div>
         }
         filters={
-          <div className="gp-contact-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '8px 12px' }}>
-                <Tabs
-                  value={tabName}
-                  onValueChange={handleTabChange}
-                  className="flex"
-                >
-                    <TabsList
-                      className="gap-1 rounded-lg border border-[rgba(225,200,165,0.7)] bg-[rgba(255,255,255,0.55)] p-1"
-                      style={{ margin: 0 }}
-                    >
-                      <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_LIST}>
-                        <span className="whitespace-nowrap">{CONTACT_TABS_CONST.CONTACT_LIST}</span>
-                      </TabsTrigger>
-                      <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_GROUP_LIST}>
-                        <span className="whitespace-nowrap">
-                          {CONTACT_TABS_CONST.CONTACT_GROUP_LIST}
-                        </span>
-                      </TabsTrigger>
-                    </TabsList>
-                </Tabs>
+          <div className="gp-contact-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 22px' }}>
+            <Tabs
+              value={tabName}
+              onValueChange={handleTabChange}
+              className="flex"
+              style={{ flex: '0 0 auto' }}
+            >
+              <TabsList
+                className="gap-1 rounded-lg border border-[rgba(225,200,165,0.7)] bg-[rgba(255,255,255,0.55)] p-1"
+                style={{ margin: 0 }}
+              >
+                <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_LIST}>
+                  <span className="whitespace-nowrap">{CONTACT_TABS_CONST.CONTACT_LIST}</span>
+                </TabsTrigger>
+                <TabsTrigger value={CONTACT_TABS_CONST.CONTACT_GROUP_LIST}>
+                  <span className="whitespace-nowrap">
+                    {CONTACT_TABS_CONST.CONTACT_GROUP_LIST}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-                <Button
-                  onClick={() => login()}
-                  variant="outline"
-                  className="gp-sync-btn h-9 min-h-9 rounded-lg border-primary bg-white font-medium text-primary shadow-sm"
-                >
-                  Sync With Google
-                </Button>
+            <Button
+              onClick={() => login()}
+              variant="outline"
+              className="gp-sync-btn h-9 min-h-9 rounded-lg border-primary bg-white font-medium text-primary shadow-sm"
+              style={{ flex: '0 0 auto' }}
+            >
+              Sync With Google
+            </Button>
 
-                  <div className="gp-contact-search-wrap" style={{ flex: '1 1 120px', minWidth: 120 }}>
-                    <Input
-                      placeholder="Search"
-                      className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow"
-                      IconPosition="left-0 pl-3 inset-y-0"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      Icon={<SearchLine className="gp-contact-search-icon text-[#8a7a67] w-4 h-4" />}
-                    />
-                  </div>
-                  {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
-                    <>
-                      <div style={{ width: 160 }}>
-                        <CustomSelect
-                          isClearable
-                          placeholder="Group"
-                          options={groupList?.map((group: any) => ({
-                            label: group.groupName || group.name || '',
-                            value: group._id,
-                          }))}
-                          handleChange={(e: any) => {
-                            setSelectedGroupId(e ? e.value : null);
-                            setSelectedGroupLabel(e ? e.label : null);
-                          }}
-                          value={
-                            selectedGroupId
-                              ? { label: selectedGroupLabel || '', value: selectedGroupId }
-                              : null
-                          }
-                          inputClass="contact-toolbar-select"
-                        />
-                      </div>
-                      <div style={{ width: 140 }}>
-                        <CustomSelect
-                          isClearable
-                          placeholder="Tag"
-                          options={[
-                            { label: 'Standard', value: 'STANDARD' },
-                            { label: 'VIP', value: 'VIP' },
-                            { label: 'Blocked', value: 'BLOCK' },
-                            { label: 'DNC', value: 'DNC' },
-                          ]}
-                          handleChange={(e: any) => setSelectedTag(e ? e.value : null)}
-                          value={
-                            selectedTag
-                              ? { label: TAG_FILTER_VALUE[selectedTag] || selectedTag, value: selectedTag }
-                              : null
-                          }
-                          inputClass="contact-toolbar-select"
-                        />
-                      </div>
-                    </>
-                  )}
+            <div className="gp-contact-search-wrap" style={{ flex: '2 1 200px', minWidth: 140 }}>
+              <Input
+                placeholder="Search"
+                className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow"
+                IconPosition="left-0 pl-3 inset-y-0"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                Icon={<SearchLine className="gp-contact-search-icon text-[#8a7a67] w-4 h-4" />}
+              />
+            </div>
+            {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
+              <>
+                <div style={{ flex: '1 1 140px' }}>
+                  <CustomSelect
+                    isClearable
+                    placeholder="Group"
+                    options={groupList?.map((group: any) => ({
+                      label: group.groupName || group.name || '',
+                      value: group._id,
+                    }))}
+                    handleChange={(e: any) => {
+                      setSelectedGroupId(e ? e.value : null);
+                      setSelectedGroupLabel(e ? e.label : null);
+                    }}
+                    value={
+                      selectedGroupId
+                        ? { label: selectedGroupLabel || '', value: selectedGroupId }
+                        : null
+                    }
+                    inputClass="contact-toolbar-select"
+                  />
+                </div>
+                <div style={{ flex: '1 1 120px' }}>
+                  <CustomSelect
+                    isClearable
+                    placeholder="Tag"
+                    options={[
+                      { label: 'Standard', value: 'STANDARD' },
+                      { label: 'VIP', value: 'VIP' },
+                      { label: 'Blocked', value: 'BLOCK' },
+                      { label: 'DNC', value: 'DNC' },
+                    ]}
+                    handleChange={(e: any) => setSelectedTag(e ? e.value : null)}
+                    value={
+                      selectedTag
+                        ? { label: TAG_FILTER_VALUE[selectedTag] || selectedTag, value: selectedTag }
+                        : null
+                    }
+                    inputClass="contact-toolbar-select"
+                  />
+                </div>
+              </>
+            )}
           </div>
         }
       >

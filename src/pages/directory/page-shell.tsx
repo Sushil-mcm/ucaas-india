@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Info } from 'lucide-react';
+import { ChevronDown, Info } from 'lucide-react';
 import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import './page-shell.css';
 
@@ -24,6 +30,7 @@ export const DirectoryPage = ({
   note,
   actions,
   filters,
+  beforeTable,
   children,
 }: {
   title: string;
@@ -33,6 +40,10 @@ export const DirectoryPage = ({
   note?: ReactNode;
   actions?: ReactNode;
   filters?: ReactNode;
+  /* A sibling of `.panel-card`, rendered above it — so it can carry its own
+     card chrome instead of sitting flush against the panel-card's edges.
+     Optional, so every page that does not need one is unchanged. */
+  beforeTable?: ReactNode;
   children: ReactNode;
 }) => {
   /* People and Roles are shown in two places: their own Directory rail, and
@@ -71,6 +82,7 @@ export const DirectoryPage = ({
       )}
       {note ? <div className="page-caveat">{note}</div> : null}
       {filters ? <div className="tbar">{filters}</div> : null}
+      {beforeTable}
       <div className="panel-card">
         <div className="tbl-wrap">{children}</div>
       </div>
@@ -78,7 +90,6 @@ export const DirectoryPage = ({
   );
 };
 
-/** A filter chip that wraps a native control, so the chip is the whole hit area. */
 export const FilterChip = ({
   label,
   value,
@@ -90,20 +101,21 @@ export const FilterChip = ({
   options: string[];
   onChange: (value: string) => void;
 }) => (
-  <label className="fchip">
-    {label}:
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      style={{ border: 0, background: 'transparent', fontWeight: 700, outline: 'none' }}
-    >
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <button type="button" className="fchip">
+        {label}: <strong>{value}</strong>
+        <ChevronDown size={14} />
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start" className="gp-filter-menu">
       {options.map((option) => (
-        <option key={option} value={option}>
+        <DropdownMenuItem key={option} onClick={() => onChange(option)}>
           {option}
-        </option>
+        </DropdownMenuItem>
       ))}
-    </select>
-  </label>
+    </DropdownMenuContent>
+  </DropdownMenu>
 );
 
 export const SearchChip = ({

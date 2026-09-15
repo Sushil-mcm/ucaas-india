@@ -525,6 +525,17 @@
 .gp-people .mini {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.75);
+  color: var(--accent, #f2994a) !important;
+}
+.gp-people .mini .ic,
+.gp-people .mini svg {
+  color: var(--accent, #f2994a) !important;
+  stroke: var(--accent, #f2994a) !important;
+}
+.gp-people .mini:hover {
+  background: rgba(242, 153, 74, 0.12) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-ink, #c96f1f) !important;
 }
 /* Action-column buttons only: glass circle at rest, filled sunset gradient
    on hover — matching Performance ▸ Calls' own action buttons

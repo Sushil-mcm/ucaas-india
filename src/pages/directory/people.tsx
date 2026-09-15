@@ -425,7 +425,6 @@ const People = () => {
             className={tab === 'people' ? 'mini solid' : 'mini'}
             onClick={() => setTab('people')}
           >
-            <Ic n="users" size={12} />
             People
           </button>
           <button
@@ -436,7 +435,6 @@ const People = () => {
             title="People removed in the last 72 hours, who can still be restored"
             onClick={() => setTab('removed')}
           >
-            <Ic n="trash" size={12} />
             Removed
           </button>
         </div>

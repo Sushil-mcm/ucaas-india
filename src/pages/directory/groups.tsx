@@ -14,7 +14,7 @@ import 'react-phone-input-2/lib/style.css';
 import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
 import { usePeopleRows, type PersonRow as PeopleRow, type PresenceTone } from './people-rows';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
-import { DirectoryPage, EmptyRow, SearchChip } from './page-shell';
+import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
 import './groups-glass.css';
 
 /**
@@ -115,6 +115,7 @@ const Groups = () => {
   const { dial } = useConsoleDialer();
   const { rows: peopleRows } = usePeopleRows();
   const [search, setSearch] = useState('');
+  const [groupType, setGroupType] = useState('All');
   const [creating, setCreating] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
   const [openUuid, setOpenUuid] = useState<string | null>(null);
@@ -182,15 +183,19 @@ const Groups = () => {
   };
 
   const visible = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    if (!needle) return rows;
     return rows.filter((row: any) => {
-      const manager = resolvePerson(parseJson(row?.manager) || {}, 'Manager');
+      const mgr = parseJson(row?.manager);
+      const hasManager = mgr && (mgr.uuid || mgr.name);
+      if (groupType === 'With Manager' && !hasManager) return false;
+      if (groupType === 'Without Manager' && hasManager) return false;
+      const needle = search.trim().toLowerCase();
+      if (!needle) return true;
+      const manager = resolvePerson(mgr || {}, 'Manager');
       return [row?.name, row?.extension, manager.name]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [rows, search, peopleByUuid]);
+  }, [rows, search, groupType, peopleByUuid]);
 
   /* Same paging as People/Roles: a fixed 10 rows with a pager below. */
   const PAGE_SIZE = 10;
@@ -288,6 +293,12 @@ const Groups = () => {
         }
         filters={
           <>
+            <FilterChip
+              label="Type"
+              value={groupType}
+              options={['All', 'With Manager', 'Without Manager']}
+              onChange={setGroupType}
+            />
             <SearchChip value={search} onChange={setSearch} placeholder="Search groups" />
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               <span className="num">{visible.length}</span> groups
