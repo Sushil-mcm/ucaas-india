@@ -42,8 +42,10 @@ const SetupOption = ({
           <OrderSummary
             orderSummary={orderSummary}
             dataGetMyPlanDetails={dataGetMyPlanDetails}
-            customClass="w-full"
+            customClass="w-full mcm-order-summary"
             mainCustomClass="w-full xl:w-1/2"
+            subtitle="Review your license details"
+            note="Final amount may vary based on selected location and license type."
             onCalculationChange={setPaymentCalculation}
           />
         </div>
@@ -59,7 +61,7 @@ const SetupOption = ({
           <div className="flex items-center gap-3">
             <RadioGroupItem value="common" id="password-common" className="cursor-pointer" />
             <Label htmlFor="password-common" className="cursor-pointer">
-              Give Common Password
+              One password for everyone
             </Label>
           </div>
 
@@ -96,7 +98,7 @@ const SetupOption = ({
               className="cursor-pointer"
             />
             <Label htmlFor="password-individual" className="cursor-pointer">
-              Individual Password
+              A password for each person
             </Label>
           </div>
 
@@ -131,7 +133,7 @@ const SetupOption = ({
           <div className="flex items-center gap-3">
             <RadioGroupItem value="email" id="password-email" className="cursor-pointer" />
             <Label htmlFor="password-email" className="cursor-pointer">
-              Send via Email
+              Invite link
             </Label>
           </div>
         </RadioGroup>
