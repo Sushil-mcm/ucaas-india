@@ -980,6 +980,23 @@ input.gp-field-v:focus {
   stroke-width: 1.8;
   flex: none;
 }
+/* Same borderless, shadow-only treatment as the Directory filter dropdowns
+   (.gp-filter-menu, page-shell.css) -- every dropdown menu in Directory
+   reads as one design instead of this one keeping the shared component's
+   default solid orange border. */
+.gp-person-menu {
+  border-color: transparent !important;
+  border-radius: 14px !important;
+  padding: 6px !important;
+  box-shadow:
+    0 16px 40px rgba(160, 95, 30, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+.dark .gp-person-menu {
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
 .gp-person-menu [data-slot='dropdown-menu-item'] {
   /* The base `rounded-xl` (12px) reads as a full pill/stadium shape at this
      row's height — a smaller radius keeps the hover a rectangle with just

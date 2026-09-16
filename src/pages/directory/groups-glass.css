@@ -313,14 +313,17 @@
   background: #f0fdf4;
   color: #22c55e;
 }
+/* Call keeps its own green on hover -- a deeper wash of the same rest-state
+   green, not the peach/orange every other action button hovers to, so
+   "this one dials out" stays visually distinct from "this one messages". */
+.gp-group-call:hover {
+  background: #dcfce7;
+  color: #16a34a;
+}
 .gp-group-message {
   background: #fbe2c8;
   color: rgba(46, 45, 53, 0.7);
 }
-/* Same soft peach-wash hover on both buttons -- People's own row actions
-   use this exact treatment (people-glass.css), rather than each button
-   flipping to its own bold solid fill (green, then orange) on hover. */
-.gp-group-call:hover,
 .gp-group-message:hover {
   background: #fdf1e2;
   color: #c96f1f;

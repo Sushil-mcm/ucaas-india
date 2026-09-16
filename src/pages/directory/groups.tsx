@@ -496,7 +496,7 @@ const Groups = () => {
               <div className="flex items-center justify-end px-6 py-3 border-t border-[rgba(225,200,165,0.3)] bg-[rgba(251,249,246,0.4)]">
                 <button
                   type="button"
-                  className="h-9 px-5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="h-9 px-5 rounded-lg border border-primary bg-white text-sm font-medium text-primary hover:bg-primary hover:text-white transition-colors"
                   onClick={() => setOpenUuid(null)}
                 >
                   Close
@@ -627,7 +627,7 @@ const Groups = () => {
                     editing.extension && dial(editing.extension, { forceRefreshContactInfo: true })
                   }
                 >
-                  <Ic n="phone" size={16} />
+                  <PhoneCall className="w-4 h-4" />
                   Call
                 </button>
                 <button
@@ -635,7 +635,7 @@ const Groups = () => {
                   className="group flex-1 flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 shadow-sm hover:bg-primary hover:border-primary hover:text-white active:scale-[0.98] transition-all duration-150"
                   onClick={() => navigate(`/messenger?chatId=${editing.uuid}&chatType=chat`)}
                 >
-                  <Ic n="chat" size={16} />
+                  <MessageSquareText className="w-4 h-4" />
                   Message
                 </button>
               </div>
@@ -643,7 +643,7 @@ const Groups = () => {
               <div className="px-6 pb-5 flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
                 <button
                   type="button"
-                  className="h-9 px-5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="h-9 px-5 rounded-lg border border-primary bg-white text-sm font-medium text-primary hover:bg-primary hover:text-white transition-colors"
                   onClick={() => setEditing(null)}
                 >
                   Cancel
