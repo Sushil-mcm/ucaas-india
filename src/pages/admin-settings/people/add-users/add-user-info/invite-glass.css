@@ -163,6 +163,21 @@
 .gp-invite-dialog .mcm-invite-side {
   margin-top: 16px;
 }
+/* Matches the invitee cards' own clearance from the scrollbar
+   (`.mcm-invite-list`'s `md:pr-3` in the JSX, add-user-info/index.tsx) --
+   without it, the licence banner, the Add Users/Location card and Order
+   Summary all stop flush at the scroll body's own edge instead, reading
+   as if they touch the scrollbar right where User Information visibly
+   doesn't. Same `md` breakpoint as that Tailwind class, so nothing here
+   goes out of step with it at a width where the reference itself hasn't
+   kicked in yet. */
+@media (min-width: 768px) {
+  .gp-invite-dialog .mcm-invite-summary,
+  .gp-invite-dialog .mcm-invite-users,
+  .gp-invite-dialog .mcm-invite-side {
+    margin-right: 12px;
+  }
+}
 
 /* The platform's own wrapper (`add-users/index.tsx`) is `h-full ...
    justify-between`, built to fill a full-height side drawer with its footer
