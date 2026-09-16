@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Check } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import DepartmentInfo from './department-info';
@@ -21,7 +20,6 @@ import RingStrategy from './ring-strategy';
 import {
   DEPARTMENT_DEFAULT_TIMEOUT,
   DEPARTMENT_DEFAULT_TIMEOUT_SECONDS,
-  ERROR_TYPES,
   getDepartmentTimeoutOption,
   MEMBER_RING_STRATEGY_OPTIONS,
   readDepartmentTimeoutOption,
@@ -32,9 +30,8 @@ import { COMMON_SETTINGS_SCHEMA } from '@/components/common-settings/schema';
 import { SETTINGS } from '@/components/common-settings/constants';
 import CommonSettingPermission from '@/components/common-settings';
 import Media from './media';
-import { DEPARTMENT_ERROR_TYPES_MESSAGES, DEPARTMENT_TAB_CONSTANT } from './consts';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ErrorTooltip from '@/components/custom/error-tooltip';
+import { DEPARTMENT_TAB_CONSTANT } from './consts';
+import Stepper from '@/components/custom/stepper';
 import { requiredString } from '@/lib/schema';
 import { useGetSite } from '@/hooks/common';
 
@@ -134,6 +131,18 @@ const TABS_ORDER = [
   DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION,
 ];
 
+/* One line under each step's title, same shape as New location's own
+   StepContent (new-site-steps/index.tsx) -- this rail uses the same
+   numbered-circle Stepper that wizard does, so it gets the same second
+   line every step there already has. */
+const TAB_DESCRIPTIONS: Record<string, string> = {
+  [DEPARTMENT_TAB_CONSTANT.BASIC_INFORMATION]: 'Name, location, and extension',
+  [DEPARTMENT_TAB_CONSTANT.SETTING_PERMISSIONS]: 'Call handling rules and access',
+  [DEPARTMENT_TAB_CONSTANT.ADD_MEMBER]: "Choose who's in this group",
+  [DEPARTMENT_TAB_CONSTANT.RING_STRETEGY]: 'How calls are answered',
+  [DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION]: 'Greetings and hold music',
+};
+
 const NewDepartment = ({
   rowData,
   setDrawerState,
@@ -212,66 +221,7 @@ const NewDepartment = ({
     mode: 'onChange',
     context: { schemaContext },
   });
-  const {
-    handleSubmit,
-    reset,
-    watch,
-    trigger,
-    setValue,
-    formState: { errors, dirtyFields },
-  } = formInstance;
-
-  /* Which tabs are finished, for the tick in the strip. Each tab already
-     owns a schema (`validationSchema`), and `handleTabChange` validates
-     against exactly these when moving forward -- so "complete" here means
-     the same thing as "you would be allowed past this tab", rather than a
-     second, drifting definition of done.
-
-     `watch()` with no argument re-renders on every keystroke, which is what
-     keeps the ticks live; five small sync schemas per keystroke is
-     affordable on a form this size. A schema with an async test would make
-     validateSync throw, and the catch simply leaves that tab unticked
-     rather than breaking the strip. */
-  const watchedValues = watch();
-  const currentStepIndex = TABS_ORDER.indexOf(currentStep);
-  const completedTabs = useMemo(() => {
-    const done: Record<string, boolean> = {};
-    TABS_ORDER.forEach((tab, index) => {
-      /* A tab you've already moved past is done, full stop -- handleTabChange
-         and handleNext both refuse to advance past a tab whose schema
-         doesn't validate, so simply being behind currentStep already proves
-         it. Requiring dirtyFields too, as the check below still does for the
-         tab you're on, meant a step nobody had to touch (Ring Strategy,
-         Media, whichever step already matched the account's defaults) never
-         ticked even after being stepped through on the way to a later one. */
-      if (index < currentStepIndex) {
-        done[tab] = true;
-        return;
-      }
-      /* Schema-valid alone isn't "done" for the CURRENT tab: Ring Strategy
-         and Media pass with the form's own defaults, so they'd tick before
-         the user had opened them at all. The tab also has to hold something
-         the user actually entered. Which fields belong to a tab comes from
-         that tab's schema rather than a hand-kept list, so the two can't
-         drift apart. */
-      const tabFields = Object.keys(validationSchema[tab]?.fields || {});
-      const hasInput = tabFields.some((field) => (dirtyFields as any)?.[field]);
-      if (!hasInput) {
-        done[tab] = false;
-        return;
-      }
-      try {
-        validationSchema[tab].validateSync(watchedValues, {
-          abortEarly: true,
-          context: { activeTab: tab, schemaContext },
-        });
-        done[tab] = true;
-      } catch {
-        done[tab] = false;
-      }
-    });
-    return done;
-  }, [watchedValues, schemaContext, dirtyFields, currentStepIndex]);
+  const { handleSubmit, reset, watch, trigger, setValue } = formInstance;
 
   const handleTabChange = async (nextTab: string) => {
     const currentIndex = TABS_ORDER.indexOf(currentStep);
@@ -574,31 +524,21 @@ const NewDepartment = ({
       setValue('settings.operational_hours.regional', user?.settings?.operational_hours?.regional);
     }
   }, [rowData, isEdit, user_info]);
-  /* Plain left-aligned list of step titles -- no numbered circle, just the
-     current step picked out in orange and a tick once that step's own
-     validation passes. */
-  const tabsList = (
-    <Tabs value={currentStep} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="gp-department-tabs flex h-auto w-full flex-col items-stretch gap-3 overflow-visible rounded-none bg-transparent p-0 text-left text-sm font-semibold">
-        {Object.entries(DEPARTMENT_TAB_CONSTANT).map(([key, value]) => (
-          <TabsTrigger
-            className="gp-department-tab relative flex w-full shrink-0 items-center justify-between gap-2 rounded-none border-0 bg-transparent p-0 text-left text-sm font-semibold text-muted-foreground data-[state=active]:shadow-none focus-visible:outline-0 focus-visible:ring-0 focus-visible:border-0"
-            key={key}
-            value={value}
-          >
-            <span className="truncate text-left">{value}</span>
-            {(errors as any)[ERROR_TYPES[value]] ? (
-              <ErrorTooltip text={DEPARTMENT_ERROR_TYPES_MESSAGES[value]} />
-            ) : completedTabs[value] ? (
-              <span className="flex items-center justify-center rounded-full bg-primary/15 p-0.5 text-primary">
-                <Check className="h-3 w-3" strokeWidth={3} />
-              </span>
-            ) : null}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  );
+  /* Same numbered-circle Stepper New location's own rail uses
+     (new-site-steps/index.tsx), rather than this wizard's own plain-text
+     tab list -- one shared step-rail look across every wizard that has
+     one, instead of two different takes on the same idea. Ticking is
+     Stepper's own built-in "currentStep > this step's number" rule: a step
+     you've moved past is done, full stop -- handleTabChange/handleNext
+     already refuse to advance past one that doesn't validate, so simply
+     being behind currentStep already proves it. */
+  const currentStepNumber = TABS_ORDER.indexOf(currentStep) + 1;
+  const railSteps = TABS_ORDER.map((title, index) => ({
+    number: index + 1,
+    title,
+    description: TAB_DESCRIPTIONS[title],
+    handleChange: () => handleTabChange(title),
+  }));
 
   return (
     <>
@@ -615,19 +555,38 @@ const NewDepartment = ({
                 same breakpoint the footer's own two layouts already switch
                 on. */}
             <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
-              <div className="gp-department-rail flex h-full shrink-0 flex-col gap-4 overflow-y-auto lg:w-[230px]">
-                {railTitle ? (
-                  <div className="mcm-stepper-panel-head">
-                    <h3>{railTitle}</h3>
-                    {railSubtitle ? <p>{railSubtitle}</p> : null}
-                  </div>
-                ) : !isEdit ? (
-                  <span className="text-sm leading-5 text-muted-foreground">
-                    Route calls to a team and assign it a shared extension.
-                  </span>
-                ) : null}
-                {tabsList}
-              </div>
+              {railTitle ? (
+                /* Same call shape as New location's own rail
+                   (new-site-steps/index.tsx): Stepper renders its own
+                   panelTitle/panelSubtitle head, so nothing wraps it here --
+                   sizing and the (deliberately card-less) look both come
+                   from the shared `.gp-department-rail` CSS
+                   (groups-glass.css), scoped by class name rather than by
+                   which component renders it. */
+                <Stepper
+                  steps={railSteps}
+                  currentStep={currentStepNumber}
+                  customClass="gp-department-rail shrink-0"
+                  stickyPanel
+                  vertical
+                  panelTitle={railTitle}
+                  panelSubtitle={railSubtitle}
+                />
+              ) : (
+                <div className="gp-department-rail flex h-full shrink-0 flex-col gap-4 overflow-y-auto lg:w-[230px]">
+                  {!isEdit ? (
+                    <span className="text-sm leading-5 text-muted-foreground">
+                      Route calls to a team and assign it a shared extension.
+                    </span>
+                  ) : null}
+                  <Stepper
+                    steps={railSteps}
+                    currentStep={currentStepNumber}
+                    customClass="w-full p-0"
+                    vertical
+                  />
+                </div>
+              )}
               <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
                 <div className="min-h-0 flex-1 overflow-y-auto pr-1">
                   {stepLookUp?.[currentStep]}

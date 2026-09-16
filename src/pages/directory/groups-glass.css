@@ -477,10 +477,6 @@
   flex-direction: row !important;
 }
 .gp-create-group-body .gp-department-rail {
-  background: #ffffff;
-  border: 1px solid rgba(242, 153, 74, 0.2);
-  border-radius: 16px;
-  padding: 20px 16px;
   height: 100%;
   /* `flex` shorthand, not just `width` -- this element's own description
      text ("Route calls to a team...") is wide enough that plain `width`
@@ -493,6 +489,18 @@
   flex: 0 0 260px !important;
   width: 260px !important;
   align-self: flex-start;
+}
+/* The white/bordered/rounded "card" look, kept for Locations' own rail
+   only (it has both classes, `gp-department-rail gp-location-rail`) --
+   Create Group's rail (gp-department-rail alone, now the same numbered-
+   circle Stepper Locations uses) sits flush against the dialog instead,
+   matching the plain reference look it was switched to rather than
+   wrapping it in a second, redundant card next to the dialog's own. */
+.gp-create-group-body .gp-department-rail.gp-location-rail {
+  background: #ffffff;
+  border: 1px solid rgba(242, 153, 74, 0.2);
+  border-radius: 16px;
+  padding: 20px 16px;
 }
 
 /* Heading + description above the step list -- same shape as Invite
@@ -513,35 +521,6 @@
   font-size: 13px;
   line-height: 1.4;
   color: #6b5c4d;
-}
-
-/* Steps as plain tab rows -- padded, rounded, with a hover/active fill --
-   no numbered circles, no connecting line, no per-step description. Full
-   step names still wrap rather than ellipsing, since the rail's own text
-   ("Settings & Permissions" etc.) is tight at 260px otherwise. */
-.gp-create-group-body .gp-department-tab .truncate {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  line-height: 1.3;
-}
-.gp-create-group-body .gp-department-tab {
-  position: relative;
-  color: #6b5c4d;
-  padding: 9px 12px !important;
-  border-radius: 10px;
-  font-size: 15px;
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-}
-.gp-create-group-body .gp-department-tab:hover {
-  background: rgba(242, 153, 74, 0.08) !important;
-}
-.gp-create-group-body .gp-department-tab[data-state='active'] {
-  background: rgba(242, 153, 74, 0.12) !important;
-  color: #f2994a;
-  font-weight: 800;
 }
 
 /* "If no one answer" ▸ Voicemail row (`ForwardingActions`,
@@ -1094,7 +1073,7 @@
   border-color: var(--mcm-accent, #f97316);
   color: var(--mcm-accent-ink, #ff8a2a);
 }
-.dark .gp-create-group-body .gp-department-rail {
+.dark .gp-create-group-body .gp-department-rail.gp-location-rail {
   background: var(--mcm-surface, #111c26);
   border-color: #1b2934;
 }
@@ -1103,16 +1082,6 @@
 }
 .dark .gp-create-group-body .gp-department-rail .mcm-stepper-panel-head p {
   color: var(--mcm-ink-3, #94a3b8);
-}
-.dark .gp-create-group-body .gp-department-tab {
-  color: var(--mcm-ink-3, #aab6c1);
-}
-.dark .gp-create-group-body .gp-department-tab:hover {
-  background: rgba(255, 171, 94, 0.08) !important;
-}
-.dark .gp-create-group-body .gp-department-tab[data-state='active'] {
-  background: rgba(255, 171, 94, 0.14) !important;
-  color: var(--mcm-accent, #ffab5e);
 }
 .dark .gp-create-group-body .bg-gray-50 {
   background: var(--mcm-accent-wash, #1a2733) !important;
