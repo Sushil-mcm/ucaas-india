@@ -174,6 +174,7 @@ const CommonSettingPermission: FC<any> = ({
     setValue(
       path,
       typeof current === 'object' && current !== null ? { ...current, enabled: checked } : checked,
+      { shouldDirty: true },
     );
   };
 
@@ -242,6 +243,7 @@ const CommonSettingPermission: FC<any> = ({
          user record and drops undefined keys, so this removes the block rather
          than leaving a hollow one behind that a later reader could misread. */
       buildPersonInternationalRule(fromInternationalChoice(choice, internationalRule.countries)),
+      { shouldDirty: true },
     );
 
   const startDate = watch('startDate') ? moment(watch('startDate')) : null;

@@ -18,6 +18,7 @@ import { DEPARTMENT_RING_STRATEGY, DEPARTMENT_RING_STRATEGY_DESC } from './const
 const RingStrategy = () => {
   const { setValue, watch } = useFormContext();
   const [watchRingStrategy, watchMembers] = watch(['ring_strategy', 'members', 'manager']);
+  const isLinear = watchRingStrategy?.value === DEPARTMENT_RING_STRATEGY.LINEAR;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto">
@@ -29,7 +30,7 @@ const RingStrategy = () => {
           <CustomSelect
             options={MEMBER_RING_STRATEGY_OPTIONS}
             handleChange={(value) => {
-              setValue('ring_strategy', value);
+              setValue('ring_strategy', value, { shouldDirty: true });
             }}
             value={watch('ring_strategy')}
             placeholder={'Select ring strategy'}
@@ -57,7 +58,9 @@ const RingStrategy = () => {
         <Switch
           className="cursor-pointer shrink-0"
           checked={watch('call_waiting') !== false}
-          onCheckedChange={(checked: boolean) => setValue('call_waiting', checked)}
+          onCheckedChange={(checked: boolean) =>
+            setValue('call_waiting', checked, { shouldDirty: true })
+          }
           aria-label="Call waiting for members"
         />
       </div>
@@ -94,18 +97,31 @@ const RingStrategy = () => {
       </div> */}
       <div className="w-full">
         <p className="font-semibold text-gray-900 truncate text-md mb-2">People in this group</p>
-        {watchRingStrategy?.value !== DEPARTMENT_RING_STRATEGY.LINEAR ? (
-          <div className="w-full lg:w-1/2">
-            <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
-              <Table className="w-full text-sm text-gray-700 h-full ">
-                <TableHeader className="bg-gray-100/40 text-gray-90/80">
-                  <TableRow>
-                    <TableHead className="px-4 py-2 font-medium text-left text-text-gray-90/80">
-                      Name
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+        {/* One table for both ring strategies, not two near-identical copies --
+            only the leading drag-handle column (linear order needs one, the
+            others don't) and the body's row source differ. */}
+        <div className="w-full lg:w-1/2">
+          <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
+            <Table className="w-full text-sm text-gray-700 h-full ">
+              <TableHeader className="bg-gray-100/40 text-gray-90/80">
+                <TableRow>
+                  {isLinear ? <TableHead className="px-4 py-2 font-medium text-left" /> : null}
+                  <TableHead className="px-4 py-2 font-medium text-left text-text-gray-90/80">
+                    Name
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
 
+              {isLinear ? (
+                <TableBody className="bg-white w-full font-normal">
+                  <SelectedMemberList
+                    {...{
+                      members: watchMembers,
+                      setValue,
+                    }}
+                  />
+                </TableBody>
+              ) : (
                 <TableBody className="divide-y divide-gray-200 bg-white w-full font-normal">
                   {watchMembers.map((data: any, index: any) => {
                     const fullName = data?.last_name
@@ -143,33 +159,10 @@ const RingStrategy = () => {
                     );
                   })}
                 </TableBody>
-              </Table>
-            </div>
+              )}
+            </Table>
           </div>
-        ) : (
-          <div className="w-full lg:w-1/2">
-            <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
-              <Table className="w-full text-sm text-gray-700 h-full ">
-                <TableHeader className="bg-gray-100/40 text-gray-90/80">
-                  <TableRow>
-                    <TableHead className="px-4 py-2 font-medium text-left "></TableHead>
-
-                    <TableHead className="px-4 py-2 font-medium text-left ">Name</TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody className="bg-white w-full font-normal">
-                  <SelectedMemberList
-                    {...{
-                      members: watchMembers,
-                      setValue,
-                    }}
-                  />
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

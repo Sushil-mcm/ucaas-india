@@ -98,6 +98,7 @@ const VoiceMailConfigureModal: FC<ModalProps> = ({ modalState, setModalState, da
           handleChange={(e: ISELECTVALUE | null) => {
             setValue('settings.voicemail_pin.users', e, {
               shouldValidate: true,
+              shouldDirty: true,
             });
           }}
           isMulti={true}
@@ -110,7 +111,9 @@ const VoiceMailConfigureModal: FC<ModalProps> = ({ modalState, setModalState, da
           <Switch
             className="cursor-pointer"
             onCheckedChange={(checked) => {
-              setValue('settings.voicemail_pin.voicemail_to_text', checked ? 'YES' : 'NO');
+              setValue('settings.voicemail_pin.voicemail_to_text', checked ? 'YES' : 'NO', {
+                shouldDirty: true,
+              });
             }}
             checked={watch('settings.voicemail_pin.voicemail_to_text') === 'YES'}
           />

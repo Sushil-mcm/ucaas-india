@@ -63,7 +63,7 @@ const RoleModal: FC<RoleModalProps> = ({ modalState, setModalState, data }) => {
             }),
           )}
           handleChange={(e: ISELECTVALUE | null) => {
-            setValue('settings.role', e, { shouldValidate: true });
+            setValue('settings.role', e, { shouldValidate: true, shouldDirty: true });
           }}
           value={watch('settings.role')}
           error={(errors.role as any)?.value?.message}

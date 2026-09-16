@@ -42,11 +42,11 @@ const Media = () => {
   }[];
 
   const onChangeMedia = (name: string, status: boolean) => {
-    setValue(`media.${name}.enabled`, status, { shouldValidate: true });
+    setValue(`media.${name}.enabled`, status, { shouldValidate: true, shouldDirty: true });
     setValue(
       `media.${name}.value`,
       status ? null : ({} as ISELECTVALUE),
-      ...(status ? [] : [{ shouldValidate: true }]),
+      status ? { shouldDirty: true } : { shouldValidate: true, shouldDirty: true },
     );
   };
 
@@ -95,6 +95,7 @@ const Media = () => {
                                   onChangeMedia={(e) =>
                                     setValue(`media.${name}.value`, e as ISELECTVALUE, {
                                       shouldValidate: true,
+                                      shouldDirty: true,
                                     })
                                   }
                                   options={optionsData[name]?.map((item: GreetingItem) => ({

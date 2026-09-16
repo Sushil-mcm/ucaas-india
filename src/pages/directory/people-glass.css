@@ -784,7 +784,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 input.gp-field-v:focus {
   border-color: #f2994a;
@@ -1004,7 +1006,8 @@ input.gp-field-v:focus {
   border-radius: 6px;
 }
 .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive']):hover,
-.gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
+.gp-person-menu
+  [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
   background: #fff1e0;
   color: #c96f1f;
 }
@@ -1210,7 +1213,9 @@ input.gp-field-v:focus {
    the outline treatment above and silently won, which is why these buttons
    stayed slate. Removed rather than retuned -- one rule per state.) */
 .dark .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive']):hover,
-.dark .gp-person-menu [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
+.dark
+  .gp-person-menu
+  [data-slot='dropdown-menu-item']:not([data-variant='destructive'])[data-highlighted] {
   background: var(--mcm-accent-wash, #1a2733);
   color: var(--mcm-accent-ink, #ff8a2a);
 }

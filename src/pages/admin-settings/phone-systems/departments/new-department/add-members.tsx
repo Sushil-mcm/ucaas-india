@@ -54,14 +54,14 @@ const MemberCheckboxCell = ({ memberData }: { memberData: Member }) => {
         );
 
         if (!memberExists) {
-          setValue('members', [...members, newValue], { shouldValidate: true });
+          setValue('members', [...members, newValue], { shouldValidate: true, shouldDirty: true });
           clearErrors('members');
         }
       } else {
         const filteredMembers = members.filter((el: any) => el.value !== memberData.extension);
-        setValue('members', filteredMembers, { shouldValidate: true });
+        setValue('members', filteredMembers, { shouldValidate: true, shouldDirty: true });
         if (memberData.extension === manager?.value) {
-          setValue('manager', { value: '' });
+          setValue('manager', { value: '' }, { shouldDirty: true });
           clearErrors('manager');
         }
       }
@@ -108,8 +108,8 @@ const ManagerRadioCell = ({ memberData }: { memberData: Member }) => {
         const memberExists = members.some((m: any) => m.value === managerVal.value);
         const updatedMembers = memberExists ? [...members] : [...members, managerVal];
 
-        setValue('manager', managerVal);
-        setValue('members', updatedMembers, { shouldValidate: true });
+        setValue('manager', managerVal, { shouldDirty: true });
+        setValue('members', updatedMembers, { shouldValidate: true, shouldDirty: true });
         clearErrors('manager');
       }
     },
@@ -203,16 +203,16 @@ const SelectAllHeader = ({ currentMembers }: { currentMembers: Member[] }) => {
             });
           }
         });
-        setValue('members', newMembers, { shouldValidate: true });
+        setValue('members', newMembers, { shouldValidate: true, shouldDirty: true });
         clearErrors('members');
       } else {
         const currentExtensions = currentMembers.map((m) => m.extension);
         const filteredMembers = members.filter((m: any) => !currentExtensions.includes(m.value));
-        setValue('members', filteredMembers, { shouldValidate: true });
+        setValue('members', filteredMembers, { shouldValidate: true, shouldDirty: true });
 
         const manager = getValues('manager');
         if (manager && currentExtensions.includes(manager.value)) {
-          setValue('manager', { value: '' });
+          setValue('manager', { value: '' }, { shouldDirty: true });
           clearErrors('manager');
         }
       }

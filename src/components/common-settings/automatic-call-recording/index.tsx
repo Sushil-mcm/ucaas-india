@@ -56,12 +56,16 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                   <Label>Enable Automatic Call Recording</Label>
                   <Switch
                     onCheckedChange={(checked) => {
-                      setValue('settings.recording.automatic', {
-                        enabled: checked,
-                        value: 'all',
-                        label: 'All',
-                        recording_on: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3',
-                      });
+                      setValue(
+                        'settings.recording.automatic',
+                        {
+                          enabled: checked,
+                          value: 'all',
+                          label: 'All',
+                          recording_on: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34333.mp3',
+                        },
+                        { shouldDirty: true },
+                      );
                     }}
                     value={watch('settings.recording.automatic.enabled')}
                     checked={watch('settings.recording.automatic.enabled')}
@@ -73,8 +77,12 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                     options={automaticRecordArr.map(({ value, label }) => ({ value, label }))}
                     value={watch('settings.recording.automatic')}
                     handleChange={(value) => {
-                      setValue('settings.recording.automatic.value', value.value);
-                      setValue('settings.recording.automatic.label', value.label);
+                      setValue('settings.recording.automatic.value', value.value, {
+                        shouldDirty: true,
+                      });
+                      setValue('settings.recording.automatic.label', value.label, {
+                        shouldDirty: true,
+                      });
                     }}
                   />
                 )}
@@ -87,7 +95,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Call Recording Announcement</Label>
                 <AuthenticatedAudio
                   controls
-                  src={"/recording-announcement.mp3?v=2"}
+                  src={'/recording-announcement.mp3?v=2'}
                   className="w-full h-10"
                 />
               </div>
@@ -104,11 +112,15 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
               <div className="flex items-center gap-2">
                 <Switch
                   onCheckedChange={(checked) => {
-                    setValue('settings.recording.on_demand', {
-                      enabled: checked,
-                      recording_on: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34331.mp3',
-                      recording_Off: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34332.mp3',
-                    });
+                    setValue(
+                      'settings.recording.on_demand',
+                      {
+                        enabled: checked,
+                        recording_on: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34331.mp3',
+                        recording_Off: 'ad98d65d-fcf8-4d4d-bc77-ee1426c34332.mp3',
+                      },
+                      { shouldDirty: true },
+                    );
                   }}
                   value={watch('settings.recording.on_demand.enabled')}
                   checked={watch('settings.recording.on_demand.enabled')}
@@ -121,7 +133,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Announcement on Start</Label>
                 <AuthenticatedAudio
                   controls
-                  src={"/recording-on-demand-start.mp3?v=2"}
+                  src={'/recording-on-demand-start.mp3?v=2'}
                   className="w-full h-10"
                 />
               </div>
@@ -129,7 +141,7 @@ const AutomaticCallRecordingModal: FC<ModalProps> = ({
                 <Label>Announcement on Stop</Label>
                 <AuthenticatedAudio
                   controls
-                  src={"/recording-on-demand-stop.mp3?v=2"}
+                  src={'/recording-on-demand-stop.mp3?v=2'}
                   className="w-full h-10"
                 />
               </div>

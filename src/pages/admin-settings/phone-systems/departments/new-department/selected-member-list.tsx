@@ -100,7 +100,7 @@ const SelectedMemberList: FC<{
       const newIndex = members.findIndex((m: any) => m.user_uuid === over?.id);
 
       const newMembers = arrayMove(members, oldIndex, newIndex);
-      setValue('members', newMembers);
+      setValue('members', newMembers, { shouldDirty: true });
     }
   };
 

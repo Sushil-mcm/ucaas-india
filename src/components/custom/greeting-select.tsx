@@ -103,7 +103,7 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
             <Button
               type="button"
               variant={'outline'}
-              className="w-10 h-10"
+              className="w-10 h-10 p-0"
               onClick={() => setIsPlay(true)}
             >
               <Play className="w-5 h-5" />
@@ -116,7 +116,7 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
             <Button
               variant={'outline'}
               type="button"
-              className="w-10 h-10"
+              className="w-10 h-10 p-0"
               onClick={() => {
                 onGreetingUploadStart();
                 setDrawerState({

@@ -35,7 +35,7 @@ const DepartmentInfo = ({
 
   const generateNewExtension = () => {
     const newExtension = generateRandomExtension();
-    setValue('extension', newExtension);
+    setValue('extension', newExtension, { shouldDirty: true });
   };
 
   return (
@@ -63,7 +63,7 @@ const DepartmentInfo = ({
                     value: site?.uuid,
                   }))}
                   handleChange={(value) => {
-                    setValue('site', value, { shouldValidate: true });
+                    setValue('site', value, { shouldValidate: true, shouldDirty: true });
                   }}
                   value={watch('site')}
                   placeholder={'Select site'}
@@ -105,7 +105,7 @@ const DepartmentInfo = ({
                   {!isEdit && (
                     <Button
                       type="button"
-                      className="h-10 w-10 shrink-0"
+                      className="h-10 w-10 shrink-0 p-0"
                       variant={'outline'}
                       onClick={() => generateNewExtension()}
                     >
@@ -130,7 +130,7 @@ const DepartmentInfo = ({
                       watch('timeout'),
                     )}
                     handleChange={(value) => {
-                      setValue('timeout', value, { shouldValidate: true });
+                      setValue('timeout', value, { shouldValidate: true, shouldDirty: true });
                     }}
                     value={watch('timeout')}
                     placeholder="Select"

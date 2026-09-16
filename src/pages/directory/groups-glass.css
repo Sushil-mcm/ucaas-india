@@ -408,6 +408,18 @@
   overflow-y: auto;
   padding: 0 20px 18px;
 }
+/* The step-rail wizards (New department / "Create group") already give
+   their rail and their content pane their own independent scroll regions
+   (`.gp-department-rail`, and the content pane beside it) -- but this
+   shared body scrolling too, on top of them, meant the whole thing
+   (rail included) scrolled together as one long page instead of the rail
+   staying put while only the content on the right scrolls. Scoped to
+   `:has(.gp-department-rail)` so every other `.gp-create-group-dialog`
+   (New role, New location, ...) that has no rail keeps this body as its
+   one and only scroll container, untouched. */
+.gp-create-group-body:has(.gp-department-rail) {
+  overflow: hidden;
+}
 /* The other half of that gap is the dialog's own `gap-4` (16px) between its
    two children -- the title bar and this body. Nothing else sits between
    them, so tightening it here only closes the title-to-description space;

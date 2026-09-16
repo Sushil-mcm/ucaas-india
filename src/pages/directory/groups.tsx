@@ -87,7 +87,9 @@ const PersonRow = ({ person, onOpen }: { person: GroupPerson; onOpen: () => void
               {person.extension}
             </span>
           ) : null}
-          {person.email ? <span className="text-xs text-gray-400 truncate">{person.email}</span> : null}
+          {person.email ? (
+            <span className="text-xs text-gray-400 truncate">{person.email}</span>
+          ) : null}
         </div>
       </div>
       <div className="flex shrink-0 gap-1.5" onClick={(event) => event.stopPropagation()}>
@@ -96,7 +98,9 @@ const PersonRow = ({ person, onOpen }: { person: GroupPerson; onOpen: () => void
           className="gp-group-call flex items-center justify-center rounded-full w-8 h-8 cursor-pointer transition-colors"
           title={`Call ${person.name}`}
           aria-label={`Call ${person.name}`}
-          onClick={() => person.extension && dial(person.extension, { forceRefreshContactInfo: true })}
+          onClick={() =>
+            person.extension && dial(person.extension, { forceRefreshContactInfo: true })
+          }
         >
           <PhoneCall className="w-3.5 h-3.5" />
         </button>
@@ -140,10 +144,7 @@ const Groups = () => {
   const canEditGroup = Boolean(phoneSystem?.access?.DEPARTMENT && phoneSystem?.action?.edit);
 
   const departmentQueryKey = ['getDepartmentList', 'directoryGroups'];
-  const {
-    data: rows = [],
-    isPending,
-  } = useQuery({
+  const { data: rows = [], isPending } = useQuery({
     /* The platform's department writes invalidate ['getDepartmentList']; keying
        this list anything else meant a newly created group never appeared. */
     queryKey: departmentQueryKey,
@@ -443,7 +444,9 @@ const Groups = () => {
                       <Icon name="Grid" className="w-3.5 h-3.5" />
                       {opened?.extension || '--'}
                     </span>
-                    <span className="text-[13px] text-gray-500">{openedMembers.length} members</span>
+                    <span className="text-[13px] text-gray-500">
+                      {openedMembers.length} members
+                    </span>
                   </div>
                 </div>
                 <button
@@ -484,7 +487,11 @@ const Groups = () => {
                   <div className="flex flex-col gap-2">
                     {openedMembers.length ? (
                       openedMembers.map((member) => (
-                        <PersonRow key={member.uuid} person={member} onOpen={() => openPerson(member)} />
+                        <PersonRow
+                          key={member.uuid}
+                          person={member}
+                          onOpen={() => openPerson(member)}
+                        />
                       ))
                     ) : (
                       <p className="text-sm text-gray-500">No members in this group.</p>

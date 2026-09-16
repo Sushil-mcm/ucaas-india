@@ -122,16 +122,23 @@ const DisplayNumberModal: FC<ModalProps> = ({ modalState, setModalState, data })
                     value: displayNumber?.incoming?.value?.toString() || '',
                   }}
                   handleChange={(e) => {
-                    setValue('settings.display_number.incoming', e);
-                    setValue('settings.display_number.special_number.number', '');
+                    setValue('settings.display_number.incoming', e, { shouldDirty: true });
+                    setValue('settings.display_number.special_number.number', '', {
+                      shouldDirty: true,
+                    });
                     setValue('settings.display_number.masking.value', '', {
                       shouldValidate: true,
+                      shouldDirty: true,
                     });
                     if (e?.value && !maskingValue) {
-                      setValue('settings.display_number.masking.type', {
-                        label: 'None',
-                        value: 'N',
-                      });
+                      setValue(
+                        'settings.display_number.masking.type',
+                        {
+                          label: 'None',
+                          value: 'N',
+                        },
+                        { shouldDirty: true },
+                      );
                     }
                   }}
                 />
@@ -155,8 +162,8 @@ const DisplayNumberModal: FC<ModalProps> = ({ modalState, setModalState, data })
                     options={maskingOptions}
                     value={displayNumber?.masking?.type}
                     handleChange={(e) => {
-                      setValue('settings.display_number.masking.type', e);
-                      setValue('settings.display_number.masking.value', '');
+                      setValue('settings.display_number.masking.type', e, { shouldDirty: true });
+                      setValue('settings.display_number.masking.value', '', { shouldDirty: true });
                     }}
                   />
                 </div>
@@ -240,6 +247,7 @@ const DisplayNumberModal: FC<ModalProps> = ({ modalState, setModalState, data })
                   setValue(
                     'settings.display_number.show_number_if_blocked',
                     checked ? 'Yes' : 'No',
+                    { shouldDirty: true },
                   );
                 }}
                 checked={watch('settings.display_number.show_number_if_blocked') === 'Yes'}
