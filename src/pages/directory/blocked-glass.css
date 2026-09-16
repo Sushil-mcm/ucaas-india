@@ -280,7 +280,6 @@
   gap: 14px 16px;
 }
 .gp-block-intro,
-.gp-block-summary,
 .gp-block-note {
   grid-column: 1 / -1;
 }
@@ -295,6 +294,24 @@
   gap: 5px;
   min-width: 0;
 }
+/* Number is the anchor field -- what you're actually blocking -- so it
+   spans both columns above the rest instead of pairing with "What to
+   stop", giving it visual weight and room for its own leading icon. */
+.gp-block-field--number {
+  grid-column: 1 / -1;
+}
+/* Groups the three rule dropdowns (What to stop / What the caller gets /
+   Whose line) under one label, same idiom as a form section heading,
+   now that Number has been pulled out above them on its own row. */
+.gp-block-section-label {
+  grid-column: 1 / -1;
+  margin: 2px 0 -4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b09075;
+}
 .gp-block-label {
   font-size: 14px;
   font-weight: 700;
@@ -305,6 +322,40 @@
   color: #8a7a67;
   line-height: 1.4;
 }
+/* Leading icon for the Number input and every rule dropdown -- react-select
+   and <input> both leave no icon slot of their own, so the icon is an
+   absolutely-positioned sibling inside a `position:relative` wrapper,
+   centered on the wrapper's own height rather than pinned to a fixed
+   pixel offset (which would drift if a field's label ever wrapped). */
+.gp-block-icon-field {
+  position: relative;
+}
+.gp-block-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: #b09075;
+  pointer-events: none;
+  z-index: 1;
+}
+.gp-block-icon-field .gp-block-input {
+  padding-left: 34px;
+}
+/* Layered (not just `!important`) because the shared select's own
+   `@layer base { .custom-react-select__value-container { padding: 0 !important } }`
+   otherwise wins regardless of specificity. */
+@layer base {
+  .gp-block-icon-field .custom-react-select__value-container {
+    padding-left: 30px !important;
+  }
+}
+.gp-block-icon-field .custom-react-select__placeholder,
+.gp-block-icon-field .custom-react-select__single-value {
+  margin-left: 2px;
+}
 .gp-block-input {
   height: 38px;
   padding: 0 12px;
@@ -314,6 +365,7 @@
   font-size: 14.5px;
   color: #2a2733;
   outline: none;
+  width: 100%;
 }
 .gp-block-input:focus {
   border-color: #f2994a;
@@ -325,32 +377,10 @@
   min-height: 38px !important;
   font-size: 14.5px !important;
 }
-.gp-block-summary {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #fff6e9;
-  border: 1px solid rgba(242, 153, 74, 0.2);
-}
-.gp-block-summary p {
-  margin: 0 0 6px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #6b5c4d;
-}
-.gp-block-summary p:last-child {
-  margin-bottom: 0;
-}
-.gp-block-summary p.is-blocking {
-  color: #c0392b;
-  font-weight: 600;
-}
-.gp-block-summary p.is-warning {
-  color: #b06a1a;
-}
-.gp-block-summary p.is-muted {
-  color: #9a948f;
-}
 .gp-block-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0;
   padding: 10px 12px;
   border-radius: 10px;
@@ -358,6 +388,13 @@
   color: #8a7a67;
   font-size: 11px;
   line-height: 1.5;
+}
+.gp-block-note-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  color: #f2994a;
 }
 .gp-block-foot {
   display: flex;
@@ -601,4 +638,13 @@
 }
 .dark .gp-block-dialog input::placeholder {
   color: var(--mcm-ink-3, #93a1ba) !important;
+}
+.dark .gp-block-dialog .gp-block-section-label {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+.dark .gp-block-dialog .gp-block-icon {
+  color: var(--mcm-ink-3, #93a1ba);
+}
+.dark .gp-block-dialog .gp-block-note {
+  background: rgba(255, 171, 94, 0.08);
 }

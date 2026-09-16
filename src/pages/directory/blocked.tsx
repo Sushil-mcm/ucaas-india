@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { Info, Phone, PhoneOff, Users, Volume2 } from 'lucide-react';
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import { addBlockedNumbers, getBlockReach, getContactList, listBlockedNumbers, removeBlockedNumbers, updateContactTag } from '@/services/api';
 import { useUser } from '@/hooks/use-user';
@@ -278,70 +279,88 @@ const Blocked = () => {
               Blocking covers calls, faxes and messages from that number.
             </p>
 
-            <label className="gp-block-field">
+            <label className="gp-block-field gp-block-field--number">
               <span className="gp-block-label">Number</span>
-              <input
-                className="gp-block-input"
-                value={choice.numbers}
-                onChange={(event) => set('numbers', event.target.value)}
-                placeholder="+44 20 7946 0000"
-                inputMode="tel"
-                aria-label="Number to block"
-              />
+              <div className="gp-block-icon-field">
+                <Phone className="gp-block-icon" />
+                <input
+                  className="gp-block-input"
+                  value={choice.numbers}
+                  onChange={(event) => set('numbers', event.target.value)}
+                  placeholder="+44 20 7946 0000"
+                  inputMode="tel"
+                  aria-label="Number to block"
+                />
+              </div>
               <span className="gp-block-hint">
-                Type it the way it was shown to you. A number without a country code is read as {country}.
+                Type it the way it was shown to you. A number without a country code is read as{' '}
+                {country}.
               </span>
             </label>
 
+            <span className="gp-block-section-label">Blocking rules</span>
+
             <label className="gp-block-field">
               <span className="gp-block-label">What to stop</span>
-              <CustomSelect
-                value={{ label: SCOPE_LABELS[choice.scope], value: choice.scope }}
-                options={(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => ({
-                  label: SCOPE_LABELS[key],
-                  value: key,
-                }))}
-                handleChange={(option: any) => set('scope', option.value)}
-                inputClass="gp-block-select"
-              />
+              <div className="gp-block-icon-field">
+                <PhoneOff className="gp-block-icon" />
+                <CustomSelect
+                  value={{ label: SCOPE_LABELS[choice.scope], value: choice.scope }}
+                  options={(Object.keys(SCOPE_LABELS) as BlockScope[]).map((key) => ({
+                    label: SCOPE_LABELS[key],
+                    value: key,
+                  }))}
+                  handleChange={(option: any) => set('scope', option.value)}
+                  inputClass="gp-block-select"
+                />
+              </div>
               <span className="gp-block-hint">Blocking calls blocks faxes too — same line.</span>
             </label>
 
             {choice.scope !== 'messages' ? (
               <label className="gp-block-field">
                 <span className="gp-block-label">What the caller gets</span>
-                <CustomSelect
-                  value={{ label: TREATMENT_LABELS[choice.treatment], value: choice.treatment }}
-                  options={(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => ({
-                    label: TREATMENT_LABELS[key],
-                    value: key,
-                  }))}
-                  handleChange={(option: any) => set('treatment', option.value)}
-                  inputClass="gp-block-select"
-                />
+                <div className="gp-block-icon-field">
+                  <Volume2 className="gp-block-icon" />
+                  <CustomSelect
+                    value={{ label: TREATMENT_LABELS[choice.treatment], value: choice.treatment }}
+                    options={(Object.keys(TREATMENT_LABELS) as BlockTreatment[]).map((key) => ({
+                      label: TREATMENT_LABELS[key],
+                      value: key,
+                    }))}
+                    handleChange={(option: any) => set('treatment', option.value)}
+                    inputClass="gp-block-select"
+                  />
+                </div>
                 <span className="gp-block-hint">{TREATMENT_DESCRIPTIONS[choice.treatment]}</span>
               </label>
             ) : null}
 
             <label className="gp-block-field">
               <span className="gp-block-label">Whose line</span>
-              <CustomSelect
-                value={{ label: LINE_LABELS[choice.line], value: choice.line }}
-                options={lines.map((key) => ({
-                  label: LINE_LABELS[key],
-                  value: key,
-                }))}
-                handleChange={(option: any) => set('line', option.value)}
-                inputClass="gp-block-select"
-              />
+              <div className="gp-block-icon-field">
+                <Users className="gp-block-icon" />
+                <CustomSelect
+                  value={{ label: LINE_LABELS[choice.line], value: choice.line }}
+                  options={lines.map((key) => ({
+                    label: LINE_LABELS[key],
+                    value: key,
+                  }))}
+                  handleChange={(option: any) => set('line', option.value)}
+                  inputClass="gp-block-select"
+                />
+              </div>
               <span className="gp-block-hint">
                 A shared line has to be blocked for everyone who answers it.
               </span>
             </label>
 
             <p className="gp-block-note">
-              Coming soon — recorded against the contact only, nothing in the call path reads it
-              yet, so a blocked number can still ring through.
+              <Info className="gp-block-note-icon" />
+              <span>
+                Coming soon — recorded against the contact only, nothing in the call path reads it
+                yet, so a blocked number can still ring through.
+              </span>
             </p>
           </div>
           <div className="gp-block-foot">
