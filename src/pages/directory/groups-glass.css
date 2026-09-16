@@ -504,7 +504,28 @@
    isn't affected. */
 .gp-create-group-body .gp-department-rail.gp-location-rail {
   padding: 20px 16px 20px 0;
-  border-right: 1px solid rgba(242, 153, 74, 0.2);
+}
+/* The divider itself moved off the rail box and onto the dialog -- the
+   rail's `align-self: stretch` (above) only fills the row it sits in,
+   and that row is inset from the dialog's true edges by the bare head's
+   34px top clearance and the body's own 18px bottom padding (both
+   above), so a `border-right` on the rail stopped short of both. Painted
+   here instead, positioned against `.gp-create-group-dialog` itself
+   (already a `fixed`-positioned containing block, same idiom as this
+   dialog's own `::before` background bleed further down), the line
+   spans `top:0`/`bottom:0` -- the dialog's actual edges -- regardless of
+   what padding the scrolling body puts around its content. Left offset
+   is the body's own 20px side padding plus the rail's fixed 260px
+   width. */
+.gp-create-group-dialog:has(.gp-location-rail)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 280px;
+  width: 1px;
+  background: rgba(242, 153, 74, 0.2);
+  pointer-events: none;
 }
 
 /* Heading + description above the step list -- same shape as Invite
@@ -1077,8 +1098,8 @@
   border-color: var(--mcm-accent, #f97316);
   color: var(--mcm-accent-ink, #ff8a2a);
 }
-.dark .gp-create-group-body .gp-department-rail.gp-location-rail {
-  border-right-color: #1b2934;
+.dark .gp-create-group-dialog:has(.gp-location-rail)::after {
+  background: #1b2934;
 }
 .dark .gp-create-group-body .gp-department-rail .mcm-stepper-panel-head h3 {
   color: var(--mcm-ink, #f8fafc);
