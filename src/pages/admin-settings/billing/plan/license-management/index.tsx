@@ -874,7 +874,7 @@ const LicenseManagement: FC<any> = ({ dataGetMyPlanDetails, restrictPlan }) => {
         <SideDrawer
           width="min(1040px, 84vw)"
           isOpen={drawerState.addUser}
-          title="Add Users"
+          title="Add people"
           isTab={false}
           handleClose={() => setDrawerState({ addUser: false })}
           content={

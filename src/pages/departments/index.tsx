@@ -526,7 +526,7 @@ const Departments = () => {
       {drawerState.addUser && (
         <SideDrawer
           isOpen={drawerState.addUser}
-          title="Add Users"
+          title="Add people"
           enableResponsive
           responsiveWidth="96vw"
           responsiveBreakpoint={1024}

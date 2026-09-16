@@ -755,7 +755,9 @@ const AddUserInfo = ({
 
             <div className="mcm-invitee-full flex flex-col gap-1.5 w-full">
               <div className="flex items-center justify-between">
-                <Label required>Phone</Label>
+                <Label>
+                  Phone <span className="font-normal text-gray-400">(optional)</span>
+                </Label>
                 <div className="flex items-start">
                   {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
                 </div>
@@ -866,7 +868,9 @@ const AddUserInfo = ({
 
             <div className="mcm-invitee-actions flex items-center justify-end gap-2">
               {fields.length > 1 && (
-                <div
+                <button
+                  type="button"
+                  aria-label={`Remove person ${index + 1}`}
                   className="border-0 cursor-pointer min-w-10 w-10 h-10 text-red-500 hover:text-red-700 flex items-center justify-center"
                   onClick={() => {
                     remove(index);
@@ -875,7 +879,7 @@ const AddUserInfo = ({
                   }}
                 >
                   <TrashBin className="w-5 h-5" />
-                </div>
+                </button>
               )}
             </div>
           </div>

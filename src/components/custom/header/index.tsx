@@ -21,6 +21,7 @@ import PendingChatRequestsDrawer from './PendingChatRequestsDrawer';
 import { ChevronDown, Menu, Wallet, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearStorageKeepingDeviceIdentity, cn, SESSION_NAME } from '@/lib/utils';
+import { formatMoney } from '@/lib/billing-money';
 import { DASHBOARDCONST } from '@/pages/dashboard/constant';
 import AlertConfirm from '../alert-confirm';
 import { toast } from 'react-toastify';
@@ -62,12 +63,12 @@ const Header = () => {
     (path) => pathname === path || pathname?.startsWith(`${path}/`),
   );
   const companyAmount = user?.company_info?.amount;
-  const totalFunds =
-    companyAmount !== null && companyAmount !== undefined ? `$${companyAmount}` : '00.00';
-  const resolvedFundsDisplay =
-    walletUpdatedAmount !== null && walletUpdatedAmount !== undefined
-      ? `$${walletUpdatedAmount}`
-      : totalFunds;
+  /* The platform is India/₹-only (see billing-money.ts) — every other money
+     figure in the app, including the Order Summary two clicks away in
+     Directory ▸ People ▸ Invite, is formatted through formatMoney(). This
+     literal `$` used to disagree with all of them. */
+  const totalFunds = formatMoney(companyAmount) ?? '₹0.00';
+  const resolvedFundsDisplay = formatMoney(walletUpdatedAmount) ?? totalFunds;
   const role =
     user?.user_info?.custom_role_data?.name ||
     user?.user_info?.role_data?.name ||

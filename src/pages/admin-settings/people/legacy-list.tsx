@@ -580,7 +580,7 @@ const UsersExtension: FC = () => {
                 }}
               >
                 <Plus className="w-3 h-3" />
-                Add Users
+                Add people
               </Button>
             )}
           </div>
@@ -625,7 +625,7 @@ const UsersExtension: FC = () => {
       {drawerState.addUser && (
         <SideDrawer
           isOpen={drawerState.addUser}
-          title="Add Users"
+          title="Add people"
           /* Six fields and a location box do not need the full width of a
              desktop. Left to the default this drawer opened at the viewport
              minus the sidebar, stretching one person's name across ~1500px. */

@@ -172,6 +172,15 @@ const People = () => {
   const [changingRole, setChangingRole] = useState<PersonRow | null>(null);
   const [assigningCallerId, setAssigningCallerId] = useState<PersonRow | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [inviteFormDirty, setInviteFormDirty] = useState(false);
+  const [confirmDiscardInvite, setConfirmDiscardInvite] = useState(false);
+  const requestCloseInvite = () => {
+    if (inviteFormDirty) {
+      setConfirmDiscardInvite(true);
+    } else {
+      setInviting(false);
+    }
+  };
 
   const [tab, setTab] = useState<'people' | 'removed'>('people');
   const [search, setSearch] = useState('');
@@ -370,9 +379,16 @@ const People = () => {
               Export
             </button>
             {canInvite ? (
-              <button type="button" className="btn primary" onClick={() => setInviting(true)}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  setInviteFormDirty(false);
+                  setInviting(true);
+                }}
+              >
                 <Ic n="plus" />
-                Invite person
+                Add people
               </button>
             ) : null}
           </>
@@ -924,7 +940,7 @@ const People = () => {
 
       {/* The platform's own add-user flow, opened in place rather than
           bouncing to Admin — the console keeps you in Directory. */}
-      <Dialog open={inviting} onOpenChange={(next) => !next && setInviting(false)}>
+      <Dialog open={inviting} onOpenChange={(next) => !next && requestCloseInvite()}>
         <DialogContent
           className="gp-create-group-dialog gp-invite-dialog sm:max-w-[600px] lg:max-w-[1120px]"
           showCloseButton={false}
@@ -934,20 +950,43 @@ const People = () => {
               type="button"
               aria-label="Close"
               className="gp-create-group-close"
-              onClick={() => setInviting(false)}
+              onClick={requestCloseInvite}
             >
               <Icon name="CloseIcon" className="h-4 w-4" />
             </button>
           </div>
           <div className="gp-create-group-body">
             <AddUsers
-              setDrawerState={() => setInviting(false)}
-              railTitle="Invite people"
+              setDrawerState={(next) => !next && requestCloseInvite()}
+              onDirtyChange={setInviteFormDirty}
+              railTitle="Add people"
               railSubtitle="Add team members and give them access to your workspace."
             />
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardInvite,
+          setOpen: setConfirmDiscardInvite,
+          onConfirm: () => {
+            setConfirmDiscardInvite(false);
+            setInviteFormDirty(false);
+            setInviting(false);
+          },
+          onCancel: () => setConfirmDiscardInvite(false),
+          onClose: () => setConfirmDiscardInvite(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started adding people. Closing now will lose what you've typed.
+            </div>
+          ),
+        }}
+      />
 
       <AlertConfirm
         {...{

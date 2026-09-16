@@ -1,4 +1,4 @@
-import { useRef, useState, type FC, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FC, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { formInitialState } from '../../constants';
@@ -21,6 +21,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useGetMyPlanDetails } from '@/hooks/common';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { handleAlert } from '@/lib/utils';
+import { ADMIN_BY_DEFAULT_WARNING, willBecomeAdminByDefault } from '@/lib/invite-role';
 
 interface AddUsersProps {
   setDrawerState: (state: boolean) => void;
@@ -30,9 +31,19 @@ interface AddUsersProps {
      show a heading on the step rail instead of a separate dialog header. */
   railTitle?: string;
   railSubtitle?: string;
+  /* Lets a caller that wraps this in its own dialog (Directory) decide
+     whether closing needs a "discard changes?" confirmation -- this
+     component has no opinion on how that confirmation looks, it only
+     reports whether there's unsaved typing to lose. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }) => {
+const AddUsers: FC<AddUsersProps> = ({
+  setDrawerState,
+  railTitle,
+  railSubtitle,
+  onDirtyChange,
+}) => {
   const { data: dataGetMyPlanDetails } = useGetMyPlanDetails();
   const { refetch: refetchUserApi } = useUser();
 
@@ -108,6 +119,10 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
     paymentData.current = null;
     setStatus('');
     setPaymentCalculation(null);
+    /* The people just typed are already saved -- closing the dialog from
+       here on shouldn't ask "discard changes?" about data that no longer
+       exists to lose. */
+    formInstance.reset(formInitialState);
     queryClient.invalidateQueries(['fetchUsersList'], { exact: true });
     queryClient.invalidateQueries(['getMyPlanDetails'], { exact: true });
     invalidateGlobalUsersDirectory(queryClient);
@@ -148,7 +163,11 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
     mode: 'onChange',
   });
 
-  const { handleSubmit, watch } = formInstance;
+  const {
+    handleSubmit,
+    watch,
+    formState: { isDirty },
+  } = formInstance;
 
   const [watchPasswordType, watchPassword, watchUsers, watchSite] = watch([
     'password_type',
@@ -156,6 +175,10 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
     'users',
     'site',
   ]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const StepContent = [
     {
@@ -165,8 +188,8 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
     },
     {
       number: 2,
-      title: 'Setup Options',
-      description: 'Set permissions and preferences',
+      title: 'Login & Access',
+      description: 'Choose how they sign in',
     },
   ];
 
@@ -179,20 +202,32 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
       if (isPaymentRequired) {
         setStatus('show_payment');
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const mappedUsers = users?.map(({ confirm_password, password, role, ...item }: any) => ({
+          ...item,
+          /* The name, not the id. `value` is always a uuid (role_uuid, or the
+                 custom role's uuid), and sending it here wrote a uuid into
+                 users.role — the display-name column. Every guard that compares
+                 that column to "ADMIN", "MANAGER" or "AGENT" then silently
+                 stopped working, including the one that prevents an
+                 administrator being deleted. The role ids still travel
+                 separately as role_uuid / custom_role_uuid. */
+          role: role?.label,
+          password: password_type === 'common' ? data?.password : password,
+        }));
+
+        /* Last-line check on the actual payload, not the form: a role
+           deleted between loading the form and submitting it (or cleared by
+           hand) would otherwise reach the API with an empty role, which the
+           platform stores as an administrator. See invite-role.ts. */
+        const missingRole = mappedUsers?.find((item: any) => willBecomeAdminByDefault(item.role));
+        if (missingRole) {
+          handleAlert({ text: ADMIN_BY_DEFAULT_WARNING, type: 'error' });
+          return;
+        }
+
         mutateAddMember({
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          users: users?.map(({ confirm_password, password, role, ...item }: any) => ({
-            ...item,
-            /* The name, not the id. `value` is always a uuid (role_uuid, or the
-                   custom role's uuid), and sending it here wrote a uuid into
-                   users.role — the display-name column. Every guard that compares
-                   that column to "ADMIN", "MANAGER" or "AGENT" then silently
-                   stopped working, including the one that prevents an
-                   administrator being deleted. The role ids still travel
-                   separately as role_uuid / custom_role_uuid. */
-            role: role?.label,
-            password: password_type === 'common' ? data?.password : password,
-          })),
+          users: mappedUsers,
           site_uuid: site?.value,
         });
       }
@@ -219,6 +254,27 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
 
     // const totalTax = (taxPercentage * (totalAmountPayable ?? 0)) / 100;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const mappedUsers = watchUsers?.map(({ confirm_password, role, password, ...item }: any) => ({
+      ...item,
+      /* The name, not the id. `value` is always a uuid (role_uuid, or the
+                 custom role's uuid), and sending it here wrote a uuid into
+                 users.role — the display-name column. Every guard that compares
+                 that column to "ADMIN", "MANAGER" or "AGENT" then silently
+                 stopped working, including the one that prevents an
+                 administrator being deleted. The role ids still travel
+                 separately as role_uuid / custom_role_uuid. */
+      role: role?.label,
+      password: watchPasswordType === 'common' ? watchPassword : password,
+    }));
+
+    const missingRole = mappedUsers?.find((item: any) => willBecomeAdminByDefault(item.role));
+    if (missingRole) {
+      paymentMethod.setLoader(false);
+      handleAlert({ text: ADMIN_BY_DEFAULT_WARNING, type: 'error' });
+      return;
+    }
+
     const payload = {
       payment: {
         amount: paymentCalculation?.total_amount,
@@ -226,19 +282,7 @@ const AddUsers: FC<AddUsersProps> = ({ setDrawerState, railTitle, railSubtitle }
         payment_method_id: paymentMethod?.id || paymentMethod?.payment_method_id,
         save: paymentMethod?.isSavedCard,
       },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      users: watchUsers?.map(({ confirm_password, role, password, ...item }: any) => ({
-        ...item,
-        /* The name, not the id. `value` is always a uuid (role_uuid, or the
-                   custom role's uuid), and sending it here wrote a uuid into
-                   users.role — the display-name column. Every guard that compares
-                   that column to "ADMIN", "MANAGER" or "AGENT" then silently
-                   stopped working, including the one that prevents an
-                   administrator being deleted. The role ids still travel
-                   separately as role_uuid / custom_role_uuid. */
-        role: role?.label,
-        password: watchPasswordType === 'common' ? watchPassword : password,
-      })),
+      users: mappedUsers,
       site_uuid: watchSite?.value,
     };
 
