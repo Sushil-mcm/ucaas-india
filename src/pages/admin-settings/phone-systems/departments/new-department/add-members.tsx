@@ -277,71 +277,75 @@ const AddMembers = () => {
   );
 
   return (
-    <section className="flex h-full min-h-0 w-full flex-col overflow-x-auto overflow-y-hidden">
-      <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
-        {Object?.keys(errors)?.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {errors?.members && (
-              <p className="text-red-500 text-sm">
-                {typeof errors?.members?.message === 'string' ? errors.members.message : null}
-              </p>
-            )}
-            {errors?.manager && (
-              <p className="text-red-500 text-sm">
-                {errors.manager &&
-                  'value' in errors.manager &&
-                  typeof errors.manager.value?.message === 'string' && (
-                    <p className="text-red-500 text-sm">{errors.manager.value.message}</p>
-                  )}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Search Input */}
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search by name, email, or extension..."
-            value={searchKey}
-            Icon={<SearchLine className=" text-gray-700" />}
-            IconPosition="left-0 pl-2 inset-y-0"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.startsWith(' ')) return;
-              setSearchKey(e.target.value);
-            }}
-            className="pl-10 h-9 text-sm"
-          />
+    /* Same shape as Ring Strategy's own root (ring-strategy.tsx), which
+       scrolls correctly: ONE scrolling container at the top of the step
+       (h-full to fill whatever bounded height the wizard gives this step,
+       overflow-y-auto to scroll everything inside as one unit), with plain,
+       naturally-sized content underneath rather than a second, independent
+       scroll region nested inside it. The previous version tried to make
+       TableManager's own internal box the scroll owner via a percentage
+       tableMaxHeight -- a chain of `height: 100%`s each depending on the
+       one above having a definite size, several levels deep, with
+       TableManager's table box and pager bar competing as siblings for the
+       same space. It never reliably won. isHeightSet={false} below turns
+       that whole mechanism off, so the table just renders at its natural
+       height like Ring Strategy's table does, and this one root scrollbar
+       handles the overflow. */
+    <section className="flex h-full min-h-0 w-full flex-col gap-3 overflow-y-auto">
+      {Object?.keys(errors)?.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {errors?.members && (
+            <p className="text-red-500 text-sm">
+              {typeof errors?.members?.message === 'string' ? errors.members.message : null}
+            </p>
+          )}
+          {errors?.manager && (
+            <p className="text-red-500 text-sm">
+              {errors.manager &&
+                'value' in errors.manager &&
+                typeof errors.manager.value?.message === 'string' && (
+                  <p className="text-red-500 text-sm">{errors.manager.value.message}</p>
+                )}
+            </p>
+          )}
         </div>
+      )}
 
-        {/* flex flex-col: TableManager renders the scrollable table box and
-            the pager bar as siblings, not one nested in the other -- as a
-            plain block, this div let the table's own flex-1 (table-manager.tsx)
-            claim all the height for itself, leaving the pager either
-            overlapping it or spilling out unclipped below. Making this a flex
-            column turns both of TableManager's siblings into real flex items
-            that can actually share the space TableManager was given. */}
-        <div className="min-h-0 flex-1 flex flex-col gap-2">
-          <TableManager
-            {...{
-              emptyTablePlaceholder: 'Nobody to add',
-              descriptionEmptyTable: 'There is nobody available to put in this department yet.',
-              fetcherKey: 'forwardActionType',
-              fetcherFn: forwardActionType,
-              columns,
-              tableMaxHeight: '100%',
-              onSuccess: handleSuccess,
-              extraParams: {
-                site_uuid: siteWatch?.value,
-                type: 'EXTENSION',
-                search: debouncedSearchKey,
-              },
-            }}
-          />
-        </div>
-        {/* </div> */}
+      {/* Search Input */}
+      <div className="relative w-full max-w-sm">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Search by name, email, or extension..."
+          value={searchKey}
+          Icon={<SearchLine className=" text-gray-700" />}
+          IconPosition="left-0 pl-2 inset-y-0"
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value.startsWith(' ')) return;
+            setSearchKey(e.target.value);
+          }}
+          className="pl-10 h-9 text-sm"
+        />
+      </div>
+
+      <div className="w-full">
+        <TableManager
+          {...{
+            emptyTablePlaceholder: 'Nobody to add',
+            descriptionEmptyTable: 'There is nobody available to put in this department yet.',
+            fetcherKey: 'forwardActionType',
+            fetcherFn: forwardActionType,
+            columns,
+            isHeightSet: false,
+            onSuccess: handleSuccess,
+            extraParams: {
+              site_uuid: siteWatch?.value,
+              type: 'EXTENSION',
+              search: debouncedSearchKey,
+            },
+          }}
+        />
       </div>
     </section>
   );
