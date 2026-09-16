@@ -726,8 +726,8 @@
   }
 
   .custom-react-select__option--is-selected {
-    background-color: var(--primary) !important;
-    color: var(--color-white) !important;
+    background-color: #fff1e0 !important;
+    color: #c96f1f !important;
   }
 
   .custom-react-select__indicator,
