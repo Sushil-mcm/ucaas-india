@@ -22,16 +22,14 @@ export const schemaValidationForAddUser = yup.object().shape({
           })
           .required('Role is required'),
         extension: requiredExtension(),
-        /* Optional. The platform gives a person their work number; demanding a
-           personal one before anybody can be invited only made admins invent
-           them. Checked for shape only when something was actually typed. */
         phone: yup
           .string()
           .transform((value) => String(value ?? '').trim())
+          .required('Phone is required')
           .test(
             'phone-length',
             'Invalid Number Format',
-            (value) => !value || (value.length >= 9 && value.length <= 15),
+            (value) => !!value && value.length >= 9 && value.length <= 15,
           ),
       }),
     )

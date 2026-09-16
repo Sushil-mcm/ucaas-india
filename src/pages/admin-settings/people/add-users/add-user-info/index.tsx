@@ -23,6 +23,7 @@ import {
   Layers,
   Mail,
   MapPin,
+  RefreshCw,
   ShieldCheck,
   User as UserIcon,
   Phone as PhoneIcon,
@@ -714,7 +715,7 @@ const AddUserInfo = ({
                 maxLength={50}
               />
             </div>
-            <div className="mcm-invitee-email w-full">
+            <div className="w-full">
               <Input
                 label="Email"
                 required
@@ -735,11 +736,9 @@ const AddUserInfo = ({
               />
             </div>
 
-            <div className="mcm-invitee-full flex flex-col gap-1.5 w-full">
+            <div className="flex flex-col gap-1.5 w-full">
               <div className="flex items-center justify-between">
-                <Label>
-                  Phone <span className="font-normal text-gray-400">(optional)</span>
-                </Label>
+                <Label required>Phone</Label>
                 <div className="flex items-start">
                   {phoneProblem(index) ? <ErrorTooltip text={phoneProblem(index)} /> : null}
                 </div>
@@ -763,7 +762,7 @@ const AddUserInfo = ({
               </div>
             </div>
 
-            <div className="mcm-icon-select-field mcm-invitee-full relative w-full">
+            <div className="mcm-icon-select-field relative w-full">
               <ShieldCheck className="mcm-icon-select-field-icon" />
               <CustomSelect
                 label="Role"
@@ -826,26 +825,37 @@ const AddUserInfo = ({
               })()}
             </div>
 
-            <div className="w-full">
-              <Input
-                label="Extension"
-                required
-                type="text"
-                placeholder="Extension"
-                Icon={<PhoneIcon className="w-4 h-4" />}
-                IconPosition="left-0 inset-y-0 pl-3"
-                className="pl-9"
-                value={watch(`users.[${index}].extension`)}
-                error={extensionProblem(index)}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setValue(`users.[${index}].extension`, value, {
-                    shouldValidate: true,
-                  });
-                  handleValidateUser({ value, type: 'extension' }, index);
-                }}
-                maxLength={5}
-              />
+            <div className="flex items-end gap-2 w-full">
+              <div className="flex-1 min-w-0">
+                <Input
+                  label="Extension"
+                  required
+                  type="text"
+                  placeholder="Extension"
+                  Icon={<PhoneIcon className="w-4 h-4" />}
+                  IconPosition="left-0 inset-y-0 pl-3"
+                  className="pl-9"
+                  value={watch(`users.[${index}].extension`)}
+                  error={extensionProblem(index)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setValue(`users.[${index}].extension`, value, {
+                      shouldValidate: true,
+                    });
+                    handleValidateUser({ value, type: 'extension' }, index);
+                  }}
+                  maxLength={5}
+                />
+              </div>
+              <button
+                type="button"
+                aria-label="Generate a new extension"
+                title="Generate a new extension"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-300 text-gray-500 hover:border-primary hover:text-primary"
+                onClick={() => generateNewExtension(index)}
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="mcm-invitee-actions flex items-center justify-end gap-2">

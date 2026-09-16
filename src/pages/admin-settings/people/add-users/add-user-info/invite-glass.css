@@ -644,10 +644,6 @@
   .gp-invite-dialog .mcm-invitee {
     grid-template-columns: 1fr 1fr !important;
   }
-  .gp-invite-dialog .mcm-invitee-email,
-  .gp-invite-dialog .mcm-invitee-full {
-    grid-column: 1 / -1 !important;
-  }
 }
 /* Plain white card, border only — no shadow, no orange-tinted background. */
 .gp-invite-dialog .mcm-invitee {
