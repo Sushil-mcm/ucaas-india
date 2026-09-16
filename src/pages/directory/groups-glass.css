@@ -416,8 +416,21 @@
    staying put while only the content on the right scrolls. Scoped to
    `:has(.gp-department-rail)` so every other `.gp-create-group-dialog`
    (New role, New location, ...) that has no rail keeps this body as its
-   one and only scroll container, untouched. */
+   one and only scroll container, untouched.
+
+   `display: flex` is not optional here: this class is a plain block box,
+   so its child row (`flex min-h-0 ... flex-1 ... lg:flex-row`, in
+   new-department/index.tsx) sat inside a non-flex parent -- `flex-1` and
+   `min-h-0` only mean anything on a flex/grid item, so outside a flex
+   parent they were no-ops and the row simply grew to its full content
+   height. `overflow: hidden` alone then just clipped that oversized row
+   instead of bounding it, which is why nothing scrolled at all once the
+   body's own scrollbar was removed. Making this a flex column gives the
+   row a real height to size `flex-1` against, so the rail and the
+   content pane's own inner scroll regions can finally do their job. */
 .gp-create-group-body:has(.gp-department-rail) {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 /* The other half of that gap is the dialog's own `gap-4` (16px) between its
