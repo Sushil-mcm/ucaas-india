@@ -212,6 +212,7 @@ const NewSiteSteps = ({
             currentStep={currentStep}
             customClass="gp-department-rail gp-location-rail shrink-0"
             stickyPanel
+            vertical
             panelTitle={railTitle}
             panelSubtitle={railSubtitle}
           />

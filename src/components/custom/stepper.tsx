@@ -26,6 +26,16 @@ interface IStepperProps {
      and catch. Wraps just the title+list (not panelFooter, which nothing
      using this prop currently passes) in a sticky container instead. */
   stickyPanel?: boolean;
+  /* Opt-in, only Locations' narrow left rail passes this. The default (and
+     `mobileHorizontal`) branches both go horizontal past a Tailwind
+     viewport breakpoint (`sm:`/`lg:`) -- fine for a full-width banner or
+     a horizontal scroller, but a viewport breakpoint fires regardless of
+     how narrow the RAIL's own column actually is, so at any normal
+     desktop width the steps switched to a row that overflowed the rail's
+     own box and spilled text over the form panel beside it. This keeps
+     the list a single column at every width and draws its own vertical
+     connector between circles instead of the horizontal after-line. */
+  vertical?: boolean;
 }
 const Stepper: FC<IStepperProps> = ({
   steps,
@@ -37,6 +47,7 @@ const Stepper: FC<IStepperProps> = ({
   panelSubtitle,
   panelFooter,
   stickyPanel = false,
+  vertical = false,
 }) => {
   const titleAndSteps = (
     <>
@@ -47,7 +58,7 @@ const Stepper: FC<IStepperProps> = ({
         </div>
       ) : null}
       <ol
-        className={`mx-auto flex w-full max-w-4xl ${mobileHorizontal ? 'items-center gap-2 overflow-x-auto pb-1 lg:w-4/5 lg:gap-0 lg:overflow-visible' : 'flex-col gap-3 sm:w-4/5 sm:flex-row sm:items-center sm:gap-0'}`}
+        className={`mx-auto flex w-full max-w-4xl ${vertical ? 'flex-col gap-3' : mobileHorizontal ? 'items-center gap-2 overflow-x-auto pb-1 lg:w-4/5 lg:gap-0 lg:overflow-visible' : 'flex-col gap-3 sm:w-4/5 sm:flex-row sm:items-center sm:gap-0'}`}
       >
         {steps.map((step, index) => {
           const handleChange = step?.handleChange || null;
@@ -57,10 +68,16 @@ const Stepper: FC<IStepperProps> = ({
                 if (handleChange) handleChange(step);
               }}
               key={index}
-              className={`${handleChange ? 'pointer' : ''} relative flex ${mobileHorizontal ? 'xxl:min-w-fit xxl:shrink-0 items-center pr-0 lg:w-full lg:pr-3 lg:last:w-max' : 'w-full items-start pr-0 sm:items-center sm:pr-3 sm:last:w-max'} sm:last-of-type:pr-0 after:hidden after:content-[''] after:w-full after:h-h-0.5 after:border-b-1 ${mobileHorizontal ? 'lg:after:inline-block' : 'sm:after:inline-block'} last:after:w-0 ${currentStep > index + 1 ? 'after:border-primary' : ' after:border-gray-200 dark:after:border-mcm-line '}`}
+              className={`${handleChange ? 'pointer' : ''} relative flex ${vertical ? 'w-full items-start pr-0' : mobileHorizontal ? 'xxl:min-w-fit xxl:shrink-0 items-center pr-0 lg:w-full lg:pr-3 lg:last:w-max' : 'w-full items-start pr-0 sm:items-center sm:pr-3 sm:last:w-max'} sm:last-of-type:pr-0 ${vertical ? '' : `after:hidden after:content-[''] after:w-full after:h-h-0.5 after:border-b-1 ${mobileHorizontal ? 'lg:after:inline-block' : 'sm:after:inline-block'} last:after:w-0 ${currentStep > index + 1 ? 'after:border-primary' : ' after:border-gray-200 dark:after:border-mcm-line '}`}`}
             >
+              {vertical && index < steps.length - 1 ? (
+                <span
+                  aria-hidden
+                  className={`absolute left-4 top-8 -bottom-3 w-px ${currentStep > index + 1 ? 'bg-primary' : 'bg-gray-200 dark:bg-mcm-line'}`}
+                />
+              ) : null}
               <div
-                className={`relative flex items-center ${mobileHorizontal ? 'min-h-11 gap-2 pr-2 lg:min-h-14 lg:gap-3 lg:pr-3' : 'min-h-14 gap-3 pr-3'}`}
+                className={`relative flex ${vertical ? 'items-start' : 'items-center'} ${mobileHorizontal ? 'min-h-11 gap-2 pr-2 lg:min-h-14 lg:gap-3 lg:pr-3' : 'min-h-14 gap-3 pr-3'}`}
               >
                 <div
                   className={`flex items-center justify-center rounded-full border text-primary shrink-0 ${mobileHorizontal ? 'h-7 w-7 text-sm lg:h-8 lg:w-8' : 'w-8 h-8'} ${customStep} ${(currentStep ?? 0) >= step.number || step.number === 1 ? 'bg-ucass-primary-200 border-primary ' : 'bg-gray-100 dark:bg-mcm-surface-3 border-gray-200 dark:border-mcm-line '}`}
