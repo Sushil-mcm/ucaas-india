@@ -173,9 +173,19 @@
    kicked in yet. */
 @media (min-width: 768px) {
   .gp-invite-dialog .mcm-invite-summary,
-  .gp-invite-dialog .mcm-invite-users,
-  .gp-invite-dialog .mcm-invite-side {
+  .gp-invite-dialog .mcm-invite-users {
     margin-right: 12px;
+  }
+  /* `.mcm-invite-side` (and its child, `.mcm-order-summary`) both carry
+     their own `w-full` from the JSX -- an explicit `width: 100%` paired
+     with `margin-right` over-constrains the box, and per spec the browser
+     resolves that by silently discarding the margin rather than shrinking
+     the box, so the plain `margin-right: 12px` every other box here uses
+     had no visible effect on this one. `calc()` bakes the same 12px
+     straight into the width instead, which isn't subject to that
+     resolution. */
+  .gp-invite-dialog .mcm-invite-side {
+    width: calc(100% - 12px);
   }
 }
 
