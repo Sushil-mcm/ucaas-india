@@ -217,7 +217,9 @@ const NewSiteSteps = ({
             panelSubtitle={railSubtitle}
           />
           <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto pr-1">{stepLookUp[currentStep]}</div>
+            <div className="gp-location-form-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+              {stepLookUp[currentStep]}
+            </div>
             <div className="flex flex-col-reverse gap-2 border-t border-[#EEE7DD] pt-3 sm:flex-row sm:justify-end sm:pt-4">
               {footerButtons}
             </div>

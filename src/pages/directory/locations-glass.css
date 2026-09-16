@@ -195,6 +195,25 @@
   background: rgba(194, 111, 31, 0.55);
   background-clip: padding-box;
 }
+/* The "New location" wizard's own content pane (beside the step rail) had
+   no scrollbar styling of its own, so it fell back to the browser's full
+   default-width scrollbar -- much heavier than every other scroll region
+   in this dialog. Same thin/orange treatment as the table body above. */
+.gp-location-form-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.gp-location-form-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-location-form-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+.gp-location-form-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
 /* Matching People's own header treatment: near-black instead of the washed
    brown, bolder and a size up — at 9.5px/normal-weight the uppercase,
    wide-tracking labels read as a texture rather than column names. */

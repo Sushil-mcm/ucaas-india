@@ -146,11 +146,6 @@ const SiteInfo = ({ formInstance }: any) => {
       <div className="flex flex-col gap-5 border-b border-gray-200 py-4 sm:py-5">
         <div className="flex flex-col gap-1">
           <h5 className="font-semibold text-gray-900 text-md">General Location Info</h5>
-          <p className="text-gray-500 text-sm">
-            The name of this place — <span className="font-medium">Mumbai Office</span>,{' '}
-            <span className="font-medium">London Branch</span>. Not your company name, which is
-            shown at the top of Company &amp; Locations.
-          </p>
         </div>
         <div className="flex w-full items-center gap-3">
           <div className="flex w-full gap-4">
