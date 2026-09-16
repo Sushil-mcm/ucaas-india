@@ -313,17 +313,17 @@
   background: #f0fdf4;
   color: #22c55e;
 }
-.gp-group-call:hover {
-  background: #22c55e;
-  color: #fff;
-}
 .gp-group-message {
   background: #fbe2c8;
   color: rgba(46, 45, 53, 0.7);
 }
+/* Same soft peach-wash hover on both buttons -- People's own row actions
+   use this exact treatment (people-glass.css), rather than each button
+   flipping to its own bold solid fill (green, then orange) on hover. */
+.gp-group-call:hover,
 .gp-group-message:hover {
-  background: var(--accent);
-  color: #fff;
+  background: #fdf1e2;
+  color: #c96f1f;
 }
 
 /* ---- "Create group" popup ----

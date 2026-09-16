@@ -17,16 +17,41 @@
    descendant of any page's own wrapper regardless of where it's written in
    JSX — this is scoped off its own class rather than an ancestor it will
    never actually sit inside. */
+/* `DropdownMenuContent`'s own base style (dropdown-menu.tsx) ships a solid
+   `border-primary` (brand orange) edge -- fine for a menu, heavy for a
+   floating filter panel next to plain white filter chips. Dropped in favour
+   of a soft shadow doing the work of separating it from the page instead,
+   scoped to this class rather than the shared base component so every other
+   dropdown menu in the app keeps its own border. */
 .gp-filter-menu {
-  min-width: 10rem;
+  min-width: 11rem;
+  border-color: transparent !important;
+  border-radius: 14px !important;
+  padding: 6px !important;
+  box-shadow:
+    0 16px 40px rgba(160, 95, 30, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+.dark .gp-filter-menu {
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 .gp-filter-menu [data-slot='dropdown-menu-item'] {
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 .gp-filter-menu [data-slot='dropdown-menu-item']:hover,
 .gp-filter-menu [data-slot='dropdown-menu-item'][data-highlighted] {
   background: #fff1e0;
   color: #c96f1f;
+}
+.dark .gp-filter-menu [data-slot='dropdown-menu-item']:hover,
+.dark .gp-filter-menu [data-slot='dropdown-menu-item'][data-highlighted] {
+  background: var(--mcm-accent-wash, #1a2733);
+  color: var(--mcm-accent-ink, #ff8a2a);
 }
 
 /* The head's title row. The description used to sit under the title as a

@@ -4,6 +4,7 @@ import { getDepartmentList, updateMemberForwading } from '@/services/api';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
 import { Ic } from '@/components/mcm/icons';
+import { MessageSquareText, PhoneCall } from 'lucide-react';
 import { handleAlert, withIndianDialCode } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -90,20 +91,24 @@ const PersonRow = ({ person, onOpen }: { person: GroupPerson; onOpen: () => void
         </div>
       </div>
       <div className="flex shrink-0 gap-1.5" onClick={(event) => event.stopPropagation()}>
-        <div
+        <button
+          type="button"
           className="gp-group-call flex items-center justify-center rounded-full w-8 h-8 cursor-pointer transition-colors"
           title={`Call ${person.name}`}
+          aria-label={`Call ${person.name}`}
           onClick={() => person.extension && dial(person.extension, { forceRefreshContactInfo: true })}
         >
-          <Ic n="phone" size={14} />
-        </div>
-        <div
+          <PhoneCall className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
           className="gp-group-message flex items-center justify-center rounded-full w-8 h-8 cursor-pointer transition-colors"
           title={`Message ${person.name}`}
+          aria-label={`Message ${person.name}`}
           onClick={() => navigate(`/messenger?chatId=${person.uuid}&chatType=chat`)}
         >
-          <Ic n="chat" size={14} />
-        </div>
+          <MessageSquareText className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
