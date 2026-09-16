@@ -259,7 +259,7 @@
 /* White, not the cream/orange wash -- matches New location/New role/Add
    Contact's own dialog headers (locations-glass.css, external-glass.css). */
 .gp-block-dialog .gp-create-group-head {
-  background: #ffffff;
+  background: #fff6e9;
   border-bottom: none;
   padding-top: 12px;
   padding-bottom: 12px;

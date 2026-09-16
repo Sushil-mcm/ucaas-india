@@ -16,7 +16,7 @@
   background: #ffffff !important;
 }
 .gp-edit-person-dialog .gp-create-group-head {
-  background: #ffffff;
+  background: #fff6e9;
 }
 /* Same fix as the Invite people dialog's own `.gp-create-group-body` —
    the shared shell's default top padding left a dead gap between the

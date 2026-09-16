@@ -348,6 +348,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
+  /* Cream, matching Add Contact/Notes/WhatsApp's own header wash
+     (external-glass.css) -- the one shared shell this class serves, so
+     every dialog using a real (non-bare) title bar reads the same
+     colour without each dialog file repeating it. */
+  background: #fff6e9;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
   flex: none;
 }
@@ -364,6 +369,11 @@
   right: 0;
   z-index: 5;
   padding: 14px;
+  /* This variant is deliberately invisible (Create group/New location's
+     title lives on the step rail instead, see `railTitle` below) -- the
+     shared class's new cream fill (above) would otherwise paint a small
+     disconnected patch behind the floating close button. */
+  background: transparent;
   border-bottom: none;
 }
 /* The form column (to the right of the rail) would otherwise start flush
