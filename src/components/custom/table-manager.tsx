@@ -867,18 +867,28 @@ function TableManager({
            escape an ancestor that isn't also the scroll container, so this
            clips reliably.
 
-           `h-full` matters whenever a caller passes a percentage
+           `flex-1 min-h-0` matters whenever a caller passes a percentage
            `tableMaxHeight` (e.g. "100%"): the child below reads that value
            as an inline `height`, which only resolves against a parent with
            a definite height. This wrapper had none, so that percentage
            silently fell back to `auto` and the table grew to its full
            content height instead of the caller's intended bound -- with
            nothing left to scroll, an ancestor's own overflow:hidden simply
-           clipped the rest instead of showing a scrollbar. Harmless for
-           every other caller: `tableMaxHeight` unset means the child gets a
-           JS-measured pixel height instead, which doesn't care about the
-           parent's height at all. */
-        <div className="h-full rounded-xl border border-[rgba(225,200,165,0.9)] overflow-hidden">
+           clipped the rest instead of showing a scrollbar.
+
+           `flex-1 min-h-0` rather than `h-full`: this wrapper has a sibling
+           whenever `showPagination` is on (the pager bar, rendered after
+           this whole block) -- `h-full` claimed 100% of a bounded caller's
+           height for itself alone, leaving the pager nothing to sit in but
+           overflow. `flex-1` only does anything if the caller also makes
+           its own wrapper a flex column (so this box and the pager become
+           real flex items sharing it); everywhere else, exactly like
+           `h-full` before it, a percentage/flex property with no flex
+           parent to resolve against is simply ignored. `tableMaxHeight`
+           unset (every other existing caller) means the child below gets a
+           JS-measured pixel height instead, which doesn't care about any
+           of this. */
+        <div className="min-h-0 flex-1 rounded-xl border border-[rgba(225,200,165,0.9)] overflow-hidden">
           {/* `rounded-xl` repeated here, matching the outer wrapper — a
               second, distinct Chromium quirk from the sticky-header one
               above: this div's own `overflow-auto` promotes it to a

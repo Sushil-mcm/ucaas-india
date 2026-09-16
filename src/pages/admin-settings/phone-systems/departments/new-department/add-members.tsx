@@ -316,8 +316,14 @@ const AddMembers = () => {
           />
         </div>
 
-        {/* <div className="w-full flex flex-col gap-2"> */}
-        <div className="min-h-0 flex-1">
+        {/* flex flex-col: TableManager renders the scrollable table box and
+            the pager bar as siblings, not one nested in the other -- as a
+            plain block, this div let the table's own flex-1 (table-manager.tsx)
+            claim all the height for itself, leaving the pager either
+            overlapping it or spilling out unclipped below. Making this a flex
+            column turns both of TableManager's siblings into real flex items
+            that can actually share the space TableManager was given. */}
+        <div className="min-h-0 flex-1 flex flex-col gap-2">
           <TableManager
             {...{
               emptyTablePlaceholder: 'Nobody to add',
