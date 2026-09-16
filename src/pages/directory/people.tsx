@@ -5,7 +5,7 @@ import 'react-phone-input-2/lib/style.css';
 import { Ic } from '@/components/mcm/icons';
 import UpdateForwarding from '@/pages/admin-settings/people/update-forwarding';
 import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useInstantMeeting } from '@/hooks/use-instant-meeting';
@@ -787,93 +787,113 @@ const People = () => {
                 (event.target as HTMLElement)?.focus?.();
               }}
             >
-              <div className="gp-person-fields">
-                <label className="gp-field">
-                  <span className="gp-field-l">First Name</span>
-                  <input
-                    className="gp-field-v"
-                    value={personForm.first_name}
-                    onChange={(event) =>
-                      setPersonForm((prev) => ({ ...prev, first_name: event.target.value }))
-                    }
-                  />
-                </label>
-                <label className="gp-field">
-                  <span className="gp-field-l">Last Name</span>
-                  <input
-                    className="gp-field-v"
-                    value={personForm.last_name}
-                    onChange={(event) =>
-                      setPersonForm((prev) => ({ ...prev, last_name: event.target.value }))
-                    }
-                  />
-                </label>
-                <label className="gp-field">
-                  <span className="gp-field-l">Email</span>
-                  <input
-                    className="gp-field-v"
-                    type="email"
-                    value={personForm.email}
-                    onChange={(event) =>
-                      setPersonForm((prev) => ({ ...prev, email: event.target.value }))
-                    }
-                  />
-                </label>
-                <label className="gp-field">
-                  <span className="gp-field-l">Phone</span>
-                  <PhoneInput
-                    country={'in'}
-                    onlyCountries={['in']}
-                    disableDropdown
-                    value={personForm.phone}
-                    onChange={(value) =>
-                      setPersonForm((prev) => ({
-                        ...prev,
-                        phone: `+${withIndianDialCode(value)}`,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="gp-field">
-                  <span className="gp-field-l">Site</span>
-                  <input
-                    className="gp-field-v"
-                    value={personForm.site}
-                    disabled
-                    title="Site is set from the person's assigned location, not edited here"
-                  />
-                </label>
-                <label className="gp-field">
-                  <span className="gp-field-l">Extension</span>
-                  <input
-                    className="gp-field-v"
-                    value={personForm.extension}
-                    disabled
-                    title="Extension is provisioned, not edited here"
-                  />
-                </label>
+              <DialogHeader className="gp-person-dialog-head">
+                <div className="gp-person-identity">
+                  <CustomAvatar name={open.name} image={open.image} size="44" />
+                  <div className="gp-person-identity-text">
+                    <DialogTitle className="gp-person-identity-name">{open.name}</DialogTitle>
+                    <DialogDescription className="gp-person-identity-sub">
+                      Edit contact details
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="gp-person-section">
+                <span className="gp-person-section-label">Contact</span>
+                <div className="gp-person-fields">
+                  <label className="gp-field">
+                    <span className="gp-field-l">First Name</span>
+                    <input
+                      className="gp-field-v"
+                      value={personForm.first_name}
+                      onChange={(event) =>
+                        setPersonForm((prev) => ({ ...prev, first_name: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="gp-field">
+                    <span className="gp-field-l">Last Name</span>
+                    <input
+                      className="gp-field-v"
+                      value={personForm.last_name}
+                      onChange={(event) =>
+                        setPersonForm((prev) => ({ ...prev, last_name: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="gp-field">
+                    <span className="gp-field-l">Email</span>
+                    <input
+                      className="gp-field-v"
+                      type="email"
+                      value={personForm.email}
+                      onChange={(event) =>
+                        setPersonForm((prev) => ({ ...prev, email: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="gp-field">
+                    <span className="gp-field-l">Phone</span>
+                    <PhoneInput
+                      containerClass="gp-phone-input"
+                      country={'in'}
+                      onlyCountries={['in']}
+                      disableDropdown
+                      value={personForm.phone}
+                      onChange={(value) =>
+                        setPersonForm((prev) => ({
+                          ...prev,
+                          phone: `+${withIndianDialCode(value)}`,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
               </div>
 
-              <div className="gp-person-callerid">
-                <span className="gp-field-l">Caller ID</span>
-                {open.callerId ? (
-                  <span className="gp-field-v" style={{ flex: 'none' }}>
-                    {open.callerId}
-                  </span>
-                ) : canAssignCallerId ? (
-                  <button
-                    type="button"
-                    className="btn ghost sm"
-                    onClick={() => setAssigningCallerId(open)}
-                  >
-                    <Ic n="vm" size={12} />
-                    Assign Number
-                  </button>
-                ) : (
-                  <span className="gp-field-v" style={{ flex: 'none' }}>
-                    Not assigned
-                  </span>
-                )}
+              <div className="gp-person-section">
+                <span className="gp-person-section-label">Assignment</span>
+                <div className="gp-person-fields">
+                  <label className="gp-field">
+                    <span className="gp-field-l">Site</span>
+                    <span
+                      className="gp-field-static"
+                      title="Site is set from the person's assigned location, not edited here"
+                    >
+                      {personForm.site || '—'}
+                    </span>
+                  </label>
+                  <label className="gp-field">
+                    <span className="gp-field-l">Extension</span>
+                    <span
+                      className="gp-field-static"
+                      title="Extension is provisioned, not edited here"
+                    >
+                      {personForm.extension || '—'}
+                    </span>
+                  </label>
+                </div>
+
+                <div className="gp-person-callerid">
+                  <span className="gp-field-l">Caller ID</span>
+                  {open.callerId ? (
+                    <span className="gp-person-callerid-value">{open.callerId}</span>
+                  ) : canAssignCallerId ? (
+                    <button
+                      type="button"
+                      className="btn ghost sm"
+                      onClick={() => setAssigningCallerId(open)}
+                    >
+                      <Ic n="vm" size={12} />
+                      Assign Number
+                    </button>
+                  ) : (
+                    <span className="gp-person-callerid-value gp-person-callerid-empty">
+                      Not assigned
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="gp-person-actions">

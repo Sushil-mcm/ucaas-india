@@ -692,11 +692,70 @@
   background: #ffffff;
   border-color: rgba(242, 153, 74, 0.3);
 }
+
+/* ---- header: avatar + name, replacing the old title-less dialog ---- */
+.gp-person-dialog-head {
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(150, 100, 50, 0.12);
+}
+.gp-person-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gp-person-identity-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gp-person-identity-name.gp-person-identity-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mcm-ink, #0d1526);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gp-person-identity-sub.gp-person-identity-sub {
+  font-size: 12.5px;
+  color: var(--mcm-ink-2, #3d4a63);
+}
+.dark .gp-person-dialog-head {
+  border-bottom-color: rgba(255, 171, 94, 0.14);
+}
+
+/* ---- sections: groups fields under a small label + divider, rather than
+   one undifferentiated grid ---- */
+.gp-person-section {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+}
+.gp-person-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 6px;
+}
+.gp-person-section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a6f57;
+  margin-bottom: 12px;
+}
+.dark .gp-person-section {
+  border-bottom-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-person-section-label {
+  color: var(--mcm-ink-2, #aab6c1);
+}
+
 .gp-person-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px 16px;
-  margin-bottom: 14px;
 }
 .gp-field {
   display: flex;
@@ -709,11 +768,14 @@
   font-weight: 700;
   color: var(--mcm-ink-2, #3d4a63);
 }
+/* Clean, neutral field — the old warm orange wash on every box made
+   read-only fields look identical to the ones you're meant to type into.
+   Orange now shows up only on focus, as an accent rather than a fill. */
 .gp-field-v {
   width: 100%;
   border-radius: 10px;
-  background: var(--mcm-accent-wash, #fff1e0);
-  border: 1px solid var(--mcm-accent-edge, #ffd9ad);
+  background: #fff;
+  border: 1px solid #e2d9cf;
   padding: 9px 12px;
   font-size: 13px;
   font-family: inherit;
@@ -722,41 +784,113 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 input.gp-field-v:focus {
   border-color: #f2994a;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
 }
 .dark input.gp-field-v:focus {
   border-color: var(--mcm-accent, #f97316);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
 }
-input.gp-field-v:disabled {
+.dark .gp-field-v {
+  background: #16202b;
+  border-color: #293746;
+}
+/* Read-only values (Site, Extension) — plain static text, not a fake input,
+   so they read as "not editable" rather than an empty field to fill in. */
+.gp-field-static {
+  width: 100%;
+  padding: 9px 0;
+  font-size: 13px;
   color: var(--mcm-ink-2, #3d4a63);
-  cursor: not-allowed;
-  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
 .gp-person-callerid {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: rgba(150, 100, 50, 0.04);
+  border: 1px solid rgba(150, 100, 50, 0.1);
+  border-radius: 10px;
 }
 .gp-person-callerid .gp-field-l {
   flex: none;
   white-space: nowrap;
 }
-.gp-person-callerid .gp-field-v {
-  flex: 1;
-  /* A flex item's default `min-width: auto` lets its content force the item
-     (and its container) wider than the space actually allotted — this is
-     what let the box push past the dialog's edge. */
-  min-width: 0;
-  width: auto;
+.gp-person-callerid-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcm-ink, #0d1526);
 }
+.gp-person-callerid-empty {
+  font-weight: 500;
+  color: var(--mcm-ink-2, #3d4a63);
+}
+.dark .gp-person-callerid {
+  background: rgba(255, 171, 94, 0.05);
+  border-color: rgba(255, 171, 94, 0.1);
+}
+.dark .gp-person-callerid-value {
+  color: var(--mcm-ink, #f3f6f9);
+}
+
+/* Phone field — react-phone-input-2 ships its own look (rounded pill,
+   different height/border) that clashed with the plain fields around it
+   once those stopped being orange-filled boxes; restyled to match. */
+.gp-phone-input.gp-phone-input {
+  width: 100%;
+}
+.gp-phone-input.gp-phone-input .form-control {
+  width: 100%;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e2d9cf;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--mcm-ink, #0d1526);
+}
+.gp-phone-input.gp-phone-input .form-control:focus {
+  border-color: #f2994a;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
+}
+.gp-phone-input.gp-phone-input .flag-dropdown {
+  border-radius: 10px 0 0 10px;
+  border: 1px solid #e2d9cf;
+  background: #fff;
+}
+.dark .gp-phone-input.gp-phone-input .form-control {
+  background: #16202b;
+  border-color: #293746;
+  color: var(--mcm-ink, #f3f6f9);
+}
+.dark .gp-phone-input.gp-phone-input .flag-dropdown {
+  background: #16202b;
+  border-color: #293746;
+}
+.dark .gp-phone-input.gp-phone-input .form-control:focus {
+  border-color: var(--mcm-accent, #f97316);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
 .gp-person-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(150, 100, 50, 0.1);
+}
+.dark .gp-person-actions {
+  border-top-color: rgba(255, 171, 94, 0.1);
 }
 
 /* `.btn`/`.ic` are normally styled under `.mcm-page` — this dialog is
