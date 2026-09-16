@@ -488,19 +488,23 @@
      1fr`, invite-glass.css). */
   flex: 0 0 260px !important;
   width: 260px !important;
-  align-self: flex-start;
+  /* `stretch`, not `flex-start`: a plain right-hand border (below) only
+     reads as a divider running the full height of the dialog if the rail
+     itself is actually that tall -- `flex-start` let it stop wherever its
+     own (usually shorter) content ended instead of matching the taller
+     form column beside it. */
+  align-self: stretch;
 }
-/* The white/bordered/rounded "card" look, kept for Locations' own rail
-   only (it has both classes, `gp-department-rail gp-location-rail`) --
-   Create Group's rail (gp-department-rail alone, now the same numbered-
-   circle Stepper Locations uses) sits flush against the dialog instead,
-   matching the plain reference look it was switched to rather than
-   wrapping it in a second, redundant card next to the dialog's own. */
+/* No card -- background, border, radius and padding all dropped in favour
+   of a single right-hand divider, same idiom Invite people's own rail
+   uses (`mcm-invite-rail`, invite-glass.css: a plain `border-right`, no
+   fill or box around it). Scoped to Locations' own rail specifically
+   (it carries both `gp-department-rail` and `gp-location-rail`) so
+   Create Group's rail, which never had a border-right to begin with,
+   isn't affected. */
 .gp-create-group-body .gp-department-rail.gp-location-rail {
-  background: #ffffff;
-  border: 1px solid rgba(242, 153, 74, 0.2);
-  border-radius: 16px;
-  padding: 20px 16px;
+  padding: 20px 16px 20px 0;
+  border-right: 1px solid rgba(242, 153, 74, 0.2);
 }
 
 /* Heading + description above the step list -- same shape as Invite
@@ -1074,8 +1078,7 @@
   color: var(--mcm-accent-ink, #ff8a2a);
 }
 .dark .gp-create-group-body .gp-department-rail.gp-location-rail {
-  background: var(--mcm-surface, #111c26);
-  border-color: #1b2934;
+  border-right-color: #1b2934;
 }
 .dark .gp-create-group-body .gp-department-rail .mcm-stepper-panel-head h3 {
   color: var(--mcm-ink, #f8fafc);
