@@ -153,57 +153,15 @@
   text-align: center;
 }
 
-/* ---- two-column layout: invitee cards + sticky cost sidebar ---- */
+/* ---- single column: invitee cards, then Order Summary below, both full
+   width. (Used to be a two-column layout with Order Summary pinned as a
+   sticky sidebar; that's gone, along with the height-matching rules it
+   needed.) ---- */
 .gp-invite-dialog .mcm-invite-main {
   padding-top: 18px;
 }
 .gp-invite-dialog .mcm-invite-side {
-  margin-top: 4px;
-}
-@media (min-width: 1024px) {
-  .gp-invite-dialog .mcm-invite-main {
-    padding-right: 2px;
-  }
-  .gp-invite-dialog .mcm-invite-side {
-    margin-top: 58px;
-    margin-right: 16px;
-  }
-  /* The pager bar (below) adds height above the invitee card only when
-     there's more than one person, which the Order Summary column has no
-     equivalent of -- without this, its fixed offset above only lines up
-     with the card when the pager is absent. */
-  .gp-invite-dialog .mcm-invite-columns--paged .mcm-invite-side {
-    margin-top: 122px;
-  }
-  /* Order Summary matched to the invitee card's height: `lg:items-start`
-     (the platform's own utility) only ever sized each column to its own
-     content, so the shorter Order Summary card always stopped short of the
-     six-field form beside it. Stretching the row, then the whole chain
-     down to the card itself, lets it grow to fill that same height instead. */
-  .gp-invite-dialog .mcm-invite-columns {
-    align-items: stretch !important;
-  }
-  .gp-invite-dialog .mcm-invite-main {
-    display: flex;
-    flex-direction: column;
-  }
-  .gp-invite-dialog .mcm-invite-list {
-    flex: 1;
-  }
-  .gp-invite-dialog .mcm-invitee {
-    height: 100%;
-  }
-  .gp-invite-dialog .mcm-invite-side {
-    display: flex;
-    flex-direction: column;
-  }
-  .gp-invite-dialog .mcm-invite-side > div {
-    flex: 1;
-    align-items: stretch;
-  }
-  .gp-invite-dialog .mcm-order-summary {
-    height: 100%;
-  }
+  margin-top: 16px;
 }
 
 /* The platform's own wrapper (`add-users/index.tsx`) is `h-full ...
@@ -691,20 +649,21 @@
     grid-column: 1 / -1 !important;
   }
 }
+/* Plain white card, border only — no shadow, no orange-tinted background. */
 .gp-invite-dialog .mcm-invitee {
-  background: #fffdfb;
-  border-color: rgba(242, 153, 74, 0.22) !important;
+  background: #ffffff;
+  border-color: #e5e7eb !important;
   border-radius: 16px !important;
   /* No extra top clearance needed — the actions cluster (below) is small
      and sits within "First Name" label's own row height, not above it. */
   padding: 16px !important;
-  box-shadow: 0 4px 14px rgba(160, 95, 30, 0.08);
+  box-shadow: none;
   position: relative;
 }
 .dark .gp-invite-dialog .mcm-invitee {
   background: var(--mcm-surface, #111c26);
   border-color: #1b2934 !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 /* ---- invitee pager — one card visible at a time once "Add Multiple

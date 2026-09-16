@@ -547,10 +547,9 @@ const AddUserInfo = ({
       </div>
 
       <div className="mcm-invite-users flex flex-col gap-1">
-        <h4 className="mcm-invite-heading text-center">Add Users</h4>
         <div className="mcm-bulk-add grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <span className="mcm-field-label">Number of users</span>
+            <span className="mcm-field-label">Add Users</span>
             <div className="mcm-count-stepper flex items-center">
               <button
                 type="button"
@@ -618,15 +617,6 @@ const AddUserInfo = ({
           </p>
         ) : null}
 
-        {/* Which role everybody on this form starts on, and why that one. Said
-            once at the top rather than repeated on every row: it is the same
-            answer for all of them, and it is a company-wide setting somebody
-            can go and change. */}
-        {roleDecision.reason ? (
-          <p className="mx-auto mt-1 max-w-3xl text-center text-xs text-gray-600 dark:text-mcm-ink-3">
-            {roleDecision.reason}
-          </p>
-        ) : null}
         {roleDecision.warning ? (
           <p className="mx-auto max-w-3xl text-center text-xs font-medium text-amber-600">
             {roleDecision.warning}
@@ -644,18 +634,10 @@ const AddUserInfo = ({
           </p>
         ) : null}
       </div>
-      {/* Two columns from here down: the invitee cards on the left, the
-          running cost pinned on the right — so the total is still visible
-          while scrolling a long list of people, instead of buried below
-          all of them. Collapses to one column under `lg` (this dialog is
-          also used at its old 600px width in narrower contexts), where the
-          summary just falls in after the last card. */}
-      <div
-        className={`mcm-invite-columns flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-10 ${
-          fields.length > 1 ? 'mcm-invite-columns--paged' : ''
-        }`}
-      >
-        <div className="mcm-invite-main min-w-0 flex-1">
+      {/* Single column: User Information stays full width, with the Order
+          Summary falling in below it rather than beside it in a sidebar. */}
+      <div className="mcm-invite-columns flex flex-col gap-4">
+        <div className="mcm-invite-main min-w-0 w-full">
           <h4 className="mcm-invite-heading">User Information</h4>
           {fields.length > 1 ? (
             <div className="mcm-invitee-pager flex items-center justify-between">
@@ -889,7 +871,7 @@ const AddUserInfo = ({
         </div>
 
         {licenseInfo.extraCharge ? (
-          <div className="mcm-invite-side lg:sticky lg:top-0 lg:w-[280px] lg:shrink-0">
+          <div className="mcm-invite-side w-full">
             <OrderSummary
               customClass="w-full mcm-order-summary"
               subtitle="Review your license details"
