@@ -865,8 +865,20 @@ function TableManager({
            interaction), leaving a sliver of the wrapper's paler background
            showing through at the top corners. A sticky descendant can't
            escape an ancestor that isn't also the scroll container, so this
-           clips reliably. */
-        <div className="rounded-xl border border-[rgba(225,200,165,0.9)] overflow-hidden">
+           clips reliably.
+
+           `h-full` matters whenever a caller passes a percentage
+           `tableMaxHeight` (e.g. "100%"): the child below reads that value
+           as an inline `height`, which only resolves against a parent with
+           a definite height. This wrapper had none, so that percentage
+           silently fell back to `auto` and the table grew to its full
+           content height instead of the caller's intended bound -- with
+           nothing left to scroll, an ancestor's own overflow:hidden simply
+           clipped the rest instead of showing a scrollbar. Harmless for
+           every other caller: `tableMaxHeight` unset means the child gets a
+           JS-measured pixel height instead, which doesn't care about the
+           parent's height at all. */
+        <div className="h-full rounded-xl border border-[rgba(225,200,165,0.9)] overflow-hidden">
           {/* `rounded-xl` repeated here, matching the outer wrapper — a
               second, distinct Chromium quirk from the sticky-header one
               above: this div's own `overflow-auto` promotes it to a
