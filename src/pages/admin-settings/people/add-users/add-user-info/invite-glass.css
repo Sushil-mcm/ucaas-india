@@ -266,9 +266,19 @@
      without an explicit rule. The close button floats over its top-right
      corner now (see `.gp-create-group-head--bare` above), so the first
      card needs some clearance to not sit right underneath it. */
+  /* 50px, not 34 -- measured against the rail's own panel head (24px pad +
+     the "Add people" heading + its description paragraph): this is the
+     offset where the licence banner's top edge lands level with that
+     description text, rather than several pixels above the heading. It
+     also happens to clear the floating close button's own bottom edge
+     (~46px down) by a comfortable margin, which is what let the banner's
+     old `margin-right: 44px` dodge (below) come off `.mcm-invite-summary`
+     entirely -- nothing here starts high enough to reach the button any
+     more, so every box in this column can now share the same left/right
+     edges instead of the banner alone being pulled in on the right. */
   .gp-invite-dialog .mcm-invite > form {
     min-height: 0;
-    padding-top: 34px;
+    padding-top: 50px;
   }
 }
 /* Forces the rail's own `ol` vertical regardless of viewport width: the
@@ -341,12 +351,6 @@
   gap: 2px !important;
   margin-top: 4px !important;
   margin-bottom: 10px !important;
-  /* `.gp-create-group-body` starts flush at the dialog's true top edge (see
-     `.gp-create-group-head--bare` above), the same row the close button
-     sits on -- this card is the only thing that starts that high, so its
-     top-right corner ran directly under the button (measured ~29px of
-     actual overlap) instead of past it. */
-  margin-right: 44px !important;
 }
 .dark .gp-invite-dialog .mcm-invite-summary {
   background: var(--mcm-surface, #1e293b);
@@ -436,8 +440,20 @@
    plain text link, and the two fields sit in a plain two-column card below
    it, rather than the stepper and button sharing a row with the location
    field crammed on the end. ---- */
+/* Same card treatment as the licence banner above (`.mcm-invite-summary`)
+   -- "keep Add Users and Location inside a box" -- so the two sections
+   read as matching cards rather than one boxed and one floating loose on
+   the dialog's own background. */
 .gp-invite-dialog .mcm-invite-users {
   margin-top: 10px;
+  background: #fffdfb;
+  border: 1px solid rgba(242, 153, 74, 0.2);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+.dark .gp-invite-dialog .mcm-invite-users {
+  background: var(--mcm-surface, #1e293b);
+  border-color: rgba(100, 116, 139, 0.2);
 }
 .gp-invite-dialog .mcm-invite-link {
   display: inline-flex;
@@ -457,9 +473,13 @@
 .dark .gp-invite-dialog .mcm-invite-link {
   color: var(--mcm-accent-ink, #ff8a2a);
 }
+/* Full width of its new card (`.mcm-invite-users`, above), not centered
+   and capped at 480px -- that cap was what let this box's own left/right
+   edges drift out of line with the licence banner and User Information
+   below it once the dialog was wider than ~528px; the card now supplies
+   the shared width, this grid just fills it. */
 .gp-invite-dialog .mcm-bulk-add {
-  margin: 8px auto 0;
-  max-width: 480px;
+  margin-top: 0;
 }
 /* "Location" comes from `CustomSelect`'s own `Label` (`text-sm font-medium`,
    shared by every select on the platform), which reads visibly bigger next
