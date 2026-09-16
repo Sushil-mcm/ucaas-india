@@ -233,14 +233,27 @@ const NewDepartment = ({
      validateSync throw, and the catch simply leaves that tab unticked
      rather than breaking the strip. */
   const watchedValues = watch();
+  const currentStepIndex = TABS_ORDER.indexOf(currentStep);
   const completedTabs = useMemo(() => {
     const done: Record<string, boolean> = {};
-    TABS_ORDER.forEach((tab) => {
-      /* Schema-valid alone isn't "done": Ring Strategy and Media pass with
-         the form's own defaults, so they ticked before the user had opened
-         them. The tab also has to hold something the user actually entered.
-         Which fields belong to a tab comes from that tab's schema rather
-         than a hand-kept list, so the two can't drift apart. */
+    TABS_ORDER.forEach((tab, index) => {
+      /* A tab you've already moved past is done, full stop -- handleTabChange
+         and handleNext both refuse to advance past a tab whose schema
+         doesn't validate, so simply being behind currentStep already proves
+         it. Requiring dirtyFields too, as the check below still does for the
+         tab you're on, meant a step nobody had to touch (Ring Strategy,
+         Media, whichever step already matched the account's defaults) never
+         ticked even after being stepped through on the way to a later one. */
+      if (index < currentStepIndex) {
+        done[tab] = true;
+        return;
+      }
+      /* Schema-valid alone isn't "done" for the CURRENT tab: Ring Strategy
+         and Media pass with the form's own defaults, so they'd tick before
+         the user had opened them at all. The tab also has to hold something
+         the user actually entered. Which fields belong to a tab comes from
+         that tab's schema rather than a hand-kept list, so the two can't
+         drift apart. */
       const tabFields = Object.keys(validationSchema[tab]?.fields || {});
       const hasInput = tabFields.some((field) => (dirtyFields as any)?.[field]);
       if (!hasInput) {
@@ -258,7 +271,7 @@ const NewDepartment = ({
       }
     });
     return done;
-  }, [watchedValues, schemaContext, dirtyFields]);
+  }, [watchedValues, schemaContext, dirtyFields, currentStepIndex]);
 
   const handleTabChange = async (nextTab: string) => {
     const currentIndex = TABS_ORDER.indexOf(currentStep);

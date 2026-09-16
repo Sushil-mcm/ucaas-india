@@ -13,7 +13,7 @@ import {
 import SelectedMemberList from './selected-member-list';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { Icon } from '@/assets/icons/icon';
-import { DEPARTMENT_RING_STRATEGY, DEPARTMENT_RING_STRATEGY_DESC } from './consts';
+import { DEPARTMENT_RING_STRATEGY } from './consts';
 
 const RingStrategy = () => {
   const { setValue, watch } = useFormContext();
@@ -36,9 +36,6 @@ const RingStrategy = () => {
             placeholder={'Select ring strategy'}
             className="w-full max-w-[300px]"
           />
-          <p className="text-gray-800 text-xs mt-3">
-            {DEPARTMENT_RING_STRATEGY_DESC[watchRingStrategy?.value] || ''}
-          </p>
         </div>
       </div>
       {/* Read by the switch when this group rings (10 Sep 2026): off, a member
@@ -100,7 +97,7 @@ const RingStrategy = () => {
         {/* One table for both ring strategies, not two near-identical copies --
             only the leading drag-handle column (linear order needs one, the
             others don't) and the body's row source differ. */}
-        <div className="w-full lg:w-1/2">
+        <div className="w-full">
           <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
             <Table className="w-full text-sm text-gray-700 h-full ">
               <TableHeader className="bg-gray-100/40 text-gray-90/80">
