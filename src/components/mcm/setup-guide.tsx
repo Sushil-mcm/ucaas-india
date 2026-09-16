@@ -82,7 +82,13 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div
+      className="rounded-xl border border-gray-200 bg-white p-4"
+      /* `.mcm-page` repaints any rounded `.bg-white` box to the translucent
+         `--glass-surface` tint (mcm-page.css) — an inline style beats that
+         cascade rule without needing `!important` in the stylesheet. */
+      style={{ background: '#fff' }}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">Finish setting up your phone system</p>

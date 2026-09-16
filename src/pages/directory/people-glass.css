@@ -316,19 +316,15 @@
   width: 16px;
 }
 
-/* Bulk action bar -- appears above the table the moment a row is checked,
-   and disappears the moment selection is cleared, so it never eats space
-   on a page nobody is bulk-acting on. */
+/* Bulk action bar -- appears the moment a row is checked, and disappears the
+   moment selection is cleared, so it never eats space on a page nobody is
+   bulk-acting on. Shares the People/Removed tab row's own white strip
+   (people.tsx) rather than opening a second band below it, so it needs no
+   background/border/radius of its own here -- just its own spacing. */
 .gp-people .gp-bulk-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  background: rgba(242, 153, 74, 0.12);
-  border: 1px solid rgba(242, 153, 74, 0.28);
+  gap: 16px;
 }
 .gp-people .gp-bulk-count {
   font-weight: 700;
@@ -445,7 +441,11 @@
   background: transparent;
 }
 .gp-people th {
-  background: #fffdfb;
+  /* A light cream, not the row body's own near-white (`#fffdfb`) — the two
+     used to match exactly, so the header only read as a row because of its
+     underline. `#fff6e9` is the same cream already used for `.tbar .fchip`
+     above, not a new colour. */
+  background: #fff6e9;
   /* Was `#8a6f57`, a washed brown that sat between the header band and the
      rows without belonging to either. Near-black instead -- the colour is
      carried by the 3px orange underline beneath the row, so the labels

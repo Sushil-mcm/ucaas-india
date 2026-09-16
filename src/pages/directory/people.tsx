@@ -429,70 +429,76 @@ const People = () => {
         }
       >
         <div
-          className="flex items-center gap-1"
+          className="flex items-center justify-between gap-1"
           role="tablist"
           aria-label="People or removed people"
           style={{ padding: '8px 12px', borderBottom: '1px solid var(--line)' }}
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'people'}
-            className={tab === 'people' ? 'mini solid' : 'mini'}
-            onClick={() => setTab('people')}
-          >
-            People
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'removed'}
-            className={tab === 'removed' ? 'mini solid' : 'mini'}
-            title="People removed in the last 72 hours, who can still be restored"
-            onClick={() => setTab('removed')}
-          >
-            Removed
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'people'}
+              className={tab === 'people' ? 'mini solid' : 'mini'}
+              onClick={() => setTab('people')}
+            >
+              People
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'removed'}
+              className={tab === 'removed' ? 'mini solid' : 'mini'}
+              title="People removed in the last 72 hours, who can still be restored"
+              onClick={() => setTab('removed')}
+            >
+              Removed
+            </button>
+          </div>
+
+          {/* Was its own bar below the tab row — a second white strip that
+              appeared/disappeared with selection read as a layout jump.
+              Sharing the tab row's strip keeps the header a single band. */}
+          {tab === 'people' && selectedIds.size > 0 ? (
+            <div className="gp-bulk-bar">
+              <span className="gp-bulk-count">
+                {selectedIds.size} selected
+              </span>
+              <span className="gp-bulk-actions">
+                <button
+                  type="button"
+                  className="btn ghost sm"
+                  disabled={!selectedForRoleChange.length}
+                  title={
+                    selectedForRoleChange.length
+                      ? undefined
+                      : 'None of the selected people can have their role changed'
+                  }
+                  onClick={() => setBulkChangingRole(true)}
+                >
+                  <Ic n="shield" size={13} />
+                  Change role
+                </button>
+                <button
+                  type="button"
+                  className="btn ghost sm gp-bulk-remove"
+                  onClick={() => setBulkDeleting(true)}
+                >
+                  <Ic n="trash" size={13} />
+                  Remove
+                </button>
+                <button type="button" className="btn ghost sm" onClick={clearSelection}>
+                  Clear
+                </button>
+              </span>
+            </div>
+          ) : null}
         </div>
 
         {tab === 'removed' ? (
           <RemovedPeople canRestore={canDelete} />
         ) : (
         <>
-        {selectedIds.size > 0 ? (
-          <div className="gp-bulk-bar">
-            <span className="gp-bulk-count">
-              {selectedIds.size} selected
-            </span>
-            <span className="gp-bulk-actions">
-              <button
-                type="button"
-                className="btn ghost sm"
-                disabled={!selectedForRoleChange.length}
-                title={
-                  selectedForRoleChange.length
-                    ? undefined
-                    : 'None of the selected people can have their role changed'
-                }
-                onClick={() => setBulkChangingRole(true)}
-              >
-                <Ic n="shield" size={13} />
-                Change role
-              </button>
-              <button
-                type="button"
-                className="btn ghost sm gp-bulk-remove"
-                onClick={() => setBulkDeleting(true)}
-              >
-                <Ic n="trash" size={13} />
-                Remove
-              </button>
-              <button type="button" className="btn ghost sm" onClick={clearSelection}>
-                Clear
-              </button>
-            </span>
-          </div>
-        ) : null}
         <table>
           <thead>
             <tr>
