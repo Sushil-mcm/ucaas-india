@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { AudioLines, Mic, Upload } from 'lucide-react';
 import Loader from '@/components/custom/loader';
 import { useUser } from '@/hooks/use-user';
 import ChooseFile from './choose-file';
@@ -65,6 +66,12 @@ const AddGreeting: FC<IAddgreetings> = ({
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  const TAB_ICONS: Record<string, typeof Upload> = {
+    [TAB_CONSTANT.CHOOSE_FILE]: Upload,
+    [TAB_CONSTANT.RECORD]: Mic,
+    [TAB_CONSTANT.TEXT_TO_SPEECH]: AudioLines,
   };
 
   const { mutateAsync: uploadMediaMutate, isPending } = useMutation({
@@ -215,17 +222,21 @@ const AddGreeting: FC<IAddgreetings> = ({
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
             <div className="border-b border-gray-200 w-full mb-4">
               <TabsList className="flex text-sm font-semibold text-center p-0 rounded-none h-auto justify-start bg-transparent gap-6">
-                {Object.entries(TAB_CONSTANT).map(([key, value]) => (
-                  <TabsTrigger
-                    key={key}
-                    value={value}
-                    type="button"
-                    onClick={(event) => event.stopPropagation()}
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-1 pb-3 pt-2 text-gray-600 cursor-pointer rounded-none relative flex gap-1 bg-transparent font-semibold data-[state=active]:shadow-none hover:text-gray-900 transition-colors"
-                  >
-                    {value}
-                  </TabsTrigger>
-                ))}
+                {Object.entries(TAB_CONSTANT).map(([key, value]) => {
+                  const TabIcon = TAB_ICONS[value];
+                  return (
+                    <TabsTrigger
+                      key={key}
+                      value={value}
+                      type="button"
+                      onClick={(event) => event.stopPropagation()}
+                      className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-1 pb-3 pt-2 text-gray-600 cursor-pointer rounded-none relative flex items-center gap-1.5 bg-transparent font-semibold data-[state=active]:shadow-none hover:text-gray-900 transition-colors"
+                    >
+                      {TabIcon ? <TabIcon className="w-3.5 h-3.5" /> : null}
+                      {value}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </div>
             <TabsContent value={TAB_CONSTANT.CHOOSE_FILE}>
@@ -244,29 +255,34 @@ const AddGreeting: FC<IAddgreetings> = ({
             </TabsContent>
           </Tabs>
 
-          <Input
-            {...register('greeting')}
-            label={'Name'}
-            placeholder={'Enter Name'}
-            maxLength={50}
-          />
-          {greetingType === 'all' ? (
-            <CustomSelect
-              label={'Type'}
-              options={options}
-              handleChange={(value) => {
-                setValue('greeting_type', value, { shouldValidate: true });
-              }}
-              value={watch(`greeting_type`)}
-              placeholder="Select Type"
+          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              Details
+            </span>
+            <Input
+              {...register('greeting')}
+              label={'Name'}
+              placeholder={'Enter Name'}
+              maxLength={50}
             />
-          ) : (
-            <Input label="Type" value={capitalizeFirstLetter(greetingType)} disabled={true} />
-          )}
+            {greetingType === 'all' ? (
+              <CustomSelect
+                label={'Type'}
+                options={options}
+                handleChange={(value) => {
+                  setValue('greeting_type', value, { shouldValidate: true });
+                }}
+                value={watch(`greeting_type`)}
+                placeholder="Select Type"
+              />
+            ) : (
+              <Input label="Type" value={capitalizeFirstLetter(greetingType)} disabled={true} />
+            )}
+          </div>
         </div>
-        <div className="flex justify-end gap-2 pt-4 mt-auto">
+        <div className="flex justify-end gap-2 border-t border-gray-100 pt-4 mt-auto">
           <Button
-            variant="transparent"
+            variant="outline"
             type="button"
             onClick={() => {
               reset();
@@ -276,7 +292,7 @@ const AddGreeting: FC<IAddgreetings> = ({
             Cancel
           </Button>
           <Button
-            variant={'outline'}
+            variant={'primary'}
             type="button"
             onClick={handleCreateGreeting}
             disabled={
@@ -287,7 +303,7 @@ const AddGreeting: FC<IAddgreetings> = ({
           >
             {isPending || isPendingCreateGreeting || showLoader ? (
               <div className="flex items-center justify-center p-5">
-                <Loader variant="blue" size="sm" />
+                <Loader variant="white" size="sm" />
               </div>
             ) : (
               'Upload'

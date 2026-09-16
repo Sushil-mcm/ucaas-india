@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, FC, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatDuration } from '@/lib/utils';
-import RecordingGif from '@/assets/images/recordingimg.webp';
+import { Mic, Music, X } from 'lucide-react';
 import Recorder from '../recorder';
 import moment from 'moment';
 import { useFormContext } from 'react-hook-form';
@@ -78,47 +78,64 @@ const Record: FC = () => {
   }, [audioRecordUrl]);
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
-      <div className="border border-gray-300 gap-12 flex flex-col w-full h-44 justify-center rounded-xl">
-        <div className="gap-4 flex flex-col p-3 justify-center">
-          <div className="flex flex-col gap-2 justify-center w-full items-center">
-            {!recording && !WatchUploadFile && (
-              <Button variant={'outline'} type="button" onClick={handleStartRecording}>
-                Start Recording
+    <div className="flex flex-col gap-3 pt-2">
+      <div className="flex flex-col w-full min-h-44 items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white p-4">
+        {!recording && !WatchUploadFile && (
+          <>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+              <Mic className="w-5 h-5" />
+            </span>
+            <Button variant={'primary'} type="button" onClick={handleStartRecording}>
+              <Mic className="w-4 h-4" />
+              Start Recording
+            </Button>
+          </>
+        )}
+
+        {recording && (
+          <>
+            <span className="relative flex h-11 w-11 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <Mic className="w-5 h-5" />
+              </span>
+            </span>
+            <Recorder getAudioBlob={getAudioBlob} />
+            <div className="flex flex-col items-center gap-1">
+              <p className="font-semibold text-gray-900 truncate text-md">Listening</p>
+              <small className="text-gray-500 truncate text-sm tabular-nums">
+                {formatDuration(duration)}
+              </small>
+            </div>
+            <Button type="button" variant={'outline'} onClick={handleStopRecording}>
+              Stop Recording
+            </Button>
+          </>
+        )}
+
+        {WatchUploadFile && audioRecordUrl && (
+          <div className="flex items-center gap-3 w-full rounded-xl border border-gray-200 bg-white p-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Music className="w-4 h-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <ReadyAudio controls src={audioRecordUrl} />
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Button type="button" variant={'outline'} size={'sm'} onClick={handleRecordAgain}>
+                Record Again
               </Button>
-            )}
-
-            {recording && (
-              <>
-                <img src={RecordingGif} alt="gif" height={50} width={50} />
-                <Recorder getAudioBlob={getAudioBlob} />
-                <div className="flex flex-col items-center gap-1">
-                  <p className="font-semibold text-gray-900 truncate text-md">{'Listening'}</p>
-                  <small className="text-gray-800 truncate text-sm">
-                    {formatDuration(duration)}
-                  </small>
-                </div>
-                <Button type="button" variant={'outline'} onClick={handleStopRecording}>
-                  Stop Recording
-                </Button>
-              </>
-            )}
-
-            {WatchUploadFile && audioRecordUrl && (
-              <div className="flex flex-col items-center justify-center w-full">
-                <ReadyAudio controls src={audioRecordUrl} />
-                <div className="flex gap-2 mt-2">
-                  <Button type="button" variant={'secondary'} onClick={handleCloseAudio}>
-                    Close
-                  </Button>
-                  <Button type="button" variant={'outline'} onClick={handleRecordAgain}>
-                    Record Again
-                  </Button>
-                </div>
-              </div>
-            )}
+              <button
+                type="button"
+                aria-label="Discard recording"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                onClick={handleCloseAudio}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

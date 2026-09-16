@@ -7,6 +7,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-defaults';
 import { getGreetingVoiceList } from '@/services/api';
 import ReadyAudio from '@/components/custom/ready-audio';
+import { AudioLines, Music } from 'lucide-react';
 
 const LANGUAGE_OPTIONS = [
   { label: 'Hindi (India)', value: 'hi-IN' },
@@ -122,64 +123,68 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
   }, [audioUrl]);
 
   return (
-    <div className={`flex flex-col gap-4 pt-2 w-full `}>
-      <CustomSelect
-        label={'Language'}
-        options={LANGUAGE_OPTIONS}
-        value={selectedLocale}
-        placeholder="Select language"
-        handleChange={(option) => {
-          setValue('textToSpeechLocale', option, { shouldDirty: true, shouldValidate: true });
-          setValue('textToSpeech', '');
-          setValue('textFile', null);
-          setValue('textToSpeechVoice', null);
-          setVoiceOptions([]);
+    <div className={`flex flex-col gap-3 pt-2 w-full `}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <CustomSelect
+          label={'Language'}
+          options={LANGUAGE_OPTIONS}
+          value={selectedLocale}
+          placeholder="Select language"
+          handleChange={(option) => {
+            setValue('textToSpeechLocale', option, { shouldDirty: true, shouldValidate: true });
+            setValue('textToSpeech', '');
+            setValue('textFile', null);
+            setValue('textToSpeechVoice', null);
+            setVoiceOptions([]);
 
-          if (option?.value) {
-            mutateVoiceList({ locale: option.value });
-          }
-        }}
-      />
-      <CustomSelect
-        label={'Voice'}
-        options={voiceOptions}
-        value={selectedVoice}
-        placeholder={selectedLocale ? 'Select voice' : 'Select language first'}
-        isDisabled={!selectedLocale}
-        isLoading={isVoiceListLoading}
-        handleChange={(option) => {
-          setValue('textToSpeechVoice', option, { shouldDirty: true, shouldValidate: true });
-          setValue('textFile', null);
-        }}
-      />
-      <label className="flex items-center gap-2 text-sm leading-none font-medium group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50">
-        Enter the text you want to convert into speech.
-      </label>
-      <Controller
-        name="textToSpeech"
-        control={control}
-        render={({ field }) => (
-          <textarea
-            rows={5}
-            value={field.value || ''}
-            onChange={(event) => {
-              const locale = selectedLocale?.value || '';
-              const sanitizedText = sanitizeTextByLocale(event.target.value, locale);
-              field.onChange(sanitizedText);
-              setValue('textFile', null);
-            }}
-            placeholder={selectedLocale ? 'Type your text here...' : 'Select language first'}
-            className=" border border-gray-300 rounded-xl text-sm min-h-[86px]  p-3 hover:border-primary focus:border-primary focus-visible:border-primary focus-visible:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-            maxLength={500}
-            disabled={!selectedLocale}
-          />
-        )}
-      />
-      <p className="text-xs text-gray-500">
-        {selectedLocale
-          ? 'You can type only characters from the selected language script.'
-          : 'Choose a language to enable typing.'}
-      </p>
+            if (option?.value) {
+              mutateVoiceList({ locale: option.value });
+            }
+          }}
+        />
+        <CustomSelect
+          label={'Voice'}
+          options={voiceOptions}
+          value={selectedVoice}
+          placeholder={selectedLocale ? 'Select voice' : 'Select language first'}
+          isDisabled={!selectedLocale}
+          isLoading={isVoiceListLoading}
+          handleChange={(option) => {
+            setValue('textToSpeechVoice', option, { shouldDirty: true, shouldValidate: true });
+            setValue('textFile', null);
+          }}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Text to convert
+        </label>
+        <Controller
+          name="textToSpeech"
+          control={control}
+          render={({ field }) => (
+            <textarea
+              rows={5}
+              value={field.value || ''}
+              onChange={(event) => {
+                const locale = selectedLocale?.value || '';
+                const sanitizedText = sanitizeTextByLocale(event.target.value, locale);
+                field.onChange(sanitizedText);
+                setValue('textFile', null);
+              }}
+              placeholder={selectedLocale ? 'Type your text here...' : 'Select language first'}
+              className="border border-gray-300 rounded-xl text-sm min-h-[86px] p-3 hover:border-primary focus:border-primary focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+              maxLength={500}
+              disabled={!selectedLocale}
+            />
+          )}
+        />
+        <p className="text-xs text-gray-500">
+          {selectedLocale
+            ? 'You can type only characters from the selected language script.'
+            : 'Choose a language to enable typing.'}
+        </p>
+      </div>
 
       <div className="flex justify-center">
         <Button
@@ -188,10 +193,21 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
           onClick={handleTextToSpeech}
           disabled={!watch('textToSpeech') || !selectedLocale || isPendingTextToSpeech}
         >
-          Text to Speech
+          <AudioLines className="w-4 h-4" />
+          Generate Speech
         </Button>
       </div>
-      {WatchTextFile && audioUrl && <ReadyAudio controls src={audioUrl} />}
+
+      {WatchTextFile && audioUrl && (
+        <div className="flex items-center gap-3 w-full rounded-xl border border-gray-200 bg-white p-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Music className="w-4 h-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <ReadyAudio controls src={audioUrl} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
