@@ -9,14 +9,42 @@
  * nothing is ever blocked behind an unfinished step — an admin who only wants to
  * add one person should not have to complete a wizard first. Once everything is
  * done it stops showing entirely, so an established account is not nagged.
+ *
+ * Presented as a horizontal stepper (done/next/future nodes joined by a line)
+ * rather than five always-expanded rows — the connecting line already carries
+ * the "how far along" signal a separate progress bar used to duplicate, and
+ * only the step that's actually actionable (`next`) gets its full
+ * purpose/detail text, in a panel below the stepper.
  */
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useSetupProgress } from '@/hooks/use-setup-progress';
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Headset,
+  MapPin,
+  Phone,
+  Users,
+  X,
+} from 'lucide-react';
+import { useSetupProgress, type SetupStepKey } from '@/hooks/use-setup-progress';
 
 const DISMISS_KEY = 'mcm.setup-guide.dismissed';
+
+/* One icon per step key rather than a plain number — the five keys are fixed
+   (see use-setup-progress.ts), so mapping them by hand here is safe and
+   reads better than a generic placeholder glyph. */
+const STEP_ICONS: Record<SetupStepKey, typeof Building2> = {
+  company: Building2,
+  locations: MapPin,
+  people: Users,
+  numbers: Phone,
+  handling: Headset,
+};
 
 const readDismissed = (): boolean => {
   try {
@@ -69,6 +97,8 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
     }
   };
 
+  const NextIcon = next ? STEP_ICONS[next.key] : null;
+
   return (
     <div className="rounded-xl border border-primary/20 bg-ucass-primary-200/30 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -100,63 +130,90 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
         </div>
       </div>
 
-      {/* Progress bar: the last step is never auto-ticked, so it is excluded
-          rather than making the bar look permanently unfinished. */}
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/70">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${Math.round((completed / Math.max(total - 1, 1)) * 100)}%` }}
-        />
-      </div>
-
       {expanded && (
-        <ol className="mt-3 flex flex-col gap-1.5">
-          {steps.map((step, index) => {
-            const isNext = next?.key === step.key;
-            return (
-              <li key={step.key}>
-                <button
-                  type="button"
-                  onClick={() => goToStep(step.path, step.anchor)}
-                  className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
-                    isNext
-                      ? 'border-primary bg-white'
-                      : 'border-transparent bg-white/60 hover:bg-white'
-                  }`}
-                >
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                      step.done
-                        ? 'bg-green-100 text-green-700'
-                        : isNext
-                          ? 'bg-primary text-white'
-                          : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {step.done ? <Check className="h-3 w-3" /> : index + 1}
-                  </span>
+        <>
+          {/* Horizontal stepper: a filled line between two done steps, half-filled
+              up to the next one, plain gray after it. Scrolls sideways instead of
+              squeezing five nodes onto a narrow screen. */}
+          <div className="mt-4 -mx-1 overflow-x-auto px-1 pb-1">
+            <div className="flex w-full min-w-[520px] items-start">
+              {steps.map((step, index) => {
+                const isNext = next?.key === step.key;
+                const isLast = index === steps.length - 1;
+                const StepIcon = STEP_ICONS[step.key];
+                return (
+                  <Fragment key={step.key}>
+                    <button
+                      type="button"
+                      onClick={() => goToStep(step.path, step.anchor)}
+                      aria-label={`${step.title}${step.done ? ' — done' : isNext ? ' — next' : ''}`}
+                      className="flex w-24 shrink-0 flex-col items-center gap-1.5 text-center"
+                    >
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                          step.done
+                            ? 'bg-green-100 text-green-700'
+                            : isNext
+                              ? 'bg-primary text-white'
+                              : 'bg-gray-200 text-gray-500'
+                        }`}
+                      >
+                        {step.done ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <StepIcon className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span
+                        className={`text-[11px] leading-tight ${
+                          isNext
+                            ? 'font-semibold text-gray-900'
+                            : step.done
+                              ? 'font-medium text-gray-700'
+                              : 'text-gray-500'
+                        }`}
+                      >
+                        {step.title}
+                      </span>
+                    </button>
+                    {!isLast && (
+                      <span
+                        className={`mt-4 h-0.5 flex-1 ${step.done ? 'bg-primary' : 'bg-gray-200'}`}
+                      />
+                    )}
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
 
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900">{step.title}</span>
-                      {isNext && (
-                        <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
-                          Next
-                        </span>
-                      )}
-                    </span>
-                    <span className="block text-xs text-gray-600">{step.purpose}</span>
-                    <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                      {step.detail}
-                    </span>
+          {/* Only the actionable step gets its full explanation — the stepper
+              above already shows where everything else stands. */}
+          {next && NextIcon && (
+            <button
+              type="button"
+              onClick={() => goToStep(next.path, next.anchor)}
+              className="mt-4 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-primary bg-white p-3 text-left transition-colors hover:bg-primary/5"
+            >
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                <NextIcon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-900">{next.title}</span>
+                  <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
+                    Next
                   </span>
-
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+                </span>
+                <span className="block text-xs text-gray-600">{next.purpose}</span>
+                <span className="mt-0.5 block text-xs font-medium text-gray-500">
+                  {next.detail}
+                </span>
+              </span>
+              <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
+            </button>
+          )}
+        </>
       )}
     </div>
   );
