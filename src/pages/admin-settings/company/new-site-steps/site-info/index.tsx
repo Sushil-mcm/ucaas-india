@@ -14,18 +14,6 @@ const CALLER_ID_OPTIONS = [
   { label: 'Withheld', value: 'BLANK' },
 ];
 
-/* Stored, but not yet acted on. Nothing in the call path reads a location's
-   caller ID — the number a person shows comes from their own record. Saying so
-   is better than describing behaviour that does not happen. */
-const CALLER_ID_HELP: Record<string, string> = {
-  MAIN: 'Recorded against this location. Not applied to calls yet — see the note below.',
-  CUSTOM: 'Recorded against this location. Not applied to calls yet — see the note below.',
-  BLANK: 'Recorded against this location. Not applied to calls yet — see the note below.',
-};
-
-const CALLER_ID_NOTE =
-  'What a person shows when calling out is currently taken from their own record, not from their location. This setting is saved for when location-level caller ID is switched on.';
-
 const SiteInfo = ({ formInstance }: any) => {
   const {
     register,
@@ -334,13 +322,6 @@ const SiteInfo = ({ formInstance }: any) => {
               </div>
               <div className="relative flex w-full gap-1 md:w-1/2" />
             </div>
-          </div>
-
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-2.5">
-            <p className="text-xs text-gray-700">
-              {CALLER_ID_HELP[watchedCallerIdType] || CALLER_ID_HELP.MAIN}
-            </p>
-            <p className="mt-1 text-xs text-gray-500">{CALLER_ID_NOTE}</p>
           </div>
         </div>
       </div>
