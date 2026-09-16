@@ -12,10 +12,10 @@
      that, so the page's own background showed through as a bare strip
      along the true bottom edge instead of this element's flat fill. */
   min-height: calc(100% + 22px);
-  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+  /* Flat, matching People's own body colour (`#FEF8F1`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
-  background: #fdf1e2;
+  background: #FEF8F1;
   margin: -22px -26px -40px;
   /* 8px, not the parent `.page`'s own 40px -- matches People's own trim
      (people-glass.css) so the gap below the pager reads the same as the

@@ -15,10 +15,10 @@
   min-height: calc(100% + 22px);
   /* Flat, not the layered radial-gradient backdrop this used to pull in from
      `body` (src/index.css) -- that stack of warm pools is what read as "that
-     gradient effect". `#fdf1e2` is the live site's own `body` background
+     gradient effect". `#FEF8F1` is the live site's own `body` background
      (rgb(253,241,226), pulled directly from ucaas-india.vercel.app), so this
      is a real colour already shipped rather than one invented here. */
-  background: #fdf1e2;
+  background: #FEF8F1;
   /* cancel `.mcm-page .page`'s own padding so the background reaches the
      page's real edges instead of stopping in a boxed-off inset. The
      bottom margin still cancels the parent's full 40px (so the background
@@ -27,7 +27,7 @@
      leaving a visibly bigger gap below the pager than the 22px this page
      opens with above the header. Safe to shrink on its own: whatever
      shows through below is `body`'s own background, the exact same
-     #fdf1e2 this element paints, so there is no seam to reintroduce. */
+     #FEF8F1 this element paints, so there is no seam to reintroduce. */
   margin: -22px -26px -40px;
   padding: 22px 26px 8px;
 }
@@ -109,17 +109,11 @@
   background-clip: padding-box;
 }
 /* SetupGuide now renders as `DirectoryPage`'s `beforeTable` slot — a sibling
-   of `.panel-card`, not nested inside it — specifically so it can carry its
-   own card chrome (background, border, shadow, radius) instead of sitting
-   flush against the panel-card's edges with only a 1px border between its
-   bottom and the table's header row. Without this it read as one card with
-   a seam through it rather than two distinct things stacked. */
+   of `.panel-card`, not nested inside it. It carries its own single white
+   card chrome (see setup-guide.tsx), so this wrapper stays chrome-less —
+   giving it a second background/border/shadow here stacked a card on top of
+   SetupGuide's own card. */
 .gp-people-setup {
-  background: #fffdfb;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
-  border-radius: 20px;
-  padding: 4px;
   margin-bottom: 16px;
 }
 /* SetupGuide returns null once setup is done (or is dismissed, or is still
@@ -566,12 +560,12 @@
     box-shadow 0.16s ease;
 }
 /* Softer than the filled sunset gradient it replaces: a pale wash with the
-   glyph in brand orange. `#fdf1e2` is the live site's own `body` background
+   glyph in brand orange. `#FEF8F1` is the live site's own `body` background
    (rgb(253,241,226), pulled directly from ucaas-india.vercel.app) rather
    than an invented tint, so the hover reads as this page's own warm colour
    showing through instead of a new shade appearing from nowhere. */
 .gp-people td:last-child .mini:not(.mcm-fav-on):hover:not(:disabled) {
-  background: #fdf1e2;
+  background: #FEF8F1;
   /* Rounded square, not the button's own resting circle -- a visible
      hairline border plus a softer corner radius reads as a distinct card
      under the pointer rather than just a color change on the same shape. */

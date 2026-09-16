@@ -30,10 +30,10 @@
   position: relative;
   isolation: isolate;
   min-height: 100%;
-  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+  /* Flat, matching People's own body colour (`#FEF8F1`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
-  background: #fdf1e2;
+  background: #FEF8F1;
   margin: -22px -26px -40px;
   padding: 22px 26px 40px;
 }
@@ -530,7 +530,7 @@
     box-shadow 0.16s ease;
 }
 .gp-contact-table [class*='rounded-full'][class*='w-8']:hover {
-  background: #fdf1e2 !important;
+  background: #FEF8F1 !important;
   border: 1px solid rgba(242, 153, 74, 0.35);
   border-radius: 14px !important;
   color: #c96f1f;

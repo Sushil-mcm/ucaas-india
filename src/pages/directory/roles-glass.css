@@ -6,7 +6,7 @@
   position: relative;
   isolation: isolate;
   min-height: calc(100% + 22px);
-  background: #fdf1e2;
+  background: #FEF8F1;
   margin: -22px -26px -40px;
   padding: 22px 26px 8px;
 }
@@ -257,7 +257,7 @@
     box-shadow 0.16s ease;
 }
 .gp-roles .gp-role-actions .mini:not(.gp-role-open):hover:not(:disabled) {
-  background: #fdf1e2;
+  background: #FEF8F1;
   border: 1px solid rgba(242, 153, 74, 0.35);
   border-radius: 14px;
   color: #c96f1f;

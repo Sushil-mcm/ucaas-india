@@ -12,9 +12,9 @@
      absorb that. */
   min-height: calc(100% + 22px);
   /* Flat, matching People/Roles' own page background rather than the
-     layered radial-gradient backdrop this used to carry. `#fdf1e2` is the
+     layered radial-gradient backdrop this used to carry. `#FEF8F1` is the
      live site's own `body` background. */
-  background: #fdf1e2;
+  background: #FEF8F1;
   /* cancel `.page`'s own padding so the background reaches the page's real
      edges instead of stopping in a boxed-off inset -- see the matching
      rule and comment in people-glass.css for the full mechanism. */
@@ -325,7 +325,7 @@
   color: rgba(46, 45, 53, 0.7);
 }
 .gp-group-message:hover {
-  background: #fdf1e2;
+  background: #FEF8F1;
   color: #c96f1f;
 }
 

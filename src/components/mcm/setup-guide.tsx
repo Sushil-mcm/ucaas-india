@@ -20,7 +20,6 @@
 import { Fragment, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight,
   Building2,
   Check,
   ChevronDown,
@@ -33,8 +32,6 @@ import {
 } from 'lucide-react';
 import { useSetupProgress, type SetupStepKey } from '@/hooks/use-setup-progress';
 
-const DISMISS_KEY = 'mcm.setup-guide.dismissed';
-
 /* One icon per step key rather than a plain number — the five keys are fixed
    (see use-setup-progress.ts), so mapping them by hand here is safe and
    reads better than a generic placeholder glyph. */
@@ -46,20 +43,13 @@ const STEP_ICONS: Record<SetupStepKey, typeof Building2> = {
   handling: Headset,
 };
 
-const readDismissed = (): boolean => {
-  try {
-    return localStorage.getItem(DISMISS_KEY) === '1';
-  } catch {
-    /* Private windows and blocked site data throw. Showing the guide is the
-       safer default — it is dismissable again. */
-    return false;
-  }
-};
-
 const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [dismissed, setDismissed] = useState(readDismissed);
+  /* Dismissal is in-memory only, not persisted — closing it just clears the
+     current view. A refresh (or coming back to the page later) should show
+     it again as long as setup isn't actually finished. */
+  const [dismissed, setDismissed] = useState(false);
 
   /* Two steps point at the page the guide is already on. Calling navigate() for
      those is a no-op, so the row looked broken — clicking it did nothing at all.
@@ -89,18 +79,10 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
 
   const handleDismiss = () => {
     setDismissed(true);
-    try {
-      localStorage.setItem(DISMISS_KEY, '1');
-    } catch {
-      /* Not being able to remember the dismissal is a small annoyance, not a
-         reason to leave the panel stuck open. */
-    }
   };
 
-  const NextIcon = next ? STEP_ICONS[next.key] : null;
-
   return (
-    <div className="rounded-xl border border-primary/20 bg-ucass-primary-200/30 p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">Finish setting up your phone system</p>
@@ -186,33 +168,6 @@ const SetupGuide = ({ companyInfo }: { companyInfo?: any }) => {
               })}
             </div>
           </div>
-
-          {/* Only the actionable step gets its full explanation — the stepper
-              above already shows where everything else stands. */}
-          {next && NextIcon && (
-            <button
-              type="button"
-              onClick={() => goToStep(next.path, next.anchor)}
-              className="mt-4 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-primary bg-white p-3 text-left transition-colors hover:bg-primary/5"
-            >
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                <NextIcon className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">{next.title}</span>
-                  <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
-                    Next
-                  </span>
-                </span>
-                <span className="block text-xs text-gray-600">{next.purpose}</span>
-                <span className="mt-0.5 block text-xs font-medium text-gray-500">
-                  {next.detail}
-                </span>
-              </span>
-              <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-400" />
-            </button>
-          )}
         </>
       )}
     </div>

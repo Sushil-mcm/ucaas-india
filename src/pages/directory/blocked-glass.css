@@ -23,7 +23,7 @@
      `100%` falls 22px short of the true bottom edge for the same reason
      documented there. */
   min-height: calc(100% + 22px);
-  /* Flat, matching People's own body colour (`#fdf1e2`) rather than the
+  /* Flat, matching People's own body colour (`#FEF8F1`) rather than the
      layered orange radial-gradient — every Directory tab now shares one
      page background instead of each carrying its own gradient. */
   background: #ffffffc7;
