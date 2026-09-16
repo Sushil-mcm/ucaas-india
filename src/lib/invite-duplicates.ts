@@ -238,7 +238,13 @@ export const findInviteClashes = ({ rows, roster }: InviteDuplicateInput): Clash
     }
 
     const phone = normalisePhone(row?.phone);
-    if (phone) {
+    /* An untouched phone field isn't blank -- it defaults to India's bare
+       dial code, "91". Two never-typed-in rows both normalise to that same
+       two-digit string, so without a length floor every second person
+       falsely collided with the first before anybody had typed a digit.
+       10 is safely below a real number (91 + a 10-digit number = 12) and
+       safely above the untouched default. */
+    if (phone && phone.length >= 10) {
       const firstAt = seenPhone.get(phone);
       if (firstAt === undefined) {
         seenPhone.set(phone, index);

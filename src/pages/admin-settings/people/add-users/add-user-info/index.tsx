@@ -32,7 +32,6 @@ import { COMPANY_DEFAULTS_QUERY_KEY, fetchCompanyDefaults } from '@/lib/company-
 import { NEW_PERSON_ROLE_KEY, readNewPersonRole } from '@/lib/role-permission-defaults';
 import {
   decideInviteRole,
-  describeRole,
   roleWarning,
   toRoleChoice,
 } from '@/lib/invite-role';
@@ -801,31 +800,18 @@ const AddUserInfo = ({
                 error={errors?.users?.[index]?.role?.value?.message}
                 isLoading={isPending}
               />
-              {/* What that role actually allows. The names the platform ships
-                  with — AGENT, MANAGER, SUB-ADMIN — do not say, and the
-                  permissions behind them barely differ, so the box on its own is
-                  a guess dressed up as a decision. The words come from the same
-                  place the Default permissions screen reads them, so the two
-                  screens describe a role identically. */}
               {(() => {
                 const chosen = chosenRoleOf(index);
                 const caution = roleWarning(chosen);
-                return chosen ? (
-                  <>
-                    <p className="mt-1 text-[11px] leading-snug text-gray-500 dark:text-mcm-ink-3">
-                      {describeRole(chosen)}
-                    </p>
-                    {caution ? (
-                      <p className="mt-0.5 text-[11px] font-medium leading-snug text-amber-600">
-                        {caution}
-                      </p>
-                    ) : null}
-                  </>
+                return caution ? (
+                  <p className="mt-1 text-[11px] font-medium leading-snug text-amber-600">
+                    {caution}
+                  </p>
                 ) : null;
               })()}
             </div>
 
-            <div className="flex items-end gap-2 w-full">
+            <div className="flex items-end gap-2 w-full self-start">
               <div className="flex-1 min-w-0">
                 <Input
                   label="Extension"
