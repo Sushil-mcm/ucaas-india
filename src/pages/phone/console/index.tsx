@@ -15,6 +15,13 @@ import {
   toConsoleTurns,
 } from './copilot-adapter';
 import './console.css';
+/* `.mcm-actpage` (used below) is styled in this file, not console.css — it's
+   normally pulled in by importing `ActivityPageHead`. This page dropped that
+   import to remove the duplicate "Phone" title bar, which silently dropped
+   `.mcm-actpage`'s CSS too (including its `width: 100%`), leaving the whole
+   console shrink-to-content instead of filling the page. Import the
+   stylesheet directly instead of the component. */
+import '@/components/custom/activity-page-head.css';
 
 /**
  * MCM Unified Console — phone console.
