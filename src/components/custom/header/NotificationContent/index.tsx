@@ -542,7 +542,17 @@ const NotificationContent = ({
     <div
       role="region"
       aria-label="Notifications"
-      className="relative h-[calc(100%+1.25rem)] -ml-4 lg:-ml-5 w-[calc(100%+2rem)] lg:w-[calc(100%+2.5rem)] px-4 lg:px-5 pb-5 flex flex-col bg-white"
+      /* Was `h-[calc(100%+1.25rem)]` with its own `pb-5` — deliberately
+         taller than this drawer's SideDrawer wrapper (which already has its
+         own `pb-5`) by exactly one pb-5, apparently to push that doubled-up
+         bottom padding outside the wrapper's box rather than stack it. That
+         relied on the wrapper's own overflow silently absorbing the excess,
+         which is exactly what made it independently scrollable — a second,
+         mismatched scrollbar outside this component's own padding, which is
+         the "space beside the scrollbar" being reported. `h-full` with no
+         extra `pb-5` here removes the double padding at the source instead
+         of relying on overflow to hide it. */
+      className="relative h-full -ml-4 lg:-ml-5 w-[calc(100%+2rem)] lg:w-[calc(100%+2.5rem)] px-4 lg:px-5 flex flex-col bg-white"
     >
       {/* Visually hidden — announces count changes to screen readers without
           a visible element, since the badge itself only conveys meaning
