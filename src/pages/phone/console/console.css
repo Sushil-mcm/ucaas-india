@@ -4224,16 +4224,18 @@
   color: var(--accent-ink);
 }
 .mcm-console .col.stage .stage-inner .btn.primary {
+  /* Flat single orange + white text, matching Directory's own buttons —
+     not the gradient-plus-inset-highlight treatment this used to have. */
   height: 44px;
   border-radius: 22px;
   font-size: 14px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent-ink));
-  box-shadow: 0 6px 16px rgba(234, 124, 30, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 .mcm-console .col.stage .stage-inner .btn.primary:hover {
-  box-shadow: 0 8px 20px rgba(234, 124, 30, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: var(--accent-ink);
   transform: translateY(-1px);
 }
 .mcm-console .col.stage .stage-inner .btn.primary:active {
