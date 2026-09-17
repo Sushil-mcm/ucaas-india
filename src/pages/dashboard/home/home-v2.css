@@ -300,37 +300,43 @@
   border-radius: 2px;
 }
 
-/* ---- agent status donut ----
-   The shared .dist-legend (mcm-page.css) spreads its items edge-to-edge
-   with justify-content: space-between -- fine for a wide bar-chart
-   legend, but with only two or three states here it left one huge gap
-   in the middle. A vertical list next to the donut scales the same way
-   whether there are 2 states or 6, instead of stretching thin. */
-.home-v2 .dist-donut-row {
-  display: flex;
-  align-items: center;
-  gap: 22px;
+/* ---- agent status: segmented bar instead of a donut ----
+   One bar, each state's real share end to end, reads as a single
+   proportion at a glance; the vertical legend list underneath carries
+   the exact counts instead of stretching a wide flex row edge to edge. */
+.home-v2 .dist-bar-block .dist-bar {
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface-3, #f5e6d3);
 }
-.home-v2 .dist-donut-row .dist-legend {
-  flex: 1;
-  min-width: 0;
+.home-v2 .dist-bar-block .dist-bar-seg {
+  transition: width 0.5s ease;
+}
+.home-v2 .dist-bar-block .dist-bar-seg:first-child {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+.home-v2 .dist-bar-block .dist-bar-seg:last-child {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+.home-v2 .dist-legend-list {
   display: flex;
   flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: stretch;
   gap: 10px;
-  margin-top: 0;
+  margin-top: 16px;
 }
-.home-v2 .dist-donut-row .dist-legend-item {
+.home-v2 .dist-legend-list .dist-legend-item {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   white-space: normal;
 }
-.home-v2 .dist-donut-row .dist-legend-item .state {
+.home-v2 .dist-legend-list .dist-legend-item .state {
   font-size: 11px;
   padding: 3px 9px;
 }
-.home-v2 .dist-donut-row .dist-legend-item .num {
+.home-v2 .dist-legend-list .dist-legend-item .num {
   font-size: 11.5px;
   font-weight: 700;
   color: var(--ink-2, #3d4a63);
@@ -491,18 +497,15 @@
 .home-v2 .day-split-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   padding: 18px 0;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
   border-bottom: 1px solid rgba(150, 100, 50, 0.1);
 }
 .home-v2 .day-split-legend {
-  flex: 1;
-  min-width: 0;
   display: grid;
   grid-template-columns: repeat(3, auto);
-  justify-content: center;
-  align-content: center;
   align-items: center;
   column-gap: 20px;
   row-gap: 8px;
@@ -513,11 +516,6 @@
   gap: 6px;
   font-size: 12.5px;
   color: var(--ink-2, #3d4a63);
-}
-.home-v2 .day-split-item b {
-  margin-left: auto;
-  font-weight: 800;
-  color: var(--ink, #0d1526);
 }
 .home-v2 .day-split-item .dot {
   width: 8px;

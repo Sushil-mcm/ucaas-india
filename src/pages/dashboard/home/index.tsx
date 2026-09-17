@@ -845,12 +845,10 @@ const Home = () => {
                         <div className="day-split-item">
                           <span className="dot" style={{ background: '#2563eb' }} />
                           Inbound
-                          <b className="num">{Number(myStats.incoming_calls) || 0}</b>
                         </div>
                         <div className="day-split-item">
                           <span className="dot" style={{ background: '#7c3aed' }} />
                           Outbound
-                          <b className="num">{Number(myStats.outgoing_calls) || 0}</b>
                         </div>
                         {[
                           { label: 'Voicemails today', color: 'var(--accent)' },
@@ -1145,13 +1143,25 @@ const Home = () => {
             </span>
           </div>
           <div className="pc-body">
-            {/* One donut instead of two stacked bars saying the same thing --
-                real counts (`stateDistribution` above), same legend below it
-                as before. */}
+            {/* A single segmented bar -- every state's share end to end --
+                instead of a donut: reads as one proportion at a glance
+                rather than needing separate wedges compared to each other,
+                and the legend rows underneath give the exact counts. */}
             {stateDistribution.length ? (
-              <div className="dist-donut-row" role="img" aria-label={rosterSummary}>
-                <StatusDonut data={stateDistribution} colors={STATE_COLOR} />
-                <div className="dist-legend">
+              <div className="dist-bar-block" role="img" aria-label={rosterSummary}>
+                <div className="dist-bar">
+                  {stateDistribution.map((slice) => (
+                    <span
+                      key={slice.state}
+                      className="dist-bar-seg"
+                      style={{
+                        width: `${slice.pct}%`,
+                        background: STATE_COLOR[slice.state] || 'var(--ink-4)',
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="dist-legend-list">
                   {stateDistribution.map((slice) => (
                     <div className="dist-legend-item" key={slice.state}>
                       <span className={STATE_CLASS[slice.state] || 'state away'}>
