@@ -914,7 +914,7 @@ const StageColumn = ({
                  as one thing overlapping another rather than a dropdown. The
                  max-height + scroll on .dres-scroll keeps it from pushing the
                  keypad out of view either way. */
-              <div className="dres-scroll" style={{ background: 'var(--surface, #fff)', borderRadius: 'var(--r, 12px)', boxShadow: '0 4px 16px rgba(0,0,0,.10)', marginBottom: 10 }}>
+              <div className="dres-scroll" style={{ background: 'var(--surface, #fff)', borderRadius: 'var(--r, 12px)', marginBottom: 10 }}>
                 {contactHits.length ? (
                   <div className="dres">
                     <div className="dres-group">
