@@ -30,7 +30,8 @@ import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { RadialGauge, StatusDonut } from './charts';
+import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut, TrendArea } from './charts';
+import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
 import './home-v2.css';
@@ -100,22 +101,30 @@ const slTag = (sla: number | null) => {
 
 type Kpi = {
   key: string;
-  label: string;
+  title: string;
+  subtitle: string;
   value: ReactNode;
   sub?: ReactNode;
   tone?: 'good' | 'warnv' | 'bad';
-  // Optional gauge under the value, e.g. service level against its target.
+  // Service level only: the linear rail reads value against this real target.
   meter?: { value: number; target: number };
-  /** Icon + accent colour for this tile's badge, ghost watermark and footer
-   * bar -- each of the 8 gets its own so the strip reads as 8 distinct
-   * things at a glance rather than 8 identical grey boxes. */
   icon: McmIconName;
   color: string;
-  /** 0-100: how full the footer bar reads. Derived from the same number
-   * the tile already shows -- a percent metric uses its own percent, a
-   * count/time metric is read against a soft, reasonable ceiling -- never
-   * a value invented separately from what's on screen. */
+  /** 0-100 for the donut tiles (On Queue, On a Call Now) -- derived from
+   * the same number already on the tile. */
   progressPct: number;
+  /** Which mini chart this tile draws below its value -- bar/line read the
+   * tile's own rolling history (`useKpiHistory`); meter and donut read a
+   * single current value, no history needed. */
+  chartType: 'bar' | 'line' | 'meter' | 'donut';
+  /** The raw number sampled into that rolling history -- `null` skips
+   * sampling (e.g. service level with nothing configured yet). */
+  rawValue: number | null;
+  /** Which way this specific metric improving actually points -- fewer
+   * people waiting is good, more calls answered is good -- so the trend
+   * chip's colour reflects whether the real change was an improvement,
+   * not just whether the number went up. */
+  goodDirection: 'up' | 'down';
 };
 
 const Home = () => {
@@ -340,30 +349,52 @@ const Home = () => {
   const ahtAnimated = useAnimatedNumber(avgHandleTime);
   const onCallAnimated = useAnimatedNumber(agentsOnCallPct);
 
+  /* Real rolling history for the sparklines/trend chips below -- see
+     `useKpiHistory` for why this exists instead of a report endpoint. */
+  const { getHistory, getTrend } = useKpiHistory({
+    waiting: waitingCalls.length,
+    longest: longestWaitSecs,
+    sla: serviceLevel.percent,
+    answered: totals.answered,
+    abandon: abandonRate,
+    aht: avgHandleTime,
+    onqueue: onlineAgentsCount,
+    agentsOnCall: agentsOnCallPct,
+  });
+
   const kpis: Kpi[] = [
     {
       key: 'waiting',
-      label: 'Waiting now',
+      title: 'Waiting Now',
+      subtitle: 'Calls in queue',
       value: round(waitingAnimated),
       sub: `across ${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}`,
       tone: waitingCalls.length > 5 ? 'bad' : undefined,
       icon: 'headset',
       color: '#7c3aed',
       progressPct: Math.min(100, (waitingCalls.length / 10) * 100),
+      chartType: 'bar',
+      rawValue: waitingCalls.length,
+      goodDirection: 'down',
     },
     {
       key: 'longest',
-      label: 'Longest wait',
+      title: 'Longest Wait',
+      subtitle: 'Current longest wait time',
       value: longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00',
       sub: longestWaitSecs > 120 ? 'past the breach mark' : 'within target',
       tone: longestWaitSecs > 120 ? 'bad' : undefined,
       icon: 'clock',
       color: 'var(--accent)',
       progressPct: Math.min(100, (longestWaitSecs / 300) * 100),
+      chartType: 'line',
+      rawValue: longestWaitSecs,
+      goodDirection: 'down',
     },
     {
       key: 'sla',
-      label: 'Service level',
+      title: 'Service Level',
+      subtitle: 'Calls answered in target',
       value: serviceLevel.percent === null ? '—' : `${Math.round(slaAnimated)}%`,
       /* The real goal, from the queues' own settings: one line when they all
          ask for the same thing, "per-queue targets" when they do not. */
@@ -383,51 +414,74 @@ const Home = () => {
       icon: 'target',
       color: 'var(--live)',
       progressPct: serviceLevel.percent === null ? 0 : Math.round(slaAnimated),
+      chartType: 'meter',
+      rawValue: serviceLevel.percent,
+      goodDirection: 'up',
     },
     {
       key: 'answered',
-      label: 'Answered today',
+      title: 'Answered Today',
+      subtitle: 'Total calls answered',
       value: round(answeredAnimated),
       sub: 'all queues',
-      icon: 'arrow-in',
+      icon: 'phone',
       color: '#2563eb',
       progressPct: Math.min(100, (totals.answered / 200) * 100),
+      chartType: 'bar',
+      rawValue: totals.answered,
+      goodDirection: 'up',
     },
     {
       key: 'abandon',
-      label: 'Abandon rate',
+      title: 'Abandon Rate',
+      subtitle: 'Calls dropped before answer',
       value: abandonRate === null ? '—' : `${Math.round(abandonAnimated)}%`,
       sub: abandonRate === null ? 'no calls in range' : 'of calls today',
       tone: abandonRate !== null && abandonRate > 5 ? 'bad' : undefined,
       icon: 'miss',
       color: 'var(--crit, #d32f2f)',
       progressPct: abandonRate === null ? 0 : Math.round(abandonAnimated),
+      chartType: 'bar',
+      rawValue: abandonRate,
+      goodDirection: 'down',
     },
     {
       key: 'aht',
-      label: 'Avg handle time',
+      title: 'Avg Handle Time',
+      subtitle: 'Average call duration',
       value: avgHandleTime === null ? '—' : formatSecsToClock(ahtAnimated),
       icon: 'bolt',
       color: '#0ea5e9',
       progressPct: avgHandleTime === null ? 0 : Math.min(100, (avgHandleTime / 600) * 100),
+      chartType: 'line',
+      rawValue: avgHandleTime,
+      goodDirection: 'down',
     },
     {
       key: 'onqueue',
-      label: 'On queue',
+      title: 'On Queue',
+      subtitle: 'Agents currently in queue',
       value: round(onlineAgentsAnimated),
       sub: `of ${agentRows.length} on the roster`,
       icon: 'users',
       color: '#7c3aed',
       progressPct: agentRows.length ? (onlineAgentsCount / agentRows.length) * 100 : 0,
+      chartType: 'donut',
+      rawValue: onlineAgentsCount,
+      goodDirection: 'up',
     },
     {
       key: 'agentsOnCall',
-      label: 'On a call now',
+      title: 'On a Call Now',
+      subtitle: 'Agents on active calls',
       value: agentsOnCallPct === null ? '—' : `${Math.round(onCallAnimated)}%`,
       sub: 'of agents on queue',
       icon: 'trend',
       color: '#0d9488',
       progressPct: agentsOnCallPct === null ? 0 : Math.round(onCallAnimated),
+      chartType: 'donut',
+      rawValue: agentsOnCallPct,
+      goodDirection: 'up',
     },
   ];
 
@@ -479,44 +533,92 @@ const Home = () => {
               <span className="dot green" />
               live
             </span>
-            <h4>Live performance</h4>
+            <h4>Live Performance</h4>
             <p>
               Everything you need, in real-time — wait times, service levels, occupancy and agent
               activity across your contact centre.
             </p>
-            {serviceLevel.percent !== null ? (
-              <span className="kpi-hero-chip">{Math.round(slaAnimated)}% Service level</span>
-            ) : null}
+            {/* The hero's own trend -- service level's rolling history
+                (`useKpiHistory`), the one figure on the strip that reads as
+                "how is the floor doing" on its own. */}
+            <div className="kpi-hero-chart">
+              <TrendArea data={getHistory('sla')} dataKey="v" color="var(--accent)" height={90} />
+            </div>
+            <div className={`kpi-hero-status${attention.length ? ' is-warn' : ''}`}>
+              <Ic n={attention.length ? 'alert' : 'bolt'} size={16} />
+              <div>
+                <div className="kpi-hero-status-title">
+                  {attention.length ? 'Needs attention' : 'System Healthy'}
+                </div>
+                <div className="kpi-hero-status-sub">
+                  {attention.length
+                    ? `${attention.length} item${attention.length === 1 ? '' : 's'} to review`
+                    : 'All queues operational'}
+                </div>
+              </div>
+            </div>
           </div>
-          {kpis.map((kpi) => (
-            // A breaching figure tints the whole tile, not just the number —
-            // the artifact's `alert` treatment, so it reads at a glance.
-            <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
-              <div className="kpi-main">
-                <div className="kpi-head">
+          {kpis.map((kpi) => {
+            const trend = getTrend(kpi.key);
+            const trendGood = trend ? trend.direction === kpi.goodDirection : true;
+            return (
+              // A breaching figure tints the whole tile, not just the number —
+              // the artifact's `alert` treatment, so it reads at a glance.
+              <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
+                <div className="kpi-top">
                   <span
                     className="kpi-badge"
                     style={{ background: `${kpi.color}1f`, color: kpi.color }}
                   >
-                    <Ic n={kpi.icon} size={16} />
+                    <Ic n={kpi.icon} size={18} />
                   </span>
-                  <span className="k">{kpi.label}</span>
+                  <div className="kpi-titles">
+                    <span className="kpi-title">{kpi.title}</span>
+                    <span className="kpi-subtitle">{kpi.subtitle}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="kpi-chevron"
+                    onClick={() => navigate('/performance')}
+                    aria-label={`${kpi.title} — open Performance`}
+                  >
+                    <Ic n="chev" size={12} />
+                  </button>
                 </div>
-                <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                <div className="kpi-value-row">
+                  <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                  {trend ? (
+                    <span className={`kpi-trend${trendGood ? ' is-good' : ' is-bad'}`}>
+                      <Ic n={trend.direction === 'down' ? 'down' : 'up'} size={10} />
+                      {trend.pct}%<small>vs last 30 min</small>
+                    </span>
+                  ) : null}
+                </div>
+                <div className="kpi-chart">
+                  {kpi.chartType === 'bar' ? (
+                    <SparkBars data={getHistory(kpi.key)} color={kpi.color} />
+                  ) : null}
+                  {kpi.chartType === 'line' ? (
+                    <SparkLine data={getHistory(kpi.key)} color={kpi.color} />
+                  ) : null}
+                  {kpi.chartType === 'meter' && kpi.meter ? (
+                    <LinearMeter
+                      value={kpi.meter.value}
+                      target={kpi.meter.target}
+                      color={kpi.color}
+                    />
+                  ) : null}
+                  {kpi.chartType === 'donut' ? (
+                    <div className="kpi-chart-donut">
+                      <RadialGauge value={kpi.progressPct} size={52} color={kpi.color} />
+                      <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
+                    </div>
+                  ) : null}
+                </div>
                 {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
               </div>
-              {/* Fills the dead space a short value/label pair left on the
-                  tile's right side with the same number the old footer bar
-                  read, just as a gauge instead of a flat line. */}
-              <div role="img" aria-label={`${Math.round(kpi.progressPct)}%`}>
-                <RadialGauge
-                  value={kpi.progressPct}
-                  size={46}
-                  color={kpi.tone === 'bad' ? 'var(--crit, #d32f2f)' : kpi.color}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ── needs you now, full width on its own row ─────────────────── */}

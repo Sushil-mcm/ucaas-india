@@ -2,7 +2,11 @@ import { useMemo } from 'react';
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   Cell,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   RadialBar,
@@ -11,6 +15,7 @@ import {
   Tooltip,
   XAxis,
 } from 'recharts';
+import type { HistoryPoint } from './use-kpi-history';
 
 /**
  * Shared recharts wrappers for Home — kept out of the main file since they're
@@ -162,3 +167,67 @@ export const TrendArea = ({
     </div>
   );
 };
+
+/** Tiny bar sparkline for a count-type KPI's own recent history
+ * (`useKpiHistory`) -- Waiting Now, Answered Today, Abandon Rate. */
+export const SparkBars = ({
+  data,
+  color = 'var(--accent)',
+  height = 44,
+}: {
+  data: HistoryPoint[];
+  color?: string;
+  height?: number;
+}) => (
+  <div style={{ width: '100%', height }}>
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <Bar dataKey="v" fill={color} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+);
+
+/** Smooth line sparkline for a time-type KPI's own recent history --
+ * Longest Wait, Avg Handle Time. */
+export const SparkLine = ({
+  data,
+  color = 'var(--accent)',
+  height = 44,
+}: {
+  data: HistoryPoint[];
+  color?: string;
+  height?: number;
+}) => (
+  <div style={{ width: '100%', height }}>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
+        <Line
+          type="monotone"
+          dataKey="v"
+          stroke={color}
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+);
+
+/** Service level's own value-against-target rail -- a plain, honest
+ * progress bar with a tick at the real target, not a chart. */
+export const LinearMeter = ({
+  value,
+  target,
+  color = 'var(--live)',
+}: {
+  value: number;
+  target: number;
+  color?: string;
+}) => (
+  <div className="kpi-linear-meter" role="img" aria-label={`${value}% against a ${target}% target`}>
+    <span style={{ width: `${Math.max(2, Math.min(100, value))}%`, background: color }} />
+    <i style={{ left: `${Math.min(100, target)}%` }} />
+  </div>
+);
