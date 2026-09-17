@@ -2853,34 +2853,32 @@
   color: var(--ink-3);
 }
 
+/* Matches Directory's own search chip (.fchip in page-shell.css/tsx) —
+   height, radius and border, rather than the taller full-pill shape this
+   had before, which was the one thing on this bar that didn't look like
+   the rest of the app's search fields. */
 .mcm-adminhome-search {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-width: 260px;
-  padding: 8px 14px;
+  gap: 8px;
+  min-width: 220px;
+  max-width: 320px;
+  height: 30px;
+  padding: 0 11px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 8px;
   background: var(--surface);
-  /* A faint inset lip reads as a slightly recessed slot rather than a flat
-     tinted rectangle — the same cue a well-made search field in a native
-     app uses, just dialled down. */
-  box-shadow:
-    var(--shadow-sm),
-    inset 0 1px 1px rgba(13, 21, 38, 0.03);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 .mcm-adminhome-search:hover {
-  border-color: var(--ink-4);
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
 }
 .mcm-adminhome-search:focus-within {
   border-color: var(--accent-edge);
-  box-shadow:
-    var(--shadow-sm),
-    inset 0 1px 1px rgba(13, 21, 38, 0.03),
-    0 0 0 3px var(--accent-wash);
+  box-shadow: 0 0 0 3px var(--accent-wash);
 }
 .mcm-adminhome-search .ic {
   color: var(--ink-4);
@@ -2896,7 +2894,7 @@
   outline: 0;
   background: transparent;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.005em;
 }
@@ -2909,7 +2907,10 @@
   flex: none;
   margin: 0;
   padding: 0 22px;
-  background: var(--surface);
+  /* Was var(--surface) (white) — the head bar above it now floats as its
+     own white card on the page's cream, so this strip having its own
+     separate white background read as a second, disconnected white band. */
+  background: transparent;
 }
 
 .mcm-adminhome-body {
@@ -2923,27 +2924,31 @@
    tallest one, so a one-item section left a tall empty box beside a seven-item
    one — which is what made the page look scattered. Columns let each card take
    only the height it needs and pack up the page. */
+/* Was CSS multi-column (column-count) — masonry fills each column top to
+   bottom before moving to the next, so a short card's neighbour in the next
+   column starts wherever that column's previous card happened to end, not
+   at the same height. Real cards in the same row never lined up. A grid
+   with align-items: start keeps each row starting flush without forcing
+   every card in it to the same height. */
 .mcm-admingrid {
-  column-gap: 16px;
-  column-count: 1;
-}
-.mcm-admingrid > * {
-  break-inside: avoid;
-  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 16px;
 }
 @media (min-width: 700px) {
   .mcm-admingrid {
-    column-count: 2;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (min-width: 1120px) {
   .mcm-admingrid {
-    column-count: 3;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 @media (min-width: 1560px) {
   .mcm-admingrid {
-    column-count: 4;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -6386,11 +6391,11 @@
   display: contents;
 }
 
-/* The landing page's search sits in the head now rather than on the page, so
-   it has to fit the bar's 65px rather than set its own height. */
+/* The landing page's search sits in the head now rather than on the page —
+   the base .mcm-adminhome-search rule already sets a fixed 30px height that
+   fits the bar's 65px fine without this needing its own override. */
 .mcm-admin .mcm-adminhead .mcm-adminhome-search {
-  min-width: 240px;
-  padding: 7px 14px;
+  min-width: 220px;
 }
 
 /* The sidebar's title bar and the page head sit side by side and their bottom
