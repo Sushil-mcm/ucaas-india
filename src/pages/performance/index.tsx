@@ -3,16 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   PhoneIncoming,
   AlarmClock,
-  Gauge,
-  Clock,
   PhoneCall,
-  PhoneMissed,
   Users,
   Activity,
   TriangleAlert,
   RotateCw,
   Search,
   X,
+  Target,
+  Zap,
 } from 'lucide-react';
 import moment from 'moment';
 import './live-theme.css';
@@ -22,7 +21,6 @@ import Timer from '@/components/timer';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { PERFORMANCE_VIEWS, isViewAllowedByPlan } from '@/components/custom/nav-areas';
-import { serviceLevelBand } from '@/lib/queue-series';
 import QueuesActivityTab from './queues-activity-tab';
 import CampaignActivityTab from './campaign-activity-tab';
 import AgentsTab from './agents-tab';
@@ -35,11 +33,10 @@ import SpeechTextTab from './speech-text-tab';
 import ReportsTab from './reports-tab';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
 import { formatSecsToClock } from './format';
-import { useTrend } from './use-trend';
-import HeroStatCard from './hero-stat-card';
-import PerfStatCard from './stat-card';
 import AnimatedValue from './animated-value';
 import DataFreshness from './data-freshness';
+import PerfKpiTile from './perf-kpi-tile';
+import { useKpiHistory } from '@/pages/dashboard/home/use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 
 import LiveDashboard from '@/pages/dashboard/live-dashboard';
@@ -94,17 +91,6 @@ const LIVE_DATA_TABS = new Set([
   'dashboards',
   'agents',
 ]);
-
-const slaTone = (
-  sla: number | null,
-  targetPercent: number | null,
-): 'default' | 'success' | 'warning' | 'danger' => {
-  const band = serviceLevelBand(sla, targetPercent);
-  if (band === 'good') return 'success';
-  if (band === 'warn') return 'warning';
-  if (band === 'bad') return 'danger';
-  return 'default';
-};
 
 const Performance = () => {
   const { view: viewParam } = useParams<{ view: string }>();
@@ -209,15 +195,22 @@ const Performance = () => {
      `AnimatedValue`, which each card renders. They ran at page level, so every
      animation frame re-rendered the whole page to repaint one tile. */
 
-  // Trends read off the real polled value, not the animated display value —
-  // the animated one is mid-flight for ~1.8s after every tick, which would
-  // flip the arrow on every render instead of only when the number actually
-  // moves between polls.
-  const waitingTrend = useTrend(waitingCalls.length);
-  const ahtTrend = useTrend(avgHandleTime);
-  const abandonTrend = useTrend(abandonRate);
-
   const isBreachingWait = longestWaitSecs > 120;
+
+  /* Backs the KPI band's sparklines and "%" trend pills — same rolling
+     in-memory sampler Home's own KPI strip uses (there's no historical
+     report endpoint behind these live figures either). Starts empty on
+     load; a pill only appears once ~30 minutes of samples exist. */
+  const { getHistory, getTrend } = useKpiHistory({
+    waiting: waitingCalls.length,
+    longestWait: longestWaitSecs,
+    serviceLevel: serviceLevel.percent,
+    handleTime: avgHandleTime,
+    answered: totals.answered,
+    abandon: abandonRate,
+    onQueue: onlineAgentsCount,
+    onCallPct: agentsOnCallPct,
+  });
 
   return (
     // `mcm-page` scopes the shared console design system (stat tiles, panels,
@@ -364,70 +357,47 @@ const Performance = () => {
         !(activeTab === 'queues-activity' && selectedQueueUuid) && (
           <div className="page-band">
             <style>{`
-            /* Waiting / Longest wait are what a supervisor triages on first —
-               sized up and, past target, ringed so they're findable without
-               reading every tile. The rest are individual single-metric
-               tiles (same style as Performance ▸ Agents' KPI strip), all
-               eight sharing one row. */
-            .mcm-page .hero-row {
+            /* Eight colour-coded tiles (icon badge, value, trend pill,
+               sparkline/meter footer) — replaces the old two-hero +
+               six-plain-tile "hero-row" layout with one consistent card
+               per metric, matching the reference this band was rebuilt
+               against. */
+            .mcm-page .perf-kpi-row {
               display:grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-              align-items:stretch; gap:10px; padding-top:12px;
+              gap:12px; padding-top:12px;
             }
             @media (min-width: 900px) {
-              .mcm-page .hero-row { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+              .mcm-page .perf-kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             }
-            .mcm-page .hero-stat { padding:16px 18px; }
-            .mcm-page .hero-stat-icon {
-              display:grid; place-items:center; width:22px; height:22px; flex:none; border-radius:99px;
-              background:var(--accent-wash); color:var(--accent-ink);
+            .mcm-page .perf-kpi-tile {
+              display:flex; flex-direction:column; gap:8px;
+              padding:14px 16px; border-radius:16px; border:1px solid;
+              transition: transform 0.15s ease, box-shadow 0.15s ease;
             }
-            .mcm-page .hero-stat-icon-breach { background:var(--crit-wash); color:var(--crit); }
-            .mcm-page .hero-stat-value-row {
-              display:flex; align-items:baseline; gap:8px; margin-top:6px;
+            .mcm-page .perf-kpi-tile:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12);
             }
-            /* .hero-row .stat .v below (heading-to-value spacing) also
-               matches this span, since it's a .v nested inside .stat — but
-               flex containers don't collapse margins with their items, so
-               that margin-top would add unwanted extra space inside the
-               row on top of the row's own margin-top. The row already
-               supplies the 6px gap from the heading; the span itself needs
-               none. */
-            .mcm-page .hero-row .stat .hero-stat-value-row .v {
-              margin-top: 0;
+            .mcm-page .perf-kpi-top { display:flex; align-items:center; justify-content:space-between; }
+            .mcm-page .perf-kpi-badge {
+              display:flex; align-items:center; justify-content:center;
+              width:36px; height:36px; flex:none; border-radius:999px;
             }
-            .mcm-page .hero-stat-value { font-size:38px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
-            .mcm-page .hero-stat-trend { font-size:18px; font-weight:800; line-height:1; }
-            .mcm-page .hero-stat-trend.bad { color:var(--crit); }
-            .mcm-page .hero-stat-trend.good { color:var(--live); }
-            .mcm-page .hero-stat-breach { box-shadow: 0 0 0 1px var(--crit), 0 0 0 0 var(--crit-wash); animation: hero-pulse 2s ease-in-out infinite; }
-            @keyframes hero-pulse {
-              0%, 100% { box-shadow: 0 0 0 1px var(--crit), 0 0 0 0 var(--crit-wash); }
-              50% { box-shadow: 0 0 0 1px var(--crit), 0 0 0 8px transparent; }
+            .mcm-page .perf-kpi-trend {
+              display:inline-flex; align-items:center; gap:2px;
+              padding:2px 8px; border-radius:999px;
+              font-size:11.5px; font-weight:800; white-space:nowrap;
+              background: var(--surface-3, #eef1f6); color: var(--ink-3, #6b7891);
             }
-            /* Every KPI tile's heading always wraps to two lines (each
-               label below carries its own \n) and its bottom line always
-               stays to one, so the value/sub start at the same row across
-               every card regardless of label length. Heading/bottom-line
-               colour (grey normally, crit red together when a hero card
-               breaches) lives in queues-theme.css, which needs the
-               body.perf-warm-backdrop chain to outrank this same rule. */
-            .mcm-page .hero-row .stat .k {
-              white-space: pre-line; line-height: 1.3;
-            }
-            /* Matches HeroStatCard's own hero-stat-value-row margin-top,
-               so heading-to-number spacing is 6px on every card instead of
-               the plain PerfStatCard tiles using .stat .v's base 5px. */
-            .mcm-page .hero-row .stat .v {
-              margin-top: 6px;
-            }
-            .mcm-page .hero-row .stat .d {
-              display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-            }
-
-            .mcm-page .stat-trend { font-size:13px; font-weight:800; margin-left:5px; }
-            .mcm-page .stat-trend.bad { color:var(--crit); }
-            .mcm-page .stat-trend.good { color:var(--live); }
-
+            .mcm-page .perf-kpi-trend.is-good { background: var(--live-wash, #d9f2ee); color: var(--live, #0d9488); }
+            .mcm-page .perf-kpi-trend.is-bad { background: var(--crit-wash, #fbe2e2); color: var(--crit, #d32f2f); }
+            .mcm-page .perf-kpi-titles { display:flex; flex-direction:column; gap:2px; }
+            .mcm-page .perf-kpi-title { font-size:12.5px; font-weight:700; color: var(--ink-3, #6b7891); }
+            .mcm-page .perf-kpi-value { font-size:26px; font-weight:800; letter-spacing:-0.02em; line-height:1.2; color: var(--ink, #0d1526); }
+            .mcm-page .perf-kpi-subtitle { font-size:11.5px; color: var(--ink-4, #93a0b8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .mcm-page .perf-kpi-chart { min-height:36px; }
+            .mcm-page .perf-kpi-chart-meter { display:flex; flex-direction:column; gap:6px; justify-content:center; }
+            .mcm-page .perf-kpi-meter-target { font-size:11px; font-weight:600; color: var(--ink-4, #93a0b8); align-self:flex-end; }
           `}</style>
             {/* A feed that failed used to be invisible: every query defaults to
                 an empty list, so an unreachable API produced Waiting 0,
@@ -451,84 +421,96 @@ const Performance = () => {
                 </button>
               </div>
             )}
-            <div className="hero-row">
-              <HeroStatCard
-                label={'Waiting\nCalls'}
+            <div className="perf-kpi-row">
+              <PerfKpiTile
+                icon={PhoneIncoming}
+                color="#7c3aed"
+                title="Waiting Calls"
+                subtitle={`across ${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}`}
                 value={
                   <AnimatedValue value={waitingCalls.length} format={(n) => String(Math.round(n))} />
                 }
-                sub={`across ${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}`}
-                breaching={waitingCalls.length > 5}
-                trend={waitingTrend}
-                trendBadWhenUp
-                icon={PhoneIncoming}
+                trend={getTrend('waiting')}
+                chart={{ type: 'line', data: getHistory('waiting') }}
               />
-              <HeroStatCard
-                label={'Longest\nWait'}
-                value={longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00'}
-                sub={isBreachingWait ? 'breaching' : 'within target'}
-                breaching={isBreachingWait}
+              <PerfKpiTile
                 icon={AlarmClock}
+                color="#f59e0b"
+                title="Longest Wait"
+                subtitle={isBreachingWait ? 'breaching' : 'within target'}
+                value={longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00'}
+                trend={getTrend('longestWait')}
+                chart={{ type: 'line', data: getHistory('longestWait') }}
               />
-              <PerfStatCard
-                label={'Service\nLevel'}
-                value={<AnimatedValue value={serviceLevel.percent} format={(n) => `${Math.round(n)}%`} />}
+              <PerfKpiTile
+                icon={Target}
+                color="#10b981"
+                title="Service Level"
                 /* The real goal: one line when every queue asks for the same thing,
                    "per-queue targets" when they do not. Never a fixed number. */
-                sub={serviceLevel.targetText}
-                icon={Gauge}
-                tone={slaTone(serviceLevel.percent, serviceLevel.targetPercent)}
-              />
-              <PerfStatCard
-                label={'Handle\nTime'}
+                subtitle={serviceLevel.targetText}
                 value={
-                  <>
-                    <AnimatedValue value={avgHandleTime} format={formatSecsToClock} />
-                    {ahtTrend !== 'flat' && (
-                      <span className={`stat-trend${ahtTrend === 'up' ? ' bad' : ' good'}`}>
-                        {ahtTrend === 'up' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </>
+                  <AnimatedValue value={serviceLevel.percent} format={(n) => `${Math.round(n)}%`} />
                 }
-                sub="Team average"
-                icon={Clock}
+                trend={getTrend('serviceLevel')}
+                goodWhenUp
+                chart={{
+                  type: 'meter',
+                  value: serviceLevel.percent ?? 0,
+                  target: serviceLevel.targetPercent ?? 80,
+                }}
               />
-              <PerfStatCard
-                label={'Answered\nCalls'}
-                value={<AnimatedValue value={totals.answered} format={(n) => String(Math.round(n))} />}
-                sub={`of ${callStats.totalCalls} calls`}
+              <PerfKpiTile
+                icon={Zap}
+                color="#2563eb"
+                title="Handle Time"
+                subtitle="Team average"
+                value={<AnimatedValue value={avgHandleTime} format={formatSecsToClock} />}
+                trend={getTrend('handleTime')}
+                chart={{ type: 'line', data: getHistory('handleTime') }}
+              />
+              <PerfKpiTile
                 icon={PhoneCall}
-              />
-              <PerfStatCard
-                label={'Abandon\nRate'}
+                color="#db2777"
+                title="Answered Calls"
+                subtitle={`of ${callStats.totalCalls} calls`}
                 value={
-                  <>
-                    <AnimatedValue value={abandonRate} format={(n) => `${Math.round(n)}%`} />
-                    {abandonTrend !== 'flat' && (
-                      <span className={`stat-trend${abandonTrend === 'up' ? ' bad' : ' good'}`}>
-                        {abandonTrend === 'up' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </>
+                  <AnimatedValue value={totals.answered} format={(n) => String(Math.round(n))} />
                 }
-                sub={`${callStats.missedCalls} missed`}
-                icon={PhoneMissed}
-                tone={abandonRate !== null && abandonRate > 5 ? 'danger' : 'default'}
+                trend={getTrend('answered')}
+                goodWhenUp
+                chart={{ type: 'line', data: getHistory('answered') }}
               />
-              <PerfStatCard
-                label={'On\nQueue'}
+              <PerfKpiTile
+                icon={X}
+                color="#dc2626"
+                title="Abandon Rate"
+                subtitle={`${callStats.missedCalls} missed`}
+                value={<AnimatedValue value={abandonRate} format={(n) => `${Math.round(n)}%`} />}
+                trend={getTrend('abandon')}
+                chart={{ type: 'line', data: getHistory('abandon') }}
+              />
+              <PerfKpiTile
+                icon={Users}
+                color="#9333ea"
+                title="On Queue"
+                subtitle={`of ${agentRows.length} active`}
                 value={
                   <AnimatedValue value={onlineAgentsCount} format={(n) => String(Math.round(n))} />
                 }
-                sub={`of ${agentRows.length} active`}
-                icon={Users}
+                trend={getTrend('onQueue')}
+                goodWhenUp
+                chart={{ type: 'line', data: getHistory('onQueue') }}
               />
-              <PerfStatCard
-                label={'On a\nCall Now'}
-                value={<AnimatedValue value={agentsOnCallPct} format={(n) => `${Math.round(n)}%`} />}
-                sub="of agents on queue"
+              <PerfKpiTile
                 icon={Activity}
+                color="#f97316"
+                title="On A Call Now"
+                subtitle="of agents on queue"
+                value={<AnimatedValue value={agentsOnCallPct} format={(n) => `${Math.round(n)}%`} />}
+                trend={getTrend('onCallPct')}
+                goodWhenUp
+                chart={{ type: 'line', data: getHistory('onCallPct') }}
               />
             </div>
           </div>
