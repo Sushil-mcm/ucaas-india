@@ -504,10 +504,13 @@
 /* 3 items on top, 2 underneath -- equal-width (1fr) columns instead of
    auto/content-sized ones, so a long "Missed calls today" can never push
    the grid wider than the card (it wraps to a second line in its own
-   column instead), and every row stays aligned regardless of card width. */
+   column instead), and every row stays aligned regardless of card width.
+   Capped at 400px so on a wide card the block stays compact next to the
+   donut instead of the 1fr columns stretching to the card's full width. */
 .home-v2 .day-split-legend {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 400px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
