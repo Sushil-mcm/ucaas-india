@@ -1189,7 +1189,7 @@ const Home = () => {
               All agents
             </button>
           </div>
-          <div className="tbl-wrap">
+          <div className="tbl-wrap tbl-enhanced">
             <table>
               <thead>
                 <tr>
@@ -1206,13 +1206,18 @@ const Home = () => {
                   agentsByActivity.map((agent) => (
                     <tr key={agent.extension || agent.name}>
                       <td>
-                        <span style={{ fontWeight: 700 }}>{agent.name}</span>
-                        {agent.extension ? (
-                          <span className="num" style={{ color: 'var(--ink-4)' }}>
-                            {' '}
-                            · {agent.extension}
-                          </span>
-                        ) : null}
+                        <span className="tbl-row-name">
+                          <i
+                            className="tbl-dot"
+                            style={{ background: STATE_COLOR[agent.status] || 'var(--ink-4)' }}
+                          />
+                          <span style={{ fontWeight: 700 }}>{agent.name}</span>
+                          {agent.extension ? (
+                            <span className="num" style={{ color: 'var(--ink-4)' }}>
+                              · {agent.extension}
+                            </span>
+                          ) : null}
+                        </span>
                       </td>
                       <td>{agent.queueOrCampaign}</td>
                       <td>
