@@ -45,11 +45,15 @@ const PerfKpiTile = ({
         : !goodWhenUp
       : null;
 
+  /* A sparkline built from only 1-2 real samples (a fresh page load) is a
+     single flat segment stretched across the tile's full width — not a
+     chart, just an ugly stray line/bar. Rather than show that, the chart
+     area stays empty until there's enough history to actually look like
+     one; the meter doesn't need history so it's exempt. */
+  const hasEnoughHistory = chart?.type !== 'meter' ? (chart?.data.length ?? 0) >= 4 : true;
+
   return (
-    <div
-      className="perf-kpi-tile"
-      style={{ background: `linear-gradient(135deg, ${color}17, #fff 60%)`, borderColor: `${color}26` }}
-    >
+    <div className="perf-kpi-tile" style={{ background: `${color}0c`, borderColor: `${color}26` }}>
       <div className="perf-kpi-top">
         <span className="perf-kpi-badge" style={{ background: `${color}1f`, color }}>
           <Icon size={18} />
@@ -65,17 +69,17 @@ const PerfKpiTile = ({
         <span className="perf-kpi-value">{value}</span>
         <span className="perf-kpi-subtitle">{subtitle}</span>
       </div>
-      {chart?.type === 'line' && (
+      {hasEnoughHistory && chart?.type === 'line' && (
         <div className="perf-kpi-chart">
           <SparkLine data={chart.data} color={color} height={36} />
         </div>
       )}
-      {chart?.type === 'bar' && (
+      {hasEnoughHistory && chart?.type === 'bar' && (
         <div className="perf-kpi-chart">
           <SparkBars data={chart.data} color={color} height={36} />
         </div>
       )}
-      {chart?.type === 'area' && (
+      {hasEnoughHistory && chart?.type === 'area' && (
         <div className="perf-kpi-chart">
           <SparkArea data={chart.data} color={color} height={36} />
         </div>

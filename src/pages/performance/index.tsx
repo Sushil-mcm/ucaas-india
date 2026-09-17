@@ -365,10 +365,6 @@ const Performance = () => {
             .mcm-page .perf-kpi-row {
               display:grid; grid-template-columns: repeat(2, minmax(0, 1fr));
               gap:12px; padding-top:12px;
-              /* Capped rather than stretching to the full viewport on a wide
-                 monitor — past this width the tiles were mostly empty
-                 padding around a small value, not a card. */
-              max-width: 1320px;
             }
             @media (min-width: 900px) {
               .mcm-page .perf-kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
