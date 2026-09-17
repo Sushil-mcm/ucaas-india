@@ -482,14 +482,16 @@
   display: block;
 }
 .mcm-console .phone-grid {
-  /* All three columns are capped, not just the stage — an unbounded column
-     either stretches the keypad's keys apart (stage) or leaves the copilot
-     panel mostly empty on a wide monitor (panel). `justify-content: center`
-     means any width left over past the three caps becomes even margins on
-     both sides instead of one lopsided gap on the right. */
+  /* The call list is the one column that's fine wide or narrow, so it's the
+     only one left flexible (`1fr`) — it soaks up whatever width is left
+     over, which is what actually fills the grid's own box edge-to-edge.
+     Capping every column instead (no `fr` at all) left a real gap after
+     the last column with nothing painted in it, so it showed the page
+     behind the console rather than the console's own background. Stage and
+     panel stay capped so neither the keypad's keys nor the copilot panel
+     stretch wide and empty. */
   display: grid;
-  grid-template-columns: 420px minmax(420px, 520px) minmax(380px, 440px);
-  justify-content: center;
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 520px) minmax(380px, 440px);
   height: 100%;
   overflow: hidden;
 }
@@ -2370,7 +2372,7 @@
 }
 @media (max-width: 1240px) {
   .mcm-console .phone-grid {
-    grid-template-columns: 380px minmax(380px, 460px) minmax(340px, 400px);
+    grid-template-columns: minmax(360px, 1fr) minmax(380px, 460px) minmax(340px, 400px);
   }
 }
 @media (max-width: 900px) {
@@ -4043,7 +4045,7 @@
    ============================================================ */
 .mcm-console .col.stage .stage-inner > .card {
   border-radius: 20px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
 }
 .mcm-console .col.stage .stage-inner .chip {
   box-shadow: var(--shadow-sm);
