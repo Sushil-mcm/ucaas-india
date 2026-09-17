@@ -728,23 +728,13 @@ const NotificationContent = ({
             : `${categorySnoozedCount} snoozed — Show`}
         </button>
       )}
-      {/* The scrollbar itself (6px) only ever reserves space on the right,
-          with nothing matching on the left — so a row's icon sat flush
-          against the true left edge while its text stopped ~6px short of
-          the true right edge, before the scrollbar even appears. `pl-1.5`
-          gives the left the same 6px the scrollbar silently takes from the
-          right, and `scrollbar-gutter: stable` keeps that 6px reserved
-          even when the list is short enough that no scrollbar shows, so
-          the balance doesn't shift depending on how many rows there are. */}
-      {/* overflow-y-auto/overflow-x-hidden, not overflow-auto on both axes —
-          a row's content sitting even 1px wider than the list (rounding
-          from the padding/scrollbar-gutter above) was enough to open a
-          horizontal scrollbar along the bottom of every row, which had
-          nothing to actually scroll left-right. */}
-      <div
-        className="w-full overflow-y-auto overflow-x-hidden flex-1 min-h-0 pl-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent]"
-        style={{ scrollbarGutter: 'stable' }}
-      >
+      {/* A permanently-reserved scrollbar gutter (tried here previously, to
+          balance left/right spacing) read as a dead strip of empty space
+          down the right edge instead — the scrollbar only takes up real
+          width while the thumb is visibly there, on hover/scroll, not as
+          a constant reservation. overflow-x-hidden stays: the vertical
+          scrollbar is all this list should ever show. */}
+      <div className="w-full overflow-y-auto overflow-x-hidden flex-1 min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent]">
         {notificationLoading && mutatedNotifications?.length == 0 ? (
           <div role="status" aria-label="Loading notifications" className="flex justify-center items-center h-full">
             <Loader variant="blue" />
