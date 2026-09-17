@@ -4059,7 +4059,7 @@
 }
 
 .mcm-console .col.calls .seg {
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--line-2);
 }
 .mcm-console .col.calls .seg button {
@@ -4074,7 +4074,7 @@
   text-overflow: clip;
 }
 .mcm-console .col.calls .seg button.on {
-  background: var(--accent-wash);
+  background: rgba(242, 153, 74, 0.14);
   color: var(--accent-ink);
   box-shadow: var(--shadow-sm);
 }
@@ -4107,7 +4107,9 @@
     transform 0.15s ease;
 }
 .mcm-console .col.calls .call-row:hover {
-  background: var(--accent-wash);
+  /* Lighter than the selected state's --accent-wash, so hovering a row
+     doesn't read as though it's already selected. */
+  background: rgba(242, 153, 74, 0.08);
   border-color: var(--accent-edge);
   box-shadow: var(--shadow);
   transform: translateY(-1px);
