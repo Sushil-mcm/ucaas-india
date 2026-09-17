@@ -209,15 +209,17 @@ const CallRecord = ({
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="record-name">
-            {/* The live contact book wins over the row's snapshot, so a
-                contact saved from this screen renames it at once. */}
-            {savedContact?.name ? (
-              savedContact.name
-            ) : isNumberLike(row.name) ? (
-              <NumberWithFlag number={row.name} className="num" />
-            ) : (
-              row.name
-            )}
+            <span className="record-name-text">
+              {/* The live contact book wins over the row's snapshot, so a
+                  contact saved from this screen renames it at once. */}
+              {savedContact?.name ? (
+                savedContact.name
+              ) : isNumberLike(row.name) ? (
+                <NumberWithFlag number={row.name} className="num" />
+              ) : (
+                row.name
+              )}
+            </span>
             {row.contactId || savedContact ? <span className="tag acc">Contact</span> : null}
           </div>
           <div className="record-sub num">
