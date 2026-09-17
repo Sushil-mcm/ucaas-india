@@ -99,6 +99,27 @@ const slTag = (sla: number | null) => {
   return <span className={`tag ${tone}`}>{Math.round(sla)}%</span>;
 };
 
+/** Same thresholds as slTag, as a plain status dot for the queue name cell --
+ * lets you read "which queue is hurting" down the row labels themselves,
+ * before your eye even reaches the SL column. */
+const slDotClass = (sla: number | null) =>
+  sla === null ? 'neu' : sla >= 85 ? 'pos' : sla >= 80 ? 'neu' : 'neg';
+
+/** First-letter avatar chip for a caller name -- coloured by a stable hash
+ * of the name so the same customer keeps the same colour call to call. */
+const AVATAR_COLORS = ['#f2994a', '#2f9e6e', '#3f7bd6', '#c2593f', '#8a63d2', '#c9962f'];
+const nameAvatar = (name: string) => {
+  const initial = name.trim().charAt(0).toUpperCase() || '?';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  const color = AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  return (
+    <span className="tbl-avatar" style={{ background: `${color}22`, color }}>
+      {initial}
+    </span>
+  );
+};
+
 type Kpi = {
   key: string;
   title: string;
@@ -940,7 +961,7 @@ const Home = () => {
               All queues
             </button>
           </div>
-          <div className="tbl-wrap">
+          <div className="tbl-wrap tbl-enhanced">
             <table>
               <thead>
                 <tr>
@@ -958,8 +979,19 @@ const Home = () => {
                 {queueRows.length ? (
                   queueRows.map((row) => (
                     <tr key={row.uuid}>
-                      <td style={{ fontWeight: 700 }}>{row.name}</td>
-                      <td className="num">{row.waiting}</td>
+                      <td style={{ fontWeight: 700 }}>
+                        <span className="tbl-row-name">
+                          <i className={`tbl-dot ${slDotClass(row.sla)}`} />
+                          {row.name}
+                        </span>
+                      </td>
+                      <td className="num">
+                        {row.waiting > 0 ? (
+                          <span className="tag warn">{row.waiting}</span>
+                        ) : (
+                          row.waiting
+                        )}
+                      </td>
                       <td className="num">
                         {row.longestWaitTimestamp ? (
                           <Timer startTime={row.longestWaitTimestamp} />
@@ -1009,7 +1041,7 @@ const Home = () => {
               {interactions.length} in progress
             </span>
           </div>
-          <div className="tbl-wrap">
+          <div className="tbl-wrap tbl-enhanced">
             <table>
               <thead>
                 <tr>
@@ -1029,7 +1061,12 @@ const Home = () => {
                       <td className="num">
                         {call.startedAt ? moment(call.startedAt).format('HH:mm') : '—'}
                       </td>
-                      <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{call.customer}</td>
+                      <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        <span className="tbl-row-name">
+                          {nameAvatar(call.customer)}
+                          {call.customer}
+                        </span>
+                      </td>
                       <td className="num">{call.number}</td>
                       <td>{call.queue}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>{call.agent}</td>
