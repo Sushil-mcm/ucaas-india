@@ -554,18 +554,34 @@
   flex: none;
   display: grid;
   place-items: center;
-  color: #fff;
-  background: linear-gradient(150deg, var(--accent), var(--accent-ink));
-  box-shadow: 0 3px 8px rgba(234, 124, 30, 0.28);
+  color: var(--accent-ink);
+  background: var(--accent-wash);
 }
-.mcm-console .col-title-sub {
-  margin: 1px 0 0;
-  font-size: 11px;
+.mcm-console .col-title-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.mcm-console .col-title-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
   color: var(--ink-3);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.mcm-console .col-title-info:hover {
+  color: var(--accent-ink);
+  border-color: var(--accent-edge);
+  background: var(--accent-wash);
 }
 .mcm-console .seg {
   display: flex;
@@ -4056,9 +4072,9 @@
   text-overflow: clip;
 }
 .mcm-console .col.calls .seg button.on {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(234, 124, 30, 0.28);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
 }
 
 .mcm-console .col.calls .search-mini input {

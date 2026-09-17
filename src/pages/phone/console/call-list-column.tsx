@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { Info } from 'lucide-react';
 import { pickCounterpartNumber } from '@/lib/call-number';
 import moment from 'moment';
 import { lightenColorWithAlpha, stringToColour } from '@/lib/utils';
 import { callMoment, callTimestamp } from '@/lib/call-time';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 import { fetchPhone } from '@/services/api';
 import { useFetchContact } from '@/hooks/common';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -471,9 +473,13 @@ const CallListColumn = ({
           <div className="col-title-icon">
             <Ic n="phone" size={16} />
           </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="col-title-heading">
             <h2>Phone</h2>
-            <p className="col-title-sub">Manage and handle your calls</p>
+            <CustomTooltip text="Manage and handle your calls" side="bottom" className="max-w-xs">
+              <button type="button" className="col-title-info" aria-label="About Phone">
+                <Info size={13} aria-hidden="true" />
+              </button>
+            </CustomTooltip>
           </div>
           <div className="console-datefilter">
             <DateDropdown
