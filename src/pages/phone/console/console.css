@@ -538,6 +538,7 @@
 .mcm-console .col-title {
   display: flex;
   align-items: center;
+  gap: 10px;
   justify-content: space-between;
 }
 .mcm-console .col-title h2 {
@@ -545,6 +546,26 @@
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+.mcm-console .col-title-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(150deg, var(--accent), var(--accent-ink));
+  box-shadow: 0 3px 8px rgba(234, 124, 30, 0.28);
+}
+.mcm-console .col-title-sub {
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mcm-console .seg {
   display: flex;
@@ -581,7 +602,7 @@
   border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--surface);
-  padding: 0 12px 0 32px;
+  padding: 0 34px 0 32px;
   font-size: 13px;
   transition: border-color 0.15s ease;
 }
@@ -597,6 +618,10 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--ink-4);
+}
+.mcm-console .search-mini-filter {
+  left: auto;
+  right: 11px;
 }
 .mcm-console .list {
   flex: 1;
@@ -630,29 +655,20 @@
   background: var(--accent);
 }
 .mcm-console .cr-av {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
+  width: 38px;
+  height: 38px;
+  border-radius: 99px;
   flex: none;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 800;
   color: var(--ink-2);
   background: var(--surface-3);
 }
-.mcm-console .cr-av.in {
-  background: var(--live-wash);
-  color: var(--live);
-}
-.mcm-console .cr-av.out {
-  background: var(--accent-wash);
-  color: var(--accent-ink);
-}
-.mcm-console .cr-av.miss {
-  background: var(--crit-wash);
-  color: var(--crit);
-}
+/* Unsaved numbers (no name to hash a colour from) fall back to this neutral
+   circle with a phone glyph instead — see the inline style callers set for
+   everyone else. */
 .mcm-console .cr-body {
   flex: 1;
   min-width: 0;
@@ -713,11 +729,57 @@
   min-width: 0;
   overflow: hidden;
 }
-.mcm-console .cr-time {
-  margin-left: auto;
-  font-size: 10.5px;
-  color: var(--ink-4);
+/* The day/time block moved out of `.cr-top` into its own column on the far
+   right of the row (day label above, clock time below), same place a
+   messaging app puts it — freed up `.cr-top` for just the name. */
+.mcm-console .cr-right {
   flex: none;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-top: 1px;
+}
+.mcm-console .cr-day {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.mcm-console .cr-clock {
+  font-size: 10px;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+/* Direction moved off the avatar and onto its own line: an icon plus a
+   coloured label plus the talk time, so scanning the list for "who did I
+   miss" doesn't require reading every avatar's colour. */
+.mcm-console .cr-direction {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.mcm-console .cr-direction svg {
+  width: 11px;
+  height: 11px;
+  flex: none;
+}
+.mcm-console .cr-direction.in {
+  color: var(--live);
+}
+.mcm-console .cr-direction.out {
+  color: var(--accent-ink);
+}
+.mcm-console .cr-direction.miss {
+  color: var(--crit);
+}
+.mcm-console .cr-direction .num {
+  color: var(--ink-4);
+  font-weight: 500;
 }
 .mcm-console .cr-num {
   font-size: 11.5px;
@@ -3992,12 +4054,9 @@
   text-overflow: clip;
 }
 .mcm-console .col.calls .seg button.on {
-  /* A gradient pill instead of plain white + ink, so the active filter
-     reads with some weight — kept light rather than a solid saturated
-     fill, so it doesn't read as heavy/dark next to the rest of the list. */
-  background: linear-gradient(135deg, #ffcf94, #fff1de);
-  color: var(--accent-ink);
-  box-shadow: 0 2px 6px rgba(234, 124, 30, 0.18);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(234, 124, 30, 0.28);
 }
 
 .mcm-console .col.calls .search-mini input {
@@ -4045,28 +4104,10 @@
 .mcm-console .col.calls .cr-av {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 99px;
   font-size: 12px;
-  color: #fff;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
-}
-/* Every direction gets its own gradient instead of a flat wash, so the list
-   reads with some color even before anything is selected. */
-.mcm-console .col.calls .cr-av.in {
-  background: linear-gradient(150deg, #2dd4bf, #99f6e4);
-}
-.mcm-console .col.calls .cr-av.out {
-  background: linear-gradient(150deg, #f0973d, #ffd9ad);
-}
-.mcm-console .col.calls .cr-av.miss {
-  background: linear-gradient(150deg, #ef6a6a, #ffc9c9);
-}
-/* The clicked/selected row's icon box picks up the orange theme instead of
-   its direction color, so it reads as "this is the one you opened". */
-.mcm-console .col.calls .call-row.on .cr-av {
-  background: linear-gradient(150deg, #f0973d, #ffd48a);
-  box-shadow: 0 3px 8px rgba(234, 124, 30, 0.25);
+  transition: box-shadow 0.15s ease;
 }
 .mcm-console .col.calls .cr-name {
   font-weight: 800;

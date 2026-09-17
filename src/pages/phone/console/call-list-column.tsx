@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { pickCounterpartNumber } from '@/lib/call-number';
 import moment from 'moment';
+import { lightenColorWithAlpha, stringToColour } from '@/lib/utils';
 import { callMoment, callTimestamp } from '@/lib/call-time';
 import { fetchPhone } from '@/services/api';
 import { useFetchContact } from '@/hooks/common';
@@ -28,6 +29,12 @@ export type ConsoleCallRow = {
   name: string;
   number: string;
   time: string;
+  /** "Today" / "Yesterday" / "DD MMM" — the row's date, split out from `time`
+      so a row can show both a day label and a clock time at once. */
+  dayLabel: string;
+  /** Always a clock time (never falls back to a date the way `time` does),
+      for the same two-line reason. */
+  clockTime: string;
   duration: string;
   topic: string;
   contactId: string | number | null;
@@ -121,6 +128,28 @@ const timeLabel = (stamp: unknown) => {
   const m = callMoment(stamp);
   if (!m.isValid()) return String(stamp);
   return m.isSame(moment(), 'day') ? m.format('HH:mm') : m.format('DD MMM');
+};
+
+const dayLabel = (stamp: unknown) => {
+  if (!stamp) return '';
+  const m = callMoment(stamp);
+  if (!m.isValid()) return '';
+  if (m.isSame(moment(), 'day')) return 'Today';
+  if (m.isSame(moment().subtract(1, 'day'), 'day')) return 'Yesterday';
+  return m.format('DD MMM YYYY');
+};
+
+const clockLabel = (stamp: unknown) => {
+  if (!stamp) return '';
+  const m = callMoment(stamp);
+  return m.isValid() ? m.format('hh:mm A') : '';
+};
+
+/** A name-hashed hue (same `stringToColour` custom-avatar.tsx uses),
+    lightened to a solid pastel circle with white initials on top. */
+const avatarColors = (name: string) => {
+  const hue = stringToColour(name) || '#93a0b8';
+  return { background: lightenColorWithAlpha(hue, 35, 1), color: '#fff' };
 };
 
 const getEntryLogs = (main: any = {}) => {
@@ -230,6 +259,8 @@ export const toCallRow = (
     name: contactName || 'Unknown Contact',
     number,
     time: timeLabel(latest?.start_stamp || raw?.start_stamp),
+    dayLabel: dayLabel(latest?.start_stamp || raw?.start_stamp),
+    clockTime: clockLabel(latest?.start_stamp || raw?.start_stamp),
     /* The LATEST call's talk time, not the group's total. A call nobody
        answered has no length worth showing — printing its ring time reads as a
        conversation that never happened. */
@@ -437,7 +468,13 @@ const CallListColumn = ({
             drawn with a merge glyph — it read as an unexplained filter icon,
             and the list already refetches whenever the date or tab changes. */}
         <div className="col-title">
-          <h2>Phone</h2>
+          <div className="col-title-icon">
+            <Ic n="phone" size={16} />
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h2>Phone</h2>
+            <p className="col-title-sub">Manage and handle your calls</p>
+          </div>
           <div className="console-datefilter">
             <DateDropdown
               dropdownVal={dropdownVal}
@@ -486,11 +523,12 @@ const CallListColumn = ({
         <div className="search-mini">
           <Ic n="search" size={13} />
           <input
-            placeholder={source === 'call' ? 'Search contacts & calls…' : 'Search calls…'}
+            placeholder={source === 'call' ? 'Search name, number or notes…' : 'Search calls…'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label={source === 'call' ? 'Search contacts and calls' : 'Search calls'}
           />
+          <Ic n="filter" size={13} className="search-mini-filter" />
         </div>
       </div>
 
@@ -530,17 +568,24 @@ const CallListColumn = ({
                     }
                   }}
                 >
-                  <div className={`cr-av ${row.direction === 'miss' ? 'miss' : row.direction}`}>
-                    <Ic
-                      n={
-                        row.direction === 'out'
-                          ? 'arrow-out'
-                          : row.direction === 'miss'
-                            ? 'miss'
-                            : 'arrow-in'
-                      }
-                      size={15}
-                    />
+                  {/* Identity, not direction, now lives on the avatar — a saved
+                      contact or colleague gets their own name-hashed colour, the
+                      same recipe custom-avatar.tsx uses everywhere else in the
+                      app. Direction moved to its own coloured line below instead,
+                      where an icon can carry it without recolouring who this is. */}
+                  <div
+                    className="cr-av"
+                    style={
+                      row.contactId || row.isDirectoryMatch
+                        ? avatarColors(row.name)
+                        : undefined
+                    }
+                  >
+                    {(row.contactId || row.isDirectoryMatch) && initialsOf(row.name) ? (
+                      initialsOf(row.name)
+                    ) : (
+                      <Ic n="phone" size={15} />
+                    )}
                   </div>
                   <div className="cr-body">
                     <div className="cr-top">
@@ -569,7 +614,6 @@ const CallListColumn = ({
                           {row.callCount}
                         </span>
                       ) : null}
-                      <span className="cr-time num">{row.time}</span>
                     </div>
                     <div className="cr-num">
                       {row.contactId || row.isDirectoryMatch ? (
@@ -577,9 +621,20 @@ const CallListColumn = ({
                       ) : (
                         <span style={{ color: 'var(--ink-4)' }}>Not in contacts</span>
                       )}
-                      {row.duration !== '—' ? (
-                        <span style={{ color: 'var(--ink-4)' }}> · {row.duration}</span>
-                      ) : null}
+                    </div>
+                    <div className={`cr-direction ${row.direction}`}>
+                      <Ic
+                        n={
+                          row.direction === 'out'
+                            ? 'arrow-out'
+                            : row.direction === 'miss'
+                              ? 'x'
+                              : 'arrow-in'
+                        }
+                        size={11}
+                      />
+                      {row.direction === 'out' ? 'Outbound' : row.direction === 'miss' ? 'Missed' : 'Inbound'}
+                      {row.duration !== '—' ? <span className="num"> · {row.duration}</span> : null}
                     </div>
                     {row.topic ? (
                       <div
@@ -590,7 +645,6 @@ const CallListColumn = ({
                       </div>
                     ) : null}
                     <div className="cr-tags">
-                      {row.direction === 'miss' ? <span className="tag neg">Missed</span> : null}
                       {/* One badge, not two. A voicemail IS a recording - the
                           message is the recording - so a row carrying both said
                           the same thing twice and buried the part that matters.
@@ -617,6 +671,10 @@ const CallListColumn = ({
                       ) : null}
                       {isLive ? <span className="tag pos">Live now</span> : null}
                     </div>
+                  </div>
+                  <div className="cr-right">
+                    <span className="cr-day">{row.dayLabel}</span>
+                    <span className="cr-clock num">{row.clockTime}</span>
                   </div>
                   {row.number ? (
                     <button
@@ -670,7 +728,9 @@ const CallListColumn = ({
               }
             }}
           >
-            <div className="cr-av out">{initialsOf(c.name) || <Ic n="phone" size={14} />}</div>
+            <div className="cr-av" style={c.name ? avatarColors(c.name) : undefined}>
+              {initialsOf(c.name) || <Ic n="phone" size={14} />}
+            </div>
             <div className="cr-body">
               <div className="cr-top">
                 <span className="cr-name">{c.name || c.phone}</span>
@@ -711,7 +771,9 @@ const CallListColumn = ({
               }
             }}
           >
-            <div className="cr-av in">{initialsOf(d.name) || <Ic n="phone" size={14} />}</div>
+            <div className="cr-av" style={d.name ? avatarColors(d.name) : undefined}>
+              {initialsOf(d.name) || <Ic n="phone" size={14} />}
+            </div>
             <div className="cr-body">
               <div className="cr-top">
                 <span className="cr-name">{d.name}</span>
