@@ -191,6 +191,19 @@ const AddUsers: FC<AddUsersProps> = ({
       title: 'Login & Access',
       description: 'Choose how they sign in',
     },
+    /* Only once it's actually going to happen -- `isPaymentRequired` is
+       already kept live from step 1 onward (AddUserInfo's own license
+       check), so an invite that never needs a card never shows a step for
+       one. */
+    ...(isPaymentRequired
+      ? [
+          {
+            number: 3,
+            title: 'Payment',
+            description: 'Add your card details',
+          },
+        ]
+      : []),
   ];
 
   const onSubmit = (data: any) => {
@@ -198,9 +211,10 @@ const AddUsers: FC<AddUsersProps> = ({
 
     if (currentStep === 1) {
       setCurrentStep((p) => p + 1);
-    } else {
+    } else if (currentStep === 2) {
       if (isPaymentRequired) {
         setStatus('show_payment');
+        setCurrentStep(3);
       } else {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const mappedUsers = users?.map(({ confirm_password, password, role, ...item }: any) => ({
@@ -308,6 +322,31 @@ const AddUsers: FC<AddUsersProps> = ({
     setStatus('');
   };
 
+  /* Rendered for both step 2 and step 3: `SetupOption` already switches
+     between the sign-in cards and the payment view on its own `status`
+     prop, so promoting payment to its own named step just means handing
+     the wizard's step 3 slot the same element instead of overlaying the
+     payment view on top of step 2's own content. */
+  const setupOptionStep = (
+    <SetupOption
+      {...{
+        isPaymentRequired,
+        orderSummary,
+        status,
+        dataGetMyPlanDetails,
+        setPaymentCalculation,
+        paymentProps: {
+          onSuccessPayment,
+          paymentRef,
+          isApiLoad: isPendingAddMember,
+          handle3DSSuccess,
+          handle3DSFailure,
+        },
+        setTypeOfPassword,
+      }}
+    />
+  );
+
   const stepLookUp: any = {
     1: (
       <AddUserInfo
@@ -321,25 +360,8 @@ const AddUsers: FC<AddUsersProps> = ({
         }}
       />
     ),
-    2: (
-      <SetupOption
-        {...{
-          isPaymentRequired,
-          orderSummary,
-          status,
-          dataGetMyPlanDetails,
-          setPaymentCalculation,
-          paymentProps: {
-            onSuccessPayment,
-            paymentRef,
-            isApiLoad: isPendingAddMember,
-            handle3DSSuccess,
-            handle3DSFailure,
-          },
-          setTypeOfPassword,
-        }}
-      />
-    ),
+    2: setupOptionStep,
+    3: setupOptionStep,
   };
   return (
     <>
