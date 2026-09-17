@@ -1,4 +1,5 @@
-import { FilterIcon, Bell, PhoneIcon, VideocameraAdd, Clock } from '@/assets/icons';
+import { Bell, PhoneIcon, VideocameraAdd, Clock } from '@/assets/icons';
+import { Filter } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -294,9 +295,9 @@ const getCategoryAccent = () => '#ea6b42';
 // step down in size, and only as far as their length actually requires.
 const getFilterLabelSizeClass = (label?: string) => {
   const length = label?.length || 0;
-  if (length > 15) return 'text-base';
-  if (length > 10) return 'text-lg';
-  return 'text-xl';
+  if (length > 15) return 'text-lg';
+  if (length > 10) return 'text-xl';
+  return 'text-2xl';
 };
 
 // So reopening the drawer picks up where the user left it (Gmail/Slack do
@@ -551,7 +552,7 @@ const NotificationContent = ({
           ? `${categoryUnreadCount} unread notification${categoryUnreadCount === 1 ? '' : 's'} in ${notificationFilterValue?.label}`
           : `No unread notifications in ${notificationFilterValue?.label}`}
       </div>
-      <div className="flex flex-col gap-3 mt-1 mb-2 py-3">
+      <div className="flex flex-col gap-3 mt-1 mb-1 py-3">
         <div className="flex items-center">
           <div className="text-gray-900 font-semibold flex flex-nowrap items-center gap-1 w-full">
             {/* Only this zone (icon + category name) scrolls when it's too
@@ -584,8 +585,8 @@ const NotificationContent = ({
                 onClick={() => setShowUnreadOnly((prev) => !prev)}
                 className={`relative flex items-center justify-center w-9 h-9 rounded-full shrink-0 border cursor-pointer transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42] ${
                   showUnreadOnly
-                    ? 'bg-gradient-to-r from-[#f2794f] to-[#ea5c34] text-white border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_4px_rgba(234,107,66,0.14)]'
-                    : 'bg-white text-[#b5502f] border-gray-200 hover:bg-gradient-to-r hover:from-[#f2794f] hover:to-[#ea5c34] hover:text-white hover:border-transparent'
+                    ? 'bg-[#ffe3c2] text-[#c96f1f] border-[#f0b978]'
+                    : 'bg-white text-[#b5502f] border-gray-200 hover:bg-[#fff1e0] hover:text-[#c96f1f] hover:border-[#f5c98f]'
                 }`}
               >
                 <Bell className="w-4 h-4" />
@@ -608,7 +609,7 @@ const NotificationContent = ({
                   type="button"
                   title="Mark all as read"
                   aria-label="Mark all as read"
-                  className="flex items-center justify-center w-9 h-9 rounded-full shrink-0 cursor-pointer text-[#ea6b42] bg-white border border-gray-200 hover:bg-gradient-to-r hover:from-[#f2794f] hover:to-[#ea5c34] hover:text-white hover:border-transparent transition-colors"
+                  className="flex items-center justify-center w-9 h-9 rounded-full shrink-0 cursor-pointer text-[#ea6b42] bg-white border border-gray-200 hover:bg-[#fff1e0] hover:text-[#c96f1f] hover:border-[#f5c98f] transition-colors"
                   onClick={() => {
                     if (isShowingDummy) {
                       // Only offered for the local dev sample data — there's
@@ -660,13 +661,18 @@ const NotificationContent = ({
                 <DropdownMenuTrigger ref={filterTriggerRef}>
                   <div
                     className={
-                      'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 shrink-0 bg-white text-[#b5502f] border border-gray-200 hover:bg-gradient-to-r hover:from-[#f2794f] hover:to-[#ea5c34] hover:text-white hover:border-transparent'
+                      'cursor-pointer flex items-center justify-center rounded-full w-9 h-9 shrink-0 bg-white text-[#b5502f] border border-gray-200 hover:bg-[#fff1e0] hover:text-[#c96f1f] hover:border-[#f5c98f]'
                     }
                   >
-                    <FilterIcon className="w-4 h-4" />
+                    <Filter className="w-4 h-4" />
                   </div>
                 </DropdownMenuTrigger>
+                {/* No border, soft brand-tinted shadow, orange wash on
+                    hover — the same panel look every other dropdown in the
+                    app uses (see .gp-filter-menu), instead of the default
+                    DropdownMenuContent's solid border-primary edge. */}
                 <DropdownMenuContent
+                  className="border-transparent shadow-[0_16px_40px_rgba(160,95,30,0.18),0_2px_8px_rgba(0,0,0,0.06)] [--accent:#fff1e0] [--accent-foreground:#c96f1f]"
                   onCloseAutoFocus={(e) => {
                     // Radix returns focus to the trigger on close, and the
                     // browser's default focus scrolls that trigger into
@@ -701,7 +707,7 @@ const NotificationContent = ({
                 onClick={() => setNotificationState(false)}
                 aria-label="Close"
                 title="Close"
-                className="flex items-center justify-center w-9 h-9 rounded-full shrink-0 cursor-pointer border border-gray-200 bg-white text-[#ea6b42] transition-colors hover:bg-gradient-to-r hover:from-[#f2794f] hover:to-[#ea5c34] hover:text-white hover:border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42]"
+                className="flex items-center justify-center w-9 h-9 rounded-full shrink-0 cursor-pointer border border-gray-200 bg-white text-[#ea6b42] transition-colors hover:bg-[#fff1e0] hover:text-[#c96f1f] hover:border-[#f5c98f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42]"
               >
                 <IconComponent name="CloseIcon" className="h-4 w-4" />
               </button>
@@ -709,7 +715,7 @@ const NotificationContent = ({
           </div>
         </div>
       </div>
-      <hr className="border-gray-200 mt-1 mb-1" />
+      <hr className="border-gray-200 mb-1" />
       {isShowingDummy && categorySnoozedCount > 0 && (
         <button
           type="button"
@@ -722,7 +728,12 @@ const NotificationContent = ({
             : `${categorySnoozedCount} snoozed — Show`}
         </button>
       )}
-      <div className="w-full overflow-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent]">
+      {/* No `pr-*` here — that used to reserve extra room on the right for
+          the scrollbar with nothing matching on the left, so every row's
+          text stopped further from the right edge than its icon sat from
+          the left. The scrollbar itself (6px, thin) is enough clearance on
+          its own. */}
+      <div className="w-full overflow-auto flex-1 min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent]">
         {notificationLoading && mutatedNotifications?.length == 0 ? (
           <div role="status" aria-label="Loading notifications" className="flex justify-center items-center h-full">
             <Loader variant="blue" />
@@ -1038,7 +1049,7 @@ const NotificationContent = ({
                             unsnoozeDummyId(notification?._id);
                             setDummyReadVersion((v) => v + 1);
                           }}
-                          className="cursor-pointer flex items-center justify-center rounded-full w-7 h-7 shrink-0 text-white bg-gradient-to-r from-[#f2794f] to-[#ea5c34] border border-transparent hover:opacity-90 transition-opacity"
+                          className="cursor-pointer flex items-center justify-center rounded-full w-7 h-7 shrink-0 text-[#c96f1f] bg-[#ffe3c2] border border-[#f0b978] hover:opacity-90 transition-opacity"
                         >
                           <Clock className="w-3.5 h-3.5" />
                         </button>
@@ -1055,7 +1066,7 @@ const NotificationContent = ({
                               tabIndex={0}
                               aria-label="Snooze"
                               title="Snooze"
-                              className="cursor-pointer flex items-center justify-center rounded-full w-7 h-7 shrink-0 text-[#b5502f] bg-white/60 border border-[#f0d6b4] hover:bg-gradient-to-r hover:from-[#f2794f] hover:to-[#ea5c34] hover:text-white hover:border-transparent transition-colors"
+                              className="cursor-pointer flex items-center justify-center rounded-full w-7 h-7 shrink-0 text-[#b5502f] bg-white border border-gray-200 hover:bg-[#fff1e0] hover:text-[#c96f1f] hover:border-[#f5c98f] transition-colors"
                             >
                               <Clock className="w-3.5 h-3.5" />
                             </span>

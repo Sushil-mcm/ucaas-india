@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronRight,
   Copy,
-  Settings,
   Mail,
   Grid3X3,
   Phone,
@@ -132,13 +131,11 @@ const AvatarContent = ({ setProfileState }: any) => {
     {
       icon: User,
       title: 'My Profile',
-      subtitle: 'View and update your personal details',
       onClick: goToProfile,
     },
     {
       icon: KeyRound,
       title: 'Security & Password',
-      subtitle: 'Change your password and security settings',
       onClick: () => setProfileState('changePassword'),
     },
     ...(features?.plan_features?.billing?.action?.view
@@ -146,22 +143,11 @@ const AvatarContent = ({ setProfileState }: any) => {
           {
             icon: Wallet,
             title: 'Add Funds',
-            subtitle: 'Top up your account balance',
             onClick: handleAddFunds,
             prefetch: '/admin-settings/billing/purchase',
           },
         ]
       : []),
-    {
-      icon: Settings,
-      title: 'Preferences',
-      subtitle: 'Set your preferences and notifications',
-      onClick: () => {
-        navigate('/admin-settings/account/preferences');
-        setProfileState(false);
-      },
-      prefetch: '/admin-settings/account/preferences',
-    },
   ];
 
   return (
@@ -179,7 +165,7 @@ const AvatarContent = ({ setProfileState }: any) => {
           <Pencil className="w-3.5 h-3.5" />
           Edit
         </button>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
           <CustomAvatar
             name={fullName}
             size="72"
@@ -187,15 +173,15 @@ const AvatarContent = ({ setProfileState }: any) => {
             image={user?.user_info?.profile}
             isActivityInfo={false}
           />
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-base font-bold text-gray-900 dark:text-mcm-ink truncate max-w-56">
+          <div className="flex flex-col items-start gap-1 min-w-0">
+            <p className="text-base font-bold text-gray-900 dark:text-mcm-ink truncate max-w-44">
               {fullName}
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
               <Crown className="w-3.5 h-3.5" />
               {roleLabel}
             </span>
-            <p className="text-xs text-gray-500 dark:text-mcm-ink-3">
+            <p className="text-xs text-gray-500 dark:text-mcm-ink-3 truncate max-w-44">
               Manage your account and settings
             </p>
           </div>
@@ -290,7 +276,7 @@ const AvatarContent = ({ setProfileState }: any) => {
       <DropdownMenuSeparator className="my-1" />
 
       <div className="flex flex-col gap-0.5 px-1 pb-1">
-        {menuItems.map(({ icon: ItemIcon, title, subtitle, onClick, prefetch }) => (
+        {menuItems.map(({ icon: ItemIcon, title, onClick, prefetch }) => (
           <div
             key={title}
             className="flex items-center gap-3 rounded-lg px-2.5 py-2 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
@@ -300,10 +286,9 @@ const AvatarContent = ({ setProfileState }: any) => {
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <ItemIcon className="w-4 h-4" />
             </span>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink">{title}</span>
-              <span className="text-xs text-gray-500 dark:text-mcm-ink-3 truncate">{subtitle}</span>
-            </div>
+            <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink min-w-0 truncate">
+              {title}
+            </span>
             <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-gray-400" />
           </div>
         ))}
@@ -316,10 +301,7 @@ const AvatarContent = ({ setProfileState }: any) => {
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
             <LogOut className="w-4 h-4" />
           </span>
-          <div className="flex flex-col items-start min-w-0">
-            <span className="text-sm font-semibold text-red-600">Sign out</span>
-            <span className="text-xs text-red-400">End your current session</span>
-          </div>
+          <span className="text-sm font-semibold text-red-600">Sign out</span>
           <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-red-300" />
         </button>
       </div>
