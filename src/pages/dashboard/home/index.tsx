@@ -839,7 +839,7 @@ const Home = () => {
                           ];
                         })()}
                         colors={{ Inbound: '#2563eb', Outbound: '#7c3aed' }}
-                        size={64}
+                        size={88}
                       />
                       <div className="day-split-legend">
                         <div className="day-split-item">

@@ -472,11 +472,12 @@
   border-bottom: 1px solid rgba(150, 100, 50, 0.1);
 }
 .home-v2 .day-split-legend {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
   align-items: center;
-  gap: 16px;
+  column-gap: 20px;
+  row-gap: 8px;
 }
 .home-v2 .day-split-item {
   display: flex;
