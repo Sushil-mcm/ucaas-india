@@ -4142,13 +4142,13 @@
      doesn't read as though it's already selected. */
   background: rgba(242, 153, 74, 0.08);
   border-color: var(--accent-edge);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 .mcm-console .col.calls .call-row.on {
   background: var(--accent-wash);
   border-color: var(--accent-edge);
-  box-shadow: 0 4px 14px rgba(234, 124, 30, 0.2);
+  box-shadow: none;
 }
 .mcm-console .col.calls .call-row.on::before {
   display: none;
