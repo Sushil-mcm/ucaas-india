@@ -957,6 +957,19 @@
   color: var(--mcm-accent-ink, #ff8a2a);
 }
 
+/* Step 2's own scroll wrapper (`setup-options/index.tsx`) had no left
+   padding at all, so a selected radio's own focus/selected treatment --
+   the shared `RadioGroupItem`'s `ring-2` plus its `after:-inset-2` hit-
+   target, both painted outside the circle's own 16px box -- sat flush
+   against this wrapper's left edge. `overflow-y: auto` here forces
+   `overflow-x` to also compute as `auto` per spec, clipping that bleed
+   at x:0 instead of letting it show, which is what cut the selected
+   circle's left edge off. 8px clears the `after:-inset-2` pseudo, the
+   larger of the two. */
+.gp-invite-dialog .mcm-setup-options {
+  padding-left: 8px;
+}
+
 /* The "Save & Continue" arrow — a global rule, deliberately: this button is
    the shared wizard's own (`add-users/index.tsx`), which also renders as a
    full Admin page outside this dialog, and the icon should look right

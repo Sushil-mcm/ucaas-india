@@ -26,7 +26,7 @@ const SetupOption = ({
   const watchUsers = watch('users');
 
   return (
-    <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pt-2 pr-1">
+    <div className="mcm-setup-options flex min-h-0 flex-col gap-2 overflow-y-auto pt-2 pr-1">
       {status === 'show_payment' ? (
         <div className="flex flex-col xl:flex-row gap-5">
           <section className="w-full xl:w-1/2 border border-grey-200 p-3 rounded-xl flex items-center justify-center">
@@ -50,93 +50,110 @@ const SetupOption = ({
           />
         </div>
       ) : (
-        <RadioGroup
-          className="gap-4"
-          value={passwordType}
-          onValueChange={(value) => {
-            setTypeOfPassword(value);
-            setValue('password_type', value, { shouldValidate: true });
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="common" id="password-common" className="cursor-pointer" />
-            <Label htmlFor="password-common" className="cursor-pointer">
-              One password for everyone
-            </Label>
-          </div>
-
-          {passwordType === 'common' && (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="flex flex-col gap-1.5 w-full">
-                <Input
-                  type="password"
-                  label="Password"
-                  required
-                  placeholder="Password"
-                  {...register(`password`)}
-                  error={errors?.password?.message}
-                  showEye={true}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 w-full">
-                <Input
-                  type="password"
-                  label="Confirm Password"
-                  required
-                  placeholder="Confirm Password"
-                  {...register(`confirm_password`)}
-                  error={errors?.confirm_password?.message}
-                  showEye={true}
-                />
-              </div>
+        <>
+          {orderSummary?.totalPayableUnit > 0 ? (
+            <div className="mcm-invite-side w-full">
+              <OrderSummary
+                orderSummary={orderSummary}
+                dataGetMyPlanDetails={dataGetMyPlanDetails}
+                customClass="w-full mcm-order-summary"
+                subtitle="Review your license details"
+                note="Final amount may vary based on selected location and license type."
+                onCalculationChange={setPaymentCalculation}
+              />
             </div>
-          )}
-          <div className="flex items-center gap-3">
-            <RadioGroupItem
-              value="individual"
-              id="password-individual"
-              className="cursor-pointer"
-            />
-            <Label htmlFor="password-individual" className="cursor-pointer">
-              A password for each person
-            </Label>
-          </div>
-
-          {passwordType === 'individual' && (
-            <div className="flex flex-col gap-4">
-              {watchUsers?.map((field: typeof userInitialState, index: number) => {
-                return (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" key={index}>
-                    <Input label={index === 0 && 'User'} value={field?.first_name} disabled />
-
-                    <Input
-                      showEye={true}
-                      label={index === 0 && 'Password'}
-                      placeholder="Password"
-                      type="password"
-                      {...register(`users.${index}.password`)}
-                      error={errors?.users?.[index]?.password?.message}
-                    />
-                    <Input
-                      showEye={true}
-                      label={index === 0 && 'Confirm Password'}
-                      placeholder="Confirm Password"
-                      type="password"
-                      {...register(`users.${index}.confirm_password`)}
-                      error={errors?.users?.[index]?.confirm_password?.message}
-                    />
-                  </div>
-                );
-              })}
+          ) : null}
+          <RadioGroup
+            className="gap-4"
+            value={passwordType}
+            onValueChange={(value) => {
+              setTypeOfPassword(value);
+              setValue('password_type', value, { shouldValidate: true });
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="common" id="password-common" className="cursor-pointer" />
+              <Label htmlFor="password-common" className="cursor-pointer">
+                One password for everyone
+              </Label>
             </div>
-          )}
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="email" id="password-email" className="cursor-pointer" />
-            <Label htmlFor="password-email" className="cursor-pointer">
-              Invite link
-            </Label>
-          </div>
-        </RadioGroup>
+
+            {passwordType === 'common' && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex flex-col gap-1.5 w-full">
+                  <Input
+                    type="password"
+                    label="Password"
+                    required
+                    placeholder="Password"
+                    {...register(`password`)}
+                    error={errors?.password?.message}
+                    showEye={true}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <Input
+                    type="password"
+                    label="Confirm Password"
+                    required
+                    placeholder="Confirm Password"
+                    {...register(`confirm_password`)}
+                    error={errors?.confirm_password?.message}
+                    showEye={true}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <RadioGroupItem
+                value="individual"
+                id="password-individual"
+                className="cursor-pointer"
+              />
+              <Label htmlFor="password-individual" className="cursor-pointer">
+                A password for each person
+              </Label>
+            </div>
+
+            {passwordType === 'individual' && (
+              <div className="flex flex-col gap-4">
+                {watchUsers?.map((field: typeof userInitialState, index: number) => {
+                  return (
+                    <div
+                      className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                      key={index}
+                    >
+                      <Input label={index === 0 && 'User'} value={field?.first_name} disabled />
+
+                      <Input
+                        showEye={true}
+                        label={index === 0 && 'Password'}
+                        placeholder="Password"
+                        type="password"
+                        {...register(`users.${index}.password`)}
+                        error={errors?.users?.[index]?.password?.message}
+                      />
+                      <Input
+                        showEye={true}
+                        label={index === 0 && 'Confirm Password'}
+                        placeholder="Confirm Password"
+                        type="password"
+                        {...register(`users.${index}.confirm_password`)}
+                        error={errors?.users?.[index]?.confirm_password?.message}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="email" id="password-email" className="cursor-pointer" />
+              <Label htmlFor="password-email" className="cursor-pointer">
+                Invite link
+              </Label>
+            </div>
+          </RadioGroup>
+        </>
       )}
     </div>
   );
