@@ -669,6 +669,16 @@
 .gp-invite-dialog .mcm-invite [data-slot='input']:focus-visible {
   outline: none !important;
 }
+/* Same double-ring, same fix, for the Phone field -- `react-phone-input-2`
+   renders a plain `<input class="form-control">`, so it's just as subject
+   to that base-layer outline reset as the shared `Input` component above.
+   On an invalid number this outline sat outside `.phone-error`'s own red
+   border, reading as a second, differently-coloured ring around the same
+   field. */
+.gp-invite-dialog .react-tel-input .form-control:focus,
+.gp-invite-dialog .react-tel-input .form-control:focus-visible {
+  outline: none !important;
+}
 
 /* ---- duplicate/role notices — same warm card language as the summary
    above, not the platform's bare amber text block ---- */
