@@ -94,17 +94,28 @@ const AdminHome = () => {
 
   const visibleGroups = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return groups;
-    return groups
-      .map((group) => ({
-        ...group,
-        entries: group.entries.filter(
-          (entry) =>
-            entry.title.toLowerCase().includes(needle) ||
-            group.title.toLowerCase().includes(needle),
-        ),
-      }))
-      .filter((group) => group.entries.length > 0);
+    const filtered = needle
+      ? groups
+          .map((group) => ({
+            ...group,
+            entries: group.entries.filter(
+              (entry) =>
+                entry.title.toLowerCase().includes(needle) ||
+                group.title.toLowerCase().includes(needle),
+            ),
+          }))
+          .filter((group) => group.entries.length > 0)
+      : groups;
+    /* Cards cap at COLLAPSED_ROW_COUNT visible rows, so a 12-item card and a
+       5-item card render at the same height — sorting by the raw entry
+       count would still split them apart. Sorting by the *visible* row
+       count instead is what actually clusters same-height cards into the
+       same rows, with shorter cards sinking toward the bottom. */
+    return [...filtered].sort(
+      (a, b) =>
+        Math.min(b.entries.length, COLLAPSED_ROW_COUNT) -
+        Math.min(a.entries.length, COLLAPSED_ROW_COUNT),
+    );
   }, [groups, search]);
 
   /* Recent is a list of paths; resolving each through `allEntries` means a

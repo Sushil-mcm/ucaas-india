@@ -2965,24 +2965,6 @@
     box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
-/* Inner edge-highlight, top and left only — the cue that reads as a
-   refracting pane of glass rather than a plain translucent box. A ring on
-   all four sides flattens back into a border; restricting it to the lit
-   corner is what makes it look dimensional. */
-.mcm-admincard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(160deg, var(--glass-border) 0%, transparent 40%);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
 .mcm-admincard:hover {
   border-color: var(--accent-edge);
   box-shadow: var(--shadow);
@@ -3035,12 +3017,18 @@
    and the entry that opens it read as one thing -- and the number of screens
    behind it. Each row gets a chevron that arrives on hover, which is what makes
    it look like a way in rather than text. */
+/* The card itself has 6px of horizontal padding (.mcm-admincard), so this
+   header sat inset within that — its border-bottom stopped 6px short of
+   the card's own rounded edges on both sides instead of reaching them.
+   Bleeding out by that same 6px with a negative margin, and adding it back
+   as extra padding, extends the divider edge-to-edge without moving the
+   icon/title's own visual position. */
 .mcm-admin .mcm-admincard-h {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 12px 12px;
-  margin-bottom: 4px;
+  margin: 0 -6px 4px;
+  padding: 4px 18px 12px;
   border-bottom: 1px solid var(--glass-border);
 }
 .mcm-admin .mcm-admincard-ic {
@@ -6324,8 +6312,12 @@
   /* Was a flush full-width bar (var(--surface) + a bottom border) sitting
      directly on the page. Floating white card with a soft shadow instead,
      the same recipe People's own page-head uses, now that the page behind
-     it (.mcm-adminhome) is the app's cream rather than plain white. */
-  margin: 16px 22px 0;
+     it (.mcm-adminhome) is the app's cream rather than plain white. No
+     margin-top, matching People's own page-head exactly (only a
+     margin-bottom) — a top margin here left a sliver of the cream page
+     peeking above the card, reading as a second, unwanted colour banding
+     the white card's own top edge. */
+  margin: 0 22px 16px;
   background: #fff;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 20px;
