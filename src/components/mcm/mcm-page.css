@@ -6310,18 +6310,15 @@
   min-height: 65px;
   padding: 12px 22px;
   /* Was a flush full-width bar (var(--surface) + a bottom border) sitting
-     directly on the page. Floating white card with a soft shadow instead,
-     the same recipe People's own page-head uses, now that the page behind
-     it (.mcm-adminhome) is the app's cream rather than plain white. No
-     margin-top, matching People's own page-head exactly (only a
-     margin-bottom) — a top margin here left a sliver of the cream page
-     peeking above the card, reading as a second, unwanted colour banding
-     the white card's own top edge. */
-  margin: 0 22px 16px;
+     directly on the page. Floating white card instead, now that the page
+     behind it (.mcm-adminhome) is the app's cream rather than plain white.
+     No box-shadow: its warm glow bled unevenly into the cream page right
+     around the card, reading as a colour mismatch rather than one flat
+     background. A plain border is enough separation on its own. */
+  margin: 16px 22px 16px;
   background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
-  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.16);
 }
 
 .mcm-admin .mcm-adminhead-title {
