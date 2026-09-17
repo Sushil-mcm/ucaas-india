@@ -1081,7 +1081,7 @@
   min-height: 0;
   overflow: hidden;
   height: 100%;
-  background: var(--surface);
+  background: var(--ground);
 }
 .mcm-console .panel-tabs {
   display: flex;
@@ -4048,7 +4048,6 @@
 }
 .mcm-console .col.calls .col-head {
   position: relative;
-  background: linear-gradient(180deg, var(--surface-2), transparent);
 }
 .mcm-console .col.calls .col-title h2 {
   background: linear-gradient(120deg, var(--ink), var(--accent-ink));
