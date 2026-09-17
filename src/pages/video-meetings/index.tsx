@@ -58,8 +58,9 @@ const VideoMeetings = () => {
       <div
         className="relative flex h-full min-h-0 w-full flex-col overflow-hidden md:flex-row"
         style={{
-          background:
-            'radial-gradient(75% 65% at 100% 0%, rgba(231,139,80,0.16) 0%, transparent 100%), radial-gradient(65% 60% at 0% 100%, rgba(217,101,46,0.1) 0%, transparent 100%), radial-gradient(55% 50% at 30% 15%, rgba(251,224,196,0.28) 0%, transparent 100%), #fdfbf9',
+          /* Flat, matching Directory's own #FEF8F1 rather than this page's
+             old sunset gradient. */
+          background: '#fef8f1',
         }}
       >
         {/* Light sunset-orange blobs behind the glass layer - this is what the frosted cards blur/tint against */}

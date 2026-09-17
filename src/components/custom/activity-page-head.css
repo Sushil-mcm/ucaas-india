@@ -78,13 +78,20 @@
 }
 
 /* The wrapper each Activity screen gets so the head sits above its own
-   layout without that layout losing its height. */
+   layout without that layout losing its height. Flat #FEF8F1, matching
+   Directory's own background, as a fallback for whichever of this
+   wrapper's callers (Inbox, Agent Chat, ...) paints no background of its
+   own further down and would otherwise show `body`'s warm gradient
+   through the gap. Safe for the Phone console too -- its own `.mcm-console`
+   child is opaque and fills all the space below the head, so this never
+   actually shows through there. */
 .mcm-actpage {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   width: 100%;
+  background: #fef8f1;
 }
 
 .mcm-actpage > :not(.mcm-acthead) {

@@ -337,7 +337,10 @@
    touching `.mcm-page` itself, so Home/Performance/Admin stay on the
    platform's default blue. Matches the Video Meetings sunset palette. */
 .mcm-page.cmp {
-  --ground: #fdf6f0;
+  /* Flat, matching Directory's own #FEF8F1 rather than this section's old
+     sunset gradient -- the accent tokens below still give Campaign's own
+     buttons/links their distinct warm tint, just not the page backdrop. */
+  --ground: #fef8f1;
   --surface: rgba(255, 255, 255, 0.55);
   --surface-2: rgba(231, 139, 80, 0.07);
   --surface-3: rgba(231, 139, 80, 0.14);
@@ -348,11 +351,7 @@
   --accent-wash: rgba(231, 139, 80, 0.12);
   --accent-edge: rgba(231, 139, 80, 0.4);
 
-  background:
-    radial-gradient(70% 60% at 100% 0%, rgba(231, 139, 80, 0.16) 0%, transparent 100%),
-    radial-gradient(65% 60% at 0% 100%, rgba(217, 101, 46, 0.1) 0%, transparent 100%),
-    radial-gradient(55% 50% at 30% 15%, rgba(251, 224, 196, 0.3) 0%, transparent 100%),
-    #fdf6f0;
+  background: #fef8f1;
 }
 
 .cmp .page-head h1 {
@@ -396,16 +395,13 @@
    Reports, Messenger, ...), so this only fires when `.cmp-shell` — added
    solely on the Campaign route — is also present. */
 .mcm-page.mcm-admin.cmp-shell {
-  --ground: #fdf6f0;
+  --ground: #fef8f1;
   --accent: #e78b50;
   --accent-ink: #b5642f;
   --accent-wash: rgba(231, 139, 80, 0.12);
   --accent-edge: rgba(231, 139, 80, 0.4);
 
-  background:
-    radial-gradient(70% 55% at 100% 0%, rgba(231, 139, 80, 0.14) 0%, transparent 100%),
-    radial-gradient(60% 55% at 0% 100%, rgba(217, 101, 46, 0.08) 0%, transparent 100%),
-    #fdf6f0;
+  background: #fef8f1;
 }
 
 /* ==================================================================

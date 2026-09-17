@@ -26,7 +26,15 @@
 
 .mcm-page,
 .mcm-dialog {
-  --ground: transparent;
+  /* Flat, matching Directory's own `#FEF8F1` (people-glass.css et al.)
+     instead of falling through to `body`'s warm radial-gradient backdrop
+     (src/index.css) -- every ordinary page sharing this file's `.mcm-page`
+     frame now reads the same cream as Directory by default. Pages with
+     their own more specific accent override (Campaign's `.cmp`/`cmp-shell`)
+     and the two dark consoles (`.mcm-video`, `.mcm-console`) aren't
+     affected -- they set `--ground` again themselves, later, at higher
+     specificity. */
+  --ground: #fef8f1;
   /* Upstream's warm, opaque surfaces, which replace the translucent ones
      the glass pass introduced. They also settle a bug those caused: these
      tokens back the sticky table-header class, and while translucent the
