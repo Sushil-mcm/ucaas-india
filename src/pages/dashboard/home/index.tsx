@@ -8,7 +8,6 @@ import { Ic, McmIconSprite, type McmIconName } from '@/components/mcm/icons';
 import Timer from '@/components/timer';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
-import { useQueueSeries } from '@/hooks/use-queue-series';
 
 /* Today's voicemail and missed-call counts. Held as its own number rather than
  * a multiple of the contact-centre poll: these two only need to keep up with
@@ -31,14 +30,7 @@ import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import {
-  LinearMeter,
-  QueueHeatmap,
-  RadialGauge,
-  SparkBars,
-  SparkLine,
-  StatusDonut,
-} from './charts';
+import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut } from './charts';
 import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
@@ -195,27 +187,6 @@ const Home = () => {
           b.waiting - a.waiting || b.interacting - a.interacting || a.name.localeCompare(b.name),
       ),
     [live, queues, activeQueueCalls, liveSlaByName],
-  );
-
-  /* ── queue activity heatmap -- real per-queue/per-hour call counts, the
-     same report Communication Overview's Calls tab already reads from its
-     totals (`callQueueSeries`, `useQueueSeries`). React Query dedupes this
-     against that other call since the query key is identical, so this
-     isn't a second network request. */
-  const { data: queueSeries } = useQueueSeries(today, { granularity: 'hour' });
-  const heatmapHourLabels = useMemo(
-    () => (queueSeries?.buckets || []).map((bucket) => moment(bucket).format('ha')),
-    [queueSeries],
-  );
-  const heatmapRows = useMemo(
-    () =>
-      (queueSeries?.queues || [])
-        .map((queue) => ({
-          name: queue.queue_name || 'Queue',
-          values: queue.series.map((bucket) => Number(bucket.offered) || 0),
-        }))
-        .filter((row) => row.values.length),
-    [queueSeries],
   );
 
   /* ── the floor, from the derivation Performance ▸ Agents uses ────────── */
@@ -949,26 +920,6 @@ const Home = () => {
           <CommunicationOverview today={today} />
         </div>
 
-        {/* ── queue activity heatmap -- full width, so all 24 hourly columns
-            show at once instead of needing to scroll a half-width card ── */}
-        <div className="panel-card" style={{ marginTop: 16 }}>
-          <div className="pc-head">
-            <h3>Queue activity today</h3>
-            <span className="src pc-right">calls offered, by hour</span>
-          </div>
-          <div className="pc-body">
-            {heatmapRows.length ? (
-              <div className="heatmap-scroll">
-                <QueueHeatmap rows={heatmapRows} hourLabels={heatmapHourLabels} />
-              </div>
-            ) : (
-              <div className="empty">
-                <Ic n="chart" />
-                <p>No queue activity to show yet today.</p>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* ── Queues + agent status, side by side ──────────────────────── */}
         <div className="grid2 grid2-stretch-cols" style={{ marginTop: 16 }}>
