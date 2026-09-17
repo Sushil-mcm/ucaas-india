@@ -30,7 +30,7 @@ import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut, TrendArea } from './charts';
+import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut } from './charts';
 import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
@@ -544,20 +544,6 @@ const Home = () => {
               Everything you need, in real-time — wait times, service levels, occupancy and agent
               activity across your contact centre.
             </p>
-            {/* The hero's own trend -- queue volume's rolling history
-                (`useKpiHistory`). Not service level: that's `null` (and so
-                never sampled) whenever nothing's been answered yet today,
-                which would leave this chart blank on a quiet queue. Waiting
-                count is always a real number, 0 included, so this always
-                has something real to draw. */}
-            <div className="kpi-hero-chart">
-              <TrendArea
-                data={getHistory('waiting')}
-                dataKey="v"
-                color="var(--accent)"
-                height={90}
-              />
-            </div>
             <div className={`kpi-hero-status${attention.length ? ' is-warn' : ''}`}>
               <Ic n={attention.length ? 'alert' : 'bolt'} size={16} />
               <div>
@@ -590,14 +576,6 @@ const Home = () => {
                     <span className="kpi-title">{kpi.title}</span>
                     <span className="kpi-subtitle">{kpi.subtitle}</span>
                   </div>
-                  <button
-                    type="button"
-                    className="kpi-chevron"
-                    onClick={() => navigate('/performance')}
-                    aria-label={`${kpi.title} — open Performance`}
-                  >
-                    <Ic n="chev" size={12} />
-                  </button>
                 </div>
                 <div className="kpi-value-row">
                   <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
@@ -607,28 +585,37 @@ const Home = () => {
                       {trend.pct}%<small>vs last 30 min</small>
                     </span>
                   ) : null}
-                </div>
-                <div className="kpi-chart">
-                  {kpi.chartType === 'bar' ? (
-                    <SparkBars data={getHistory(kpi.key)} color={kpi.color} />
-                  ) : null}
-                  {kpi.chartType === 'line' ? (
-                    <SparkLine data={getHistory(kpi.key)} color={kpi.color} />
-                  ) : null}
-                  {kpi.chartType === 'meter' && kpi.meter ? (
-                    <LinearMeter
-                      value={kpi.meter.value}
-                      target={kpi.meter.target}
-                      color={kpi.color}
-                    />
-                  ) : null}
+                  {/* The two roster-share metrics put their gauge beside the
+                      value instead of below it -- there's no history to
+                      chart for "share of roster right now", so it reads as
+                      one compact row rather than a tall tile with an empty
+                      gap under a short number. */}
                   {kpi.chartType === 'donut' ? (
                     <div className="kpi-chart-donut">
-                      <RadialGauge value={kpi.progressPct} size={52} color={kpi.color} />
+                      <RadialGauge value={kpi.progressPct} size={40} color={kpi.color} />
                       <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
                     </div>
                   ) : null}
                 </div>
+                {kpi.chartType === 'bar' ||
+                kpi.chartType === 'line' ||
+                kpi.chartType === 'meter' ? (
+                  <div className="kpi-chart">
+                    {kpi.chartType === 'bar' ? (
+                      <SparkBars data={getHistory(kpi.key)} color={kpi.color} height={32} />
+                    ) : null}
+                    {kpi.chartType === 'line' ? (
+                      <SparkLine data={getHistory(kpi.key)} color={kpi.color} height={32} />
+                    ) : null}
+                    {kpi.chartType === 'meter' && kpi.meter ? (
+                      <LinearMeter
+                        value={kpi.meter.value}
+                        target={kpi.meter.target}
+                        color={kpi.color}
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
                 {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
               </div>
             );
