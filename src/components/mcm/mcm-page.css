@@ -2949,9 +2949,9 @@
 
 .mcm-admincard {
   position: relative;
-  background: var(--glass-surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  /* Was the translucent var(--glass-surface) + backdrop-filter — the
+     reference card is a plain solid-white card, no glass effect. */
+  background: #fff;
   border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
   padding: 16px 6px 10px;
@@ -3033,18 +3033,22 @@
 .mcm-admin .mcm-admincard-h {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  padding: 4px 12px 10px;
 }
 .mcm-admin .mcm-admincard-ic {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--accent-wash);
   color: var(--accent-ink);
+  /* A little lift off the white card — the reference badge reads as sitting
+     just above the surface, not flat against it. */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 .mcm-admin .mcm-admincard-title-wrap {
   display: flex;
@@ -3053,8 +3057,16 @@
   flex: 1;
   gap: 1px;
 }
+/* This card's `-h` container sets a small uppercase/tracked label style for
+   its own text (see the base .mcm-admincard-h rule above), inherited here
+   unless overridden — the title needs its own real heading weight instead. */
 .mcm-admin .mcm-admincard-t {
   min-width: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-2);
 }
 /* One line under the title, the way the reference pairs a section name
    with what it's for — this card used to be a label and a count with
