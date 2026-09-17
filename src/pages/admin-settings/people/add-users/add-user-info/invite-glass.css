@@ -977,6 +977,328 @@
   padding-left: 8px;
 }
 
+/* ---- Step 2 "How should they sign in?" -- three selectable cards plus a
+   detail panel underneath showing what the current pick actually does. ---- */
+.gp-invite-dialog .mcm-setup-heading h4 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.dark .gp-invite-dialog .mcm-setup-heading h4 {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-setup-heading p {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: #6b5c4d;
+}
+.dark .gp-invite-dialog .mcm-setup-heading p {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.gp-invite-dialog .mcm-setup-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 767px) {
+  .gp-invite-dialog .mcm-setup-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.gp-invite-dialog .mcm-setup-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.gp-invite-dialog .mcm-setup-card:hover {
+  border-color: rgba(242, 153, 74, 0.5);
+}
+.gp-invite-dialog .mcm-setup-card.is-selected {
+  border-color: #f2994a;
+  background: #fff8f0;
+  box-shadow: 0 0 0 1px #f2994a;
+}
+.dark .gp-invite-dialog .mcm-setup-card {
+  background: var(--mcm-surface, #1e293b);
+  border-color: #1b2934;
+}
+.dark .gp-invite-dialog .mcm-setup-card.is-selected {
+  background: rgba(255, 171, 94, 0.08);
+  border-color: var(--mcm-accent, #f97316);
+  box-shadow: 0 0 0 1px var(--mcm-accent, #f97316);
+}
+/* The native radio moves into the card's own top-right corner instead of
+   sitting inline before the title -- comfortably inside the card's own
+   padding, not at the scroll container's true edge, so its ring/hit-target
+   bleed (see `.mcm-setup-options` above) never needs clearance here. */
+.gp-invite-dialog .mcm-setup-card-radio {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+.gp-invite-dialog .mcm-setup-card-badge {
+  align-self: flex-start;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1e0;
+  color: #c96f1f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dark .gp-invite-dialog .mcm-setup-card-badge {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-setup-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  margin-bottom: 2px;
+  background: rgba(150, 100, 50, 0.08);
+  color: #8a6f57;
+}
+.gp-invite-dialog .mcm-setup-card.is-selected .mcm-setup-card-icon {
+  background: #f2994a;
+  color: #fff;
+}
+.dark .gp-invite-dialog .mcm-setup-card-icon {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.dark .gp-invite-dialog .mcm-setup-card.is-selected .mcm-setup-card-icon {
+  background: var(--mcm-accent, #f97316);
+  color: #111c26;
+}
+.gp-invite-dialog .mcm-setup-card-title.mcm-setup-card-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+.dark .gp-invite-dialog .mcm-setup-card-title.mcm-setup-card-title {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-setup-card-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #8a7a67;
+}
+.dark .gp-invite-dialog .mcm-setup-card-desc {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+
+/* ---- Detail panel below the cards -- what the current pick does ---- */
+.gp-invite-dialog .mcm-setup-detail {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(225, 200, 165, 0.7);
+  border-radius: 14px;
+  background: #fffdfb;
+}
+.dark .gp-invite-dialog .mcm-setup-detail {
+  background: var(--mcm-surface, #1e293b);
+  border-color: #1b2934;
+}
+.gp-invite-dialog .mcm-setup-detail-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.dark .gp-invite-dialog .mcm-setup-detail-title {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-setup-detail-desc {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #8a7a67;
+}
+.dark .gp-invite-dialog .mcm-setup-detail-desc {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.gp-invite-dialog .mcm-setup-next-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 767px) {
+  .gp-invite-dialog .mcm-setup-next-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.gp-invite-dialog .mcm-setup-next-step {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(150, 100, 50, 0.05);
+}
+.dark .gp-invite-dialog .mcm-setup-next-step {
+  background: var(--mcm-surface-3, #334155);
+}
+.gp-invite-dialog .mcm-setup-next-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.dark .gp-invite-dialog .mcm-setup-next-num {
+  background: var(--mcm-ink, #f8fafc);
+  color: #111c26;
+}
+.gp-invite-dialog .mcm-setup-next-step-title {
+  margin: 0 0 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.dark .gp-invite-dialog .mcm-setup-next-step-title {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-setup-next-step-desc {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #8a7a67;
+}
+.dark .gp-invite-dialog .mcm-setup-next-step-desc {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.gp-invite-dialog .mcm-setup-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(150, 100, 50, 0.12);
+  font-size: 11.5px;
+  color: #8a6f57;
+}
+.gp-invite-dialog .mcm-setup-note svg {
+  color: #c96f1f;
+  flex: none;
+}
+.dark .gp-invite-dialog .mcm-setup-note {
+  color: var(--mcm-ink-3, #94a3b8);
+  border-top-color: #1b2934;
+}
+.dark .gp-invite-dialog .mcm-setup-note svg {
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+
+/* ---- "A password for each person" table ---- */
+.gp-invite-dialog .mcm-setup-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gp-invite-dialog .mcm-setup-table-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 0 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b09075;
+}
+@media (max-width: 767px) {
+  .gp-invite-dialog .mcm-setup-table-head {
+    display: none;
+  }
+}
+.dark .gp-invite-dialog .mcm-setup-table-head {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+.gp-invite-dialog .mcm-setup-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+@media (max-width: 767px) {
+  .gp-invite-dialog .mcm-setup-table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(225, 200, 165, 0.5);
+  }
+}
+.gp-invite-dialog .mcm-setup-table-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.gp-invite-dialog .mcm-setup-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 999px;
+  background: #fff1e0;
+  color: #c96f1f;
+  font-size: 11px;
+  font-weight: 800;
+}
+.dark .gp-invite-dialog .mcm-setup-avatar {
+  background: var(--mcm-surface-3, #334155);
+  color: var(--mcm-accent-ink, #ff8a2a);
+}
+.gp-invite-dialog .mcm-setup-person-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dark .gp-invite-dialog .mcm-setup-person-name {
+  color: var(--mcm-ink, #f8fafc);
+}
+.gp-invite-dialog .mcm-setup-person-email {
+  margin: 0;
+  font-size: 11.5px;
+  color: #8a7a67;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dark .gp-invite-dialog .mcm-setup-person-email {
+  color: var(--mcm-ink-3, #94a3b8);
+}
+
 /* The "Save & Continue" arrow — a global rule, deliberately: this button is
    the shared wizard's own (`add-users/index.tsx`), which also renders as a
    full Admin page outside this dialog, and the icon should look right
