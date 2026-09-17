@@ -598,3 +598,35 @@
   font-size: 10.5px;
   font-weight: 800;
 }
+.home-v2 .sl-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.home-v2 .sl-target {
+  font-size: 10px;
+  color: var(--ink-4, #93a0b8);
+  font-weight: 600;
+}
+.home-v2 .occ-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  justify-content: flex-end;
+}
+.home-v2 .occ-bar {
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line-2, #f0e4d3);
+  overflow: hidden;
+  flex: none;
+}
+.home-v2 .occ-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.home-v2 .occ-label {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

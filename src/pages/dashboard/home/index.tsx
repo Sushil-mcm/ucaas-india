@@ -93,10 +93,36 @@ const STATE_COLOR: Record<string, string> = {
 };
 
 /** Service level, on the artifact's thresholds: 85+ good, 80+ neutral, below that bad. */
-const slTag = (sla: number | null) => {
+const slTag = (sla: number | null, targetPct?: number | null) => {
   if (sla === null) return <span style={{ color: 'var(--ink-4)' }}>—</span>;
   const tone = sla >= 85 ? 'pos' : sla >= 80 ? 'neu' : 'neg';
-  return <span className={`tag ${tone}`}>{Math.round(sla)}%</span>;
+  return (
+    <span className="sl-cell">
+      <span className={`tag ${tone}`}>{Math.round(sla)}%</span>
+      {targetPct ? <span className="sl-target">/{targetPct}%</span> : null}
+    </span>
+  );
+};
+
+/** Free capacity in the queue right now -- how much of its roster is
+ * actually available to take the next call, not just headcount. Read as
+ * risk of the wait growing, not as the SL tone above it: a fully-staffed
+ * but fully-busy queue (0 free) is the same risk regardless of its SL. */
+const occupancyBar = (available: number, membersCount: number) => {
+  const pct = membersCount > 0 ? Math.round((available / membersCount) * 100) : 0;
+  const tone = pct >= 60 ? 'pos' : pct >= 30 ? 'warn' : 'neg';
+  const color = tone === 'pos' ? 'var(--live)' : tone === 'warn' ? 'var(--warn)' : 'var(--crit)';
+  return (
+    <span className="occ-cell">
+      <span className="occ-label">
+        {available}
+        <span style={{ color: 'var(--ink-4)' }}>/{membersCount}</span>
+      </span>
+      <span className="occ-bar">
+        <span className="occ-fill" style={{ width: `${pct}%`, background: color }} />
+      </span>
+    </span>
+  );
 };
 
 /** Same thresholds as slTag, as a plain status dot for the queue name cell --
@@ -999,12 +1025,9 @@ const Home = () => {
                           <span style={{ color: 'var(--ink-4)' }}>—</span>
                         )}
                       </td>
-                      <td className="num">
-                        {row.available}
-                        <span style={{ color: 'var(--ink-4)' }}>/{row.membersCount}</span>
-                      </td>
+                      <td className="num">{occupancyBar(row.available, row.membersCount)}</td>
                       <td className="num">{row.interacting}</td>
-                      <td>{slTag(row.sla)}</td>
+                      <td className="num">{slTag(row.sla, row.slaTargetPct)}</td>
                       <td className="num">
                         {row.asa === null ? (
                           <span style={{ color: 'var(--ink-4)' }}>—</span>
