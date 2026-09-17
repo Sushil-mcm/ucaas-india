@@ -907,9 +907,14 @@ const StageColumn = ({
                 Both groups share one scroller: capping each list separately let
                 two full lists stack past the card and push the keypad out of
                 view. */}
-            <div style={{ position: 'relative' }}>
+            <div>
             {dial.trim() && (contactHits.length || directoryHits.length || /[a-z]/i.test(dial)) ? (
-              <div className="dres-scroll" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5, background: 'var(--surface, #fff)', borderRadius: 'var(--r, 12px)', boxShadow: '0 4px 16px rgba(0,0,0,.10)' }}>
+              /* In normal flow, not absolutely positioned — it used to float
+                 over the keypad with no boundary between the two, which read
+                 as one thing overlapping another rather than a dropdown. The
+                 max-height + scroll on .dres-scroll keeps it from pushing the
+                 keypad out of view either way. */
+              <div className="dres-scroll" style={{ background: 'var(--surface, #fff)', borderRadius: 'var(--r, 12px)', boxShadow: '0 4px 16px rgba(0,0,0,.10)', marginBottom: 10 }}>
                 {contactHits.length ? (
                   <div className="dres">
                     <div className="dres-group">

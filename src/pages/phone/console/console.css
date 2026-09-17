@@ -4503,16 +4503,16 @@
   border-radius: 9px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--ok);
+  border: 1px solid var(--accent);
   background: var(--surface);
-  color: var(--ok);
+  color: var(--accent);
   cursor: pointer;
   transition: all 0.12s;
 }
 
 .mcm-console .dres-call:hover:not(:disabled) {
-  background: var(--ok);
-  border-color: var(--ok);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--surface);
 }
 
