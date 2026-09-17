@@ -1,7 +1,20 @@
 import { useUser } from '@/hooks/use-user';
 import { useState } from 'react';
-import { Icon } from '@/assets/icons/icon';
-import { KeyRound, LogOut, User, Wallet } from 'lucide-react';
+import {
+  KeyRound,
+  LogOut,
+  User,
+  Wallet,
+  Pencil,
+  Crown,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Settings,
+  Mail,
+  Grid3X3,
+  Phone,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -15,6 +28,19 @@ import packageJson from '../../../../../package.json';
 import { useMutation } from '@tanstack/react-query';
 import { logout } from '@/services/api';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
+import { handleAlert } from '@/lib/utils';
+
+// "ADMIN" -> "Administrator", everything else Title Cased — the raw role
+// string is an API/internal value, not something meant to be shown as-is.
+const formatRoleLabel = (role?: string) => {
+  if (!role) return 'Member';
+  if (role.toUpperCase() === 'ADMIN') return 'Administrator';
+  return role
+    .toLowerCase()
+    .split(/[\s_-]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const AvatarContent = ({ setProfileState }: any) => {
   const { user, handleRemoveUser } = useUser();
@@ -23,6 +49,11 @@ const AvatarContent = ({ setProfileState }: any) => {
   const lastName = user?.user_info?.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim();
   const phone = user?.user_info?.phone ? String(user.user_info.phone) : '';
+  const roleLabel = formatRoleLabel(
+    user?.user_info?.custom_role_data?.name ||
+      user?.user_info?.role_data?.name ||
+      user?.user_info?.role,
+  );
 
   const { disconnectSocket } = useSocketEvents();
   const navigate = useNavigate();
@@ -53,6 +84,19 @@ const AvatarContent = ({ setProfileState }: any) => {
     setProfileState(false);
   };
 
+  const goToProfile = () => {
+    navigate('/admin-settings/account/basic-info');
+    setProfileState(false);
+  };
+
+  const copyValue = (value: string, label: string) => {
+    if (!value) return;
+    navigator.clipboard
+      .writeText(value)
+      .then(() => handleAlert({ text: `${label} copied`, type: 'success' }))
+      .catch(() => handleAlert({ text: `Could not copy ${label.toLowerCase()}`, type: 'error' }));
+  };
+
   const { mutate: logoutMutate } = useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -73,44 +117,117 @@ const AvatarContent = ({ setProfileState }: any) => {
     };
     logoutMutate(payload);
   };
-  const menuItemClass =
-    'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-gray-700 dark:text-mcm-ink-2 cursor-pointer transition-colors hover:bg-ucass-primary-200 hover:text-primary';
+
+  const contactRows = [
+    { icon: Mail, label: 'Email', value: user?.user_info?.email || '—' },
+    { icon: Grid3X3, label: 'Extension', value: `Ext ${user?.user_info?.extension || '—'}` },
+    {
+      icon: Phone,
+      label: 'Phone',
+      value: phone ? (phone.startsWith('+') ? phone : `+${phone}`) : '—',
+    },
+  ];
+
+  const menuItems = [
+    {
+      icon: User,
+      title: 'My Profile',
+      subtitle: 'View and update your personal details',
+      onClick: goToProfile,
+    },
+    {
+      icon: KeyRound,
+      title: 'Security & Password',
+      subtitle: 'Change your password and security settings',
+      onClick: () => setProfileState('changePassword'),
+    },
+    ...(features?.plan_features?.billing?.action?.view
+      ? [
+          {
+            icon: Wallet,
+            title: 'Add Funds',
+            subtitle: 'Top up your account balance',
+            onClick: handleAddFunds,
+            prefetch: '/admin-settings/billing/purchase',
+          },
+        ]
+      : []),
+    {
+      icon: Settings,
+      title: 'Preferences',
+      subtitle: 'Set your preferences and notifications',
+      onClick: () => {
+        navigate('/admin-settings/account/preferences');
+        setProfileState(false);
+      },
+      prefetch: '/admin-settings/account/preferences',
+    },
+  ];
 
   return (
     <div className="flex flex-col">
-      {/* Banner: a tinted header strip behind the avatar, name and email
-          centered, so this reads as a profile card rather than a plain
-          stacked list. */}
-      <div className="flex flex-col items-center gap-2 -mx-3 -mt-3 px-4 pt-5 pb-4 bg-ucass-primary-200/50 rounded-t-md">
-        <CustomAvatar
-          name={fullName}
-          size="72"
-          extension={user?.user_info?.extension}
-          image={user?.user_info?.profile}
-          isActivityInfo={false}
-        />
-        <div className="flex flex-col items-center gap-0.5">
-          <p className="text-sm font-semibold text-gray-900 dark:text-mcm-ink truncate max-w-56">{fullName}</p>
-          <p className="text-xs text-gray-500 dark:text-mcm-ink-3 truncate max-w-56">{user?.user_info?.email || ''}</p>
+      {/* Banner: a tinted header strip behind the avatar, name and role, with
+          an Edit shortcut straight into the same profile page the menu item
+          below opens — the two used to be the only way in, this is the
+          quicker one for the most common edit. */}
+      <div className="relative flex flex-col gap-2 -mx-3 -mt-3 px-4 pt-5 pb-4 bg-ucass-primary-200/50 rounded-t-md">
+        <button
+          type="button"
+          onClick={goToProfile}
+          className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm cursor-pointer transition-colors hover:bg-gray-50"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+          Edit
+        </button>
+        <div className="flex flex-col items-center gap-2">
+          <CustomAvatar
+            name={fullName}
+            size="72"
+            extension={user?.user_info?.extension}
+            image={user?.user_info?.profile}
+            isActivityInfo={false}
+          />
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-base font-bold text-gray-900 dark:text-mcm-ink truncate max-w-56">
+              {fullName}
+            </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              <Crown className="w-3.5 h-3.5" />
+              {roleLabel}
+            </span>
+            <p className="text-xs text-gray-500 dark:text-mcm-ink-3">
+              Manage your account and settings
+            </p>
+          </div>
         </div>
+      </div>
 
+      {/* Availability — the same presence popover as before, now a
+          full-width row that reads as "current status, tap to change"
+          instead of a small chip tucked into the banner. */}
+      <div className="px-1 pt-3">
         <Popover open={showPresence} onOpenChange={(val) => setShowPresence(val)}>
-          <PopoverTrigger>
-            <span className="cursor-pointer flex gap-1.5 items-center rounded-full bg-white/80 dark:bg-mcm-surface-3/80 px-2.5 py-1 border border-white dark:border-mcm-line shadow-sm">
-              <div className="w-3.5 h-3.5">
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg bg-green-50 dark:bg-mcm-surface-3 px-3 py-2.5 cursor-pointer transition-colors hover:bg-green-100/70"
+            >
+              <div className="w-3.5 h-3.5 shrink-0">
                 {statusImageLookup[effectiveSocketStatus] ?? statusImageLookup['online']}
               </div>
-              {/* The label, not the stored value. This printed the raw
-                  "online"/"busy" with a capitalize class, so the chip and the
-                  menu directly below it named the same state differently.
-                  On a call is shown alongside it rather than instead of it:
-                  the declared state has not changed and comes back when the
-                  call ends, so hiding it would misreport what is stored. */}
-              <div className="text-xs font-medium text-gray-700 dark:text-mcm-ink-2">{presenceLabel}</div>
-              {presenceNote && presenceNote !== presenceLabel ? (
-                <span className="text-xs text-gray-500 dark:text-mcm-ink-3">· {presenceNote}</span>
-              ) : null}
-            </span>
+              <div className="flex flex-col items-start min-w-0">
+                <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink">
+                  {presenceLabel}
+                  {presenceNote && presenceNote !== presenceLabel ? (
+                    <span className="font-normal text-gray-500 dark:text-mcm-ink-3"> · {presenceNote}</span>
+                  ) : null}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-mcm-ink-3">
+                  Set your availability status
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 ml-auto shrink-0 text-gray-500" />
+            </button>
           </PopoverTrigger>
           <PopoverContent className="p-1 flex flex-col gap-1" side="left" align="start">
             {presenceStatusArray.map((status) => {
@@ -139,70 +256,71 @@ const AvatarContent = ({ setProfileState }: any) => {
         </Popover>
       </div>
 
-      {/* Contact details. Email gets its own full-width row — splitting it
-          into a two-column grid with phone left it truncating after just a
-          few characters. Extension and phone (when there is one) share a
-          row since both are short. */}
-      <div className="flex flex-col gap-2 px-3 pt-3 pb-1 text-xs text-gray-600 dark:text-mcm-ink-3">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Icon name="LetterLine" className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-mcm-ink-3" />
-          <span className="truncate">{user?.user_info?.email || '—'}</span>
-        </div>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Icon name="Grid" className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-mcm-ink-3" />
-            <span className="truncate">Ext {user?.user_info?.extension}</span>
+      {/* Contact details, each with its own copy button — the old version
+          only ever showed these as read-only text, so getting the extension
+          or DID into a dialer meant retyping it by hand. */}
+      <div className="flex flex-col gap-1 mx-1 mt-3 mb-1 px-3 py-2 rounded-lg bg-gray-50 dark:bg-mcm-surface-3">
+        {contactRows.map(({ icon: RowIcon, label, value }, index) => (
+          <div key={label}>
+            {index > 0 && <DropdownMenuSeparator className="my-2" />}
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <RowIcon className="w-4 h-4" />
+              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs text-gray-500 dark:text-mcm-ink-3">{label}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-mcm-ink truncate max-w-48">
+                  {value}
+                </span>
+              </div>
+              <button
+                type="button"
+                aria-label={`Copy ${label.toLowerCase()}`}
+                title={`Copy ${label.toLowerCase()}`}
+                onClick={() => copyValue(value, label)}
+                className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 cursor-pointer transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-mcm-surface"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-          {/* Always shown, even with no number yet — this fills in once a
-              real backend supplies user_info.phone. */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Icon name="PhoneLine" className="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-mcm-ink-3" />
-            <span className="truncate">
-              {phone ? (phone.startsWith('+') ? phone : `+${phone}`) : '—'}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <DropdownMenuSeparator className="my-2" />
+      <DropdownMenuSeparator className="my-1" />
 
       <div className="flex flex-col gap-0.5 px-1 pb-1">
-        <div
-          className={menuItemClass}
-          {...getRoutePrefetchHandlers('/admin-settings/account/basic-info')}
-          onClick={() => {
-            navigate('/admin-settings/account/basic-info');
-            setProfileState(false);
-          }}
-        >
-          <User className="w-4 h-4" />
-          My Profile
-        </div>
-        <div
-          className={menuItemClass}
-          onClick={(val) => setProfileState(val ? 'changePassword' : null)}
-        >
-          <KeyRound className="w-4 h-4" />
-          Change Password
-        </div>
-        {features?.plan_features?.billing?.action?.view && (
+        {menuItems.map(({ icon: ItemIcon, title, subtitle, onClick, prefetch }) => (
           <div
-            className={menuItemClass}
-            {...getRoutePrefetchHandlers('/admin-settings/billing/purchase')}
-            onClick={handleAddFunds}
+            key={title}
+            className="flex items-center gap-3 rounded-lg px-2.5 py-2 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
+            {...(prefetch ? getRoutePrefetchHandlers(prefetch) : {})}
+            onClick={onClick}
           >
-            <Wallet className="w-4 h-4" />
-            Add Funds
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ItemIcon className="w-4 h-4" />
+            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink">{title}</span>
+              <span className="text-xs text-gray-500 dark:text-mcm-ink-3 truncate">{subtitle}</span>
+            </div>
+            <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-gray-400" />
           </div>
-        )}
+        ))}
+
         <button
-          onClick={() => {
-            logoutDevice();
-          }}
-          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-red-600 cursor-pointer transition-colors hover:bg-red-50"
+          type="button"
+          onClick={logoutDevice}
+          className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 cursor-pointer transition-colors bg-red-50 hover:bg-red-100"
         >
-          <LogOut className="w-4 h-4" />
-          Sign out
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
+            <LogOut className="w-4 h-4" />
+          </span>
+          <div className="flex flex-col items-start min-w-0">
+            <span className="text-sm font-semibold text-red-600">Sign out</span>
+            <span className="text-xs text-red-400">End your current session</span>
+          </div>
+          <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-red-300" />
         </button>
       </div>
       <DropdownMenuSeparator className="my-1" />

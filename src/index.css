@@ -1310,7 +1310,11 @@
 
 .global-search-root {
   position: relative;
-  flex: 1 1 0%;
+  /* Was `flex: 1 1 0%` — a flex-grow item ignores its own width classes and
+     stretches to fill whatever space its flex parent has free, which is
+     exactly why narrowing the w-[...] classes on this element had no
+     visible effect. `flex: none` lets its own width win. */
+  flex: none;
   min-width: 120px;
   max-width: 420px;
 }

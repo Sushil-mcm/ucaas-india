@@ -5,8 +5,72 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 // import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { Fragment, useEffect, useState, type MouseEvent } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Contact,
+  BarChart3,
+  Phone,
+  Settings,
+  Workflow,
+  MessageCircle,
+  Video,
+  PhoneCall,
+  Inbox,
+  Users,
+  CalendarDays,
+  Mail,
+  User,
+  ShieldCheck,
+  MapPin,
+  Star,
+  UserX,
+  ClipboardList,
+  PhoneForwarded,
+} from 'lucide-react';
 import { getRoutePrefetchHandlers, prefetchRoute } from '@/router/route-prefetch';
+
+/* Every rail across every area (Home/Activity/Performance/Directory/Admin)
+   renders through this one component, so swapping the icon set here — real
+   lucide glyphs instead of the mixed custom SVG library — covers the whole
+   left sidebar without touching the icon strings elsewhere in the app that
+   share these same names (nav-areas.ts, the top bar, etc). Anything not
+   listed here falls back to the existing custom icon, so an unmapped name
+   never renders blank. */
+const RAIL_ICON_OVERRIDES: Partial<Record<IconType, typeof Home>> = {
+  HomeIcon: Home,
+  ContactIcon: Contact,
+  AnalyticsIcon: BarChart3,
+  PhoneIcon: Phone,
+  AdminIcon: Settings,
+  IntegrationIcon: Workflow,
+  MessageIcon: MessageCircle,
+  VideoIcon: Video,
+  DialerIcon: PhoneCall,
+  InboxIcon: Inbox,
+  DepartmentIcon: Users,
+  CalendarIcon: CalendarDays,
+  UsersIcon: Users,
+  LetterOpenedLine: Mail,
+  UserLine: User,
+  UsersGroupLine: Users,
+  RoleIcon: ShieldCheck,
+  LocationIcon: MapPin,
+  Star: Star,
+  UserBlockLine: UserX,
+  ReportsLineIcon: ClipboardList,
+  PhoneForwardingIcon: PhoneForwarded,
+};
+
+const RailIcon = ({ name, className }: { name: IconType; className?: string }) => {
+  const LucideOverride = RAIL_ICON_OVERRIDES[name];
+  return LucideOverride ? (
+    <LucideOverride className={className} strokeWidth={1.75} aria-hidden="true" />
+  ) : (
+    <Icon name={name} className={className} />
+  );
+};
 
 export interface NavItem {
   id: number;
@@ -366,9 +430,9 @@ const Sidebar = () => {
                           !isEnabled ? 'opacity-60' : ''
                         }`}
                       >
-                        <Icon
+                        <RailIcon
                           name={`${icon}` as IconType}
-                          className="h-[1.15rem] w-[1.15rem] relative"
+                          className="h-[1.35rem] w-[1.35rem] relative"
                         />
                         {/* Two-word labels ("External Contacts") stack rather
                             than truncate — the tile is 64px wide, so one line
@@ -426,9 +490,9 @@ const Sidebar = () => {
                     style={{ color: '#000' }}
                   >
                     <div className="flex flex-col items-center justify-center gap-1">
-                      <Icon
+                      <RailIcon
                         name={`${icon}` as IconType}
-                        className="h-[1.15rem] w-[1.15rem] relative"
+                        className="h-[1.35rem] w-[1.35rem] relative"
                       />
 
                       <small className="text-[11px] leading-none">{name}</small>

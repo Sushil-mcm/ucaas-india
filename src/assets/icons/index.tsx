@@ -11,6 +11,7 @@ import {
   // collide with that existing `export const Monitor`.
   Monitor as MonitorLucide,
   Bot,
+  Home,
 } from 'lucide-react';
 
 export interface IconProps {
@@ -1212,16 +1213,12 @@ export const ListIcon = ({ className }: IconProps) => {
   );
 };
 
-export const HomeIcon = ({ className }: IconProps) => {
-  return (
-    <svg width="17" height="17" viewBox="0 0 17 17" fill="none" className={className}>
-      <path
-        d="M1.21429 15.895H5.69743V10.2851C5.69743 10.0324 5.79174 9.82063 5.98036 9.64972C6.16817 9.47808 6.4009 9.39227 6.67857 9.39227H10.3214C10.5991 9.39227 10.8322 9.47808 11.0209 9.64972C11.2087 9.82063 11.3026 10.0324 11.3026 10.2851V15.895H15.7857V6.29061C15.7857 6.17716 15.7586 6.07403 15.7044 5.98122C15.6501 5.8884 15.576 5.80737 15.4821 5.73812L8.94443 1.25414C8.81976 1.15543 8.67162 1.10608 8.5 1.10608C8.32838 1.10608 8.18064 1.15543 8.05679 1.25414L1.51786 5.73812C1.42476 5.80884 1.35069 5.88987 1.29564 5.98122C1.2406 6.07256 1.21348 6.17569 1.21429 6.29061V15.895ZM0 15.895V6.29061C0 6.00773 0.069619 5.73996 0.208857 5.48729C0.348095 5.23462 0.539952 5.02652 0.784428 4.86298L7.32336 0.356907C7.66579 0.118969 8.05679 0 8.49636 0C8.93593 0 9.32936 0.118969 9.67664 0.356907L16.2156 4.86188C16.4609 5.02541 16.6527 5.23389 16.7911 5.48729C16.9304 5.73996 17 6.00773 17 6.29061V15.895C17 16.1912 16.879 16.4494 16.6369 16.6696C16.3949 16.8899 16.1111 17 15.7857 17H11.0694C10.791 17 10.5578 16.9145 10.37 16.7436C10.1822 16.572 10.0883 16.3599 10.0883 16.1072V10.4983H6.91172V16.1072C6.91172 16.3606 6.81781 16.5727 6.63 16.7436C6.44219 16.9145 6.20945 17 5.93179 17H1.21429C0.888857 17 0.605119 16.8899 0.363071 16.6696C0.121024 16.4494 0 16.1912 0 15.895Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-};
+// Was a hand-drawn path flush against all four edges of its own viewBox
+// (the roof apex touches y=0 exactly) — with no internal margin of its own,
+// it read as clipped wherever it sat next to icons that do have breathing
+// room. Lucide's stroke-based Home renders with sensible padding built in,
+// and is already used elsewhere in this header/sidebar without issue.
+export const HomeIcon = ({ className }: IconProps) => <Home className={className} />;
 
 export const EmojiICon = ({ className }: IconProps) => {
   return (
