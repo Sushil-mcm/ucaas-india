@@ -3123,15 +3123,16 @@
 .mcm-console .record-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px 18px;
   flex-wrap: wrap;
 }
 .mcm-console .record-av {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  font-size: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(59, 111, 224, 0.28);
 }
 .mcm-console .record-name {
   display: flex;
@@ -3149,22 +3150,35 @@
 }
 
 .mcm-console .record-legs {
-  padding: 4px 0;
+  /* Cards, not table rows: each leg gets its own rounded tile with a gap
+     around it instead of a flat list divided by hairlines only. */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.mcm-console .leg + .leg {
-  border-top: 1px solid var(--line-2);
+.mcm-console .leg {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
 }
 .mcm-console .leg-row {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 11px 16px;
+  padding: 12px 14px;
   width: 100%;
   text-align: left;
   cursor: pointer;
 }
 .mcm-console .leg:hover {
-  background: var(--surface-2);
+  border-color: var(--accent-edge);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 .mcm-console .leg-main {
   flex: 1;
@@ -3208,9 +3222,9 @@
   --legbtn-hue: var(--ink-3);
   --legbtn-edge: var(--line);
   --legbtn-wash: var(--surface-2);
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 99px;
   display: grid;
   place-items: center;
   flex: none;
@@ -3224,6 +3238,8 @@
   background: var(--legbtn-hue);
   border-color: var(--legbtn-hue);
   color: var(--surface);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 .mcm-console .legbtn.on {
   background: var(--accent);
