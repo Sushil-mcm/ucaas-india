@@ -541,7 +541,7 @@ const NotificationContent = ({
     <div
       role="region"
       aria-label="Notifications"
-      className="relative h-[calc(100%+1.25rem)] -ml-4 lg:-ml-5 w-[calc(100%+2rem)] lg:w-[calc(100%+2.5rem)] px-4 lg:px-5 pb-5 flex flex-col bg-gradient-to-b from-[#fdf3e7] via-[#fbe9d5] to-[#f7dcc0]"
+      className="relative h-[calc(100%+1.25rem)] -ml-4 lg:-ml-5 w-[calc(100%+2rem)] lg:w-[calc(100%+2.5rem)] px-4 lg:px-5 pb-5 flex flex-col bg-white"
     >
       {/* Visually hidden — announces count changes to screen readers without
           a visible element, since the badge itself only conveys meaning
@@ -557,11 +557,11 @@ const NotificationContent = ({
         onClick={() => setNotificationState(false)}
         aria-label="Close"
         title="Close"
-        className="absolute right-6 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#f0d6b4] bg-white/80 backdrop-blur-sm text-[#ea6b42] shadow-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42]"
+        className="absolute right-6 top-4 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-[#ea6b42] transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42]"
       >
         <IconComponent name="CloseIcon" className="h-4 w-4" />
       </button>
-      <div className="flex flex-col gap-3 mt-1 mb-2 py-3 pl-3 pr-12 rounded-2xl bg-white/45 backdrop-blur-md border border-white/70 shadow-sm">
+      <div className="flex flex-col gap-3 mt-1 mb-2 py-3 pr-12">
         <div className="flex items-center">
           <div className="text-gray-900 font-semibold flex flex-nowrap items-center gap-1 w-full">
             {/* Only this zone (icon + category name) scrolls when it's too
@@ -703,12 +703,12 @@ const NotificationContent = ({
           </div>
         </div>
       </div>
-      <hr className="border-[#f0d6b4] p-2 mt-1" />
+      <hr className="border-gray-200 mt-1 mb-1" />
       {isShowingDummy && categorySnoozedCount > 0 && (
         <button
           type="button"
           onClick={() => setShowSnoozed((prev) => !prev)}
-          className="flex items-center gap-1.5 shrink-0 mx-1 mb-2 px-3 py-1.5 rounded-full cursor-pointer text-xs font-medium text-[#b5502f] bg-white/50 border border-[#f0d6b4] hover:bg-white/80 transition-colors self-start"
+          className="flex items-center gap-1.5 shrink-0 mb-2 px-3 py-1.5 rounded-full cursor-pointer text-xs font-medium text-[#b5502f] bg-white border border-gray-200 hover:bg-gray-50 transition-colors self-start"
         >
           <Clock className="w-3.5 h-3.5" />
           {showSnoozed
@@ -716,7 +716,7 @@ const NotificationContent = ({
             : `${categorySnoozedCount} snoozed — Show`}
         </button>
       )}
-      <div className="w-full overflow-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#e8b98a] [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#e8b98a_transparent]">
+      <div className="w-full overflow-auto flex-1 min-h-0 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent]">
         {notificationLoading && mutatedNotifications?.length == 0 ? (
           <div role="status" aria-label="Loading notifications" className="flex justify-center items-center h-full">
             <Loader variant="blue" />
@@ -745,7 +745,7 @@ const NotificationContent = ({
                 <Fragment key={notification._id}>
                   {showDateGroupHeader && (
                     <div
-                      className={`sticky top-0 z-[6] -mx-1 px-1 bg-[#fbe9d5]/90 backdrop-blur-sm text-xs font-semibold text-[#b5502f]/80 uppercase tracking-wide pb-1 ${notificationIndex === 0 ? 'pt-2' : 'pt-4'}`}
+                      className={`sticky top-0 z-[6] -mx-1 px-1 bg-white/95 backdrop-blur-sm text-xs font-semibold text-gray-500 uppercase tracking-wide pb-1 ${notificationIndex === 0 ? 'pt-2' : 'pt-4'}`}
                     >
                       {dateGroupLabel}
                     </div>
@@ -754,8 +754,7 @@ const NotificationContent = ({
                     role="button"
                     tabIndex={0}
                     aria-label={`${notification.senderKey}, ${notification.items.length} ${groupLabel}${notification.anyUnread ? ', unread' : ''}`}
-                    className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300 motion-reduce:animate-none relative w-full p-3 mt-2 bg-white/55 backdrop-blur-sm border border-l-4 rounded-xl border-white/70 shadow-sm flex items-center cursor-pointer flex-shrink-0 transition-all motion-reduce:transition-none hover:bg-white/75 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42] ${notification.anyUnread ? 'opacity-100' : 'opacity-60'}`}
-                    style={{ borderLeftColor: getCategoryAccent() }}
+                    className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300 motion-reduce:animate-none relative w-full py-3 flex items-center cursor-pointer flex-shrink-0 border-b border-gray-100 transition-colors motion-reduce:transition-none hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42] ${notification.anyUnread ? 'opacity-100' : 'opacity-60'}`}
                     onClick={() => {
                       notification.items.forEach((item: any) => {
                         if (isShowingDummy) markDummyIdRead(item?._id);
@@ -777,7 +776,7 @@ const NotificationContent = ({
                     <div
                       aria-label="group icon"
                       role="img"
-                      className="relative focus:outline-none w-11 h-11 border rounded-full border-[#f0d6b4] bg-[#fdeee0] flex flex-shrink-0 items-center justify-center p-2 text-[#b5502f]"
+                      className="relative focus:outline-none w-11 h-11 border rounded-full border-gray-200 bg-gray-50 flex flex-shrink-0 items-center justify-center p-2 text-[#b5502f]"
                     >
                       {GroupIcon ? <div className="flex w-5 h-5">{GroupIcon}</div> : null}
                       <span className="absolute -bottom-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold flex items-center justify-center bg-[#b5502f] text-white ring-2 ring-white">
@@ -969,7 +968,7 @@ const NotificationContent = ({
               <Fragment key={notification?._id}>
                 {showDateGroupHeader && (
                   <div
-                    className={`sticky top-0 z-[6] -mx-1 px-1 bg-[#fbe9d5]/90 backdrop-blur-sm text-xs font-semibold text-[#b5502f]/80 uppercase tracking-wide pb-1 ${notificationIndex === 0 ? 'pt-2' : 'pt-4'}`}
+                    className={`sticky top-0 z-[6] -mx-1 px-1 bg-white/95 backdrop-blur-sm text-xs font-semibold text-gray-500 uppercase tracking-wide pb-1 ${notificationIndex === 0 ? 'pt-2' : 'pt-4'}`}
                   >
                     {dateGroupLabel}
                   </div>
@@ -978,8 +977,8 @@ const NotificationContent = ({
                   role="button"
                   tabIndex={0}
                   aria-label={`${notification?.description || 'Notification'}${isShowingDummy ? `, ${notification?.unread ? 'unread' : 'read, activate to mark unread'}` : ''}`}
-                  style={{ borderLeftColor: categoryAccent, animationDelay: `${enterDelayMs}ms` }}
-                  className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300 motion-reduce:animate-none relative w-full p-3 mt-2 bg-white/55 backdrop-blur-sm border border-l-4 rounded-xl border-white/70 shadow-sm flex cursor-pointer flex-shrink-0 transition-all motion-reduce:transition-none hover:bg-white/75 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42] ${shouldShowJoinNowForInvite ? 'pb-12' : ''} ${
+                  style={{ animationDelay: `${enterDelayMs}ms` }}
+                  className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-300 motion-reduce:animate-none relative w-full py-3 flex cursor-pointer flex-shrink-0 border-b border-gray-100 transition-colors motion-reduce:transition-none hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ea6b42] ${shouldShowJoinNowForInvite ? 'pb-12' : ''} ${
                     notification?.unread ? 'opacity-100' : 'opacity-60'
                   }`}
                   onClick={toggleReadState}
@@ -992,7 +991,7 @@ const NotificationContent = ({
                   <div
                     aria-label="group icon"
                     role="img"
-                    className="relative focus:outline-none w-11 h-11 border rounded-full border-[#f0d6b4] bg-[#fdeee0] flex flex-shrink-0 items-center justify-center p-2 text-[#b5502f]"
+                    className="relative focus:outline-none w-11 h-11 border rounded-full border-gray-200 bg-gray-50 flex flex-shrink-0 items-center justify-center p-2 text-[#b5502f]"
                   >
                     {Icon ? <div className="flex w-5 h-5">{Icon}</div> : null}
                     {notification?.unread && (
@@ -1103,7 +1102,7 @@ const NotificationContent = ({
             );
           })
         ) : (
-          <div className="w-full max-w-96 min-h-52  h-full p-4 rounded-xl   m-auto border border-[#f0d6b4] bg-white/40 flex flex-col items-center justify-center gap-2">
+          <div className="w-full max-w-96 min-h-52 h-full p-4 m-auto flex flex-col items-center justify-center gap-2">
             <img src={NotFound} alt="BusyImage" className="min-w-28 w-28" />
             <p className="flex items-center justify-center text-gray-900  font-medium">
               {getEmptyStateMessage(notificationFilterValue?.label, showUnreadOnly)}

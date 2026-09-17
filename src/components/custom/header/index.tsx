@@ -333,7 +333,7 @@ const Header = () => {
                 </span>
               </a>
             </div>
-            <div className="flex w-full items-center gap-2 text-black md:order-2 md:min-w-0 md:w-auto md:flex-1 relative">
+            <div className="flex w-full items-center gap-2 text-black md:order-3 md:min-w-0 md:w-auto md:flex-1 relative">
               {hasActiveCampaign && (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                   <span className="relative flex h-2.5 w-2.5">
@@ -374,10 +374,11 @@ const Header = () => {
                 )}
               </button>
             </div>
-            {/* Moved out of the brand block on the far left — sitting to the
-                right of search, before the icon cluster, is where a nav
-                group reads as "where you are" rather than "the app's name". */}
-            <div className="hidden md:order-3 md:flex md:items-center">
+            {/* Moved out of the brand block on the far left — sitting right
+                after the logo, with search now beside Admin rather than
+                beside the logo, is where a nav group reads as "where you
+                are" rather than "the app's name". */}
+            <div className="hidden md:order-2 md:flex md:items-center">
               <AreaNav />
             </div>
             <div
