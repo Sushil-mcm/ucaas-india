@@ -748,8 +748,13 @@
 
 .gp-person-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px 16px;
+}
+@media (max-width: 520px) {
+  .gp-person-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .gp-field {
   display: flex;
@@ -806,22 +811,14 @@ input.gp-field-v:focus {
   white-space: nowrap;
 }
 
-.gp-person-callerid {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 10px 12px;
-  background: rgba(150, 100, 50, 0.04);
-  border: 1px solid rgba(150, 100, 50, 0.1);
-  border-radius: 10px;
-}
-.gp-person-callerid .gp-field-l {
-  flex: none;
-  white-space: nowrap;
+/* Third column of the same row as Site/Extension now (`.gp-field` handles
+   the shared label+value stack), so this no longer needs its own boxed
+   full-width row. */
+.gp-person-callerid .btn.ghost.sm {
+  align-self: flex-start;
 }
 .gp-person-callerid-value {
+  padding: 9px 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--mcm-ink, #0d1526);
@@ -829,10 +826,6 @@ input.gp-field-v:focus {
 .gp-person-callerid-empty {
   font-weight: 500;
   color: var(--mcm-ink-2, #3d4a63);
-}
-.dark .gp-person-callerid {
-  background: rgba(255, 171, 94, 0.05);
-  border-color: rgba(255, 171, 94, 0.1);
 }
 .dark .gp-person-callerid-value {
   color: var(--mcm-ink, #f3f6f9);
