@@ -246,50 +246,47 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 /* ------------------------------------------------------------
    3. Seven-metric snapshot strip (Busiest queue / Callbacks waiting /
    Longest waiting / Lowest SLA / Total members / Available now / Total
-   interacting) — deliberately NOT another row of KPI cards. One flat
-   ribbon, a vertical divider between segments instead of a bordered card
-   per metric, no icon badge — reads as a single summary line, not a
-   second tile grid stacked under the first. */
+   interacting) — a plain table (header row of labels, one data row of
+   values), not a row of cards. Two card-style redesigns of this strip
+   were both rejected as "still KPI style"; a table reads as a different
+   kind of thing — a snapshot readout, matching the per-queue detail table
+   directly below it — rather than a second tile grid under the first. */
 .mcm-page .perf-queues .kpi-strip {
-  display: flex;
-  align-items: stretch;
+  width: 100%;
+  border-collapse: collapse;
   background: #fff;
   border: 1px solid rgba(225, 200, 165, 0.7);
   border-radius: 14px;
+  overflow: hidden;
   box-shadow: var(--qa-glass-shadow);
-  padding: 4px 0;
 }
-.mcm-page .perf-queues .kpi-strip-cell {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px 18px;
-  border-right: 1px solid rgba(225, 200, 165, 0.5);
-}
-.mcm-page .perf-queues .kpi-strip-cell:last-child {
-  border-right: none;
-}
-.dark .mcm-page .perf-queues .kpi-strip-cell {
-  border-right-color: rgba(255, 255, 255, 0.08);
-}
-/* Breaching reads through the value's own colour only (below) — the
-   segment itself stays plain, no card to tint. */
-.mcm-page .perf-queues .kpi-strip-label {
+.mcm-page .perf-queues .kpi-strip th {
+  text-align: left;
+  padding: 8px 18px 4px;
   color: #8a7a68;
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border-bottom: 1px solid rgba(225, 200, 165, 0.5);
+}
+.mcm-page .perf-queues .kpi-strip td {
+  padding: 4px 18px 10px;
+  border-right: 1px solid rgba(225, 200, 165, 0.5);
+  vertical-align: top;
+}
+.mcm-page .perf-queues .kpi-strip td:last-child,
+.mcm-page .perf-queues .kpi-strip th:last-child {
+  border-right: none;
+}
+.dark .mcm-page .perf-queues .kpi-strip td,
+.dark .mcm-page .perf-queues .kpi-strip th {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 .mcm-page .perf-queues .kpi-strip-value {
+  display: block;
   color: #1a1a1a;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -298,10 +295,11 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   text-overflow: ellipsis;
 }
 .mcm-page .perf-queues .kpi-strip-value-danger,
-.mcm-page .perf-queues .kpi-strip-cell-breach .kpi-strip-value {
+.mcm-page .perf-queues .kpi-strip-breach .kpi-strip-value {
   color: #e11d48 !important;
 }
 .mcm-page .perf-queues .kpi-strip-sub {
+  display: block;
   color: #8a7a68;
   font-size: 10px;
   line-height: 1.3;
@@ -311,11 +309,8 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 }
 @media (max-width: 1180px) {
   .mcm-page .perf-queues .kpi-strip {
-    flex-wrap: wrap;
-  }
-  .mcm-page .perf-queues .kpi-strip-cell {
-    flex: 1 1 33%;
-    border-bottom: 1px solid rgba(225, 200, 165, 0.5);
+    display: block;
+    overflow-x: auto;
   }
 }
 
@@ -591,4 +586,67 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 /* Breadcrumb + title above the drill-in table. */
 .mcm-page .perf-queues .qa-crumb button {
   color: var(--qa-accent-ink);
+}
+
+/* ---- Queue activity heatmap ----
+   QueueHeatmap (dashboard/home/charts.tsx) renders plain .queue-heatmap-*
+   classes with no styling of their own — the only CSS for them lives
+   scoped under .home-v2 in home-v2.css. This is the equivalent for this
+   page, which doesn't carry that scope. */
+.mcm-page .perf-queues .heatmap-scroll {
+  overflow-x: auto;
+}
+.mcm-page .perf-queues .queue-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 560px;
+}
+.mcm-page .perf-queues .queue-heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.mcm-page .perf-queues .queue-heatmap-row-label {
+  width: 140px;
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #3d4a63;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-queues .queue-heatmap-head {
+  margin-bottom: 2px;
+}
+.mcm-page .perf-queues .queue-heatmap-hour {
+  flex: 1;
+  min-width: 20px;
+  font-size: 10px;
+  text-align: center;
+  color: #93a0b8;
+}
+.mcm-page .perf-queues .queue-heatmap-cell {
+  flex: 1;
+  min-width: 20px;
+  height: 22px;
+  border-radius: 4px;
+}
+.mcm-page .perf-queues .queue-heatmap-card {
+  background: #fff;
+  border: 1px solid rgba(225, 200, 165, 0.7);
+  border-radius: 14px;
+  box-shadow: var(--qa-glass-shadow);
+  padding: 14px 18px;
+}
+.mcm-page .perf-queues .queue-heatmap-card h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 2px;
+}
+.mcm-page .perf-queues .queue-heatmap-card .src {
+  font-size: 11px;
+  color: #8a7a68;
 }

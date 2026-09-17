@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Clock,
   Timer as TimerIcon,
@@ -9,9 +9,13 @@ import {
   Gauge,
   PhoneMissed,
 } from 'lucide-react';
+import moment from 'moment';
 import TableManager from '@/components/custom/table-manager';
 import Timer from '@/components/timer';
 import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers';
+import { useQueueSeries } from '@/hooks/use-queue-series';
+import { bucketLabel } from '@/lib/queue-series';
+import { QueueHeatmap } from '@/pages/dashboard/home/charts';
 import PerfStatCard from './stat-card';
 import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { CDR_LIMIT } from '@/hooks/use-call-stats';
@@ -159,6 +163,7 @@ const QueuesActivityTab = ({
   globalSearch,
   callbacksWaitingCount,
   callbacksByQueueUuid,
+  selectedRange,
 }: {
   queues: QueueRow[];
   activeQueueCalls: any[];
@@ -183,6 +188,10 @@ const QueuesActivityTab = ({
      activeQueueCalls; counted from the queue service's ledger instead. */
   callbacksWaitingCount?: number;
   callbacksByQueueUuid?: Record<string, number>;
+  /* Backs the queue activity heatmap only — every other figure on this tab
+     comes pre-filtered from the parent's own useLiveContactCentre(selectedRange)
+     call, so this is the one place here that needs the raw range itself. */
+  selectedRange?: { from: string; to: string };
 }) => {
   /* The warm ambient backdrop and the KPI hero band (Waiting / Longest wait
      / Service / Volume / Coverage) both render one level up, in the
@@ -193,6 +202,36 @@ const QueuesActivityTab = ({
     document.body.classList.add('perf-warm-backdrop');
     return () => document.body.classList.remove('perf-warm-backdrop');
   }, []);
+
+  /* Queue activity heatmap — real per-queue call counts, bucketed to match
+     the page's own selected date range instead of always "today": a range
+     spanning one day reads as busiest hours (24 columns), a range spanning
+     several reads as busiest days instead. Hourly buckets across a 30-day
+     range would be several hundred columns wide and unreadable — daily
+     buckets are what a multi-day range actually needs to answer "which
+     days were busy", the same way the granularity switch already works
+     elsewhere in Performance (see use-queue-series.ts's own SeriesGranularity). */
+  const heatmapSpansOneDay =
+    !selectedRange?.from || !selectedRange?.to || moment(selectedRange.from).isSame(selectedRange.to, 'day');
+  const heatmapGranularity: 'hour' | 'day' = heatmapSpansOneDay ? 'hour' : 'day';
+  const { data: queueSeries } = useQueueSeries(selectedRange, { granularity: heatmapGranularity });
+  const heatmapColumnLabels = useMemo(
+    () =>
+      (queueSeries?.buckets || []).map((bucket) =>
+        heatmapGranularity === 'hour' ? moment(bucket).format('ha') : bucketLabel(bucket, 'day'),
+      ),
+    [queueSeries, heatmapGranularity],
+  );
+  const heatmapRows = useMemo(
+    () =>
+      (queueSeries?.queues || [])
+        .map((queue) => ({
+          name: queue.queue_name || 'Queue',
+          values: queue.series.map((bucket) => Number(bucket.offered) || 0),
+        }))
+        .filter((row) => row.values.length),
+    [queueSeries],
+  );
 
   const rows = buildQueueRows({
     queues,
@@ -678,6 +717,18 @@ const QueuesActivityTab = ({
       )}
 
       <style>{QUEUE_TAB_STYLES}</style>
+
+      {heatmapRows.length > 0 && (
+        <div className="queue-heatmap-card">
+          <h3>Queue activity{heatmapSpansOneDay ? ' today' : ''}</h3>
+          <span className="src">
+            calls offered, by {heatmapGranularity === 'hour' ? 'hour' : 'day'}
+          </span>
+          <div className="heatmap-scroll" style={{ marginTop: 10 }}>
+            <QueueHeatmap rows={heatmapRows} hourLabels={heatmapColumnLabels} />
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <h3 className="sect-title">Queues</h3>

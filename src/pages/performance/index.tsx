@@ -372,6 +372,7 @@ const Performance = () => {
             .mcm-page .perf-kpi-tile {
               display:flex; flex-direction:column; gap:8px;
               padding:14px 16px; border-radius:16px; border:1px solid;
+              background:#fff;
               transition: transform 0.15s ease, box-shadow 0.15s ease;
             }
             .mcm-page .perf-kpi-tile:hover {
@@ -552,6 +553,7 @@ const Performance = () => {
             callbacksWaitingCount={callbacksWaitingCount}
             callbacksByQueueUuid={callbacksByQueueUuid}
             globalSearch={globalSearchQuery}
+            selectedRange={selectedRange}
           />
         )}
         {activeTab === 'campaign-activity' && (
