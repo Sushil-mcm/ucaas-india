@@ -3042,7 +3042,7 @@
   flex: none;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 50%;
   background: var(--accent-wash);
   color: var(--accent-ink);
 }
@@ -3074,34 +3074,44 @@
 .mcm-admin .mcm-admincard-n {
   flex: none;
   min-width: 20px;
-  padding: 1px 6px;
+  padding: 1px 8px;
   border-radius: 99px;
-  background: var(--surface-3);
-  color: var(--ink-3);
-  font-size: 10px;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  align-self: flex-start;
 }
 .mcm-admin .mcm-admincard li {
   padding-right: 8px;
+}
+/* A plain bullet ahead of each row, the way a short reference list reads —
+   this list otherwise had nothing marking it as a list at all, just a
+   stack of rows the same width as the card. Scoped to .mcm-admincard-entry
+   (the "All" tab's own rows) rather than every `li a` here, since the
+   "Recently used" tab reuses this same markup for a two-line title + group
+   name — row layout would put those side by side instead of stacked. */
+.mcm-admin .mcm-admincard li a.mcm-admincard-entry::before {
+  content: '•';
+  flex: none;
+  margin-right: 2px;
+  color: var(--ink-4);
+  font-weight: 700;
+}
+.mcm-admin .mcm-admincard li a.mcm-admincard-entry {
+  flex-direction: row;
+  align-items: center;
 }
 .mcm-admin .mcm-admincard-go {
   flex: none;
   width: 14px;
   height: 14px;
-  color: var(--accent-ink);
-  opacity: 0;
-  transform: translateX(-3px);
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
-}
-.mcm-admin .mcm-admincard li:hover .mcm-admincard-go,
-.mcm-admin .mcm-admincard li:focus-within .mcm-admincard-go {
+  color: var(--ink-4);
   opacity: 1;
-  transform: translateX(0);
+  transform: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .mcm-admin .mcm-admincard-go {
@@ -3114,9 +3124,8 @@
    Captain alone has 12 screens, which used to make its card nearly 3x the
    height of a 4-item neighbour in the same row. */
 .mcm-admincard-viewall {
-  margin: 2px 12px 4px;
-  padding: 6px 0 0;
-  border-top: 1px solid var(--glass-border);
+  margin: 4px 12px 2px;
+  padding: 0;
   background: none;
   color: var(--accent-ink);
   font-size: 12px;

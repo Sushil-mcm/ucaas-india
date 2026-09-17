@@ -228,7 +228,9 @@ const AdminHome = () => {
                     <ul>
                       {shownEntries.map((entry) => (
                         <li key={entry.path}>
-                          <Link to={entry.path}>{entry.title}</Link>
+                          <Link to={entry.path} className="mcm-admincard-entry">
+                            {entry.title}
+                          </Link>
                           <ChevronRight className="mcm-admincard-go" aria-hidden="true" />
                         </li>
                       ))}
@@ -239,7 +241,7 @@ const AdminHome = () => {
                         className="mcm-admincard-viewall"
                         onClick={() => toggleExpanded(group.title)}
                       >
-                        {isExpanded ? 'Show less' : `View all ${group.entries.length} items`}
+                        {isExpanded ? 'Show less' : `View all ${group.entries.length} items →`}
                       </button>
                     )}
                   </div>
