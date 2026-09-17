@@ -3026,8 +3026,12 @@
   transform: rotate(180deg);
 }
 
-/* the stage scrolls its record view rather than clipping it */
+/* the stage scrolls its record view rather than clipping it, and its top
+   padding matches the call list's and panel's 12px — .stage-inner's own
+   18px top made "Calling as" sit visibly lower than "Phone" and "Copilot"
+   beside it. */
 .mcm-console .col.stage .stage-inner {
+  padding-top: 12px;
   padding-bottom: 18px;
 }
 
