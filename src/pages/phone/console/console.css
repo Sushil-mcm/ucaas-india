@@ -541,22 +541,14 @@
   align-items: center;
   gap: 10px;
   justify-content: space-between;
+  min-height: 38px;
 }
 .mcm-console .col-title h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.02em;
-}
-.mcm-console .col-title-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  color: var(--accent-ink);
-  background: var(--accent-wash);
+  color: var(--ink);
 }
 .mcm-console .col-title-heading {
   display: flex;
@@ -3989,8 +3981,12 @@
   max-width: 112px;
 }
 .mcm-console .col.calls .col-title .console-datefilter .custom-react-select__control {
-  min-height: 38px;
-  height: 38px;
+  /* !important: a later, less-specific rule sets height:30px!important —
+     !important beats plain specificity, so this needs it too to actually
+     win (it does, on specificity, once both are !important) and keep the
+     pill the same 38px as the rest of the header row. */
+  min-height: 38px !important;
+  height: 38px !important;
   font-size: 13px !important;
   display: flex;
   align-items: center;

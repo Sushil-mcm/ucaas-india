@@ -470,9 +470,6 @@ const CallListColumn = ({
             drawn with a merge glyph — it read as an unexplained filter icon,
             and the list already refetches whenever the date or tab changes. */}
         <div className="col-title">
-          <div className="col-title-icon">
-            <Ic n="phone" size={16} />
-          </div>
           <div className="col-title-heading">
             <h2>Phone</h2>
             <CustomTooltip text="Manage and handle your calls" side="bottom" className="max-w-xs">
