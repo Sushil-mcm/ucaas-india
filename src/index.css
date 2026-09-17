@@ -1904,7 +1904,10 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   white-space: nowrap;
-  color: #64748b;
+  /* Was #64748b (slate-500) — the sidebar's own rail items sit at solid
+     #000 (sidebar.tsx), so this matched neither the rail nor the rest of
+     the header's now-black text. */
+  color: #000;
   background: none;
   border: 1px solid transparent;
   border-radius: 8px;

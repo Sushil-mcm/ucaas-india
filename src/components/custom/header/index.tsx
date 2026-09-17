@@ -303,12 +303,13 @@ const Header = () => {
           /* Upstream's px-4/py-2.5 padding, but keeping `h-16` over
              `min-h-16` and a visible `border-gray-200` over
              `border-white/50` — see the note above the tag. */
-          className={`h-16 text-gray-900/80 border-b px-4 py-2.5 ${hidesHeaderBorderForRail ? 'border-transparent' : 'border-gray-200'}`}
-          style={{
-            background: 'rgba(255, 255, 255, 0.78)',
-            backdropFilter: 'blur(12px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-          }}
+          className={`h-16 text-black border-b px-4 py-2.5 ${hidesHeaderBorderForRail ? 'border-transparent' : 'border-gray-200'}`}
+          /* Solid white, matching the sidebar (sidebar.tsx) exactly — the old
+             78%-opacity white let the page's cream body colour bleed through,
+             so the bar read as peach instead of white. Blur/saturate are
+             dropped along with it: they had nothing left to blur once the
+             background stopped being translucent. */
+          style={{ background: '#ffffff' }}
         >
           <nav
             className="flex w-full flex-col gap-3 md:flex-row md:items-center md:gap-2"
@@ -333,7 +334,7 @@ const Header = () => {
               </a>
               <AreaNav />
             </div>
-            <div className="flex w-full items-center gap-2 text-gray-900/80 md:order-2 md:min-w-0 md:w-auto md:flex-1 relative">
+            <div className="flex w-full items-center gap-2 text-black md:order-2 md:min-w-0 md:w-auto md:flex-1 relative">
               {hasActiveCampaign && (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                   <span className="relative flex h-2.5 w-2.5">
@@ -361,7 +362,7 @@ const Header = () => {
               </div>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700 transition-colors hover:bg-ucass-primary-100 hover:text-ucass-active md:hidden"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-black transition-colors hover:bg-ucass-primary-100 hover:text-ucass-active md:hidden"
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 aria-label={isMobileMenuOpen ? 'Close header menu' : 'Open header menu'}
                 aria-expanded={isMobileMenuOpen}
