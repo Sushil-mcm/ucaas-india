@@ -121,11 +121,6 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  /* Every other Activity screen gets breathing room from the navbar via
-     ActivityPageHead's own padding. Phone dropped that head, so without
-     this the columns' cards sit flush against the navbar. Same flat
-     ground colour behind it, so it reads as space, not a bar. */
-  padding-top: 16px;
 }
 .mcm-console button {
   font: inherit;
@@ -519,6 +514,12 @@
   min-height: 0;
   overflow: hidden;
   background: var(--ground);
+  /* Breathing room from the navbar (every other Activity screen gets this
+     from ActivityPageHead's own padding, which Phone dropped along with
+     the duplicate title bar). Lives on each column, not on .mcm-console,
+     so the border-left dividing the columns starts at the true top of the
+     console instead of leaving a blank gap above it before it begins. */
+  padding-top: 16px;
 }
 .mcm-console .col.calls,
 .mcm-console .col.panel-col {
