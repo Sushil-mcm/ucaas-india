@@ -895,25 +895,26 @@ const People = () => {
                       {personForm.extension || '—'}
                     </span>
                   </label>
-                  <div className="gp-field gp-person-callerid">
-                    <span className="gp-field-l">Caller ID</span>
-                    {open.callerId ? (
-                      <span className="gp-person-callerid-value">{open.callerId}</span>
-                    ) : canAssignCallerId ? (
-                      <button
-                        type="button"
-                        className="btn ghost sm"
-                        onClick={() => setAssigningCallerId(open)}
-                      >
-                        <Ic n="vm" size={12} />
-                        Assign Number
-                      </button>
-                    ) : (
-                      <span className="gp-person-callerid-value gp-person-callerid-empty">
-                        Not assigned
-                      </span>
-                    )}
-                  </div>
+                </div>
+
+                <div className="gp-person-callerid">
+                  <span className="gp-field-l">Caller ID</span>
+                  {open.callerId ? (
+                    <span className="gp-person-callerid-value">{open.callerId}</span>
+                  ) : canAssignCallerId ? (
+                    <button
+                      type="button"
+                      className="btn ghost sm"
+                      onClick={() => setAssigningCallerId(open)}
+                    >
+                      <Ic n="vm" size={12} />
+                      Assign Number
+                    </button>
+                  ) : (
+                    <span className="gp-person-callerid-value gp-person-callerid-empty">
+                      Not assigned
+                    </span>
+                  )}
                 </div>
               </div>
 
