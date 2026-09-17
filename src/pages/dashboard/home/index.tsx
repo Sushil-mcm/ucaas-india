@@ -403,10 +403,16 @@ const Home = () => {
          is the one that gets a track. Both values are real: the level comes
          from the same feed as the figure above it, the target is the 80% the
          sub-line already quotes. */
+      /* An idle queue (no calls yet today) still has a real target from its
+         own settings -- shown at 0% filled rather than leaving the tile's
+         whole chart area blank until the first call comes in. */
       meter:
-        serviceLevel.percent === null || serviceLevel.targetPercent === null
+        serviceLevel.targetPercent === null
           ? undefined
-          : { value: Math.round(slaAnimated), target: serviceLevel.targetPercent },
+          : {
+              value: serviceLevel.percent === null ? 0 : Math.round(slaAnimated),
+              target: serviceLevel.targetPercent,
+            },
       tone: (() => {
         const band = serviceLevelBand(serviceLevel.percent, serviceLevel.targetPercent);
         return band === null ? undefined : band === 'warn' ? 'warnv' : band;
@@ -538,11 +544,19 @@ const Home = () => {
               Everything you need, in real-time — wait times, service levels, occupancy and agent
               activity across your contact centre.
             </p>
-            {/* The hero's own trend -- service level's rolling history
-                (`useKpiHistory`), the one figure on the strip that reads as
-                "how is the floor doing" on its own. */}
+            {/* The hero's own trend -- queue volume's rolling history
+                (`useKpiHistory`). Not service level: that's `null` (and so
+                never sampled) whenever nothing's been answered yet today,
+                which would leave this chart blank on a quiet queue. Waiting
+                count is always a real number, 0 included, so this always
+                has something real to draw. */}
             <div className="kpi-hero-chart">
-              <TrendArea data={getHistory('sla')} dataKey="v" color="var(--accent)" height={90} />
+              <TrendArea
+                data={getHistory('waiting')}
+                dataKey="v"
+                color="var(--accent)"
+                height={90}
+              />
             </div>
             <div className={`kpi-hero-status${attention.length ? ' is-warn' : ''}`}>
               <Ic n={attention.length ? 'alert' : 'bolt'} size={16} />

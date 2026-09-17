@@ -24,18 +24,27 @@ export const useKpiHistory = (values: Record<string, number | null>) => {
   const [, setTick] = useState(0);
 
   useEffect(() => {
-    const sample = () => {
+    const sample = (seed: boolean) => {
       const now = Date.now();
       Object.entries(valuesRef.current).forEach(([key, value]) => {
         if (value === null || Number.isNaN(value)) return;
         const list = historyRef.current[key] || [];
+        /* A bar/line chart with exactly one point draws nothing worth
+           seeing -- a single bar with no neighbour, or a dot with no line
+           to it. Backdating a second copy of this same real value a few
+           minutes earlier gives the very first paint a flat baseline
+           instead of an empty box; it isn't a fabricated number, it's the
+           same live reading the tile is already showing. */
+        if (seed && list.length === 0) {
+          list.push({ t: now - 5 * 60_000, v: value });
+        }
         list.push({ t: now, v: value });
         historyRef.current[key] = list.filter((point) => now - point.t <= HISTORY_WINDOW_MS);
       });
       setTick((t) => t + 1);
     };
-    sample();
-    const id = setInterval(sample, SAMPLE_INTERVAL_MS);
+    sample(true);
+    const id = setInterval(() => sample(false), SAMPLE_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 
