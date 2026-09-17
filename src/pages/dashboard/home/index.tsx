@@ -1164,9 +1164,11 @@ const Home = () => {
                 <div className="dist-legend-list">
                   {stateDistribution.map((slice) => (
                     <div className="dist-legend-item" key={slice.state}>
-                      <span className={STATE_CLASS[slice.state] || 'state away'}>
-                        {slice.state}
-                      </span>
+                      <i
+                        className="tbl-dot"
+                        style={{ background: STATE_COLOR[slice.state] || 'var(--ink-4)' }}
+                      />
+                      <span>{slice.state}</span>
                       <span className="num" style={{ color: 'var(--ink-4)' }}>
                         {slice.count} · {slice.pct}%
                       </span>

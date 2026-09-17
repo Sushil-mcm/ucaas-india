@@ -329,17 +329,16 @@
 .home-v2 .dist-legend-list .dist-legend-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-2, #3d4a63);
   white-space: normal;
 }
-.home-v2 .dist-legend-list .dist-legend-item .state {
-  font-size: 11px;
-  padding: 3px 9px;
-}
 .home-v2 .dist-legend-list .dist-legend-item .num {
+  margin-left: 4px;
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--ink-2, #3d4a63);
+  color: var(--ink-4, #93a0b8);
 }
 
 /* ---- Communication overview ---- */
@@ -502,16 +501,18 @@
   border-top: 1px solid rgba(150, 100, 50, 0.1);
   border-bottom: 1px solid rgba(150, 100, 50, 0.1);
 }
-/* A 3-column grid kept breaking on 5 uneven-length items -- a short
-   "Inbound" over a long "Missed calls today" either misaligned or
-   overflowed the card depending on width. A single vertical list (same
-   pattern as the Agent status distribution card) can't misalign. */
+/* 3 items on top, 2 underneath -- equal-width (1fr) columns instead of
+   auto/content-sized ones, so a long "Missed calls today" can never push
+   the grid wider than the card (it wraps to a second line in its own
+   column instead), and every row stays aligned regardless of card width. */
 .home-v2 .day-split-legend {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 8px;
 }
 .home-v2 .day-split-item {
   display: flex;
