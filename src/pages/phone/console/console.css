@@ -482,18 +482,28 @@
   display: block;
 }
 .mcm-console .phone-grid {
-  /* The call list is the one column that's fine wide or narrow, so it's the
-     only one left flexible (`1fr`) — it soaks up whatever width is left
-     over, which is what actually fills the grid's own box edge-to-edge.
-     Capping every column instead (no `fr` at all) left a real gap after
-     the last column with nothing painted in it, so it showed the page
-     behind the console rather than the console's own background. Stage and
-     panel stay capped so neither the keypad's keys nor the copilot panel
-     stretch wide and empty. */
-  display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(420px, 520px) minmax(380px, 440px);
+  /* Flexbox, not grid: a CSS Grid `1fr` track left a real unpainted gap
+     after the last column at browser zoom levels other than 100% (the
+     `fr` distribution came up short of the container's actual width).
+     Flexbox's `flex-grow` doesn't have that failure mode, so the call
+     list (the one column that's fine wide or narrow) grows to fill
+     whatever's left while stage and panel keep a fixed preferred width
+     and only shrink, never grow past it. */
+  display: flex;
   height: 100%;
   overflow: hidden;
+}
+.mcm-console .col.calls {
+  flex: 1 1 420px;
+  min-width: 420px;
+}
+.mcm-console .col.stage {
+  flex: 0 1 520px;
+  min-width: 420px;
+}
+.mcm-console .col.panel-col {
+  flex: 0 1 440px;
+  min-width: 380px;
 }
 .mcm-console .col {
   display: flex;
@@ -2371,8 +2381,17 @@
   transform: translateX(-50%) translateY(0);
 }
 @media (max-width: 1240px) {
-  .mcm-console .phone-grid {
-    grid-template-columns: minmax(360px, 1fr) minmax(380px, 460px) minmax(340px, 400px);
+  .mcm-console .col.calls {
+    flex-basis: 360px;
+    min-width: 360px;
+  }
+  .mcm-console .col.stage {
+    flex-basis: 460px;
+    min-width: 380px;
+  }
+  .mcm-console .col.panel-col {
+    flex-basis: 400px;
+    min-width: 340px;
   }
 }
 @media (max-width: 900px) {
@@ -2399,8 +2418,15 @@
     display: none;
   }
   .mcm-console .phone-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     height: auto;
+  }
+  .mcm-console .col.calls,
+  .mcm-console .col.stage,
+  .mcm-console .col.panel-col {
+    flex-basis: auto;
+    min-width: 0;
+    width: 100%;
   }
   .mcm-console .col + .col {
     border-left: 0;
@@ -3214,13 +3240,9 @@
   height: 34px;
 }
 
-/* the stage must never dictate the grid's width */
-.mcm-console .col.stage {
-  min-width: 0;
-}
-.mcm-console .col.panel-col {
-  min-width: 0;
-}
+/* the stage's own content must never force it wider than its flex-basis;
+   the column's floor is the `min-width` set on `.col.stage` itself above,
+   not zero — that's what let it shrink away to nothing before. */
 .mcm-console .stage-inner {
   min-width: 0;
 }
@@ -3290,8 +3312,9 @@
   color: var(--ink-3);
 }
 
-/* the list column is fixed-width: never let content force it wider */
-.mcm-console .col.calls {
+/* rows inside must never force the list column wider than its flex-basis;
+   the column's own shrink floor is the `min-width` set above, not zero. */
+.mcm-console .col.calls .list {
   min-width: 0;
 }
 .mcm-console .col-head {
