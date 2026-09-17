@@ -149,7 +149,14 @@ const SideDrawer: FC<SideDrawerProps> = ({
 
         <div
           className={cn(
-            'flex-1 min-h-0 w-full flex flex-col gap-4 overflow-auto px-4 lg:px-5 pb-5',
+            /* overflow-x-hidden: a panel this narrow scrolling sideways is
+               never the intent — and content that bleeds its own negative
+               margin to cancel this wrapper's padding (see the notification
+               drawer) can end up a sub-pixel wider than the wrapper through
+               nested percentage/calc rounding, which was enough on its own
+               to open a horizontal scrollbar and reserve space for it along
+               the bottom/right of every drawer using this component. */
+            'flex-1 min-h-0 w-full flex flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 lg:px-5 pb-5',
             /* No title row means nothing reserves space for the floating
                close button above, so the content's own heading runs
                underneath it - give the content the same clearance a title
