@@ -2812,11 +2812,11 @@
    The whole area laid out at once, grouped, rather than hidden behind an
    accordion you have to open to discover what is inside. */
 .mcm-adminhome {
-  /* One quiet wash, off to a side — not the mirrored twin-blob glow that
-     makes a page read as a template. Barely perceptible; it just gives the
-     glass panels below something to catch. */
-  background: radial-gradient(900px 480px at 78% -10%, var(--accent-wash) 0%, transparent 65%),
-    var(--ground);
+  /* The app's own page cream (matches Directory/People's #FEF8F1), so the
+     white head bar and white cards read as floating surfaces above the
+     page the way People's own header card does, rather than either
+     blending flush white-on-white or showing an unrelated glow. */
+  background: #fef8f1;
 }
 
 .mcm-adminhome-head {
@@ -3034,7 +3034,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 12px 10px;
+  padding: 4px 12px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--glass-border);
 }
 .mcm-admin .mcm-admincard-ic {
   display: inline-flex;
@@ -6314,8 +6316,15 @@
   gap: 14px;
   min-height: 65px;
   padding: 12px 22px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  /* Was a flush full-width bar (var(--surface) + a bottom border) sitting
+     directly on the page. Floating white card with a soft shadow instead,
+     the same recipe People's own page-head uses, now that the page behind
+     it (.mcm-adminhome) is the app's cream rather than plain white. */
+  margin: 16px 22px 0;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.16);
 }
 
 .mcm-admin .mcm-adminhead-title {
