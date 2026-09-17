@@ -759,7 +759,10 @@ const Home = () => {
                       </div>
                     </div>
 
-                    {/* Inbound/outbound as a split, not two more kv rows. */}
+                    {/* Inbound/outbound as a split, not two more kv rows --
+                        and the "since you logged off" digest's own dot
+                        legend joins the same line, so every colour on the
+                        card is explained in one place instead of two. */}
                     <div className="day-split-row">
                       <StatusDonut
                         data={(() => {
@@ -793,15 +796,19 @@ const Home = () => {
                           Outbound
                           <b className="num">{Number(myStats.outgoing_calls) || 0}</b>
                         </div>
+                        {[
+                          { label: 'Voicemails today', color: 'var(--accent)' },
+                          { label: 'Missed calls today', color: 'var(--crit, #d32f2f)' },
+                          { label: 'Callers still waiting', color: '#7c3aed' },
+                        ].map((row) => (
+                          <div className="day-split-item" key={row.label}>
+                            <span className="dot" style={{ background: row.color }} />
+                            {row.label}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Since you logged off -- same three counts, as bars
-                        against each other instead of a table. A dot legend
-                        first, same visual language as Inbound/Outbound
-                        above it, so what each bar's colour means is never
-                        just implied by the row it happens to sit on. */}
-                    <div className="day-section-label">Since you logged off</div>
                     {(() => {
                       const digestRows = [
                         { label: 'Voicemails today', value: voicemails, color: 'var(--accent)' },
@@ -818,31 +825,21 @@ const Home = () => {
                       ];
                       const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
                       return (
-                        <>
-                          <div className="day-split-legend day-digest-legend">
-                            {digestRows.map((row) => (
-                              <div className="day-split-item" key={row.label}>
-                                <span className="dot" style={{ background: row.color }} />
-                                {row.label}
+                        <div className="day-bars">
+                          {digestRows.map((row) => (
+                            <div className="day-bar-row" key={row.label}>
+                              <div className="day-bar-track">
+                                <span
+                                  style={{
+                                    width: `${Math.max(3, (row.value / max) * 100)}%`,
+                                    background: row.color,
+                                  }}
+                                />
                               </div>
-                            ))}
-                          </div>
-                          <div className="day-bars">
-                            {digestRows.map((row) => (
-                              <div className="day-bar-row" key={row.label}>
-                                <div className="day-bar-track">
-                                  <span
-                                    style={{
-                                      width: `${Math.max(3, (row.value / max) * 100)}%`,
-                                      background: row.color,
-                                    }}
-                                  />
-                                </div>
-                                <span className="day-bar-value num">{row.value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </>
+                              <span className="day-bar-value num">{row.value}</span>
+                            </div>
+                          ))}
+                        </div>
                       );
                     })()}
 
