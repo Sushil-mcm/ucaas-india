@@ -706,45 +706,133 @@ const Home = () => {
             </div>
           </div>
 
-        {/* ── your day so far / since you logged off / quick dial ──────── */}
-        <div className="grid3 grid3-stretch" style={{ marginTop: 16 }}>
+        {/* ── your day so far (merged with the old "since you logged off"
+            digest) / quick dial -- two cards, not three, and the first one
+            reads as charts/stats now instead of a stack of key-value rows ── */}
+        <div className="grid2 grid2-stretch-cols" style={{ marginTop: 16 }}>
             <div className="panel-card">
               <div className="pc-head">
                 <h3>Your day so far</h3>
                 <span className="src pc-right">{moment().format('HH:mm')} · today</span>
               </div>
-              <div className="pc-body tight">
+              <div className="pc-body">
                 {me ? (
                   <>
-                    <div className="kv">
-                      <span className="k">Calls handled</span>
-                      <span className="v num">{myHandled}</span>
+                    <div className="day-stats-row">
+                      <div className="day-stat">
+                        <span
+                          className="day-stat-icon"
+                          style={{ background: 'rgba(124,58,237,0.12)', color: '#7c3aed' }}
+                        >
+                          <Ic n="phone" size={14} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="day-stat-v num">{myHandled}</div>
+                          <div className="day-stat-k">Calls handled</div>
+                        </div>
+                      </div>
+                      <div className="day-stat">
+                        <span
+                          className="day-stat-icon"
+                          style={{ background: 'rgba(14,165,233,0.12)', color: '#0ea5e9' }}
+                        >
+                          <Ic n="clock" size={14} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="day-stat-v num">
+                            {myAhtSecs === null ? '—' : formatSecsToClock(myAhtSecs)}
+                          </div>
+                          <div className="day-stat-k">Avg handle time</div>
+                        </div>
+                      </div>
+                      <div className="day-stat">
+                        <span
+                          className="day-stat-icon"
+                          style={{ background: 'rgba(13,148,136,0.12)', color: '#0d9488' }}
+                        >
+                          <Ic n="bolt" size={14} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="day-stat-v num">{Math.round(myTalkMinutes)}m</div>
+                          <div className="day-stat-k">Time on calls</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="kv">
-                      <span className="k">Average handle time</span>
-                      <span className="v num">
-                        {myAhtSecs === null ? '—' : formatSecsToClock(myAhtSecs)}
-                      </span>
+
+                    {/* Inbound/outbound as a split, not two more kv rows. */}
+                    <div className="day-split-row">
+                      <StatusDonut
+                        data={(() => {
+                          const inbound = Number(myStats.incoming_calls) || 0;
+                          const outbound = Number(myStats.outgoing_calls) || 0;
+                          const total = inbound + outbound || 1;
+                          return [
+                            {
+                              state: 'Inbound',
+                              count: inbound,
+                              pct: Math.round((inbound / total) * 100),
+                            },
+                            {
+                              state: 'Outbound',
+                              count: outbound,
+                              pct: Math.round((outbound / total) * 100),
+                            },
+                          ];
+                        })()}
+                        colors={{ Inbound: '#2563eb', Outbound: '#7c3aed' }}
+                        size={64}
+                      />
+                      <div className="day-split-legend">
+                        <div className="day-split-item">
+                          <span className="dot" style={{ background: '#2563eb' }} />
+                          Inbound
+                          <b className="num">{Number(myStats.incoming_calls) || 0}</b>
+                        </div>
+                        <div className="day-split-item">
+                          <span className="dot" style={{ background: '#7c3aed' }} />
+                          Outbound
+                          <b className="num">{Number(myStats.outgoing_calls) || 0}</b>
+                        </div>
+                      </div>
                     </div>
-                    <div className="kv">
-                      <span className="k">Time on calls</span>
-                      <span className="v num">{Math.round(myTalkMinutes)} min</span>
+
+                    {/* Since you logged off -- same three counts, as bars
+                        against each other instead of a table. */}
+                    <div className="day-section-label">Since you logged off</div>
+                    <div className="day-bars">
+                      {[
+                        { label: 'Voicemails today', value: voicemails, color: 'var(--accent)' },
+                        {
+                          label: 'Missed calls today',
+                          value: missedRows.length,
+                          color: 'var(--crit, #d32f2f)',
+                        },
+                        {
+                          label: 'Callers still waiting',
+                          value: waitingCalls.length,
+                          color: '#7c3aed',
+                        },
+                      ].map((row) => {
+                        const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
+                        return (
+                          <div className="day-bar-row" key={row.label}>
+                            <span className="day-bar-label">{row.label}</span>
+                            <div className="day-bar-track">
+                              <span
+                                style={{
+                                  width: `${Math.max(3, (row.value / max) * 100)}%`,
+                                  background: row.color,
+                                }}
+                              />
+                            </div>
+                            <span className="day-bar-value num">{row.value}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="kv">
-                      <span className="k">Inbound</span>
-                      <span className="v num">{Number(myStats.incoming_calls) || 0}</span>
-                    </div>
-                    <div className="kv">
-                      <span className="k">Outbound</span>
-                      <span className="v num">{Number(myStats.outgoing_calls) || 0}</span>
-                    </div>
-                    <div className="kv">
-                      <span className="k">Queues you cover</span>
-                      <span className="v num">{myQueues.length}</span>
-                    </div>
-                    <div className="kv">
-                      <span className="k">Station</span>
-                      <span className="v">
+
+                    <div className="day-foot">
+                      <span className="day-station">
                         {isRegistered ? (
                           <>
                             <span className="dot green" />
@@ -758,6 +846,10 @@ const Home = () => {
                           </>
                         )}
                       </span>
+                      <button className="mini" onClick={() => navigate('/phone')}>
+                        <Ic n="list" size={12} />
+                        Open the call log
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -769,55 +861,6 @@ const Home = () => {
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* ── overnight digest ─────────────────────────────────────── */}
-            <div className="panel-card">
-              <div className="pc-head">
-                <h3>Since you logged off</h3>
-                <span className="tag ai pc-right">
-                  <Ic n="spark" size={9} fill />
-                  Copilot
-                </span>
-              </div>
-              <div className="pc-body">
-                {/* The artifact writes a Copilot narrative here — "eleven duplicate
-                    direct debits, none of them told". There is no summarisation
-                    service behind Home yet, so this says so instead of inventing
-                    one. The counts below it are real. */}
-                <div className="aicard" style={{ marginBottom: 10 }}>
-                  <div className="ac-head">
-                    <span className="ac-kind">
-                      <Ic n="spark" size={12} fill />
-                      Overnight summary
-                    </span>
-                    <span className="src pc-right">not connected</span>
-                  </div>
-                  <div className="ac-body">
-                    Copilot does not summarise overnight activity yet. When that service is wired
-                    up, the pattern it finds across the calls you missed appears here — for now the
-                    counts below are the raw record.
-                  </div>
-                </div>
-                <div className="kv">
-                  <span className="k">Voicemails today</span>
-                  <span className="v num">{voicemails}</span>
-                </div>
-                <div className="kv">
-                  <span className="k">Missed calls today</span>
-                  <span className="v num">{missedRows.length}</span>
-                </div>
-                <div className="kv">
-                  <span className="k">Callers still waiting</span>
-                  <span className="v num">{waitingCalls.length}</span>
-                </div>
-                <div className="ac-acts" style={{ marginTop: 12 }}>
-                  <button className="mini" onClick={() => navigate('/phone')}>
-                    <Ic n="list" size={12} />
-                    Open the call log
-                  </button>
-                </div>
               </div>
             </div>
 
