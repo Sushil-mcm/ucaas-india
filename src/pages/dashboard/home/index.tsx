@@ -30,7 +30,7 @@ import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { StatusDonut } from './charts';
+import { RadialGauge, StatusDonut } from './charts';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
 import './home-v2.css';
@@ -492,23 +492,27 @@ const Home = () => {
             // A breaching figure tints the whole tile, not just the number —
             // the artifact's `alert` treatment, so it reads at a glance.
             <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
-              <div className="kpi-head">
-                <span
-                  className="kpi-badge"
-                  style={{ background: `${kpi.color}1f`, color: kpi.color }}
-                >
-                  <Ic n={kpi.icon} size={13} />
-                </span>
-                <span className="k">{kpi.label}</span>
+              <div className="kpi-main">
+                <div className="kpi-head">
+                  <span
+                    className="kpi-badge"
+                    style={{ background: `${kpi.color}1f`, color: kpi.color }}
+                  >
+                    <Ic n={kpi.icon} size={16} />
+                  </span>
+                  <span className="k">{kpi.label}</span>
+                </div>
+                <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
               </div>
-              <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
-              {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
-              <div className="kpi-bar" role="img" aria-label={`${Math.round(kpi.progressPct)}%`}>
-                <span
-                  style={{
-                    width: `${Math.max(2, Math.min(100, kpi.progressPct))}%`,
-                    background: kpi.tone === 'bad' ? 'var(--crit, #d32f2f)' : kpi.color,
-                  }}
+              {/* Fills the dead space a short value/label pair left on the
+                  tile's right side with the same number the old footer bar
+                  read, just as a gauge instead of a flat line. */}
+              <div role="img" aria-label={`${Math.round(kpi.progressPct)}%`}>
+                <RadialGauge
+                  value={kpi.progressPct}
+                  size={46}
+                  color={kpi.tone === 'bad' ? 'var(--crit, #d32f2f)' : kpi.color}
                 />
               </div>
             </div>
