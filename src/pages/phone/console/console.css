@@ -3213,6 +3213,14 @@
 .mcm-console .record-head-actions .btn {
   flex: 1;
 }
+.mcm-console .record-head-actions .btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+.mcm-console .record-head-actions .btn.primary:hover:not(:disabled) {
+  background: var(--accent-ink);
+}
 .mcm-console .record-av {
   width: 48px;
   height: 48px;
