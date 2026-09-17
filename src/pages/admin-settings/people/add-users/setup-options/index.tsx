@@ -51,18 +51,6 @@ const SetupOption = ({
         </div>
       ) : (
         <>
-          {orderSummary?.totalPayableUnit > 0 ? (
-            <div className="mcm-invite-side w-full">
-              <OrderSummary
-                orderSummary={orderSummary}
-                dataGetMyPlanDetails={dataGetMyPlanDetails}
-                customClass="w-full mcm-order-summary"
-                subtitle="Review your license details"
-                note="Final amount may vary based on selected location and license type."
-                onCalculationChange={setPaymentCalculation}
-              />
-            </div>
-          ) : null}
           <RadioGroup
             className="gap-4"
             value={passwordType}
@@ -153,6 +141,18 @@ const SetupOption = ({
               </Label>
             </div>
           </RadioGroup>
+          {orderSummary?.totalPayableUnit > 0 ? (
+            <div className="mcm-invite-side w-full">
+              <OrderSummary
+                orderSummary={orderSummary}
+                dataGetMyPlanDetails={dataGetMyPlanDetails}
+                customClass="w-full mcm-order-summary"
+                subtitle="Review your license details"
+                note="Final amount may vary based on selected location and license type."
+                onCalculationChange={setPaymentCalculation}
+              />
+            </div>
+          ) : null}
         </>
       )}
     </div>

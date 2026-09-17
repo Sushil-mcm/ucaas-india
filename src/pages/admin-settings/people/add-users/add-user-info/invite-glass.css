@@ -239,10 +239,6 @@
   .gp-invite-dialog .mcm-invite-rail {
     grid-column: 1;
     grid-row: 1 / 3;
-    border-right: 1px solid rgba(242, 153, 74, 0.16);
-  }
-  .dark .gp-invite-dialog .mcm-invite-rail {
-    border-right-color: #1b2934;
   }
   /* `.mcm-invite > div:first-child` (above) already sets this same
      element's padding at (0,2,1) specificity -- one class + a type
@@ -274,6 +270,16 @@
     inset: 0 auto 0 0;
     width: 280px;
     background: #ffffff;
+    /* Same reason the fill itself lives here rather than on the rail's own
+       box: `.mcm-invite`'s `height: auto !important` (above) means the
+       grid -- and the rail spanning it -- is only ever as tall as
+       whichever step's content needs, so on a shorter step (step 2's
+       radio list, next to step 1's taller invitee cards) the rail's own
+       border-right used to end well above the footer instead of reaching
+       the dialog's true bottom. Painted on this full-height pseudo
+       instead, the divider line reaches the same true edges the white
+       fill already does, on every step. */
+    border-right: 1px solid rgba(242, 153, 74, 0.16);
     /* Negative, not 0: a positioned z-index:0 element paints *above* the
        dialog's own static-flow content (the rail's text) regardless of
        DOM order, which would hide it behind solid peach. */
@@ -282,6 +288,7 @@
   }
   .dark .gp-invite-dialog::before {
     background: var(--mcm-surface, #111c26);
+    border-right-color: #1b2934;
   }
   /* The remaining top-level child of `.mcm-invite` -- a `<form>`, not a
      `div`, which is why a `div:nth-child(2)` version of this rule never
