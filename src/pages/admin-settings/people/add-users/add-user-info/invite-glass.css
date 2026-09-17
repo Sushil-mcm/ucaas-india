@@ -905,12 +905,16 @@
    line -- lighter and plainer than the card's other two rules (the
    header's own border-bottom and the Total row's dashed 0.3-alpha
    border-top above), so they read as a quiet row grid rather than
-   competing with either. */
-.gp-invite-dialog .mcm-order-summary ul > li:not(:last-child) {
+   competing with either. Stops short of Total Tax itself
+   (`:nth-last-child(2)`, the row right before Total Amount) -- that
+   boundary already gets the Total row's own dashed border-top, and a
+   solid line immediately above it doubled up into two stacked rules
+   instead of one. */
+.gp-invite-dialog .mcm-order-summary ul > li:not(:last-child):not(:nth-last-child(2)) {
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(242, 153, 74, 0.12);
 }
-.dark .gp-invite-dialog .mcm-order-summary ul > li:not(:last-child) {
+.dark .gp-invite-dialog .mcm-order-summary ul > li:not(:last-child):not(:nth-last-child(2)) {
   border-bottom-color: rgba(148, 163, 184, 0.15);
 }
 .gp-invite-dialog .mcm-order-summary ul > li:last-child span,
