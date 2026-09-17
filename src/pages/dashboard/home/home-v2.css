@@ -75,6 +75,62 @@
 }
 
 /* ---- KPI tiles: icon/value on the left, gauge (if any) on the right ---- */
+/* One hero card on the left spanning both rows, the 8 tiles filling a
+   4-column x 2-row grid beside it -- `.kpis-onerow`'s own 8-equal-columns
+   rule (mcm-page.css) is overridden here since Home's own version isn't a
+   single row any more. */
+.mcm-page.home-v2 .kpis.kpis-with-hero {
+  grid-template-columns: minmax(200px, 260px) repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.home-v2 .kpi-hero {
+  grid-row: 1 / 3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: linear-gradient(160deg, #fff6e9, #fef8f1);
+}
+.home-v2 .kpi-hero-live {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--live, #0d9488);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.home-v2 .kpi-hero h4 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink, #0d1526);
+}
+.home-v2 .kpi-hero p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3, #6b7891);
+}
+.home-v2 .kpi-hero-chip {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.3);
+  color: var(--accent-ink, #c96f1f);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(160, 95, 30, 0.1);
+}
+
 .mcm-page.home-v2 .kpi.kpi-v2 {
   position: relative;
   display: flex;
@@ -90,17 +146,6 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12);
   z-index: 1;
-}
-/* Large, faint outline of the tile's own icon in the bottom-right corner --
-   decoration, not information (the real icon is the small badge below),
-   so it stays low-opacity and never competes with the number. */
-.home-v2 .kpi-ghost {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  color: currentColor;
-  opacity: 0.05;
-  pointer-events: none;
 }
 .home-v2 .kpi-head {
   display: flex;

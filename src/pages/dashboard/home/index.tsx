@@ -471,15 +471,27 @@ const Home = () => {
         {/* ── quick actions ────────────────────────────────────────────── */}
         <QuickActions />
 
-        {/* ── KPI strip ────────────────────────────────────────────────── */}
-        <div className="kpis kpis-onerow">
+        {/* ── KPI strip: one hero card, then the 8 tiles as a 4x2 grid
+            beside it ──────────────────────────────────────────────────── */}
+        <div className="kpis kpis-onerow kpis-with-hero">
+          <div className="kpi-hero">
+            <span className="kpi-hero-live">
+              <span className="dot green" />
+              live
+            </span>
+            <h4>Live performance</h4>
+            <p>
+              Everything you need, in real-time — wait times, service levels, occupancy and agent
+              activity across your contact centre.
+            </p>
+            {serviceLevel.percent !== null ? (
+              <span className="kpi-hero-chip">{Math.round(slaAnimated)}% Service level</span>
+            ) : null}
+          </div>
           {kpis.map((kpi) => (
             // A breaching figure tints the whole tile, not just the number —
             // the artifact's `alert` treatment, so it reads at a glance.
             <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
-              <span className="kpi-ghost">
-                <Ic n={kpi.icon} size={64} />
-              </span>
               <div className="kpi-head">
                 <span
                   className="kpi-badge"
