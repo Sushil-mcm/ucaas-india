@@ -57,7 +57,8 @@ export type ConsoleIconName =
   | 'expand'
   | 'target'
   | 'trend'
-  | 'merge';
+  | 'merge'
+  | 'transcript';
 
 export const ConsoleIconSprite = () => (
   <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
@@ -140,4 +141,5 @@ const SPRITE = `<g id="mcmi-home"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-
 <g id="mcmi-expand"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></g>
 <g id="mcmi-target"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></g>
 <g id="mcmi-trend"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></g>
-<g id="mcmi-merge"><path d="M8 21V9a5 5 0 0 0-5-5M16 21V9a5 5 0 0 1 5-5M12 3v18"/></g>`;
+<g id="mcmi-merge"><path d="M8 21V9a5 5 0 0 0-5-5M16 21V9a5 5 0 0 1 5-5M12 3v18"/></g>
+<g id="mcmi-transcript"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h5M8 17h8"/></g>`;
