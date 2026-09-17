@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
 import { useUser } from '@/hooks/use-user';
 import { fetchPhone } from '@/services/api';
-import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import { Ic, McmIconSprite, type McmIconName } from '@/components/mcm/icons';
 import Timer from '@/components/timer';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
@@ -30,7 +30,7 @@ import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { RadialGauge, StatusDonut } from './charts';
+import { StatusDonut } from './charts';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
 import './home-v2.css';
@@ -104,8 +104,18 @@ type Kpi = {
   value: ReactNode;
   sub?: ReactNode;
   tone?: 'good' | 'warnv' | 'bad';
-  // Optional progress bar under the value, e.g. service level against its target.
+  // Optional gauge under the value, e.g. service level against its target.
   meter?: { value: number; target: number };
+  /** Icon + accent colour for this tile's badge, ghost watermark and footer
+   * bar -- each of the 8 gets its own so the strip reads as 8 distinct
+   * things at a glance rather than 8 identical grey boxes. */
+  icon: McmIconName;
+  color: string;
+  /** 0-100: how full the footer bar reads. Derived from the same number
+   * the tile already shows -- a percent metric uses its own percent, a
+   * count/time metric is read against a soft, reasonable ceiling -- never
+   * a value invented separately from what's on screen. */
+  progressPct: number;
 };
 
 const Home = () => {
@@ -337,6 +347,9 @@ const Home = () => {
       value: round(waitingAnimated),
       sub: `across ${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}`,
       tone: waitingCalls.length > 5 ? 'bad' : undefined,
+      icon: 'headset',
+      color: '#7c3aed',
+      progressPct: Math.min(100, (waitingCalls.length / 10) * 100),
     },
     {
       key: 'longest',
@@ -344,6 +357,9 @@ const Home = () => {
       value: longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00',
       sub: longestWaitSecs > 120 ? 'past the breach mark' : 'within target',
       tone: longestWaitSecs > 120 ? 'bad' : undefined,
+      icon: 'clock',
+      color: 'var(--accent)',
+      progressPct: Math.min(100, (longestWaitSecs / 300) * 100),
     },
     {
       key: 'sla',
@@ -364,31 +380,54 @@ const Home = () => {
         const band = serviceLevelBand(serviceLevel.percent, serviceLevel.targetPercent);
         return band === null ? undefined : band === 'warn' ? 'warnv' : band;
       })(),
+      icon: 'target',
+      color: 'var(--live)',
+      progressPct: serviceLevel.percent === null ? 0 : Math.round(slaAnimated),
     },
-    { key: 'answered', label: 'Answered today', value: round(answeredAnimated), sub: 'all queues' },
+    {
+      key: 'answered',
+      label: 'Answered today',
+      value: round(answeredAnimated),
+      sub: 'all queues',
+      icon: 'arrow-in',
+      color: '#2563eb',
+      progressPct: Math.min(100, (totals.answered / 200) * 100),
+    },
     {
       key: 'abandon',
       label: 'Abandon rate',
       value: abandonRate === null ? '—' : `${Math.round(abandonAnimated)}%`,
       sub: abandonRate === null ? 'no calls in range' : 'of calls today',
       tone: abandonRate !== null && abandonRate > 5 ? 'bad' : undefined,
+      icon: 'miss',
+      color: 'var(--crit, #d32f2f)',
+      progressPct: abandonRate === null ? 0 : Math.round(abandonAnimated),
     },
     {
       key: 'aht',
       label: 'Avg handle time',
       value: avgHandleTime === null ? '—' : formatSecsToClock(ahtAnimated),
+      icon: 'bolt',
+      color: '#0ea5e9',
+      progressPct: avgHandleTime === null ? 0 : Math.min(100, (avgHandleTime / 600) * 100),
     },
     {
       key: 'onqueue',
       label: 'On queue',
       value: round(onlineAgentsAnimated),
       sub: `of ${agentRows.length} on the roster`,
+      icon: 'users',
+      color: '#7c3aed',
+      progressPct: agentRows.length ? (onlineAgentsCount / agentRows.length) * 100 : 0,
     },
     {
       key: 'agentsOnCall',
       label: 'On a call now',
       value: agentsOnCallPct === null ? '—' : `${Math.round(onCallAnimated)}%`,
       sub: 'of agents on queue',
+      icon: 'trend',
+      color: '#0d9488',
+      progressPct: agentsOnCallPct === null ? 0 : Math.round(onCallAnimated),
     },
   ];
 
@@ -438,32 +477,28 @@ const Home = () => {
             // A breaching figure tints the whole tile, not just the number —
             // the artifact's `alert` treatment, so it reads at a glance.
             <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="k">{kpi.label}</div>
-                <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
-                {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
-              </div>
-              {/* Service level swaps the old linear bar for a ring -- the same
-                  value/target the bar read, just drawn as a gauge so it's the
-                  one figure on the strip that reads as a dial rather than a
-                  plain number. */}
-              {kpi.meter ? (
-                <div
-                  role="img"
-                  aria-label={`${kpi.meter.value}% against a ${kpi.meter.target}% target`}
+              <span className="kpi-ghost">
+                <Ic n={kpi.icon} size={64} />
+              </span>
+              <div className="kpi-head">
+                <span
+                  className="kpi-badge"
+                  style={{ background: `${kpi.color}1f`, color: kpi.color }}
                 >
-                  <RadialGauge
-                    value={kpi.meter.value}
-                    color={
-                      kpi.tone === 'bad'
-                        ? 'var(--crit, #d32f2f)'
-                        : kpi.tone === 'warnv'
-                          ? 'var(--warn)'
-                          : 'var(--live)'
-                    }
-                  />
-                </div>
-              ) : null}
+                  <Ic n={kpi.icon} size={13} />
+                </span>
+                <span className="k">{kpi.label}</span>
+              </div>
+              <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+              {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
+              <div className="kpi-bar" role="img" aria-label={`${Math.round(kpi.progressPct)}%`}>
+                <span
+                  style={{
+                    width: `${Math.max(2, Math.min(100, kpi.progressPct))}%`,
+                    background: kpi.tone === 'bad' ? 'var(--crit, #d32f2f)' : kpi.color,
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>

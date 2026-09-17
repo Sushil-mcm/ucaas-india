@@ -76,10 +76,12 @@
 
 /* ---- KPI tiles: icon/value on the left, gauge (if any) on the right ---- */
 .mcm-page.home-v2 .kpi.kpi-v2 {
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  padding-bottom: 16px;
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
@@ -88,7 +90,48 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12);
   z-index: 1;
-  position: relative;
+}
+/* Large, faint outline of the tile's own icon in the bottom-right corner --
+   decoration, not information (the real icon is the small badge below),
+   so it stays low-opacity and never competes with the number. */
+.home-v2 .kpi-ghost {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  color: currentColor;
+  opacity: 0.05;
+  pointer-events: none;
+}
+.home-v2 .kpi-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.home-v2 .kpi-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 999px;
+}
+/* Footer bar -- how full each tile's own number reads against a sensible
+   ceiling (see `progressPct` in index.tsx), pinned to the tile's bottom
+   edge rather than sitting inline with the text. */
+.home-v2 .kpi-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(150, 100, 50, 0.08);
+}
+.home-v2 .kpi-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  transition: width 0.4s ease;
 }
 
 /* ---- agent status donut ---- */
