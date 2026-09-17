@@ -3976,7 +3976,7 @@
   min-width: 0;
 }
 .mcm-console .col.calls .col-title .console-datefilter > * {
-  max-width: 112px;
+  max-width: 132px;
 }
 .mcm-console .col.calls .col-title .console-datefilter .custom-react-select__control {
   /* !important: a later, less-specific rule sets height:30px!important —
@@ -4027,6 +4027,10 @@
 .mcm-console .col.calls .col-title .console-datefilter .custom-react-select__menu {
   width: 150px;
   right: 0;
+  /* The shared select component's global rule borders every menu in the
+     brand orange (var(--primary)) with !important — override it here so
+     this one gets a plain neutral border instead. */
+  border-color: var(--line) !important;
 }
 
 .mcm-console .col.calls .panel-tabs {

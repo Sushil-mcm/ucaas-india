@@ -160,34 +160,36 @@ const ContactPane = ({
             <h3>This call</h3>
             <span className="src live">live</span>
           </div>
-          {agentName ? (
-            <div className="kv">
-              <span className="k">Handled by</span>
-              <span className="v">
-                {agentName}
-                {agentExtension ? (
-                  <span style={{ color: 'var(--ink-4)' }} className="num">
-                    {' '}
-                    · {agentExtension}
-                  </span>
-                ) : null}
-              </span>
-            </div>
-          ) : null}
-          {viaDid ? (
-            <div className="kv">
-              <span className="k">{isOutbound ? 'Called from' : 'Called to'}</span>
-              <span className="v">
-                <NumberWithFlag number={viaDid} className="num" />
-              </span>
-            </div>
-          ) : null}
-          {queue ? (
-            <div className="kv">
-              <span className="k">Queue</span>
-              <span className="v">{queue}</span>
-            </div>
-          ) : null}
+          <div className="pc-body tight">
+            {agentName ? (
+              <div className="kv">
+                <span className="k">Handled by</span>
+                <span className="v">
+                  {agentName}
+                  {agentExtension ? (
+                    <span style={{ color: 'var(--ink-4)' }} className="num">
+                      {' '}
+                      · {agentExtension}
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            ) : null}
+            {viaDid ? (
+              <div className="kv">
+                <span className="k">{isOutbound ? 'Called from' : 'Called to'}</span>
+                <span className="v">
+                  <NumberWithFlag number={viaDid} className="num" />
+                </span>
+              </div>
+            ) : null}
+            {queue ? (
+              <div className="kv">
+                <span className="k">Queue</span>
+                <span className="v">{queue}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
