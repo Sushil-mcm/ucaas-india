@@ -3040,15 +3040,34 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   background: var(--accent-wash);
   color: var(--accent-ink);
 }
-.mcm-admin .mcm-admincard-t {
+.mcm-admin .mcm-admincard-title-wrap {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   flex: 1;
+  gap: 1px;
+}
+.mcm-admin .mcm-admincard-t {
+  min-width: 0;
+}
+/* One line under the title, the way the reference pairs a section name
+   with what it's for — this card used to be a label and a count with
+   nothing explaining what "Numbers" or "Integration" actually holds. */
+.mcm-admin .mcm-admincard-blurb {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* The count sits quiet: it answers "how much is in here" without competing
    with the section name for the eye. */
@@ -3089,6 +3108,24 @@
     transition: none;
     transform: none;
   }
+}
+
+/* A card capped at 5 rows falls back to this instead of just running tall —
+   Captain alone has 12 screens, which used to make its card nearly 3x the
+   height of a 4-item neighbour in the same row. */
+.mcm-admincard-viewall {
+  margin: 2px 12px 4px;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--glass-border);
+  background: none;
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.mcm-admincard-viewall:hover {
+  text-decoration: underline;
 }
 
 .mcm-admincard-group {

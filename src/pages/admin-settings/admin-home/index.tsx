@@ -25,12 +25,46 @@ import '@/components/mcm/mcm-page.css';
 type Entry = { title: string; path: string };
 type Group = { title: string; icon: string; entries: Entry[] };
 
+/* One line under each section name, the way the reference layout pairs a
+   title with what it's for. Not every section title is self-explanatory at
+   a glance ("Numbers"? "Integration"?), and a generic sentence built from
+   the title alone ("Manage your Numbers") reads worse than just writing the
+   dozen or so that exist. */
+const SECTION_BLURBS: Record<string, string> = {
+  Captain: 'Customize your UCaaS experience',
+  Company: 'Manage company information',
+  'My Account': 'Manage your personal settings',
+  People: 'Manage users and permissions',
+  Numbers: 'Manage your phone numbers and caller IDs',
+  'Phone System': 'Configure your calling experience',
+  'AI Tools': 'Explore AI-powered features',
+  Integration: 'Connect third-party tools and services',
+  'Social Media Channels': 'Manage your social media channels',
+  Billing: 'Manage your billing and payments',
+  '10DLC Compliance': 'Register and manage SMS compliance',
+};
+
+/* Rows shown before a card falls back to "View all" — long sections
+   (Captain has 12) used to just run the card tall instead of letting every
+   card in the row match its neighbours. */
+const COLLAPSED_ROW_COUNT = 5;
+
 const AdminHome = () => {
   const { features, user_info } = useCompanyFeatures();
   const { loader } = useUser();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'all' | 'recent'>('all');
   const { recent, clearRecent } = useAdminShortcuts();
+  /* Which cards have had "View all" clicked, by section title. A Set rather
+     than per-card state: expanding one card shouldn't re-render the rest. */
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleExpanded = (title: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
 
   const IS_ADMIN = user_info?.role === 'ADMIN';
 
@@ -165,29 +199,52 @@ const AdminHome = () => {
         {tab === 'all' ? (
           visibleGroups.length ? (
             <div className="mcm-admingrid">
-              {visibleGroups.map((group) => (
-                <div className="mcm-admincard" key={group.title}>
-                  {/* The section's own icon, the one the rail uses, so a card
-                      here and the entry that opens it are recognisably the same
-                      thing. The count says how much is behind it without
-                      opening it. */}
-                  <div className="mcm-admincard-h">
-                    <span className="mcm-admincard-ic" aria-hidden="true">
-                      <Icon name={group.icon as IconType} className="h-4 w-4" />
-                    </span>
-                    <span className="mcm-admincard-t">{group.title}</span>
-                    <span className="mcm-admincard-n">{group.entries.length}</span>
+              {visibleGroups.map((group) => {
+                const isExpanded = expandedGroups.has(group.title);
+                const shownEntries =
+                  isExpanded || group.entries.length <= COLLAPSED_ROW_COUNT
+                    ? group.entries
+                    : group.entries.slice(0, COLLAPSED_ROW_COUNT);
+                return (
+                  <div className="mcm-admincard" key={group.title}>
+                    {/* The section's own icon, the one the rail uses, so a card
+                        here and the entry that opens it are recognisably the
+                        same thing. The count says how much is behind it
+                        without opening it. */}
+                    <div className="mcm-admincard-h">
+                      <span className="mcm-admincard-ic" aria-hidden="true">
+                        <Icon name={group.icon as IconType} className="h-4 w-4" />
+                      </span>
+                      <span className="mcm-admincard-title-wrap">
+                        <span className="mcm-admincard-t">{group.title}</span>
+                        {SECTION_BLURBS[group.title] && (
+                          <span className="mcm-admincard-blurb">
+                            {SECTION_BLURBS[group.title]}
+                          </span>
+                        )}
+                      </span>
+                      <span className="mcm-admincard-n">{group.entries.length}</span>
+                    </div>
+                    <ul>
+                      {shownEntries.map((entry) => (
+                        <li key={entry.path}>
+                          <Link to={entry.path}>{entry.title}</Link>
+                          <ChevronRight className="mcm-admincard-go" aria-hidden="true" />
+                        </li>
+                      ))}
+                    </ul>
+                    {group.entries.length > COLLAPSED_ROW_COUNT && (
+                      <button
+                        type="button"
+                        className="mcm-admincard-viewall"
+                        onClick={() => toggleExpanded(group.title)}
+                      >
+                        {isExpanded ? 'Show less' : `View all ${group.entries.length} items`}
+                      </button>
+                    )}
                   </div>
-                  <ul>
-                    {group.entries.map((entry) => (
-                      <li key={entry.path}>
-                        <Link to={entry.path}>{entry.title}</Link>
-                        <ChevronRight className="mcm-admincard-go" aria-hidden="true" />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="mcm-adminhome-empty">Nothing matches “{search}”.</p>
