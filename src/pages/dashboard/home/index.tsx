@@ -949,12 +949,10 @@ const Home = () => {
                         onClick={() => dial(person.extension)}
                       >
                         {nameAvatar(person.name, initials(person.name), 34)}
-                        <span className="qd-row-info">
-                          <span className="qd-row-name">{person.name}</span>
-                          <span className="qd-row-meta">
-                            <i className={`tbl-dot ${person.online ? 'pos' : 'neu'}`} />
-                            Ext. {person.extension} · {person.online ? 'Available' : 'Offline'}
-                          </span>
+                        <span className="qd-row-name">{person.name}</span>
+                        <span className="qd-row-meta">
+                          <i className={`tbl-dot ${person.online ? 'pos' : 'neu'}`} />
+                          Ext. {person.extension} · {person.online ? 'Available' : 'Offline'}
                         </span>
                         <span className="qd-row-call">
                           <Ic n="phone" size={13} />
