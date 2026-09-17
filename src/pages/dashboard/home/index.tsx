@@ -797,10 +797,13 @@ const Home = () => {
                     </div>
 
                     {/* Since you logged off -- same three counts, as bars
-                        against each other instead of a table. */}
+                        against each other instead of a table. A dot legend
+                        first, same visual language as Inbound/Outbound
+                        above it, so what each bar's colour means is never
+                        just implied by the row it happens to sit on. */}
                     <div className="day-section-label">Since you logged off</div>
-                    <div className="day-bars">
-                      {[
+                    {(() => {
+                      const digestRows = [
                         { label: 'Voicemails today', value: voicemails, color: 'var(--accent)' },
                         {
                           label: 'Missed calls today',
@@ -812,24 +815,36 @@ const Home = () => {
                           value: waitingCalls.length,
                           color: '#7c3aed',
                         },
-                      ].map((row) => {
-                        const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
-                        return (
-                          <div className="day-bar-row" key={row.label}>
-                            <span className="day-bar-label">{row.label}</span>
-                            <div className="day-bar-track">
-                              <span
-                                style={{
-                                  width: `${Math.max(3, (row.value / max) * 100)}%`,
-                                  background: row.color,
-                                }}
-                              />
-                            </div>
-                            <span className="day-bar-value num">{row.value}</span>
+                      ];
+                      const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
+                      return (
+                        <>
+                          <div className="day-split-legend day-digest-legend">
+                            {digestRows.map((row) => (
+                              <div className="day-split-item" key={row.label}>
+                                <span className="dot" style={{ background: row.color }} />
+                                {row.label}
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
-                    </div>
+                          <div className="day-bars">
+                            {digestRows.map((row) => (
+                              <div className="day-bar-row" key={row.label}>
+                                <div className="day-bar-track">
+                                  <span
+                                    style={{
+                                      width: `${Math.max(3, (row.value / max) * 100)}%`,
+                                      background: row.color,
+                                    }}
+                                  />
+                                </div>
+                                <span className="day-bar-value num">{row.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     <div className="day-foot">
                       <span className="day-station">

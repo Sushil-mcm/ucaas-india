@@ -473,8 +473,10 @@
 }
 .home-v2 .day-split-legend {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
 }
 .home-v2 .day-split-item {
   display: flex;
@@ -505,18 +507,17 @@
   flex-direction: column;
   gap: 8px;
 }
+/* Two columns now, not three -- the label moved up into
+   `.day-digest-legend`'s own dot legend, so each row is just the bar
+   itself and its value. */
 .home-v2 .day-bar-row {
   display: grid;
-  grid-template-columns: 1fr 2fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 10px;
 }
-.home-v2 .day-bar-label {
-  font-size: 12px;
-  color: var(--ink-2, #3d4a63);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.home-v2 .day-digest-legend {
+  margin-bottom: 10px;
 }
 .home-v2 .day-bar-track {
   height: 6px;
