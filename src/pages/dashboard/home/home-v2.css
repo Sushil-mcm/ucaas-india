@@ -556,6 +556,7 @@
 .home-v2 .tbl-enhanced thead th {
   background: rgba(242, 153, 74, 0.07);
   border-bottom: 2px solid rgba(242, 153, 74, 0.35);
+  color: var(--ink, #0d1526);
 }
 .home-v2 .tbl-enhanced thead th:first-child {
   border-top-left-radius: 8px;
@@ -615,6 +616,7 @@
   justify-content: flex-end;
 }
 .home-v2 .occ-bar {
+  display: block;
   width: 46px;
   height: 5px;
   border-radius: 999px;
@@ -623,6 +625,7 @@
   flex: none;
 }
 .home-v2 .occ-fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
 }
