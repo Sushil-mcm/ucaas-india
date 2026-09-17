@@ -265,6 +265,9 @@
   align-items: center;
   justify-content: center;
   flex: none;
+  /* Extra room beyond the row's own 14px gap -- scoped to the donut
+     specifically rather than widening every tile's value/trend gap. */
+  margin-left: 14px;
 }
 .home-v2 .kpi-chart-donut-label {
   position: absolute;
@@ -393,4 +396,33 @@
 .dark .home-v2 .comms-tab {
   background: var(--mcm-surface, #1e293b);
   border-color: #1b2934;
+}
+
+/* ---- Needs you now: crit/warn split + rolling trend, both real data
+   already behind the list below it ---- */
+.home-v2 .attn-head {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.home-v2 .attn-split {
+  display: inline-flex;
+  gap: 6px;
+}
+.home-v2 .attn-split-seg {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.home-v2 .attn-split-seg.is-crit {
+  background: rgba(211, 47, 47, 0.12);
+  color: var(--crit, #d32f2f);
+}
+.home-v2 .attn-split-seg.is-warn {
+  background: rgba(242, 153, 74, 0.15);
+  color: var(--accent-ink, #c96f1f);
+}
+.home-v2 .attn-spark {
+  width: 90px;
+  flex: none;
 }

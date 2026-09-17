@@ -365,6 +365,7 @@ const Home = () => {
     aht: avgHandleTime,
     onqueue: onlineAgentsCount,
     agentsOnCall: agentsOnCallPct,
+    needsAttention: attention.length,
   });
 
   const kpis: Kpi[] = [
@@ -635,13 +636,40 @@ const Home = () => {
 
         {/* ── needs you now, full width on its own row ─────────────────── */}
         <div className="panel-card">
-            <div className="pc-head">
+            <div className="pc-head attn-head">
               <h3>Needs you now</h3>
               <span className={`tag ${attention.length ? 'neg' : 'pos'}`}>
                 {attention.length
                   ? `${attention.length} item${attention.length === 1 ? '' : 's'}`
                   : 'all clear'}
               </span>
+              {/* Real counts, from the same items listed below -- critical
+                  (a breach) split from warning (worth a look) rather than
+                  one undifferentiated total. */}
+              {attention.length ? (
+                <span className="attn-split">
+                  {attention.filter((item) => item.level === 'crit').length ? (
+                    <span className="attn-split-seg is-crit">
+                      {attention.filter((item) => item.level === 'crit').length} critical
+                    </span>
+                  ) : null}
+                  {attention.filter((item) => item.level === 'warn').length ? (
+                    <span className="attn-split-seg is-warn">
+                      {attention.filter((item) => item.level === 'warn').length} warning
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+              {/* How this count has moved over the session -- same rolling
+                  sampling as the KPI sparklines above (`useKpiHistory`), not
+                  a report endpoint that doesn't exist for this figure. */}
+              <div className="attn-spark">
+                <SparkBars
+                  data={getHistory('needsAttention')}
+                  color={attention.length ? 'var(--crit, #d32f2f)' : 'var(--live)'}
+                  height={28}
+                />
+              </div>
               <span className="src live pc-right">
                 <span className="dot green" />
                 live
