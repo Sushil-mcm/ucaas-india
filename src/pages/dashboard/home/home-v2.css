@@ -213,11 +213,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* `flex-start`, not `space-between` -- that stretched the donut (On Queue,
+   On a Call Now) all the way out to the card's own inner edge instead of
+   sitting a fixed distance from the value, the way the reference has it. */
 .home-v2 .kpi-value-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 14px;
 }
 .home-v2 .kpi-trend {
   display: inline-flex;
