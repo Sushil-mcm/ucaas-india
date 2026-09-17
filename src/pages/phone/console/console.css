@@ -4137,12 +4137,6 @@
 .mcm-console .col.calls .col-head {
   position: relative;
 }
-.mcm-console .col.calls .col-title h2 {
-  background: linear-gradient(120deg, var(--ink), var(--accent-ink));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
 .mcm-console .col.calls .tag {
   border-radius: 99px;
   padding: 2px 8px;
