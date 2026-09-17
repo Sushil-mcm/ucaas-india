@@ -184,17 +184,21 @@ export const DIRECTORY_VIEWS: AreaView[] = [
   {
     key: 'external',
     label: 'Contacts',
-    icon: 'ContactIcon',
+    /* Was 'ContactIcon' — the same glyph as People below, so the two rail
+       items were indistinguishable at a glance. An envelope reads as
+       "outside contacts" the way People's own person glyph reads as staff. */
+    icon: 'LetterOpenedLine',
     /* Both open from a row on this list — "New contact" and the clock icon's
        contact Activity — so both stay inside Directory with the rail up. */
     altPaths: ['/contact', '/contact-activity'],
   },
-  { key: 'people', label: 'People', icon: 'ContactIcon' },
-  { key: 'groups', label: 'Groups', icon: 'DepartmentIcon' },
-  { key: 'roles', label: 'Roles', icon: 'AdminIcon' },
-  { key: 'locations', label: 'Locations', icon: 'IntegrationIcon' },
+  { key: 'people', label: 'People', icon: 'UserLine' },
+  { key: 'groups', label: 'Groups', icon: 'UsersGroupLine' },
+  /* Roles and Blocked below used to share 'AdminIcon' too. */
+  { key: 'roles', label: 'Roles', icon: 'RoleIcon' },
+  { key: 'locations', label: 'Locations', icon: 'LocationIcon' },
   { key: 'favourites', label: 'Favourites', icon: 'Star' },
-  { key: 'blocked', label: 'Blocked', icon: 'AdminIcon' },
+  { key: 'blocked', label: 'Blocked', icon: 'UserBlockLine' },
 ];
 
 export const PERFORMANCE_VIEWS: AreaView[] = [
