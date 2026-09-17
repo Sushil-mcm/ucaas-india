@@ -82,49 +82,65 @@ export const RadialGauge = ({
 
 /** The roster split as a donut instead of two stacked bars saying the same
  * thing -- real counts (`stateDistribution`, home/index.tsx), just drawn
- * once instead of twice. */
+ * once instead of twice.
+ *
+ * When every slice is 0 (nothing has happened yet today), recharts draws no
+ * arcs at all for a pie whose values sum to zero -- the ring just vanishes.
+ * A plain neutral track in its place reads as "nothing yet", not as a
+ * missing chart. */
 export const StatusDonut = ({
   data,
   colors,
   size = 96,
+  trackColor = 'rgba(150, 100, 50, 0.12)',
 }: {
   data: { state: string; count: number; pct: number }[];
   colors: Record<string, string>;
   size?: number;
-}) => (
-  <div style={{ width: size, height: size, flex: 'none' }}>
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="count"
-          nameKey="state"
-          innerRadius="62%"
-          outerRadius="100%"
-          paddingAngle={data.length > 1 ? 3 : 0}
-          isAnimationActive
-          animationDuration={700}
-          stroke="none"
-        >
-          {data.map((slice) => (
-            <Cell key={slice.state} fill={colors[slice.state] || 'var(--ink-4)'} />
-          ))}
-        </Pie>
-        <Tooltip
-          formatter={(val: number, _name, entry: any) => [
-            `${val} · ${entry?.payload?.pct ?? 0}%`,
-            entry?.payload?.state,
-          ]}
-          contentStyle={{
-            borderRadius: 10,
-            border: '1px solid rgba(225,200,165,0.9)',
-            fontSize: 12,
-          }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
-  </div>
-);
+  trackColor?: string;
+}) => {
+  const isEmpty = data.every((slice) => !slice.count);
+  const pieData = isEmpty ? [{ state: 'empty', count: 1, pct: 0 }] : data;
+  return (
+    <div style={{ width: size, height: size, flex: 'none' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={pieData}
+            dataKey="count"
+            nameKey="state"
+            innerRadius="62%"
+            outerRadius="100%"
+            paddingAngle={!isEmpty && data.length > 1 ? 3 : 0}
+            isAnimationActive
+            animationDuration={700}
+            stroke="none"
+          >
+            {pieData.map((slice) => (
+              <Cell
+                key={slice.state}
+                fill={isEmpty ? trackColor : colors[slice.state] || 'var(--ink-4)'}
+              />
+            ))}
+          </Pie>
+          {!isEmpty && (
+            <Tooltip
+              formatter={(val: number, _name, entry: any) => [
+                `${val} · ${entry?.payload?.pct ?? 0}%`,
+                entry?.payload?.state,
+              ]}
+              contentStyle={{
+                borderRadius: 10,
+                border: '1px solid rgba(225,200,165,0.9)',
+                fontSize: 12,
+              }}
+            />
+          )}
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 /** One filled trend line, used by every Communication Overview tab -- same
  * shape, different series/colour per channel. */

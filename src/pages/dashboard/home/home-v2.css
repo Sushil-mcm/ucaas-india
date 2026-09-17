@@ -433,7 +433,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 .home-v2 .day-stat {
   display: flex;
@@ -467,7 +467,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 0;
+  padding: 18px 0;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
   border-bottom: 1px solid rgba(150, 100, 50, 0.1);
 }
@@ -497,8 +497,8 @@
 .home-v2 .day-bars {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 18px;
 }
 /* Two columns, not three -- the label lives in the shared
    `.day-split-legend` dot legend above now, so each row is just the bar
@@ -532,8 +532,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
 }
 .home-v2 .day-station {
