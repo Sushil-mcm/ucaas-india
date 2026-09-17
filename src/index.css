@@ -319,6 +319,24 @@
     @apply border-border outline-ring/50;
   }
 
+  /* This reset's own outline-color wins over a focused field's
+     `focus:outline-none` (the shared Input component's own class,
+     src/components/ui/input.tsx) regardless of the normal base/utility
+     layer order, so an errored field -- red border, red focus ring --
+     also kept the browser's own outline half a pixel further out: one
+     field, two differently-coloured rings. `!important` on the actual
+     focus state is the only thing that reliably wins that fight.
+     `.react-tel-input .form-control` (react-phone-input-2's own plain
+     `<input>`, used by every Phone field) gets the same treatment --
+     it isn't `[data-slot='input']`, but it is just as much a focusable
+     text input subject to this same reset. */
+  [data-slot='input']:focus,
+  [data-slot='input']:focus-visible,
+  .react-tel-input .form-control:focus,
+  .react-tel-input .form-control:focus-visible {
+    outline: none !important;
+  }
+
   body {
     height: 100%;
     font-family: var(--mcm-sans);

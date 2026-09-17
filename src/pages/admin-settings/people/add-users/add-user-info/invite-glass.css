@@ -660,25 +660,10 @@
 .dark .gp-invite-dialog .mcm-invite [data-slot='input']:focus {
   border-color: #f97316;
 }
-/* The base layer's `outline-ring/50` reset (src/index.css) wins over the
-   Input component's own `focus:outline-none` here, so a focused field
-   showed both: the component's 1px orange border AND the browser's 2px
-   orange outline half a pixel further out -- one field, two rings. The
-   border alone already says "focused". */
-.gp-invite-dialog .mcm-invite [data-slot='input']:focus,
-.gp-invite-dialog .mcm-invite [data-slot='input']:focus-visible {
-  outline: none !important;
-}
-/* Same double-ring, same fix, for the Phone field -- `react-phone-input-2`
-   renders a plain `<input class="form-control">`, so it's just as subject
-   to that base-layer outline reset as the shared `Input` component above.
-   On an invalid number this outline sat outside `.phone-error`'s own red
-   border, reading as a second, differently-coloured ring around the same
-   field. */
-.gp-invite-dialog .react-tel-input .form-control:focus,
-.gp-invite-dialog .react-tel-input .form-control:focus-visible {
-  outline: none !important;
-}
+/* The double-ring fix that used to live here (an errored field's red
+   border plus the browser's own outline half a pixel further out) is now
+   a global rule in src/index.css -- every field with this problem gets
+   it, not just this dialog's. */
 
 /* ---- duplicate/role notices — same warm card language as the summary
    above, not the platform's bare amber text block ---- */
