@@ -14,7 +14,7 @@
    ============================================================ */
 
 .mcm-console {
-  --ground: transparent;
+  --ground: #fef8f1;
   --surface: #ffffff;
   --surface-2: #fbf3e8;
   --surface-3: #f5e6d3;
@@ -482,12 +482,14 @@
   display: block;
 }
 .mcm-console .phone-grid {
-  /* list gets more room for the caller's name and number, the stage is
-     capped so its 3-column keypad doesn't stretch its keys apart, and the
-     panel takes the slack — it's where the AI copilot, transcript and
-     summary live and reads better with the extra width. */
+  /* All three columns are capped, not just the stage — an unbounded column
+     either stretches the keypad's keys apart (stage) or leaves the copilot
+     panel mostly empty on a wide monitor (panel). `justify-content: center`
+     means any width left over past the three caps becomes even margins on
+     both sides instead of one lopsided gap on the right. */
   display: grid;
-  grid-template-columns: 360px minmax(420px, 520px) minmax(400px, 1fr);
+  grid-template-columns: 420px minmax(420px, 520px) minmax(380px, 440px);
+  justify-content: center;
   height: 100%;
   overflow: hidden;
 }
@@ -496,13 +498,10 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--ground);
 }
 .mcm-console .col + .col {
   border-left: 1px solid var(--line);
-}
-.mcm-console .col.stage {
-  background: var(--ground);
 }
 .mcm-console .col-head {
   padding: 12px 14px;
@@ -2371,7 +2370,7 @@
 }
 @media (max-width: 1240px) {
   .mcm-console .phone-grid {
-    grid-template-columns: 320px minmax(380px, 460px) minmax(360px, 1fr);
+    grid-template-columns: 380px minmax(380px, 460px) minmax(340px, 400px);
   }
 }
 @media (max-width: 900px) {
