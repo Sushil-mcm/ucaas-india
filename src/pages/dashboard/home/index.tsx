@@ -105,6 +105,11 @@ type Kpi = {
   subtitle: string;
   value: ReactNode;
   sub?: ReactNode;
+  /** Donut tiles only -- a short "of N" caption right under the value
+   * itself, alongside the gauge, when the metric has a natural fraction
+   * (On Queue's 1 of 15). Skipped for a pure percentage with nothing to
+   * count against (On a Call Now). */
+  compactSub?: ReactNode;
   tone?: 'good' | 'warnv' | 'bad';
   // Service level only: the linear rail reads value against this real target.
   meter?: { value: number; target: number };
@@ -468,6 +473,7 @@ const Home = () => {
       title: 'On Queue',
       subtitle: 'Agents currently in queue',
       value: round(onlineAgentsAnimated),
+      compactSub: `of ${agentRows.length}`,
       sub: `of ${agentRows.length} on the roster`,
       icon: 'users',
       color: '#7c3aed',
@@ -578,7 +584,12 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="kpi-value-row">
-                  <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                  <div className="kpi-value-block">
+                    <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                    {kpi.compactSub ? (
+                      <div className="kpi-compact-sub">{kpi.compactSub}</div>
+                    ) : null}
+                  </div>
                   {trend ? (
                     <span className={`kpi-trend${trendGood ? ' is-good' : ' is-bad'}`}>
                       <Ic n={trend.direction === 'down' ? 'down' : 'up'} size={10} />
@@ -592,7 +603,7 @@ const Home = () => {
                       gap under a short number. */}
                   {kpi.chartType === 'donut' ? (
                     <div className="kpi-chart-donut">
-                      <RadialGauge value={kpi.progressPct} size={40} color={kpi.color} />
+                      <RadialGauge value={kpi.progressPct} size={52} color={kpi.color} />
                       <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
                     </div>
                   ) : null}

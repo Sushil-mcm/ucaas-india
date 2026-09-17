@@ -222,6 +222,18 @@
   justify-content: flex-start;
   gap: 14px;
 }
+.home-v2 .kpi-value-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* On Queue's own "of 15" -- a short fraction right under the value, only
+   set where the metric has a natural one (see `compactSub`, index.tsx). */
+.home-v2 .kpi-compact-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3, #6b7891);
+}
 .home-v2 .kpi-trend {
   display: inline-flex;
   align-items: center;
