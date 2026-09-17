@@ -4103,7 +4103,7 @@
     transform 0.15s ease;
 }
 .mcm-console .col.calls .call-row:hover {
-  background: var(--surface-2);
+  background: var(--accent-wash);
   border-color: var(--accent-edge);
   box-shadow: var(--shadow);
   transform: translateY(-1px);
@@ -4114,8 +4114,7 @@
   box-shadow: 0 4px 14px rgba(234, 124, 30, 0.2);
 }
 .mcm-console .col.calls .call-row.on::before {
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 6px var(--accent);
+  display: none;
 }
 .mcm-console .col.calls .cr-av {
   width: 38px;
