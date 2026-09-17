@@ -545,7 +545,7 @@
 }
 .mcm-console .col-title h2 {
   margin: 0;
-  font-size: 19px;
+  font-size: 23px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -3988,12 +3988,8 @@
   font-size: 13px !important;
   display: flex;
   align-items: center;
-  /* Borderless, like the app's other inline filter dropdowns (e.g. the
-     inbox address select) — the global .custom-react-select__control
-     rule sets a 1px grey border with !important, so this needs the same
-     to win, but wins on specificity regardless of source order. */
-  border: 0 !important;
-  background: var(--surface-2) !important;
+  border: 1px solid var(--line) !important;
+  background: var(--surface) !important;
   box-shadow: none !important;
 }
 .mcm-console .col.calls .col-title .console-datefilter .custom-react-select__value-container {
