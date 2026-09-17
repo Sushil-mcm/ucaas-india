@@ -332,7 +332,6 @@ const Header = () => {
                   <img src={ucaasLogo} alt="" />
                 </span>
               </a>
-              <AreaNav />
             </div>
             <div className="flex w-full items-center gap-2 text-black md:order-2 md:min-w-0 md:w-auto md:flex-1 relative">
               {hasActiveCampaign && (
@@ -375,9 +374,15 @@ const Header = () => {
                 )}
               </button>
             </div>
+            {/* Moved out of the brand block on the far left — sitting to the
+                right of search, before the icon cluster, is where a nav
+                group reads as "where you are" rather than "the app's name". */}
+            <div className="hidden md:order-3 md:flex md:items-center">
+              <AreaNav />
+            </div>
             <div
               id="mobile-header-actions"
-              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap gap-2 items-center border-t border-gray-200 pt-3 md:order-3 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:border-t-0 md:pt-0`}
+              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap gap-2 items-center border-t border-gray-200 pt-3 md:order-4 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:border-t-0 md:pt-0`}
             >
               {/* Tasks, Calendar, My Campaigns, Activity and Monitoring moved
                   into the Performance area rail — the bar keeps only
@@ -410,12 +415,12 @@ const Header = () => {
               {/* The gear lived here. Personal settings are now Admin ▸ My
                   Account, and the avatar menu still links straight to them. */}
             </div>
-            <div className="hidden md:order-4 md:flex md:items-center">
+            <div className="hidden md:order-5 md:flex md:items-center">
               <ThemeToggle />
             </div>
             <div
               id="mobile-header-wallet-profile"
-              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-5 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:justify-end md:border-t-0 md:pt-0`}
+              className={`${isMobileMenuOpen ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 border-t border-gray-200 pt-3 md:order-6 md:flex md:w-auto md:flex-nowrap md:shrink-0 md:justify-end md:border-t-0 md:pt-0`}
             >
               {/* Wallet / Add Funds */}
               {features?.plan_features?.billing?.action?.view ? (

@@ -191,7 +191,7 @@ const GlobalSearch = () => {
   return (
     <div
       ref={containerRef}
-      className="global-search-root w-[200px] sm:w-[260px] lg:w-[300px] min-[1440px]:w-[380px]"
+      className="global-search-root w-[170px] sm:w-[220px] lg:w-[260px] min-[1440px]:w-[320px]"
     >
       <div className="global-search-input-wrapper ">
         <SearchIcon />

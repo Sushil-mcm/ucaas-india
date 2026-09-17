@@ -1318,12 +1318,12 @@
 .global-search-input-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid #e2dcd3;
   border-radius: 999px;
-  padding: 0 16px;
-  height: 38px;
+  padding: 0 12px;
+  height: 32px;
   transition:
     border-color 0.2s,
     box-shadow 0.2s,
@@ -1342,7 +1342,7 @@
   border: none !important;
   outline: none !important;
   background: transparent !important;
-  font-size: 14px;
+  font-size: 13px;
   color: #334155;
   min-width: 0;
   padding: 0 !important;
