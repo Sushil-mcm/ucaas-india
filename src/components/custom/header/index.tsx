@@ -312,7 +312,7 @@ const Header = () => {
           style={{ background: '#ffffff' }}
         >
           <nav
-            className="flex w-full flex-col gap-3 md:flex-row md:items-center md:gap-2"
+            className="flex w-full flex-col gap-3 md:flex-row md:items-center md:gap-3"
             aria-label="Global"
           >
             <div className="mcm-brandbar hidden md:order-1 md:flex md:items-center md:gap-3">

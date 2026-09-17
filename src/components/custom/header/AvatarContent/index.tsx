@@ -223,10 +223,10 @@ const AvatarContent = ({ setProfileState }: any) => {
                   key={status.value}
                   title={isOnCall ? 'You cannot change this during a call' : status.description}
                   aria-disabled={isOnCall}
-                  className={`flex items-center gap-2 w-full px-2 rounded-md ${
+                  className={`flex items-center gap-2 w-full px-2 rounded-md transition-colors ${
                     isOnCall
                       ? 'opacity-50 cursor-not-allowed'
-                      : `cursor-pointer ${isActive ? 'bg-ucass-active-bg' : 'hover:bg-gray-200 dark:hover:bg-mcm-surface-3'}`
+                      : `cursor-pointer ${isActive ? 'bg-[#fff1e0]' : 'hover:bg-[#fff1e0] dark:hover:bg-mcm-surface-3'}`
                   }`}
                   onClick={() => handleStatusChange(status.value)}
                 >
