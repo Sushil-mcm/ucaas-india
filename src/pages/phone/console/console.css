@@ -502,8 +502,11 @@
   min-width: 420px;
 }
 .mcm-console .col.panel-col {
-  flex: 0 1 440px;
-  min-width: 380px;
+  /* Wide enough that all six tabs (Copilot, Summary, Transcript, Notes,
+     History, Contact) fit in one row — any narrower and the strip has to
+     scroll, cutting "Contact" off at the edge. */
+  flex: 0 1 540px;
+  min-width: 460px;
 }
 .mcm-console .col {
   display: flex;
@@ -2390,8 +2393,8 @@
     min-width: 380px;
   }
   .mcm-console .col.panel-col {
-    flex-basis: 400px;
-    min-width: 340px;
+    flex-basis: 480px;
+    min-width: 440px;
   }
 }
 @media (max-width: 900px) {
