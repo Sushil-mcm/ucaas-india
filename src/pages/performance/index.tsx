@@ -365,6 +365,10 @@ const Performance = () => {
             .mcm-page .perf-kpi-row {
               display:grid; grid-template-columns: repeat(2, minmax(0, 1fr));
               gap:12px; padding-top:12px;
+              /* Capped rather than stretching to the full viewport on a wide
+                 monitor — past this width the tiles were mostly empty
+                 padding around a small value, not a card. */
+              max-width: 1320px;
             }
             @media (min-width: 900px) {
               .mcm-page .perf-kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -398,6 +402,24 @@ const Performance = () => {
             .mcm-page .perf-kpi-chart { min-height:36px; }
             .mcm-page .perf-kpi-chart-meter { display:flex; flex-direction:column; gap:6px; justify-content:center; }
             .mcm-page .perf-kpi-meter-target { font-size:11px; font-weight:600; color: var(--ink-4, #93a0b8); align-self:flex-end; }
+            /* LinearMeter (dashboard/home/charts.tsx) renders a plain
+               .kpi-linear-meter div with no styling of its own — its only
+               CSS lives scoped under .home-v2 in home-v2.css, which this
+               page never carries. Without an equivalent rule here the meter
+               was an unstyled 0-height div, which is why Service Level's
+               progress bar looked like a bare sliver. */
+            .mcm-page .kpi-linear-meter {
+              position: relative; width: 100%; height: 8px;
+              border-radius: 999px; background: rgba(150, 100, 50, 0.1);
+            }
+            .mcm-page .kpi-linear-meter span {
+              display: block; height: 100%; border-radius: 999px;
+              transition: width 0.4s ease;
+            }
+            .mcm-page .kpi-linear-meter i {
+              position: absolute; top: -3px; width: 2px; height: 14px;
+              background: var(--ink-3, #6b7891); border-radius: 2px;
+            }
           `}</style>
             {/* A feed that failed used to be invisible: every query defaults to
                 an empty list, so an unreachable API produced Waiting 0,
@@ -431,7 +453,7 @@ const Performance = () => {
                   <AnimatedValue value={waitingCalls.length} format={(n) => String(Math.round(n))} />
                 }
                 trend={getTrend('waiting')}
-                chart={{ type: 'line', data: getHistory('waiting') }}
+                chart={{ type: 'bar', data: getHistory('waiting') }}
               />
               <PerfKpiTile
                 icon={AlarmClock}
@@ -440,7 +462,7 @@ const Performance = () => {
                 subtitle={isBreachingWait ? 'breaching' : 'within target'}
                 value={longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00'}
                 trend={getTrend('longestWait')}
-                chart={{ type: 'line', data: getHistory('longestWait') }}
+                chart={{ type: 'area', data: getHistory('longestWait') }}
               />
               <PerfKpiTile
                 icon={Target}
@@ -479,7 +501,7 @@ const Performance = () => {
                 }
                 trend={getTrend('answered')}
                 goodWhenUp
-                chart={{ type: 'line', data: getHistory('answered') }}
+                chart={{ type: 'bar', data: getHistory('answered') }}
               />
               <PerfKpiTile
                 icon={X}
@@ -488,7 +510,7 @@ const Performance = () => {
                 subtitle={`${callStats.missedCalls} missed`}
                 value={<AnimatedValue value={abandonRate} format={(n) => `${Math.round(n)}%`} />}
                 trend={getTrend('abandon')}
-                chart={{ type: 'line', data: getHistory('abandon') }}
+                chart={{ type: 'area', data: getHistory('abandon') }}
               />
               <PerfKpiTile
                 icon={Users}
@@ -500,7 +522,7 @@ const Performance = () => {
                 }
                 trend={getTrend('onQueue')}
                 goodWhenUp
-                chart={{ type: 'line', data: getHistory('onQueue') }}
+                chart={{ type: 'bar', data: getHistory('onQueue') }}
               />
               <PerfKpiTile
                 icon={Activity}
@@ -510,7 +532,7 @@ const Performance = () => {
                 value={<AnimatedValue value={agentsOnCallPct} format={(n) => `${Math.round(n)}%`} />}
                 trend={getTrend('onCallPct')}
                 goodWhenUp
-                chart={{ type: 'line', data: getHistory('onCallPct') }}
+                chart={{ type: 'area', data: getHistory('onCallPct') }}
               />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { HistoryPoint, Trend } from '@/pages/dashboard/home/use-kpi-history';
-import { SparkLine, LinearMeter } from '@/pages/dashboard/home/charts';
+import { SparkLine, SparkBars, SparkArea, LinearMeter } from '@/pages/dashboard/home/charts';
 
 /**
  * One tile in the Queues KPI band — a colour-coded card (icon, value,
@@ -12,7 +12,7 @@ import { SparkLine, LinearMeter } from '@/pages/dashboard/home/charts';
  * rather than re-implementing sparklines/history from scratch.
  */
 export type PerfKpiChart =
-  | { type: 'line'; data: HistoryPoint[] }
+  | { type: 'line' | 'bar' | 'area'; data: HistoryPoint[] }
   | { type: 'meter'; value: number; target: number };
 
 const PerfKpiTile = ({
@@ -68,6 +68,16 @@ const PerfKpiTile = ({
       {chart?.type === 'line' && (
         <div className="perf-kpi-chart">
           <SparkLine data={chart.data} color={color} height={36} />
+        </div>
+      )}
+      {chart?.type === 'bar' && (
+        <div className="perf-kpi-chart">
+          <SparkBars data={chart.data} color={color} height={36} />
+        </div>
+      )}
+      {chart?.type === 'area' && (
+        <div className="perf-kpi-chart">
+          <SparkArea data={chart.data} color={color} height={36} />
         </div>
       )}
       {chart?.type === 'meter' && (

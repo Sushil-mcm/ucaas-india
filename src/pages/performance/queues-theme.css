@@ -246,119 +246,46 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 /* ------------------------------------------------------------
    3. Seven-metric snapshot strip (Busiest queue / Callbacks waiting /
    Longest waiting / Lowest SLA / Total members / Available now / Total
-   interacting) — one frosted glass bar, each metric its own pill segment
-   rather than hairline-divided flat cells.
-   ------------------------------------------------------------ */
+   interacting) — deliberately NOT another row of KPI cards. One flat
+   ribbon, a vertical divider between segments instead of a bordered card
+   per metric, no icon badge — reads as a single summary line, not a
+   second tile grid stacked under the first. */
 .mcm-page .perf-queues .kpi-strip {
-  background: var(--qa-glass);
-  backdrop-filter: var(--qa-glass-blur);
-  -webkit-backdrop-filter: var(--qa-glass-blur);
-  border: 1px solid var(--qa-glass-border);
-  border-radius: 16px;
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border: 1px solid rgba(225, 200, 165, 0.7);
+  border-radius: 14px;
   box-shadow: var(--qa-glass-shadow);
-  padding: 6px;
-  /* Matches the 8-tile hero row's own gap (`.mcm-page .hero-row`,
-     index.tsx) directly above it, so the two stacked strips read as one
-     consistent rhythm instead of the hero row's cards sitting visibly
-     further apart than this strip's own cells. The per-cell `margin: 0 1px`
-     this used to lean on for spacing is dropped below — with an explicit
-     gap now owning it, that margin would only stack on top and widen the
-     gap past 8px. */
-  gap: 8px;
+  padding: 4px 0;
 }
-/* Leadership review: each cell used to be a translucent
-   `rgba(255,255,255,0.55)` wash — mostly-transparent white sitting directly
-   over the warm gradient page, which read as a flat "stark white box"
-   rather than actual frosted glass. Opaque `#fffdfb` + its own blur/border/
-   shadow gives every cell (breach included, below) real depth instead of
-   just fading into the backdrop.
-
-   This strip sits directly below the 8-tile hero row (also this dense),
-   so it reads as a second, compact "executive summary" line rather than
-   another full card row — icon and label share one line, the value and
-   its context share the next, `p-2.5`-equivalent padding, ~58px tall
-   total instead of the ~96px a fully stacked icon/value/sub card needed. */
 .mcm-page .perf-queues .kpi-strip-cell {
-  border-left: none;
-  border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(249, 115, 22, 0.16) !important;
-  box-shadow: 0 4px 16px rgba(160, 95, 30, 0.08) !important;
-  padding: 10px 12px !important;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  transition: all 0.2s ease;
+  gap: 3px;
+  padding: 10px 18px;
+  border-right: 1px solid rgba(225, 200, 165, 0.5);
 }
-.mcm-page .perf-queues .kpi-strip-cell-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.mcm-page .perf-queues .kpi-strip-icon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: var(--qa-wash);
-  color: var(--qa-accent-ink);
-}
-.mcm-page .perf-queues .kpi-strip-icon svg {
-  width: 12px;
-  height: 12px;
+.mcm-page .perf-queues .kpi-strip-cell:last-child {
+  border-right: none;
 }
 .dark .mcm-page .perf-queues .kpi-strip-cell {
-  background: rgba(255, 255, 255, 0.04) !important;
+  border-right-color: rgba(255, 255, 255, 0.08);
 }
-/* One hover treatment for every cell, breach included — a warm peach
-   lift, not a background-colour swap. Previously `.kpi-strip-cell:hover`
-   applied unconditionally (same class present on a breaching cell), so it
-   overrode the breach's own background on hover — Longest Waiting's pink
-   fill would flash to solid white the instant a cursor crossed it. Since
-   neither state has its own solid background any more (both use this same
-   glass card + a peach hover wash), there's nothing left to flash between. */
-.mcm-page .perf-queues .kpi-strip-cell:hover {
-  background: rgba(254, 215, 170, 0.25) !important;
-}
-.dark .mcm-page .perf-queues .kpi-strip-cell:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-/* Longest Waiting, breaching — the card itself stays the same uniform
-   glass every other cell gets (above); the breach reads through the
-   number's own colour, a soft rose hairline and an ambient glow instead
-   of painting the whole card solid pink/red. */
-.mcm-page .perf-queues .kpi-strip-cell-breach {
-  border-color: rgba(244, 63, 94, 0.3) !important;
-  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.12) !important;
-}
+/* Breaching reads through the value's own colour only (below) — the
+   segment itself stays plain, no card to tint. */
 .mcm-page .perf-queues .kpi-strip-label {
-  color: #64748b;
+  color: #8a7a68;
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   line-height: 1.25;
-  /* The base (non-theme) rule truncates to one line with an ellipsis —
-     fine when a label had the cell's full width, but three of these six
-     labels ("Longest waiting", "Lowest SLA today", "Total interacting")
-     no longer fit the width left once the icon badge sits beside them,
-     and read as "Longest waiti…" / "Lowest SLA t…" / "Total interact…" —
-     half a word cut off is worse than the label wrapping onto its own
-     second line, which this compact card still has the room for. */
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  /* A flex item's default `min-width: auto` still refuses to shrink below
-     its own unwrapped max-content width even with `white-space: normal`
-     set — `min-width: 0` is what actually lets it give up width to the
-     icon badge next to it and wrap instead of pushing the row wider. */
-  min-width: 0;
-  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mcm-page .perf-queues .kpi-strip-value {
   color: #1a1a1a;
@@ -370,11 +297,12 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.mcm-page .perf-queues .kpi-strip-value-danger {
+.mcm-page .perf-queues .kpi-strip-value-danger,
+.mcm-page .perf-queues .kpi-strip-cell-breach .kpi-strip-value {
   color: #e11d48 !important;
 }
 .mcm-page .perf-queues .kpi-strip-sub {
-  color: #64748b;
+  color: #8a7a68;
   font-size: 10px;
   line-height: 1.3;
   white-space: nowrap;
@@ -382,8 +310,12 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   text-overflow: ellipsis;
 }
 @media (max-width: 1180px) {
+  .mcm-page .perf-queues .kpi-strip {
+    flex-wrap: wrap;
+  }
   .mcm-page .perf-queues .kpi-strip-cell {
-    border-bottom: none;
+    flex: 1 1 33%;
+    border-bottom: 1px solid rgba(225, 200, 165, 0.5);
   }
 }
 

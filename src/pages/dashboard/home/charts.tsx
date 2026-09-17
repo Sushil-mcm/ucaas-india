@@ -14,7 +14,20 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from 'recharts';
+
+/* A metric that hasn't moved yet (a brand-new session, or a genuinely flat
+   value like 0 waiting calls) produces a data series where every point is
+   identical. Recharts' auto Y-domain then collapses to that single value,
+   which draws the line/bars flush against the plot's own edge — visually
+   indistinguishable from nothing rendering at all. A little padding keeps a
+   flat series visible as a flat line in the middle of the chart instead of
+   an invisible one at its boundary. */
+const paddedDomain = (): [(min: number) => number, (max: number) => number] => [
+  (min: number) => min - Math.max(1, Math.abs(min) * 0.15),
+  (max: number) => max + Math.max(1, Math.abs(max) * 0.15),
+];
 import type { HistoryPoint } from './use-kpi-history';
 
 /**
@@ -182,6 +195,7 @@ export const SparkBars = ({
   <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+        <YAxis hide domain={paddedDomain()} />
         <Bar dataKey="v" fill={color} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive />
       </BarChart>
     </ResponsiveContainer>
@@ -202,6 +216,7 @@ export const SparkLine = ({
   <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
+        <YAxis hide domain={paddedDomain()} />
         <Line
           type="monotone"
           dataKey="v"
@@ -214,6 +229,45 @@ export const SparkLine = ({
     </ResponsiveContainer>
   </div>
 );
+
+/** Filled-wave variant of SparkLine, same HistoryPoint[] shape -- a soft
+ * gradient under the curve instead of a bare stroke, for tiles that want the
+ * fuller "area" look rather than a thin line. */
+export const SparkArea = ({
+  data,
+  color = 'var(--accent)',
+  height = 44,
+}: {
+  data: HistoryPoint[];
+  color?: string;
+  height?: number;
+}) => {
+  const gradientId = useMemo(() => `spark-area-${Math.random().toString(36).slice(2, 8)}`, []);
+  return (
+    <div style={{ width: '100%', height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+              <stop offset="95%" stopColor={color} stopOpacity={0.03} />
+            </linearGradient>
+          </defs>
+          <YAxis hide domain={paddedDomain()} />
+          <Area
+            type="monotone"
+            dataKey="v"
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#${gradientId})`}
+            dot={false}
+            isAnimationActive
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 /** Service level's own value-against-target rail -- a plain, honest
  * progress bar with a tick at the real target, not a chart. */
