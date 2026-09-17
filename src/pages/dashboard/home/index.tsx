@@ -134,14 +134,23 @@ const slDotClass = (sla: number | null) =>
 /** First-letter avatar chip for a caller name -- coloured by a stable hash
  * of the name so the same customer keeps the same colour call to call. */
 const AVATAR_COLORS = ['#f2994a', '#2f9e6e', '#3f7bd6', '#c2593f', '#8a63d2', '#c9962f'];
-const nameAvatar = (name: string) => {
-  const initial = name.trim().charAt(0).toUpperCase() || '?';
+const nameAvatar = (name: string, label?: string, size: number = 22) => {
+  const shown = label || name.trim().charAt(0).toUpperCase() || '?';
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   const color = AVATAR_COLORS[hash % AVATAR_COLORS.length];
   return (
-    <span className="tbl-avatar" style={{ background: `${color}22`, color }}>
-      {initial}
+    <span
+      className="tbl-avatar"
+      style={{
+        background: `${color}22`,
+        color,
+        width: size,
+        height: size,
+        fontSize: size <= 22 ? 10.5 : 12,
+      }}
+    >
+      {shown}
     </span>
   );
 };
@@ -931,23 +940,24 @@ const Home = () => {
               </div>
               <div className="pc-body">
                 {quickDial.length ? (
-                  <div className="quickdial">
+                  <div className="qd-list">
                     {quickDial.map((person) => (
                       <button
                         key={person.extension}
-                        className="qd"
+                        className="qd-row"
                         title={`Call ${person.name} on ${person.extension}`}
                         onClick={() => dial(person.extension)}
                       >
-                        <span className="qd-av">{initials(person.name)}</span>
-                        <span style={{ minWidth: 0 }}>
-                          <span className="qd-n" style={{ display: 'block' }}>
-                            {person.name}
+                        {nameAvatar(person.name, initials(person.name), 34)}
+                        <span className="qd-row-info">
+                          <span className="qd-row-name">{person.name}</span>
+                          <span className="qd-row-meta">
+                            <i className={`tbl-dot ${person.online ? 'pos' : 'neu'}`} />
+                            Ext. {person.extension} · {person.online ? 'Available' : 'Offline'}
                           </span>
-                          <span className="qd-m num">
-                            ext {person.extension}
-                            {person.online ? ' · online' : ''}
-                          </span>
+                        </span>
+                        <span className="qd-row-call">
+                          <Ic n="phone" size={13} />
                         </span>
                       </button>
                     ))}
