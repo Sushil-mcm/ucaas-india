@@ -200,67 +200,73 @@ const CallRecord = ({
     <>
       {/* ---- one header ---- */}
       <div className="card record-head">
-        <button type="button" className="btn ghost sm" onClick={onBack}>
-          <Ic n="chev" size={13} className="flip" />
-          Dialer
-        </button>
-        <div className="caller-av record-av">
-          {initialsOf(savedContact?.name || row.name) || <Ic n="user" size={18} />}
-        </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div className="record-name">
-            <span className="record-name-text">
-              {/* The live contact book wins over the row's snapshot, so a
-                  contact saved from this screen renames it at once. */}
-              {savedContact?.name ? (
-                savedContact.name
-              ) : isNumberLike(row.name) ? (
-                <NumberWithFlag number={row.name} className="num" />
+        <div className="record-head-top">
+          <button type="button" className="btn ghost sm" onClick={onBack}>
+            <Ic n="chev" size={13} className="flip" />
+            Dialer
+          </button>
+          <div className="caller-av record-av">
+            {initialsOf(savedContact?.name || row.name) || <Ic n="user" size={18} />}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="record-name">
+              <span className="record-name-text">
+                {/* The live contact book wins over the row's snapshot, so a
+                    contact saved from this screen renames it at once. */}
+                {savedContact?.name ? (
+                  savedContact.name
+                ) : isNumberLike(row.name) ? (
+                  <NumberWithFlag number={row.name} className="num" />
+                ) : (
+                  row.name
+                )}
+              </span>
+              {row.contactId || savedContact ? <span className="tag acc">Contact</span> : null}
+            </div>
+            <div className="record-sub num">
+              {/* The heading above is already the number when nobody is saved
+                  under it, so repeating it here said the same thing twice and
+                  never said the useful part -- that this caller is not in the
+                  contact book. Same wording as the list row. */}
+              {!savedContact?.name && isNumberLike(row.name) ? (
+                <span style={{ color: 'var(--ink-4)' }}>Not in contacts</span>
               ) : (
-                row.name
+                <DialNumber number={row.number}>
+                  <NumberWithFlag number={row.number} />
+                </DialNumber>
               )}
-            </span>
-            {row.contactId || savedContact ? <span className="tag acc">Contact</span> : null}
-          </div>
-          <div className="record-sub num">
-            {/* The heading above is already the number when nobody is saved
-                under it, so repeating it here said the same thing twice and
-                never said the useful part -- that this caller is not in the
-                contact book. Same wording as the list row. */}
-            {!savedContact?.name && isNumberLike(row.name) ? (
-              <span style={{ color: 'var(--ink-4)' }}>Not in contacts</span>
-            ) : (
-              <DialNumber number={row.number}>
-                <NumberWithFlag number={row.number} />
-              </DialNumber>
-            )}
-            <span style={{ color: 'var(--ink-4)' }}>
-              {' '}
-              · {legs.length} {legs.length === 1 ? 'call' : 'calls'}
-            </span>
+              <span style={{ color: 'var(--ink-4)' }}>
+                {' '}
+                · {legs.length} {legs.length === 1 ? 'call' : 'calls'}
+              </span>
+            </div>
           </div>
         </div>
-        {/* Save the person from the phone itself, the way a mobile does. */}
-        {row.number && !isExtensionNumber(row.number) ? (
+        {/* Actions get their own row along the bottom rather than squeezing
+            onto the identity row — that row already has the back button,
+            avatar and a name/number that can run long. */}
+        <div className="record-head-actions">
+          {row.number && !isExtensionNumber(row.number) ? (
+            <button
+              type="button"
+              className="btn ghost"
+              title={savedContact ? 'Edit contact' : 'Add to contacts'}
+              onClick={() => setContactOpen(true)}
+            >
+              <Ic n="user" size={14} />
+              {savedContact ? 'Edit contact' : 'Add to contacts'}
+            </button>
+          ) : null}
           <button
             type="button"
-            className="btn ghost"
-            title={savedContact ? 'Edit contact' : 'Add to contacts'}
-            onClick={() => setContactOpen(true)}
+            className="btn primary"
+            disabled={!row.number}
+            onClick={() => dial(row.number)}
           >
-            <Ic n="user" size={14} />
-            {savedContact ? 'Edit contact' : 'Add to contacts'}
+            <Ic n="phone" />
+            Call
           </button>
-        ) : null}
-        <button
-          type="button"
-          className="btn primary"
-          disabled={!row.number}
-          onClick={() => dial(row.number)}
-        >
-          <Ic n="phone" />
-          Call
-        </button>
+        </div>
       </div>
       {contactOpen
         ? createPortal(
