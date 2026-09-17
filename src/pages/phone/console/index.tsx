@@ -15,7 +15,6 @@ import {
   toConsoleTurns,
 } from './copilot-adapter';
 import './console.css';
-import ActivityPageHead from '@/components/custom/activity-page-head';
 
 /**
  * MCM Unified Console — phone console.
@@ -66,7 +65,6 @@ const PhoneConsole = () => {
 
   return (
     <div className="mcm-actpage">
-      <ActivityPageHead title="Phone" description="Your softphone: place and take calls, with today's history, recordings and voicemails beside it." />
       <div className="mcm-console">
       <ConsoleIconSprite />
       {/* Headless. It relays transcript socket messages onto the session and
