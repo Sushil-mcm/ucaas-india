@@ -3322,10 +3322,10 @@
   white-space: nowrap;
 }
 
-/* six panel tabs need to fit ~400px before scrolling */
+/* six panel tabs need to fit the panel's 460px floor without scrolling */
 .mcm-console .panel-tabs .ptab {
   padding: 12px 9px 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* call rows: keep the name line honest when it holds a dial button */
