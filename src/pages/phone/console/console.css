@@ -520,6 +520,10 @@
   overflow: hidden;
   background: var(--ground);
 }
+.mcm-console .col.calls,
+.mcm-console .col.panel-col {
+  background: var(--surface);
+}
 .mcm-console .col + .col {
   border-left: 1px solid var(--line);
 }
@@ -556,7 +560,7 @@
   flex: 1;
   padding: 5px 8px;
   border-radius: 7px;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--ink-3);
   white-space: nowrap;
@@ -1086,7 +1090,7 @@
   min-height: 0;
   overflow: hidden;
   height: 100%;
-  background: var(--ground);
+  background: var(--surface);
 }
 .mcm-console .panel-tabs {
   display: flex;
@@ -1110,7 +1114,7 @@
 }
 .mcm-console .ptab {
   padding: 12px 11px 10px;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--ink-3);
   border-bottom: 2px solid transparent;
@@ -3982,7 +3986,7 @@
      tighten padding/tracking and drop the size half a step so all four
      labels fit at once instead of truncating. */
   padding: 5px 3px;
-  font-size: 10.8px;
+  font-size: 11.8px;
   letter-spacing: -0.01em;
   overflow: visible;
   text-overflow: clip;
