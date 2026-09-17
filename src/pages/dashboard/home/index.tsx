@@ -28,8 +28,12 @@ import {
 } from '@/pages/monitoring/live-call-helpers';
 import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { buildAttentionItems } from './attention';
+import QuickActions from './quick-actions';
+import CommunicationOverview from './communication-overview';
+import { RadialGauge, StatusDonut } from './charts';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
+import './home-v2.css';
 
 /**
  * MCM Unified Console — Home.
@@ -425,28 +429,41 @@ const Home = () => {
           </div>
         </div>
 
+        {/* ── quick actions ────────────────────────────────────────────── */}
+        <QuickActions />
+
         {/* ── KPI strip ────────────────────────────────────────────────── */}
         <div className="kpis kpis-onerow">
           {kpis.map((kpi) => (
             // A breaching figure tints the whole tile, not just the number —
             // the artifact's `alert` treatment, so it reads at a glance.
-            <div key={kpi.key} className={`kpi${kpi.tone === 'bad' ? ' alert' : ''}`}>
-              <div className="k">{kpi.label}</div>
-              <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+            <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="k">{kpi.label}</div>
+                <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
+              </div>
+              {/* Service level swaps the old linear bar for a ring -- the same
+                  value/target the bar read, just drawn as a gauge so it's the
+                  one figure on the strip that reads as a dial rather than a
+                  plain number. */}
               {kpi.meter ? (
                 <div
-                  className="kpi-meter"
                   role="img"
                   aria-label={`${kpi.meter.value}% against a ${kpi.meter.target}% target`}
                 >
-                  <span style={{ width: `${Math.min(100, Math.max(0, kpi.meter.value))}%` }} />
-                  {/* Where the target sits on the same rail, so the gap between
-                      the two is the thing you read rather than a number you
-                      have to hold in your head. */}
-                  <i style={{ left: `${Math.min(100, kpi.meter.target)}%` }} />
+                  <RadialGauge
+                    value={kpi.meter.value}
+                    color={
+                      kpi.tone === 'bad'
+                        ? 'var(--crit, #d32f2f)'
+                        : kpi.tone === 'warnv'
+                          ? 'var(--warn)'
+                          : 'var(--live)'
+                    }
+                  />
                 </div>
               ) : null}
-              {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
             </div>
           ))}
         </div>
@@ -650,6 +667,11 @@ const Home = () => {
             </div>
         </div>
 
+        {/* ── communication overview ────────────────────────────────────── */}
+        <div style={{ marginTop: 16 }}>
+          <CommunicationOverview today={today} />
+        </div>
+
         {/* ── Queues + agent status, side by side ──────────────────────── */}
         <div className="grid2 grid2-stretch-cols" style={{ marginTop: 16 }}>
         {/* Queues stacked with Interactions below it — Queues alone left a
@@ -806,42 +828,12 @@ const Home = () => {
             </span>
           </div>
           <div className="pc-body">
-            {/* The whole roster as one bar, before the states are listed out.
-                Four separate bars each measured against its own empty track say
-                how big each state is; one bar divided between them says how the
-                team is split, which is the question this panel exists to
-                answer. The rows below stay as the detail. */}
+            {/* One donut instead of two stacked bars saying the same thing --
+                real counts (`stateDistribution` above), same legend below it
+                as before. */}
             {stateDistribution.length ? (
-              <div className="rosterbar" role="img" aria-label={rosterSummary}>
-                {stateDistribution.map((slice) => (
-                  <span
-                    key={slice.state}
-                    style={{
-                      width: `${slice.pct}%`,
-                      background: slice.state === 'Offline' ? 'var(--ink-4)' : 'var(--accent)',
-                    }}
-                    title={`${slice.state} · ${slice.count} · ${slice.pct}%`}
-                  />
-                ))}
-              </div>
-            ) : null}
-            {stateDistribution.length ? (
-              <>
-                {/* One row instead of a bar per state: each slice's width is
-                    its share of the roster, laid end to end. */}
-                <div className="dist-bar">
-                  {stateDistribution.map((slice) => (
-                    <span
-                      key={slice.state}
-                      className="dist-bar-seg"
-                      style={{
-                        width: `${slice.pct}%`,
-                        background: STATE_COLOR[slice.state] || 'var(--ink-4)',
-                      }}
-                      title={`${slice.state}: ${slice.count} (${slice.pct}%)`}
-                    />
-                  ))}
-                </div>
+              <div className="dist-donut-row" role="img" aria-label={rosterSummary}>
+                <StatusDonut data={stateDistribution} colors={STATE_COLOR} />
                 <div className="dist-legend">
                   {stateDistribution.map((slice) => (
                     <div className="dist-legend-item" key={slice.state}>
@@ -854,7 +846,7 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
               <div className="empty">
                 <Ic n="users" />
