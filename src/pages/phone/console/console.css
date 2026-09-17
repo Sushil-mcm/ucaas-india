@@ -4027,7 +4027,9 @@
   min-width: 0;
 }
 .mcm-console .col.calls .ptab {
-  border-radius: var(--r-sm);
+  /* Top corners only — rounding the bottom ones too curved the active
+     tab's border-bottom into an arc instead of a straight underline. */
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
   transition: color 0.15s ease, background 0.15s ease;
   padding: 12px 6px 10px;
 }
