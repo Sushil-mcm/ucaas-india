@@ -176,7 +176,8 @@
   min-width: 160px;
 }
 .gp-roles th {
-  background: #fffdfb;
+  /* Matches People's own header exactly -- see people-glass.css. */
+  background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);

@@ -148,9 +148,16 @@
   background: transparent;
 }
 .gp-external th {
-  background: #fffdfb;
-  color: #8a6f57;
+  /* Matches People's own header exactly -- see people-glass.css. Was
+     #fffdfb/#8a6f57 (the washed-brown text People was already fixed away
+     from) and missing the font-weight/height/font-size every other
+     Directory table's header has. */
+  background: #fff6e9;
+  color: #1a1a1a;
+  font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  height: 40px;
+  font-size: 11.5px;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -424,7 +431,7 @@
   box-shadow: none !important;
 }
 .gp-contact-table thead {
-  background-color: #fffdfb !important;
+  background-color: #fff6e9 !important;
 }
 .gp-contact-table > div:first-child {
   background: transparent !important;

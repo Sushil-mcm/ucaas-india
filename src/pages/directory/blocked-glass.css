@@ -213,7 +213,8 @@
 /* Matches People's own header exactly (people-glass.css) -- near-black
    and bold instead of the washed `#8a6f57`/9.5px this still carried. */
 .gp-blocked th {
-  background: #fffdfb;
+  /* Matches People's own header exactly -- see people-glass.css. */
+  background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);

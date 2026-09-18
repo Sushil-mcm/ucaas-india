@@ -212,7 +212,8 @@
    which read as a texture rather than column names next to every other
    Directory table's own near-black, bolder header. */
 .gp-favourites th {
-  background: #fffdfb;
+  /* Matches People's own header exactly -- see people-glass.css. */
+  background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);

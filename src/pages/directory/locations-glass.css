@@ -218,7 +218,8 @@
    brown, bolder and a size up — at 9.5px/normal-weight the uppercase,
    wide-tracking labels read as a texture rather than column names. */
 .gp-locations th {
-  background: #fffdfb;
+  /* Matches People's own header exactly -- see people-glass.css. */
+  background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
