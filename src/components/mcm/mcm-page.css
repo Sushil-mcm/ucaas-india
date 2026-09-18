@@ -2872,22 +2872,17 @@
   max-width: 320px;
   height: 30px;
   padding: 0 11px;
-  /* Plain border, exactly like the .fchip benchmark this is meant to
-     match — .fchip never doubles, so a single 1px border was never the
-     real bug here. The extra 3px focus-within glow this used to add on
-     top of its own border was: this box got a border-color change AND a
-     separate outer ring at once, which is what actually read as "double
-     border" whenever the field had focus. .fchip only ever changes
-     border-color (hover) and has no separate focus ring, so this now
-     does the same. */
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  /* Faint at rest (a barely-there warm tint), full accent orange only on
+     hover/focus — the field reads as quiet until you're actually about to
+     use it. */
+  border: 1.5px solid #9664321f;
+  border-radius: 999px;
   background: var(--surface);
   transition: border-color 0.2s ease;
 }
 .mcm-adminhome-search:hover,
 .mcm-adminhome-search:focus-within {
-  border-color: var(--accent-edge);
+  border-color: var(--accent);
   color: var(--accent-ink);
 }
 .mcm-adminhome-search .ic {
