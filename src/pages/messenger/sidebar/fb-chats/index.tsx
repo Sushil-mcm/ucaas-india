@@ -92,7 +92,11 @@ const FBChats = ({
     <div className="h-full min-h-0 flex flex-col overflow-hidden">
       <div className="p-2">
         <Input
-          Icon={<SearchLine className="text-gray-400 w-4 h-4 shrink-0" />}
+          Icon={
+            <span className="flex items-center" style={{ color: '#9CA3AF' }}>
+              <SearchLine className="w-4 h-4 shrink-0" />
+            </span>
+          }
           IconPosition="left-0 pl-3 inset-y-0"
           className="w-full pl-9 hover:border-gray-300 focus:border-gray-300"
           placeholder="Search..."

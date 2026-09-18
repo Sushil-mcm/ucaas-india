@@ -1109,7 +1109,10 @@ const SearchBar = ({
   onChange: (value: string) => void;
 }) => (
   <div className="relative">
-    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+    <Search
+      className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+      color="#64748b"
+    />
     <input
       value={value}
       onChange={(event) => onChange(event.target.value)}
