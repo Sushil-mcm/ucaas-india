@@ -837,7 +837,7 @@ const DescriptionModal = ({
           onValueChange={(value) => setActiveTab(value as InfoTab)}
           className="min-h-full w-full gap-0"
         >
-          <div className="shrink-0 border-b border-[rgba(225,200,165,0.9)] bg-white">
+          <div className="shrink-0 border-b border-[rgba(225,200,165,0.9)] bg-gradient-to-b from-[#FBE2C8]/25 to-white">
             <div className="relative flex flex-col items-center px-4 pb-4 pt-5 text-center">
               <input
                 ref={fileInputRef}
@@ -848,7 +848,7 @@ const DescriptionModal = ({
               />
               <button
                 type="button"
-                className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-[#2E2D35]/70 transition-colors hover:bg-[#fff1e0] hover:text-primary"
                 onClick={() => setActiveState(null)}
                 aria-label="Back to messages"
               >
@@ -942,20 +942,20 @@ const DescriptionModal = ({
                 <HeaderActionButton
                   label="Call"
                   icon={<PhoneCall className="h-5 w-5" />}
-                  iconClassName="bg-emerald-100 text-emerald-500"
+                  iconClassName="bg-[#FBE2C8]/50 text-primary"
                   onClick={() => handleStartInfoCall('audio')}
                 />
                 <HeaderActionButton
                   label="Video"
                   icon={<Video className="h-5 w-5" />}
-                  iconClassName="bg-orange-100 text-orange-500"
+                  iconClassName="bg-primary text-white shadow-sm"
                   onClick={() => handleStartInfoCall('video')}
                 />
                 {selectedChat?.isGroupChat || selectedChat?.groupType === 'CHANNEL' ? (
                   <HeaderActionButton
                     label="Add"
                     icon={<UserPlus className="h-5 w-5" />}
-                    iconClassName="bg-slate-100 text-orange-500"
+                    iconClassName="bg-[#FBE2C8]/50 text-primary"
                     onClick={() => setActiveState('members')}
                   />
                 ) : null}
@@ -963,8 +963,8 @@ const DescriptionModal = ({
             </div>
 
             <div className="px-3 pb-4">
-              <div className="relative rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left">
-                <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              <div className="relative rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/10 px-4 py-3 text-left">
+                <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#9A948F]">
                   Description
                 </div>
                 {isEditingInfo && canEditTeam ? (
@@ -973,18 +973,18 @@ const DescriptionModal = ({
                     onChange={(event) => setDescriptionDraft(event.target.value)}
                     maxLength={255}
                     rows={3}
-                    className="w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium leading-5 text-slate-700 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="w-full resize-none rounded-md border border-[rgba(225,200,165,0.9)] bg-white px-3 py-2 text-xs font-medium leading-5 text-[#2E2D35] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                     placeholder="Add a team description"
                   />
                 ) : (
-                  <p className="pr-7 text-xs font-medium leading-5 text-slate-700">
+                  <p className="pr-7 text-xs font-medium leading-5 text-[#2E2D35]">
                     {descriptionDisplay || 'No description added.'}
                   </p>
                 )}
                 {canEditTeam && !isEditingInfo ? (
                   <button
                     type="button"
-                    className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-primary"
+                    className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full text-[#9A948F] hover:bg-white hover:text-primary"
                     onClick={startEditingTeamInfo}
                     aria-label="Edit description"
                   >
@@ -994,7 +994,7 @@ const DescriptionModal = ({
               </div>
             </div>
 
-            <TabsList className="flex h-12 w-full rounded-none border-t border-slate-100 bg-white p-0">
+            <TabsList className="flex h-12 w-full gap-1 rounded-none border-t border-[rgba(225,200,165,0.9)] bg-white p-1.5">
               {selectedChat?.isGroupChat ? (
                 <InfoTabTrigger value="members">Members</InfoTabTrigger>
               ) : null}
@@ -1075,7 +1075,7 @@ const HeaderActionButton = ({
 }) => (
   <button
     type="button"
-    className="flex min-w-12 flex-col items-center gap-2 text-xs font-medium text-slate-600"
+    className="flex min-w-12 flex-col items-center gap-2 text-xs font-medium text-[#2E2D35]"
     onClick={onClick}
   >
     <span
@@ -1093,7 +1093,7 @@ const HeaderActionButton = ({
 const InfoTabTrigger = ({ value, children }: { value: InfoTab; children: ReactNode }) => (
   <TabsTrigger
     value={value}
-    className="h-full flex-1 rounded-none border-0 px-2 text-xs font-semibold text-slate-500 shadow-none transition-colors data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-none"
+    className="h-full flex-1 rounded-lg border-0 px-2 text-xs font-semibold text-[#9A948F] shadow-none transition-colors hover:bg-[#fff1e0] hover:text-primary data-[state=active]:bg-[#fff1e0] data-[state=active]:text-primary data-[state=active]:shadow-none"
   >
     {children}
   </TabsTrigger>
@@ -1117,7 +1117,7 @@ const SearchBar = ({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs font-medium text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-primary/50 focus:bg-white"
+      className="h-10 w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/10 pl-10 pr-3 text-xs font-medium text-[#2E2D35] outline-none transition-colors placeholder:text-[#9A948F] hover:border-primary/50 focus:border-primary focus:bg-white"
     />
   </div>
 );
