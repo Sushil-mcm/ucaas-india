@@ -1687,7 +1687,7 @@ export const ChatHeader = ({
                 <CustomTooltip text="Search" side="top">
                   <button
                     type="button"
-                    className={`cursor-pointer shrink-0 flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-ucass-active hover:text-white transition-colors duration-200
+                    className={`cursor-pointer shrink-0 flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-ucass-active-bg hover:text-ucass-active transition-colors duration-200
                    `}
                     onClick={() => setShowSearch(true)}
                     aria-label="Search"
@@ -1704,7 +1704,7 @@ export const ChatHeader = ({
                       key={idx}
                       type="button"
                       onClick={onClick}
-                      className={`cursor-pointer shrink-0 flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-ucass-active hover:text-white transition-colors duration-200
+                      className={`cursor-pointer shrink-0 flex items-center justify-center rounded-full w-9 h-9 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-ucass-active-bg hover:text-ucass-active transition-colors duration-200
                     ${activeSidebarMode === type ? 'text-ucass-active bg-ucass-active-bg' : ''}`}
                       aria-label={tooltip}
                     >
