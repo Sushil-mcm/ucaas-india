@@ -104,7 +104,7 @@ const AttachmentItem = ({
       <div
         className={cn(
           'border-b last:border-b-0 w-full flex flex-col gap-2 px-3 py-3',
-          isMine ? 'border-white/15' : 'border-gray-200',
+          isMine ? 'border-ucass-active/15' : 'border-gray-200',
         )}
       >
         {/* Row: play button + filename + download */}
@@ -170,13 +170,10 @@ const AttachmentItem = ({
         <div className="flex items-center gap-2 w-full">
           <div
             className="relative flex-1 h-1.5 rounded-full overflow-hidden"
-            style={{ background: isMine ? 'rgba(255,255,255,0.60)' : '#e5e7eb' }}
+            style={{ background: isMine ? 'rgba(201,111,31,0.18)' : '#e5e7eb' }}
           >
             <div
-              className={cn(
-                'h-full rounded-full transition-all',
-                isMine ? 'bg-white' : 'bg-primary',
-              )}
+              className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${progressPercent}%` }}
             />
             <input
