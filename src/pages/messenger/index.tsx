@@ -454,20 +454,24 @@ const ListItem = ({
   return (
     <div
       key={chat?.chatId}
-      className="text-xs text-[var(--color-text-black)] pb-0 cursor-pointer"
+      className="text-xs text-[var(--color-text-black)] cursor-pointer px-2 py-0.5"
       onClick={() => handleClickItem(chat)}
     >
       <div className="w-full flex flex-col">
         <div
-          className={`flex justify-between w-full items-center pl-2 pr-1.5 min-h-[48px] group relative transition-all border-b border-[#EEE7DD] duration-200
-             ${isChatOpened ? 'bg-[#FBE2C8]/40' : 'bg-transparent hover:bg-[#FBE2C8]/40'}`}
+          className={`flex justify-between w-full items-center pl-2.5 pr-2 py-2.5 min-h-[52px] group relative transition-all duration-150 rounded-xl border
+             ${
+               isChatOpened
+                 ? 'bg-[#FBE2C8]/50 border-primary/20 shadow-sm'
+                 : 'bg-white border-transparent hover:bg-[#FBE2C8]/20 hover:border-[#EEE7DD]'
+             }`}
         >
-          <div className="flex w-full min-w-0 items-center gap-2">
+          <div className="flex w-full min-w-0 items-center gap-2.5">
             <div className="text-xs font-medium flex items-center gap-1">
               <CustomAvatar
                 name={nameToShow || ''}
                 showPresence={!isGroupChat && !isOwnChat}
-                size="32"
+                size="36"
                 extension={!isGroupChat ? otherUserData?.extension : ''}
                 image={isGroupChat ? chat?.avatar : getUserProfileByUuid(otherUserData?.uuid) || ''}
               />
@@ -1108,16 +1112,16 @@ const SidebarContent = ({
   return (
     <div className="relative w-full h-full min-h-0 bg-white flex flex-col">
       {!isAgentChat ? (
-        <div className="border-b border-[#EEE7DD] px-1.5">
-          <div className="flex min-h-8 items-center gap-1">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar">
+        <div className="border-b border-[#EEE7DD] px-2 py-2">
+          <div className="flex min-h-9 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar rounded-full bg-[#FBE2C8]/25 p-1">
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
-                  className={`px-1.5 py-2 text-xs font-medium border-b-2 transition-colors cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     activeTab === tab.value
-                      ? 'text-primary border-primary'
-                      : 'text-[#2E2D35] border-transparent hover:text-primary'
+                      ? 'text-primary bg-white shadow-sm'
+                      : 'text-[#2E2D35]/70 hover:text-primary'
                   }`}
                   onClick={() => {
                     setActiveTab(tab.value);
@@ -1220,11 +1224,11 @@ const SidebarContent = ({
         </div>
       ) : null}
 
-      <div className="px-2 py-1.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 border-b border-gray-100">
+      <div className="px-2.5 py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100">
         <Input
           Icon={<SearchLine className="text-[#9A948F]" />}
           IconPosition="left-0 pl-3 inset-y-0"
-          className="pl-9"
+          className="pl-9 rounded-xl"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
@@ -1232,7 +1236,7 @@ const SidebarContent = ({
         {!isAgentChat ? (
           <div className="w-full sm:min-w-28 sm:w-28">
             <select
-              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]"
+              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] transition-colors hover:border-primary/40 focus:border-primary focus:outline-none cursor-pointer"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as MessageStatus)}
             >
