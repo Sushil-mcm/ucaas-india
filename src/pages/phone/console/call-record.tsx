@@ -308,7 +308,7 @@ const CallRecord = ({
                           ? 'miss'
                           : 'arrow-in'
                     }
-                    size={14}
+                    size={18}
                   />
                 </div>
 
