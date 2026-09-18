@@ -416,7 +416,7 @@ body.perf-warm-backdrop.dark {
      mcm-page.css/people-glass.css) — a tan hairline, not the orange-tinted
      one this tab used before. */
   border:        1px solid rgba(225, 200, 165, 0.9);
-  background:    #fffdfb;
+  background:    #fff;
   box-shadow:    0 10px 34px rgba(160, 95, 30, 0.14);
 }
 .dark .mcm-page .perf-agents .ag-table-section {
@@ -442,6 +442,15 @@ body.perf-warm-backdrop.dark {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow:    none;
+}
+/* TableManager's own <TableBody> (table-manager.tsx) carries a Tailwind
+   bg-[rgba(251,249,246,0.88)] + blur of its own — that's what was reading
+   as off-white under the rows regardless of this card's background.
+   Plain white, no blur, so the rows actually show the card's white. */
+.mcm-page .perf-agents .table-scroll tbody {
+  background: #fff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 .mcm-page .perf-agents .table-scroll::-webkit-scrollbar-track {
   margin-bottom: 8px;
