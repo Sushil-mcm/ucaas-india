@@ -531,7 +531,7 @@ const ListItem = ({
                     }}
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
-                      <LetterOpenedLine className="w-3.5 h-3.5" />
+                      <LetterOpenedLine className="w-3.5 h-3.5 text-current" />
                     </span>
                     <span className="text-[#2E2D35] group-hover:text-primary">Mark as read</span>
                   </DropdownMenuItem>
@@ -544,9 +544,9 @@ const ListItem = ({
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
                       {isFavorited ? (
-                        <StarOff className="w-3.5 h-3.5" />
+                        <StarOff className="w-3.5 h-3.5 text-current" />
                       ) : (
-                        <Star className="w-3.5 h-3.5" />
+                        <Star className="w-3.5 h-3.5 text-current" />
                       )}
                     </span>
                     <span className="text-[#2E2D35] group-hover:text-primary">
@@ -562,9 +562,9 @@ const ListItem = ({
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
                       {isConversationPinned ? (
-                        <PinOff className="w-3.5 h-3.5" />
+                        <PinOff className="w-3.5 h-3.5 text-current" />
                       ) : (
-                        <Pin className="w-3.5 h-3.5" />
+                        <Pin className="w-3.5 h-3.5 text-current" />
                       )}
                     </span>
                     <span className="text-[#2E2D35] group-hover:text-primary">
@@ -581,7 +581,7 @@ const ListItem = ({
                       }}
                     >
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
-                        {isMuted ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                        {isMuted ? <Bell className="w-3.5 h-3.5 text-current" /> : <BellOff className="w-3.5 h-3.5 text-current" />}
                       </span>
                       <span className="text-[#2E2D35] group-hover:text-primary">
                         {isMuted ? 'Unmute conversation' : 'Mute conversation'}
