@@ -696,6 +696,31 @@
   white-space: nowrap;
 }
 
+/* Add Members' own root (add-members.tsx) is a single `<section
+   overflow-y-auto>` -- deliberately the ONE scrollbar for this step, with
+   TableManager's own internal scrolling turned off (isHeightSet={false})
+   so it renders at natural height and lets this section handle the
+   overflow, same shape as the working Ring Strategy step.
+
+   TableManager's own markup (table-manager.tsx) still wraps its rows in
+   two divs that are unconditionally `overflow-hidden` / `overflow-auto`
+   regardless of isHeightSet, though -- both establish their own scroll
+   context, which clips content harder than a bounded flex-1 box was ever
+   meant to instead of letting the real height bubble up to this section.
+   With more members than fit, the section's own scrollHeight never grew
+   past its clientHeight (nothing to scroll), and the rows past the fold
+   were simply invisible rather than reachable -- the actual bug this
+   fixes. `> div` twice reaches through TableManager's fixed two-level
+   wrapper (its outer box, then the ref'd scroll box inside it) without
+   touching the shared component itself, so every other TableManager
+   caller (Ring Strategy included) keeps its current behaviour. */
+.gp-create-group-body .gp-members-table-wrap > div {
+  overflow: visible !important;
+}
+.gp-create-group-body .gp-members-table-wrap > div > div {
+  overflow: visible !important;
+}
+
 /* The table itself -- `customClass="gp-members-table"` (add-members.tsx)
    lands on `TableManager`'s own scroll box (the non-`splitStickyHeader`
    path this caller uses), same as every other `.gp-contact-table`-style

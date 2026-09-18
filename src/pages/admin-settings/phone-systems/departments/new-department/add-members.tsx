@@ -329,7 +329,7 @@ const AddMembers = () => {
         />
       </div>
 
-      <div className="w-full">
+      <div className="w-full gp-members-table-wrap">
         <TableManager
           {...{
             emptyTablePlaceholder: 'Nobody to add',
