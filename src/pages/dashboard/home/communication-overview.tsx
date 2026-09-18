@@ -5,7 +5,7 @@ import { Ic } from '@/components/mcm/icons';
 import { useQueueSeries } from '@/hooks/use-queue-series';
 import { videoDashboardStats, getSmsLogList, getChatAgentList } from '@/services/api';
 import { useAnimatedNumber } from '@/pages/performance/use-animated-number';
-import { TrendArea } from './charts';
+import { TrendBars } from './charts';
 
 type Range = { from: string; to: string };
 
@@ -115,7 +115,7 @@ const CommunicationOverview = ({ today }: { today: Range }) => {
                 <span className="comms-total-num">{Math.round(callsTotalAnimated)}</span>
                 <span className="comms-total-label">calls offered today</span>
               </div>
-              <TrendArea data={callsTrend} dataKey="value" color={active.color} />
+              <TrendBars data={callsTrend} dataKey="value" color={active.color} />
             </>
           ) : (
             <div className="empty">
@@ -132,7 +132,7 @@ const CommunicationOverview = ({ today }: { today: Range }) => {
                 <span className="comms-total-num">{Math.round(meetingsTotalAnimated)}</span>
                 <span className="comms-total-label">meetings today</span>
               </div>
-              <TrendArea data={meetingsTrend} dataKey="value" color={active.color} />
+              <TrendBars data={meetingsTrend} dataKey="value" color={active.color} />
             </>
           ) : (
             <div className="empty">

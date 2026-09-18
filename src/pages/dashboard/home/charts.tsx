@@ -5,6 +5,7 @@ import {
   Bar,
   BarChart,
   Cell,
+  LabelList,
   Line,
   LineChart,
   Pie,
@@ -142,14 +143,16 @@ export const StatusDonut = ({
   );
 };
 
-/** One filled trend line, used by every Communication Overview tab -- same
- * shape, different series/colour per channel. */
-export const TrendArea = ({
+/** Hourly (or daily) bars, used by every Communication Overview tab that has
+ * a real time series -- same real buckets the old filled curve read, just
+ * drawn as bars with the busiest one called out, since "which hour was
+ * busiest" is the question this chart actually answers. */
+export const TrendBars = ({
   data,
   dataKey,
   xKey = 'label',
   color = 'var(--accent)',
-  height = 180,
+  height = 190,
 }: {
   data: Record<string, any>[];
   dataKey: string;
@@ -157,21 +160,34 @@ export const TrendArea = ({
   color?: string;
   height?: number;
 }) => {
-  const gradientId = useMemo(
-    () => `home-trend-${dataKey}-${Math.random().toString(36).slice(2, 8)}`,
-    [dataKey],
+  const peakValue = useMemo(
+    () => data.reduce((max, point) => Math.max(max, Number(point[dataKey]) || 0), 0),
+    [data, dataKey],
   );
+  const renderPeakLabel = (props: any) => {
+    const { x, y, width, value } = props;
+    if (!peakValue || value !== peakValue) return null;
+    const cx = x + width / 2;
+    return (
+      <g>
+        <rect x={cx - 30} y={y - 24} width={60} height={20} rx={6} fill="var(--ink, #0d1526)" />
+        <text x={cx} y={y - 10} textAnchor="middle" fontSize={10} fontWeight={700} fill="#fff">
+          Peak · {value}
+        </text>
+      </g>
+    );
+  };
   return (
     <div style={{ width: '100%', height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.35} />
-              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <XAxis dataKey={xKey} hide />
+        <BarChart data={data} margin={{ top: 28, right: 4, bottom: 4, left: 4 }}>
+          <XAxis
+            dataKey={xKey}
+            tick={{ fontSize: 9.5, fill: 'var(--ink-4)' }}
+            axisLine={false}
+            tickLine={false}
+            interval="preserveStartEnd"
+          />
           <Tooltip
             contentStyle={{
               borderRadius: 10,
@@ -179,19 +195,19 @@ export const TrendArea = ({
               fontSize: 12,
             }}
             labelStyle={{ fontWeight: 700 }}
+            cursor={{ fill: 'rgba(150, 100, 50, 0.06)' }}
           />
-          <Area
-            type="monotone"
-            dataKey={dataKey}
-            stroke={color}
-            strokeWidth={2.5}
-            fill={`url(#${gradientId})`}
-            isAnimationActive
-            animationDuration={700}
-            dot={false}
-            activeDot={{ r: 4 }}
-          />
-        </AreaChart>
+          <Bar dataKey={dataKey} radius={[5, 5, 0, 0]} isAnimationActive animationDuration={700}>
+            {data.map((point, index) => (
+              <Cell
+                key={index}
+                fill={color}
+                fillOpacity={Number(point[dataKey]) === peakValue ? 1 : 0.5}
+              />
+            ))}
+            <LabelList dataKey={dataKey} content={renderPeakLabel} />
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

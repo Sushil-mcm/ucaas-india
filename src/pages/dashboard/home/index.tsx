@@ -543,6 +543,7 @@ const Home = () => {
       title: 'Avg Handle Time',
       subtitle: 'Average call duration',
       value: avgHandleTime === null ? '—' : formatSecsToClock(ahtAnimated),
+      sub: 'based on completed calls today',
       icon: 'bolt',
       color: '#0ea5e9',
       progressPct: avgHandleTime === null ? 0 : Math.min(100, (avgHandleTime / 600) * 100),
