@@ -170,9 +170,13 @@
   color: var(--ink-4, #93a0b8);
 }
 .mcm-page .perf-kpi-split-label {
-  width: 46px;
+  /* Was 46px with no white-space rule — "Outbound" (8 chars) doesn't fit
+     that box, so it overflowed past its own edge and visually overlapped
+     the bar sitting right next to it instead of wrapping or clipping. */
+  width: 58px;
   flex: none;
   font-weight: 600;
+  white-space: nowrap;
 }
 .mcm-page .perf-kpi-split-bar {
   flex: 1;

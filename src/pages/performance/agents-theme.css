@@ -153,6 +153,14 @@ body.perf-warm-backdrop.dark {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding-top: 12px;
+}
+/* The shared `.sect-title` base (mcm-page.css) is an 11px uppercase label
+   sized for a dense sub-heading, not a real section title — scoped bump
+   here rather than touching the shared rule, which other Performance
+   sections also use at its original size (same approach as Queues). */
+.mcm-page .perf-agents .sect-title {
+  font-size: 15px;
 }
 .mcm-page .perf-agents .ag-roster-section > div:first-child {
   padding: 0 8px;
@@ -176,6 +184,214 @@ body.perf-warm-backdrop.dark {
 }
 .dark .mcm-page .perf-agents .ag-sect-count {
   background: rgba(251, 146, 60, 0.12);
+}
+
+/* ── 2b. Roster + side panels layout ──────────────────────────────────────── */
+/* Table takes the remaining width, the three status panels sit in a fixed
+   340px column beside it — narrower than the table used to run full-width,
+   per the reference layout the panels were built against. Stacks back to
+   one column once there isn't room for both side by side. */
+.mcm-page .perf-agents .ag-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .mcm-page .perf-agents .ag-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.mcm-page .perf-agents .ag-side-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mcm-page .perf-agents .ag-panel {
+  background: #fff;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(160, 95, 30, 0.08);
+}
+.dark .mcm-page .perf-agents .ag-panel {
+  background: rgba(23, 15, 10, 0.97);
+  border-color: rgba(251, 146, 60, 0.18);
+}
+.mcm-page .perf-agents .ag-panel-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--aa-ink);
+  margin-bottom: 12px;
+}
+.mcm-page .perf-agents .ag-panel-empty {
+  font-size: 12.5px;
+  color: var(--aa-muted);
+  margin: 0;
+}
+
+/* Agent Status Overview — donut + legend + tip banner. */
+.mcm-page .perf-agents .ag-donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.mcm-page .perf-agents .ag-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mcm-page .perf-agents .ag-donut-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.mcm-page .perf-agents .ag-donut-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a4438;
+}
+.mcm-page .perf-agents .ag-donut-legend-label i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.mcm-page .perf-agents .ag-donut-legend-value {
+  font-weight: 700;
+  color: var(--aa-ink);
+}
+.mcm-page .perf-agents .ag-tip-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fdecc8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #7a5a1e;
+}
+.mcm-page .perf-agents .ag-tip-banner svg {
+  flex: none;
+  color: #c96f1f;
+}
+.mcm-page .perf-agents .ag-tip-banner span {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* Status breakdown — a bar per live status, widest count first. */
+.mcm-page .perf-agents .ag-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.mcm-page .perf-agents .ag-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.mcm-page .perf-agents .ag-breakdown-label {
+  width: 92px;
+  flex: none;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-agents .ag-breakdown-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(150, 100, 50, 0.1);
+  overflow: hidden;
+}
+.mcm-page .perf-agents .ag-breakdown-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.mcm-page .perf-agents .ag-breakdown-count {
+  width: 18px;
+  flex: none;
+  text-align: right;
+  font-weight: 700;
+  color: var(--aa-ink);
+}
+
+/* Top performers — top 3 by calls handled today. */
+.mcm-page .perf-agents .ag-top-list {
+  display: flex;
+  flex-direction: column;
+}
+.mcm-page .perf-agents .ag-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5ede0;
+}
+.mcm-page .perf-agents .ag-top-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.mcm-page .perf-agents .ag-top-agent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.mcm-page .perf-agents .ag-top-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mcm-page .perf-agents .ag-top-avatar i {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+.mcm-page .perf-agents .ag-top-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--aa-accent-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+.mcm-page .perf-agents .ag-top-ext {
+  font-size: 11px;
+  color: var(--aa-muted);
+}
+.mcm-page .perf-agents .ag-top-handled {
+  text-align: right;
+  flex: none;
+}
+.mcm-page .perf-agents .ag-top-handled-v {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--aa-accent-ink);
+}
+.mcm-page .perf-agents .ag-top-handled-k {
+  font-size: 10.5px;
+  color: #93a0b8;
 }
 
 /* The table card itself — flattened to the Queues benchmark's flat, opaque
