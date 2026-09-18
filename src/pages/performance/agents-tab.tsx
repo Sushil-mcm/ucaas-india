@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Users,
   Trophy,
@@ -9,6 +9,9 @@ import {
   AlertCircle,
   Clock,
   Headset,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import TableManager from '@/components/custom/table-manager';
 import buildAgentRows, { AGENT_STATES } from './agent-rows';
@@ -51,6 +54,33 @@ const initials = (name: string) =>
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || '—';
+
+/* Column sort — plain client-side sort of the rows TableManager already
+   gets handed (same approach as the search filter above it), rather than
+   teaching the shared TableManager component its own sorting model. */
+type SortKey = 'name' | 'status' | 'isOnCall' | 'handledToday' | 'queuesCount';
+type SortState = { key: SortKey; dir: 'asc' | 'desc' } | null;
+
+const SortableHeader = ({
+  label,
+  sortKey,
+  sort,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  onSort: (key: SortKey) => void;
+}) => {
+  const active = sort?.key === sortKey;
+  const Icon = active ? (sort!.dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <button type="button" className={`ag-sort-btn${active ? ' is-active' : ''}`} onClick={() => onSort(sortKey)}>
+      {label}
+      <Icon size={11} />
+    </button>
+  );
+};
 
 const STATUS_STYLES: Record<string, string> = {
   'On Call': 'state busy',
@@ -116,6 +146,29 @@ const AgentsTab = ({
         row.callerId.toLowerCase().includes(q),
     );
   }, [rows, globalSearch]);
+
+  /* ── Column sort — client-side, same pattern as the search filter above:
+     sort the rows here and hand TableManager an already-ordered list,
+     rather than teaching the shared component its own sorting model. ── */
+  const [sort, setSort] = useState<SortState>(null);
+  const handleSort = (key: SortKey) => {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: 'asc' };
+      if (prev.dir === 'asc') return { key, dir: 'desc' };
+      return null;
+    });
+  };
+  const sortedRows = useMemo(() => {
+    if (!sort) return filteredRows;
+    const { key, dir } = sort;
+    const mul = dir === 'asc' ? 1 : -1;
+    return [...filteredRows].sort((a, b) => {
+      const av = a[key];
+      const bv = b[key];
+      if (typeof av === 'string' && typeof bv === 'string') return av.localeCompare(bv) * mul;
+      return ((Number(av) || 0) - (Number(bv) || 0)) * mul;
+    });
+  }, [filteredRows, sort]);
 
   /* ── KPI stats — memoised on the full row set ──────────────────────────── */
   const kpi = useMemo(() => {
@@ -232,7 +285,7 @@ const AgentsTab = ({
   /* ── Column definitions — stable reference so TableManager never re-mounts ── */
   const columns = useMemo(() => [
     {
-      header: 'Agent',
+      header: () => <SortableHeader label="Agent" sortKey="name" sort={sort} onSort={handleSort} />,
       accessorKey: 'name',
       cell: ({ row }: any) => {
         const data = row.original;
@@ -255,7 +308,9 @@ const AgentsTab = ({
       },
     },
     {
-      header: 'Live Status',
+      header: () => (
+        <SortableHeader label="Live Status" sortKey="status" sort={sort} onSort={handleSort} />
+      ),
       accessorKey: 'status',
       cell: ({ row }: any) => (
         <span
@@ -297,23 +352,31 @@ const AgentsTab = ({
         ),
     },
     {
-      header: 'Utilization',
-      accessorKey: 'isOnCall',
-      cell: ({ row }: any) => (
-        <div className="ag-util-cell">
-          <div className="ag-util-bar">
-            <i
-              style={{
-                width: row.original.isOnCall ? '100%' : '0%',
-              }}
-            />
-          </div>
-          <span className="ag-util-pct num">{row.original.isOnCall ? '100%' : '0%'}</span>
-        </div>
+      header: () => (
+        <SortableHeader label="Utilization" sortKey="isOnCall" sort={sort} onSort={handleSort} />
       ),
+      accessorKey: 'isOnCall',
+      cell: ({ row }: any) => {
+        const busy = row.original.isOnCall;
+        return (
+          <div className="ag-util-cell">
+            <div className="ag-util-bar">
+              <i
+                className={busy ? 'is-busy' : 'is-idle'}
+                style={{ width: busy ? '100%' : '0%' }}
+              />
+            </div>
+            <span className={`ag-util-pct num${busy ? ' is-busy' : ''}`}>
+              {busy ? '100%' : '0%'}
+            </span>
+          </div>
+        );
+      },
     },
     {
-      header: 'Daily Stats',
+      header: () => (
+        <SortableHeader label="Daily Stats" sortKey="handledToday" sort={sort} onSort={handleSort} />
+      ),
       accessorKey: 'handledToday',
       cell: ({ row }: any) => (
         <div className="ag-daily-cell num">
@@ -335,11 +398,13 @@ const AgentsTab = ({
       ),
     },
     {
-      header: 'Queues',
+      header: () => (
+        <SortableHeader label="Queues" sortKey="queuesCount" sort={sort} onSort={handleSort} />
+      ),
       accessorKey: 'queuesCount',
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], []);
+  ], [sort]);
 
   return (
     /* `pt-[20px]`, not `pt-7` (28px) — Queues' own top offset, so the first
@@ -470,7 +535,7 @@ const AgentsTab = ({
         <div className="ag-table-section">
           <TableManager
             columns={columns}
-            staticData={filteredRows}
+            staticData={sortedRows}
             loading={isLoading}
             search={globalSearch ?? ''}
             isHeightSet={false}

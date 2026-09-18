@@ -412,6 +412,13 @@ body.perf-warm-backdrop.dark {
   gap:           0;
   border-radius: 20px;
   overflow:      hidden;
+  /* A grid item's default min-width is `auto` (its content's own width),
+     not 0 — without this, the table's real content width forced the
+     `minmax(0, 1fr)` track in .ag-layout wider than the viewport instead
+     of shrinking to it, which is what pushed the last couple of columns
+     off the edge with no scrollbar rather than letting .table-scroll's
+     own overflow-auto take over. */
+  min-width:     0;
   /* Directory ▸ People's own border/shadow (--glass-border, .panel-card in
      mcm-page.css/people-glass.css) — a tan hairline, not the orange-tinted
      one this tab used before. */
@@ -482,6 +489,33 @@ body.perf-warm-backdrop.dark {
 .dark .mcm-page .perf-agents thead th {
   color: rgba(251, 146, 60, 0.65) !important;
   border-bottom-color: rgba(251, 146, 60, 0.14);
+}
+
+/* Sortable column headers — a plain button so the header keeps the exact
+   same type (inherits size/weight/spacing/colour from the th above it)
+   and just adds a clickable target and a direction arrow. */
+.mcm-page .perf-agents .ag-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.mcm-page .perf-agents .ag-sort-btn svg {
+  flex: none;
+  opacity: 0.5;
+}
+.mcm-page .perf-agents .ag-sort-btn:hover svg,
+.mcm-page .perf-agents .ag-sort-btn.is-active svg {
+  opacity: 1;
+  color: var(--accent);
 }
 
 /* ── 5. Table rows ────────────────────────────────────────────────────────── */
@@ -671,9 +705,18 @@ body.perf-warm-backdrop.dark {
   display:       block;
   height:        100%;
   border-radius: 3px;
-  background:    linear-gradient(90deg, var(--aa-accent) 0%, var(--aa-accent-deep) 100%);
-  box-shadow:    0 0 5px rgba(234, 88, 12, 0.4);
   transition:    width 0.3s ease !important;
+}
+/* Colour-coded by whether the agent is actually on a call right now —
+   green/"busy" reads as productive at a glance, instead of every bar
+   using the same orange regardless of value. */
+.mcm-page .perf-agents .ag-util-bar i.is-busy {
+  background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 5px rgba(16, 185, 129, 0.35);
+}
+.mcm-page .perf-agents .ag-util-bar i.is-idle {
+  background: #d8dde5;
+  box-shadow: none;
 }
 .mcm-page .perf-agents .ag-util-pct {
   font-size:           11px;
@@ -682,6 +725,10 @@ body.perf-warm-backdrop.dark {
   width:               28px;
   text-align:          right;
   font-variant-numeric: tabular-nums;
+}
+.mcm-page .perf-agents .ag-util-pct.is-busy {
+  color: #059669;
+  font-weight: 700;
 }
 
 /* ── 10. Daily Stats cell ─────────────────────────────────────────────────── */
