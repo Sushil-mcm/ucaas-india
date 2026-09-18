@@ -107,6 +107,21 @@ const STATE_BAR_COLOR: Record<string, string> = {
   Offline: '#c3cbdb',
 };
 
+/* Every KPI tile's own `color` (its badge icon, a small circle, reads fine
+ * saturated) lightened for the bigger shapes -- the donut ring and the
+ * bar/line/meter chart beneath the value -- so they match the softer
+ * palette the rest of the page now uses instead of standing out as the
+ * one loud element on the tile. */
+const KPI_CHART_COLOR: Record<string, string> = {
+  '#7c3aed': '#c4b5f7',
+  'var(--accent)': '#f7c896',
+  'var(--live)': '#7fd4c7',
+  '#2563eb': '#93b4f5',
+  'var(--crit, #d32f2f)': '#f0a8a5',
+  '#0ea5e9': '#8fd3f4',
+  '#0d9488': '#7fd4c7',
+};
+
 /* Existing wash tokens (mcm-page.css), reused as each state card's tint --
  * matches the card border/background family already used for tags and
  * status pills elsewhere instead of computing a tint at render time. */
@@ -701,7 +716,11 @@ const Home = () => {
                       gap under a short number. */}
                   {kpi.chartType === 'donut' ? (
                     <div className="kpi-chart-donut">
-                      <RadialGauge value={kpi.progressPct} size={90} color={kpi.color} />
+                      <RadialGauge
+                        value={kpi.progressPct}
+                        size={90}
+                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                      />
                       <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
                     </div>
                   ) : null}
@@ -711,16 +730,24 @@ const Home = () => {
                 kpi.chartType === 'meter' ? (
                   <div className="kpi-chart">
                     {kpi.chartType === 'bar' ? (
-                      <SparkBars data={getHistory(kpi.key)} color={kpi.color} height={32} />
+                      <SparkBars
+                        data={getHistory(kpi.key)}
+                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                        height={32}
+                      />
                     ) : null}
                     {kpi.chartType === 'line' ? (
-                      <SparkLine data={getHistory(kpi.key)} color={kpi.color} height={32} />
+                      <SparkLine
+                        data={getHistory(kpi.key)}
+                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                        height={32}
+                      />
                     ) : null}
                     {kpi.chartType === 'meter' && kpi.meter ? (
                       <LinearMeter
                         value={kpi.meter.value}
                         target={kpi.meter.target}
-                        color={kpi.color}
+                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                       />
                     ) : null}
                   </div>
