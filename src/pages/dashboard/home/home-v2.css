@@ -269,14 +269,15 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  /* A fixed offset from the value, not margin-left: auto -- auto pushed it
-     all the way to the tile's actual edge, which on a wide tile left a
-     huge empty gap in the middle instead of a filled-looking card. */
-  margin-left: 28px;
+  /* Flush against the tile's own right edge -- a fixed offset instead
+     left dead space after it on a wide tile. The ring itself is sized
+     big enough now that the space before it reads as normal breathing
+     room, not a gap. */
+  margin-left: auto;
 }
 .home-v2 .kpi-chart-donut-label {
   position: absolute;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--ink, #0d1526);
 }
