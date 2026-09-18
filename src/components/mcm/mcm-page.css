@@ -892,6 +892,13 @@
   border-bottom: 1px solid var(--line);
   margin: -4px 0 18px;
   overflow-x: auto;
+  /* `overflow-x: auto` with no explicit `overflow-y` computes overflow-y
+     to `auto` too (the CSS overflow spec's own rule when one axis is
+     `visible` and the other isn't) — that's what put a vertical scrollbar
+     on this row the moment a tab's padding made it even 1px taller than
+     the box. This strip never scrolls vertically; only horizontally when
+     there are more tabs than fit. */
+  overflow-y: hidden;
 }
 .mcm-page .ptabstrip::-webkit-scrollbar {
   height: 0;
@@ -2865,20 +2872,25 @@
   max-width: 320px;
   height: 30px;
   padding: 0 11px;
-  border: 1px solid var(--line);
+  /* An actual `border` on a rounded box reads doubled at this app's
+     fractional device pixel ratio (1.5) — the same collapse/antialiasing
+     artifact already documented and worked around for the Queues table's
+     row dividers (queues-theme.css). A single inset box-shadow rasterizes
+     as one crisp line instead of a border-plus-fringe pair. */
+  border: none;
+  box-shadow: inset 0 0 0 1px var(--line);
   border-radius: 8px;
   background: var(--surface);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 .mcm-adminhome-search:hover {
-  border-color: var(--accent-edge);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
   color: var(--accent-ink);
 }
 .mcm-adminhome-search:focus-within {
-  border-color: var(--accent-edge);
-  box-shadow: 0 0 0 3px var(--accent-wash);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-edge),
+    0 0 0 3px var(--accent-wash);
 }
 .mcm-adminhome-search .ic {
   color: var(--ink-4);
@@ -2892,6 +2904,11 @@
   min-width: 0;
   border: 0;
   outline: 0;
+  /* Chrome still paints a faint native control border on a plain <input>
+     unless appearance is neutralized — right on top of this box's own
+     border, which is what read as "double". */
+  appearance: none;
+  -webkit-appearance: none;
   background: transparent;
   color: var(--ink);
   font-size: 12px;
