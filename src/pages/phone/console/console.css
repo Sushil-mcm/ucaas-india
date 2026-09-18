@@ -507,8 +507,11 @@
   max-width: 420px;
 }
 .mcm-console .col.stage {
-  flex: 0 1 520px;
+  /* Grows too now, alongside panel below — a wide-enough viewport still
+     left a sliver of gap on the right with panel as the only grower. */
+  flex: 1 1 520px;
   min-width: 420px;
+  max-width: 600px;
 }
 .mcm-console .col.panel-col {
   /* Wide enough that all six tabs (Copilot, Summary, Transcript, Notes,
