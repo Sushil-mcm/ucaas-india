@@ -202,6 +202,15 @@
   box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12) !important;
   z-index: 1;
 }
+/* The grid row stretches every tile to match its tallest sibling (a KPI
+   with more content, e.g. Service Level's meter+tick), but a shorter
+   tile's own flex column doesn't grow to fill that height -- the surplus
+   just sits below its last child, reading as an oversized gap under the
+   caption instead of balanced padding. Pinning the caption to the bottom
+   absorbs that surplus there instead. */
+.home-v2 .kpi.kpi-v2 .d {
+  margin-top: auto;
+}
 .home-v2 .kpi-top {
   display: flex;
   align-items: flex-start;
