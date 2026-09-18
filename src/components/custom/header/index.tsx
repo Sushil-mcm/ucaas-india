@@ -55,13 +55,13 @@ const Header = () => {
   const [walletUpdatedAmount, setWalletUpdatedAmount] = useState<number | null>(null);
   const navigate = useNavigate();
   const { pathname = '' } = useLocation();
-  /* The icon rail (Chat/Agent Chat/Video/Inbox/Campaign) sits flush against
-     the header's bottom edge on these routes, so the header's border-b reads
-     as a stray line cutting across the rail's corner. Hidden only here —
-     every other page keeps the visible border. Phone was in this list too,
-     but there the border is what separates the navbar from the page below
-     it, and losing that read as broken rather than intentional. */
-  const hidesHeaderBorderForRail = ['/messenger', '/agent-chat', '/video', '/inbox', '/campaign'].some(
+  /* The icon rail (Agent Chat/Video/Inbox/Campaign) sits flush against the
+     header's bottom edge on these routes, so the header's border-b reads as
+     a stray line cutting across the rail's corner. Hidden only here — every
+     other page keeps the visible border. Phone and Chat were in this list
+     too, but there the border is what separates the navbar from the page
+     below it, and losing that read as broken rather than intentional. */
+  const hidesHeaderBorderForRail = ['/agent-chat', '/video', '/inbox', '/campaign'].some(
     (path) => pathname === path || pathname?.startsWith(`${path}/`),
   );
   const companyAmount = user?.company_info?.amount;
