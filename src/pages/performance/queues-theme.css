@@ -253,6 +253,11 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
    layout wrapper, not a card. .queue-overview-hero (below) carries its
    own card styling; the stat grid is its own set of small tinted rows,
    not boxed either. */
+.mcm-page .perf-queues .queue-overview {
+  /* Clearance from the 8-tile KPI band above (rendered one level up, in
+     index.tsx) — the two sat flush against each other otherwise. */
+  margin-top: 16px;
+}
 .mcm-page .perf-queues .queue-overview-head {
   display: flex;
   align-items: center;
@@ -276,11 +281,6 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   color: #1a1a1a;
   margin: 0;
 }
-.mcm-page .perf-queues .queue-overview-head p {
-  font-size: 12.5px;
-  color: #8a7a68;
-  margin: 1px 0 0;
-}
 .mcm-page .perf-queues .queue-overview-body {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -294,7 +294,7 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 .mcm-page .perf-queues .queue-overview-hero {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(160deg, #fff6e9 0%, #fdf1e2 100%);
+  background: #fff;
   border: 1px solid rgba(242, 153, 74, 0.18);
   border-radius: 14px;
   padding: 16px;
@@ -377,16 +377,23 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 }
 .mcm-page .perf-queues .queue-overview-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* Was repeat(2, 1fr) — an equal 50/50 split stretched every card to the
+     grid's own column width regardless of how little the icon+text
+     inside it actually needed, leaving a wide dead strip on the right of
+     each card. max-content sizes each column to what its cards actually
+     need instead. */
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  justify-content: start;
   gap: 10px;
   align-content: start;
 }
 .mcm-page .perf-queues .queue-overview-stat {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px 14px;
   border-radius: 12px;
+  width: 232px;
 }
 .mcm-page .perf-queues .queue-overview-stat-icon {
   display: flex;
@@ -423,6 +430,9 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 @media (max-width: 640px) {
   .mcm-page .perf-queues .queue-overview-stats {
     grid-template-columns: 1fr;
+  }
+  .mcm-page .perf-queues .queue-overview-stat {
+    width: auto;
   }
 }
 
@@ -751,6 +761,7 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   border-radius: 14px;
   box-shadow: var(--qa-glass-shadow);
   padding: 14px 18px;
+  margin-bottom: 20px;
 }
 .mcm-page .perf-queues .queue-heatmap-card h3 {
   font-size: 13px;

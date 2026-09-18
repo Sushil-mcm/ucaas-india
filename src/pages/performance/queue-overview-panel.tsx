@@ -60,10 +60,7 @@ const QueueOverviewPanel = ({
         <span className="queue-overview-head-icon">
           <Headset size={20} />
         </span>
-        <div>
-          <h3>Queue Overview</h3>
-          <p>Live status of calls and agents in this queue</p>
-        </div>
+        <h3>Queue Overview</h3>
       </div>
 
       <div className="queue-overview-body">
