@@ -2872,25 +2872,23 @@
   max-width: 320px;
   height: 30px;
   padding: 0 11px;
-  /* An actual `border` on a rounded box reads doubled at this app's
-     fractional device pixel ratio (1.5) — the same collapse/antialiasing
-     artifact already documented and worked around for the Queues table's
-     row dividers (queues-theme.css). A single inset box-shadow rasterizes
-     as one crisp line instead of a border-plus-fringe pair. */
-  border: none;
-  box-shadow: inset 0 0 0 1px var(--line);
+  /* Plain border, exactly like the .fchip benchmark this is meant to
+     match — .fchip never doubles, so a single 1px border was never the
+     real bug here. The extra 3px focus-within glow this used to add on
+     top of its own border was: this box got a border-color change AND a
+     separate outer ring at once, which is what actually read as "double
+     border" whenever the field had focus. .fchip only ever changes
+     border-color (hover) and has no separate focus ring, so this now
+     does the same. */
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
-  transition: box-shadow 0.2s ease;
+  transition: border-color 0.2s ease;
 }
-.mcm-adminhome-search:hover {
-  box-shadow: inset 0 0 0 1px var(--accent-edge);
-  color: var(--accent-ink);
-}
+.mcm-adminhome-search:hover,
 .mcm-adminhome-search:focus-within {
-  box-shadow:
-    inset 0 0 0 1px var(--accent-edge),
-    0 0 0 3px var(--accent-wash);
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
 }
 .mcm-adminhome-search .ic {
   color: var(--ink-4);
