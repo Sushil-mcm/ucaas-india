@@ -54,8 +54,11 @@ const PerfKpiTile = ({
   return (
     <div className="perf-kpi-tile" style={{ borderColor: `${color}26` }}>
       <div className="perf-kpi-top">
-        <span className="perf-kpi-badge" style={{ background: `${color}1f`, color }}>
-          <Icon size={18} />
+        <span className="perf-kpi-heading">
+          <span className="perf-kpi-badge" style={{ background: `${color}1f`, color }}>
+            <Icon size={18} />
+          </span>
+          <span className="perf-kpi-title">{title}</span>
         </span>
         {trend && (
           <span className={`perf-kpi-trend${isGood === null ? '' : isGood ? ' is-good' : ' is-bad'}`}>
@@ -64,7 +67,6 @@ const PerfKpiTile = ({
         )}
       </div>
       <div className="perf-kpi-titles">
-        <span className="perf-kpi-title">{title}</span>
         <span className="perf-kpi-value">{value}</span>
         <span className="perf-kpi-subtitle">{subtitle}</span>
       </div>

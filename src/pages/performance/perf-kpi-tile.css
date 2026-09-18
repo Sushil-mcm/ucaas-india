@@ -37,6 +37,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+/* Icon and heading share the top row now, instead of the icon sitting
+   alone above a stacked title/value/subtitle block. */
+.mcm-page .perf-kpi-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 .mcm-page .perf-kpi-badge {
   display: flex;
@@ -67,16 +76,21 @@
   background: var(--crit-wash, #fbe2e2);
   color: var(--crit, #d32f2f);
 }
+/* Value and subtitle now share one baseline row instead of stacking on
+   separate lines. */
 .mcm-page .perf-kpi-titles {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 .mcm-page .perf-kpi-title {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--ink-3, #6b7891);
-  white-space: pre-line;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mcm-page .perf-kpi-value {
   font-size: 26px;
@@ -87,6 +101,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: none;
+  max-width: 100%;
 }
 .mcm-page .perf-kpi-subtitle {
   font-size: 11.5px;
