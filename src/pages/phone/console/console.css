@@ -4112,6 +4112,7 @@
 .mcm-console .col.calls .seg button.on {
   background: rgba(242, 153, 74, 0.14);
   color: var(--accent-ink);
+  border: 1px solid var(--accent-edge);
   box-shadow: var(--shadow-sm);
 }
 
