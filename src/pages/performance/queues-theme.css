@@ -496,12 +496,16 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
      under the header, where this box's own top corners traced against
      the header's straight bottom edge. */
   border-radius: 0 0 20px 20px;
-  /* Directory ▸ People's own border/shadow (--glass-border, .panel-card
-     in mcm-page.css/people-glass.css) — a tan hairline, not the
-     orange-tinted one Live/Campaigns/Agents standardized on. Explicitly
-     asked to match Directory here, even though that means this table's
-     frame no longer matches its Performance siblings exactly. */
-  border: 1px solid rgba(225, 200, 165, 0.9);
+  /* No border here: `splitStickyHeader`'s own outer box (table-manager.tsx,
+     `border border-[#efe2cf] rounded-[20px]`) already frames the whole
+     card. Giving `.table-scroll` its own opaque Directory-matching border
+     on top of that stacked a second, differently-coloured line right at
+     the rounded top corner, e.g. "Inbound - callqueue"'s cell reading as
+     a thick double border. Same fix agents-theme.css already uses for the
+     identical overlap. Directory's own tan hairline shows through via the
+     box-shadow below instead, which doesn't stack a second line the way a
+     literal border does. */
+  border: none;
   background: #fffdfb;
   box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
 }
