@@ -1168,7 +1168,7 @@ const SidebarContent = ({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
+                      className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary/15 hover:text-primary"
                       aria-label="Add"
                     >
                       <Plus width={18} height={18} />
@@ -1205,7 +1205,7 @@ const SidebarContent = ({
                 </DropdownMenu>
               ) : (
                 <button
-                  className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary hover:text-white"
+                  className="flex items-center justify-center cursor-pointer w-8 h-8 rounded-full bg-[#FBE2C8]/40 text-[#2E2D35] hover:bg-primary/15 hover:text-primary"
                   aria-label="Add"
                 >
                   <Plus width={18} height={18} />
@@ -1213,7 +1213,7 @@ const SidebarContent = ({
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <div className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white">
+                  <div className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary/15 hover:text-primary">
                     <FilterIcon className="w-6 h-6" />
                   </div>
                 </DropdownMenuTrigger>
