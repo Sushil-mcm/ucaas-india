@@ -71,12 +71,17 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
       <div
         className={cn(
           'flex flex-col w-full max-w-[320px] rounded-lg overflow-hidden',
-          isMine ? 'bg-transparent text-black' : 'bg-white text-black',
+          isMine ? 'bg-transparent text-white' : 'bg-white text-black',
         )}
       >
         <div className="p-3 pb-2">
           <h3 className="font-semibold text-[15px] leading-tight mb-1">{poll.question}</h3>
-          <p className="text-[11px] text-gray-500 uppercase tracking-wider font-medium">
+          <p
+            className={cn(
+              'text-[11px] uppercase tracking-wider font-medium',
+              isMine ? 'text-white/80' : 'text-gray-500',
+            )}
+          >
             {poll.isMultipleChoice ? 'Select one or more' : 'Select one'} • {totalVotes}{' '}
             {totalVotes === 1 ? 'vote' : 'votes'}
           </p>
@@ -93,8 +98,9 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
                 disabled={!onVote}
                 onClick={() => onVote?.(option.id)}
                 className={cn(
-                  'relative group w-full text-left rounded-md transition-all duration-200 overflow-hidden border border-gray-100',
-                  onVote ? 'cursor-pointer hover:border-primary/30' : 'cursor-default',
+                  'relative group w-full text-left rounded-md transition-all duration-200 overflow-hidden border',
+                  isMine ? 'border-white/25' : 'border-gray-100',
+                  onVote ? (isMine ? 'cursor-pointer hover:border-white/50' : 'cursor-pointer hover:border-primary/30') : 'cursor-default',
                 )}
               >
                 {/* Progress Bar Background */}
@@ -102,7 +108,13 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
                   <div
                     className={cn(
                       'absolute left-0 top-0 h-full transition-all duration-500 ease-out',
-                      isVotedByMe ? 'bg-primary/20' : 'bg-gray-100',
+                      isMine
+                        ? isVotedByMe
+                          ? 'bg-white/30'
+                          : 'bg-white/10'
+                        : isVotedByMe
+                          ? 'bg-primary/20'
+                          : 'bg-gray-100',
                     )}
                     style={{ width: `${percentage}%` }}
                   />
@@ -111,14 +123,23 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
                 <div className="relative z-10 flex items-center justify-between p-2.5 gap-3">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {isVotedByMe && (
-                      <div className="bg-primary text-white rounded-full p-0.5 shrink-0">
+                      <div
+                        className={cn(
+                          'rounded-full p-0.5 shrink-0',
+                          isMine ? 'bg-white text-ucass-active' : 'bg-primary text-white',
+                        )}
+                      >
                         <Check size={10} strokeWidth={3} />
                       </div>
                     )}
                     <span
                       className={cn(
                         'text-[13px] truncate',
-                        isVotedByMe ? 'font-semibold text-primary' : 'text-gray-700',
+                        isMine
+                          ? 'text-white font-semibold'
+                          : isVotedByMe
+                            ? 'font-semibold text-primary'
+                            : 'text-gray-700',
                       )}
                     >
                       {option.text}
@@ -128,7 +149,7 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
                   {totalVotes > 0 && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       {/* <span className="text-[11px] font-bold text-gray-600">{percentage}%</span> */}
-                      <span className="text-[10px] text-gray-400">
+                      <span className={cn('text-[10px]', isMine ? 'text-white/70' : 'text-gray-400')}>
                         ({option.votes?.length || 0})
                       </span>
                     </div>
@@ -139,11 +160,19 @@ const PollItem: React.FC<PollItemProps> = ({ poll, isMine, onVote }) => {
           })}
         </div>
 
-        <div className="px-3 pb-3 pt-1 border-t border-gray-100 flex justify-center">
+        <div
+          className={cn(
+            'px-3 pb-3 pt-1 border-t flex justify-center',
+            isMine ? 'border-white/25' : 'border-gray-100',
+          )}
+        >
           <button
             type="button"
             onClick={() => setIsViewVotesOpen(true)}
-            className="text-primary text-[13px] font-semibold hover:underline transition-all w-full text-center py-1.5"
+            className={cn(
+              'text-[13px] font-semibold hover:underline transition-all w-full text-center py-1.5',
+              isMine ? 'text-white' : 'text-primary',
+            )}
           >
             View votes
           </button>

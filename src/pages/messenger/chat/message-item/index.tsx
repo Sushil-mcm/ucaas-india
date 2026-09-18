@@ -1170,7 +1170,9 @@ const MessageItem = ({
                           ? 'rounded-2xl border border-border bg-muted px-3 py-2 text-foreground shadow-sm'
                           : 'rounded-2xl border border-border bg-white px-3 py-2 text-foreground shadow-sm'
                       : isMine
-                        ? 'bg-ucass-active text-white border border-ucass-active'
+                        ? msgObj?.messageType === 'poll'
+                          ? 'bg-ucass-active/85 text-white border border-ucass-active/85'
+                          : 'bg-ucass-active text-white border border-ucass-active'
                         : 'bg-white text-black',
                   )}
                   onMouseEnter={handleMouseEnter}
@@ -1248,7 +1250,7 @@ const MessageItem = ({
                           type="button"
                           className={cn(
                             'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 hover:text-ucass-active',
-                            'text-[#1a1a1a]',
+                            'text-black',
                             isMine ? '-left-7' : '-right-7',
                           )}
                         >
