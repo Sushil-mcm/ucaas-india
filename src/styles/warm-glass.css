@@ -30,14 +30,7 @@
   --cg-accent-edge: #f6c78c;
   --cg-blur: blur(14px) saturate(140%);
 
-  background: radial-gradient(
-    140% 160% at 50% -20%,
-    #fff6ea 0%,
-    #fbe9cd 30%,
-    #f6d9ab 55%,
-    #eec38a 75%,
-    #e0a967 100%
-  ) !important;
+  background: #fef8f1 !important;
 }
 .dark .mcm-warm-glass {
   --cg-ink: #f7ecdd;
