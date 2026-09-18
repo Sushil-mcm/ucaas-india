@@ -232,17 +232,17 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
               <div
                 key={ripple.id}
                 className="absolute rounded-full border border-primary/40 audio-ripple-animate"
-                style={{ width: '48px', height: '48px' }}
+                style={{ width: '28px', height: '28px' }}
               />
             ))}
             <div
-              className={`relative z-10 flex items-center justify-center w-12 h-12 min-h-12 min-w-12 rounded-full transition-all duration-200 shadow-sm ${
+              className={`relative z-10 flex items-center justify-center w-7 h-7 min-h-7 min-w-7 rounded-full transition-all duration-200 shadow-sm ${
                 volumeLevel > 0.015 ? 'bg-primary' : 'bg-white border border-[#EEE7DD]'
               }`}
             >
               <Mic
-                width={20}
-                height={20}
+                width={14}
+                height={14}
                 className={volumeLevel > 0.015 ? 'text-white' : 'text-primary'}
               />
             </div>
