@@ -3441,7 +3441,7 @@ export const ChatFooter = ({
         'transition-colors',
         hasAttachmentPreview
           ? 'absolute inset-0 z-20 flex h-full min-h-0 w-full flex-col bg-[#edf1f6]'
-          : `w-full shrink-0 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-2 py-2 relative flex flex-col ${typingText ? 'gap-0' : 'gap-3'} border-t border-[rgba(225,200,165,0.9)]`,
+          : `w-full shrink-0 bg-[rgba(255,255,255,0.86)] backdrop-blur-[12px] px-2 py-2.5 relative flex flex-col ${typingText ? 'gap-0' : 'gap-3'} border-t border-[rgba(225,200,165,0.9)] shadow-[0_-2px_10px_rgba(46,45,53,0.04)]`,
         isDragOver ? 'bg-ucass-active-bg ring-2 ring-primary/20 ring-inset' : '',
       )}
     >
@@ -3641,7 +3641,7 @@ export const ChatFooter = ({
                           <label
                             htmlFor={attachmentInputId}
                             className={cn(
-                              'cursor-pointer min-w-7 max-h-7 max-w-7 min-h-7 rounded-full flex justify-center items-center text-[#9A948F] transition-colors hover:text-ucass-active',
+                              'cursor-pointer min-w-7 max-h-7 max-w-7 min-h-7 rounded-full flex justify-center items-center text-[#9A948F] transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
                               isComposerBusy ? 'opacity-50 cursor-not-allowed' : '',
                             )}
                             title="Attach files"
@@ -3652,7 +3652,7 @@ export const ChatFooter = ({
                           {!fromMeetChat ? (
                             <div
                               className={cn(
-                                'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F]',
+                                'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
                                 isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                               )}
                               onClick={() => {
@@ -3671,7 +3671,7 @@ export const ChatFooter = ({
 
                       <div
                         className={cn(
-                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:text-ucass-active transition-colors',
+                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                           isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                         )}
                         onClick={() => {
@@ -3686,7 +3686,7 @@ export const ChatFooter = ({
                       {!fromMeetChat && canScheduleEvent ? (
                         <div
                           className={cn(
-                            'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:text-ucass-active transition-colors',
+                            'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                             isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                           )}
                           onClick={() => {
@@ -3708,7 +3708,7 @@ export const ChatFooter = ({
                     hasAiAssistAgent ? (
                       <div
                         className={cn(
-                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:text-ucass-active transition-colors',
+                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                           isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                         )}
                         onClick={() => {
