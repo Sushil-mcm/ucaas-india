@@ -508,6 +508,22 @@
      form column beside it. */
   align-self: stretch;
 }
+/* The rail's own fix above (align-self: stretch) was never applied to its
+   sibling on the other side of the row -- the content pane holding each
+   step's own scrolling area (Add Members, Ring Strategy, ...). The row's
+   `align-items: flex-start` (new-department/index.tsx) leaves this pane
+   to its own natural content height instead of the row's real bounded
+   height, so it grows to fit however many rows a step renders (Add
+   Members' member list, potentially dozens) instead of staying within
+   the dialog. With no ancestor left to constrain it, that oversized pane
+   just gets clipped by the row's own `overflow: hidden` -- silently, no
+   scrollbar -- instead of the step's own internal `overflow-y-auto`
+   ever getting a chance to do its job. `.gp-department-rail + div`
+   reaches it by its fixed position as the rail's next sibling, since it
+   carries no class of its own. */
+.gp-create-group-body .gp-department-rail + div {
+  align-self: stretch !important;
+}
 /* No card -- background, border, radius and padding all dropped in favour
    of a single right-hand divider, same idiom Invite people's own rail
    uses (`mcm-invite-rail`, invite-glass.css: a plain `border-right`, no
