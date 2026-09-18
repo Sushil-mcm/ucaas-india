@@ -732,9 +732,14 @@
    caller (Ring Strategy included) keeps its current behaviour. */
 .gp-create-group-body .gp-members-table-wrap > div {
   overflow: visible !important;
+  /* Both of TableManager's own divs still carry `rounded-xl` -- a curved
+     border with nothing left to clip to it once overflow went visible,
+     so square row content shows past the curve instead of following it. */
+  border-radius: 0 !important;
 }
 .gp-create-group-body .gp-members-table-wrap > div > div {
   overflow: visible !important;
+  border-radius: 0 !important;
 }
 
 /* The table itself -- `customClass="gp-members-table"` (add-members.tsx)
