@@ -191,7 +191,7 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
 
   if (!permissionGranted) {
     return (
-      <div className="w-full h-14   bg-white flex items-center justify-center">
+      <div className="w-full h-14 rounded-xl border border-[#f0e4d4] bg-[#FBE2C8]/15 flex items-center justify-center">
         <div className="text-gray-500 text-xs">Requesting microphone access...</div>
       </div>
     );
@@ -209,7 +209,7 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
           animation: audio-ripple 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
       `}</style>
-      <div className="w-full h-14 rounded-xl  flex items-center px-3 gap-3">
+      <div className="w-full h-14 rounded-xl border border-[#f0e4d4] bg-[#FBE2C8]/20 shadow-sm flex items-center px-3 gap-3">
         {/* Timer */}
         <div className="flex items-center gap-1.5 shrink-0">
           <div
@@ -231,19 +231,19 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
             {ripples.map((ripple) => (
               <div
                 key={ripple.id}
-                className="absolute rounded-full border border-red-400/50 audio-ripple-animate"
+                className="absolute rounded-full border border-primary/40 audio-ripple-animate"
                 style={{ width: '48px', height: '48px' }}
               />
             ))}
             <div
-              className={`relative z-10 flex items-center justify-center w-12 h-12 min-h-12 min-w-12 rounded-full transition-all duration-200 ${
-                volumeLevel > 0.015 ? 'bg-red-500 ' : 'bg-gray-300 scale-100'
+              className={`relative z-10 flex items-center justify-center w-12 h-12 min-h-12 min-w-12 rounded-full transition-all duration-200 shadow-sm ${
+                volumeLevel > 0.015 ? 'bg-primary' : 'bg-white border border-[#EEE7DD]'
               }`}
             >
               <Mic
                 width={20}
                 height={20}
-                className={volumeLevel > 0.015 ? 'text-white' : 'text-gray-600'}
+                className={volumeLevel > 0.015 ? 'text-white' : 'text-primary'}
               />
             </div>
           </div>
@@ -255,7 +255,7 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
             type="button"
             onClick={handleCancel}
             disabled={isLoading}
-            className="flex items-center justify-center w-7 h-7 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full transition-colors disabled:opacity-50"
+            className="flex items-center justify-center w-7 h-7 bg-white border border-[#EEE7DD] hover:bg-[#fff1e0] hover:border-primary/40 text-[#2E2D35]/70 hover:text-primary rounded-full transition-colors disabled:opacity-50"
           >
             <X width={14} height={14} />
           </button>
@@ -263,7 +263,7 @@ const AudioRecorder = ({ onCancel, onSend, isLoading = false }: AudioRecorderPro
             type="button"
             onClick={handleSend}
             disabled={isLoading}
-            className="flex items-center justify-center w-7 h-7 bg-primary hover:opacity-90 text-white rounded-full transition-colors disabled:opacity-50"
+            className="flex items-center justify-center w-7 h-7 bg-primary hover:opacity-90 text-white rounded-full shadow-sm transition-colors disabled:opacity-50"
           >
             {isLoading ? (
               <Loader2 width={12} height={12} className="animate-spin" />
