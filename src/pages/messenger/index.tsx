@@ -1127,7 +1127,7 @@ const SidebarContent = ({
         >
           <button
             type="button"
-            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-[#9A948F] transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-black transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
             aria-label={`About ${pageTitle}`}
           >
             <Info size={13} aria-hidden="true" />
