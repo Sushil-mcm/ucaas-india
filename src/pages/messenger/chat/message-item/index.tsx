@@ -1250,7 +1250,7 @@ const MessageItem = ({
                           type="button"
                           className={cn(
                             'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 hover:text-ucass-active',
-                            'text-black',
+                            'text-[#000000]',
                             isMine ? '-left-7' : '-right-7',
                           )}
                         >
