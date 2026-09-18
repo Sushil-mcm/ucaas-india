@@ -13,36 +13,31 @@ export type KpiStripItem = {
   icon?: LucideIcon;
 };
 
-/* A plain table — one header row of labels, one data row of values — not a
-   row of cards. Two KPI-card-style redesigns of this strip were both
-   rejected as "still KPI style"; a table reads as a different kind of
-   thing entirely (a snapshot readout, like the queue detail rows right
-   below it), not another tile grid stacked under the one above. */
+/* Third pass at this strip. A row of icon-badge cards, then a plain table,
+   were both tried and rejected — the cards read as "more KPI tiles" and
+   the table still split into two visually competing zones (a dense label
+   row, a bold value row) across 7 crowded columns. This is a single calm
+   line of "label: value" pairs instead — one weight of text throughout
+   (the value just a touch bolder), wrapping naturally instead of forcing
+   7 columns into a fixed grid. About as far from a dashboard tile as this
+   information can read while still being scannable. */
 const KpiStrip = ({ items }: { items: KpiStripItem[] }) => (
-  <table className="kpi-strip">
-    <thead>
-      <tr>
-        {items.map((item) => (
-          <th key={item.key}>{item.label}</th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        {items.map((item) => (
-          <td
-            key={item.key}
-            className={item.breaching ? 'kpi-strip-breach' : undefined}
-          >
-            <span className={`kpi-strip-value kpi-strip-value-${item.tone ?? 'default'}`}>
-              {item.value}
-            </span>
-            {item.sub && <span className="kpi-strip-sub">{item.sub}</span>}
-          </td>
-        ))}
-      </tr>
-    </tbody>
-  </table>
+  <div className="kpi-strip">
+    {items.map((item, index) => (
+      <span className="kpi-strip-item" key={item.key}>
+        {index > 0 && <span className="kpi-strip-sep" aria-hidden="true">·</span>}
+        <span className="kpi-strip-label">{item.label}:</span>{' '}
+        <span
+          className={`kpi-strip-value kpi-strip-value-${item.tone ?? 'default'}${
+            item.breaching ? ' kpi-strip-breach' : ''
+          }`}
+        >
+          {item.value}
+        </span>
+        {item.sub && <span className="kpi-strip-sub"> ({item.sub})</span>}
+      </span>
+    ))}
+  </div>
 );
 
 export default KpiStrip;

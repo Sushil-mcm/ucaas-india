@@ -246,71 +246,55 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 /* ------------------------------------------------------------
    3. Seven-metric snapshot strip (Busiest queue / Callbacks waiting /
    Longest waiting / Lowest SLA / Total members / Available now / Total
-   interacting) — a plain table (header row of labels, one data row of
-   values), not a row of cards. Two card-style redesigns of this strip
-   were both rejected as "still KPI style"; a table reads as a different
-   kind of thing — a snapshot readout, matching the per-queue detail table
-   directly below it — rather than a second tile grid under the first. */
+   interacting) — third pass. Icon-badge cards, then a table, were both
+   tried and rejected: the cards read as more KPI tiles, and the table
+   still split into two visually competing zones (a dense label row, a
+   bold value row) across 7 crowded columns. This is a single calm line
+   of "label: value" pairs, wrapping naturally, one weight of text
+   throughout instead of a header/value split. */
 .mcm-page .perf-queues .kpi-strip {
-  width: 100%;
-  border-collapse: collapse;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  row-gap: 6px;
   background: #fff;
   border: 1px solid rgba(225, 200, 165, 0.7);
   border-radius: 14px;
-  overflow: hidden;
-  box-shadow: var(--qa-glass-shadow);
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.4;
 }
-.mcm-page .perf-queues .kpi-strip th {
-  text-align: left;
-  padding: 8px 18px 4px;
+.mcm-page .perf-queues .kpi-strip-item {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.mcm-page .perf-queues .kpi-strip-sep {
+  color: rgba(138, 122, 104, 0.5);
+  margin: 0 12px;
+}
+.mcm-page .perf-queues .kpi-strip-label {
   color: #8a7a68;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-bottom: 1px solid rgba(225, 200, 165, 0.5);
-}
-.mcm-page .perf-queues .kpi-strip td {
-  padding: 4px 18px 10px;
-  border-right: 1px solid rgba(225, 200, 165, 0.5);
-  vertical-align: top;
-}
-.mcm-page .perf-queues .kpi-strip td:last-child,
-.mcm-page .perf-queues .kpi-strip th:last-child {
-  border-right: none;
-}
-.dark .mcm-page .perf-queues .kpi-strip td,
-.dark .mcm-page .perf-queues .kpi-strip th {
-  border-color: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
 }
 .mcm-page .perf-queues .kpi-strip-value {
-  display: block;
   color: #1a1a1a;
-  font-size: 16px;
   font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .mcm-page .perf-queues .kpi-strip-value-danger,
-.mcm-page .perf-queues .kpi-strip-breach .kpi-strip-value {
+.mcm-page .perf-queues .kpi-strip-value.kpi-strip-breach {
   color: #e11d48 !important;
 }
 .mcm-page .perf-queues .kpi-strip-sub {
-  display: block;
   color: #8a7a68;
-  font-size: 10px;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 400;
 }
 @media (max-width: 1180px) {
-  .mcm-page .perf-queues .kpi-strip {
-    display: block;
-    overflow-x: auto;
+  .mcm-page .perf-queues .kpi-strip-sep {
+    display: none;
+  }
+  .mcm-page .perf-queues .kpi-strip-item {
+    flex: 1 1 45%;
   }
 }
 
