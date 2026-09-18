@@ -4329,7 +4329,7 @@ const FilesView = ({
 
   return (
     <div className="w-full flex flex-col h-full bg-[var(--color-bg-gray-50)] overflow-hidden">
-      <div className="w-full shrink-0 px-4 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] flex items-center justify-between border-b min-h-[56px] lg:min-h-[65px] border-b-[rgba(225,200,165,0.9)]">
+      <div className="w-full shrink-0 px-4 bg-[rgba(255,255,255,0.86)] backdrop-blur-[12px] flex items-center justify-between border-b min-h-[56px] lg:min-h-[65px] border-b-[rgba(225,200,165,0.9)]">
         <div className="cursor-pointer" onClick={onClose}>
           <div className="flex gap-2 items-center">
             <ArrowLeft className="w-5 h-5 text-[#9A948F]" />
