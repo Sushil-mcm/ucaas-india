@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Headset, Flame, Lightbulb, ArrowRight } from 'lucide-react';
+import { Headset, Flame } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -20,11 +20,9 @@ export type QueueOverviewStat = {
 };
 
 /**
- * "Queue Overview" — a hero card for the busiest queue's real hourly call
- * volume (the same per-queue series the heatmap below already fetches, so
- * this isn't a second request) next to a grid of the other six snapshot
- * figures, closing with a tip banner. Built to a specific reference layout
- * the flowing-text strip it replaces didn't attempt.
+ * "Queue Overview" — the busiest queue's real hourly call volume as its own
+ * chart card, beside (not inside a shared box with) a grid of the other six
+ * snapshot figures. Two independent blocks, not one card wrapping both.
  */
 const QueueOverviewPanel = ({
   queueName,
@@ -33,8 +31,6 @@ const QueueOverviewPanel = ({
   series,
   hourLabels,
   stats,
-  tip,
-  onViewDetails,
 }: {
   queueName: string | null;
   handledToday: number | null;
@@ -44,8 +40,6 @@ const QueueOverviewPanel = ({
   series: number[];
   hourLabels: string[];
   stats: QueueOverviewStat[];
-  tip: { title: string; body: string };
-  onViewDetails?: () => void;
 }) => {
   const chartData = useMemo(
     () => series.map((value, index) => ({ label: hourLabels[index] || '', value })),
@@ -163,22 +157,6 @@ const QueueOverviewPanel = ({
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="queue-overview-tip">
-        <span className="queue-overview-tip-icon">
-          <Lightbulb size={16} />
-        </span>
-        <div className="queue-overview-tip-body">
-          <strong>{tip.title}</strong>
-          <span>{tip.body}</span>
-        </div>
-        {onViewDetails && (
-          <button type="button" className="queue-overview-tip-cta" onClick={onViewDetails}>
-            View Queue Details
-            <ArrowRight size={14} />
-          </button>
-        )}
       </div>
     </div>
   );

@@ -243,20 +243,16 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 }
 
 /* ------------------------------------------------------------
-   3. Queue Overview — fourth pass on this strip. A row of icon-badge
-   cards, then a plain table, then a single flowing text line were all
-   tried; this one follows a specific reference layout instead: a header,
-   a hero card (busiest queue + its real hourly wave, peak-hour marker)
-   beside a 2-column grid of the other six figures, closing with a tip
-   banner that surfaces whichever real condition is worth flagging.
-   ------------------------------------------------------------ */
-.mcm-page .perf-queues .queue-overview {
-  background: #fff;
-  border: 1px solid rgba(225, 200, 165, 0.7);
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: var(--qa-glass-shadow);
-}
+   3. Queue Overview — fifth pass on this strip. A row of icon-badge
+   cards, a plain table, a flowing text line, and a single shared white
+   card wrapping everything (with a tip banner) were all tried; this is a
+   header above two independent blocks — the hero chart card and the stat
+   grid — with no outer card merging them into one shared box, and no tip
+   banner. */
+/* .queue-overview itself carries no background/border/shadow — a plain
+   layout wrapper, not a card. .queue-overview-hero (below) carries its
+   own card styling; the stat grid is its own set of small tinted rows,
+   not boxed either. */
 .mcm-page .perf-queues .queue-overview-head {
   display: flex;
   align-items: center;
@@ -424,63 +420,9 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.mcm-page .perf-queues .queue-overview-tip {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: linear-gradient(90deg, #fff6e9 0%, #fdf1e2 100%);
-  border: 1px solid rgba(242, 153, 74, 0.18);
-}
-.mcm-page .perf-queues .queue-overview-tip-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex: none;
-  border-radius: 999px;
-  background: #fff1e0;
-  color: #c96f1f;
-}
-.mcm-page .perf-queues .queue-overview-tip-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  font-size: 12.5px;
-  color: #6b5c4d;
-}
-.mcm-page .perf-queues .queue-overview-tip-body strong {
-  color: #1a1a1a;
-  font-size: 13.5px;
-}
-.mcm-page .perf-queues .queue-overview-tip-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: none;
-  padding: 9px 16px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid #f2994a;
-  color: #c96f1f;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-.mcm-page .perf-queues .queue-overview-tip-cta:hover {
-  background: #fff1e0;
-}
 @media (max-width: 640px) {
   .mcm-page .perf-queues .queue-overview-stats {
     grid-template-columns: 1fr;
-  }
-  .mcm-page .perf-queues .queue-overview-tip {
-    flex-wrap: wrap;
   }
 }
 

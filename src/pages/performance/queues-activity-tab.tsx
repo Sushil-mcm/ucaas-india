@@ -259,37 +259,6 @@ const QueuesActivityTab = ({
     [heatmapRows, busiestQueue],
   );
 
-  /* A real observation about the actual numbers, not decorative filler —
-     whichever condition is true first is the one worth surfacing. */
-  const overviewTip = useMemo(() => {
-    if ((callbacksWaitingCount ?? 0) > 0) {
-      return {
-        title: 'Callbacks are piling up',
-        body: `${callbacksWaitingCount} caller${callbacksWaitingCount === 1 ? ' is' : 's are'} waiting to be called back — clearing these keeps abandon rate down.`,
-      };
-    }
-    if (
-      longestWaitingQueue &&
-      longestWaitingQueue.longestWaitTimestamp !== null &&
-      Date.now() - longestWaitingQueue.longestWaitTimestamp > 120_000
-    ) {
-      return {
-        title: 'Someone has been waiting a while',
-        body: `The longest wait right now is in ${longestWaitingQueue.name} — worth a look if nobody's picking up.`,
-      };
-    }
-    if (lowestSlaQueue && (lowestSlaQueue.sla as number) < 60) {
-      return {
-        title: 'Service level is slipping',
-        body: `${lowestSlaQueue.name} is at ${Math.round(lowestSlaQueue.sla as number)}% SLA — below where it should be.`,
-      };
-    }
-    return {
-      title: 'Keep your queue balanced',
-      body: 'Monitor callbacks and waiting time to deliver a better customer experience.',
-    };
-  }, [callbacksWaitingCount, longestWaitingQueue, lowestSlaQueue]);
-
   const columns = [
     {
       header: 'Queue',
@@ -640,8 +609,6 @@ const QueuesActivityTab = ({
         interacting={busiestQueue ? busiestQueue.interacting : 0}
         series={busiestQueueSeries?.values ?? []}
         hourLabels={heatmapColumnLabels}
-        tip={overviewTip}
-        onViewDetails={busiestQueue ? () => setSelectedQueueUuid(busiestQueue.uuid) : undefined}
         stats={[
           {
             key: 'callbacks-waiting',
