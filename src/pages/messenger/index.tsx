@@ -521,76 +521,70 @@ const ListItem = ({
                     <EllipsisVertical width={16} height={16} />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] rounded-lg shadow-lg border border-[rgba(225,200,165,0.9)] p-1 min-w-[200px]">
+                <DropdownMenuContent className="bg-white/95 backdrop-blur-[12px] rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[220px]">
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
+                    className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg transition-colors hover:bg-primary/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleUnread({ chatId: chat?.chatId, type: 'read' }, true);
                     }}
                   >
-                    {/* <LetterOpenedLine className="text-[#2E2D35] w-4 h-4" /> */}
-                    <LetterOpenedLine className="w-3.5 h-3.5 text-[#9A948F]" />
-                    <span className="text-[#2E2D35]">Mark as read</span>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
+                      <LetterOpenedLine className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-[#2E2D35] group-hover:text-primary">Mark as read</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
+                    className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg transition-colors hover:bg-primary/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(chat);
                     }}
                   >
-                    {isFavorited ? (
-                      <>
-                        <StarOff className="w-3.5 h-3.5 text-[#9A948F]" />
-                        <span className="text-[#2E2D35]">Remove from favorites</span>
-                      </>
-                    ) : (
-                      <>
-                        <Star className="w-3.5 h-3.5 text-[#9A948F]" />
-                        <span className="text-[#2E2D35]">Add to favorites</span>
-                      </>
-                    )}
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
+                      {isFavorited ? (
+                        <StarOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Star className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                    <span className="text-[#2E2D35] group-hover:text-primary">
+                      {isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
+                    className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg transition-colors hover:bg-primary/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       togglePinConversation(chat);
                     }}
                   >
-                    {isConversationPinned ? (
-                      <>
-                        <PinOff className="w-3.5 h-3.5 text-[#9A948F]" />
-                        <span className="text-[#2E2D35]">Unpin conversation</span>
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="w-3.5 h-3.5 text-[#9A948F]" />
-                        <span className="text-[#2E2D35]">Pin conversation</span>
-                      </>
-                    )}
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
+                      {isConversationPinned ? (
+                        <PinOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Pin className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                    <span className="text-[#2E2D35] group-hover:text-primary">
+                      {isConversationPinned ? 'Unpin conversation' : 'Pin conversation'}
+                    </span>
                   </DropdownMenuItem>
 
                   {!isOwnChat && (
                     <DropdownMenuItem
-                      className="flex items-center gap-3 p-2 text-xs font-normal cursor-pointer rounded-md hover:bg-[#FBE2C8]/45"
+                      className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg transition-colors hover:bg-primary/10"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleMute(chat);
                       }}
                     >
-                      {isMuted ? (
-                        <>
-                          <Bell className="w-3.5 h-3.5 text-[#9A948F]" />
-                          <span className="text-[#2E2D35]">Unmute conversation</span>
-                        </>
-                      ) : (
-                        <>
-                          <BellOff className="w-3.5 h-3.5 text-[#9A948F]" />
-                          <span className="text-[#2E2D35]">Mute conversation</span>
-                        </>
-                      )}
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-hover:bg-primary/15 group-hover:text-primary">
+                        {isMuted ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                      </span>
+                      <span className="text-[#2E2D35] group-hover:text-primary">
+                        {isMuted ? 'Unmute conversation' : 'Mute conversation'}
+                      </span>
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -1252,11 +1246,11 @@ const SidebarContent = ({
         </div>
       ) : null}
 
-      <div className="px-2.5 py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100">
+      <div className="px-2.5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100 bg-[#FBE2C8]/10">
         <Input
           Icon={<SearchLine className="text-[#9A948F]" />}
           IconPosition="left-0 pl-3 inset-y-0"
-          className="pl-9 rounded-xl"
+          className="pl-9 rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
@@ -1264,7 +1258,7 @@ const SidebarContent = ({
         {!isAgentChat ? (
           <div className="w-full sm:min-w-28 sm:w-28">
             <select
-              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-sm transition-colors hover:border-primary/40 focus:border-primary focus:outline-none cursor-pointer"
+              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-white shadow-sm transition-colors hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none cursor-pointer"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as MessageStatus)}
             >
