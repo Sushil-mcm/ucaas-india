@@ -450,37 +450,37 @@ const AgentsTab = ({
         />
       </div>
 
-      <div className="ag-layout">
-        {/* ── Agent roster ─────────────────────────────────────────────────── */}
-        <div className="ag-roster-section">
-          <div className="flex items-center justify-between">
-            <h2 className="sect-title">
-              <Users className="ag-sect-icon" />
-              Agent roster
-            </h2>
-            <span className="ag-sect-count">
-              {filteredRows.length !== rows.length
-                ? `${filteredRows.length} of ${rows.length}`
-                : rows.length}{' '}
-              {rows.length === 1 ? 'agent' : 'agents'}
-            </span>
-          </div>
+      {/* ── Agent roster heading — sits above the grid below (not inside its
+          left column) so the side panels' top edge lines up with the
+          table's own top edge, not with this heading row. ── */}
+      <div className="ag-roster-head">
+        <h2 className="sect-title">
+          <Users className="ag-sect-icon" />
+          Agent roster
+        </h2>
+        <span className="ag-sect-count">
+          {filteredRows.length !== rows.length
+            ? `${filteredRows.length} of ${rows.length}`
+            : rows.length}{' '}
+          {rows.length === 1 ? 'agent' : 'agents'}
+        </span>
+      </div>
 
-          <div className="ag-table-section">
-            <TableManager
-              columns={columns}
-              staticData={filteredRows}
-              loading={isLoading}
-              search={globalSearch ?? ''}
-              isHeightSet={false}
-              emptyTablePlaceholder={
-                globalSearch?.trim() ? 'No agents match your search' : 'No agent activity yet'
-              }
-              descriptionEmptyTable={
-                globalSearch?.trim() ? '' : 'Agent stats appear once calls are handled today.'
-              }
-            />
-          </div>
+      <div className="ag-layout">
+        <div className="ag-table-section">
+          <TableManager
+            columns={columns}
+            staticData={filteredRows}
+            loading={isLoading}
+            search={globalSearch ?? ''}
+            isHeightSet={false}
+            emptyTablePlaceholder={
+              globalSearch?.trim() ? 'No agents match your search' : 'No agent activity yet'
+            }
+            descriptionEmptyTable={
+              globalSearch?.trim() ? '' : 'Agent stats appear once calls are handled today.'
+            }
+          />
         </div>
 
         {/* ── Side panels: status overview, status breakdown, top performers ── */}

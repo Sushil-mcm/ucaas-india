@@ -143,17 +143,16 @@ body.perf-warm-backdrop.dark {
   text-overflow: ellipsis;
 }
 
-/* ── 2. Agent roster section ──────────────────────────────────────────────── */
-/* Brought to the same structure Queues uses (`.qa-queue-section` in
-   queues-theme.css): the "Agent roster" header is a sibling flex row above
-   the table card, not the card's own header bar — a tight anchor gap and an
-   `0 8px` inset on the header row is what lines its text up with the
-   table's own content edge, matching Queues. */
-.mcm-page .perf-agents .ag-roster-section {
+/* ── 2. Agent roster heading ──────────────────────────────────────────────── */
+/* A full-width row ABOVE the table+panels grid below, not the left column's
+   own header — that's what lets the side panels' top edge line up with the
+   table's own top edge instead of with this heading. Bumped top padding
+   (was 12px) for more air below the KPI row above it. */
+.mcm-page .perf-agents .ag-roster-head {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 8px 0;
 }
 /* The shared `.sect-title` base (mcm-page.css) is an 11px uppercase label
    sized for a dense sub-heading, not a real section title — scoped bump
@@ -161,9 +160,6 @@ body.perf-warm-backdrop.dark {
    sections also use at its original size (same approach as Queues). */
 .mcm-page .perf-agents .sect-title {
   font-size: 15px;
-}
-.mcm-page .perf-agents .ag-roster-section > div:first-child {
-  padding: 0 8px;
 }
 .mcm-page .perf-agents .ag-sect-icon {
   width: 13px;
@@ -187,20 +183,32 @@ body.perf-warm-backdrop.dark {
 }
 
 /* ── 2b. Roster + side panels layout ──────────────────────────────────────── */
-/* Table takes the remaining width, the three status panels sit in a fixed
-   340px column beside it — narrower than the table used to run full-width,
-   per the reference layout the panels were built against. Stacks back to
-   one column once there isn't room for both side by side. */
+/* Table takes the remaining width, the three status panels sit in a
+   240–340px column beside it — narrower than the table used to run
+   full-width, per the reference layout the panels were built against. The
+   `minmax` on the side column (not a bare 340px) is what keeps the table
+   from being squeezed to unreadable at in-between window widths (a
+   maximised window resized down to ~80%, not just below the stack
+   breakpoint) — the side column gives up its own width first. Stacks to
+   one column under 1300px (was 1100px — that only avoided a full stack,
+   the table was still visibly cramped for a while before it). */
 .mcm-page .perf-agents .ag-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
   gap: 16px;
   align-items: start;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1300px) {
   .mcm-page .perf-agents .ag-layout {
     grid-template-columns: 1fr;
   }
+}
+/* Whatever room the grid above leaves the table, a real 8-column roster
+   still won't always fit it — scrolling the table horizontally beats
+   squeezing every column unreadably, the same fallback every other
+   Performance table already has. */
+.mcm-page .perf-agents .ag-table-section .table-scroll {
+  overflow-x: auto;
 }
 .mcm-page .perf-agents .ag-side-panels {
   display: flex;
@@ -404,9 +412,12 @@ body.perf-warm-backdrop.dark {
   gap:           0;
   border-radius: 20px;
   overflow:      hidden;
-  border:        1px solid rgba(249, 115, 22, 0.16);
+  /* Directory ▸ People's own border/shadow (--glass-border, .panel-card in
+     mcm-page.css/people-glass.css) — a tan hairline, not the orange-tinted
+     one this tab used before. */
+  border:        1px solid rgba(225, 200, 165, 0.9);
   background:    #fffdfb;
-  box-shadow:    0 10px 34px rgba(160, 95, 30, 0.12);
+  box-shadow:    0 10px 34px rgba(160, 95, 30, 0.14);
 }
 .dark .mcm-page .perf-agents .ag-table-section {
   background: rgba(23, 15, 10, 0.97);
@@ -439,25 +450,25 @@ body.perf-warm-backdrop.dark {
 /* ── 4. Table header ──────────────────────────────────────────────────────── */
 
 .mcm-page .perf-agents thead {
-  background: #fffdfb;
+  background: #fff6e9;
   box-shadow: none;
 }
 .dark .mcm-page .perf-agents thead {
   background: rgba(23, 15, 10, 0.97);
 }
-/* Bumped from 9.5px/800/0.09em to the Queues benchmark's own header scale —
-   11px/750 reads crisper at this size than 9.5px/800 did, and `#8a6f57`
-   (kept from before) already matches Queues' own header ink tone. */
+/* Directory ▸ People's own header (.gp-people th, people-glass.css), read
+   off its current computed styles rather than an older number this tab had
+   copied before Directory's own header colours moved on. */
 .mcm-page .perf-agents thead th {
-  color:          #8a6f57 !important;
-  font-size:      11px !important;
-  font-weight:    750 !important;
-  letter-spacing: 0.06em !important;
+  color:          #1a1a1a !important;
+  font-size:      11.5px !important;
+  font-weight:    800 !important;
+  letter-spacing: 0.09em !important;
   text-transform: uppercase !important;
   white-space:    nowrap;
   padding:        9px 14px !important;
   background:     transparent;
-  border-bottom:  2px solid rgba(242, 153, 74, 0.3);
+  border-bottom:  3px solid rgba(242, 153, 74, 0.4);
 }
 .dark .mcm-page .perf-agents thead th {
   color: rgba(251, 146, 60, 0.65) !important;
@@ -476,7 +487,11 @@ body.perf-warm-backdrop.dark {
 }
 .mcm-page .perf-agents .table-scroll tbody tr:hover {
   background: var(--aa-row-hover) !important;
-  box-shadow: inset 3px 0 0 var(--aa-accent) !important;
+  /* Directory ▸ People's own hover accent bar is var(--accent), not this
+     tab's own --aa-accent (a slightly different orange used for its
+     buttons/icons elsewhere) — "exactly like Directory" means this one
+     value has to match Directory's, not just be close to it. */
+  box-shadow: inset 3px 0 0 var(--accent) !important;
 }
 /* `.mcm-page table` (mcm-page.css) sets `border-collapse: collapse`; restated
    here so the row divider below (a box-shadow, not a real border — see next
@@ -489,16 +504,20 @@ body.perf-warm-backdrop.dark {
   padding-bottom: 13px;
   padding-left:   14px;
   padding-right:  14px;
-  color: #334155;
+  /* Was the hardcoded #334155 (slate-700) — Directory's own rows set no
+     colour of their own, inheriting `.mcm-page`'s var(--ink). */
+  color: var(--ink);
   font-size: 13px !important;
   /* A real `border-bottom` measures fine in devtools but stays invisible on
      screen: this app renders at a fractional device-pixel ratio (1.5), and
      `border-collapse: collapse`'s own border-conflict math rounds a 1px
      cell border down to ~0.667px, which the rasterizer all but drops.
      `box-shadow` isn't part of that collapse model, so it paints at its
-     full specified 1px regardless — same fix as queues-theme.css. */
+     full specified 1px regardless — same fix as queues-theme.css. Colour
+     is Directory's own `.gp-people td` divider (rgba(150,100,50,0.1)),
+     not the arbitrary `#fed7aa` this tab had before. */
   border-bottom: none !important;
-  box-shadow: inset 0 -1px 0 0 #fed7aa !important;
+  box-shadow: inset 0 -1px 0 0 rgba(150, 100, 50, 0.1) !important;
 }
 .dark .mcm-page .perf-agents .table-scroll tbody td {
   color: var(--aa-muted);
