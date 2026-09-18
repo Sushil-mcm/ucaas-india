@@ -1177,7 +1177,7 @@ const Home = () => {
               <button
                 type="button"
                 className="btn sm ghost"
-                onClick={() => navigate('/performance')}
+                onClick={() => navigate('/performance/agents')}
               >
                 View all
                 <Ic n="chev" size={11} />
@@ -1265,7 +1265,11 @@ const Home = () => {
         <div className="panel-card roomy-rows fill-remaining">
           <div className="pc-head">
             <h3>Agents</h3>
-            <button type="button" className="btn sm ghost" onClick={() => navigate('/performance')}>
+            <button
+              type="button"
+              className="btn sm ghost"
+              onClick={() => navigate('/performance/agents')}
+            >
               <Ic n="users" />
               All agents
             </button>
