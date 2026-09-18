@@ -213,9 +213,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* `flex-start`, not `space-between` -- that stretched the donut (On Queue,
-   On a Call Now) all the way out to the card's own inner edge instead of
-   sitting a fixed distance from the value, the way the reference has it. */
 .home-v2 .kpi-value-row {
   display: flex;
   align-items: center;
@@ -226,6 +223,13 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+/* On Queue / On a Call Now only (the two donut tiles) -- they read as
+   sparse with a small number on the left and a small ring right next to
+   it; a bigger value and a bigger ring pushed to the card's far edge
+   fills the same tile height every other KPI's sparkline already fills. */
+.home-v2 .kpi-value-row:has(.kpi-chart-donut) .v {
+  font-size: 34px;
 }
 /* On Queue's own "of 15" -- a short fraction right under the value, only
    set where the metric has a natural one (see `compactSub`, index.tsx). */
@@ -265,13 +269,13 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  /* Extra room beyond the row's own 14px gap -- scoped to the donut
-     specifically rather than widening every tile's value/trend gap. */
-  margin-left: 14px;
+  /* Pushed to the row's far end instead of sitting close to the value --
+     fills the tile's width instead of leaving it empty on the right. */
+  margin-left: auto;
 }
 .home-v2 .kpi-chart-donut-label {
   position: absolute;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--ink, #0d1526);
 }

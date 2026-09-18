@@ -685,7 +685,7 @@ const Home = () => {
                       gap under a short number. */}
                   {kpi.chartType === 'donut' ? (
                     <div className="kpi-chart-donut">
-                      <RadialGauge value={kpi.progressPct} size={52} color={kpi.color} />
+                      <RadialGauge value={kpi.progressPct} size={72} color={kpi.color} />
                       <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
                     </div>
                   ) : null}
