@@ -33,6 +33,11 @@ interface SideDrawerProps {
      a filtered ancestor, and moving them out of their subtree would change
      which stacking context they belong to. */
   portal?: boolean;
+  /* Renders as a centered modal card instead of a right-edge panel. The
+     rest of this component's positioning (fixed, right-0, full-height,
+     slide-in translate) is shared by every other caller, so this is an
+     opt-in override rather than a change to the default layout. */
+  centered?: boolean;
 }
 
 const SideDrawer: FC<SideDrawerProps> = ({
@@ -50,6 +55,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
   isCloseIcon = true,
   headerClassName = '',
   portal = false,
+  centered = false,
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -90,16 +96,26 @@ const SideDrawer: FC<SideDrawerProps> = ({
       <div
         id="drawer-example"
         className={cn(
-          `fixed top-0 shadow-lg bg-[rgba(251,249,246,0.88)] right-0 ${isHeader ? 'z-30' : 'z-10'} transition-transform ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col`,
-          enableResponsive && isSmallScreen ? 'min-w-0 max-w-full' : 'min-w-84 sm:min-w-100',
-          isHeader ? 'mt-0 h-full' : 'mt-16 h-[calc(100vh_-_4rem)]',
-          isOpen ? 'translate-x-0 right-0' : 'translate-x-full right-[-1rem]',
+          centered
+            ? `fixed top-1/2 left-1/2 -translate-x-1/2 shadow-lg bg-[rgba(251,249,246,0.88)] ${isHeader ? 'z-30' : 'z-10'} transition-[opacity,transform] ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col rounded-xl max-h-[85vh]`
+            : `fixed top-0 shadow-lg bg-[rgba(251,249,246,0.88)] right-0 ${isHeader ? 'z-30' : 'z-10'} transition-transform ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col`,
+          !centered && (enableResponsive && isSmallScreen ? 'min-w-0 max-w-full' : 'min-w-84 sm:min-w-100'),
+          !centered && (isHeader ? 'mt-0 h-full' : 'mt-16 h-[calc(100vh_-_4rem)]'),
+          centered
+            ? isOpen
+              ? 'opacity-100 -translate-y-1/2 pointer-events-auto'
+              : 'opacity-0 -translate-y-[calc(50%-0.5rem)] pointer-events-none'
+            : isOpen
+              ? 'translate-x-0 right-0'
+              : 'translate-x-full right-[-1rem]',
         )}
         aria-labelledby="drawer-label"
         style={{
           width:
             finalWidth ||
-            `${finalIsTab ? 'calc(100% - 22rem - 5rem)' : 'calc(100% - 16rem - 5rem)'}`,
+            (centered
+              ? undefined
+              : `${finalIsTab ? 'calc(100% - 22rem - 5rem)' : 'calc(100% - 16rem - 5rem)'}`),
         }}
       >
         {title && (
