@@ -3622,7 +3622,7 @@ export const ChatFooter = ({
               {typingText ? (
                 <div className="text-xs text-ucass-active px-1 py-1">{typingText}</div>
               ) : null}
-              <div className={baseComposerClasses} style={{ border: '1px solid #e5e7eb', outline: 'none', borderRadius: '12px' }}>{renderComposerEditor()}</div>
+              <div className={baseComposerClasses} style={{ border: '1px solid #e5e7eb', outline: 'none', borderRadius: '12px', overflow: 'hidden' }}>{renderComposerEditor()}</div>
               <div className="absolute right-0 bottom-1 z-[12]">
                 <div className="flex gap-1.5 items-center px-2  pointer-events-auto rounded-full">
                   {!isGuestRestrictedFooter && chatFeatures.canUseAttachmentAndRichComposer ? (
