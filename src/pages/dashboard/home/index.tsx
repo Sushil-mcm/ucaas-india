@@ -906,7 +906,7 @@ const Home = () => {
                             },
                           ];
                         })()}
-                        colors={{ Inbound: '#2563eb', Outbound: '#7c3aed' }}
+                        colors={{ Inbound: '#93b4f5', Outbound: '#c4b5f7' }}
                         size={88}
                       />
                       <div className="day-split-legend">
