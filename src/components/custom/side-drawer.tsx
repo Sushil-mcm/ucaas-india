@@ -97,7 +97,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
         id="drawer-example"
         className={cn(
           centered
-            ? `fixed top-1/2 left-1/2 -translate-x-1/2 shadow-lg bg-[rgba(251,249,246,0.88)] ${isHeader ? 'z-30' : 'z-10'} transition-[opacity,transform] ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col rounded-xl max-h-[85vh]`
+            ? `fixed top-1/2 left-1/2 -translate-x-1/2 shadow-lg bg-white ${isHeader ? 'z-30' : 'z-10'} transition-[opacity,transform] ease-in-out duration-300 gap-4 flex flex-col rounded-xl max-h-[85vh]`
             : `fixed top-0 shadow-lg bg-[rgba(251,249,246,0.88)] right-0 ${isHeader ? 'z-30' : 'z-10'} transition-transform ease-in-out duration-300 backdrop-blur-[12px] gap-4 flex flex-col`,
           !centered && (enableResponsive && isSmallScreen ? 'min-w-0 max-w-full' : 'min-w-84 sm:min-w-100'),
           !centered && (isHeader ? 'mt-0 h-full' : 'mt-16 h-[calc(100vh_-_4rem)]'),
