@@ -376,7 +376,7 @@ const CreateEvent: FC<CreateEventProps> = ({
         className="w-full flex flex-col justify-between h-full min-h-0"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="flex-1 min-h-0 overflow-y-auto gap-5 pr-2 flex flex-col pb-4">
+        <div className="flex-1 min-h-0 overflow-y-auto gap-4 pr-2 flex flex-col pb-4">
           <Input
             {...register('name')}
             placeholder={'Enter Topic'}
@@ -384,6 +384,7 @@ const CreateEvent: FC<CreateEventProps> = ({
             label={'Meeting Topic'}
             error={errors?.name?.message}
             maxLength={50}
+            className="rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50 focus:border-primary"
           />
 
           <div className="flex gap-4">
@@ -474,11 +475,16 @@ const CreateEvent: FC<CreateEventProps> = ({
           </div>
           <div className="flex flex-col gap-3">
             <Label>Estimated Duration</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {durationOptions?.map((item: any) => (
                 <div
+                  key={item.value}
                   onClick={() => setDuration(item.value)}
-                  className={`border border-gray-200 rounded-xl p-2 cursor-pointer text-sm hover:bg-primary hover:text-white ${duration === item.value ? 'bg-primary text-white' : 'bg-white text-gray-900'}`}
+                  className={`border rounded-full px-3.5 py-1.5 cursor-pointer text-sm font-medium transition-colors ${
+                    duration === item.value
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-white text-[#2E2D35] border-[rgba(225,200,165,0.9)] hover:border-primary/50 hover:bg-[#fff1e0]'
+                  }`}
                 >
                   {item.label}
                 </div>
@@ -486,8 +492,8 @@ const CreateEvent: FC<CreateEventProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col ">
-            <div className="flex items-center justify-between min-h-10">
+          <div className="flex flex-col gap-1 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#FBE2C8]/10 px-4 py-1">
+            <div className="flex items-center justify-between min-h-12">
               <Label>Allow join meeting before host</Label>
               <Switch
                 className="cursor-pointer"
@@ -498,7 +504,7 @@ const CreateEvent: FC<CreateEventProps> = ({
               />
             </div>
 
-            <div className=" flex items-center justify-between min-h-10 mb-4">
+            <div className="flex items-center justify-between min-h-12 border-t border-[rgba(225,200,165,0.6)]">
               <Label>Need Password to join meeting</Label>
               <div className=" flex gap-3 items-center">
                 {watch('need_password') === 'Yes' && (
@@ -508,6 +514,7 @@ const CreateEvent: FC<CreateEventProps> = ({
                       placeholder={'Enter Password'}
                       error={errors?.pin?.message}
                       maxLength={13}
+                      className="rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50 focus:border-primary"
                     />
                   </div>
                 )}
@@ -575,7 +582,7 @@ const CreateEvent: FC<CreateEventProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-[rgba(225,200,165,0.9)] pt-4 mt-1">
           <Button variant={'transparent'} type="button" onClick={() => setDrawerState(false)}>
             Cancel
           </Button>

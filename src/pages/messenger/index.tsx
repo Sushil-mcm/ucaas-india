@@ -1256,7 +1256,7 @@ const SidebarContent = ({
 
       <div className="px-2.5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100 bg-[#FBE2C8]/10">
         <Input
-          Icon={<SearchLine className="text-[#9A948F] w-4 h-4 shrink-0" />}
+          Icon={<SearchLine className="text-gray-500 w-4 h-4 shrink-0" />}
           IconPosition="left-0 pl-3 inset-y-0"
           className="pl-9 rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50"
           value={searchQuery}
