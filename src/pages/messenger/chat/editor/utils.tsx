@@ -221,7 +221,7 @@ export const Button = React.forwardRef<
     {...props}
     ref={ref}
     className={`${className || ''} cursor-pointer rounded ${
-      active ? 'bg-gray-300 text-gray-900' : 'text-gray-500 hover:bg-gray-200'
+      active ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
     }`}
   />
 ));
@@ -288,7 +288,7 @@ export const Toolbar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTM
       <Menu
         {...props}
         ref={ref}
-        className={`flex items-center gap-2 p-2 pl-3 bg-gray-100 rounded-t-md transition-all duration-500 ease-out ${
+        className={`flex items-center gap-2 p-2 pl-3 bg-white rounded-t-md transition-all duration-500 ease-out ${
           isVisible ? 'opacity-100' : 'opacity-0'
         } ${className}`}
         style={{
