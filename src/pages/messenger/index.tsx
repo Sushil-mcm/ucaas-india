@@ -1,5 +1,6 @@
 import { SearchLine, UserLine, UsersGroupLine, FilterIcon, LetterOpenedLine } from '@/assets/icons';
 import CustomAvatar from '@/components/custom/custom-avatar';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 import CreateDirectChat from './drawers/create-direct-chat';
 import CreateTeamChat from './drawers/create-team-chat';
 import { useCompanyFeatures } from '@/hooks/rbac';
@@ -17,6 +18,7 @@ import {
   Bell,
   BellOff,
   EllipsisVertical,
+  Info,
   Pin,
   PinOff,
   MessageSquareIcon,
@@ -45,7 +47,12 @@ import useDebounce from '@/hooks/use-debounce';
 import { useLoadMoreUsersObserver, useMessengerUsers } from './hooks/use-messenger-users';
 import '@/components/mcm/mcm-page.css';
 import '@/styles/warm-glass.css';
-import ActivityPageHead from '@/components/custom/activity-page-head';
+/* `.mcm-actpage`'s own layout CSS (width:100%, the #FEF8F1 fallback
+   background) lives in activity-page-head.css, only ever pulled in by
+   importing the ActivityPageHead component. Dropping that import above
+   also dropped this page's only route to that CSS — Phone hit the exact
+   same bug the same way. Import the stylesheet directly instead. */
+import '@/components/custom/activity-page-head.css';
 
 type ChannelType = keyof typeof CHANNELS_ICON;
 
@@ -1111,17 +1118,38 @@ const SidebarContent = ({
 
   return (
     <div className="relative w-full h-full min-h-0 bg-white flex flex-col">
+      {/* The page-wide ActivityPageHead sat above the sidebar+content columns
+          as its own full-width row, so the sidebar's border-right only ever
+          spanned the body below it, never that row — it read as a gap before
+          the divider "started". Same fix as Phone: drop the shared head and
+          put the title here, inside the column it actually belongs to. */}
+      <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
+        <h2 className="text-lg font-bold text-[#2E2D35]">{pageTitle}</h2>
+        <CustomTooltip
+          text="Team and customer conversations across every channel you have connected."
+          side="bottom"
+          className="max-w-xs"
+        >
+          <button
+            type="button"
+            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-[#9A948F] transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+            aria-label={`About ${pageTitle}`}
+          >
+            <Info size={13} aria-hidden="true" />
+          </button>
+        </CustomTooltip>
+      </div>
       {!isAgentChat ? (
         <div className="border-b border-[#EEE7DD] px-2 py-2">
           <div className="flex min-h-9 items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar rounded-full bg-[#FBE2C8]/25 p-1">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar rounded-full bg-primary/10 border border-primary/20 p-1">
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     activeTab === tab.value
-                      ? 'text-primary bg-primary/15 shadow-sm'
-                      : 'text-[#2E2D35]/70 hover:bg-white/70 hover:text-primary'
+                      ? 'text-white bg-primary shadow-sm'
+                      : 'text-[#2E2D35]/70 hover:text-primary'
                   }`}
                   onClick={() => {
                     setActiveTab(tab.value);
@@ -1454,10 +1482,6 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
 
   return (
     <div className="mcm-actpage">
-      <ActivityPageHead
-        title={isAgentChat ? 'Agent Chat' : 'Chat'}
-        description="Team and customer conversations across every channel you have connected."
-      />
       <div className="mcm-page mcm-admin mcm-warm-glass">
       <div className="w-full h-full min-h-0 flex overflow-hidden bg-white">
         {chatType === 'chat' ? (
