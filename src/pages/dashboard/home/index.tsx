@@ -92,6 +92,21 @@ const STATE_COLOR: Record<string, string> = {
   Offline: 'var(--ink-4)',
 };
 
+/* Same hues as STATE_COLOR, lightened -- for the wide segmented bar only.
+ * A small dot or pill reads fine at full saturation, but the same colour
+ * across a tall bar looked heavier than the rest of the card's soft
+ * palette, so the bar gets a lighter tint while the dots/pills next to it
+ * keep the true colour. */
+const STATE_BAR_COLOR: Record<string, string> = {
+  'On Call': '#f7c896',
+  Ringing: '#e8bb8a',
+  'On Hold': '#e8bb8a',
+  Available: '#7fd4c7',
+  Busy: '#f7c896',
+  'Do Not Disturb': '#e0ac7a',
+  Offline: '#c3cbdb',
+};
+
 /* Existing wash tokens (mcm-page.css), reused as each state card's tint --
  * matches the card border/background family already used for tags and
  * status pills elsewhere instead of computing a tint at render time. */
@@ -891,16 +906,23 @@ const Home = () => {
 
                     {(() => {
                       const digestRows = [
-                        { label: 'Voicemails today', value: voicemails, color: 'var(--accent)' },
+                        {
+                          label: 'Voicemails today',
+                          value: voicemails,
+                          color: 'var(--accent)',
+                          barColor: '#f7c896',
+                        },
                         {
                           label: 'Missed calls today',
                           value: missedRows.length,
                           color: 'var(--crit, #d32f2f)',
+                          barColor: '#f0a8a5',
                         },
                         {
                           label: 'Callers still waiting',
                           value: waitingCalls.length,
                           color: '#7c3aed',
+                          barColor: '#c4b5f7',
                         },
                       ];
                       const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
@@ -912,7 +934,7 @@ const Home = () => {
                                 <span
                                   style={{
                                     width: `${Math.max(3, (row.value / max) * 100)}%`,
-                                    background: row.color,
+                                    background: row.barColor,
                                   }}
                                 />
                               </div>
@@ -1199,7 +1221,7 @@ const Home = () => {
                       className="dist-bar-seg"
                       style={{
                         width: `${slice.pct}%`,
-                        background: STATE_COLOR[slice.state] || 'var(--ink-4)',
+                        background: STATE_BAR_COLOR[slice.state] || '#c3cbdb',
                       }}
                     >
                       {slice.pct >= 10 ? `${slice.pct}%` : null}
