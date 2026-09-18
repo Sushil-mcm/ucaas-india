@@ -461,7 +461,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 16px;
+  padding: 0 16px 14px;
   margin-top: 4px;
 }
 .home-v2 .comms-tab {
