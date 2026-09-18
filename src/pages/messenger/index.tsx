@@ -522,7 +522,7 @@ const ListItem = ({
                     <EllipsisVertical width={16} height={16} />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white/95 backdrop-blur-[12px] rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[220px]">
+                <DropdownMenuContent className="bg-white/95 backdrop-blur-[12px] rounded-xl shadow-lg p-1.5 min-w-[220px]">
                   <DropdownMenuItem
                     className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg transition-colors hover:bg-primary/10"
                     onClick={(e) => {
@@ -1174,7 +1174,7 @@ const SidebarContent = ({
                       <Plus width={18} height={18} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[200px]">
+                  <DropdownMenuContent className="bg-white rounded-xl shadow-lg p-1.5 min-w-[200px]">
                     {chatAccess?.access?.DIRECT_MESSAGE && (
                       <DropdownMenuItem
                         className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg focus:bg-primary/10 focus:text-primary"
@@ -1217,7 +1217,7 @@ const SidebarContent = ({
                     <FilterIcon className="w-6 h-6" />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[180px]">
+                <DropdownMenuContent className="bg-white rounded-xl shadow-lg p-1.5 min-w-[180px]">
                   {ChatChannels?.map((item: any, index: number) => {
                     return (
                       <DropdownMenuItem
