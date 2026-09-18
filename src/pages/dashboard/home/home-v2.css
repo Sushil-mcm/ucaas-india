@@ -269,9 +269,10 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  /* Pushed to the row's far end instead of sitting close to the value --
-     fills the tile's width instead of leaving it empty on the right. */
-  margin-left: auto;
+  /* A fixed offset from the value, not margin-left: auto -- auto pushed it
+     all the way to the tile's actual edge, which on a wide tile left a
+     huge empty gap in the middle instead of a filled-looking card. */
+  margin-left: 28px;
 }
 .home-v2 .kpi-chart-donut-label {
   position: absolute;
