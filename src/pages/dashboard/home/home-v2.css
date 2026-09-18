@@ -80,8 +80,17 @@
    rule (mcm-page.css) is overridden here since Home's own version isn't a
    single row any more. */
 .mcm-page.home-v2 .kpis.kpis-with-hero {
-  grid-template-columns: minmax(200px, 260px) repeat(4, 1fr);
+  /* The hero column is capped (max 260px) but the 4 KPI columns were plain
+     1fr -- uncapped, so any extra viewport width (a wider window, or the
+     browser zoomed out) went entirely into the KPI columns instead of
+     being shared, making each tile noticeably wider and throwing off the
+     On Queue / On a Call Now donut's distance from its number depending on
+     zoom level. Capping them the same way keeps every tile a consistent
+     width regardless of viewport, and centering the grid absorbs any
+     leftover width instead of stretching the columns further. */
+  grid-template-columns: minmax(200px, 260px) repeat(4, minmax(200px, 300px));
   grid-template-rows: repeat(2, 1fr);
+  justify-content: center;
   /* Real gaps between separate rounded cards, not a joined strip with
      hairline dividers -- the shared `.kpis` rule (mcm-page.css) draws that
      strip via a 1px gap over a single bordered background, which is what
