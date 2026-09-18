@@ -102,6 +102,22 @@
   border-radius: 0;
   overflow: visible;
 }
+/* Below ~1300px there isn't room for 5 columns each at least 200px wide,
+   and this grid had no fallback at all -- the fixed column minimums just
+   forced the whole grid wider than the viewport, and centering an
+   overflowing grid is what made it look inset from the full-width cards
+   above and below it instead of lining up with them. The hero becomes a
+   normal full-width block above the tiles, which reflow on their own. */
+@media (max-width: 900px) {
+  .mcm-page.home-v2 .kpis.kpis-with-hero {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-rows: none;
+  }
+  .home-v2 .kpi-hero {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
 .home-v2 .kpi-hero {
   grid-row: 1 / 3;
   position: relative;
