@@ -485,15 +485,11 @@
   /* Flexbox, not grid: a CSS Grid `1fr` track left a real unpainted gap
      after the last column at browser zoom levels other than 100% (the
      `fr` distribution came up short of the container's actual width).
-     Flexbox's `flex-grow` doesn't have that failure mode, so the panel
-     column (see its own comment) grows to fill whatever's left while
-     the other two keep a fixed preferred width and only shrink, never
-     grow past it. `justify-content: center` is the fallback for once
-     even panel hits ITS max — any width past that (all three columns
-     at their widest) is now a small margin split on both sides,
-     instead of one gap dumped entirely on the right. */
+     Flexbox's `flex-grow` doesn't have that failure mode. calls is the
+     only capped column; stage and panel both grow uncapped and split
+     whatever's left between them, so there's never leftover width for a
+     gap to appear in — no justify-content fallback needed either. */
   display: flex;
-  justify-content: center;
   height: 100%;
   overflow: hidden;
 }
@@ -507,27 +503,24 @@
   max-width: 420px;
 }
 .mcm-console .col.stage {
-  /* Grows too now, alongside panel below — a wide-enough viewport still
-     left a sliver of gap on the right with panel as the only grower. */
+  /* Grows alongside panel below, with no cap on either — capping both
+     still left a sliver of gap once the viewport was wide enough to
+     push both to their max, and centering that gap (justify-content)
+     just moved it to both sides instead of removing it. calls is the
+     one column capped (max-width below): it has a real upper limit to
+     staying readable/useful. Stage and panel don't — a wide dialpad and
+     a wide copilot panel are still just fine, so letting them grow
+     freely is what actually gets rid of the gap instead of shrinking it. */
   flex: 1 1 520px;
   min-width: 420px;
-  max-width: 600px;
 }
 .mcm-console .col.panel-col {
   /* Wide enough that all six tabs (Copilot, Summary, Transcript, Notes,
      History, Contact) fit in one row — any narrower and the strip has to
-     scroll, cutting "Contact" off at the edge.
-
-     Capping the call list (max-width above) took away the column that
-     used to be the sole flex-grow:1 absorber of leftover width, which
-     brought back the old trailing-gap-on-the-right bug (nothing left to
-     fill the space, calls/stage/panel all hit their max and stopped).
-     Panel takes over that job now — grow, but still capped, so it
-     doesn't regress to swallowing the whole screen the way the
-     uncapped 1fr version once did. */
+     scroll, cutting "Contact" off at the edge. See .col.stage above for
+     why this one has no max-width either. */
   flex: 1 1 540px;
   min-width: 460px;
-  max-width: 640px;
 }
 .mcm-console .col {
   display: flex;
