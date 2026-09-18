@@ -1142,7 +1142,7 @@ const SidebarContent = ({
                   key={tab.value}
                   className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap border transition-colors cursor-pointer ${
                     activeTab === tab.value
-                      ? 'text-primary bg-primary/[0.14] border-primary/30 shadow-sm'
+                      ? 'text-primary bg-primary/[0.14] border-[#ffd9ad] shadow-sm'
                       : 'text-[#2E2D35]/70 border-transparent hover:text-primary'
                   }`}
                   onClick={() => {
