@@ -1142,13 +1142,13 @@ const SidebarContent = ({
       {!isAgentChat ? (
         <div className="border-b border-[#EEE7DD] px-2 py-2">
           <div className="flex min-h-9 items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto no-scrollbar rounded-full bg-primary/10 border border-primary/20 p-1">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto no-scrollbar rounded-lg bg-white border border-gray-200 p-0.5">
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
                     activeTab === tab.value
-                      ? 'text-white bg-primary shadow-sm'
+                      ? 'text-primary bg-primary/[0.14] shadow-sm'
                       : 'text-[#2E2D35]/70 hover:text-primary'
                   }`}
                   onClick={() => {
