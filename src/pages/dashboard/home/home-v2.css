@@ -80,17 +80,16 @@
    rule (mcm-page.css) is overridden here since Home's own version isn't a
    single row any more. */
 .mcm-page.home-v2 .kpis.kpis-with-hero {
-  /* The hero column is capped (max 260px) but the 4 KPI columns were plain
-     1fr -- uncapped, so any extra viewport width (a wider window, or the
-     browser zoomed out) went entirely into the KPI columns instead of
-     being shared, making each tile noticeably wider and throwing off the
-     On Queue / On a Call Now donut's distance from its number depending on
-     zoom level. Capping them the same way keeps every tile a consistent
-     width regardless of viewport, and centering the grid absorbs any
-     leftover width instead of stretching the columns further. */
-  grid-template-columns: minmax(200px, 260px) repeat(4, minmax(200px, 300px));
+  /* Capping the 4 KPI columns (instead of plain 1fr) fixed the donut's
+     zoom-dependent spacing, but it also capped the whole row's width --
+     on a screen wider than the cap, centering left the entire hero+tiles
+     block visibly inset from the page's edges while every sibling card
+     (Quick Actions, Needs You Now, ...) still stretched full width. Back
+     to 1fr so this row matches its siblings; the donut spacing is capped
+     inside the tile itself instead (`.kpi-value-row:has(.kpi-chart-donut)`
+     below), which doesn't require capping the column. */
+  grid-template-columns: minmax(200px, 260px) repeat(4, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  justify-content: center;
   /* Real gaps between separate rounded cards, not a joined strip with
      hairline dividers -- the shared `.kpis` rule (mcm-page.css) draws that
      strip via a 1px gap over a single bordered background, which is what
@@ -255,6 +254,13 @@
    fills the same tile height every other KPI's sparkline already fills. */
 .home-v2 .kpi-value-row:has(.kpi-chart-donut) .v {
   font-size: 34px;
+}
+/* Capped so the value-to-ring gap stays fixed no matter how wide the
+   tile's own 1fr column happens to render (the KPI columns went back to
+   1fr to keep this row full width like every sibling card) -- without
+   this, a wide tile would push the ring far from its number again. */
+.home-v2 .kpi-value-row:has(.kpi-chart-donut) {
+  max-width: 260px;
 }
 /* On Queue's own "of 15" -- a short fraction right under the value, only
    set where the metric has a natural one (see `compactSub`, index.tsx). */
