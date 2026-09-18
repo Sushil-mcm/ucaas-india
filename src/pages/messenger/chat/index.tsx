@@ -3817,6 +3817,7 @@ export const ChatFooter = ({
           isHeader={true}
           width="min(480px,calc(100vw-2rem))"
           centered
+          portal
         />
       )}
 
