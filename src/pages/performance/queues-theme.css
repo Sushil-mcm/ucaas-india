@@ -276,14 +276,20 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   color: #c96f1f;
 }
 .mcm-page .perf-queues .queue-overview-head h3 {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 800;
   color: #1a1a1a;
   margin: 0;
 }
 .mcm-page .perf-queues .queue-overview-body {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  /* Was 1.3fr 1fr — the stats column now holds fixed-width 232px cards
+     (see .queue-overview-stat), so a flexible 1fr column reserved far
+     more width than those two columns of cards actually use, leaving a
+     dead gap between them and the panel's right edge. `auto` sizes the
+     column to its real content instead, and the hero (still `1fr`)
+     absorbs whatever width that frees up. */
+  grid-template-columns: 1fr auto;
   gap: 16px;
 }
 @media (max-width: 1180px) {
