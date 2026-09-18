@@ -3441,7 +3441,7 @@ export const ChatFooter = ({
         'transition-colors',
         hasAttachmentPreview
           ? 'absolute inset-0 z-20 flex h-full min-h-0 w-full flex-col bg-[#edf1f6]'
-          : `w-full shrink-0 bg-[rgba(255,255,255,0.86)] backdrop-blur-[12px] px-2 py-2.5 relative flex flex-col ${typingText ? 'gap-0' : 'gap-3'} border-t border-[rgba(225,200,165,0.9)] shadow-[0_-2px_10px_rgba(46,45,53,0.04)]`,
+          : `w-full shrink-0 bg-[rgba(255,255,255,0.86)] backdrop-blur-[12px] px-2 py-2.5 relative flex flex-col ${typingText ? 'gap-0' : 'gap-3'} border-t border-[rgba(225,200,165,0.9)]`,
         isDragOver ? 'bg-ucass-active-bg ring-2 ring-primary/20 ring-inset' : '',
       )}
     >
