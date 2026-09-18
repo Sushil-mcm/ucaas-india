@@ -471,6 +471,14 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
    5. Main queues table — 20px frosted glass card, sticky frosted header,
    Directory's signature left accent-bar row hover.
    ------------------------------------------------------------ */
+/* "Queues" itself — the shared `.sect-title` base (mcm-page.css) is an
+   11px uppercase label sized for a dense sub-heading, not a real section
+   title. Scoped bump here rather than touching the shared rule, which
+   plenty of other Performance/Admin sections also use at its original
+   size. */
+.mcm-page .perf-queues .sect-title {
+  font-size: 15px;
+}
 /* `.mcm-page table` (mcm-page.css) already sets `border-collapse: collapse`,
    but restating it here, scoped and `!important`, makes explicit that the
    row divider below depends on it: under collapse, each td's own
@@ -488,14 +496,14 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
      under the header, where this box's own top corners traced against
      the header's straight bottom edge. */
   border-radius: 0 0 20px 20px;
-  /* The warm-orange hairline every other Performance card frame uses
-     (`rgba(249,115,22,0.16)`), not the older `rgba(225,200,165,0.9)` tan
-     border this table had settled on — the two read as slightly different
-     card families side by side once Live/Campaigns/Agents standardized on
-     the orange hairline. */
-  border: 1px solid rgba(249, 115, 22, 0.16);
+  /* Directory ▸ People's own border/shadow (--glass-border, .panel-card
+     in mcm-page.css/people-glass.css) — a tan hairline, not the
+     orange-tinted one Live/Campaigns/Agents standardized on. Explicitly
+     asked to match Directory here, even though that means this table's
+     frame no longer matches its Performance siblings exactly. */
+  border: 1px solid rgba(225, 200, 165, 0.9);
   background: #fffdfb;
-  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.12);
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
 }
 /* TableManager wraps `.table-scroll` in its own outer div (table-
    manager.tsx: `rounded-xl border ... overflow-hidden`) — that outer div,
@@ -547,30 +555,31 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
    split header's own single-row table doesn't share that fractional
    layout chain, so the identical value renders crisp here (verified
    against Performance ▸ Calls, `.perf-interactions`, which uses this same
-   splitStickyHeader + plain-`thead` pattern and the exact same rgba). */
+   splitStickyHeader + plain-`thead` pattern and the exact same rgba).
+
+   Re-checked against Directory ▸ People's *current* `.gp-people th`
+   (people-glass.css) rather than trusting the numbers this comment
+   recorded on 2026-09-07 — People's own header has since moved to a
+   light-cream background and darker text (see that file's own
+   commentary), which this table hadn't picked up. Every value below is
+   copied from that file as it stands today. */
 .mcm-page .perf-queues thead {
-  background: #fffdfb;
+  background: #fff6e9;
   box-shadow: none;
 }
 .dark .mcm-page .perf-queues thead {
   background: rgba(23, 15, 10, 0.97);
 }
-/* Header text was 9.5px sitting directly above 14-15px row content — a
-   supervisor's eye had to jump a visible size gap going from label to
-   value. Scaled up to 11px (with a slightly lighter 750 weight, since
-   800 at 11px started reading heavy/blocky rather than crisp) and given
-   an explicit 40px row height so the header keeps a fixed, generous
-   band regardless of font metrics. */
 .mcm-page .perf-queues thead th {
-  color: #8a6f57 !important;
-  font-size: 11px !important;
-  font-weight: 750 !important;
-  letter-spacing: 0.07em !important;
+  color: #1a1a1a !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.09em !important;
   text-transform: uppercase !important;
   white-space: nowrap;
   height: 40px;
   padding: 0 12px !important;
-  border-bottom: 2px solid rgba(242, 153, 74, 0.25) !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4) !important;
   background: transparent;
 }
 .mcm-page .perf-queues thead th:first-child {
@@ -589,9 +598,12 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
     background-color 0.16s ease,
     box-shadow 0.16s ease;
 }
+/* Directory ▸ People's exact row-hover wash (.gp-people tbody tr:hover) —
+   lighter than this table's previous 0.22-alpha peach, and var(--accent)
+   for the left bar instead of a hardcoded #ea580c. */
 .mcm-page .perf-queues .table-scroll tbody tr:hover {
-  background: rgba(254, 215, 170, 0.22) !important;
-  box-shadow: inset 3px 0 0 #ea580c !important;
+  background: rgba(255, 241, 235, 0.55) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
 }
 .mcm-page .perf-queues .table-scroll tbody td {
   padding-top: 13px;
@@ -605,13 +617,17 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
      rasterizer all but drops — a real border-bottom stays invisible on
      screen no matter how opaque its color. `box-shadow` isn't part of
      that collapse model, so it paints at its full specified 1px
-     regardless of the table's collapse rounding — same sleek, light
-     warm-orange-100 hairline, just actually visible. Needs !important to
-     outrank the base `.mcm-page td` border-bottom (mcm-page.css) and the
-     tr-level border-color set just above. */
+     regardless of the table's collapse rounding — same technique, now
+     Directory's own `.gp-people td` divider colour (rgba(150,100,50,0.1))
+     instead of the arbitrary Tailwind orange-100 this used before. Needs
+     !important to outrank the base `.mcm-page td` border-bottom
+     (mcm-page.css) and the tr-level border-color set just above. */
   border-bottom: none !important;
-  box-shadow: inset 0 -1px 0 0 #fed7aa !important;
-  color: #334155;
+  box-shadow: inset 0 -1px 0 0 rgba(150, 100, 50, 0.1) !important;
+  /* Was the hardcoded #334155 (slate-700) — Directory's own rows set no
+     colour of their own, inheriting `.mcm-page`'s var(--ink) (#0d1526),
+     noticeably darker than this table's old value. */
+  color: var(--ink);
   /* Row content was inheriting the console's base 14-15px body size,
      visibly oversized next to an (also since-fixed) 9.5px header — 13px
      is the Directory-benchmark row size the rest of Performance's tables
