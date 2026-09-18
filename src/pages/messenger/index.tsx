@@ -1174,26 +1174,31 @@ const SidebarContent = ({
                       <Plus width={18} height={18} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
+                  <DropdownMenuContent className="bg-white rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[200px]">
                     {chatAccess?.access?.DIRECT_MESSAGE && (
                       <DropdownMenuItem
-                        className="cursor-pointer"
+                        className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg focus:bg-primary/10 focus:text-primary"
                         onClick={() => {
                           setShowCreateChatModal('direct');
                         }}
                       >
-                        <UserLine className="text-[#2E2D35] w-8 h-8" /> Direct Message
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-focus:bg-primary/15 group-focus:text-primary">
+                          <UserLine className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="text-[#2E2D35] group-focus:text-primary">Direct Message</span>
                       </DropdownMenuItem>
                     )}
                     {chatAccess?.access?.TEAM_MESSAGE && (
                       <DropdownMenuItem
-                        className="cursor-pointer"
+                        className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg focus:bg-primary/10 focus:text-primary"
                         onClick={() => {
                           setShowCreateChatModal('team');
                         }}
                       >
-                        <UsersGroupLine className="text-[#2E2D35] w-8 h-8" />
-                        Create New Team
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FBE2C8]/40 text-[#9A948F] transition-colors group-focus:bg-primary/15 group-focus:text-primary">
+                          <UsersGroupLine className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="text-[#2E2D35] group-focus:text-primary">Create New Team</span>
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
@@ -1212,11 +1217,12 @@ const SidebarContent = ({
                     <FilterIcon className="w-6 h-6" />
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1.5 min-w-[180px]">
                   {ChatChannels?.map((item: any, index: number) => {
                     return (
                       <DropdownMenuItem
                         key={index}
+                        className="flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg text-[#2E2D35] focus:bg-primary/10 focus:text-primary [&_svg]:text-[#9A948F] focus:[&_svg]:text-primary"
                         onClick={() => {
                           setChatType(item.value);
                           setselectedChannelType(item);
@@ -1230,6 +1236,7 @@ const SidebarContent = ({
                     ? allowedOmniChannels.map((item: any, index: number) => (
                         <DropdownMenuItem
                           key={index}
+                          className="flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg text-[#2E2D35] focus:bg-primary/10 focus:text-primary [&_svg]:text-[#9A948F] focus:[&_svg]:text-primary"
                           onClick={() => {
                             setChatType(item.type);
                             setselectedChannelType(item);
@@ -1249,7 +1256,7 @@ const SidebarContent = ({
 
       <div className="px-2.5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100 bg-[#FBE2C8]/10">
         <Input
-          Icon={<SearchLine className="text-[#9A948F]" />}
+          Icon={<SearchLine className="text-[#9A948F] w-4 h-4 shrink-0" />}
           IconPosition="left-0 pl-3 inset-y-0"
           className="pl-9 rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50"
           value={searchQuery}
