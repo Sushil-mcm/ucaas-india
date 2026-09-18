@@ -29,10 +29,9 @@
                                 so nothing to wire here.
 
    Every selector below is chained through `.mcm-page .perf-queues` (three
-   classes) specifically so it outranks the plain `.mcm-page .kpi-strip` /
-   `.mcm-page .stat` rules defined inline in queues-activity-tab.tsx and
-   mcm-page.css — regardless of which stylesheet the bundler happens to
-   place later in the document.
+   classes) specifically so it outranks the plain `.mcm-page .stat` rules
+   defined inline in queues-activity-tab.tsx and mcm-page.css — regardless
+   of which stylesheet the bundler happens to place later in the document.
    ============================================================ */
 
 .perf-queues,
@@ -244,57 +243,244 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
 }
 
 /* ------------------------------------------------------------
-   3. Seven-metric snapshot strip (Busiest queue / Callbacks waiting /
-   Longest waiting / Lowest SLA / Total members / Available now / Total
-   interacting) — third pass. Icon-badge cards, then a table, were both
-   tried and rejected: the cards read as more KPI tiles, and the table
-   still split into two visually competing zones (a dense label row, a
-   bold value row) across 7 crowded columns. This is a single calm line
-   of "label: value" pairs, wrapping naturally, one weight of text
-   throughout instead of a header/value split. */
-.mcm-page .perf-queues .kpi-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  row-gap: 6px;
+   3. Queue Overview — fourth pass on this strip. A row of icon-badge
+   cards, then a plain table, then a single flowing text line were all
+   tried; this one follows a specific reference layout instead: a header,
+   a hero card (busiest queue + its real hourly wave, peak-hour marker)
+   beside a 2-column grid of the other six figures, closing with a tip
+   banner that surfaces whichever real condition is worth flagging.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .queue-overview {
   background: #fff;
   border: 1px solid rgba(225, 200, 165, 0.7);
-  border-radius: 14px;
-  padding: 14px 18px;
-  font-size: 13px;
-  line-height: 1.4;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--qa-glass-shadow);
 }
-.mcm-page .perf-queues .kpi-strip-item {
+.mcm-page .perf-queues .queue-overview-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mcm-page .perf-queues .queue-overview-head-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: #fff1e0;
+  color: #c96f1f;
+}
+.mcm-page .perf-queues .queue-overview-head h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+}
+.mcm-page .perf-queues .queue-overview-head p {
+  font-size: 12.5px;
+  color: #8a7a68;
+  margin: 1px 0 0;
+}
+.mcm-page .perf-queues .queue-overview-body {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1180px) {
+  .mcm-page .perf-queues .queue-overview-body {
+    grid-template-columns: 1fr;
+  }
+}
+.mcm-page .perf-queues .queue-overview-hero {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #fff6e9 0%, #fdf1e2 100%);
+  border: 1px solid rgba(242, 153, 74, 0.18);
+  border-radius: 14px;
+  padding: 16px;
+  min-height: 260px;
+}
+.mcm-page .perf-queues .queue-overview-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mcm-page .perf-queues .queue-overview-hero-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a7a68;
+}
+.mcm-page .perf-queues .queue-overview-hero-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-top: 2px;
+}
+.mcm-page .perf-queues .queue-overview-hero-badge {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.3);
+  color: #c2410c;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.mcm-page .perf-queues .queue-overview-hero-sub {
+  font-size: 12px;
+  color: #8a7a68;
+  margin-top: 6px;
+}
+.mcm-page .perf-queues .queue-overview-chart {
+  flex: 1;
+  min-height: 140px;
+  margin-top: 8px;
+}
+.mcm-page .perf-queues .queue-overview-chart-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8a7a68;
+}
+.mcm-page .perf-queues .queue-overview-peak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid rgba(225, 200, 165, 0.7);
+  box-shadow: 0 4px 10px rgba(160, 95, 30, 0.15);
+  font-size: 10px;
   white-space: nowrap;
 }
-.mcm-page .perf-queues .kpi-strip-sep {
-  color: rgba(138, 122, 104, 0.5);
-  margin: 0 12px;
-}
-.mcm-page .perf-queues .kpi-strip-label {
+.mcm-page .perf-queues .queue-overview-peak-t {
   color: #8a7a68;
   font-weight: 600;
 }
-.mcm-page .perf-queues .kpi-strip-value {
+.mcm-page .perf-queues .queue-overview-peak-v {
   color: #1a1a1a;
   font-weight: 800;
+  font-size: 11px;
 }
-.mcm-page .perf-queues .kpi-strip-value-danger,
-.mcm-page .perf-queues .kpi-strip-value.kpi-strip-breach {
-  color: #e11d48 !important;
+.mcm-page .perf-queues .queue-overview-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-content: start;
 }
-.mcm-page .perf-queues .kpi-strip-sub {
+.mcm-page .perf-queues .queue-overview-stat {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+}
+.mcm-page .perf-queues .queue-overview-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 999px;
+}
+.mcm-page .perf-queues .queue-overview-stat-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mcm-page .perf-queues .queue-overview-stat-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4a4238;
+}
+.mcm-page .perf-queues .queue-overview-stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+.mcm-page .perf-queues .queue-overview-stat-sub {
+  font-size: 10.5px;
   color: #8a7a68;
-  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-@media (max-width: 1180px) {
-  .mcm-page .perf-queues .kpi-strip-sep {
-    display: none;
+.mcm-page .perf-queues .queue-overview-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #fff6e9 0%, #fdf1e2 100%);
+  border: 1px solid rgba(242, 153, 74, 0.18);
+}
+.mcm-page .perf-queues .queue-overview-tip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 999px;
+  background: #fff1e0;
+  color: #c96f1f;
+}
+.mcm-page .perf-queues .queue-overview-tip-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: #6b5c4d;
+}
+.mcm-page .perf-queues .queue-overview-tip-body strong {
+  color: #1a1a1a;
+  font-size: 13.5px;
+}
+.mcm-page .perf-queues .queue-overview-tip-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #f2994a;
+  color: #c96f1f;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.mcm-page .perf-queues .queue-overview-tip-cta:hover {
+  background: #fff1e0;
+}
+@media (max-width: 640px) {
+  .mcm-page .perf-queues .queue-overview-stats {
+    grid-template-columns: 1fr;
   }
-  .mcm-page .perf-queues .kpi-strip-item {
-    flex: 1 1 45%;
+  .mcm-page .perf-queues .queue-overview-tip {
+    flex-wrap: wrap;
   }
 }
 

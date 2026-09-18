@@ -8,6 +8,9 @@ import {
   Target,
   Gauge,
   PhoneMissed,
+  PhoneForwarded,
+  Activity,
+  MessageCircle,
 } from 'lucide-react';
 import moment from 'moment';
 import TableManager from '@/components/custom/table-manager';
@@ -16,6 +19,7 @@ import { isMonitoringCallForMember } from '@/pages/monitoring/live-call-helpers'
 import { useQueueSeries } from '@/hooks/use-queue-series';
 import { bucketLabel } from '@/lib/queue-series';
 import { QueueHeatmap } from '@/pages/dashboard/home/charts';
+import QueueOverviewPanel from './queue-overview-panel';
 import PerfStatCard from './stat-card';
 import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { CDR_LIMIT } from '@/hooks/use-call-stats';
@@ -23,7 +27,6 @@ import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
 import type { QueueRow, QueueStats, LiveQueueStats } from './queue-rows';
 import StatusPill, { abandonPillTone, parsePercent, slaPillTone } from './status-pill';
-import KpiStrip from './kpi-strip';
 import './queues-theme.css';
 
 export type { QueueRow } from './queue-rows';
@@ -75,43 +78,6 @@ const QUEUE_TAB_STYLES = `
     border-radius:99px; background:var(--accent-wash); color:var(--accent-ink);
   }
 
-  /* One flat strip, cells divided by hairlines - the queue summary reads as
-     one glanceable line instead of six separate boxed cards. */
-  .mcm-page .kpi-strip {
-    display:flex; align-items:stretch;
-    background:var(--surface); border-radius:16px; overflow:hidden;
-    border:1px solid var(--line);
-    box-shadow: 0 1px 2px rgba(46,45,53,0.05);
-    margin-bottom: 4px;
-  }
-  .mcm-page .kpi-strip-cell {
-    flex:1; min-width:0; padding:14px 16px;
-    display:flex; flex-direction:column; gap:4px;
-    border-left:1px solid var(--line);
-  }
-  .mcm-page .kpi-strip-cell:first-child { border-left:none; }
-  .mcm-page .kpi-strip-cell-breach { background:var(--crit-wash); }
-  .mcm-page .kpi-strip-label {
-    font-size:10.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
-    color:var(--ink-3, #9A948F); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .mcm-page .kpi-strip-value {
-    font-size:26px; font-weight:800; letter-spacing:-0.02em; line-height:1.15;
-    color:var(--ink, #2E2D35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .mcm-page .kpi-strip-value-success { color:var(--live); }
-  .mcm-page .kpi-strip-value-danger { color:var(--crit); }
-  .mcm-page .kpi-strip-sub {
-    font-size:11.5px; color:var(--ink-3, #9A948F);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  @media (max-width: 1180px) {
-    .mcm-page .kpi-strip { flex-wrap:wrap; }
-    .mcm-page .kpi-strip-cell { flex:1 1 33.33%; min-width:150px; border-bottom:1px solid var(--line); }
-  }
-  @media (max-width: 620px) {
-    .mcm-page .kpi-strip-cell { flex:1 1 50%; }
-  }
 `;
 
 const STATUS_STYLES: Record<string, string> = {
@@ -284,6 +250,45 @@ const QueuesActivityTab = ({
   ).length;
 
   const totalInteracting = rows.reduce((sum, row) => sum + row.interacting, 0);
+
+  /* The Queue Overview hero card's own wave — the busiest queue's real
+     series, pulled out of the same heatmapRows already fetched for the
+     heatmap below rather than a second request. */
+  const busiestQueueSeries = useMemo(
+    () => (busiestQueue ? heatmapRows.find((row) => row.name === busiestQueue.name) : null),
+    [heatmapRows, busiestQueue],
+  );
+
+  /* A real observation about the actual numbers, not decorative filler —
+     whichever condition is true first is the one worth surfacing. */
+  const overviewTip = useMemo(() => {
+    if ((callbacksWaitingCount ?? 0) > 0) {
+      return {
+        title: 'Callbacks are piling up',
+        body: `${callbacksWaitingCount} caller${callbacksWaitingCount === 1 ? ' is' : 's are'} waiting to be called back — clearing these keeps abandon rate down.`,
+      };
+    }
+    if (
+      longestWaitingQueue &&
+      longestWaitingQueue.longestWaitTimestamp !== null &&
+      Date.now() - longestWaitingQueue.longestWaitTimestamp > 120_000
+    ) {
+      return {
+        title: 'Someone has been waiting a while',
+        body: `The longest wait right now is in ${longestWaitingQueue.name} — worth a look if nobody's picking up.`,
+      };
+    }
+    if (lowestSlaQueue && (lowestSlaQueue.sla as number) < 60) {
+      return {
+        title: 'Service level is slipping',
+        body: `${lowestSlaQueue.name} is at ${Math.round(lowestSlaQueue.sla as number)}% SLA — below where it should be.`,
+      };
+    }
+    return {
+      title: 'Keep your queue balanced',
+      body: 'Monitor callbacks and waiting time to deliver a better customer experience.',
+    };
+  }, [callbacksWaitingCount, longestWaitingQueue, lowestSlaQueue]);
 
   const columns = [
     {
@@ -629,21 +634,20 @@ const QueuesActivityTab = ({
 
   return (
     <div className="perf-queues flex flex-col gap-3 px-[22px] pt-7 pb-4">
-      <KpiStrip
-        items={[
-          {
-            key: 'busiest',
-            label: 'Busiest queue',
-            value: busiestQueue ? busiestQueue.name : '—',
-            sub: busiestQueue
-              ? busiestQueue.interacting > 0
-                ? `${busiestQueue.interacting} interacting now`
-                : `${busiestQueue.handledToday} handled today`
-              : undefined,
-          },
+      <QueueOverviewPanel
+        queueName={busiestQueue ? busiestQueue.name : null}
+        handledToday={busiestQueue ? busiestQueue.handledToday : null}
+        interacting={busiestQueue ? busiestQueue.interacting : 0}
+        series={busiestQueueSeries?.values ?? []}
+        hourLabels={heatmapColumnLabels}
+        tip={overviewTip}
+        onViewDetails={busiestQueue ? () => setSelectedQueueUuid(busiestQueue.uuid) : undefined}
+        stats={[
           {
             key: 'callbacks-waiting',
-            label: 'Callbacks waiting',
+            icon: PhoneForwarded,
+            color: '#2563eb',
+            label: 'Callbacks Waiting',
             value: callbacksWaitingCount ?? 0,
             sub:
               (callbacksWaitingCount ?? 0) > 0
@@ -652,7 +656,9 @@ const QueuesActivityTab = ({
           },
           {
             key: 'longest-waiting',
-            label: 'Longest waiting',
+            icon: Clock,
+            color: '#f59e0b',
+            label: 'Longest Waiting',
             value:
               longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null ? (
                 <Timer startTime={longestWaitingQueue.longestWaitTimestamp} />
@@ -662,46 +668,38 @@ const QueuesActivityTab = ({
             sub:
               longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null
                 ? longestWaitingQueue.name
-                : undefined,
-            tone:
-              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null
-                ? 'danger'
-                : 'default',
-            breaching: Boolean(
-              longestWaitingQueue && longestWaitingQueue.longestWaitTimestamp !== null,
-            ),
+                : 'within target',
           },
           {
             key: 'lowest-sla',
-            label: 'Lowest SLA today',
+            icon: Activity,
+            color: '#7c3aed',
+            label: 'Lowest SLA Today',
             value: lowestSlaQueue ? `${Math.round(lowestSlaQueue.sla as number)}%` : '—',
-            sub: lowestSlaQueue ? lowestSlaQueue.name : undefined,
-            tone: lowestSlaQueue && (lowestSlaQueue.sla as number) < 60 ? 'danger' : 'default',
+            sub: lowestSlaQueue ? lowestSlaQueue.name : 'no SLA data yet',
           },
           {
             key: 'total-members',
-            label: 'Total members',
+            icon: Users,
+            color: '#10b981',
+            label: 'Total Members',
             value: totalMembers,
             sub: 'across all queues',
           },
           {
             key: 'available-now',
-            label: 'Available now',
+            icon: PhoneCall,
+            color: '#db2777',
+            label: 'Available Now',
             value: totalAvailable,
             sub: 'free to take a call',
           },
           {
             key: 'total-interacting',
-            label: 'Total interacting',
-            value:
-              totalInteracting > 0 ? (
-                <span className="live-pulse-dot-wrap">
-                  <span className="live-pulse-dot" />
-                  {totalInteracting}
-                </span>
-              ) : (
-                totalInteracting
-              ),
+            icon: MessageCircle,
+            color: '#4f46e5',
+            label: 'Total Interacting',
+            value: totalInteracting,
             sub: 'on a call right now',
           },
         ]}
