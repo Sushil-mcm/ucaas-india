@@ -1,4 +1,4 @@
-import { SearchLine, UserLine, UsersGroupLine, FilterIcon, LetterOpenedLine } from '@/assets/icons';
+import { UserLine, UsersGroupLine, FilterIcon, LetterOpenedLine } from '@/assets/icons';
 import CustomAvatar from '@/components/custom/custom-avatar';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import CreateDirectChat from './drawers/create-direct-chat';
@@ -1256,13 +1256,7 @@ const SidebarContent = ({
 
       <div className="px-2.5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 border-b border-gray-100 bg-[#FBE2C8]/10">
         <Input
-          Icon={
-            <span className="flex items-center" style={{ color: '#6B7280' }}>
-              <SearchLine className="w-4 h-4 shrink-0" />
-            </span>
-          }
-          IconPosition="left-0 pl-3 inset-y-0"
-          className="pl-9 rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50"
+          className="rounded-xl border-[rgba(225,200,165,0.9)] hover:border-primary/50"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
