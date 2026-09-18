@@ -494,8 +494,13 @@
   overflow: hidden;
 }
 .mcm-console .col.calls {
+  /* Still the one column that grows to fill the leftover width (see
+     .phone-grid's own comment), but capped now — left uncapped it grew
+     to swallow most of the screen on a narrower window instead of
+     leaving room for the stage/panel columns to show at all. */
   flex: 1 1 380px;
   min-width: 380px;
+  max-width: 420px;
 }
 .mcm-console .col.stage {
   flex: 0 1 520px;
