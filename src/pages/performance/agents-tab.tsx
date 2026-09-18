@@ -13,8 +13,11 @@ import TableManager from '@/components/custom/table-manager';
 import buildAgentRows from './agent-rows';
 import Timer from '@/components/timer';
 import CustomAvatar from '@/components/custom/custom-avatar';
-import PerfStatCard from './stat-card';
+import PerfKpiTile from './perf-kpi-tile';
+import { useKpiHistory } from '@/pages/dashboard/home/use-kpi-history';
+import { RadialGauge } from '@/pages/dashboard/home/charts';
 import { formatSecsToClock } from './format';
+import './perf-kpi-tile.css';
 import './agents-theme.css';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -105,14 +108,19 @@ const AgentsTab = ({
       null,
     );
     const totalTalkMinutes = rows.reduce((sum, row) => sum + row.timeOnCallsMinutes, 0);
+    const totalInOut = totalIncoming + totalOutgoing;
+    const inboundPct = totalInOut ? Math.round((totalIncoming / totalInOut) * 100) : 0;
+    const noQueuePct = rows.length ? Math.round((noQueueCount / rows.length) * 100) : 0;
     return {
       onlineCount,
       onCallCount,
       zeroActivityCount,
       noQueueCount,
+      noQueuePct,
       avgAht,
       totalIncoming,
       totalOutgoing,
+      inboundPct,
       topPerformer,
       totalTalkMinutes,
       hasTopPerformer: Boolean(topPerformer && topPerformer.handledToday > 0),
@@ -123,13 +131,28 @@ const AgentsTab = ({
     onCallCount,
     zeroActivityCount,
     noQueueCount,
+    noQueuePct,
     avgAht,
     totalIncoming,
     totalOutgoing,
+    inboundPct,
     topPerformer,
     totalTalkMinutes,
     hasTopPerformer,
   } = kpi;
+
+  /* Backs the KPI band's sparklines and "vs last 30 min" trend pills —
+     same rolling in-memory sampler Queues/Home use; no historical report
+     endpoint exists behind these live-only figures either. */
+  const { getHistory, getTrend } = useKpiHistory({
+    online: onlineCount,
+    topHandled: hasTopPerformer ? topPerformer!.handledToday : 0,
+    onCall: onCallCount,
+    zeroActivity: zeroActivityCount,
+    handleTime: avgAht ?? 0,
+    noQueue: noQueueCount,
+    talkTime: totalTalkMinutes,
+  });
 
   /* ── Column definitions — stable reference so TableManager never re-mounts ── */
   const columns = useMemo(() => [
@@ -252,55 +275,103 @@ const AgentsTab = ({
        spacing the grid from the roster section beneath it. */
     <div className="perf-agents flex flex-col gap-[16px] px-[22px] pt-[20px] pb-4">
       {/* ── KPI strip ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-8">
-        <PerfStatCard
-          label={'Agents\nOnline'}
-          value={String(onlineCount)}
-          sub={`of ${rows.length} agents`}
+      <div className="perf-kpi-row">
+        <PerfKpiTile
           icon={Users}
+          color="#27ae60"
+          title="Agents Online"
+          subtitle={`of ${rows.length} agents`}
+          value={onlineCount}
+          trend={getTrend('online')}
+          goodWhenUp
+          chart={{ type: 'area', data: getHistory('online') }}
         />
-        <PerfStatCard
-          label={'Top\nPerformer'}
-          value={hasTopPerformer ? topPerformer!.name : '—'}
-          sub={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : undefined}
+        <PerfKpiTile
           icon={Trophy}
-          highlight="gold"
+          color="#eab308"
+          title="Top Performer"
+          subtitle={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : 'No calls yet'}
+          value={hasTopPerformer ? topPerformer!.name : '—'}
+          trend={getTrend('topHandled')}
+          goodWhenUp
+          chart={{ type: 'bar', data: getHistory('topHandled') }}
         />
-        <PerfStatCard
-          label={'Active\nCalls'}
-          value={String(onCallCount)}
-          sub={`of ${onlineCount} online`}
+        <PerfKpiTile
           icon={PhoneCall}
+          color="#7c3aed"
+          title="Active Calls"
+          subtitle={`of ${onlineCount} online`}
+          value={onCallCount}
+          trend={getTrend('onCall')}
+          goodWhenUp
+          chart={{ type: 'line', data: getHistory('onCall') }}
         />
-        <PerfStatCard
-          label={'Zero\nActivity'}
-          value={String(zeroActivityCount)}
-          sub="Idle agents"
+        <PerfKpiTile
           icon={AlertTriangle}
+          color="#eb5757"
+          title="Zero Activity"
+          subtitle="idle agents"
+          value={zeroActivityCount}
+          trend={getTrend('zeroActivity')}
+          chart={{ type: 'bar', data: getHistory('zeroActivity') }}
         />
-        <PerfStatCard
-          label={'Handle\nTime'}
-          value={avgAht === null ? '—' : formatSecsToClock(avgAht)}
-          sub="Team average"
+        <PerfKpiTile
           icon={Gauge}
+          color="#f2994a"
+          title="Handle Time"
+          subtitle="team average"
+          value={avgAht === null ? '—' : formatSecsToClock(avgAht)}
+          trend={getTrend('handleTime')}
+          chart={{ type: 'line', data: getHistory('handleTime') }}
         />
-        <PerfStatCard
-          label={'Inbound\nOutbound'}
-          value={`${totalIncoming} / ${totalOutgoing}`}
-          sub="incoming / outgoing"
+        <PerfKpiTile
           icon={ArrowLeftRight}
-        />
-        <PerfStatCard
-          label={'No\nQueue'}
-          value={String(noQueueCount)}
-          sub="agents"
+          color="#2f80ed"
+          title="Inbound / Outbound"
+          subtitle="calls / campaigns"
+          value={`${totalIncoming} / ${totalOutgoing}`}
+        >
+          <div className="perf-kpi-split">
+            <div className="perf-kpi-split-row">
+              <span className="perf-kpi-split-label">Inbound</span>
+              <span className="perf-kpi-split-bar">
+                <span style={{ width: `${inboundPct}%`, background: '#2f80ed' }} />
+              </span>
+              <span className="perf-kpi-split-pct">{inboundPct}%</span>
+            </div>
+            <div className="perf-kpi-split-row">
+              <span className="perf-kpi-split-label">Outbound</span>
+              <span className="perf-kpi-split-bar">
+                <span style={{ width: `${100 - inboundPct}%`, background: '#f2994a' }} />
+              </span>
+              <span className="perf-kpi-split-pct">{100 - inboundPct}%</span>
+            </div>
+          </div>
+        </PerfKpiTile>
+        <PerfKpiTile
           icon={AlertCircle}
-        />
-        <PerfStatCard
-          label={'Talk\nTime'}
-          value={formatSecsToClock(totalTalkMinutes * 60)}
-          sub="combined, all agents"
+          color="#14b8a6"
+          title="No Queue"
+          subtitle="agents"
+          value={noQueueCount}
+          trend={getTrend('noQueue')}
+        >
+          <div className="perf-kpi-body-split">
+            <span className="perf-kpi-title" style={{ fontSize: 11.5, color: 'var(--ink-4, #93a0b8)' }}>
+              {noQueuePct}% of the roster
+            </span>
+            <RadialGauge value={noQueuePct} size={48} color="#6366f1" />
+          </div>
+        </PerfKpiTile>
+        <PerfKpiTile
           icon={Clock}
+          color="#9b51e0"
+          title="Talk Time"
+          subtitle="combined, all agents"
+          value={formatSecsToClock(totalTalkMinutes * 60)}
+          trend={getTrend('talkTime')}
+          goodWhenUp
+          chart={{ type: 'area', data: getHistory('talkTime') }}
         />
       </div>
 

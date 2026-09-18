@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import moment from 'moment';
 import './live-theme.css';
+import './perf-kpi-tile.css';
 import DateDropdown, { type DateDropdownHandle } from '@/components/custom/date-dropdown';
 import { DateFilterTypes, handleDate } from '@/components/custom/date-dropdown/constant';
 import Timer from '@/components/timer';
@@ -356,68 +357,6 @@ const Performance = () => {
       {SHOW_KPI_HEADER_TABS.has(activeTab) &&
         !(activeTab === 'queues-activity' && selectedQueueUuid) && (
           <div className="page-band">
-            <style>{`
-            /* Eight colour-coded tiles (icon badge, value, trend pill,
-               sparkline/meter footer) — replaces the old two-hero +
-               six-plain-tile "hero-row" layout with one consistent card
-               per metric, matching the reference this band was rebuilt
-               against. */
-            .mcm-page .perf-kpi-row {
-              display:grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-              gap:12px; padding-top:12px;
-            }
-            @media (min-width: 900px) {
-              .mcm-page .perf-kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            }
-            .mcm-page .perf-kpi-tile {
-              display:flex; flex-direction:column; gap:8px;
-              padding:14px 16px; border-radius:16px; border:1px solid;
-              background:#fff;
-              transition: transform 0.15s ease, box-shadow 0.15s ease;
-            }
-            .mcm-page .perf-kpi-tile:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12);
-            }
-            .mcm-page .perf-kpi-top { display:flex; align-items:center; justify-content:space-between; }
-            .mcm-page .perf-kpi-badge {
-              display:flex; align-items:center; justify-content:center;
-              width:36px; height:36px; flex:none; border-radius:999px;
-            }
-            .mcm-page .perf-kpi-trend {
-              display:inline-flex; align-items:center; gap:2px;
-              padding:2px 8px; border-radius:999px;
-              font-size:11.5px; font-weight:800; white-space:nowrap;
-              background: var(--surface-3, #eef1f6); color: var(--ink-3, #6b7891);
-            }
-            .mcm-page .perf-kpi-trend.is-good { background: var(--live-wash, #d9f2ee); color: var(--live, #0d9488); }
-            .mcm-page .perf-kpi-trend.is-bad { background: var(--crit-wash, #fbe2e2); color: var(--crit, #d32f2f); }
-            .mcm-page .perf-kpi-titles { display:flex; flex-direction:column; gap:2px; }
-            .mcm-page .perf-kpi-title { font-size:12.5px; font-weight:700; color: var(--ink-3, #6b7891); }
-            .mcm-page .perf-kpi-value { font-size:26px; font-weight:800; letter-spacing:-0.02em; line-height:1.2; color: var(--ink, #0d1526); }
-            .mcm-page .perf-kpi-subtitle { font-size:11.5px; color: var(--ink-4, #93a0b8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-            .mcm-page .perf-kpi-chart { min-height:36px; }
-            .mcm-page .perf-kpi-chart-meter { display:flex; flex-direction:column; gap:6px; justify-content:center; }
-            .mcm-page .perf-kpi-meter-target { font-size:11px; font-weight:600; color: var(--ink-4, #93a0b8); align-self:flex-end; }
-            /* LinearMeter (dashboard/home/charts.tsx) renders a plain
-               .kpi-linear-meter div with no styling of its own — its only
-               CSS lives scoped under .home-v2 in home-v2.css, which this
-               page never carries. Without an equivalent rule here the meter
-               was an unstyled 0-height div, which is why Service Level's
-               progress bar looked like a bare sliver. */
-            .mcm-page .kpi-linear-meter {
-              position: relative; width: 100%; height: 8px;
-              border-radius: 999px; background: rgba(150, 100, 50, 0.1);
-            }
-            .mcm-page .kpi-linear-meter span {
-              display: block; height: 100%; border-radius: 999px;
-              transition: width 0.4s ease;
-            }
-            .mcm-page .kpi-linear-meter i {
-              position: absolute; top: -3px; width: 2px; height: 14px;
-              background: var(--ink-3, #6b7891); border-radius: 2px;
-            }
-          `}</style>
             {/* A feed that failed used to be invisible: every query defaults to
                 an empty list, so an unreachable API produced Waiting 0,
                 Answered 0 — the same screen a genuinely quiet contact centre

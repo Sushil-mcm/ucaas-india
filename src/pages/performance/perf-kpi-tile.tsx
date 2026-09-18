@@ -28,6 +28,11 @@ const PerfKpiTile = ({
      Waiting Calls count red rather than green. */
   goodWhenUp = false,
   chart,
+  /* Escape hatch for a footer neither a sparkline nor a meter can draw
+     (Agents' Inbound/Outbound split, its No Queue donut) — still sits
+     inside this same card chrome rather than each caller rolling its
+     own box. Ignored when `chart` is set. */
+  children,
 }: {
   icon: LucideIcon;
   color: string;
@@ -37,6 +42,7 @@ const PerfKpiTile = ({
   trend?: Trend | null;
   goodWhenUp?: boolean;
   chart?: PerfKpiChart;
+  children?: ReactNode;
 }) => {
   const isGood =
     trend && trend.direction !== 'flat'
@@ -83,6 +89,7 @@ const PerfKpiTile = ({
           <span className="perf-kpi-meter-target">Target: {chart.target}%</span>
         </div>
       )}
+      {!chart && children}
     </div>
   );
 };

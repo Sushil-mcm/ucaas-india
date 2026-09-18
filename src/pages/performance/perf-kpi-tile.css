@@ -1,0 +1,189 @@
+/* ============================================================
+   Shared KPI tile band — colour-coded cards (icon badge, value, trend
+   pill, sparkline/meter/donut footer). Originally built for Queues'
+   8-tile band (perf-kpi-tile.tsx) and pulled out of that page's own
+   inline <style> so any Performance tab can reuse the same cards
+   (Agents' KPI strip is the second consumer) without duplicating this
+   block per tab.
+   ============================================================ */
+.mcm-page .perf-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 12px;
+}
+@media (min-width: 900px) {
+  .mcm-page .perf-kpi-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.mcm-page .perf-kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid;
+  background: #fff;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.mcm-page .perf-kpi-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(160, 95, 30, 0.12);
+}
+.mcm-page .perf-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mcm-page .perf-kpi-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 999px;
+}
+.mcm-page .perf-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: var(--surface-3, #eef1f6);
+  color: var(--ink-3, #6b7891);
+}
+.mcm-page .perf-kpi-trend.is-good {
+  background: var(--live-wash, #d9f2ee);
+  color: var(--live, #0d9488);
+}
+.mcm-page .perf-kpi-trend.is-bad {
+  background: var(--crit-wash, #fbe2e2);
+  color: var(--crit, #d32f2f);
+}
+.mcm-page .perf-kpi-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mcm-page .perf-kpi-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-3, #6b7891);
+  white-space: pre-line;
+}
+.mcm-page .perf-kpi-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink, #0d1526);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-kpi-subtitle {
+  font-size: 11.5px;
+  color: var(--ink-4, #93a0b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcm-page .perf-kpi-chart {
+  min-height: 36px;
+}
+.mcm-page .perf-kpi-chart-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+.mcm-page .perf-kpi-meter-target {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-4, #93a0b8);
+  align-self: flex-end;
+}
+/* LinearMeter (dashboard/home/charts.tsx) renders a plain
+   .kpi-linear-meter div with no styling of its own — its only CSS lives
+   scoped under .home-v2 in home-v2.css, which no Performance tab carries.
+   Without an equivalent rule here the meter is an unstyled 0-height div. */
+.mcm-page .kpi-linear-meter {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(150, 100, 50, 0.1);
+}
+.mcm-page .kpi-linear-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.mcm-page .kpi-linear-meter i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  background: var(--ink-3, #6b7891);
+  border-radius: 2px;
+}
+
+/* ---- Extra footer variants the KPI tile itself doesn't render, used by
+   cards whose metric isn't a single trend/history (Inbound vs Outbound
+   split, a donut ring) but that still need to sit in the same card chrome
+   as every other tile in the row. ---- */
+.mcm-page .perf-kpi-split {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+.mcm-page .perf-kpi-split-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-4, #93a0b8);
+}
+.mcm-page .perf-kpi-split-label {
+  width: 46px;
+  flex: none;
+  font-weight: 600;
+}
+.mcm-page .perf-kpi-split-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(150, 100, 50, 0.1);
+  overflow: hidden;
+}
+.mcm-page .perf-kpi-split-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.mcm-page .perf-kpi-split-pct {
+  width: 30px;
+  flex: none;
+  text-align: right;
+  font-weight: 700;
+  color: var(--ink-2, #3d4a63);
+}
+/* A card whose footer is a donut instead of a sparkline puts the titles
+   and the ring side by side at the same level, rather than stacking the
+   ring below (which would make that one card visibly taller than its
+   sparkline-footed neighbours in the same row). */
+.mcm-page .perf-kpi-body-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
