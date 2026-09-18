@@ -17,6 +17,7 @@ import moment from 'moment';
 import {
   Bell,
   BellOff,
+  ChevronDown,
   EllipsisVertical,
   Info,
   Pin,
@@ -1257,14 +1258,32 @@ const SidebarContent = ({
         />
         {!isAgentChat ? (
           <div className="w-full sm:min-w-28 sm:w-28">
-            <select
-              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-white shadow-sm transition-colors hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as MessageStatus)}
-            >
-              <option value="all">All</option>
-              <option value="unread">Unread</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center justify-between gap-1.5 border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-white shadow-sm transition-colors hover:border-primary/50 cursor-pointer"
+                >
+                  {statusFilter === 'unread' ? 'Unread' : 'All'}
+                  <ChevronDown className="w-3.5 h-3.5 text-[#9A948F] shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white rounded-xl shadow-lg border border-[rgba(225,200,165,0.9)] p-1 min-w-[140px]">
+                {(['all', 'unread'] as MessageStatus[]).map((option) => (
+                  <DropdownMenuItem
+                    key={option}
+                    className={`px-3 py-2 text-sm font-medium cursor-pointer rounded-lg ${
+                      statusFilter === option
+                        ? 'bg-[#fff1e0] text-[#c96f1f]'
+                        : 'text-[#2E2D35] hover:bg-[#fff1e0] hover:text-[#c96f1f]'
+                    }`}
+                    onClick={() => setStatusFilter(option)}
+                  >
+                    {option === 'unread' ? 'Unread' : 'All'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ) : null}
       </div>
