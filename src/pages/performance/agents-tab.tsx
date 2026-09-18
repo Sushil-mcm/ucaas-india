@@ -290,7 +290,7 @@ const AgentsTab = ({
           icon={Trophy}
           color="#eab308"
           title="Top Performer"
-          subtitle={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : 'No calls yet'}
+          subtitle={hasTopPerformer ? `${topPerformer!.handledToday} handled today` : ''}
           value={hasTopPerformer ? topPerformer!.name : '—'}
           trend={getTrend('topHandled')}
           goodWhenUp
@@ -310,7 +310,7 @@ const AgentsTab = ({
           icon={AlertTriangle}
           color="#eb5757"
           title="Zero Activity"
-          subtitle="idle agents"
+          subtitle="Idle agents"
           value={zeroActivityCount}
           trend={getTrend('zeroActivity')}
           chart={{ type: 'bar', data: getHistory('zeroActivity') }}
@@ -319,7 +319,7 @@ const AgentsTab = ({
           icon={Gauge}
           color="#f2994a"
           title="Handle Time"
-          subtitle="team average"
+          subtitle="Team average"
           value={avgAht === null ? '—' : formatSecsToClock(avgAht)}
           trend={getTrend('handleTime')}
           chart={{ type: 'line', data: getHistory('handleTime') }}
@@ -327,8 +327,8 @@ const AgentsTab = ({
         <PerfKpiTile
           icon={ArrowLeftRight}
           color="#2f80ed"
-          title="Inbound / Outbound"
-          subtitle="calls / campaigns"
+          title="Inbound Outbound"
+          subtitle="incoming / outgoing"
           value={`${totalIncoming} / ${totalOutgoing}`}
         >
           <div className="perf-kpi-split">
