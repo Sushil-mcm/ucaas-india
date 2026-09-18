@@ -72,6 +72,7 @@ function TableManager({
   loaderTableClass = '',
   type = '',
   getRowClassName = defaultGetRowClassName,
+  onRowClick,
   emptyTablePlaceholder = 'Nothing here yet',
   tableRef,
   isHeightSet = true,
@@ -124,6 +125,10 @@ function TableManager({
      not the answer to a search that missed. */
   emptyAction?: React.ReactNode;
   getRowClassName?: (row: any) => string;
+  /* Opt-in only — undefined leaves every other table's rows exactly as
+     they render today. A caller that sets this also owns making the row
+     look clickable (getRowClassName's own cursor/hover styling). */
+  onRowClick?: (rowOriginal: any) => void;
   isHeightSet?: boolean;
   tableMaxHeight?: any;
   hasSubRows?: boolean;
@@ -678,6 +683,7 @@ function TableManager({
                       makeSubRowPayload={makeSubRowPayload}
                       columns={columns}
                       getRowClassName={getRowClassName}
+                      onRowClick={onRowClick}
                       showMoreData={showMoreData}
                       renderSubComponent={renderSubComponent}
                     />

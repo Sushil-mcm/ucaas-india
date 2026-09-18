@@ -11,6 +11,8 @@ import {
   PhoneForwarded,
   Activity,
   MessageCircle,
+  ChevronRight,
+  Download,
 } from 'lucide-react';
 import moment from 'moment';
 import TableManager from '@/components/custom/table-manager';
@@ -25,9 +27,59 @@ import type { QueueCallStats } from '@/hooks/use-call-stats';
 import { CDR_LIMIT } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import buildQueueRows from './queue-rows';
-import type { QueueRow, QueueStats, LiveQueueStats } from './queue-rows';
+import type { QueueRow, QueueStats, LiveQueueStats, LiveQueueRow } from './queue-rows';
 import StatusPill, { abandonPillTone, parsePercent, slaPillTone } from './status-pill';
 import './queues-theme.css';
+
+/* A plain CSV of exactly the columns the table shows, in the same order —
+   a supervisor exporting this wants what they're already looking at, not a
+   reshaped report. Quoted per-field so a queue name with a comma in it
+   can't shift the columns after it. */
+const exportQueueRowsCsv = (rows: LiveQueueRow[]) => {
+  const csvField = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+  const header = [
+    'Queue',
+    'Media',
+    'Waiting',
+    'Longest',
+    'Members',
+    'Interacting',
+    'Offered',
+    'Handled',
+    'Abandoned',
+    'SL today',
+    'ASA',
+    'AHT',
+    'Abandon',
+  ];
+  const lines = rows.map((row) =>
+    [
+      row.name,
+      'Voice',
+      row.waiting,
+      row.longestWaitInRange === null ? '—' : formatSecsToClock(row.longestWaitInRange),
+      row.membersCount,
+      row.interacting,
+      row.offered ?? '—',
+      row.handledToday ?? '—',
+      row.abandoned ?? '—',
+      row.sla === null ? '—' : `${Math.round(row.sla)}%`,
+      row.asa === null || row.asa === undefined ? '—' : formatSecsToClock(row.asa),
+      row.aht === null ? '—' : formatSecsToClock(row.aht),
+      row.abandonRate,
+    ]
+      .map(csvField)
+      .join(','),
+  );
+  const csv = [header.map(csvField).join(','), ...lines].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `queues-${moment().format('YYYY-MM-DD-HHmm')}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 export type { QueueRow } from './queue-rows';
 
@@ -263,14 +315,7 @@ const QueuesActivityTab = ({
     {
       header: 'Queue',
       accessorKey: 'name',
-      cell: ({ row }: any) => (
-        <span
-          className="qa-queue-name"
-          onClick={() => setSelectedQueueUuid(row.original.uuid)}
-        >
-          {row.original.name}
-        </span>
-      ),
+      cell: ({ row }: any) => <span className="qa-queue-name">{row.original.name}</span>,
     },
     {
       header: 'Media',
@@ -369,6 +414,15 @@ const QueuesActivityTab = ({
           <StatusPill tone={abandonPillTone(percent)}>{row.original.abandonRate}</StatusPill>
         );
       },
+    },
+    {
+      header: '',
+      id: 'drill-in',
+      cell: () => (
+        <span className="qa-row-chevron">
+          <ChevronRight size={14} />
+        </span>
+      ),
     },
   ];
 
@@ -685,18 +739,39 @@ const QueuesActivityTab = ({
 
       {heatmapRows.length > 0 && (
         <div className="queue-heatmap-card">
-          <h3>Queue activity{heatmapSpansOneDay ? ' today' : ''}</h3>
-          <span className="src">
-            calls offered, by {heatmapGranularity === 'hour' ? 'hour' : 'day'}
-          </span>
+          <div className="qa-heatmap-head">
+            <div>
+              <h3>Queue activity{heatmapSpansOneDay ? ' today' : ''}</h3>
+              <span className="src">
+                calls offered, by {heatmapGranularity === 'hour' ? 'hour' : 'day'}
+              </span>
+            </div>
+            <div className="qa-heatmap-legend">
+              <span>Fewer calls</span>
+              <i style={{ opacity: 0.06 }} />
+              <i style={{ opacity: 0.25 }} />
+              <i style={{ opacity: 0.5 }} />
+              <i style={{ opacity: 0.75 }} />
+              <i style={{ opacity: 1 }} />
+              <span>More calls</span>
+            </div>
+          </div>
           <div className="heatmap-scroll" style={{ marginTop: 10 }}>
             <QueueHeatmap rows={heatmapRows} hourLabels={heatmapColumnLabels} />
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between qa-table-head">
         <h3 className="sect-title">Queues</h3>
+        <button
+          type="button"
+          className="qa-export-btn"
+          onClick={() => exportQueueRowsCsv(rows)}
+        >
+          <Download size={14} />
+          Export CSV
+        </button>
       </div>
 
       <TableManager
@@ -709,6 +784,8 @@ const QueuesActivityTab = ({
         splitStickyHeader
         search={globalSearch}
         clientSideSearch
+        onRowClick={(rowOriginal: QueueRow) => setSelectedQueueUuid(rowOriginal.uuid)}
+        getRowClassName={() => 'qa-clickable-row'}
       />
     </div>
   );

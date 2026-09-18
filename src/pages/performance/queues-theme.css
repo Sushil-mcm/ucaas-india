@@ -702,6 +702,47 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   justify-content: center;
 }
 
+/* Trailing chevron — the whole row is the click target now (onRowClick,
+   queues-activity-tab.tsx), this just tells the eye where that lands. Muted
+   at rest, picks up the accent colour with the rest of the row on hover. */
+.mcm-page .perf-queues .table-scroll td:last-child {
+  width: 28px;
+  padding-left: 4px !important;
+  padding-right: 12px !important;
+}
+.mcm-page .perf-queues .qa-row-chevron {
+  display: flex;
+  color: #c9a876;
+  transition: color 0.14s ease;
+}
+.mcm-page .perf-queues .table-scroll tbody tr:hover .qa-row-chevron {
+  color: var(--qa-accent-ink);
+}
+
+/* Export CSV — same pill-button shape the date-range control on this page
+   already uses, so it doesn't introduce a third button style. */
+.mcm-page .perf-queues .qa-table-head {
+  margin-bottom: 10px;
+}
+.mcm-page .perf-queues .qa-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4a4438;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+.mcm-page .perf-queues .qa-export-btn:hover {
+  background: #fff6e9;
+  border-color: rgba(242, 153, 74, 0.5);
+}
+
 /* ------------------------------------------------------------
    6. Drill-in member table — same frosted card as the main table above,
    TableManager renders it through the identical `.table-scroll` markup so
@@ -794,6 +835,30 @@ body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
   font-weight: 800;
   color: #1a1a1a;
   margin: 0 0 2px;
+}
+.mcm-page .perf-queues .qa-heatmap-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mcm-page .perf-queues .qa-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding-top: 2px;
+}
+.mcm-page .perf-queues .qa-heatmap-legend span {
+  font-size: 11px;
+  color: #a39c8e;
+}
+.mcm-page .perf-queues .qa-heatmap-legend i {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: var(--accent, #f2994a);
+  font-style: normal;
 }
 .mcm-page .perf-queues .queue-heatmap-card .src {
   font-size: 11px;

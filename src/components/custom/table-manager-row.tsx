@@ -15,6 +15,7 @@ export const TableManagerRow: FC<{
   makeSubRowPayload?: (row: any) => any;
   columns: CustomColumnDef[];
   getRowClassName?: any;
+  onRowClick?: (rowOriginal: any) => void;
   showMoreData?: any;
   renderSubComponent?: (rowOriginal: any) => React.ReactNode;
 }> = ({
@@ -24,6 +25,7 @@ export const TableManagerRow: FC<{
   subRowsMutateFn,
   makeSubRowPayload = () => {},
   getRowClassName = () => '',
+  onRowClick,
   columns,
   showMoreData = () => {},
   renderSubComponent,
@@ -56,6 +58,8 @@ export const TableManagerRow: FC<{
         key={row.id}
         data-state={row.getIsSelected() && 'selected'}
         className={getRowClassName ? getRowClassName(row) : 'w-full'}
+        onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+        style={onRowClick ? { cursor: 'pointer' } : undefined}
       >
         {hasSubRows && (
           <TableCell className=" max-h-3 sm:min-w-6 xl:min-w-3 sm:max-w-6 lg:max-w-3">
