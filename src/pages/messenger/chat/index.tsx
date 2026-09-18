@@ -3385,7 +3385,7 @@ export const ChatFooter = ({
       <button
         type="button"
         className={cn(
-          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F]',
+          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
           isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
         )}
         onClick={() => {
@@ -3641,7 +3641,7 @@ export const ChatFooter = ({
                           <label
                             htmlFor={attachmentInputId}
                             className={cn(
-                              'cursor-pointer min-w-7 max-h-7 max-w-7 min-h-7 rounded-full flex justify-center items-center text-[#9A948F] transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
+                              'cursor-pointer min-w-7 max-h-7 max-w-7 min-h-7 rounded-full flex justify-center items-center text-black transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
                               isComposerBusy ? 'opacity-50 cursor-not-allowed' : '',
                             )}
                             title="Attach files"
@@ -3652,7 +3652,7 @@ export const ChatFooter = ({
                           {!fromMeetChat ? (
                             <div
                               className={cn(
-                                'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
+                                'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black transition-colors hover:bg-[#fff1e0] hover:text-ucass-active',
                                 isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                               )}
                               onClick={() => {
@@ -3671,7 +3671,7 @@ export const ChatFooter = ({
 
                       <div
                         className={cn(
-                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
+                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                           isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                         )}
                         onClick={() => {
@@ -3686,7 +3686,7 @@ export const ChatFooter = ({
                       {!fromMeetChat && canScheduleEvent ? (
                         <div
                           className={cn(
-                            'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
+                            'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                             isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                           )}
                           onClick={() => {
@@ -3708,7 +3708,7 @@ export const ChatFooter = ({
                     hasAiAssistAgent ? (
                       <div
                         className={cn(
-                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
+                          'cursor-pointer min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                           isComposerBusy ? 'cursor-not-allowed opacity-50' : '',
                         )}
                         onClick={() => {
@@ -3727,7 +3727,7 @@ export const ChatFooter = ({
                             type="button"
                             disabled={isComposerBusy}
                             className={cn(
-                              'min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-[#9A948F] hover:text-ucass-active transition-colors',
+                              'min-w-6 max-h-6 max-w-6 min-h-6 rounded-2xl flex justify-center items-center text-black hover:bg-[#fff1e0] hover:text-ucass-active transition-colors',
                               isComposerBusy ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                             )}
                             aria-label="Set up AI assist agent"
