@@ -36,7 +36,10 @@
    painted on `.perf-speech` itself (not the generic `.mcm-page` rule),
    consistent with how Callbacks and Campaigns do it. */
 body.perf-warm-backdrop .perf-speech {
-  background-color: #fdf6ee;
+  /* var(--ground) — matches the toolbar and every other Performance tab's
+     page body exactly, per explicit request for one flat background
+     colour everywhere rather than a close-but-different hardcoded cream. */
+  background-color: var(--ground);
 }
 .dark body.perf-warm-backdrop .perf-speech {
   background-color: #0a0f1a;

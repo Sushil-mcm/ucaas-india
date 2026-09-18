@@ -108,7 +108,11 @@ body.perf-warm-toolbar.dark {
    ------------------------------------------------------------ */
 .mcm-page .perf-live,
 body.perf-warm-backdrop .mcm-page {
-  background-color: #fdf6ee;
+  /* var(--ground), #fef8f1 — the app's own page background, and now what
+     the toolbar above uses too. Was #fdf6ee, then #fffaf4: two more
+     hardcoded creams that were each close to var(--ground) but not equal
+     to it, which is what drew a seam. One shared variable can't drift. */
+  background-color: var(--ground);
   /* `.mcm-page` already sits in a flex slot sized to exactly the viewport
      minus the fixed top nav (`height: 100%` in mcm-page.css, correctly
      resolved by its flex ancestors) — `100vh` here ignored that offset and
@@ -135,7 +139,11 @@ body.perf-warm-backdrop .mcm-page {
    plain against its tinted panel rather than each carrying their own
    background. */
 body.perf-warm-toolbar .mcm-page .page-bar {
-  background: #fffaf4;
+  /* Was a hardcoded #fffaf4 matching the sidebar rail's own tint — now
+     var(--ground), the same value every Performance tab's page body uses
+     below it, per explicit request for one flat background colour across
+     every tab rather than two close-but-different creams. */
+  background: var(--ground);
   border-bottom-color: var(--pl-hairline);
 }
 
