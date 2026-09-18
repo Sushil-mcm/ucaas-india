@@ -6329,10 +6329,13 @@
      behind it (.mcm-adminhome) is the app's cream rather than plain white.
      No box-shadow: its warm glow bled unevenly into the cream page right
      around the card, reading as a colour mismatch rather than one flat
-     background. A plain border is enough separation on its own. */
+     background. No border either now — with the search box's own oval
+     border sitting inside it, the card's own rectangular border read as a
+     second, larger border wrapping the first. White on the page's cream
+     ground is contrast enough on its own. */
   margin: 16px 22px 16px;
   background: #fff;
-  border: 1px solid var(--glass-border);
+  border: none;
   border-radius: 20px;
 }
 
