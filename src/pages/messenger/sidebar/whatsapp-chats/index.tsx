@@ -1,6 +1,7 @@
 import CustomAvatar from '@/components/custom/custom-avatar';
 import Loader from '@/components/custom/loader';
 import { Input } from '@/components/ui/input';
+import { SearchLine } from '@/assets/icons';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { getOmniChats } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -85,7 +86,9 @@ const WhatsappChats = ({
     <div className="h-full min-h-0 flex flex-col overflow-hidden">
       <div className="p-2">
         <Input
-          className="w-full hover:border-gray-300 focus:border-gray-300"
+          Icon={<SearchLine className="text-gray-400 w-4 h-4 shrink-0" />}
+          IconPosition="left-0 pl-3 inset-y-0"
+          className="w-full pl-9 hover:border-gray-300 focus:border-gray-300"
           placeholder="Search..."
           value={searchKey}
           onChange={(e) => {
