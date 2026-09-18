@@ -1248,13 +1248,13 @@ const MessageItem = ({
                       <PopoverTrigger asChild>
                         <button
                           type="button"
+                          style={{ color: '#000000' }}
                           className={cn(
                             'h-6 w-6 p-0 cursor-pointer rounded-full absolute top-1 hover:text-ucass-active',
-                            'text-[#000000]',
                             isMine ? '-left-7' : '-right-7',
                           )}
                         >
-                          <Eye size={16} />
+                          <Eye size={16} color="#000000" />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent
