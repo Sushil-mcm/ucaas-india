@@ -462,8 +462,8 @@ const ListItem = ({
           className={`flex justify-between w-full items-center pl-2.5 pr-2 py-2.5 min-h-[52px] group relative transition-all duration-150 rounded-xl border
              ${
                isChatOpened
-                 ? 'bg-[#FBE2C8]/50 border-primary/20 shadow-sm'
-                 : 'bg-white border-transparent hover:bg-[#FBE2C8]/20 hover:border-[#EEE7DD]'
+                 ? 'bg-[#FBE2C8]/80 border-primary/25 shadow-sm'
+                 : 'bg-white border-transparent hover:bg-[#FBE2C8]/15 hover:border-[#EEE7DD]'
              }`}
         >
           <div className="flex w-full min-w-0 items-center gap-2.5">
@@ -1118,10 +1118,10 @@ const SidebarContent = ({
               {tabOptions.map((tab) => (
                 <button
                   key={tab.value}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     activeTab === tab.value
-                      ? 'text-primary bg-white shadow-sm'
-                      : 'text-[#2E2D35]/70 hover:text-primary'
+                      ? 'text-primary bg-primary/15 shadow-sm'
+                      : 'text-[#2E2D35]/70 hover:bg-white/70 hover:text-primary'
                   }`}
                   onClick={() => {
                     setActiveTab(tab.value);
@@ -1236,7 +1236,7 @@ const SidebarContent = ({
         {!isAgentChat ? (
           <div className="w-full sm:min-w-28 sm:w-28">
             <select
-              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] transition-colors hover:border-primary/40 focus:border-primary focus:outline-none cursor-pointer"
+              className="border border-[rgba(225,200,165,0.9)] rounded-xl px-3 min-h-10 text-sm w-full text-[#2E2D35] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] shadow-sm transition-colors hover:border-primary/40 focus:border-primary focus:outline-none cursor-pointer"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as MessageStatus)}
             >
@@ -1464,7 +1464,7 @@ const Messenger = ({ mode = 'messenger' }: { mode?: MessengerMode }) => {
           <>
             <section
               className={cn(
-                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]',
+                'h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[23rem] lg:min-w-[23rem] lg:max-w-[23rem]',
                 activeChatId ? 'hidden lg:block' : 'w-full',
               )}
             >
