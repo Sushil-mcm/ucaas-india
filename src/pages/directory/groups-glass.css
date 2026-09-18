@@ -224,7 +224,10 @@
   min-width: 132px;
 }
 .gp-groups th {
-  background: #fffdfb;
+  /* Matches People's own header exactly -- #fff6e9, not #fffdfb, which
+     was close enough to the row body's colour that the header only read
+     as a row because of its underline (same bug People was fixed for). */
+  background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
