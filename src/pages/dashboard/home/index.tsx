@@ -92,6 +92,31 @@ const STATE_COLOR: Record<string, string> = {
   Offline: 'var(--ink-4)',
 };
 
+/* Existing wash tokens (mcm-page.css), reused as each state card's tint --
+ * matches the card border/background family already used for tags and
+ * status pills elsewhere instead of computing a tint at render time. */
+const STATE_TINT: Record<string, string> = {
+  'On Call': 'var(--accent-wash)',
+  Ringing: 'var(--warn-wash)',
+  'On Hold': 'var(--warn-wash)',
+  Available: 'var(--live-wash)',
+  Busy: 'var(--accent-wash)',
+  'Do Not Disturb': 'var(--accent-wash)',
+  Offline: 'var(--surface-3)',
+};
+
+/** One line under each state's name on the distribution card -- what the
+ * status actually means for wait times, not just its label. */
+const STATE_DESC: Record<string, string> = {
+  Available: 'Agents ready to take calls',
+  'On Call': 'Agents currently on a call',
+  Busy: 'Agents currently busy',
+  Ringing: 'Agents being rung',
+  'On Hold': 'Agents on hold with a caller',
+  'Do Not Disturb': 'Agents marked do not disturb',
+  Offline: 'Agents not available',
+};
+
 /** Service level, on the artifact's thresholds: 85+ good, 80+ neutral, below that bad. */
 const slTag = (sla: number | null, targetPct?: number | null) => {
   if (sla === null) return <span style={{ color: 'var(--ink-4)' }}>—</span>;
@@ -1136,20 +1161,37 @@ const Home = () => {
             so they fill the height Queues sets on the left ─────────────── */}
         <div className="stack">
         <div className="panel-card">
-          <div className="pc-head">
-            <h3>Agent status distribution</h3>
-            <span className="pc-right num" style={{ color: 'var(--ink-4)', fontSize: 11 }}>
-              {liveAgents.length} on the roster
+          <div className="pc-head dist-head">
+            <span className="dist-head-icon">
+              <Ic n="users" size={20} />
             </span>
+            <div className="dist-head-text">
+              <h3>Agent status distribution</h3>
+              <p className="dist-head-sub">Current availability of agents on the roster</p>
+            </div>
+            <div className="dist-head-right">
+              <span className="dist-head-count">
+                <Ic n="users" size={13} />
+                {liveAgents.length} on the roster
+              </span>
+              <button
+                type="button"
+                className="btn sm ghost"
+                onClick={() => navigate('/performance')}
+              >
+                View all
+                <Ic n="chev" size={11} />
+              </button>
+            </div>
           </div>
           <div className="pc-body">
             {/* A single segmented bar -- every state's share end to end --
                 instead of a donut: reads as one proportion at a glance
                 rather than needing separate wedges compared to each other,
-                and the legend rows underneath give the exact counts. */}
+                and a stat card per state underneath gives the exact counts. */}
             {stateDistribution.length ? (
-              <div className="dist-bar-block" role="img" aria-label={rosterSummary}>
-                <div className="dist-bar">
+              <>
+                <div className="dist-bar" role="img" aria-label={rosterSummary}>
                   {stateDistribution.map((slice) => (
                     <span
                       key={slice.state}
@@ -1158,24 +1200,53 @@ const Home = () => {
                         width: `${slice.pct}%`,
                         background: STATE_COLOR[slice.state] || 'var(--ink-4)',
                       }}
-                    />
+                    >
+                      {slice.pct >= 10 ? `${slice.pct}%` : null}
+                    </span>
                   ))}
                 </div>
-                <div className="dist-legend-list">
+                <div className="dist-cards">
                   {stateDistribution.map((slice) => (
-                    <div className="dist-legend-item" key={slice.state}>
+                    <div
+                      className="dist-card"
+                      key={slice.state}
+                      style={{ background: STATE_TINT[slice.state] || 'var(--surface-3)' }}
+                    >
                       <i
                         className="tbl-dot"
                         style={{ background: STATE_COLOR[slice.state] || 'var(--ink-4)' }}
                       />
-                      <span>{slice.state}</span>
-                      <span className="num" style={{ color: 'var(--ink-4)' }}>
-                        {slice.count} · {slice.pct}%
-                      </span>
+                      <div className="dist-card-text">
+                        <span className="dist-card-name">{slice.state}</span>
+                        <span className="dist-card-desc">
+                          {STATE_DESC[slice.state] || 'Agents in this state'}
+                        </span>
+                      </div>
+                      <div className="dist-card-figs">
+                        <span className="dist-card-count num">{slice.count}</span>
+                        <span
+                          className="dist-card-pct num"
+                          style={{ color: STATE_COLOR[slice.state] || 'var(--ink-4)' }}
+                        >
+                          {slice.pct}%
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
+                {(() => {
+                  const availablePct =
+                    stateDistribution.find((s) => s.state === 'Available')?.pct ?? 0;
+                  return (
+                    <div className="dist-tip">
+                      <Ic n="alert" size={14} />
+                      {availablePct < 50
+                        ? 'Keep more agents online to reduce wait times and improve customer experience.'
+                        : 'Agent availability looks healthy right now.'}
+                    </div>
+                  );
+                })()}
+              </>
             ) : (
               <div className="empty">
                 <Ic n="users" />
