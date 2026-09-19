@@ -7,11 +7,21 @@ import JoinMeetingModal from './join-meeting-modal';
 import ScheduleMeeting from '../schedule-meeting';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
-import { User, Video as VideoIcon, CalendarDays } from 'lucide-react';
+import { Video as VideoIcon, CalendarDays } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+
+const HERO_COPY: Record<string, { line1: string; line2: string }> = {
+  '/video': { line1: 'Every meeting,', line2: 'one click away' },
+  '/video/ongoing-meetings': { line1: "You're live,", line2: 'make it count' },
+  '/video/invited-meetings': { line1: "You're invited,", line2: "don't miss it" },
+  '/video/past-meetings': { line1: 'Every conversation,', line2: 'archived here' },
+};
 
 const MeetingHeader = ({ formInstance, showActions = true }: any) => {
   const [drawerState, setDrawerState] = useState<any>(false);
   const [modalState, setModalState] = useState(false);
+  const { pathname } = useLocation();
+  const heroCopy = HERO_COPY[pathname] || HERO_COPY['/video'];
   const { features } = useCompanyFeatures();
   const videAccess = features?.plan_features?.video?.action || {};
   const { mutate: mutateInstantMeeting, isPending: isPendingInstantMeeting } = useMutation({
@@ -59,9 +69,9 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <h2 className="text-[28px] sm:text-[34px] leading-[1.15] font-extrabold text-[#2E2D35]">
-            Every meeting,
+            {heroCopy.line1}
             <br />
-            <span className="text-[#c96f1f]">one click away</span>
+            <span className="text-[#c96f1f]">{heroCopy.line2}</span>
           </h2>
 
           {showActions && (
@@ -102,19 +112,6 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
               )}
             </div>
           )}
-        </div>
-
-        {/* Decorative icon strip, bottom of the card. */}
-        <div aria-hidden className="relative z-10 mt-7 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_6px_16px_rgba(201,111,31,0.15)]">
-            <User className="h-5 w-5 text-[#c96f1f]" strokeWidth={1.75} />
-          </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_6px_16px_rgba(201,111,31,0.15)]">
-            <VideoIcon className="h-5 w-5 text-[#f2994a]" strokeWidth={1.75} />
-          </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_6px_16px_rgba(201,111,31,0.15)]">
-            <CalendarDays className="h-5 w-5 text-[#c96f1f]" strokeWidth={1.75} />
-          </div>
         </div>
       </div>
       {modalState && (
