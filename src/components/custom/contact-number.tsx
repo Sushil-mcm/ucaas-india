@@ -10,6 +10,7 @@ import CreateContactNew from '@/pages/new-contact/create-new-contact';
 import { useContactBook, useContactForNumber } from '@/hooks/use-contact-suggestions';
 import { addContactPhone } from '@/services/api';
 import { handleAlert, isExtensionNumber } from '@/lib/utils';
+import './contact-drawer-theme.css';
 
 /**
  * A phone number the way a phone shows it: the saved name when there is one,
@@ -128,16 +129,19 @@ export const QuickContactDrawer: FC<{
         isHeader
         title="Edit contact"
         handleClose={onClose}
+        headerClassName="gp-contact-drawer-head"
         content={
-          <CreateContactNew
-            contactData={existing.raw || { _id: existing.id }}
-            isDisable={false}
-            setIsDisable={() => void 0}
-            setDrawerState={() => void 0}
-            keepFormDataAfterSave
-            isLead={false}
-            handleClose={onClose}
-          />
+          <div className="gp-contact-drawer-body h-full">
+            <CreateContactNew
+              contactData={existing.raw || { _id: existing.id }}
+              isDisable={false}
+              setIsDisable={() => void 0}
+              setDrawerState={() => void 0}
+              keepFormDataAfterSave
+              isLead={false}
+              handleClose={onClose}
+            />
+          </div>
         }
       />
     );
@@ -149,8 +153,9 @@ export const QuickContactDrawer: FC<{
       isHeader
       title="Add to contacts"
       handleClose={onClose}
+      headerClassName="gp-contact-drawer-head"
       content={
-        <div className="flex h-full min-h-0 flex-col gap-3">
+        <div className="gp-contact-drawer-body flex h-full min-h-0 flex-col gap-3">
           <div className="flex gap-2 text-sm">
             <button
               type="button"

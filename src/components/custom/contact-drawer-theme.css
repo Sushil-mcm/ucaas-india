@@ -1,0 +1,47 @@
+/* Quick-contact drawer (phone console / Calls tab "Edit contact" /
+   "Add to contacts") — the same warm cream header + pill-input treatment
+   Directory's own Add/Update Contact dialog already uses for this exact
+   form (external-glass.css `.gp-contact-form-dialog`, groups-glass.css
+   `.gp-create-group-body [data-slot='input']`). Kept as its own small
+   file rather than importing those Directory-only stylesheets here,
+   since CreateContactNew (the form both render) is also used on Leads,
+   Dialpad and the standalone New Contact page — this only reaches the
+   drawer that opts into these two marker classes. */
+.gp-contact-drawer-head {
+  background: #fff6e9 !important;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-contact-drawer-head h5 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #2a2733;
+}
+
+.gp-contact-drawer-body [data-slot='input'] {
+  border-color: rgba(242, 153, 74, 0.25);
+  background: #fffdfb;
+}
+.gp-contact-drawer-body [data-slot='input']:hover,
+.gp-contact-drawer-body [data-slot='input']:focus {
+  border-color: #f2994a;
+}
+.gp-contact-drawer-body [data-slot='input']:focus,
+.gp-contact-drawer-body [data-slot='input']:focus-visible {
+  outline: none !important;
+}
+.gp-contact-drawer-body .custom-react-select__control {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-contact-drawer-body .custom-react-select__control--is-focused {
+  border-color: #f2994a !important;
+  box-shadow: none !important;
+}
+.gp-contact-drawer-body .react-tel-input .form-control {
+  border-color: rgba(242, 153, 74, 0.25) !important;
+  background: #fffdfb !important;
+}
+.gp-contact-drawer-body .react-tel-input .form-control:hover,
+.gp-contact-drawer-body .react-tel-input .form-control:focus {
+  border-color: #f2994a !important;
+}
