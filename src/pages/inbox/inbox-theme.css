@@ -173,8 +173,8 @@
 .mcm-inbox .mcm-col-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 6px;
 }
 .mcm-inbox .mcm-col-title h2 {
   margin: 0;
@@ -1274,7 +1274,9 @@
    cool grey. Warming both ends frames the conversations instead of
    letting the column run edge to edge in one temperature.
    ============================================================ */
-.mcm-inbox .mcm-col-head,
+.mcm-inbox .mcm-col-head {
+  background: var(--mcm-surface);
+}
 .mcm-inbox .mcm-col-foot {
   background: color-mix(in srgb, var(--mcm-accent) 9%, var(--mcm-surface));
 }
