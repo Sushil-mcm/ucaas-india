@@ -755,7 +755,7 @@ const SidebarContent = ({
   return (
     <div className="w-full flex-1 min-h-0 bg-white">
 
-      <div className="px-4 pt-4 pb-5 border-b border-border bg-[#ffffff]">
+      <div className="px-3 pt-4 pb-5 border-b border-border bg-[#ffffff]">
         <div className="h-11 rounded-[10px] bg-[#ffffff] border border-[#EEE7DD] p-[2px]">
           <div className="flex h-full gap-0.5">
             {tabOptions.map((tab) => {
