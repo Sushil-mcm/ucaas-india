@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import TrustedDevices from './trusted-devices';
 import { useUser } from '@/hooks/use-user';
 import { handleAlert, capitalizeFirstLetter } from '@/lib/utils';
 import { deviceSecurityList, logout } from '@/services/api';
@@ -178,6 +179,12 @@ const Security = () => {
                 </Button>
               </div>
             </article>
+
+            {/* Two-step sign-in status and the devices allowed to skip the
+                code. Own account only; reads and revokes through
+                /api/security/devices — degrades to "Coming soon" on a server
+                without that endpoint. */}
+            <TrustedDevices />
 
             <article className="mcm-seccard is-risk">
               <span className="mcm-seccard-ico" aria-hidden="true">
