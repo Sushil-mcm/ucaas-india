@@ -154,7 +154,7 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
 
       {drawerState?.addGreeting && (
         <SideDrawer
-          width={width}
+          width={width || 'min(480px,calc(100vw-2rem))'}
           isOpen={drawerState?.addGreeting}
           /* It uploads, records from the microphone, and reads typed text
              aloud. "Upload File" named one of the three. */
@@ -163,6 +163,18 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
             setDrawerState((prev) => ({ ...prev, addGreeting: false, greetingType: '' }))
           }
           isHeader
+          /* A centered popup, same shape as the Create Event modal
+             (messenger/chat/index.tsx) -- a full-height right-edge panel
+             for a form this short read as an oversized side drawer rather
+             than a normal popup. `portal` renders it into <body>, same
+             reason as that caller: opened from inside another dialog here
+             (Edit group), so it needs to escape that ancestor rather than
+             being laid out against it. `backgroundStyle` cancels the
+             drawer's own `bg-black/50` dimming -- the Edit group dialog
+             behind it stays fully visible instead of greyed out. */
+          centered
+          portal
+          backgroundStyle="!bg-transparent"
           content={
             <AddGreeting
               drawerState={drawerState?.addGreeting}
