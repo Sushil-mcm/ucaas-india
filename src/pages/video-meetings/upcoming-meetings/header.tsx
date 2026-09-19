@@ -40,57 +40,46 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
 
   return (
     <div className="mx-auto max-w-250 flex w-full flex-col gap-6 sm:pt-3">
-      <div
-        className="relative w-full flex flex-col gap-7 overflow-hidden rounded-[28px] border border-white/60 bg-white/45 backdrop-blur-2xl
-      sm:p-9 p-5
-      shadow-[0_14px_40px_rgba(201,111,31,0.08),inset_0_1px_0_rgba(255,255,255,0.85)]
-      "
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-[110px]"
-          style={{ background: 'rgba(242,153,74,0.16)' }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-14 -bottom-20 h-48 w-48 rounded-full blur-[95px]"
-          style={{ background: 'rgba(201,111,31,0.1)' }}
-        />
-
-        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
+      <div className="relative w-full overflow-hidden rounded-[24px] border border-[#f0e0cc] shadow-[0_10px_30px_rgba(201,111,31,0.1)]">
+        <div className="flex flex-col lg:flex-row">
+          <div
+            className="relative overflow-hidden flex items-center gap-4 px-6 py-7 sm:px-8 sm:py-8 lg:w-[380px] lg:shrink-0"
+            style={{ background: 'linear-gradient(135deg, #f2994a, #c2620f)' }}
+          >
             <div
               aria-hidden
-              className="hidden sm:flex mt-5 h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)]"
-              style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
+              className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-16 bottom-0 h-52 w-52 rounded-full"
+              style={{ background: 'rgba(255,255,255,0.06)' }}
+            />
+            <div
+              aria-hidden
+              className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25"
             >
               <Icon name="VideocameraAdd" className="w-6 h-6" />
             </div>
-            <div className="flex flex-col gap-2 w-full max-w-[420px]">
-              <span
-                className="text-[10px] font-bold uppercase tracking-[0.14em]"
-                style={{ color: '#c96f1f' }}
-              >
+            <div className="relative z-10 flex flex-col gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/80">
                 Video Conferencing
               </span>
-              <div
-                className="w-full text-2xl sm:text-[28px] leading-tight font-extrabold"
-                style={{ color: '#2E2D35' }}
-              >
+              <div className="text-2xl sm:text-[26px] leading-tight font-extrabold text-white">
                 Video Meetings
               </div>
-              <div className="w-full text-[13px] text-gray-600 font-normal sm:leading-6">
-                Connect securely with your team and clients. Start, schedule, or join high-quality
-                video conferences instantly.
+              <div className="text-[13px] leading-relaxed text-white/85">
+                Connect securely with your team and clients, instantly.
               </div>
             </div>
           </div>
 
           {showActions && (
-            <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center lg:w-auto">
+            <div className="flex flex-1 flex-col justify-center gap-3 bg-white px-6 py-6 sm:flex-row sm:items-center sm:gap-2.5 sm:px-8">
               {videAccess?.create && (
                 <div
-                  className="flex items-center justify-center gap-2 min-h-11 px-5 w-full sm:w-auto cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.4)] transition-transform hover:-translate-y-0.5 "
+                  className="flex items-center justify-center gap-2 min-h-11 px-5 w-full sm:w-auto cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)] transition-transform hover:-translate-y-0.5"
                   style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
                   onClick={() => {
                     if (isPendingInstantMeeting) return;
@@ -104,19 +93,19 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
                 </div>
               )}
 
-              <div className="flex items-center gap-1 rounded-xl border border-white/80 bg-white/60 backdrop-blur-md p-1 shadow-[0_2px_10px_rgba(120,60,20,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] w-full sm:w-auto">
+              <div className="flex items-center gap-1 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/20 p-1 w-full sm:w-auto">
                 <div
                   onClick={() => setModalState(true)}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-gray-800 transition-colors hover:bg-white/90"
+                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-[#2E2D35] transition-colors hover:bg-white"
                 >
                   <Icon name="PlusIcon" className="w-4 h-4 shrink-0" />
                   <h6 className="font-medium text-center text-sm whitespace-nowrap">Join</h6>
                 </div>
                 {videAccess?.create && (
                   <>
-                    <span className="h-5 w-px bg-gray-900/10" aria-hidden />
+                    <span className="h-5 w-px bg-[#EEE7DD]" aria-hidden />
                     <div
-                      className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-gray-800 transition-colors hover:bg-white/90"
+                      className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-[#2E2D35] transition-colors hover:bg-white"
                       onClick={() => setDrawerState(true)}
                     >
                       <Icon name="CalendarIcon" className="w-4 h-4 shrink-0" />
