@@ -1,9 +1,9 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import CustomSelect from './custom-select';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import AddGreeting from '@/pages/greetings/add-greeting';
 import { Button } from '../ui/button';
-import { Play, UploadLineIcon } from '@/assets/icons';
+import { CloseIcon, Play, UploadLineIcon } from '@/assets/icons';
 import { DEFAULT_RECORDING_UUIDS, getEnv, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import ErrorTooltip from './error-tooltip';
@@ -59,12 +59,27 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
     addGreeting: false,
     greetingType: '',
   });
+  const previewRef = useRef<HTMLDivElement>(null);
   const selectedGreeting = options.find((option) => option.value === value?.value) as
     GreetingSelectValue | undefined;
   const greetingUuid = (value as GreetingSelectValue | null)?.uuid ?? selectedGreeting?.uuid;
   const recordingUrl = DEFAULT_RECORDING_UUIDS.includes(greetingUuid ?? '')
     ? `${getEnv().VITE_API_BASE_URL}/api/media/default/recording/${value?.value}`
     : `${MEDIA_URL}/${company_info?.uuid}/greeting/${value?.value}`;
+
+  // A full slide-in side panel read as too heavy for a quick preview -- this
+  // is a small card anchored right next to the row it opened from, closing
+  // the moment a click lands outside it.
+  useEffect(() => {
+    if (!isPlay) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (previewRef.current && !previewRef.current.contains(event.target as Node)) {
+        setIsPlay(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isPlay]);
 
   return (
     <>
@@ -115,21 +130,29 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
         )}
       </div>
 
-      {/* Preview opens as its own right-side panel rather than swapping in
-          over the dropdown above -- same slide-in pattern as the "Add a
-          recording" drawer below, so it reads as a peek at the recording
-          instead of replacing the control that opened it. Mounted only
-          while open, same as that drawer, so picking a recording doesn't
-          fetch its authenticated media URL until it's actually previewed. */}
+      {/* Preview opens as a small card anchored to the right of the row it
+          was opened from -- same level as the dropdown, not a separate
+          full-height panel -- and closes on an outside click. Mounted only
+          while open so picking a recording doesn't fetch its authenticated
+          media URL until it's actually previewed. */}
       {isPlay && (
-        <SideDrawer
-          isOpen={isPlay}
-          handleClose={() => setIsPlay(false)}
-          title="Recording preview"
-          isHeader
-          width="22rem"
-          content={<AudioPreviewPlayer src={recordingUrl} authenticated />}
-        />
+        <div
+          ref={previewRef}
+          className="absolute left-full top-0 z-20 ml-2 w-72 rounded-xl border-0 bg-white p-1.5 shadow-lg"
+        >
+          <div className="flex items-center justify-between px-1.5 pb-1.5 pt-0.5">
+            <span className="text-[13px] font-semibold text-[#2E2D35]">Recording preview</span>
+            <button
+              type="button"
+              onClick={() => setIsPlay(false)}
+              aria-label="Close"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-[#9A948F] transition-colors hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]"
+            >
+              <CloseIcon className="h-3 w-3" />
+            </button>
+          </div>
+          <AudioPreviewPlayer src={recordingUrl} authenticated />
+        </div>
       )}
 
       {drawerState?.addGreeting && (
