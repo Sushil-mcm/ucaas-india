@@ -192,9 +192,9 @@
   width: 100%;
   height: auto;
   gap: 3px;
-  /* The tray is the lightest surface, not the darkest. surface-3 made the
-     control the heaviest object in a column whose job is to list messages. */
-  background: var(--mcm-surface-2);
+  /* Plain white tray, matching the rest of the header per request; the
+     active segment carries its own orange wash so it still stands out. */
+  background: var(--mcm-surface);
   border: 1px solid var(--mcm-line-2);
   padding: 3px;
   border-radius: 11px;
@@ -222,7 +222,7 @@
   color: var(--mcm-accent-ink);
 }
 .mcm-inbox .mcm-seg button[data-state='active'] {
-  background: var(--mcm-surface);
+  background: var(--mcm-accent-wash);
   color: var(--mcm-accent-ink);
   box-shadow: var(--mcm-shadow-sm);
 }
@@ -964,7 +964,7 @@
   border-color: var(--mcm-line-2);
 }
 .mcm-inbox .mcm-col-head .mcm-seg {
-  background: var(--mcm-surface-2);
+  background: var(--mcm-surface);
   border-color: var(--mcm-line-2);
 }
 
