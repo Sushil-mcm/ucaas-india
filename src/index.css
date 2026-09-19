@@ -829,7 +829,10 @@
     background-color: #fff !important;
     border-radius: 14px !important;
     padding: 6px !important;
-    border-color: rgba(242, 153, 74, 0.6) !important;
+    /* The orange border belongs on the trigger only, not the opened menu —
+       overrides the base .custom-react-select__menu's own var(--primary)
+       border with a neutral one. */
+    border-color: rgba(225, 200, 165, 0.9) !important;
     box-shadow: 0 12px 32px rgba(160, 95, 30, 0.18) !important;
   }
   .mcm-date-preset.custom-react-select__menu-list {
@@ -937,6 +940,16 @@
     border: none !important;
     box-shadow: none !important;
     background-color: rgba(255, 255, 255, 0.7) !important;
+  }
+  /* The CONTROL's border was the only thing fixed above — the opened
+     option list is a separate BEM part (`__menu`) with its own border
+     from the base `.custom-react-select__menu` rule, which this control
+     fix never touched. */
+  .contact-toolbar-select.custom-react-select__menu {
+    border: none !important;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   }
 
   /* Any CustomSelect opted in via `inputClass="gp-borderless-select"` --
