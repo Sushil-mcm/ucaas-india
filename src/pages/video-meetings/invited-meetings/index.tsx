@@ -209,7 +209,7 @@ const InvitedMeetings = () => {
                 return (
                   <div
                     key={meeting?.meetingId}
-                    className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#ffffff] p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => setSelectedMeeting(meeting)}
                   >
                     <div className="flex w-full min-w-0 items-start">
