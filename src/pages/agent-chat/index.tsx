@@ -761,16 +761,16 @@ const SidebarContent = ({
             {tabOptions.map((tab) => {
               const count = tabCounts[tab.value as AgentChatTab] || 0;
               const isActive = activeTab === tab.value;
-              const badgeBg = isActive ? 'bg-primary/10' : 'bg-black/5';
-              const badgeText = isActive ? 'text-primary' : 'text-muted-foreground';
+              const badgeBg = isActive ? 'bg-[#c96f1f]/10' : 'bg-black/5';
+              const badgeText = isActive ? 'text-[#c96f1f]' : 'text-[#6b7891]';
 
               return (
                 <button
                   key={tab.value}
                   className={`flex-1 h-full min-w-0 rounded-[7px] px-1 text-[10px] sm:text-[11px] font-bold cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-[#ffffff] text-primary shadow-sm'
-                      : 'text-[#8a8580] hover:text-foreground'
+                      ? 'bg-[#ffffff] text-[#c96f1f] shadow-sm'
+                      : 'text-[#6b7891] hover:text-[#2E2D35]'
                   }`}
                   onClick={() => {
                     if (tab.value === 'unassigned' || tab.value === 'missed') {
