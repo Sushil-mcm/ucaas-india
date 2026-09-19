@@ -386,14 +386,18 @@
    every other `.gp-create-group-dialog` (New role, New location, ...)
    keeps its normal header's own spacing untouched. */
 .gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-create-group-body {
-  /* 34px cleared the floating close button (top:0, 14px padding, 32px
-     circle -- bottom edge at 46px) by only 12px less than nothing: the
-     Name/Location row's own top actually started at 34px, 12px inside the
-     button's own box. Bumped by one field row's height (measured at 78px
-     between the Name row and the Description row below it) so the form
-     starts clear of the button with real breathing room, not just barely
-     under it. */
-  padding-top: 112px;
+  padding-top: 34px;
+}
+/* The 34px above sits on `.gp-create-group-body`, the shared row that
+   holds BOTH the rail and the content pane beside it -- so it pushed the
+   rail's own title down too, which was already positioned fine (it isn't
+   under the floating close button, only the content pane's first row is).
+   Targeted extra clearance at the content pane alone -- the rail's very
+   next sibling, same selector already used for the scroll/stretch fix
+   below -- one field row's height (78px, measured between the Name row
+   and the Description row under it) on top of the 34px it already has. */
+.gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-department-rail + div {
+  padding-top: 78px;
 }
 .gp-create-group-head h2 {
   margin: 0;
