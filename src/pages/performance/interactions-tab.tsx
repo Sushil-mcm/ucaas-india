@@ -4,7 +4,7 @@ import { Clock, Timer, IndianRupee } from 'lucide-react';
 import CallHistory from '@/pages/reports/call-logs/call-history';
 import PerfKpiTile from './perf-kpi-tile';
 import { useKpiHistory } from '@/pages/dashboard/home/use-kpi-history';
-import { TrendArea } from '@/pages/dashboard/home/charts';
+import { TrendBars } from '@/pages/dashboard/home/charts';
 import { useCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
 import './perf-kpi-tile.css';
@@ -142,7 +142,7 @@ const CallVolumeTrend = ({
         Calls per {byHour ? 'hour' : 'day'} across the selected range.
       </div>
       {series.length > 1 ? (
-        <TrendArea data={series} dataKey="v" xKey="label" color="#f2994a" height={170} />
+        <TrendBars data={series} dataKey="v" xKey="label" color="#f2994a" height={170} />
       ) : (
         <div className="ic-panel-empty">Not enough range to chart yet.</div>
       )}
