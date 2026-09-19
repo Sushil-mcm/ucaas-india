@@ -16,7 +16,7 @@ import { polyfillCountryFlagEmojis } from 'country-flag-emoji-polyfill';
 polyfillCountryFlagEmojis();
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import PhoneInput from 'react-phone-input-2';
+import RecipientField from '../recipient-field';
 import { formatDialSpaced } from '../format-number';
 import { count } from 'sms-length';
 import * as yup from 'yup';
@@ -381,21 +381,14 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
               {errors?.to?.message && <ErrorTooltip text={errors?.to?.message || ''} />}
             </div>
             <div className="flex w-full gap-1">
-              {/* India only. The account's numbers are Indian and messages go
-                  to Indian numbers, so the full country list was 200-odd
-                  entries deep to reach the one that is always right -- and it
-                  defaulted to +1, which is never the answer here. */}
-              <PhoneInput
-                country="in"
-                onlyCountries={['in']}
-                disableDropdown
-                value={String(to) || ''}
-                onChange={(value: string) => {
-                  setValue('to', value, {
-                    shouldValidate: true,
-                  });
-                }}
-                containerClass={`w-full ${errors?.to?.message ? 'phone-error' : ''}`}
+              {/* Accepts a contact name or a number — digits-only input
+                  couldn't search by name. The "from" DID gives a locally
+                  typed number its country (India, for this account's
+                  numbers). */}
+              <RecipientField
+                value={String(to || '')}
+                fromNumber={from?.value}
+                onChange={(next) => setValue('to', next, { shouldValidate: true })}
               />
             </div>
           </div>

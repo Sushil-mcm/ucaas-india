@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import PhoneInput from 'react-phone-input-2';
+import RecipientField from '../recipient-field';
 import * as yup from 'yup';
 
 const MAX_FAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -217,13 +217,10 @@ const SendFaxModal = ({
               <Label>To</Label>
               {errors?.to?.message ? <ErrorTooltip text={errors.to.message} /> : null}
             </div>
-            <PhoneInput
-              country="in"
-              onlyCountries={['in']}
-              disableDropdown
+            <RecipientField
               value={String(to || '')}
-              onChange={(value: string) => setValue('to', value, { shouldValidate: true })}
-              containerClass={`w-full ${errors?.to?.message ? 'phone-error' : ''}`}
+              fromNumber={from?.value}
+              onChange={(next) => setValue('to', next, { shouldValidate: true })}
             />
           </div>
 
