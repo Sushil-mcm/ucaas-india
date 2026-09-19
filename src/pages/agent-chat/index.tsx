@@ -755,9 +755,9 @@ const SidebarContent = ({
   return (
     <div className="w-full flex-1 min-h-0 bg-white">
 
-      <div className="px-4 pt-4 pb-5 border-b border-border bg-white">
+      <div className="px-4 pt-4 pb-5 border-b border-border bg-[#ffffff]">
         <div className="h-11 rounded-[10px] bg-[#fff1e0] border border-[#ffd9ad] p-[2px]">
-          <div className="grid h-full grid-cols-[1.5fr_1fr_1fr_1.15fr] gap-0.5">
+          <div className="flex h-full gap-0.5">
             {tabOptions.map((tab) => {
               const count = tabCounts[tab.value as AgentChatTab] || 0;
               const isActive = activeTab === tab.value;
@@ -767,9 +767,9 @@ const SidebarContent = ({
               return (
                 <button
                   key={tab.value}
-                  className={`h-full min-w-0 rounded-[7px] px-1 text-[10px] sm:text-[11px] font-bold cursor-pointer transition-colors ${
+                  className={`flex-1 h-full min-w-0 rounded-[7px] px-1 text-[10px] sm:text-[11px] font-bold cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-white text-primary shadow-sm'
+                      ? 'bg-[#ffffff] text-primary shadow-sm'
                       : 'text-[#8a8580] hover:text-foreground'
                   }`}
                   onClick={() => {
