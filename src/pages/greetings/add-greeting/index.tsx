@@ -229,15 +229,16 @@ const AddGreeting: FC<IAddgreetings> = ({
        whatever height the parent actually resolves to, definite or not. */
     <div className="w-full flex flex-col gap-2 justify-between flex-1 min-h-0">
       <FormProvider {...formInstance}>
-        {/* `min-h-0`: without it, a flex item defaults to a min-height equal
-           to its own content, so this `flex-1 overflow-y-auto` never
-           actually shrinks below the tabs+details' full height inside the
-           `h-full` column above -- it grows instead of scrolling, pushing
-           the Cancel/Upload row (`mt-auto`, below) out past the drawer's
-           own bounded height instead of keeping it pinned in view while
-           only this content scrolls. Same bug/fix as the Add Members
-           table earlier in this app (groups-glass.css). */}
-        <div className="flex flex-col gap-4 pr-1 flex-1 min-h-0 overflow-y-auto">
+        {/* A fixed height, not `flex-1`: the popup itself has no fixed size
+           of its own (SideDrawer's centered panel only caps at
+           `max-height`), so whichever height this box wants to be is what
+           the whole popup resizes to. Choose File and Record's own content
+           both land around ~470px; pinning this box to that same height
+           keeps the popup one consistent size across all three tabs
+           instead of visibly resizing when Text to Speech's taller content
+           (language/voice grid, textarea, details) is selected -- that
+           content scrolls inside this fixed box instead. */}
+        <div className="flex h-[470px] flex-col gap-4 overflow-y-auto pr-1">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
             <div className="w-full mb-4">
               {/* Segmented pill track -- white track, solid-orange active
