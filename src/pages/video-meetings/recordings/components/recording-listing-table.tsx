@@ -325,7 +325,7 @@ const RecordingListingTable = ({
         <button
           type="button"
           className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, #E78B50, #D9652E)' }}
+          style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
         >
           {record.memberNames.length}
         </button>
@@ -342,7 +342,7 @@ const RecordingListingTable = ({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/70 bg-white/50 backdrop-blur-md text-[#64748b] hover:bg-white/80"
+            className="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[rgba(225,200,165,0.9)] bg-white text-[#64748b] hover:bg-[#fff6e9]"
             aria-label="Recording actions"
           >
             <MoreVertical className="h-4 w-4" />
@@ -383,15 +383,15 @@ const RecordingListingTable = ({
   };
 
   return (
-    <div className="flex min-h-[calc(100svh-320px)] max-h-[calc(100svh-180px)] flex-1 flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/45 backdrop-blur-xl shadow-[0_4px_20px_rgba(154,52,18,0.06),inset_0_1px_0_rgba(255,255,255,0.85)]">
-      <div className="flex flex-col gap-3 border-b border-white/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+    <div className="flex min-h-[calc(100svh-320px)] max-h-[calc(100svh-180px)] flex-1 flex-col overflow-hidden rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+      <div className="flex flex-col gap-3 border-b border-[rgba(225,200,165,0.9)] p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="relative w-full sm:max-w-[380px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8]" />
           <input
             value={searchText}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search recordings..."
-            className="h-10 w-full rounded-xl border border-white/80 bg-white/70 backdrop-blur-md pl-9 pr-3 text-sm text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:ring-[3px] focus:ring-[#E78B50]/20 focus:border-[#E78B50]/50"
+            className="h-10 w-full rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#fff6e9] pl-9 pr-3 text-sm text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:ring-[3px] focus:ring-primary/20 focus:border-primary/50"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -399,7 +399,7 @@ const RecordingListingTable = ({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/80 bg-white/60 backdrop-blur-md text-[#64748b] hover:bg-white/85"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(225,200,165,0.9)] bg-white text-[#64748b] hover:bg-[#fff6e9]"
               >
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
@@ -410,21 +410,21 @@ const RecordingListingTable = ({
               <DropdownMenuCheckboxItem
                 checked={videosOnly}
                 onCheckedChange={(value) => setVideosOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-[#B5642F]"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
               >
                 Videos only
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={sharedOnly}
                 onCheckedChange={(value) => setSharedOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-[#B5642F]"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
               >
                 Shared only
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={largeFilesOnly}
                 onCheckedChange={(value) => setLargeFilesOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-[#B5642F]"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
               >
                 Large files (&gt; 100 MB)
               </DropdownMenuCheckboxItem>
@@ -435,7 +435,7 @@ const RecordingListingTable = ({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/80 bg-white/60 backdrop-blur-md text-[#64748b] hover:bg-white/85"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(225,200,165,0.9)] bg-white text-[#64748b] hover:bg-[#fff6e9]"
               >
                 <ArrowUpDown className="h-4 w-4" />
               </button>
@@ -451,7 +451,7 @@ const RecordingListingTable = ({
                 >
                   <span>{option.label}</span>
                   {sortBy === option.key ? (
-                    <Check className="h-4 w-4" style={{ color: '#B5642F' }} />
+                    <Check className="h-4 w-4" style={{ color: 'var(--primary)' }} />
                   ) : null}
                 </DropdownMenuItem>
               ))}
@@ -460,7 +460,7 @@ const RecordingListingTable = ({
         </div>
       </div>
 
-      <div className="hidden grid-cols-[minmax(0,2.8fr)_0.95fr_1fr_0.95fr_0.7fr_56px] gap-4 border-b border-white/60 bg-white/20 px-5 py-3 text-xs font-semibold uppercase tracking-[0.06em] text-[#8a6a55] sm:grid">
+      <div className="hidden grid-cols-[minmax(0,2.8fr)_0.95fr_1fr_0.95fr_0.7fr_56px] gap-4 border-b-[3px] border-[rgba(242,153,74,0.4)] bg-[#fff6e9] px-5 py-3 text-xs font-semibold uppercase tracking-[0.06em] text-[#9A948F] sm:grid">
         <div>Name</div>
         <div>Size</div>
         <div>Recorded On</div>
@@ -480,11 +480,11 @@ const RecordingListingTable = ({
               {filteredRecords.map((record) => (
                 <div
                   key={record?._id}
-                  className="rounded-xl border border-white/70 bg-white/50 backdrop-blur-md p-3 shadow-[0_2px_10px_rgba(154,52,18,0.05)]"
+                  className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-white p-3 shadow-[0_2px_10px_rgba(160,95,30,0.08)]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E78B50]/10 text-[#B5642F]">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff1e0] text-[#c96f1f]">
                         {record.fileType === 'video' ? (
                           <FileVideo2 className="h-4 w-4" />
                         ) : (
@@ -505,7 +505,7 @@ const RecordingListingTable = ({
                           </p>
                           {record?.isSharedWithMeNonAdmin ? (
                             <CustomTooltip text="Shared with you" side="top">
-                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E78B50]/10 text-[#B5642F]">
+                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff1e0] text-[#c96f1f]">
                                 <Share2 className="h-3 w-3" />
                               </span>
                             </CustomTooltip>
@@ -544,10 +544,10 @@ const RecordingListingTable = ({
               {filteredRecords.map((record) => (
                 <div
                   key={record?._id}
-                  className="grid grid-cols-[minmax(0,2.8fr)_0.95fr_1fr_0.95fr_0.7fr_56px] items-center gap-4 border-b border-white/50 px-5 py-4 transition-colors last:border-b-0 hover:bg-white/30"
+                  className="grid grid-cols-[minmax(0,2.8fr)_0.95fr_1fr_0.95fr_0.7fr_56px] items-center gap-4 border-b border-[rgba(150,100,50,0.1)] px-5 py-4 transition-colors last:border-b-0 hover:bg-[#fff8f0]"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E78B50]/10 text-[#B5642F]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff1e0] text-[#c96f1f]">
                       {record.fileType === 'video' ? (
                         <FileVideo2 className="h-4 w-4" />
                       ) : (
@@ -568,7 +568,7 @@ const RecordingListingTable = ({
                         </p>
                         {record?.isSharedWithMeNonAdmin ? (
                           <CustomTooltip text="Shared with you" side="top">
-                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E78B50]/10 text-[#B5642F]">
+                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff1e0] text-[#c96f1f]">
                               <Share2 className="h-3 w-3" />
                             </span>
                           </CustomTooltip>
