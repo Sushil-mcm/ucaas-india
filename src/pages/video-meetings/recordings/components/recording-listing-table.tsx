@@ -348,11 +348,11 @@ const RecordingListingTable = ({
             <MoreVertical className="h-4 w-4" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44 border border-[#d7dbe2]">
+        <DropdownMenuContent align="end" className="w-44 border-0">
           <DropdownMenuItem
             onClick={() => handleDownloadRecording(record)}
             disabled={isDownloading}
-            className="cursor-pointer"
+            className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
           >
             {isDownloading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -362,18 +362,18 @@ const RecordingListingTable = ({
             {isDownloading ? 'Downloading...' : 'Download'}
           </DropdownMenuItem>
           {canShareAction ? (
-            <DropdownMenuItem onClick={() => onShare?.(record)} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => onShare?.(record)} className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary">
               <Share2 className="mr-2 h-4 w-4" />
               Share
             </DropdownMenuItem>
           ) : null}
           {canOpenChatAction ? (
-            <DropdownMenuItem onClick={() => onChat?.(record)} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => onChat?.(record)} className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary">
               <MessageCircle className="mr-2 h-4 w-4" />
               Chat
             </DropdownMenuItem>
           ) : null}
-          <DropdownMenuItem onClick={() => onPlay(record)} className="cursor-pointer">
+          <DropdownMenuItem onClick={() => onPlay(record)} className="cursor-pointer hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary">
             <Play className="mr-2 h-4 w-4" />
             Play
           </DropdownMenuItem>
@@ -404,7 +404,7 @@ const RecordingListingTable = ({
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 border border-[#d7dbe2]">
+            <DropdownMenuContent align="end" className="w-52 border-0">
               <DropdownMenuLabel>Filters</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
@@ -440,14 +440,14 @@ const RecordingListingTable = ({
                 <ArrowUpDown className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 border border-[#d7dbe2]">
+            <DropdownMenuContent align="end" className="w-52 border-0">
               <DropdownMenuLabel>Sort by</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {sortOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.key}
                   onClick={() => setSortBy(option.key)}
-                  className="flex items-center justify-between gap-2"
+                  className="flex items-center justify-between gap-2 hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                 >
                   <span>{option.label}</span>
                   {sortBy === option.key ? (
