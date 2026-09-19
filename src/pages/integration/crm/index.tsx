@@ -10,13 +10,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronIcon } from '@/assets/icons';
-import { CRMDisconnect, crmGetToken, CRMIsConnected, hubspotCRM } from '@/services/api';
+import {
+  CRMDisconnect,
+  crmGetToken,
+  CRMIsConnected,
+  hubspotCRM,
+  connectEspoCrm,
+  connectOdoo,
+} from '@/services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { crmList, crmListProps } from '../constant';
 import SideDrawer from '@/components/custom/side-drawer';
 import CRMConfigration from './configration';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const CRMIntegration = () => {
   const navigate = useNavigate();
@@ -25,9 +34,18 @@ const CRMIntegration = () => {
   const [drawerData, setDrawerData] = useState<crmListProps>();
   const [deleteAlertModal, setDeleteAlertModal] = useState<Record<string, boolean>>({});
   const [mondaySetupModal, setMondaySetupModal] = useState<boolean>(false);
+  const [espoCrmSetupModal, setEspoCrmSetupModal] = useState<boolean>(false);
+  const [espoCrmInstanceUrl, setEspoCrmInstanceUrl] = useState<string>('');
+  const [espoCrmApiKey, setEspoCrmApiKey] = useState<string>('');
+  const [espoCrmError, setEspoCrmError] = useState<string>('');
+  const [odooSetupModal, setOdooSetupModal] = useState<boolean>(false);
+  const [odooInstanceUrl, setOdooInstanceUrl] = useState<string>('');
+  const [odooDatabase, setOdooDatabase] = useState<string>('');
+  const [odooUsername, setOdooUsername] = useState<string>('');
+  const [odooApiKey, setOdooApiKey] = useState<string>('');
+  const [odooError, setOdooError] = useState<string>('');
   const queryClient: any = useQueryClient();
   const activeDeleteKey = Object?.keys(deleteAlertModal)?.find((key) => deleteAlertModal[key]);
-  console.log(activeDeleteKey, 'activeDeleteKey', deleteAlertModal);
 
   const { data: crmIsConnectedData = [] } = useQuery({
     queryKey: ['CRMIsConnected'],
@@ -45,6 +63,18 @@ const CRMIntegration = () => {
 
     if (crm.id === 'Monday' && !bypassModal) {
       setMondaySetupModal(true);
+      return;
+    }
+
+    if (crm.id === 'EspoCRM') {
+      setEspoCrmError('');
+      setEspoCrmSetupModal(true);
+      return;
+    }
+
+    if (crm.id === 'Odoo') {
+      setOdooError('');
+      setOdooSetupModal(true);
       return;
     }
 
@@ -76,6 +106,73 @@ const CRMIntegration = () => {
       queryClient.invalidateQueries(['CRMIsConnected']);
     },
   });
+
+  const { mutateAsync: mutateConnectEspoCrm, isPending: isEspoCrmConnecting } = useMutation({
+    mutationKey: ['connectEspoCrm'],
+    mutationFn: connectEspoCrm,
+    onSuccess: () => {
+      setEspoCrmSetupModal(false);
+      setEspoCrmInstanceUrl('');
+      setEspoCrmApiKey('');
+      queryClient.invalidateQueries(['CRMIsConnected']);
+    },
+  });
+
+  const handleEspoCrmConnect = async () => {
+    setEspoCrmError('');
+    const instanceUrl = espoCrmInstanceUrl.trim();
+    const apiKey = espoCrmApiKey.trim();
+    if (!instanceUrl || !apiKey) {
+      setEspoCrmError('Instance URL and API Key are both required.');
+      return;
+    }
+    try {
+      await mutateConnectEspoCrm({ instance_url: instanceUrl, api_key: apiKey });
+    } catch (error: any) {
+      setEspoCrmError(
+        error?.response?.data?.error?.message || 'Could not connect to EspoCRM. Check the URL and API key.',
+      );
+    }
+  };
+
+  const { mutateAsync: mutateConnectOdoo, isPending: isOdooConnecting } = useMutation({
+    mutationKey: ['connectOdoo'],
+    mutationFn: connectOdoo,
+    onSuccess: () => {
+      setOdooSetupModal(false);
+      setOdooInstanceUrl('');
+      setOdooDatabase('');
+      setOdooUsername('');
+      setOdooApiKey('');
+      queryClient.invalidateQueries(['CRMIsConnected']);
+    },
+  });
+
+  const handleOdooConnect = async () => {
+    setOdooError('');
+    const instanceUrl = odooInstanceUrl.trim();
+    const database = odooDatabase.trim();
+    const username = odooUsername.trim();
+    const apiKey = odooApiKey.trim();
+    if (!instanceUrl || !database || !username || !apiKey) {
+      setOdooError('Instance URL, Database, Username and API Key are all required.');
+      return;
+    }
+    try {
+      await mutateConnectOdoo({
+        instance_url: instanceUrl,
+        database,
+        username,
+        api_key: apiKey,
+      });
+    } catch (error: any) {
+      setOdooError(
+        error?.response?.data?.error?.message ||
+          'Could not connect to Odoo. Check the URL, database, username and API key.',
+      );
+    }
+  };
+
   useEffect(() => {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -279,6 +376,130 @@ const CRMIntegration = () => {
                   Step 2: Connect
                 </button>
               </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        {espoCrmSetupModal && (
+          <Dialog open={espoCrmSetupModal} onOpenChange={setEspoCrmSetupModal}>
+            <DialogContent className="max-w-md p-6 rounded-2xl border border-gray-100 bg-white shadow-2xl">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                  <img
+                    src={crmList.find((item) => item.id === 'EspoCRM')?.image}
+                    alt="EspoCRM"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+                <DialogTitle className="text-xl font-bold text-gray-900">
+                  Connect EspoCRM
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 max-w-xs">
+                  Enter your EspoCRM instance URL and an API key from an EspoCRM API User
+                  (Administration → Users → Create User, type "API User", auth method "API Key").
+                </DialogDescription>
+              </div>
+
+              <div className="flex flex-col gap-4 my-6">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="espocrm-instance-url">Instance URL</Label>
+                  <Input
+                    id="espocrm-instance-url"
+                    placeholder="https://your-espocrm-domain.com"
+                    value={espoCrmInstanceUrl}
+                    onChange={(e) => setEspoCrmInstanceUrl(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="espocrm-api-key">API Key</Label>
+                  <Input
+                    id="espocrm-api-key"
+                    type="password"
+                    placeholder="Paste your EspoCRM API key"
+                    value={espoCrmApiKey}
+                    onChange={(e) => setEspoCrmApiKey(e.target.value)}
+                  />
+                </div>
+                {espoCrmError && <p className="text-xs text-red-600">{espoCrmError}</p>}
+              </div>
+
+              <button
+                type="button"
+                disabled={isEspoCrmConnecting}
+                onClick={handleEspoCrmConnect}
+                className="flex-1 w-full flex items-center justify-center h-10 text-sm font-bold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-60"
+              >
+                {isEspoCrmConnecting ? 'Connecting...' : 'Connect'}
+              </button>
+            </DialogContent>
+          </Dialog>
+        )}
+        {odooSetupModal && (
+          <Dialog open={odooSetupModal} onOpenChange={setOdooSetupModal}>
+            <DialogContent className="max-w-md p-6 rounded-2xl border border-gray-100 bg-white shadow-2xl">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100/50">
+                  <img
+                    src={crmList.find((item) => item.id === 'Odoo')?.image}
+                    alt="Odoo"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+                <DialogTitle className="text-xl font-bold text-gray-900">Connect Odoo</DialogTitle>
+                <DialogDescription className="text-sm text-gray-500 max-w-xs">
+                  Enter your Odoo instance URL, database name, user login, and an API key from that
+                  user (My Profile → Account Security → New API Key).
+                </DialogDescription>
+              </div>
+
+              <div className="flex flex-col gap-4 my-6">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="odoo-instance-url">Instance URL</Label>
+                  <Input
+                    id="odoo-instance-url"
+                    placeholder="https://your-odoo-domain.com"
+                    value={odooInstanceUrl}
+                    onChange={(e) => setOdooInstanceUrl(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="odoo-database">Database</Label>
+                  <Input
+                    id="odoo-database"
+                    placeholder="Your Odoo database name"
+                    value={odooDatabase}
+                    onChange={(e) => setOdooDatabase(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="odoo-username">Username</Label>
+                  <Input
+                    id="odoo-username"
+                    placeholder="Your Odoo login (email)"
+                    value={odooUsername}
+                    onChange={(e) => setOdooUsername(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <Label htmlFor="odoo-api-key">API Key</Label>
+                  <Input
+                    id="odoo-api-key"
+                    type="password"
+                    placeholder="Paste your Odoo API key"
+                    value={odooApiKey}
+                    onChange={(e) => setOdooApiKey(e.target.value)}
+                  />
+                </div>
+                {odooError && <p className="text-xs text-red-600">{odooError}</p>}
+              </div>
+
+              <button
+                type="button"
+                disabled={isOdooConnecting}
+                onClick={handleOdooConnect}
+                className="flex-1 w-full flex items-center justify-center h-10 text-sm font-bold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-60"
+              >
+                {isOdooConnecting ? 'Connecting...' : 'Connect'}
+              </button>
             </DialogContent>
           </Dialog>
         )}
