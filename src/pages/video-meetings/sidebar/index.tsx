@@ -90,6 +90,7 @@ const Sidebar = () => {
   const { features } = useCompanyFeatures();
   const { user = {} } = useUser();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const IS_ADMIN = user?.user_info?.role === 'ADMIN';
   const sidebarItems = useMemo(() => meetingSidebarArr(features, IS_ADMIN), [features, IS_ADMIN]);
 
@@ -151,12 +152,18 @@ const Sidebar = () => {
                       activeHeaderClassName="[&>button[data-active=true]]:rounded-xl [&>button[data-active=true]]:bg-[#fff1e0] [&>button[data-active=true]]:text-[#c96f1f]"
                       activeIconClassName="text-[#c96f1f]"
                     >
-                      <div className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-[#fff1e0]/40 transition-colors">
+                      <div
+                        className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-[#fff1e0]/40 transition-colors"
+                        onClick={() => {
+                          const firstChildPath = children?.[0]?.path;
+                          if (firstChildPath) navigate(firstChildPath);
+                        }}
+                      >
                         <Icon name={icon as IconType} className="h-5 w-5" />
                         {title}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="bg-[#fff1e0]/40 backdrop-blur-md rounded-xl mt-0.5 px-2 py-1">
+                    <AccordionContent className="bg-[#ffffff] rounded-xl mt-0.5 px-2 py-1">
                       {children?.map(
                         (
                           {
