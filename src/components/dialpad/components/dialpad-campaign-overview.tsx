@@ -21,6 +21,7 @@ import { useUser } from '@/hooks/use-user';
 import { cn, handleAlert } from '@/lib/utils';
 import { AlertTriangle, Clock3, LoaderCircle, PhoneCall } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import DialpadCampaignIdleWorkspace from './dialpad-campaign-idle-workspace';
 import DialpadCampaignContactCard, {
   type CampaignContactCard,
   type CampaignSkipStatus,
@@ -1755,6 +1756,7 @@ const DialpadCampaignOverview = ({
             </div>
           ) : null}
         </div>
+        <DialpadCampaignIdleWorkspace campaign={activeCampaign} />
         {leadValidationDialog}
       </div>
     );
