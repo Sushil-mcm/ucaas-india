@@ -1118,8 +1118,8 @@ const SidebarContent = ({
           spanned the body below it, never that row — it read as a gap before
           the divider "started". Same fix as Phone: drop the shared head and
           put the title here, inside the column it actually belongs to. */}
-      <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
-        <h2 className="text-2xl font-bold text-[#2E2D35]">{pageTitle}</h2>
+      <div className="flex items-center gap-1.5 px-3 pt-[10px] pb-1 bg-[#ffffff]">
+        <h2 className="text-[23px] font-bold text-[#2E2D35]">{pageTitle}</h2>
         <CustomTooltip
           text="Team and customer conversations across every channel you have connected."
           side="bottom"
