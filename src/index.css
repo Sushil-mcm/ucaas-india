@@ -812,14 +812,44 @@
      corners rounded to match the pill's curve on the side that's a real
      edge (left) and squared off on the side that meets Sep 4/Division/
      Media (right), so there's nothing left to clip. */
+  /* Default: a standalone orange-outline pill (border + text, no fill),
+     for every page that renders this select on its own rather than as
+     the first segment of Performance's fused Today+Division+Media pill.
+     Only Performance opts back into the transparent/squared look, scoped
+     below under .perf-filter-pill. */
   .mcm-date-preset.custom-react-select__control {
     height: 36px !important;
     min-height: 36px !important;
+    border-radius: 999px !important;
+    background-color: #fff !important;
+    border: 1px solid rgba(242, 153, 74, 0.6) !important;
+  }
+  .mcm-date-preset.custom-react-select__control:hover {
+    border-color: #f2994a !important;
+  }
+  .mcm-date-preset .custom-react-select__single-value,
+  .mcm-date-preset .custom-react-select__placeholder {
+    color: #f2994a !important;
+    font-weight: 600;
+  }
+  .mcm-date-preset .custom-react-select__dropdown-indicator svg {
+    color: #f2994a !important;
+  }
+  .perf-filter-pill .mcm-date-preset.custom-react-select__control {
     background-color: transparent !important;
+    border: none !important;
     border-top-left-radius: 999px !important;
     border-bottom-left-radius: 999px !important;
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+  }
+  .perf-filter-pill .mcm-date-preset .custom-react-select__single-value,
+  .perf-filter-pill .mcm-date-preset .custom-react-select__placeholder {
+    color: inherit !important;
+    font-weight: inherit;
+  }
+  .perf-filter-pill .mcm-date-preset .custom-react-select__dropdown-indicator svg {
+    color: inherit !important;
   }
   .mcm-date-preset.custom-react-select__menu {
     /* Pure opaque white, not a 96%-alpha + blur combo — the blur softened
