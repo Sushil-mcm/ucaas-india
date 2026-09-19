@@ -340,9 +340,9 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
         className="flex h-full w-full min-h-0 flex-col justify-between gap-2"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pr-1 sm:pr-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1 sm:pr-2">
           <div
-            className="pb-5"
+            className="pb-3"
             style={{ borderBottom: '1.5px solid rgba(231,139,80,0.18)' }}
           >
             <Input
@@ -358,7 +358,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           </div>
 
           <div
-            className="flex flex-col gap-5 pb-5"
+            className="flex flex-col gap-3 pb-3"
             style={{ borderBottom: '1.5px solid rgba(231,139,80,0.18)' }}
           >
             <div className="flex flex-col gap-1.5 w-full">
@@ -370,7 +370,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           </div>
 
           <div
-            className="flex flex-col gap-5 pb-5 md:flex-row md:items-end"
+            className="flex flex-col gap-3 pb-3 md:flex-row md:items-end"
             style={{ borderBottom: '1.5px solid rgba(231,139,80,0.18)' }}
           >
             <div className="flex flex-col gap-1.5 w-full">
@@ -412,7 +412,7 @@ const ScheduleMeeting: FC<ScheduleMeetingProps> = ({ setDrawerState, initialData
           </div>
 
           <div
-            className="flex flex-col gap-2.5 pb-5"
+            className="flex flex-col gap-2 pb-3"
             style={{ borderBottom: '1.5px solid rgba(231,139,80,0.18)' }}
           >
             <Label>Estimated Duration</Label>

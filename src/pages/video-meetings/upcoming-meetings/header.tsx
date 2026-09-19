@@ -121,8 +121,8 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
         />
       )}
       <Dialog open={drawerState} onOpenChange={setDrawerState}>
-        <DialogContent className="flex w-[96vw] flex-col gap-0 rounded-2xl p-0 sm:max-w-[900px] max-h-[85vh] overflow-y-auto">
-          <div className="px-6 pt-6 pb-1">
+        <DialogContent className="flex w-[96vw] flex-col gap-0 rounded-2xl p-0 sm:max-w-[800px] max-h-[92vh] overflow-y-auto">
+          <div className="px-6 pt-5 pb-1">
             <h5 className="text-xl font-extrabold" style={{ color: '#2E2D35' }}>
               Schedule New Meeting
             </h5>
@@ -130,7 +130,7 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
               Set up a video call with your team or clients
             </p>
           </div>
-          <div className="px-6 pt-3 pb-6">
+          <div className="px-6 pt-3 pb-4">
             <ScheduleMeeting setDrawerState={setDrawerState} />
           </div>
         </DialogContent>
