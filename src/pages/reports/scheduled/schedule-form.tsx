@@ -93,6 +93,8 @@ const ScheduleForm = ({ schedule, reportTypes, onDone }: ScheduleFormProps) => {
   const [recipients, setRecipients] = useState<string[]>([]);
   const [recipientDraft, setRecipientDraft] = useState('');
   const [enabled, setEnabled] = useState(true);
+  /* An optional https address that receives the same result as the e-mail. */
+  const [webhookUrl, setWebhookUrl] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const zones = useMemo(timezoneOptions, []);
@@ -107,6 +109,7 @@ const ScheduleForm = ({ schedule, reportTypes, onDone }: ScheduleFormProps) => {
     setTimezone(schedule.timezone || browserZone());
     setRecipients(Array.isArray(schedule.recipients) ? schedule.recipients : []);
     setEnabled(Number(schedule.enabled) !== 0);
+    setWebhookUrl(String((schedule as any)?.webhook_url || ''));
   }, [schedule]);
 
   const addRecipient = (raw?: string) => {
@@ -168,6 +171,7 @@ const ScheduleForm = ({ schedule, reportTypes, onDone }: ScheduleFormProps) => {
       timezone,
       recipients: finalRecipients,
       enabled,
+      webhook_url: webhookUrl.trim() || null,
       filters: schedule?.filters || {},
     });
   };
@@ -236,6 +240,14 @@ const ScheduleForm = ({ schedule, reportTypes, onDone }: ScheduleFormProps) => {
         </div>
 
         <div>
+          <Label className="mb-1 block">Webhook (optional)</Label>
+          <input
+            type="url"
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            placeholder="https://… receives the report link as JSON"
+            className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
           <Label className="mb-1 block">Send to</Label>
           <div className="flex gap-2">
             <Input
