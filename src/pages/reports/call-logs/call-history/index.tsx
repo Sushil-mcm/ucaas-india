@@ -1,6 +1,6 @@
 import { normalizeCallNumber, pickCounterpartNumber } from '@/lib/call-number';
 import TableManager from '@/components/custom/table-manager';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/assets/icons/icon';
 import { useNavigate } from 'react-router-dom';
 import { ReportsPageLayout } from '../../reports-content-layout';
@@ -92,6 +92,20 @@ type CallHistoryProps = {
      know about the other. Every other caller (standalone Reports, the
      Home Live Wallboard) simply never passes it. */
   externalSearch?: string;
+  /* Hides just the tab strip (Total/Answered/Outgoing/Missed/Voicemails/
+     Blocked) without touching the Filters row above it, unlike `tableOnly`
+     which hides both. Performance ▸ Calls uses this once its own donut
+     covers the same counts, so the tab strip would otherwise say the same
+     thing twice. Defaults to shown, so every other caller is unaffected. */
+  hideTabStrip?: boolean;
+  /* Lets a host drive the tab strip's filter from outside -- Performance's
+     donut segments -- without the host needing to know this component's
+     internal filter-building logic. Uncontrolled (activeTab state stays
+     internal) unless passed; when it changes to a new tab label, applies
+     the exact same filter handleTabClick already applies for a click on
+     the strip itself, so external and internal selection can never
+     disagree about what "Missed Calls" means. */
+  selectedTab?: string;
 };
 
 const EMPTY_CALL_HISTORY_FILTERS: { key: string; value: string }[] = [];
@@ -164,6 +178,8 @@ const CallHistory = ({
   hasSubRows = true,
   detailsAsModal = false,
   externalSearch,
+  hideTabStrip = false,
+  selectedTab,
 }: CallHistoryProps = {}) => {
   const tableRef = useRef<any>(null);
   const { user } = useUser();
@@ -929,6 +945,17 @@ const CallHistory = ({
     setActiveTab(tab);
   };
 
+  /* External control (Performance's donut segments) -- applies the exact
+     same filter a click on the strip itself would, so the two can never
+     disagree about what a tab label means. Only reacts to a genuine change
+     from the host; an uncontrolled caller never passes `selectedTab`, so
+     this never fires for them. */
+  useEffect(() => {
+    if (selectedTab === undefined || selectedTab === activeTab) return;
+    handleTabClick(selectedTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTab]);
+
   const searchInput = (
     <div className="w-full sm:w-52 lg:w-60">
       <Input
@@ -1052,7 +1079,7 @@ const CallHistory = ({
 
   const callHistoryContent = (
     <div className={`w-full flex flex-col gap-2 ${embedded ? '' : 'p-3'}`}>
-      {!tableOnly && (
+      {!tableOnly && !hideTabStrip && (
         <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 md:grid-cols-5">
           {tabs.map((tab) => (
             <div

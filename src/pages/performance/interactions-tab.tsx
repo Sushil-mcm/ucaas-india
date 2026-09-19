@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import moment from 'moment';
 import { Clock, Timer, IndianRupee } from 'lucide-react';
 import CallHistory from '@/pages/reports/call-logs/call-history';
@@ -13,16 +13,28 @@ import './interactions-theme.css';
 /* Donut segments — real counts from the same call_stats the platform's own
    call-history tab strip reads (inbound_calls/outbound_calls/missed_calls/
    voicemail/blocked_calls), just drawn as a ring instead of five separate
-   boxes. */
-const DONUT_SEGMENTS: Array<{ key: string; label: string; color: string }> = [
-  { key: 'inboundCalls', label: 'Answered', color: '#34d399' },
-  { key: 'outboundCalls', label: 'Outgoing', color: '#fb923c' },
-  { key: 'missedCalls', label: 'Missed', color: '#f87171' },
-  { key: 'voicemailCalls', label: 'Voicemails', color: '#a5b4fc' },
-  { key: 'blockedCalls', label: 'Blocked', color: '#94a3b8' },
+   boxes. `tab` is that same tab strip's own label for the segment — clicking
+   a segment drives CallHistory's `selectedTab` prop with this exact string,
+   so it filters the table using its own existing tab-click logic rather
+   than this file re-deriving the filter rules. */
+const DONUT_SEGMENTS: Array<{ key: string; label: string; tab: string; color: string }> = [
+  { key: 'inboundCalls', label: 'Answered', tab: 'Answered Calls', color: '#34d399' },
+  { key: 'outboundCalls', label: 'Outgoing', tab: 'Outgoing Calls', color: '#fb923c' },
+  { key: 'missedCalls', label: 'Missed', tab: 'Missed Calls', color: '#f87171' },
+  { key: 'voicemailCalls', label: 'Voicemails', tab: 'Voicemails', color: '#a5b4fc' },
+  { key: 'blockedCalls', label: 'Blocked', tab: 'Blocked', color: '#94a3b8' },
 ];
+const TOTAL_CALLS_TAB = 'Total Calls';
 
-const CallStatusDonut = ({ callStats }: { callStats: ReturnType<typeof useCallStats> }) => {
+const CallStatusDonut = ({
+  callStats,
+  selectedTab,
+  onSelectTab,
+}: {
+  callStats: ReturnType<typeof useCallStats>;
+  selectedTab: string;
+  onSelectTab: (tab: string) => void;
+}) => {
   const total = callStats.totalCalls;
   const r = 70;
   const circumference = 2 * Math.PI * r;
@@ -36,13 +48,27 @@ const CallStatusDonut = ({ callStats }: { callStats: ReturnType<typeof useCallSt
     return arc;
   });
 
+  /* Clicking the already-selected segment again clears back to Total Calls
+     instead of getting stuck — the same toggle-off a filter chip usually
+     gets, since a donut segment has no separate "clear" control of its own. */
+  const toggle = (tab: string) => onSelectTab(selectedTab === tab ? TOTAL_CALLS_TAB : tab);
+
   return (
     <div className="ic-panel">
       <div className="ic-panel-title">Call Status Breakdown</div>
-      <div className="ic-panel-sub">Track and manage all your calls in real time.</div>
+      <div className="ic-panel-sub">Click a segment to filter the table below.</div>
       <div className="ic-donut-wrap">
         <svg width="150" height="150" viewBox="0 0 170 170">
-          <circle cx="85" cy="85" r={r} fill="none" stroke="rgba(150,100,50,0.1)" strokeWidth="20" />
+          <circle
+            cx="85"
+            cy="85"
+            r={r}
+            fill="none"
+            stroke="rgba(150,100,50,0.1)"
+            strokeWidth="20"
+            style={{ cursor: selectedTab !== TOTAL_CALLS_TAB ? 'pointer' : 'default' }}
+            onClick={() => onSelectTab(TOTAL_CALLS_TAB)}
+          />
           {arcs.map(
             (arc) =>
               arc.len > 0 && (
@@ -54,9 +80,12 @@ const CallStatusDonut = ({ callStats }: { callStats: ReturnType<typeof useCallSt
                   fill="none"
                   stroke={arc.color}
                   strokeWidth="20"
+                  strokeOpacity={selectedTab === TOTAL_CALLS_TAB || selectedTab === arc.tab ? 1 : 0.3}
                   strokeDasharray={`${arc.len} ${circumference - arc.len}`}
                   strokeDashoffset={arc.offset}
                   transform="rotate(-90 85 85)"
+                  style={{ cursor: 'pointer', transition: 'stroke-opacity 0.15s ease' }}
+                  onClick={() => toggle(arc.tab)}
                 />
               ),
           )}
@@ -69,7 +98,11 @@ const CallStatusDonut = ({ callStats }: { callStats: ReturnType<typeof useCallSt
         </svg>
         <div className="ic-donut-legend">
           {arcs.map((arc) => (
-            <div className="ic-donut-legend-row" key={arc.key}>
+            <div
+              className={`ic-donut-legend-row${selectedTab === arc.tab ? ' is-active' : ''}`}
+              key={arc.key}
+              onClick={() => toggle(arc.tab)}
+            >
               <span className="ic-donut-legend-label">
                 <i style={{ background: arc.color }} />
                 {arc.label}
@@ -164,6 +197,15 @@ const InteractionsTab = ({
 }) => {
   const callStats = useCallStats(selectedRange);
 
+  /* Drives CallHistory's own tab-strip filter from the donut, replacing the
+     tab strip itself (hidden below via `hideTabStrip`) rather than
+     duplicating it — one control for "which calls am I looking at", not
+     two that could disagree. */
+  const [selectedTab, setSelectedTab] = useState(TOTAL_CALLS_TAB);
+  useEffect(() => {
+    setSelectedTab(TOTAL_CALLS_TAB);
+  }, [selectedRange.from, selectedRange.to]);
+
   /* Backs the KPI tiles' sparklines and "vs last 30 min" trend pills —
      same rolling in-memory sampler Queues/Agents/Home use; no historical
      report endpoint exists behind these live-only figures either. */
@@ -227,7 +269,7 @@ const InteractionsTab = ({
         />
       </div>
       <div className="ic-chart-row">
-        <CallStatusDonut callStats={callStats} />
+        <CallStatusDonut callStats={callStats} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
         <CallVolumeTrend callStats={callStats} selectedRange={selectedRange} />
       </div>
       <CallHistory
@@ -240,6 +282,8 @@ const InteractionsTab = ({
         hasSubRows={false}
         detailsAsModal
         externalSearch={globalSearch}
+        hideTabStrip
+        selectedTab={selectedTab}
       />
     </div>
   );
