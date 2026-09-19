@@ -121,7 +121,7 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
         />
       )}
       <Dialog open={drawerState} onOpenChange={setDrawerState}>
-        <DialogContent className="flex w-[96vw] flex-col gap-0 rounded-2xl p-0 sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className="flex w-[96vw] flex-col gap-0 rounded-2xl p-0 sm:max-w-[900px] max-h-[85vh] overflow-y-auto">
           <div className="px-6 pt-6 pb-1">
             <h5 className="text-xl font-extrabold" style={{ color: '#2E2D35' }}>
               Schedule New Meeting
