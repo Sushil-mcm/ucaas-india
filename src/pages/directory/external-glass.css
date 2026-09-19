@@ -606,8 +606,17 @@
   background: #ffffff !important;
 }
 .gp-contact-form-dialog .gp-create-group-head {
-  background: #fff6e9;
+  /* Plain white, not the shared shell's cream wash -- per feedback.
+     Bottom padding trimmed too (16px -> 8px): the shared shell sizes
+     for a header with nothing directly under it, but this dialog's
+     first form field sat with a visible gap below the title as a
+     result. */
+  background: #fff;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
+}
+.gp-contact-form-dialog .gp-create-group-head h2 {
+  font-size: 19px;
 }
 /* `CreateContactNew`'s own section headings ("Address Information",
    "Notes Information") — plain grey-900 text with nothing separating one
