@@ -100,7 +100,10 @@ const AudioPreviewPlayer = ({ src, authenticated = false, onClose }: AudioPrevie
   const progressPct = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex w-full items-center gap-2 p-1">
+    // No padding of its own -- the popover wrapping this already adds `p-1`;
+    // stacking a second one made this card taller than the row it opens
+    // from, so it overflowed past the row into the divider underneath it.
+    <div className="flex w-full items-center gap-2">
       <audio
         ref={audioRef}
         src={resolvedSrc}
