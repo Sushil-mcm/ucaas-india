@@ -35,6 +35,7 @@ import ExportContacts from '../leads/export-contacts.tsx/index.tsx';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useGetGroupList } from '@/hooks/common';
 import CustomSelect from '@/components/custom/custom-select';
+import ContactDetailDrawer from './contact-detail-drawer';
 import '@/styles/warm-glass.css';
 
 interface IDrawerState {
@@ -74,6 +75,7 @@ const NewContact: FC = () => {
   const [notesOpen, setNotesOpen] = useState(false);
   const [whatsappDrawerOpen, setWhatsappDrawerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [openContact, setOpenContact] = useState<any>(null);
   const [selectedGroupForContactLogs, setSelectedGroupForContactLogs] = useState<any>(null);
   const [tabName, setTabName] = useState<string>(defaultTab || CONTACT_TABS_CONST.CONTACT_LIST);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -448,6 +450,7 @@ const NewContact: FC = () => {
                           setWhatsappDrawerOpen(true);
                           setSelectedContact(contact);
                         }}
+                        onOpenContact={setOpenContact}
                       />
                     );
                   case CONTACT_TABS_CONST.CONTACT_GROUP_LIST:
@@ -487,6 +490,7 @@ const NewContact: FC = () => {
                           setWhatsappDrawerOpen(true);
                           setSelectedContact(contact);
                         }}
+                        onOpenContact={setOpenContact}
                       />
                     );
                 }
@@ -615,6 +619,22 @@ const NewContact: FC = () => {
           />
         </>
       ) : null}
+      <ContactDetailDrawer
+        contact={openContact}
+        onClose={() => setOpenContact(null)}
+        onEdit={
+          canEditContact
+            ? (contact) => {
+                setOpenContact(null);
+                setDrawerState((prev) => ({
+                  ...prev,
+                  addContact: true,
+                  selectedContact: contact,
+                }));
+              }
+            : undefined
+        }
+      />
     </>
   );
 };

@@ -301,6 +301,9 @@ const AllNewContactsList: FC<any> = ({
   // actionMode = 'full',
   handleNotesOpen = () => {},
   handleWhatsappOpen = () => {},
+  /* Additive: undefined by default, so a caller that doesn't pass it keeps
+     today's behaviour (no click target on the name cell). */
+  onOpenContact,
   /* Additive only: default '' matches TableManager's own default, so the
      other caller of this component (Leads ▸ Contact Logs) is unaffected
      unless it explicitly opts in. */
@@ -492,7 +495,17 @@ const AllNewContactsList: FC<any> = ({
       header: 'Name',
       accessorKey: 'firstName',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div
+          className={`flex items-center gap-2${onOpenContact ? ' cursor-pointer' : ''}`}
+          onClick={
+            onOpenContact
+              ? (e) => {
+                  e.stopPropagation();
+                  onOpenContact(row.original);
+                }
+              : undefined
+          }
+        >
           <CustomAvatar
             name={`${row.original.name?.first || ''} ${row.original.name?.last || ''}`}
             type="contact"
