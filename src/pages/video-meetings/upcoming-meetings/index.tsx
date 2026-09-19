@@ -441,8 +441,9 @@ const UpcomingMeetings = () => {
                               <Icon name="PlusIcon" className="w-4 h-4" />
                               Invite
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                            <DropdownMenuContent className="border-0">
                               <DropdownMenuItem
+                                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                                 onClick={() => {
                                   setModalState({ inviteMembers: true });
                                   setSelectedMeeting(meeting);
@@ -451,6 +452,7 @@ const UpcomingMeetings = () => {
                                 Invite Members
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                                 onClick={() => {
                                   setModalState({ inviteOthers: true });
                                   setSelectedMeeting(meeting);
