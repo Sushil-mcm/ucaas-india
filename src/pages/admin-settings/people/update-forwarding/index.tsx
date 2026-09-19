@@ -2,6 +2,7 @@ import { useEffect, useState, type FC } from 'react';
 import { buildBusyActionPayload, readBusyActionForm } from '@/lib/busy-action';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SkillsTab from './skills-tab';
+import ProfileFieldsTab from './profile-fields-tab';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   basicInitialState,
@@ -98,6 +99,7 @@ const TABS_ORDER = [
   FORWARDING_TAB_CONSTANT.SETTING_PERMISSIONS,
   FORWARDING_TAB_CONSTANT.GREETING_NOTIFICATION,
   FORWARDING_TAB_CONSTANT.SKILLS,
+  FORWARDING_TAB_CONSTANT.PROFILE_FIELDS,
   FORWARDING_TAB_CONSTANT.CALL_RULES,
 ];
 
@@ -1106,6 +1108,15 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
               <TabsContent value={FORWARDING_TAB_CONSTANT.SKILLS} className="mcm-userform-body">
                 <SkillsTab
                   userUuid={data?.uuid}
+                  personName={[data?.first_name, data?.last_name].filter(Boolean).join(' ')}
+                />
+              </TabsContent>
+              <TabsContent
+                value={FORWARDING_TAB_CONSTANT.PROFILE_FIELDS}
+                className="mcm-userform-body"
+              >
+                <ProfileFieldsTab
+                  person={data}
                   personName={[data?.first_name, data?.last_name].filter(Boolean).join(' ')}
                 />
               </TabsContent>

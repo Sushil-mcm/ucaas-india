@@ -41,6 +41,7 @@ export const FORWARDING_TAB_CONSTANT = {
   SETTING_PERMISSIONS: 'Settings & Permissions',
   GREETING_NOTIFICATION: 'Media',
   SKILLS: 'Skills',
+  PROFILE_FIELDS: 'Profile Fields',
   CALL_RULES: 'Call Rules',
 };
 

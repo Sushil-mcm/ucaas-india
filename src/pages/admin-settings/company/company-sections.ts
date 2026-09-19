@@ -58,6 +58,9 @@ export const COMPANY_SECTIONS: CompanySection[] = [
   /* Read-only history of every company-settings save, plus the server's
      configuration-change log (people, roles, numbers, sites, desk phones). */
   { path: 'change-log', label: 'Change log' },
+  /* Custom per-person fields (Employee ID, Department code, ...). Values are
+     filled in by an admin on a person's own page, not here. */
+  { path: 'profile-fields', label: 'Profile fields' },
   /* Company-wide handset rules (admin password, self setup). The list of
      handsets is a separate screen, Company › Desk phones. */
   { path: 'desk-phone-settings', label: 'Desk phones' },

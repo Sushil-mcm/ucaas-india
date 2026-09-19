@@ -89,6 +89,7 @@ const CompanyAlertsPage = lazy(() => import('@/pages/admin-settings/company/comp
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
 const CompanyChangeLogPage = lazy(() => import('@/pages/admin-settings/company/company-change-log'));
 const OfficePolicy = lazy(() => import('@/pages/admin-settings/company/office-policy'));
+const CompanyProfileFieldsPage = lazy(() => import('@/pages/admin-settings/company/company-profile-fields'));
 const CompanyDeskPhonesPage = lazy(() => import('@/pages/admin-settings/company/company-desk-phones'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 /* Directory and Performance used to carry the page in a query --
@@ -793,6 +794,13 @@ export const router = createBrowserRouter([
                   {
                     path: 'change-log',
                     element: <ProtectedRoute element={<CompanyChangeLogPage />} guard={{ adminOnly: true }} />,
+                  },
+                  {
+                    /* These definitions shape every person's record, so they are
+                       not a phone-system setting — filled in by an admin on a
+                       person, never by the person themselves. */
+                    path: 'profile-fields',
+                    element: <ProtectedRoute element={<CompanyProfileFieldsPage />} guard={{ adminOnly: true }} />,
                   },
                 ],
               },
