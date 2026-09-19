@@ -1815,6 +1815,16 @@ export const undoRelease = (uuid: string) => {
   return apiClient(config);
 };
 
+export const listAuditLog = (params: { limit?: number; page?: number } = {}) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.AUDIT_LOG_LIST.METHOD,
+    url: routes.AUDIT_LOG_LIST.URL,
+    params,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
 // User Template
 export const upsertTemplate = ({ uuid = '', ...data }) => {
   return apiClient({

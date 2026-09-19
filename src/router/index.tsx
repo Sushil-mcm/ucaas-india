@@ -87,6 +87,7 @@ const CompanyDutyPolicyPage = lazy(() => import('@/pages/admin-settings/company/
 const CompanyCampaignTimersPage = lazy(() => import('@/pages/admin-settings/company/company-campaign-timers'));
 const CompanyAlertsPage = lazy(() => import('@/pages/admin-settings/company/company-alerts'));
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
+const CompanyChangeLogPage = lazy(() => import('@/pages/admin-settings/company/company-change-log'));
 const CompanyDeskPhonesPage = lazy(() => import('@/pages/admin-settings/company/company-desk-phones'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 /* Directory and Performance used to carry the page in a query --
@@ -775,6 +776,10 @@ export const router = createBrowserRouter([
                         sectionName="Security"
                       />
                     ),
+                  },
+                  {
+                    path: 'change-log',
+                    element: <ProtectedRoute element={<CompanyChangeLogPage />} guard={{ adminOnly: true }} />,
                   },
                 ],
               },

@@ -55,6 +55,9 @@ export const COMPANY_SECTIONS: CompanySection[] = [
   /* Queue metric alerts: who is told when a queue is in trouble. */
   { path: 'alerts', label: 'Alerts' },
   { path: 'security', label: 'Security' },
+  /* Read-only history of every company-settings save, plus the server's
+     configuration-change log (people, roles, numbers, sites, desk phones). */
+  { path: 'change-log', label: 'Change log' },
   /* Company-wide handset rules (admin password, self setup). The list of
      handsets is a separate screen, Company › Desk phones. */
   { path: 'desk-phone-settings', label: 'Desk phones' },

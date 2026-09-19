@@ -1071,6 +1071,12 @@ export const routes = {
     METHOD: 'POST',
     URL: '/api/did/undo-release',
   },
+  // Server's configuration-change log (people, roles, numbers, sites, desk
+  // phones, recording access) — feeds the company change-log page.
+  AUDIT_LOG_LIST: {
+    METHOD: 'GET',
+    URL: '/api/audit/log',
+  },
   // User Template
   UPSERT_TEMPLATE: {
     METHOD: 'POST',
