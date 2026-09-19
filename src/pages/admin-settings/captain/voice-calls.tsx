@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { CAPTAIN_API_BASE, captainErrorMessage, captainFetch } from '@/lib/captain-api';
 
 
 
@@ -224,7 +224,7 @@ const CallHistoryPage = ({ inboxId }: { inboxId: string }) => {
           }
         }
       } catch (_) {}
-      const fallback = await getSessionList({ agentId: inboxId, channel: 'voice', limit: 100 });
+      const fallback = await getSessionList({ agentId: inboxId, channel: 'call', limit: 100 });
       return fallback?.data?.data?.sessions || fallback?.data?.data?.calls || fallback?.data?.calls || [];
     },
     enabled: !!inboxId,
@@ -446,7 +446,7 @@ const ConnectPhoneModal = ({
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json?.detail || json?.message || 'Failed to connect phone number');
+        throw new Error(captainErrorMessage(json, 'Failed to connect phone number'));
       }
       onSuccess();
       onClose();
