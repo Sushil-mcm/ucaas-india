@@ -237,8 +237,24 @@ const AddGreeting: FC<IAddgreetings> = ({
            keeps the popup one consistent size across all three tabs
            instead of visibly resizing when Text to Speech's taller content
            (language/voice grid, textarea, details) is selected -- that
-           content scrolls inside this fixed box instead. */}
-        <div className="flex h-[470px] flex-col gap-4 overflow-y-auto pr-1">
+           content scrolls inside this fixed box instead.
+
+           `overflow-x-hidden`: Text to Speech's two-column language/voice
+           grid is the one tab that could ask for more than the panel's
+           fixed width if a select's placeholder text runs long -- without
+           this it would silently push the popup wider for that tab alone,
+           the same inconsistent-size bug as the height one above.
+
+           `overscroll-contain`: this box sits inside SideDrawer's own
+           `overflow-y-auto` content wrapper, so there are two nested
+           scroll containers. Without `overscroll-behavior: contain`, once
+           this inner box reaches its own scroll limit some
+           browsers/trackpads hand the rest of the gesture to the outer
+           one instead of just stopping -- which on a touchpad's momentum
+           scrolling can misread as "this box isn't scrolling" when the
+           outer box (which has nothing to scroll) is the one eating the
+           gesture. */}
+        <div className="flex h-[470px] flex-col gap-4 overflow-y-auto overflow-x-hidden overscroll-contain pr-1">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
             <div className="w-full mb-4">
               {/* Segmented pill track -- white track, solid-orange active
