@@ -168,7 +168,7 @@ const AudioPreviewPlayer = ({ src, authenticated = false, onClose }: AudioPrevie
                 <EllipsisVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[170px]">
+            <DropdownMenuContent align="end" className="min-w-[170px] border-0">
               <DropdownMenuItem
                 className="focus:bg-primary/10 focus:text-primary"
                 onClick={handleDownload}
@@ -181,7 +181,7 @@ const AudioPreviewPlayer = ({ src, authenticated = false, onClose }: AudioPrevie
                   Playback speed
                   <span className="ml-2 text-xs text-[#9A948F]">{playbackRate}x</span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="min-w-[100px]">
+                <DropdownMenuSubContent className="min-w-[100px] border-0">
                   {PLAYBACK_SPEEDS.map((speed) => (
                     <DropdownMenuItem
                       key={speed}

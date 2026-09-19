@@ -87,20 +87,40 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
         </div>
         {value?.value && (
           <Popover open={isPlay} onOpenChange={setIsPlay}>
+            {/* A plain themed button rather than the shared `Button`'s
+                `outline` variant -- that variant flips text to white on
+                hover, and the `Play` icon (a filled circle+triangle glyph)
+                is colored entirely via `currentColor`, so if the
+                background hover style doesn't win here (composed through
+                Popover's `asChild`/Slot), the icon goes white-on-white and
+                disappears. Keeping the icon color fixed and only tinting
+                the background can't reproduce that. */}
             <PopoverTrigger asChild>
-              <Button type="button" variant={'outline'} className="w-10 h-10 p-0">
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary text-primary transition-colors hover:bg-primary/10"
+              >
                 <Play className="w-5 h-5" />
-              </Button>
+              </button>
             </PopoverTrigger>
             {/* Portalled to <body> by PopoverContent itself, so this can't be
                 clipped by an ancestor's scroll container the way a plain
                 absolutely-positioned card was -- `.gp-create-group-body`'s
                 `overflow-y-auto` forces `overflow-x` non-visible too (CSS's
                 either-axis rule), which silently clipped an earlier version
-                off to the right with no visible error. */}
+                off to the right with no visible error.
+
+                `avoidCollisions={false}`: with it on, Radix flips/shifts
+                the panel to whichever side still has room, which in this
+                narrow two-column step looked fine for one greeting row and
+                landed above/overlapping the row below for the other --
+                same trigger, inconsistent placement. Pinning it to the
+                right at a fixed offset makes every row behave the same. */}
             <PopoverContent
-              align="start"
+              align="center"
               side="right"
+              sideOffset={8}
+              avoidCollisions={false}
               className="w-[300px] rounded-xl border-0 bg-white p-1 shadow-lg"
             >
               <AudioPreviewPlayer
