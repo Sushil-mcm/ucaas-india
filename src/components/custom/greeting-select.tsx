@@ -3,13 +3,13 @@ import CustomSelect from './custom-select';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import AddGreeting from '@/pages/greetings/add-greeting';
 import { Button } from '../ui/button';
-import { Play, UploadLineIcon } from '@/assets/icons';
+import { CloseIcon, Play, UploadLineIcon } from '@/assets/icons';
 import { DEFAULT_RECORDING_UUIDS, getEnv, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import ErrorTooltip from './error-tooltip';
-import SideDrawer from './side-drawer';
 import AudioPreviewPlayer from './audio-preview-player';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Dialog, DialogContent } from '../ui/dialog';
 
 interface IGREETINGPROPS {
   options: ISELECTVALUE[];
@@ -152,36 +152,44 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
         )}
       </div>
 
-      {drawerState?.addGreeting && (
-        <SideDrawer
-          width={width || 'min(480px,calc(100vw-2rem))'}
-          isOpen={drawerState?.addGreeting}
-          /* It uploads, records from the microphone, and reads typed text
-             aloud. "Upload File" named one of the three. */
-          title="Add a recording"
-          handleClose={() =>
-            setDrawerState((prev) => ({ ...prev, addGreeting: false, greetingType: '' }))
-          }
-          isHeader
-          /* A centered popup, same shape as the Create Event modal
-             (messenger/chat/index.tsx) -- a full-height right-edge panel
-             for a form this short read as an oversized side drawer rather
-             than a normal popup. `portal` renders it into <body>, same
-             reason as that caller: opened from inside another dialog here
-             (Edit group), so it needs to escape that ancestor rather than
-             being laid out against it. `backgroundStyle` cancels the
-             drawer's own `bg-black/50` dimming -- the Edit group dialog
-             behind it stays fully visible instead of greyed out. */
-          centered
-          portal
-          backgroundStyle="!bg-transparent"
-          /* This drawer's own z-30 sits below the Edit group Dialog it
-             opens from (a Radix Dialog, z-50) -- portalling to <body>
-             puts both in the same layer, but they still stack by z-index,
-             not mount order, so without this it rendered behind that
-             dialog instead of over it. */
-          zIndexClassName="z-[60]"
-          content={
+      {/* A real nested Dialog rather than SideDrawer's manual `createPortal`
+          -- this opens from inside another Dialog (Edit group), and Radix's
+          own scroll-lock (react-remove-scroll under the hood) coordinates a
+          stack of its OWN instances correctly, allowing scroll in whichever
+          one is topmost. A manually-portalled element sits outside that
+          stack entirely: the outer Dialog's lock intercepts wheel/touch
+          scrolling on it site-wide, while native scrollbar-thumb dragging
+          (an OS-level drag, not a JS wheel event) still worked -- exactly
+          the split reported. Using the app's own Dialog here participates
+          in that coordination instead of fighting it. */}
+      <Dialog
+        open={drawerState?.addGreeting}
+        onOpenChange={(next) =>
+          !next && setDrawerState((prev) => ({ ...prev, addGreeting: false, greetingType: '' }))
+        }
+      >
+        <DialogContent
+          overlayClassName="bg-transparent"
+          showCloseButton={false}
+          className="flex max-h-[85vh] flex-col gap-4 border-0 p-0"
+          style={{ width: width || 'min(480px,calc(100vw - 2rem))' }}
+        >
+          <div className="flex items-center justify-between gap-1.5 px-5 pt-5 pb-0 text-[#2E2D35]">
+            {/* It uploads, records from the microphone, and reads typed
+                text aloud. "Upload File" named one of the three. */}
+            <h5 className="text-xl font-semibold">Add a recording</h5>
+            <button
+              type="button"
+              onClick={() =>
+                setDrawerState((prev) => ({ ...prev, addGreeting: false, greetingType: '' }))
+              }
+              aria-label="Close"
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] bg-[rgba(251,249,246,0.88)] text-[#9A948F] shadow-sm transition-all hover:scale-110 hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35] hover:shadow-md"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-5 lg:px-5">
             <AddGreeting
               drawerState={drawerState?.addGreeting}
               setDrawerState={(val) =>
@@ -198,9 +206,9 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
               onCreated={alwaysAllowAdd ? (greeting) => onChangeMedia(greeting) : undefined}
               isRefetchable={isRefetchable}
             />
-          }
-        />
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
