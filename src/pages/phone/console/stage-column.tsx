@@ -26,6 +26,7 @@ import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/li
 import CountryFlag, { flagCodeFor } from '@/components/custom/country-flag';
 import { isIndiaCallerIdOption } from '@/lib/india-caller-ids';
 import type { Call as TwilioCall } from '@twilio/voice-sdk';
+import ParkedCallsStrip from './parked-calls-strip';
 import type { CallerIdOption } from '@/components/dialpad/types';
 import {
   buildEnrichment,
@@ -1197,6 +1198,20 @@ const StageColumn = ({
           className="card card-pad"
           style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
         >
+          {/* The company's parked lot and colleagues' held calls, with a
+              pick-up/take button — so nobody has to be told a slot number by
+              voice, and a call someone else put on hold isn't invisible. */}
+          <ParkedCallsStrip
+            socketEventsManager={socketEventsManager}
+            ownExtension={String(user?.user_info?.extension || '').trim()}
+            onPickup={(code) => {
+              if (!dialpad.makeCall(code)) toast.error('Could not start the pick-up call.');
+            }}
+            onTaken={(ok, error) => {
+              if (ok) toast.info('Taking the call. Your phone will ring; answer it to talk to the caller.');
+              else toast.error(error || 'That call could not be taken.');
+            }}
+          />
           <div className="controls">
             <button
               type="button"
