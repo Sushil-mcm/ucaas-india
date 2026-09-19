@@ -440,15 +440,26 @@ body.perf-warm-backdrop.dark {
   margin-top: 0;
   margin-bottom: 8px;
 }
-/* Belt-and-suspenders against a horizontal scrollbar: the real fix is
-   the <colgroup> percentages below actually summing to 100 (they
-   previously summed to 110, which is what caused it — table-layout:
-   fixed does not scale columns down to fit when they overrun the
-   table's own width, it just renders the table wider than its
-   container). Forcing both anyway keeps this table honest even if a
-   future column tweak drifts off 100 again. */
+/* `table-layout: fixed` + the <colgroup> percentages below (summing to
+   100) keep the TABLE itself from ever exceeding its container, but a
+   column's own CONTENT can still be wider than its allotted % share —
+   the Action column's 5 icon buttons, at typical laptop widths (100%
+   zoom, ~1366-1440px), don't all fit inside its 10% share. `overflow-x:
+   hidden` was silently clipping that overflow instead of scrolling to
+   it, which is what cut the last action icon off with no way to reach
+   it. `auto` degrades to a scrollbar instead of losing content. */
 .perf-interactions .table-scroll {
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
+}
+.perf-interactions .table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.perf-interactions .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(242, 153, 74, 0.35);
+  border-radius: 999px;
+}
+.perf-interactions .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 153, 74, 0.55);
 }
 .perf-interactions .table-scroll table {
   width: 100% !important;

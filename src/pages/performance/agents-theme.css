@@ -206,9 +206,34 @@ body.perf-warm-backdrop.dark {
 /* Whatever room the grid above leaves the table, a real 8-column roster
    still won't always fit it — scrolling the table horizontally beats
    squeezing every column unreadably, the same fallback every other
-   Performance table already has. */
+   Performance table already has.
+   `min-width: 0` on all three boxes in the chain down to the scroll
+   box itself: `.ag-table-section` (the grid item — fixed further down,
+   section 3) only stops the *grid track* from stretching to the
+   table's content width. TableManager's own wrapper (`overflow-hidden`,
+   the direct child of `.ag-table-section`) and `.table-scroll` inside
+   it are flex/block children one level further in — each one's default
+   `min-width: auto` can just as easily force *itself* wide enough to
+   fit the table's un-truncated content, at which point the column
+   further off-screen (`Daily Stats`/`Queues` at 100% zoom on a laptop
+   width) gets silently clipped by `.ag-table-section`'s own
+   `overflow: hidden` instead of reaching `.table-scroll`'s scrollbar. */
 .mcm-page .perf-agents .ag-table-section .table-scroll {
   overflow-x: auto;
+  min-width: 0;
+}
+.mcm-page .perf-agents .ag-table-section > div:has(> .table-scroll) {
+  min-width: 0;
+}
+.mcm-page .perf-agents .table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.mcm-page .perf-agents .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(242, 153, 74, 0.35);
+  border-radius: 999px;
+}
+.mcm-page .perf-agents .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 153, 74, 0.55);
 }
 .mcm-page .perf-agents .ag-side-panels {
   display: flex;
