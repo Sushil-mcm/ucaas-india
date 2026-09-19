@@ -253,8 +253,18 @@ const AddGreeting: FC<IAddgreetings> = ({
            one instead of just stopping -- which on a touchpad's momentum
            scrolling can misread as "this box isn't scrolling" when the
            outer box (which has nothing to scroll) is the one eating the
-           gesture. */}
-        <div className="flex h-[470px] flex-col gap-4 overflow-y-auto overflow-x-hidden overscroll-contain pr-1">
+           gesture.
+
+           `overflow-y-scroll`, not `-auto`: confirmed via a live
+           getComputedStyle check that the box itself was already correctly
+           configured (472px of real overflow, nothing blocking
+           pointer-events) yet a touchpad still wouldn't scroll it --
+           `overflow:auto` only paints a scrollbar once content overflows,
+           and some Windows precision-touchpad drivers only recognize a
+           region as scrollable once that scrollbar track already exists.
+           `scroll` keeps the track (and the hit-testing region touchpad
+           drivers key off) present from the first render. */}
+        <div className="flex h-[470px] flex-col gap-4 overflow-y-scroll overflow-x-hidden overscroll-contain pr-1">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
             <div className="w-full mb-4">
               {/* Segmented pill track -- white track, solid-orange active
