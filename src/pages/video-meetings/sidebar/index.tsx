@@ -114,8 +114,8 @@ const Sidebar = () => {
           ActivityPageHead row above it, never that row -- it read as a gap
           before the divider "started". Same fix as Agent Chat/Chat: title
           inline at the top of the column the border actually wraps. */}
-      <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
-        <h2 className="text-2xl font-bold text-[#2E2D35]">Video</h2>
+      <div className="flex items-center gap-1.5 px-3 pt-[26px] pb-1 bg-[#ffffff]">
+        <h2 className="text-[23px] font-bold text-[#2E2D35]">Video</h2>
         <CustomTooltip
           text="Your video room: start a meeting now, schedule one ahead or join with a code, with what is upcoming, ongoing, past and invited beside it."
           side="bottom"
@@ -148,15 +148,15 @@ const Sidebar = () => {
                     <AccordionTrigger
                       className="items-center p-0"
                       isActive={isActive}
-                      activeHeaderClassName="[&>button[data-state=open]]:rounded-xl [&>button[data-state=open]]:bg-[#E78B50]/10 [&>button[data-state=open]]:text-[#B5642F]"
-                      activeIconClassName="text-[#B5642F]"
+                      activeHeaderClassName="[&>button[data-state=open]]:rounded-xl [&>button[data-state=open]]:bg-[#fff1e0] [&>button[data-state=open]]:text-[#c96f1f]"
+                      activeIconClassName="text-[#c96f1f]"
                     >
-                      <div className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-white/50 transition-colors">
+                      <div className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-[#fff1e0]/40 transition-colors">
                         <Icon name={icon as IconType} className="h-5 w-5" />
                         {title}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="bg-[#E78B50]/[0.04] backdrop-blur-md rounded-xl mt-0.5 px-2 py-1">
+                    <AccordionContent className="bg-[#fff1e0]/40 backdrop-blur-md rounded-xl mt-0.5 px-2 py-1">
                       {children?.map(
                         (
                           {
@@ -226,13 +226,13 @@ const Tile = ({
 
   return (
     <div
-      className={`group flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? (isChildrenExist ? 'text-[#B5642F]' : 'bg-white/80 backdrop-blur-md text-[#B5642F] shadow-[0_2px_8px_rgba(154,52,18,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]') : 'text-gray-900/80 hover:bg-white/50'} ${child ? 'py-2 mt-0.5' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
+      className={`group flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? (isChildrenExist ? 'text-[#c96f1f]' : 'bg-[#fff1e0] border border-[#ffd9ad] text-[#c96f1f]') : 'text-gray-900/80 hover:bg-[#fff1e0]/40'} ${child ? 'py-2 mt-0.5' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
       {...getRoutePrefetchHandlers(path)}
       onClick={handleClick}
     >
       <span
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
-        style={isActive && !isChildrenExist ? { background: 'rgba(231,139,80,0.14)' } : undefined}
+        style={isActive && !isChildrenExist ? { background: 'rgba(201,111,31,0.14)' } : undefined}
       >
         <Icon name={icon as IconType} className="h-5 w-5" />
       </span>
