@@ -258,15 +258,18 @@
   flex: none;
 }
 /* White, not the cream/orange wash -- matches New location/New role/Add
-   Contact's own dialog headers (locations-glass.css, external-glass.css). */
+   Contact's own dialog headers (locations-glass.css, external-glass.css).
+   (This comment previously described the fix without the rule actually
+   making it -- background was still #fff6e9.) Bottom padding trimmed to
+   match those same dialogs' tighter gap before the form starts. */
 .gp-block-dialog .gp-create-group-head {
-  background: #fff6e9;
+  background: #fff;
   border-bottom: none;
   padding-top: 12px;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 .gp-block-dialog .gp-create-group-head h2 {
-  font-size: 18px;
+  font-size: 19px;
 }
 /* 2 columns, matching the New location form's own field pairing
    (locations-glass.css) -- the four fields (Number, What to stop, What
