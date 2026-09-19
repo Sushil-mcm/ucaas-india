@@ -243,6 +243,7 @@ const UploadContacts: FC<IUploadContactProps> = ({
                       isClearable
                       value={watch('groupId')}
                       error={errors?.groupId?.message}
+                      inputClass="gp-borderless-select"
                     />
                     {!watch('groupId')?.value ? (
                       <div className="mt-2 flex flex-col gap-1">

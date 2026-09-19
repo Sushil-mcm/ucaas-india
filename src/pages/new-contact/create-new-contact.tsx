@@ -975,6 +975,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
                 placeholder={'Select Country'}
                 error={errors?.country?.message}
                 isDisabled={isDisable}
+                inputClass="gp-borderless-select"
               />
             </div>
 

@@ -483,7 +483,7 @@ const CallListColumn = ({
               dropdownVal={dropdownVal}
               setDropdownVal={setDropdownVal}
               customPickerPlacement="bottom"
-              inputClass=""
+              inputClass="gp-borderless-select"
             />
           </div>
         </div>
