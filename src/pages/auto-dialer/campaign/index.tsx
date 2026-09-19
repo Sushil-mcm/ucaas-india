@@ -7,6 +7,7 @@ import moment from 'moment';
 import TableManager from '@/components/custom/table-manager';
 import SideDrawer from '@/components/custom/side-drawer';
 import AlertConfirm from '@/components/custom/alert-confirm';
+import StartPreflight from './start-preflight';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
 import { capitalizeFirstLetter, convertDateFormateApis, handleAlert } from '@/lib/utils';
@@ -327,7 +328,7 @@ const Campaign = ({
     queryClient.invalidateQueries({ queryKey: ['campaignListForKpis'] });
   };
 
-  const { mutate: mutateStatus } = useMutation({
+  const { mutate: mutateStatus, isPending: isTogglingStatus } = useMutation({
     mutationFn: (payload: any) => playPauseCampaign(payload),
     onSuccess: (data: any, variables: any) => {
       if (data?.status !== 200) return;
@@ -446,11 +447,20 @@ const Campaign = ({
   });
 
   /* ── row actions ──────────────────────────────────────────────────── */
-  const onPlayPause = (data: any) =>
+  /* Pausing is instant. STARTING asks first via StartPreflight: "Running" is
+     the one state this product could show while placing no call at all — a
+     preview campaign nobody has joined, a shut calling window, an empty
+     contact list — and the panel says which of those is true beforehand. */
+  const [startConfirm, setStartConfirm] = useState<any>(null);
+  const applyStatusChange = (data: any) =>
     mutateStatus({
       campaignId: data?._id,
       campaignStatus: data?.campaignStatus === 'PROCESSING' ? 'PAUSE' : 'PROCESSING',
     });
+  const onPlayPause = (data: any) => {
+    if (data?.campaignStatus === 'PROCESSING') return applyStatusChange(data);
+    return setStartConfirm(data);
+  };
 
   const onReSchedule = (data: any) =>
     mutateStatus({ campaignId: data?._id, campaignStatus: 'RESCHEDULED' });
@@ -1041,6 +1051,19 @@ const Campaign = ({
           }}
         />
       )}
+      {startConfirm ? (
+        <StartPreflight
+          campaign={startConfirm}
+          board={liveBoardFor(startConfirm?._id)}
+          open
+          loading={isTogglingStatus}
+          onCancel={() => setStartConfirm(null)}
+          onConfirm={() => {
+            applyStatusChange(startConfirm);
+            setStartConfirm(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 };
