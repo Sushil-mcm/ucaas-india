@@ -180,7 +180,7 @@ const GroupAssignCell: FC<{
 
   if (isSystemGenerated) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border border-gray-150 bg-[#FBE2C8]/45 text-[#9A948F] cursor-not-allowed opacity-60 shadow-3xs">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border-none bg-[#FBE2C8]/45 text-[#9A948F] cursor-not-allowed opacity-60 shadow-3xs">
         Change Group
         <ChevronDown className="w-3.5 h-3.5 opacity-40" />
       </span>
@@ -191,14 +191,14 @@ const GroupAssignCell: FC<{
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border !border-primary bg-white text-[#2E2D35] cursor-pointer hover:bg-[#fff1e0] hover:text-[#2E2D35] transition-all shadow-3xs">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border-none bg-white text-[#2E2D35] cursor-pointer hover:bg-[#fff1e0] hover:text-[#2E2D35] transition-all shadow-3xs">
             Change Group
             <ChevronDown className="w-3.5 h-3.5 opacity-80" />
           </span>
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-56 p-2 flex flex-col gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-primary shadow-md rounded-md z-50"
+          className="w-56 p-2 flex flex-col gap-2 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border-none shadow-md rounded-md z-50"
         >
           <div className="text-xs font-semibold text-[#9A948F] px-2 py-1 border-b border-gray-100">
             Assign Groups
@@ -656,23 +656,19 @@ const AllNewContactsList: FC<any> = ({
         let tagLabel = 'Standard';
         let bgColor = 'bg-ucass-active-bg';
         let textColor = 'text-ucass-active';
-        let borderColor = 'border-ucass-active-bg';
 
         if (is_blocked) {
           tagLabel = 'Blocked';
           bgColor = 'bg-red-50';
           textColor = 'text-red-600';
-          borderColor = 'border-red-200';
         } else if (is_vip) {
           tagLabel = 'VIP';
           bgColor = 'bg-orange-50';
           textColor = 'text-orange-600';
-          borderColor = 'border-orange-200';
         } else if (is_dnc) {
           tagLabel = 'DNC';
           bgColor = 'bg-purple-50';
           textColor = 'text-purple-600';
-          borderColor = 'border-purple-200';
         }
 
         return (
@@ -680,10 +676,9 @@ const AllNewContactsList: FC<any> = ({
             <DropdownMenuTrigger asChild>
               <span
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border cursor-pointer hover:opacity-80 transition-all shadow-3xs',
+                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold border-none cursor-pointer hover:opacity-80 transition-all shadow-3xs',
                   bgColor,
                   textColor,
-                  borderColor,
                 )}
               >
                 {tagLabel}
@@ -699,7 +694,7 @@ const AllNewContactsList: FC<any> = ({
                  redefining those two variables here is enough to make the
                  hover orange, without touching each item or fighting
                  specificity with `!important`. */
-              className="w-44 [--accent:#fff1e0] [--accent-foreground:#c96f1f]"
+              className="w-44 border-none [--accent:#fff1e0] [--accent-foreground:#c96f1f]"
             >
               <DropdownMenuItem
                 onClick={() =>
@@ -768,7 +763,7 @@ const AllNewContactsList: FC<any> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-48 [--accent:#fff1e0] [--accent-foreground:#c96f1f]"
+              className="w-48 border-none [--accent:#fff1e0] [--accent-foreground:#c96f1f]"
             >
               {canViewContact && (
                 <>

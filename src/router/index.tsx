@@ -581,7 +581,11 @@ export const router = createBrowserRouter([
            the pathname instead of comparing query strings. */
         path: 'directory',
         children: [
-          { index: true, element: <ViewIndexRedirect fallback="people" /> },
+          {/* Matches Directory's own DEFAULT_VIEW (DIRECTORY_VIEWS[0], 'external' /
+              Contacts) -- was 'people', a second, disagreeing default that
+              sent a bare /directory (no ?view=) to People regardless of
+              which view the rail actually leads with. */}
+          { index: true, element: <ViewIndexRedirect fallback="external" /> },
           { path: ':view', element: <Directory />, id: 'directory' },
         ],
       },
