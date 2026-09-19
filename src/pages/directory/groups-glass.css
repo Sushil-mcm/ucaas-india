@@ -379,25 +379,16 @@
   background: transparent;
   border-bottom: none;
 }
-/* The form column (to the right of the rail) would otherwise start flush
-   under the now-floating close button with nothing to clear it -- same
-   34px the Invite dialog gives its own step content for the same reason.
-   `:has()` scopes this to dialogs that actually use the bare head, so
-   every other `.gp-create-group-dialog` (New role, New location, ...)
-   keeps its normal header's own spacing untouched. */
-.gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-create-group-body {
-  padding-top: 34px;
-}
-/* The 34px above sits on `.gp-create-group-body`, the shared row that
-   holds BOTH the rail and the content pane beside it -- so it pushed the
-   rail's own title down too, which was already positioned fine (it isn't
-   under the floating close button, only the content pane's first row is).
-   Targeted extra clearance at the content pane alone -- the rail's very
-   next sibling, same selector already used for the scroll/stretch fix
-   below -- one field row's height (78px, measured between the Name row
-   and the Description row under it) on top of the 34px it already has. */
+/* The form column (to the right of the rail) needs clearance under the
+   floating close button; the rail (title/description/steps) does not --
+   it was never under that button. Both used to share one 34px padding-top
+   on `.gp-create-group-body`, the row that holds them both, which pushed
+   the rail's own description down with nothing above it to justify the
+   gap. Moved the full offset (the old 34px plus the 78px below) onto the
+   content pane alone, so the rail's description now starts flush at the
+   dialog's true top edge. */
 .gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-department-rail + div {
-  padding-top: 78px;
+  padding-top: 112px;
 }
 .gp-create-group-head h2 {
   margin: 0;
