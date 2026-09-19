@@ -27,7 +27,7 @@ function AccordionTrigger({
   isActive,
   variant = 'sidebar',
   triggerIcon = true,
-  activeHeaderClassName = '[&>button[data-state=open]]:bg-ucass-primary-200/50 [&>button[data-state=open]]:text-primary [&>button[data-state=open]]:border-r-primary [&>button[data-state=open]]:border-r-2',
+  activeHeaderClassName = '[&>button[data-active=true]]:bg-ucass-primary-200/50 [&>button[data-active=true]]:text-primary [&>button[data-active=true]]:border-r-primary [&>button[data-active=true]]:border-r-2',
   activeIconClassName = 'text-primary',
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {

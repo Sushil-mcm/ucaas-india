@@ -148,7 +148,7 @@ const Sidebar = () => {
                     <AccordionTrigger
                       className="items-center p-0"
                       isActive={isActive}
-                      activeHeaderClassName="[&>button[data-state=open]]:rounded-xl [&>button[data-state=open]]:bg-[#fff1e0] [&>button[data-state=open]]:text-[#c96f1f]"
+                      activeHeaderClassName="[&>button[data-active=true]]:rounded-xl [&>button[data-active=true]]:bg-[#fff1e0] [&>button[data-active=true]]:text-[#c96f1f]"
                       activeIconClassName="text-[#c96f1f]"
                     >
                       <div className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-[#fff1e0]/40 transition-colors">
