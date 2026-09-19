@@ -5,6 +5,7 @@ import Sidebar from '@/components/custom/sidebar';
 import { useAreaNav } from '@/components/custom/use-area-nav';
 // import Dialer from '@/components/dialer';
 import AgentRunningCampignOuter from '@/components/running-campaign-outer';
+import CampaignAutoJoiner from '@/components/running-campaign-outer/campaign-auto-joiner';
 import DialpadGlobalOverlay from '@/components/dialpad/dialpad-global-overlay';
 import DialpadIncomingCallAlert from '@/components/dialpad/dialpad-incoming-call-alert';
 import { useAvCall } from '@/hooks/use-av-call';
@@ -193,6 +194,9 @@ const AuthLayout = () => {
       {/* <PowerDialerCampaign /> */}
       <UpgradePlanWidget />
       <GlobalCallbackReminder />
+      {/* Joins an assigned, on-duty agent to a running campaign from any
+          signed-in page; the campaigns page does its own joining. */}
+      <CampaignAutoJoiner />
       {isStartCampaign && <AgentRunningCampignOuter />}
       {callingInProgress && !isInConference ? <MeetRinging /> : null}
       {meetInitiateModalData && meetModalCurrentChat ? (
