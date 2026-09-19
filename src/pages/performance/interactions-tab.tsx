@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { Clock, Timer, IndianRupee } from 'lucide-react';
 import CallHistory from '@/pages/reports/call-logs/call-history';
-import PerfStatCard from './stat-card';
+import PerfKpiTile from './perf-kpi-tile';
+import { useKpiHistory } from '@/pages/dashboard/home/use-kpi-history';
 import { useCallStats } from '@/hooks/use-call-stats';
 import { formatSecsToClock } from './format';
+import './perf-kpi-tile.css';
 import './interactions-theme.css';
 
 const InteractionsTab = ({
@@ -14,6 +16,15 @@ const InteractionsTab = ({
   globalSearch?: string;
 }) => {
   const callStats = useCallStats(selectedRange);
+
+  /* Backs the KPI tiles' sparklines and "vs last 30 min" trend pills —
+     same rolling in-memory sampler Queues/Agents/Home use; no historical
+     report endpoint exists behind these live-only figures either. */
+  const { getHistory, getTrend } = useKpiHistory({
+    avgWait: callStats.avgWaitSec ?? 0,
+    avgHandle: callStats.avgHandleSec ?? 0,
+    charge: callStats.totalCharge,
+  });
 
   /* The warm ambient backdrop renders one level up, in the Performance page
      shell (index.tsx) — flagging the document while this tab is open is
@@ -33,28 +44,39 @@ const InteractionsTab = ({
        what read as a loose double gap between the cards and the search bar
        row beneath them. One owner (this root's padding/gap) is enough. */
     <div className="perf-interactions flex w-full flex-col gap-3 px-[22px] pt-3 pb-4">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <PerfStatCard
-          label="Avg wait time"
-          value={callStats.avgWaitSec === null ? '—' : formatSecsToClock(callStats.avgWaitSec)}
-          sub="before answer"
+      <div className="perf-kpi-row" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        <PerfKpiTile
           icon={Clock}
+          color="#60a5fa"
+          title="Avg Wait Time"
+          subtitle="before answer"
+          value={callStats.avgWaitSec === null ? '—' : formatSecsToClock(callStats.avgWaitSec)}
+          trend={getTrend('avgWait')}
+          chart={{ type: 'line', data: getHistory('avgWait') }}
         />
-        <PerfStatCard
-          label="Avg call duration"
-          value={callStats.avgHandleSec === null ? '—' : formatSecsToClock(callStats.avgHandleSec)}
-          sub="per answered call"
+        <PerfKpiTile
           icon={Timer}
+          color="#fb923c"
+          title="Avg Call Duration"
+          subtitle="per answered call"
+          value={callStats.avgHandleSec === null ? '—' : formatSecsToClock(callStats.avgHandleSec)}
+          trend={getTrend('avgHandle')}
+          goodWhenUp
+          chart={{ type: 'area', data: getHistory('avgHandle') }}
         />
-        <PerfStatCard
-          label="Total call charge"
-          value={`₹${callStats.totalCharge.toFixed(2)}`}
-          sub={
+        <PerfKpiTile
+          icon={IndianRupee}
+          color="#c084fc"
+          title="Total Call Charge"
+          subtitle={
             callStats.isQueueBreakdownSampled
               ? `most recent ${callStats.sampledRowCount} calls`
               : `${selectedRange.from} – ${selectedRange.to}`
           }
-          icon={IndianRupee}
+          value={`₹${callStats.totalCharge.toFixed(2)}`}
+          trend={getTrend('charge')}
+          goodWhenUp
+          chart={{ type: 'line', data: getHistory('charge') }}
         />
       </div>
       <CallHistory

@@ -66,42 +66,11 @@ body.perf-warm-backdrop.dark {
 }
 
 /* ------------------------------------------------------------
-   1. Hero KPI cards — Avg wait time / Avg call duration / Total call
-   charge. Rendered directly by interactions-tab.tsx as PerfStatCard, so a
-   plain `.stat` hook is enough here. Flattened to the same solid `#fffdfb`
-   + warm-orange hairline card the Queues/Agents benchmark now uses for
-   every card on those pages (queues-theme.css `.table-scroll`,
-   agents-theme.css `.ag-table-section`) instead of this tab's own earlier
-   frosted-glass treatment, so Calls' hero row reads as the same card
-   family rather than a visibly different, blurrier one. */
-.mcm-page .perf-interactions > .grid .stat {
-  background: #fffdfb;
-  border: 1px solid rgba(249, 115, 22, 0.16);
-  border-radius: 20px;
-  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.12);
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-.dark .mcm-page .perf-interactions > .grid .stat {
-  background: rgba(23, 15, 10, 0.97);
-  border-color: rgba(251, 146, 60, 0.18);
-}
-.mcm-page .perf-interactions > .grid .stat:hover {
-  border-color: rgba(249, 115, 22, 0.3);
-  box-shadow: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
-  transform: translateY(-2px);
-}
-.mcm-page .perf-interactions > .grid .stat .k {
-  color: var(--ic-muted);
-}
-.mcm-page .perf-interactions > .grid .stat .v {
-  color: var(--ic-ink);
-}
-.mcm-page .perf-interactions > .grid .stat .d {
-  color: var(--ic-muted) !important;
-}
+   1. Hero KPI cards — Avg Wait Time / Avg Call Duration / Total Call
+   Charge. Now the same PerfKpiTile (icon badge, trend pill, sparkline)
+   Queues/Agents use, via the shared perf-kpi-tile.css — no page-specific
+   card styling needed here any more.
+   ------------------------------------------------------------ */
 
 /* ------------------------------------------------------------
    2. Sub-metric counters — Total Calls / Answered / Outgoing / Missed /
