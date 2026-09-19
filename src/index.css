@@ -2976,3 +2976,91 @@
   --accent-wash: #2b1f12 !important;
   --accent-edge: #4a341c !important;
 }
+
+
+/* ---------------------------------------------------------------------------
+   Global incoming-call alert (src/components/dialpad/dialpad-incoming-call-alert.tsx)
+
+   Movement is the point. A static banner at the top of the page reads as
+   chrome and gets looked past; a ringing call has to pull the eye from
+   wherever it is. The card breathes, the handset shakes on the beat, and the
+   screen edge pulses for peripheral vision. All three stop dead for anyone who
+   has asked the OS for less motion.
+   --------------------------------------------------------------------------- */
+@keyframes dialpadIncomingAlertDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialpadIncomingAlertHalo {
+  0%,
+  100% {
+    box-shadow:
+      0 18px 50px rgba(16, 32, 58, 0.32),
+      0 0 0 0 rgba(37, 99, 235, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 18px 50px rgba(16, 32, 58, 0.32),
+      0 0 0 12px rgba(37, 99, 235, 0);
+  }
+}
+
+@keyframes dialpadIncomingAlertShake {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10%,
+  30%,
+  50% {
+    transform: rotate(-14deg);
+  }
+  20%,
+  40% {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes dialpadIncomingAlertEdge {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 5px rgba(37, 99, 235, 0.5);
+  }
+}
+
+.dialpad-incoming-alert__card {
+  animation:
+    dialpadIncomingAlertDrop 220ms ease-out,
+    dialpadIncomingAlertHalo 1.6s ease-out 220ms infinite;
+}
+
+.dialpad-incoming-alert__icon {
+  animation: dialpadIncomingAlertShake 1.6s ease-in-out infinite;
+}
+
+.dialpad-incoming-alert__glow {
+  animation: dialpadIncomingAlertEdge 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialpad-incoming-alert__card,
+  .dialpad-incoming-alert__icon,
+  .dialpad-incoming-alert__glow {
+    animation: none;
+  }
+
+  .dialpad-incoming-alert__glow {
+    box-shadow: inset 0 0 0 5px rgba(37, 99, 235, 0.4);
+  }
+}

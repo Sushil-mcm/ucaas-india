@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef } from 'react';
 import DialpadGlobalOverlay from '@/components/dialpad/dialpad-global-overlay';
+import DialpadIncomingCallAlert from '@/components/dialpad/dialpad-incoming-call-alert';
 import { useDialpad } from '@/hooks/use-dialpad';
 import HubspotBridge from './hubspot-bridge';
 
@@ -39,6 +40,7 @@ const HubspotDialerPage = () => {
     <div className="h-screen w-screen overflow-hidden bg-white">
       <HubspotBridge />
       <DialpadGlobalOverlay />
+      <DialpadIncomingCallAlert />
     </div>
   );
 };

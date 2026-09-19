@@ -6,6 +6,7 @@ import { useAreaNav } from '@/components/custom/use-area-nav';
 // import Dialer from '@/components/dialer';
 import AgentRunningCampignOuter from '@/components/running-campaign-outer';
 import DialpadGlobalOverlay from '@/components/dialpad/dialpad-global-overlay';
+import DialpadIncomingCallAlert from '@/components/dialpad/dialpad-incoming-call-alert';
 import { useAvCall } from '@/hooks/use-av-call';
 import { useCampaign } from '@/hooks/use-campaign';
 import { useDialpad } from '@/hooks/use-dialpad';
@@ -188,6 +189,7 @@ const AuthLayout = () => {
         />
       ) : null}
       <DialpadGlobalOverlay />
+      <DialpadIncomingCallAlert />
       {/* <PowerDialerCampaign /> */}
       <UpgradePlanWidget />
       <GlobalCallbackReminder />

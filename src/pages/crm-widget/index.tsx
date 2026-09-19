@@ -16,6 +16,7 @@
  */
 import { useEffect, useMemo, useRef } from 'react';
 import DialpadGlobalOverlay from '@/components/dialpad/dialpad-global-overlay';
+import DialpadIncomingCallAlert from '@/components/dialpad/dialpad-incoming-call-alert';
 import { useDialpad } from '@/hooks/use-dialpad';
 import { detectCrmId } from './adapters';
 import CrmBridge from './crm-bridge';
@@ -68,6 +69,7 @@ const CrmWidgetPage = () => {
 
       <div className="min-h-0 flex-1">
         <DialpadGlobalOverlay />
+        <DialpadIncomingCallAlert />
       </div>
 
       <div className="flex shrink-0 items-center gap-2 border-t border-gray-200 px-3 py-2">
