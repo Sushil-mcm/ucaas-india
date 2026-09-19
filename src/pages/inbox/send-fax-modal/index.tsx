@@ -194,7 +194,7 @@ const SendFaxModal = ({
   return (
     <>
       <div className="flex min-h-11 items-center justify-between text-gray-900">
-        <div className="truncate text-md font-semibold">New Fax</div>
+        <div className="truncate text-xl font-semibold">New Fax</div>
       </div>
       <form
         className="flex min-h-0 w-full flex-1 flex-col justify-between gap-2"
@@ -203,6 +203,7 @@ const SendFaxModal = ({
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
           <CustomSelect
             label="From"
+            inputClass="mcm-did-select"
             options={faxDIDOptions}
             value={from}
             placeholder="Select DID Number"

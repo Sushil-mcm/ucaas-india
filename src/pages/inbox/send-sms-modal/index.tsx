@@ -349,7 +349,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
   return (
     <>
       <div className="flex flex-col text-gray-900">
-        <div className="font-semibold truncate text-md flex items-center justify-between  min-h-11 ">
+        <div className="font-semibold truncate text-xl flex items-center justify-between  min-h-11 ">
           New Message
         </div>
       </div>
@@ -357,6 +357,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
           <CustomSelect
             label="Choose a DID to send message"
+            inputClass="mcm-did-select"
             options={
               allDIDNumbers && allDIDNumbers?.length > 0
                 ? allDIDNumbers.map((number: any) => ({

@@ -889,6 +889,47 @@
     color: #ea580c !important;
   }
 
+  /* Inbox's "Choose a DID"/"From" select (New Message, New Fax dialogs).
+     The base .custom-react-select__control rule's thick var(--primary)
+     focus border, plus the base menu's own full-bleed solid-orange
+     selected option, read as a clunky, mismatched control against this
+     form's otherwise plain white/thin-border fields — thinner border,
+     rounded menu with real padding, and a proper inset pill for the
+     selected option instead of a wall-to-wall block. */
+  .mcm-did-select.custom-react-select__control {
+    border-radius: 10px !important;
+    border: 1px solid rgba(225, 200, 165, 0.9) !important;
+    box-shadow: none !important;
+  }
+  .mcm-did-select.custom-react-select__control:hover,
+  .mcm-did-select.custom-react-select__control--is-focused {
+    border-color: #f2994a !important;
+    box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15) !important;
+  }
+  .mcm-did-select.custom-react-select__menu {
+    background-color: #fff !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(225, 200, 165, 0.9) !important;
+    padding: 6px !important;
+    box-shadow: 0 12px 32px rgba(160, 95, 30, 0.14) !important;
+  }
+  .mcm-did-select.custom-react-select__option {
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    margin: 1px 0 !important;
+  }
+  .mcm-did-select.custom-react-select__option:hover,
+  .mcm-did-select.custom-react-select__option--is-focused {
+    background-color: rgba(255, 241, 225, 0.7) !important;
+    color: #1a1a1a !important;
+  }
+  .mcm-did-select.custom-react-select__option--is-selected {
+    background-color: rgba(242, 153, 74, 0.14) !important;
+    background-image: none !important;
+    color: #c96f1f !important;
+    font-weight: 600;
+  }
+
   /* Standalone date-preset select (`.rp-date-standalone` — Reports ▸ Call
      Analytics, and anywhere else this select renders alone rather than as
      the first segment of Performance's fused Today+Division+Media pill).
