@@ -617,10 +617,6 @@
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
 }
-.gp-contact-toolbar .contact-toolbar-select.custom-react-select__control {
-  border: none !important;
-  box-shadow: none !important;
-}
 /* Its own rounded card with a visible gap before the table's panel-card
    below, instead of sitting flush against it — the platform's bar has no
    bottom radius of its own, so its square corner ran straight into the
