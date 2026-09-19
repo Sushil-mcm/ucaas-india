@@ -175,6 +175,12 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
           centered
           portal
           backgroundStyle="!bg-transparent"
+          /* This drawer's own z-30 sits below the Edit group Dialog it
+             opens from (a Radix Dialog, z-50) -- portalling to <body>
+             puts both in the same layer, but they still stack by z-index,
+             not mount order, so without this it rendered behind that
+             dialog instead of over it. */
+          zIndexClassName="z-[60]"
           content={
             <AddGreeting
               drawerState={drawerState?.addGreeting}

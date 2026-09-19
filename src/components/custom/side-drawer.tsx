@@ -38,6 +38,14 @@ interface SideDrawerProps {
      slide-in translate) is shared by every other caller, so this is an
      opt-in override rather than a change to the default layout. */
   centered?: boolean;
+  /* Overrides the backdrop/panel's z-30 (or z-10 without a header) on both
+     at once. Every other caller sits on an ordinary page, where z-30 is
+     already above the content behind it -- but a caller that opens this
+     from inside another modal (a Radix Dialog, z-50) needs to clear that
+     ancestor specifically, which a fixed z-30 can't do regardless of
+     `portal` placing it in the same document.body layer: two portaled
+     elements still stack by z-index, not mount order. */
+  zIndexClassName?: string;
 }
 
 const SideDrawer: FC<SideDrawerProps> = ({
@@ -56,6 +64,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
   headerClassName = '',
   portal = false,
   centered = false,
+  zIndexClassName = '',
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -89,6 +98,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
                plays when the class actually changes. */
             isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
             backgroundStyle,
+            zIndexClassName,
           )}
         ></div>
       )}
@@ -108,6 +118,7 @@ const SideDrawer: FC<SideDrawerProps> = ({
             : isOpen
               ? 'translate-x-0 right-0'
               : 'translate-x-full right-[-1rem]',
+          zIndexClassName,
         )}
         aria-labelledby="drawer-label"
         style={{
