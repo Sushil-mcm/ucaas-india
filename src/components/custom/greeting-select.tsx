@@ -8,7 +8,7 @@ import { DEFAULT_RECORDING_UUIDS, getEnv, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import ErrorTooltip from './error-tooltip';
 import SideDrawer from './side-drawer';
-import AudioPreviewPlayer from './audio-preview-player';
+import ReadyAudio from './ready-audio';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 interface IGREETINGPROPS {
@@ -114,7 +114,12 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
                   <CloseIcon className="h-3 w-3" />
                 </button>
               </div>
-              <AudioPreviewPlayer src={recordingUrl} authenticated />
+              {/* Plain browser audio player rather than a custom-built one --
+                  its own kebab menu already gives download and playback-speed
+                  options for free. `accent-*` tints the controls Chromium
+                  renders in the page's own color (play button, volume) to
+                  the app's orange instead of the OS default blue. */}
+              <ReadyAudio controls authenticated src={recordingUrl} className="accent-[#c96f1f]" />
             </PopoverContent>
           </Popover>
         )}
