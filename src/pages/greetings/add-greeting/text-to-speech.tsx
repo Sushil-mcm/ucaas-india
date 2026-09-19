@@ -130,6 +130,7 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
           options={LANGUAGE_OPTIONS}
           value={selectedLocale}
           placeholder="Select language"
+          inputClass="gp-borderless-select"
           handleChange={(option) => {
             setValue('textToSpeechLocale', option, { shouldDirty: true, shouldValidate: true });
             setValue('textToSpeech', '');
@@ -149,6 +150,7 @@ const TextToSpeech: FC<UploadGreetingProps> = ({ handleTextToSpeech, isPendingTe
           placeholder={selectedLocale ? 'Select voice' : 'Select language first'}
           isDisabled={!selectedLocale}
           isLoading={isVoiceListLoading}
+          inputClass="gp-borderless-select"
           handleChange={(option) => {
             setValue('textToSpeechVoice', option, { shouldDirty: true, shouldValidate: true });
             setValue('textFile', null);

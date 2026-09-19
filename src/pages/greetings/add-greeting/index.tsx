@@ -216,9 +216,28 @@ const AddGreeting: FC<IAddgreetings> = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-2 justify-between h-full">
+    /* `flex-1 min-h-0`, not `h-full`: this sits inside SideDrawer's centered
+       panel, which is sized by `max-height` alone (no plain `height`) --
+       so from a CSS percentage-resolution standpoint its content wrapper
+       never has a "definite" height for a `height:100%` child to resolve
+       against, and `h-full` here silently fell back to this root's own
+       content size instead. That let the whole form (tabs+details+footer)
+       grow past the popup's bounded height, pushing the Cancel/Upload row
+       hundreds of pixels below the visible panel instead of staying
+       pinned in view. `flex-1` sidesteps the percentage requirement
+       entirely -- it sizes through the flex distribution algorithm against
+       whatever height the parent actually resolves to, definite or not. */
+    <div className="w-full flex flex-col gap-2 justify-between flex-1 min-h-0">
       <FormProvider {...formInstance}>
-        <div className="flex flex-col gap-4 pr-1 flex-1 overflow-y-auto">
+        {/* `min-h-0`: without it, a flex item defaults to a min-height equal
+           to its own content, so this `flex-1 overflow-y-auto` never
+           actually shrinks below the tabs+details' full height inside the
+           `h-full` column above -- it grows instead of scrolling, pushing
+           the Cancel/Upload row (`mt-auto`, below) out past the drawer's
+           own bounded height instead of keeping it pinned in view while
+           only this content scrolls. Same bug/fix as the Add Members
+           table earlier in this app (groups-glass.css). */}
+        <div className="flex flex-col gap-4 pr-1 flex-1 min-h-0 overflow-y-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
             <div className="w-full mb-4">
               {/* Segmented pill track -- white track, solid-orange active
