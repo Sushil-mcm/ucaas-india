@@ -301,7 +301,14 @@
   background: #ffffff !important;
 }
 .gp-role-form-dialog .gp-create-group-head {
-  background: #fff6e9;
+  /* Plain white, not the shared shell's cream wash; bigger title; less
+     bottom padding before the form starts -- same treatment as the Add
+     Contact dialog's header (external-glass.css). */
+  background: #fff;
+  padding-bottom: 8px;
+}
+.gp-role-form-dialog .gp-create-group-head h2 {
+  font-size: 19px;
 }
 .gp-role-form-dialog .gp-create-group-body {
   padding-top: 0 !important;
