@@ -9,11 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import CustomAvatar from '@/components/custom/custom-avatar';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useInstantMeeting } from '@/hooks/use-instant-meeting';
-import { usePeopleRows, type PersonRow } from './people-rows';
+import { PERSON_STATE_LABEL, STATUS_FILTER_OPTIONS, usePeopleRows, type PersonRow } from './people-rows';
 import { useDirectoryFavourites } from './use-directory-favourites';
 import { useUser } from '@/hooks/use-user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteMember, removeAssignNumber, updateMemberForwading } from '@/services/api';
+import { deleteMember, removeAssignNumber, resendInvite, updateMemberForwading } from '@/services/api';
 import { handleAlert, withIndianDialCode } from '@/lib/utils';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import AlertConfirm from '@/components/custom/alert-confirm';
@@ -187,6 +187,7 @@ const People = () => {
   const [department, setDepartment] = useState('All');
   const { isFavourite, toggleFavourite } = useDirectoryFavourites();
   const [presence, setPresence] = useState('Any');
+  const [status, setStatus] = useState('Any');
   const [location, setLocation] = useState('All');
   const [open, setOpen] = useState<PersonRow | null>(null);
   const [editing, setEditing] = useState<PersonRow | null>(null);
@@ -214,6 +215,22 @@ const People = () => {
       extension: row.extension || '',
     });
   };
+
+  const { mutate: resendInviteTo, isPending: isResendingInvite } = useMutation({
+    mutationKey: ['resendInvite'],
+    mutationFn: (uuid: string) => resendInvite({ user_uuid: uuid }),
+    onSuccess: (data: any) => {
+      handleAlert({
+        text: data?.data?.data?.message || 'Invite sent. The link is good for 3 days.',
+        type: 'success',
+      });
+    },
+    onError: (error: any) =>
+      handleAlert({
+        text: error?.response?.data?.message || 'Could not resend the invite.',
+        type: 'error',
+      }),
+  });
 
   const { mutate: savePerson, isPending: isSavingPerson } = useMutation({
     mutationFn: (payload: Record<string, string>) =>
@@ -250,6 +267,9 @@ const People = () => {
       if (department !== 'All' && row.department !== department) return false;
       if (location !== 'All' && row.location !== location) return false;
       if (presence !== 'Any' && row.presence !== presence) return false;
+      if (status !== 'Any' && (row.state ? PERSON_STATE_LABEL[row.state].label : null) !== status) {
+        return false;
+      }
       if (!needle) return true;
       return [
         row.name,
@@ -263,7 +283,7 @@ const People = () => {
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
-  }, [rows, search, department, presence, location]);
+  }, [rows, search, department, presence, status, location]);
 
   /* The roster used to scroll inside the card. A scroll box hides how much
      is left and makes the last row sit against a clipped edge, so it pages
@@ -413,6 +433,12 @@ const People = () => {
               options={presences}
               onChange={setPresence}
             />
+            <FilterChip
+              label="Status"
+              value={status}
+              options={STATUS_FILTER_OPTIONS}
+              onChange={setStatus}
+            />
             <SearchChip value={search} onChange={setSearch} placeholder="Search people" />
             <span className="fchip live" style={{ marginLeft: 'auto' }}>
               <span className="num">{onQueue}</span> available
@@ -516,6 +542,7 @@ const People = () => {
                 Person
               </th>
               <th>Role</th>
+              <th>Status</th>
               <th>Groups</th>
               <th>Location</th>
               <th>Numbers</th>
@@ -566,6 +593,20 @@ const People = () => {
                     <span className={ROLE_CLASS[row.role] || 'role-badge role-agent'}>
                       {row.role}
                     </span>
+                  </td>
+                  {/* The account's state, not their presence. The note on the
+                      pill says exactly what the state blocks today. */}
+                  <td>
+                    {row.state ? (
+                      <span
+                        className={TONE_CLASS[PERSON_STATE_LABEL[row.state].tone] || 'tag neu'}
+                        title={PERSON_STATE_LABEL[row.state].note}
+                      >
+                        {PERSON_STATE_LABEL[row.state].label}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--ink-4)' }}>—</span>
+                    )}
                   </td>
                   <td>{row.department}</td>
                   <td>
@@ -715,6 +756,15 @@ const People = () => {
                               <DropdownMenuItem onClick={() => setAssigningCallerId(row)}>
                                 <Ic n="grid" size={15} />
                                 Assign caller ID
+                              </DropdownMenuItem>
+                            ) : null}
+                            {canEdit && row.state === 'PENDING' ? (
+                              <DropdownMenuItem
+                                disabled={isResendingInvite}
+                                onClick={() => resendInviteTo(row.uuid)}
+                              >
+                                <Ic n="send" size={15} />
+                                Resend invite
                               </DropdownMenuItem>
                             ) : null}
                             {/* Admins can remove a person; never yourself, and
