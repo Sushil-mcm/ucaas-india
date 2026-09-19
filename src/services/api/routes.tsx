@@ -1061,6 +1061,16 @@ export const routes = {
     METHOD: 'DELETE',
     URL: '/api/did/delete-did',
   },
+  // Numbers held in their 30-day cooling-off window before RELEASE_DID_TO_CARRIER's
+  // nightly job actually gives them back. 404s on a server without the pool patch.
+  PENDING_RELEASE_LIST: {
+    METHOD: 'GET',
+    URL: '/api/did/pending-release',
+  },
+  UNDO_RELEASE: {
+    METHOD: 'POST',
+    URL: '/api/did/undo-release',
+  },
   // User Template
   UPSERT_TEMPLATE: {
     METHOD: 'POST',

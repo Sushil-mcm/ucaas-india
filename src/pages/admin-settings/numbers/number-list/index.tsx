@@ -1,4 +1,6 @@
 import NumberWithFlag from '@/components/custom/number-with-flag';
+import PendingReleasePanel from './pending-release-panel';
+import SwapNumberDialog from './swap-number-dialog';
 import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
@@ -154,6 +156,7 @@ interface INumberListState {
   removeConfirmationAlert: boolean;
   releaseConfirmationAlert: boolean;
   editLabel: boolean;
+  swapNumber: boolean;
 }
 
 const NumberList = () => {
@@ -188,6 +191,7 @@ const NumberList = () => {
     removeConfirmationAlert: false,
     releaseConfirmationAlert: false,
     editLabel: false,
+    swapNumber: false,
   });
   const queryClient: any = useQueryClient();
   const { features } = useCompanyFeatures();
@@ -598,6 +602,8 @@ const NumberList = () => {
         const removeAssignmentAction =
           data?.User && virtualNumberAccess?.action?.assign_number
             ? [
+                /* Swap: the person keeps a number throughout, never left with none. */
+                createAction(2, 'Swap Number', 'AssignNumberIcon', 'w-5 h-5', neutral, 'swapNumber'),
                 createAction(
                   2,
                   'Remove Assignment',
@@ -754,6 +760,10 @@ const NumberList = () => {
               />
             </div>
           ) : (
+            <>
+            {view.isArchive ? (
+              <PendingReleasePanel canUndo={Boolean(virtualNumberAccess?.action?.assign_number)} />
+            ) : null}
             <TableManager
               {...{
                 fetcherKey: view.fetcherKey,
@@ -766,6 +776,7 @@ const NumberList = () => {
                 ...(view.emptyDescription ? { descriptionEmptyTable: view.emptyDescription } : {}),
               }}
             />
+            </>
           )}
 
           {openDrawer && (
@@ -822,6 +833,14 @@ const NumberList = () => {
             setNumberState((prev) => ({ ...prev, assignDID: val, selectedDID: null }))
           }
           selectedDidNumber={selected}
+        />
+      )}
+
+      {numberState.swapNumber && (
+        <SwapNumberDialog
+          open={numberState.swapNumber}
+          number={selected}
+          onClose={() => closeAlert('swapNumber')}
         />
       )}
 

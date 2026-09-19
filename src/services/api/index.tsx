@@ -1797,6 +1797,24 @@ export const releaseDidToCarrier = (didNumber: string) => {
   });
 };
 
+export const pendingReleaseList = () => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.PENDING_RELEASE_LIST.METHOD,
+    url: routes.PENDING_RELEASE_LIST.URL,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
+export const undoRelease = (uuid: string) => {
+  const config: CustomAxiosRequestConfig = {
+    method: routes.UNDO_RELEASE.METHOD,
+    url: `${routes.UNDO_RELEASE.URL}/${uuid}`,
+    hideToastOnError: true,
+  };
+  return apiClient(config);
+};
+
 // User Template
 export const upsertTemplate = ({ uuid = '', ...data }) => {
   return apiClient({
