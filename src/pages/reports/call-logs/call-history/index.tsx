@@ -40,6 +40,7 @@ import TranscriptInfo from '@/pages/phone/transcript-info';
 import AiSessionDetailDrawer from '@/pages/admin-settings/knowledge-base/components/ai-session-detail-drawer';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 import { formatCallWaitTime } from '@/hooks/use-call-stats';
+import CallQualityBadge from '@/components/custom/call-quality-badge';
 
 type CallHistoryDateFilter = {
   from?: string;
@@ -717,6 +718,15 @@ const CallHistory = ({
             </div>
           );
         },
+      },
+      {
+        /* What the call sounded like, from the switch's own RTP figures
+           (call-quality.ts). A call the switch never measured — never
+           connected, or before this was recorded — shows a dash, not a
+           guess. */
+        header: 'Quality',
+        accessorKey: 'mos',
+        cell: ({ row }: any) => <CallQualityBadge row={row?.original} />,
       },
       {
         header: 'Duration',

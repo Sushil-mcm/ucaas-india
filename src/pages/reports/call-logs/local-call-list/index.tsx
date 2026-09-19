@@ -31,6 +31,7 @@ import { formatCallWaitTime } from '@/hooks/use-call-stats';
 import { useNavigate } from 'react-router-dom';
 import { useRecordingAccess } from '@/hooks/use-recording-access';
 import { useCompanyFeatures } from '@/hooks/rbac';
+import CallQualityBadge from '@/components/custom/call-quality-badge';
 
 const LocalCallList = ({
   // Only true when this report renders inside another already-open modal
@@ -293,6 +294,11 @@ const LocalCallList = ({
           </div>
         );
       },
+    },
+    {
+      header: 'Quality',
+      accessorKey: 'mos',
+      cell: ({ row }: any) => <CallQualityBadge row={row?.original} />,
     },
     {
       header: 'Duration',
