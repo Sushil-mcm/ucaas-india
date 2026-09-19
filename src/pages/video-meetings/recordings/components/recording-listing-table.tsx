@@ -383,7 +383,7 @@ const RecordingListingTable = ({
   };
 
   return (
-    <div className="flex min-h-[calc(100svh-320px)] max-h-[calc(100svh-180px)] flex-1 flex-col overflow-hidden rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[#fffdfb] shadow-[0_10px_34px_rgba(160,95,30,0.14)]">
+    <div className="flex min-h-[calc(100svh-320px)] max-h-[calc(100svh-180px)] flex-1 flex-col overflow-hidden rounded-2xl border border-[rgba(225,200,165,0.9)] bg-[#fffdfb]">
       <div className="flex flex-col gap-3 border-b border-[rgba(225,200,165,0.9)] p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="relative w-full sm:max-w-[380px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8]" />
@@ -480,7 +480,7 @@ const RecordingListingTable = ({
               {filteredRecords.map((record) => (
                 <div
                   key={record?._id}
-                  className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-white p-3 shadow-[0_2px_10px_rgba(160,95,30,0.08)]"
+                  className="rounded-xl border border-[rgba(225,200,165,0.9)] bg-white p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">

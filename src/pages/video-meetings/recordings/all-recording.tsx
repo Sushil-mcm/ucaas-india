@@ -106,7 +106,7 @@ const AllRecording = () => {
     <>
       <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3 overflow-auto bg-transparent p-3 sm:p-4">
         <div className="mx-auto max-w-[1200px] w-full flex min-h-0 flex-1 flex-col gap-3">
-          <div className="flex flex-wrap items-end gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:justify-between">
+          <div className="flex flex-wrap items-end gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 sm:justify-between">
             <div className="flex min-w-0 flex-col gap-[3px]" style={{ flex: '1 1 320px' }}>
               <div className="flex items-center gap-1.5">
                 <h4 className="text-[23px] font-extrabold leading-[1.1] tracking-[-0.035em] text-gray-900">
@@ -115,15 +115,15 @@ const AllRecording = () => {
                 <CustomTooltip
                   text="Manage recordings, archives, and meeting transcripts."
                   side="bottom"
-                  className="max-w-[240px] rounded-xl bg-gray-900 px-3.5 py-2.5 text-[13px] leading-snug shadow-lg"
+                  className="max-w-[240px] rounded-xl bg-gray-900 px-3.5 py-2.5 text-[13px] leading-snug"
                   arrowClassName="fill-gray-900"
                 >
                   <Info className="h-4 w-4 shrink-0 cursor-help text-gray-400" />
                 </CustomTooltip>
               </div>
             </div>
-            <div className="ml-auto inline-flex h-10 w-fit items-center rounded-full border border-white/70 bg-white/45 backdrop-blur-md px-4 text-[13px] text-muted-foreground shadow-[0_2px_10px_rgba(154,52,18,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-5">
-              <span className="mr-1.5 text-[13px] font-bold" style={{ color: '#B5642F' }}>
+            <div className="ml-auto inline-flex h-10 w-fit items-center rounded-full border border-[rgba(225,200,165,0.9)] bg-[#fff6e9] px-4 text-[13px] text-muted-foreground sm:px-5">
+              <span className="mr-1.5 text-[13px] font-bold" style={{ color: 'var(--primary)' }}>
                 {totalItems}
               </span>
               items found
