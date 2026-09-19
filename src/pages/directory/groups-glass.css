@@ -446,6 +446,16 @@
   flex-direction: column;
   overflow: hidden;
 }
+/* Without a fixed height, the dialog only ever set a `max-height` (below),
+   so its actual height tracked each step's own content -- Department
+   Information's short form gave a short dialog, Add Members' tall table
+   gave a tall one, and the container visibly resized on every Next/Prev
+   click. Pinning the height once a step rail is present (present on every
+   step, not just some) keeps the container the same size throughout the
+   whole wizard; each step's own content scrolls inside it instead. */
+.gp-create-group-dialog:has(.gp-department-rail) {
+  height: 85vh;
+}
 /* The other half of that gap is the dialog's own `gap-4` (16px) between its
    two children -- the title bar and this body. Nothing else sits between
    them, so tightening it here only closes the title-to-description space;
