@@ -7,6 +7,7 @@ import JoinMeetingModal from './join-meeting-modal';
 import ScheduleMeeting from '../schedule-meeting';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
+import { User, Video as VideoIcon, CalendarDays } from 'lucide-react';
 
 const MeetingHeader = ({ formInstance, showActions = true }: any) => {
   const [drawerState, setDrawerState] = useState<any>(false);
@@ -40,82 +41,94 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
 
   return (
     <div className="mx-auto max-w-250 flex w-full flex-col gap-6 sm:pt-3">
-      <div className="relative w-full overflow-hidden rounded-[24px] border border-[#f0e0cc] shadow-[0_10px_30px_rgba(201,111,31,0.1)]">
-        <div className="flex flex-col lg:flex-row">
-          <div
-            className="relative overflow-hidden flex items-center gap-4 px-6 py-7 sm:px-8 sm:py-8 lg:w-[380px] lg:shrink-0"
-            style={{ background: 'linear-gradient(135deg, #f2994a, #c2620f)' }}
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full"
-              style={{ background: 'rgba(255,255,255,0.08)' }}
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-16 bottom-0 h-52 w-52 rounded-full"
-              style={{ background: 'rgba(255,255,255,0.06)' }}
-            />
-            <div
-              aria-hidden
-              className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25"
-            >
-              <Icon name="VideocameraAdd" className="w-6 h-6" />
-            </div>
-            <div className="relative z-10 flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/80">
-                Video Conferencing
-              </span>
-              <div className="text-2xl sm:text-[26px] leading-tight font-extrabold text-white">
-                Video Meetings
-              </div>
-              <div className="text-[13px] leading-relaxed text-white/85">
-                Connect securely with your team and clients, instantly.
-              </div>
-            </div>
-          </div>
+      <div
+        className="relative w-full overflow-hidden rounded-[24px] border border-[#f5e6d3] px-6 py-8 sm:px-10 sm:py-10"
+        style={{ background: 'linear-gradient(120deg, #fffaf3 0%, #fff1e0 55%, #fde3c2 100%)' }}
+      >
+        {/* Decorative dot scatter — a handful of static dots rather than a
+            repeating pattern, so it reads as accent, not texture. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-[210px] top-8 hidden h-2 w-2 rounded-full bg-[#f2994a]/30 lg:block"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-[130px] top-20 hidden h-1.5 w-1.5 rounded-full bg-[#c96f1f]/25 lg:block"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-[260px] bottom-10 hidden h-1.5 w-1.5 rounded-full bg-[#f2994a]/25 lg:block"
+        />
 
-          {showActions && (
-            <div className="flex flex-1 flex-col justify-center gap-3 bg-white px-6 py-6 sm:flex-row sm:items-center sm:gap-2.5 sm:px-8">
-              {videAccess?.create && (
-                <div
-                  className="flex items-center justify-center gap-2 min-h-11 px-5 w-full sm:w-auto cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)] transition-transform hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
-                  onClick={() => {
-                    if (isPendingInstantMeeting) return;
-                    InstantMeeting();
-                  }}
-                >
-                  <Icon name="VideocameraAdd" className="w-4 h-4 shrink-0" />
-                  <h6 className="font-semibold text-center text-sm whitespace-nowrap">
-                    {isPendingInstantMeeting ? 'Please Wait' : 'Start Meeting'}
-                  </h6>
-                </div>
-              )}
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 lg:max-w-[520px]">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#c96f1f] shadow-sm">
+              <Icon name="VideocameraAdd" className="w-3.5 h-3.5" />
+              Video Meetings
+            </span>
+            <h2 className="text-[28px] sm:text-[34px] leading-[1.15] font-extrabold text-[#2E2D35]">
+              Every meeting,
+              <br />
+              <span className="text-[#c96f1f]">one click away</span>
+            </h2>
 
-              <div className="flex items-center gap-1 rounded-xl border border-[#EEE7DD] bg-[#FBE2C8]/20 p-1 w-full sm:w-auto">
-                <div
+            {showActions && (
+              <div className="mt-1 flex flex-wrap items-center gap-2.5">
+                {videAccess?.create && (
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 h-11 px-5 cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)] transition-transform hover:-translate-y-0.5"
+                    style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
+                    onClick={() => {
+                      if (isPendingInstantMeeting) return;
+                      InstantMeeting();
+                    }}
+                  >
+                    <Icon name="VideocameraAdd" className="w-4 h-4 shrink-0" />
+                    <span className="font-semibold text-sm whitespace-nowrap">
+                      {isPendingInstantMeeting ? 'Please Wait' : 'Start Meeting'}
+                    </span>
+                  </button>
+                )}
+                <button
+                  type="button"
                   onClick={() => setModalState(true)}
-                  className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-[#2E2D35] transition-colors hover:bg-white"
+                  className="flex items-center justify-center gap-2 h-11 px-4 cursor-pointer rounded-xl border border-[#EEE7DD] bg-white text-[#2E2D35] transition-colors hover:border-[#f2994a]/50"
                 >
                   <Icon name="PlusIcon" className="w-4 h-4 shrink-0" />
-                  <h6 className="font-medium text-center text-sm whitespace-nowrap">Join</h6>
-                </div>
+                  <span className="font-medium text-sm whitespace-nowrap">Join Meeting</span>
+                </button>
                 {videAccess?.create && (
-                  <>
-                    <span className="h-5 w-px bg-[#EEE7DD]" aria-hidden />
-                    <div
-                      className="flex flex-1 sm:flex-none items-center justify-center gap-2 min-h-9 px-4 cursor-pointer rounded-lg text-[#2E2D35] transition-colors hover:bg-white"
-                      onClick={() => setDrawerState(true)}
-                    >
-                      <Icon name="CalendarIcon" className="w-4 h-4 shrink-0" />
-                      <h6 className="font-medium text-center text-sm whitespace-nowrap">Schedule</h6>
-                    </div>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => setDrawerState(true)}
+                    className="flex items-center justify-center gap-2 h-11 px-4 cursor-pointer rounded-xl border border-[#EEE7DD] bg-white text-[#2E2D35] transition-colors hover:border-[#f2994a]/50"
+                  >
+                    <Icon name="CalendarIcon" className="w-4 h-4 shrink-0" />
+                    <span className="font-medium text-sm whitespace-nowrap">Schedule</span>
+                  </button>
                 )}
               </div>
+            )}
+          </div>
+
+          {/* Decorative icon cluster: a large camera tile anchored by two
+              smaller floating badges, all off the shared icon set rather
+              than bespoke illustration art. */}
+          <div
+            aria-hidden
+            className="relative hidden h-[150px] w-[190px] shrink-0 lg:block"
+          >
+            <div className="absolute right-3 top-1/2 flex h-24 w-24 -translate-y-1/2 items-center justify-center rounded-[26px] bg-white shadow-[0_16px_32px_rgba(201,111,31,0.18)]">
+              <VideoIcon className="h-10 w-10 text-[#f2994a]" strokeWidth={1.75} />
             </div>
-          )}
+            <div className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-[0_6px_16px_rgba(201,111,31,0.15)]">
+              <User className="h-5 w-5 text-[#c96f1f]" strokeWidth={1.75} />
+            </div>
+            <div className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-[0_6px_16px_rgba(201,111,31,0.15)]">
+              <CalendarDays className="h-5 w-5 text-[#c96f1f]" strokeWidth={1.75} />
+            </div>
+          </div>
         </div>
       </div>
       {modalState && (
