@@ -235,7 +235,7 @@ const UpcomingMeetings = () => {
 
   return (
     <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-3 overflow-auto p-3 sm:p-4">
-      <div className="mx-auto max-w-250 flex h-full min-h-0 w-full flex-col justify-start gap-6 sm:gap-8">
+      <div className="mx-auto max-w-[1400px] flex h-full min-h-0 w-full flex-col justify-start gap-6 sm:gap-8">
         <MeetingHeader formInstance={formInstance} />
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex justify-between items-center">
@@ -538,7 +538,7 @@ const UpcomingMeetings = () => {
                   );
                 })
               ) : (
-                <div className="w-full mx-auto max-w-250 min-h-52 lg:min-h-80 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg   m-auto border border-[rgba(225,200,165,0.9)] flex flex-col items-center justify-center gap-2">
+                <div className="w-full mx-auto max-w-[1400px] min-h-52 lg:min-h-80 bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-4 rounded-lg   m-auto border border-[rgba(225,200,165,0.9)] flex flex-col items-center justify-center gap-2">
                   <div
                     className="flex items-center justify-center rounded-full p-4"
                     style={{ background: 'rgba(231,139,80,0.08)' }}
