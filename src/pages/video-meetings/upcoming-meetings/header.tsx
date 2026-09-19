@@ -50,7 +50,7 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] flex w-full flex-col gap-6 sm:pt-3">
+    <div className="mx-auto max-w-[1200px] flex w-full flex-col gap-6 sm:pt-3">
       <div
         className="relative w-full overflow-hidden rounded-[24px] border border-[#f5e6d3] px-6 py-8 sm:px-10 sm:py-10"
         style={{ background: 'linear-gradient(120deg, #fffaf3 0%, #fff1e0 55%, #fde3c2 100%)' }}
