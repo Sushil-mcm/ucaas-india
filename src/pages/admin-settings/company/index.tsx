@@ -167,6 +167,11 @@ const CompanyInfo = () => {
     setRowData(site);
   };
 
+  const handleOfficeRules = (site: any) => {
+    if (!canEditSites || !site?.uuid) return;
+    navigate(`/admin-settings/company/locations/${site.uuid}/policies`);
+  };
+
   const handleDeleteSite = (site: any, isDefault: boolean) => {
     if (isDefault || !canDeleteSites) return;
     setRowData(site);
@@ -438,6 +443,19 @@ const CompanyInfo = () => {
                               onClick={() => makeMainLocation(site)}
                             >
                               Make main
+                            </button>
+                          )}
+                          {canEditSites && (
+                            <button
+                              type="button"
+                              aria-label={`Policies for ${site?.name || 'site'}`}
+                              title="Office policies"
+                              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/40 text-[#9A948F] hover:bg-primary hover:text-white"
+                              onClick={() => {
+                                handleOfficeRules(site);
+                              }}
+                            >
+                              <Icon name="SettingsIcon" className="h-4 w-4" />
                             </button>
                           )}
                           {!isTrial && canEditSites && (

@@ -88,6 +88,7 @@ const CompanyCampaignTimersPage = lazy(() => import('@/pages/admin-settings/comp
 const CompanyAlertsPage = lazy(() => import('@/pages/admin-settings/company/company-alerts'));
 const CompanySecurityPage = lazy(() => import('@/pages/admin-settings/company/company-security'));
 const CompanyChangeLogPage = lazy(() => import('@/pages/admin-settings/company/company-change-log'));
+const OfficePolicy = lazy(() => import('@/pages/admin-settings/company/office-policy'));
 const CompanyDeskPhonesPage = lazy(() => import('@/pages/admin-settings/company/company-desk-phones'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
 /* Directory and Performance used to carry the page in a query --
@@ -719,6 +720,18 @@ export const router = createBrowserRouter([
                   <ProtectedRoute
                     element={<CompanyInfo />}
                     guard={{ permission: 'account_setting.access.SITE.action.view' }}
+                  />
+                ),
+              },
+              {
+                /* The middle policy level between Company and Person: per-site
+                   hours, recording, voicemail and caller-ID display, versioned
+                   and saved independently by section. */
+                path: 'locations/:locationId/policies',
+                element: (
+                  <ProtectedRoute
+                    element={<OfficePolicy />}
+                    guard={{ permission: 'account_setting.access.SITE.action.edit' }}
                   />
                 ),
               },
