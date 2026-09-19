@@ -1,0 +1,1036 @@
+/* ============================================================
+   Campaign Workspace (/campaign/my-campaigns and /my-campaigns) - visual polish.
+
+   Styling only. Every hook is a class name added to the existing markup in
+   my-campaigns-list-standalone.tsx and campaign-leave-dialog.tsx; nothing here
+   changes what a control does or what data it shows.
+
+   Scope: the workspace renders inside the campaign area AND on the standalone
+   /my-campaigns route outside it, so everything hangs off the component's own
+   root, `section.mcm-workspace`. Pieces that portal to <body> carry their own
+   root class: `.mcm-ws-pop` (analytics popover), `.mcm-ws-mic` (microphone
+   dialog) and `.mcm-ws-leave` (leave dialog).
+
+   Tokens: inside the campaign area the workspace reads that area's `.mcm-page`
+   variables. Outside it (the standalone route, and the portals) it reads the
+   app-wide `--mcm-*` tokens from index.css. Both sets carry the same palette
+   and both follow the per-brand accent lock, so nothing here hard-codes the
+   brand blue. (The bare `--accent` name cannot be used outside `.mcm-page`:
+   the shadcn theme defines it on :root as a light grey.)
+
+   `section.mcm-workspace` (0,1,1) is deliberate: the `.mcm-page` compatibility
+   layer restyles utilities such as `.bg-white` at (0,2,0), and a plain
+   `.mcm-workspace .x` would tie with it and depend on stylesheet order.
+   ============================================================ */
+
+section.mcm-workspace,
+.mcm-ws-pop,
+.mcm-ws-mic,
+.mcm-ws-leave {
+  --ws-accent: var(--mcm-accent);
+  --ws-accent-ink: var(--mcm-accent-ink);
+  --ws-accent-wash: var(--mcm-accent-wash);
+  --ws-accent-edge: var(--mcm-accent-edge);
+
+  --ws-ink: var(--mcm-ink);
+  --ws-ink-2: var(--mcm-ink-2);
+  --ws-ink-3: var(--mcm-ink-3);
+  --ws-ink-4: var(--mcm-ink-4);
+
+  --ws-line: var(--mcm-line);
+  --ws-line-2: var(--mcm-line-2);
+
+  --ws-surface: var(--mcm-surface);
+  --ws-surface-2: var(--mcm-surface-2);
+  --ws-surface-3: var(--mcm-surface-3);
+
+  --ws-success: var(--mcm-live);
+  --ws-success-wash: var(--mcm-live-wash);
+  --ws-warn: var(--mcm-warn);
+  --ws-warn-wash: var(--mcm-warn-wash);
+  --ws-danger: var(--mcm-crit);
+  --ws-danger-wash: var(--mcm-crit-wash);
+}
+
+/* Inside the campaign area. (The leave dialog keeps the --mcm-* set: `.mcm-dialog`
+   carries a token block of its own that the brand lock does not reach.) */
+.mcm-page section.mcm-workspace {
+  --ws-accent: var(--accent);
+  --ws-accent-ink: var(--accent-ink);
+  --ws-accent-wash: var(--accent-wash);
+  --ws-accent-edge: var(--accent-edge);
+
+  --ws-ink: var(--ink);
+  --ws-ink-2: var(--ink-2);
+  --ws-ink-3: var(--ink-3);
+  --ws-ink-4: var(--ink-4);
+
+  --ws-line: var(--line);
+  --ws-line-2: var(--line-2);
+
+  --ws-surface: var(--surface);
+  --ws-surface-2: var(--surface-2);
+  --ws-surface-3: var(--surface-3);
+
+  --ws-success: var(--live);
+  --ws-success-wash: var(--live-wash);
+  --ws-warn: var(--warn);
+  --ws-warn-wash: var(--warn-wash);
+  --ws-danger: var(--crit);
+  --ws-danger-wash: var(--crit-wash);
+}
+
+/* Derived values, the same in both places. */
+section.mcm-workspace,
+.mcm-ws-pop,
+.mcm-ws-mic,
+.mcm-ws-leave {
+  --ws-line-strong: #cfd8e6;
+  --ws-success-edge: #b5e6de;
+  --ws-warn-edge: #f3d6a8;
+  --ws-danger-edge: #f5c6c6;
+  --ws-call: #16a34a;
+  --ws-call-ink: #15803d;
+
+  --ws-shadow-sm: 0 1px 2px rgba(13, 21, 38, 0.06);
+  --ws-shadow-card: 0 1px 2px rgba(13, 21, 38, 0.06), 0 14px 32px -18px rgba(13, 21, 38, 0.18);
+  --ws-shadow-lift: 0 2px 4px rgba(13, 21, 38, 0.06), 0 18px 36px -18px rgba(13, 21, 38, 0.26);
+  --ws-ring: 0 0 0 3px color-mix(in srgb, var(--ws-accent) 18%, transparent);
+  --ws-glow: color-mix(in srgb, var(--ws-accent) 60%, transparent);
+}
+
+/* ---- page frame ---- */
+section.mcm-workspace {
+  background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--ws-accent) 5%, transparent), transparent 60%),
+    var(--ws-surface-2);
+  color: var(--ws-ink);
+}
+
+section.mcm-workspace :is(button, a, [role='button']):focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
+
+/* Header: a titled bar with an icon tile, matching Home and Phone. */
+section.mcm-workspace .mcm-ws-head {
+  position: relative;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 22px;
+  background: var(--ws-surface);
+  border-bottom: 1px solid var(--ws-line);
+}
+/* Tile on ::before, glyph on ::after. The glyph is a mask filled with the
+   accent token, so it follows the brand colour instead of a baked-in hex. */
+section.mcm-workspace .mcm-ws-head::before {
+  content: '';
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--ws-accent-wash);
+  box-shadow: inset 0 0 0 1px var(--ws-accent-edge);
+}
+section.mcm-workspace .mcm-ws-head::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 32px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  background: var(--ws-accent);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+section.mcm-workspace .mcm-ws-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-sub {
+  margin-top: 3px;
+  max-width: 680px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ws-ink-3);
+}
+
+section.mcm-workspace .mcm-ws-body {
+  min-height: 0;
+  gap: 14px;
+  padding: 16px 20px 20px;
+}
+
+/* ---- "Calls waiting for you" frame (shared work list, framed variant) ---- */
+section.mcm-workspace .mcm-ws-waiting {
+  padding: 14px 16px;
+  border: 1px solid var(--ws-line);
+  border-radius: 16px;
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+}
+section.mcm-workspace .mcm-ws-waiting > div:first-child {
+  margin-bottom: 10px;
+}
+section.mcm-workspace .mcm-ws-waiting > div:first-child > div > p {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-waiting > div:first-child > p {
+  padding: 3px 10px;
+  border: 1px solid var(--ws-line-2);
+  border-radius: 999px;
+  background: var(--ws-surface-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ws-ink-3);
+}
+
+/* ---- main panel + segmented tabs ---- */
+section.mcm-workspace .mcm-ws-panel {
+  border: 1px solid var(--ws-line);
+  border-radius: 18px;
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-card);
+}
+section.mcm-workspace .mcm-ws-tabbar {
+  padding: 12px 14px 10px;
+  background: var(--ws-surface);
+  background-image: none;
+  border-bottom: 1px solid var(--ws-line-2);
+}
+section.mcm-workspace .mcm-ws-tabbar > div {
+  padding: 0;
+}
+section.mcm-workspace .mcm-ws-seg {
+  width: auto;
+  max-width: 100%;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--ws-line-2);
+  border-radius: 12px;
+  background: var(--ws-surface-3);
+}
+section.mcm-workspace .mcm-ws-seg-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ws-ink-3);
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-seg-btn:hover {
+  color: var(--ws-ink);
+  background: rgba(255, 255, 255, 0.55);
+}
+section.mcm-workspace .mcm-ws-seg-btn.is-active {
+  background: var(--ws-surface);
+  color: var(--ws-ink);
+  box-shadow:
+    0 1px 2px rgba(13, 21, 38, 0.1),
+    0 0 0 1px rgba(13, 21, 38, 0.03);
+}
+section.mcm-workspace .mcm-ws-seg-btn.is-active svg {
+  color: var(--ws-accent);
+}
+
+section.mcm-workspace .mcm-ws-content {
+  padding: 16px;
+}
+
+/* ---- campaign cards ---- */
+section.mcm-workspace .mcm-ws-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
+}
+
+@keyframes mcm-ws-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+section.mcm-workspace .mcm-ws-card {
+  position: relative;
+  gap: 4px;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--ws-line);
+  border-radius: 16px;
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+  /* `backwards`, not `both`: a held end state would override the hover lift. */
+  animation: mcm-ws-rise 0.32s ease-out backwards;
+}
+section.mcm-workspace .mcm-ws-card:hover {
+  border-color: var(--ws-line-strong);
+  box-shadow: var(--ws-shadow-lift);
+  transform: translateY(-1px);
+}
+/* A thin bar across the top says "you are on this one" at a glance. */
+section.mcm-workspace .mcm-ws-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 18px;
+  right: 18px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: transparent;
+}
+section.mcm-workspace .mcm-ws-card.is-joined {
+  border-color: var(--ws-success-edge);
+}
+section.mcm-workspace .mcm-ws-card.is-joined::before {
+  background: var(--ws-success);
+}
+
+section.mcm-workspace .mcm-ws-card-top {
+  margin-bottom: 2px;
+  row-gap: 6px;
+}
+section.mcm-workspace .mcm-ws-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-card-meta {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ws-ink-3);
+}
+
+/* Status: tinted rounded pill with a leading dot. */
+section.mcm-workspace .mcm-ws-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--ws-surface-3);
+  color: var(--ws-ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+}
+section.mcm-workspace .mcm-ws-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+section.mcm-workspace .mcm-ws-status--processing {
+  background: var(--ws-success-wash);
+  border-color: var(--ws-success-edge);
+  color: var(--ws-success);
+}
+section.mcm-workspace .mcm-ws-status--processing::before {
+  animation: mcm-ws-pulse 1.8s ease-in-out infinite;
+}
+section.mcm-workspace .mcm-ws-status--pause {
+  background: var(--ws-warn-wash);
+  border-color: var(--ws-warn-edge);
+  color: var(--ws-warn);
+}
+section.mcm-workspace .mcm-ws-status--new {
+  background: var(--ws-accent-wash);
+  border-color: var(--ws-accent-edge);
+  color: var(--ws-accent-ink);
+}
+section.mcm-workspace .mcm-ws-status--completed {
+  background: var(--ws-surface-3);
+  border-color: var(--ws-line);
+  color: var(--ws-ink-2);
+}
+
+@keyframes mcm-ws-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0);
+  }
+}
+
+section.mcm-workspace .mcm-ws-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+section.mcm-workspace .mcm-ws-chip.is-here {
+  background: var(--ws-accent-wash);
+  border-color: var(--ws-accent-edge);
+  color: var(--ws-accent-ink);
+}
+section.mcm-workspace .mcm-ws-chip.is-elsewhere {
+  background: var(--ws-warn-wash);
+  border-color: var(--ws-warn-edge);
+  color: var(--ws-warn);
+}
+
+section.mcm-workspace .mcm-ws-note {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--ws-warn-edge);
+  border-radius: 9px;
+  background: var(--ws-warn-wash);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ws-warn);
+}
+section.mcm-workspace .mcm-ws-auto {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ws-success-wash);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ws-success);
+}
+section.mcm-workspace .mcm-ws-activity {
+  margin-top: 8px;
+  font-size: 11.5px;
+}
+section.mcm-workspace .mcm-ws-activity--live {
+  color: var(--ws-success);
+}
+section.mcm-workspace .mcm-ws-activity--warn {
+  color: var(--ws-warn);
+}
+section.mcm-workspace .mcm-ws-activity--idle {
+  color: var(--ws-ink-3);
+}
+section.mcm-workspace .mcm-ws-activity-detail {
+  font-size: 11.5px;
+  color: var(--ws-ink-3);
+}
+
+/* ---- card actions: one consistent 36px button family ---- */
+section.mcm-workspace .mcm-ws-actions {
+  gap: 8px;
+  margin-top: 6px;
+}
+section.mcm-workspace .mcm-ws-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ws-line);
+  border-radius: 10px;
+  background: var(--ws-surface);
+  color: var(--ws-ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+section.mcm-workspace .mcm-ws-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+section.mcm-workspace .mcm-ws-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Join is the one thing a card asks of the agent: full width, call green. */
+section.mcm-workspace .mcm-ws-btn--join {
+  width: 100%;
+  height: 38px;
+  margin-top: 6px;
+  border-color: var(--ws-call);
+  background: var(--ws-call);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(22, 163, 74, 0.75);
+}
+section.mcm-workspace .mcm-ws-btn--join::before {
+  content: '';
+  flex: none;
+  width: 15px;
+  height: 15px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+section.mcm-workspace .mcm-ws-btn--join:hover:not(:disabled) {
+  border-color: var(--ws-call-ink);
+  background: var(--ws-call-ink);
+  box-shadow: 0 10px 22px -10px rgba(22, 163, 74, 0.85);
+}
+section.mcm-workspace .mcm-ws-btn--join:disabled {
+  border-color: var(--ws-line);
+  background: var(--ws-surface-3);
+  color: var(--ws-ink-3);
+  opacity: 1;
+}
+section.mcm-workspace .mcm-ws-btn--join:disabled::before {
+  opacity: 0;
+  width: 0;
+  margin-right: -7px;
+}
+
+section.mcm-workspace .mcm-ws-btn--open {
+  border-color: var(--ws-accent);
+  background: var(--ws-accent);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px var(--ws-glow);
+}
+section.mcm-workspace .mcm-ws-btn--open:hover {
+  border-color: var(--ws-accent-ink);
+  background: var(--ws-accent-ink);
+}
+
+section.mcm-workspace .mcm-ws-btn--leave {
+  border-color: var(--ws-danger-edge);
+  background: var(--ws-surface);
+  color: var(--ws-danger);
+}
+section.mcm-workspace .mcm-ws-btn--leave:hover:not(:disabled) {
+  border-color: var(--ws-danger);
+  background: var(--ws-danger-wash);
+}
+
+section.mcm-workspace .mcm-ws-btn--warn {
+  border-color: var(--ws-warn-edge);
+  background: var(--ws-warn-wash);
+  color: var(--ws-warn);
+}
+section.mcm-workspace .mcm-ws-btn--warn:hover:not(:disabled) {
+  border-color: var(--ws-warn);
+  background: color-mix(in srgb, var(--ws-warn) 14%, var(--ws-warn-wash));
+}
+
+/* ---- progress strip ---- */
+section.mcm-workspace .mcm-ws-progress {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ws-line-2);
+}
+section.mcm-workspace .mcm-ws-progress-row {
+  gap: 10px;
+}
+section.mcm-workspace .mcm-ws-bar,
+section.mcm-workspace .mcm-ws-bar-skel {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ws-surface-3);
+}
+section.mcm-workspace .mcm-ws-bar {
+  transition: box-shadow 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-progress-row > div:hover > .mcm-ws-bar {
+  box-shadow: 0 0 0 3px var(--ws-accent-wash);
+}
+section.mcm-workspace .mcm-ws-bar > * + * {
+  border-left: 2px solid var(--ws-surface);
+}
+section.mcm-workspace .mcm-ws-bar-pending {
+  background: #c3cbda;
+}
+section.mcm-workspace .mcm-ws-bar-connected {
+  background: var(--ws-call);
+}
+section.mcm-workspace .mcm-ws-bar-noanswer {
+  background: #f0a24b;
+}
+section.mcm-workspace .mcm-ws-refresh {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--ws-ink-3);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-refresh:hover:not(:disabled) {
+  background: var(--ws-accent-wash);
+  color: var(--ws-accent);
+}
+
+/* ---- analytics popover (portaled) ---- */
+.mcm-ws-pop {
+  padding: 14px 16px;
+  border: 1px solid var(--ws-line);
+  border-radius: 14px;
+  background: var(--ws-surface);
+  box-shadow:
+    0 2px 6px rgba(13, 21, 38, 0.06),
+    0 18px 40px -18px rgba(13, 21, 38, 0.28);
+  color: var(--ws-ink-2);
+}
+.mcm-ws-pop .mcm-ws-pop-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ws-ink);
+}
+.mcm-ws-pop .mcm-ws-pop-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--ws-accent-edge);
+  border-radius: 999px;
+  background: var(--ws-accent-wash);
+  color: var(--ws-accent-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mcm-ws-pop .border-t {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-color: var(--ws-line-2);
+}
+.mcm-ws-pop .text-xs:not(.mcm-ws-pop-count) {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ws-ink-3);
+}
+.mcm-ws-pop .relative.overflow-hidden {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ws-surface-3);
+}
+.mcm-ws-pop .relative.overflow-hidden > div {
+  border-radius: 999px;
+}
+.mcm-ws-pop .bg-slate-400 {
+  background: #aab4c6;
+}
+.mcm-ws-pop .bg-green-400 {
+  background: var(--ws-call);
+}
+.mcm-ws-pop .bg-orange-300 {
+  background: #f0a24b;
+}
+
+/* ---- empty and quiet states ---- */
+section.mcm-workspace .mcm-ws-quiet {
+  position: relative;
+  padding: 24px 20px;
+  border: 1px dashed var(--ws-line-strong);
+  border-radius: 16px;
+  background: var(--ws-surface-2);
+}
+section.mcm-workspace .mcm-ws-quiet::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 10px;
+  border-radius: 14px;
+  background: var(--ws-accent-wash);
+  box-shadow: 0 8px 20px -12px var(--ws-glow);
+}
+section.mcm-workspace .mcm-ws-quiet::after {
+  content: '';
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  background: var(--ws-accent);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='10' x2='10' y1='15' y2='9'/%3E%3Cline x1='14' x2='14' y1='15' y2='9'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='10' x2='10' y1='15' y2='9'/%3E%3Cline x1='14' x2='14' y1='15' y2='9'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+section.mcm-workspace .mcm-ws-quiet-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-quiet-sub {
+  font-size: 12.5px;
+  color: var(--ws-ink-3);
+}
+
+section.mcm-workspace .mcm-ws-empty {
+  gap: 6px;
+}
+section.mcm-workspace .mcm-ws-empty img {
+  box-sizing: content-box;
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  margin-bottom: 8px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--ws-accent-wash);
+  box-shadow: 0 10px 24px -14px var(--ws-glow);
+}
+section.mcm-workspace .mcm-ws-empty-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-empty-sub {
+  max-width: 320px;
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--ws-ink-3);
+}
+section.mcm-workspace .mcm-ws-error {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--ws-danger-edge);
+  border-radius: 12px;
+  background: var(--ws-danger-wash);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ws-danger);
+}
+
+/* ---- assigned, not running ---- */
+section.mcm-workspace .mcm-ws-assigned {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--ws-line);
+  border-radius: 14px;
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+}
+section.mcm-workspace .mcm-ws-assigned-toggle {
+  padding: 12px 16px;
+  transition: background-color 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-assigned-toggle:hover {
+  background: var(--ws-surface-2);
+}
+section.mcm-workspace .mcm-ws-assigned-toggle:focus-visible {
+  outline-offset: -2px;
+}
+section.mcm-workspace .mcm-ws-assigned-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ws-ink-2);
+}
+section.mcm-workspace .mcm-ws-assigned-list {
+  border-top-color: var(--ws-line-2);
+}
+section.mcm-workspace .mcm-ws-assigned-list > * + * {
+  border-color: var(--ws-line-2);
+}
+section.mcm-workspace .mcm-ws-assigned-row {
+  padding: 11px 16px;
+  transition: background-color 0.12s ease;
+}
+section.mcm-workspace .mcm-ws-assigned-row:hover {
+  background: var(--ws-surface-2);
+}
+section.mcm-workspace .mcm-ws-assigned-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-assigned-meta {
+  font-size: 11.5px;
+  color: var(--ws-ink-3);
+}
+section.mcm-workspace .mcm-ws-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px 0 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+}
+section.mcm-workspace .mcm-ws-state::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+section.mcm-workspace .mcm-ws-state.is-paused {
+  border-color: var(--ws-warn-edge);
+  background: var(--ws-warn-wash);
+  color: var(--ws-warn);
+}
+section.mcm-workspace .mcm-ws-state.is-waiting {
+  border-color: var(--ws-accent-edge);
+  background: var(--ws-accent-wash);
+  color: var(--ws-accent-ink);
+}
+section.mcm-workspace .mcm-ws-assigned-note {
+  border-top-color: var(--ws-line-2);
+  background: var(--ws-surface-2);
+  font-size: 11.5px;
+  color: var(--ws-ink-3);
+}
+
+/* ---- assigned queues tab ---- */
+section.mcm-workspace .mcm-ws-queues {
+  gap: 14px;
+}
+section.mcm-workspace .mcm-ws-search {
+  max-width: 420px;
+}
+section.mcm-workspace .mcm-ws-search input[data-slot='input'] {
+  height: 38px;
+  min-height: 38px;
+  border: 1px solid var(--ws-line);
+  border-radius: 10px;
+  background: var(--ws-surface-2);
+  box-shadow: none;
+  font-size: 13px;
+  color: var(--ws-ink);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-search input[data-slot='input']::placeholder {
+  color: var(--ws-ink-4);
+}
+section.mcm-workspace .mcm-ws-search input[data-slot='input']:hover {
+  border-color: var(--ws-line-strong);
+}
+section.mcm-workspace .mcm-ws-search input[data-slot='input']:focus {
+  outline: none;
+  border-color: var(--ws-accent);
+  background: var(--ws-surface);
+  box-shadow: var(--ws-ring);
+}
+section.mcm-workspace .mcm-ws-search svg {
+  color: var(--ws-ink-4);
+}
+section.mcm-workspace .mcm-ws-queue-grid {
+  gap: 14px;
+}
+section.mcm-workspace .mcm-ws-queue > div {
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--ws-line);
+  border-radius: 16px;
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+  animation: mcm-ws-rise 0.32s ease-out backwards;
+}
+section.mcm-workspace .mcm-ws-queue > div:hover {
+  border-color: var(--ws-line-strong);
+  box-shadow: var(--ws-shadow-lift);
+}
+section.mcm-workspace .mcm-ws-queue > div > div:first-child > p {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ws-ink);
+}
+section.mcm-workspace .mcm-ws-queue div.border.rounded-lg {
+  border-color: var(--ws-line-2);
+  border-radius: 12px;
+  background: var(--ws-surface-2);
+}
+/* The queue card's Join / Leave toggle, in the same button family as the
+   campaign cards. */
+section.mcm-workspace .mcm-ws-queue > div > div:first-child button {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+section.mcm-workspace .mcm-ws-queue > div > div:first-child button.bg-emerald-600 {
+  border-color: var(--ws-call);
+  background: var(--ws-call);
+  box-shadow: 0 8px 18px -10px rgba(22, 163, 74, 0.75);
+}
+section.mcm-workspace .mcm-ws-queue > div > div:first-child button.bg-emerald-600:hover:not(:disabled) {
+  border-color: var(--ws-call-ink);
+  background: var(--ws-call-ink);
+}
+section.mcm-workspace .mcm-ws-queue > div > div:first-child button.bg-rose-50 {
+  border-color: var(--ws-danger-edge);
+  background: var(--ws-surface);
+  color: var(--ws-danger);
+}
+section.mcm-workspace .mcm-ws-queue > div > div:first-child button.bg-rose-50:hover:not(:disabled) {
+  border-color: var(--ws-danger);
+  background: var(--ws-danger-wash);
+}
+
+/* ---- microphone dialog (portaled) ---- */
+.mcm-ws-mic {
+  border-color: var(--ws-line);
+  border-radius: 18px;
+  box-shadow:
+    0 2px 6px rgba(13, 21, 38, 0.06),
+    0 28px 64px -24px rgba(13, 21, 38, 0.38);
+}
+.mcm-ws-mic h3 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ws-ink);
+}
+.mcm-ws-mic .border-b {
+  border-color: var(--ws-line-2);
+}
+/* Only the neutral body copy: the permission error line is `text-red-700` and
+   an unlayered `p` rule would otherwise repaint it grey. */
+.mcm-ws-mic p.text-gray-800 {
+  color: var(--ws-ink-2);
+}
+.mcm-ws-mic [data-slot='button'] {
+  height: 42px;
+  min-height: 42px;
+  border-radius: 11px;
+  font-weight: 600;
+}
+.mcm-ws-mic [data-slot='button']:focus-visible,
+.mcm-ws-mic button:focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
+
+/* ---- leave dialog (portaled, already on the .mcm-dialog system) ---- */
+.mcm-ws-leave.mcm-dialog {
+  border-color: var(--ws-line);
+  border-radius: 18px;
+  box-shadow:
+    0 2px 6px rgba(13, 21, 38, 0.06),
+    0 28px 64px -24px rgba(13, 21, 38, 0.38);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice {
+  position: relative;
+  padding: 10px 12px 10px 40px;
+  border-color: var(--ws-line);
+  border-radius: 12px;
+  background: var(--ws-surface);
+  color: var(--ws-ink);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 1.5px solid var(--ws-line-strong);
+  border-radius: 50%;
+  background: var(--ws-surface);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice:hover {
+  border-color: var(--ws-line-strong);
+  background: var(--ws-surface-2);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice.is-on {
+  border-color: var(--ws-accent);
+  background: var(--ws-accent-wash);
+  box-shadow: var(--ws-ring);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice.is-on::before {
+  border-color: var(--ws-accent);
+  box-shadow: inset 0 0 0 3.5px var(--ws-surface);
+  background: var(--ws-accent);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice .text-xs {
+  color: var(--ws-ink-3);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice:focus-visible,
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-reason:focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-reason {
+  height: 28px;
+  padding: 0 12px;
+  border-color: var(--ws-line);
+  color: var(--ws-ink-2);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-reason:hover {
+  background: var(--ws-surface-2);
+}
+.mcm-ws-leave.mcm-dialog .mcm-ws-leave-reason.is-on {
+  border-color: var(--ws-accent-edge);
+  background: var(--ws-accent-wash);
+  color: var(--ws-accent-ink);
+}
+
+/* ---- motion preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  section.mcm-workspace .mcm-ws-card,
+  section.mcm-workspace .mcm-ws-queue > div {
+    animation: none;
+    transition: none;
+  }
+  section.mcm-workspace .mcm-ws-card:hover,
+  section.mcm-workspace .mcm-ws-btn:active:not(:disabled) {
+    transform: none;
+  }
+  section.mcm-workspace .mcm-ws-status--processing::before {
+    animation: none;
+  }
+  section.mcm-workspace .mcm-ws-btn,
+  section.mcm-workspace .mcm-ws-seg-btn,
+  .mcm-ws-leave.mcm-dialog .mcm-ws-leave-choice {
+    transition: none;
+  }
+}
