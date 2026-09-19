@@ -500,6 +500,7 @@ const UpcomingMeetings = () => {
                               meeting?.mode !== 'CHAT' &&
                               videAccess?.edit && (
                                 <DropdownMenuItem
+                                  className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                                   onClick={() => {
                                     setDrawerState(true);
                                     setSelectedMeeting(meeting);
@@ -510,6 +511,7 @@ const UpcomingMeetings = () => {
                               )}
 
                             <DropdownMenuItem
+                              className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                               onClick={() => {
                                 setModalState({ meetingInfo: true });
                                 setSelectedMeeting(meeting);
@@ -523,6 +525,7 @@ const UpcomingMeetings = () => {
                               meeting?.mode !== 'CHAT' &&
                               videAccess?.delete && (
                                 <DropdownMenuItem
+                                  className="hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                                   onClick={() => {
                                     setModalState({ isDelete: true });
                                     setSelectedMeeting(meeting);
