@@ -79,8 +79,7 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
               {videAccess?.create && (
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 h-11 px-5 cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)] transition-transform hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
+                  className="flex items-center justify-center gap-2 h-11 px-5 cursor-pointer rounded-xl text-white bg-primary shadow-[0_6px_18px_rgba(242,153,74,0.35)] transition-transform hover:-translate-y-0.5"
                   onClick={() => {
                     if (isPendingInstantMeeting) return;
                     InstantMeeting();
