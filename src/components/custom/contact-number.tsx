@@ -1,16 +1,24 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { UserPlus, Pencil } from 'lucide-react';
+import { UserPlus, Pencil, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NumberWithFlag from '@/components/custom/number-with-flag';
-import SideDrawer from '@/components/custom/side-drawer';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import CustomSelect from '@/components/custom/custom-select';
 import { Button } from '@/components/ui/button';
 import CreateContactNew from '@/pages/new-contact/create-new-contact';
 import { useContactBook, useContactForNumber } from '@/hooks/use-contact-suggestions';
 import { addContactPhone } from '@/services/api';
 import { handleAlert, isExtensionNumber } from '@/lib/utils';
-import './contact-drawer-theme.css';
+/* Reuses Directory's own Add/Update Contact dialog shell + the same
+   CreateContactNew form styling (`.gp-create-group-dialog
+   .gp-contact-form-dialog`, `.gp-create-group-head`, `.gp-create-group-body`)
+   rather than rebuilding it -- every selector in both files is scoped under
+   a `.gp-` marker class, so importing them here (this drawer is also opened
+   from Leads/Dialpad/the phone console) only ever activates on markup that
+   opts into those exact classes below. */
+import '@/pages/directory/groups-glass.css';
+import '@/pages/directory/external-glass.css';
 
 /**
  * A phone number the way a phone shows it: the saved name when there is one,
@@ -124,14 +132,15 @@ export const QuickContactDrawer: FC<{
   // Editing someone already saved: straight to their sheet.
   if (existing) {
     return (
-      <SideDrawer
-        isOpen
-        isHeader
-        title="Edit contact"
-        handleClose={onClose}
-        headerClassName="gp-contact-drawer-head"
-        content={
-          <div className="gp-contact-drawer-body h-full">
+      <Dialog open onOpenChange={(next) => !next && onClose()}>
+        <DialogContent className="gp-create-group-dialog gp-contact-form-dialog sm:max-w-[820px]" showCloseButton={false}>
+          <div className="gp-create-group-head">
+            <h2>Edit contact</h2>
+            <button type="button" aria-label="Close" className="gp-create-group-close" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
             <CreateContactNew
               contactData={existing.raw || { _id: existing.id }}
               isDisable={false}
@@ -139,78 +148,88 @@ export const QuickContactDrawer: FC<{
               setDrawerState={() => void 0}
               keepFormDataAfterSave
               isLead={false}
+              largeAvatar
               handleClose={onClose}
             />
           </div>
-        }
-      />
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <SideDrawer
-      isOpen
-      isHeader
-      title="Add to contacts"
-      handleClose={onClose}
-      headerClassName="gp-contact-drawer-head"
-      content={
-        <div className="gp-contact-drawer-body flex h-full min-h-0 flex-col gap-3">
-          <div className="flex gap-2 text-sm">
-            <button
-              type="button"
-              onClick={() => setMode('new')}
-              className={`rounded-full border px-3 py-1 ${mode === 'new' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'}`}
-            >
-              New contact
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('existing')}
-              className={`rounded-full border px-3 py-1 ${mode === 'existing' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'}`}
-            >
-              Add to an existing contact
-            </button>
-          </div>
-          {mode === 'new' ? (
-            <div className="min-h-0 flex-1">
-              {/* keepFormDataAfterSave: the form's other path navigates to a
-                  contact page that does not exist; this drawer simply closes. */}
-              <CreateContactNew
-                isDisable={false}
-                setIsDisable={() => void 0}
-                setDrawerState={() => void 0}
-                keepFormDataAfterSave
-                isLead={false}
-                prefillPhone={number}
-                hideCancelButton
-                handleClose={onClose}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-gray-600">
-                Put <span className="font-medium text-gray-900">{number}</span> on a contact you already have.
-              </p>
-              <CustomSelect
-                label="Contact"
-                options={options}
-                value={target}
-                placeholder="Pick a contact"
-                handleChange={(v: any) => setTarget(v || null)}
-              />
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="transparent" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button type="button" variant="primary" disabled={!target || isPending} onClick={() => addToExisting()}>
-                  {isPending ? 'Saving…' : 'Add number'}
-                </Button>
-              </div>
-            </div>
-          )}
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="gp-create-group-dialog gp-contact-form-dialog sm:max-w-[820px]" showCloseButton={false}>
+        <div className="gp-create-group-head">
+          <h2>Add to contacts</h2>
+          <button type="button" aria-label="Close" className="gp-create-group-close" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      }
-    />
+        <div className="gp-create-group-body">
+          <div className="flex h-full min-h-0 flex-col gap-3">
+            <div className="flex gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => setMode('new')}
+                className={`rounded-full border px-3 py-1 ${mode === 'new' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'}`}
+              >
+                New contact
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('existing')}
+                className={`rounded-full border px-3 py-1 ${mode === 'existing' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-600'}`}
+              >
+                Add to an existing contact
+              </button>
+            </div>
+            {mode === 'new' ? (
+              <div className="min-h-0 flex-1">
+                {/* keepFormDataAfterSave: the form's other path navigates to a
+                    contact page that does not exist; this drawer simply closes. */}
+                <CreateContactNew
+                  isDisable={false}
+                  setIsDisable={() => void 0}
+                  setDrawerState={() => void 0}
+                  keepFormDataAfterSave
+                  isLead={false}
+                  largeAvatar
+                  prefillPhone={number}
+                  hideCancelButton
+                  handleClose={onClose}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-gray-600">
+                  Put <span className="font-medium text-gray-900">{number}</span> on a contact you already have.
+                </p>
+                <CustomSelect
+                  label="Contact"
+                  options={options}
+                  value={target}
+                  placeholder="Pick a contact"
+                  handleChange={(v: any) => setTarget(v || null)}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="transparent" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={!target || isPending}
+                    onClick={() => addToExisting()}
+                  >
+                    {isPending ? 'Saving…' : 'Add number'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
