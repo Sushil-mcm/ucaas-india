@@ -1915,6 +1915,8 @@ const Inbox = () => {
         <PageSidebarLayout
           collapsible={false}
           fullHeightOnMobile
+          title="Inbox"
+          hideHeading
           content={
             <InnerSidebarInbox
               type={type}

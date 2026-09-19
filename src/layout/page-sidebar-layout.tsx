@@ -46,7 +46,7 @@ const PageSidebarLayout = ({
   const [hovered, setHovered] = useState(false);
   const isAdminResponsiveTopbar = !isTab && title === 'Admin Hub';
   const isCampaignResponsiveTopbar = !isTab && title === 'Campaign';
-  const isGlassSidebar = title === 'Meetings' || title === 'Campaign';
+  const isGlassSidebar = title === 'Meetings' || title === 'Campaign' || title === 'Inbox';
   return (
     <section
       onMouseEnter={() => setHovered(true)}
@@ -78,7 +78,7 @@ const PageSidebarLayout = ({
                 ? 'h-auto md:h-full'
                 : 'h-full',
         isCampaignResponsiveTopbar
-          ? 'border-b lg:border-r lg:border-b-0'
+          ? 'border-b border-[rgba(225,200,165,0.9)] lg:border-r lg:border-b-0'
           : isAdminResponsiveTopbar
             ? hovered
               ? 'border-b border-primary lg:border-r lg:border-b-0'
@@ -88,7 +88,7 @@ const PageSidebarLayout = ({
                 ? 'border-b border-primary md:border-r md:border-b-0'
                 : 'border-b border-gray-200 md:border-r md:border-b-0'
               : isGlassSidebar
-                ? 'border-r'
+                ? 'border-r border-[rgba(225,200,165,0.9)]'
                 : hovered
                   ? 'border-r border-primary'
                   : 'border-r border-gray-200 ',
@@ -106,11 +106,6 @@ const PageSidebarLayout = ({
                   ? 'w-full min-w-0 max-w-full lg:min-w-[16rem] lg:max-w-[16rem]'
                   : 'md:min-w-[16rem] md:max-w-[16rem] w-full xs:max-h-32 md:max-h-full',
       )}
-      style={
-        isGlassSidebar
-          ? { borderColor: hovered ? 'rgba(217,101,46,0.55)' : 'rgba(231,139,80,0.22)' }
-          : undefined
-      }
     >
       {collapsible && (
         <button
