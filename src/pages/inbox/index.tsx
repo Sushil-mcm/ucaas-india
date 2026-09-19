@@ -1917,6 +1917,7 @@ const Inbox = () => {
           fullHeightOnMobile
           title="Inbox"
           hideHeading
+          widthClass="w-full min-w-0 lg:w-[24rem] lg:min-w-[24rem] lg:max-w-[24rem]"
           content={
             <InnerSidebarInbox
               type={type}
