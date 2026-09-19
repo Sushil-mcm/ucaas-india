@@ -3,12 +3,12 @@ import CustomSelect from './custom-select';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
 import AddGreeting from '@/pages/greetings/add-greeting';
 import { Button } from '../ui/button';
-import { CloseIcon, Play, UploadLineIcon } from '@/assets/icons';
+import { Play, UploadLineIcon } from '@/assets/icons';
 import { DEFAULT_RECORDING_UUIDS, getEnv, MEDIA_URL } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user';
 import ErrorTooltip from './error-tooltip';
 import SideDrawer from './side-drawer';
-import ReadyAudio from './ready-audio';
+import AudioPreviewPlayer from './audio-preview-player';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 interface IGREETINGPROPS {
@@ -96,30 +96,18 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
                 clipped by an ancestor's scroll container the way a plain
                 absolutely-positioned card was -- `.gp-create-group-body`'s
                 `overflow-y-auto` forces `overflow-x` non-visible too (CSS's
-                either-axis rule), which silently clipped the previous
-                version off to the right with no visible error. */}
+                either-axis rule), which silently clipped an earlier version
+                off to the right with no visible error. */}
             <PopoverContent
               align="start"
               side="right"
-              className="w-72 rounded-xl border-0 bg-white p-1.5 shadow-lg"
+              className="w-[300px] rounded-xl border-0 bg-white p-1 shadow-lg"
             >
-              <div className="flex items-center justify-between px-1.5 pb-1.5 pt-0.5">
-                <span className="text-[13px] font-semibold text-[#2E2D35]">Recording preview</span>
-                <button
-                  type="button"
-                  onClick={() => setIsPlay(false)}
-                  aria-label="Close"
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-[#9A948F] transition-colors hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]"
-                >
-                  <CloseIcon className="h-3 w-3" />
-                </button>
-              </div>
-              {/* Plain browser audio player rather than a custom-built one --
-                  its own kebab menu already gives download and playback-speed
-                  options for free. `accent-*` tints the controls Chromium
-                  renders in the page's own color (play button, volume) to
-                  the app's orange instead of the OS default blue. */}
-              <ReadyAudio controls authenticated src={recordingUrl} className="accent-[#c96f1f]" />
+              <AudioPreviewPlayer
+                src={recordingUrl}
+                authenticated
+                onClose={() => setIsPlay(false)}
+              />
             </PopoverContent>
           </Popover>
         )}
