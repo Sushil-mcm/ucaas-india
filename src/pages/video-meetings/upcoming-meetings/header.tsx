@@ -43,39 +43,39 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
       <div
         className="relative w-full flex flex-col gap-7 overflow-hidden rounded-[28px] border border-white/60 bg-white/45 backdrop-blur-2xl
       sm:p-9 p-5
-      shadow-[0_14px_40px_rgba(154,52,18,0.08),inset_0_1px_0_rgba(255,255,255,0.85)]
+      shadow-[0_14px_40px_rgba(201,111,31,0.08),inset_0_1px_0_rgba(255,255,255,0.85)]
       "
       >
         <div
           aria-hidden
           className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-[110px]"
-          style={{ background: 'rgba(231,139,80,0.16)' }}
+          style={{ background: 'rgba(242,153,74,0.16)' }}
         />
         <div
           aria-hidden
           className="pointer-events-none absolute -left-14 -bottom-20 h-48 w-48 rounded-full blur-[95px]"
-          style={{ background: 'rgba(217,101,46,0.1)' }}
+          style={{ background: 'rgba(201,111,31,0.1)' }}
         />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
             <div
               aria-hidden
-              className="hidden sm:flex mt-5 h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_6px_18px_rgba(231,139,80,0.35)]"
-              style={{ background: 'linear-gradient(135deg, #E78B50, #D9652E)' }}
+              className="hidden sm:flex mt-5 h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
             >
               <Icon name="VideocameraAdd" className="w-6 h-6" />
             </div>
             <div className="flex flex-col gap-2 w-full max-w-[420px]">
               <span
                 className="text-[10px] font-bold uppercase tracking-[0.14em]"
-                style={{ color: '#B5642F' }}
+                style={{ color: '#c96f1f' }}
               >
                 Video Conferencing
               </span>
               <div
                 className="w-full text-2xl sm:text-[28px] leading-tight font-extrabold"
-                style={{ color: '#8A3F1C' }}
+                style={{ color: '#2E2D35' }}
               >
                 Video Meetings
               </div>
@@ -90,8 +90,8 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
             <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center lg:w-auto">
               {videAccess?.create && (
                 <div
-                  className="flex items-center justify-center gap-2 min-h-11 px-5 w-full sm:w-auto cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(231,139,80,0.4)] transition-transform hover:-translate-y-0.5 "
-                  style={{ background: 'linear-gradient(135deg, #E78B50, #D9652E)' }}
+                  className="flex items-center justify-center gap-2 min-h-11 px-5 w-full sm:w-auto cursor-pointer rounded-xl text-white shadow-[0_6px_18px_rgba(242,153,74,0.4)] transition-transform hover:-translate-y-0.5 "
+                  style={{ background: 'linear-gradient(135deg, #f2994a, #c96f1f)' }}
                   onClick={() => {
                     if (isPendingInstantMeeting) return;
                     InstantMeeting();
