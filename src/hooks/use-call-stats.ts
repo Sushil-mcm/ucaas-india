@@ -394,6 +394,7 @@ export const useCallStats = (
       inboundCalls: Number(stats?.inbound_calls ?? 0) || 0,
       outboundCalls: Number(stats?.outbound_calls ?? 0) || 0,
       voicemailCalls: Number(stats?.voicemail ?? 0) || 0,
+      blockedCalls: Number(stats?.blocked_calls ?? 0) || 0,
       abandonRate: totalCalls ? (missedCalls / totalCalls) * 100 : null,
       avgWaitSec: waitCount ? waitTotal / waitCount : null,
       avgHandleSec: handleCount ? handleTotal / handleCount : null,

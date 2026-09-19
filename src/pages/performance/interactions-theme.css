@@ -73,6 +73,88 @@ body.perf-warm-backdrop.dark {
    ------------------------------------------------------------ */
 
 /* ------------------------------------------------------------
+   1b. Call Status Breakdown donut + Call Volume Trend — a plain 1:2 row
+   below the hero cards. Same card chrome as everywhere else in
+   Performance (white, tan hairline, 16px radius).
+   ------------------------------------------------------------ */
+.mcm-page .perf-interactions .ic-chart-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .mcm-page .perf-interactions .ic-chart-row {
+    grid-template-columns: 1fr;
+  }
+}
+.mcm-page .perf-interactions .ic-panel {
+  background: #fff;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(160, 95, 30, 0.08);
+}
+.mcm-page .perf-interactions .ic-panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+.mcm-page .perf-interactions .ic-panel-sub {
+  font-size: 11.5px;
+  color: #93a0b8;
+  margin-bottom: 14px;
+}
+.mcm-page .perf-interactions .ic-panel-empty {
+  font-size: 12.5px;
+  color: #93a0b8;
+  padding: 40px 0;
+  text-align: center;
+}
+.mcm-page .perf-interactions .ic-panel-note {
+  font-size: 11px;
+  color: #a39c8e;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #eee7dd;
+}
+.mcm-page .perf-interactions .ic-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.mcm-page .perf-interactions .ic-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1;
+  min-width: 160px;
+}
+.mcm-page .perf-interactions .ic-donut-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.mcm-page .perf-interactions .ic-donut-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a4438;
+}
+.mcm-page .perf-interactions .ic-donut-legend-label i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.mcm-page .perf-interactions .ic-donut-legend-value {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ------------------------------------------------------------
    2. Sub-metric counters — Total Calls / Answered / Outgoing / Missed /
    Voicemails. `CallHistory` renders these as one `sm:grid-cols-3
    md:grid-cols-5` row of plain bordered divs (call-history/index.tsx),
