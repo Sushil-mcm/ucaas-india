@@ -149,17 +149,29 @@ const Sidebar = () => {
                     <AccordionTrigger
                       className="items-center p-0"
                       isActive={isActive}
-                      activeHeaderClassName="[&>button[data-active=true]]:rounded-xl [&>button[data-active=true]]:bg-[#fff1e0] [&>button[data-active=true]]:text-[#c96f1f]"
+                      activeHeaderClassName="[&>button[data-active=true]]:rounded-xl [&>button[data-active=true]]:bg-[#fff1e0] [&>button[data-active=true]]:shadow-[0_1px_3px_rgba(201,111,31,0.12)] [&>button[data-active=true]]:text-[#c96f1f] [&>button[data-active=true]]:font-semibold"
                       activeIconClassName="text-[#c96f1f]"
                     >
                       <div
-                        className="flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm font-medium rounded-xl hover:bg-[#fff1e0]/40 transition-colors"
+                        className="group relative flex min-h-12 w-full items-center gap-2.5 px-3 py-3 text-sm rounded-xl hover:bg-[#fff1e0]/40 transition-colors"
                         onClick={() => {
                           const firstChildPath = children?.[0]?.path;
                           if (firstChildPath) navigate(firstChildPath);
                         }}
                       >
-                        <Icon name={icon as IconType} className="h-5 w-5" />
+                        {isActive ? (
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[#c96f1f]"
+                          />
+                        ) : null}
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                            isActive ? 'bg-[#f2994a] text-white shadow-sm' : 'text-gray-500 group-hover:text-[#c96f1f]'
+                          }`}
+                        >
+                          <Icon name={icon as IconType} className="h-[18px] w-[18px]" />
+                        </span>
                         {title}
                       </div>
                     </AccordionTrigger>
@@ -233,17 +245,24 @@ const Tile = ({
 
   return (
     <div
-      className={`group flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? (isChildrenExist ? 'text-[#c96f1f]' : 'bg-[#fff1e0] border border-[#ffd9ad] text-[#c96f1f]') : 'text-gray-900/80 hover:bg-[#fff1e0]/40'} ${child ? 'py-2 mt-0.5' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
+      className={`group relative flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? (isChildrenExist ? 'text-[#c96f1f]' : 'bg-[#fff1e0] shadow-[0_1px_3px_rgba(201,111,31,0.12)] text-[#c96f1f] font-semibold') : 'text-gray-900/80 hover:bg-[#fff1e0]/40'} ${child ? 'py-2 mt-0.5' : ''} ${!isEnabled ? 'text-gray-400 opacity-60' : ''}`}
       {...getRoutePrefetchHandlers(path)}
       onClick={handleClick}
     >
+      {isActive && !isChildrenExist ? (
+        <span
+          aria-hidden
+          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[#c96f1f]"
+        />
+      ) : null}
       <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
-        style={isActive && !isChildrenExist ? { background: 'rgba(201,111,31,0.14)' } : undefined}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+          isActive && !isChildrenExist ? 'bg-[#f2994a] text-white shadow-sm' : 'text-gray-500 group-hover:text-[#c96f1f]'
+        }`}
       >
-        <Icon name={icon as IconType} className="h-5 w-5" />
+        <Icon name={icon as IconType} className="h-[18px] w-[18px]" />
       </span>
-      <p className="truncate text-sm font-medium">{title}</p>
+      <p className="truncate text-sm">{title}</p>
       {!isEnabled && <span className="text-xs">🔒</span>}
     </div>
   );
