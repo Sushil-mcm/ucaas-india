@@ -187,7 +187,6 @@ const ForwardingHolidaysActions = ({
                 : { label: 'Select', value: '' }
             }
             errors={''}
-            audioCustomClass="w-60"
             selectCustomClass={`w-full`}
             refetch={() => {
               refetch();

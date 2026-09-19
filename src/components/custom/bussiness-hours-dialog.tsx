@@ -452,7 +452,6 @@ const BussinessHoursModal: FC<IBussinessModalProps> = ({
                         mainTypeDivClass="w-1/3"
                         radioClass="w-fit pr-2"
                         mainValueJustifyClass="justify-between w-full"
-                        audioCustomClass="w-80"
                         typeLabel="Closed Hour Type"
                         valueLabel="Closed Hour Value"
                         selectedUserExt={watch('basic.extension') || selectedUserExt}

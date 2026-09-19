@@ -102,7 +102,6 @@ const ForwardingActions = ({
   isShowUpload = true,
   typeLabel = '',
   valueLabel = '',
-  audioCustomClass = 'w-60',
   inputClass = '',
   extenstionClass = '',
   menuPlacement = 'top',
@@ -301,7 +300,6 @@ const ForwardingActions = ({
               options={FORWARD_VALUE_OPTIONS[currentType] || []}
               value={resolvedForwardValue}
               errors={''}
-              audioCustomClass={audioCustomClass}
               selectCustomClass={`w-full`}
               selectCustomClassSecond={selectCustomClassSecond}
               refetch={() => {

@@ -70,7 +70,7 @@ const Media = () => {
                           <RadioGroup
                             value={watchMedia?.[name]?.enabled?.toString()}
                             onValueChange={(value) => onChangeMedia(name, JSON.parse(value))}
-                            className="flex w-full gap-5 md:w-1/2"
+                            className="flex w-full gap-5 pl-1.5 md:w-1/2"
                           >
                             <div className="flex items-center gap-2 cursor-pointer">
                               <RadioGroupItem value="true" id={`yes-${name}`} />
