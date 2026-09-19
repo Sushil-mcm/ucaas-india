@@ -380,15 +380,14 @@
   border-bottom: none;
 }
 /* The form column (to the right of the rail) needs clearance under the
-   floating close button; the rail (title/description/steps) does not --
-   it was never under that button. Both used to share one 34px padding-top
-   on `.gp-create-group-body`, the row that holds them both, which pushed
-   the rail's own description down with nothing above it to justify the
-   gap. Moved the full offset (the old 34px plus the 78px below) onto the
-   content pane alone, so the rail's description now starts flush at the
-   dialog's true top edge. */
+   floating close button (top:0, 14px padding, 32px circle -- bottom edge
+   at 46px); the rail (title/description/steps) does not, since it was
+   never under that button. 54px lands the content pane's first row
+   alongside the rail's own subtitle (its own text spans roughly 31-67px)
+   with an 8px gap under the button, rather than clearing it by so much
+   that the form starts a whole row lower than the rail does. */
 .gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-department-rail + div {
-  padding-top: 112px;
+  padding-top: 54px;
 }
 .gp-create-group-head h2 {
   margin: 0;
