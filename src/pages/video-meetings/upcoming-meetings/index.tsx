@@ -300,7 +300,7 @@ const UpcomingMeetings = () => {
                   return (
                     <div
                       key={meeting?.meetingId}
-                      className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between "
+                      className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[#ffffff] p-5 shadow-[1px_1px_5px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between "
                     >
                       <div className="flex w-full min-w-0 items-start">
                         <div className="flex gap-4 items-center">
@@ -494,7 +494,7 @@ const UpcomingMeetings = () => {
                           <DropdownMenuTrigger className="focus:outline-0 border border-gray-200 cursor-pointer flex items-center justify-center rounded-md w-8 h-8 bg-white-100 text-[#2E2D35]/80 hover:bg-gray-100 hover:text-[#9A948F]">
                             <Icon name="MenuDots" className="w-5 h-5 " />
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent>
+                          <DropdownMenuContent className="border-0">
                             {canEditMeeting(meeting?.startTimeLocal) &&
                               meeting?.createdById === user?.uuid &&
                               meeting?.mode !== 'CHAT' &&
