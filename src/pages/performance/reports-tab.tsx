@@ -128,6 +128,7 @@ const LINKED_REPORTS: { group: string; reports: LinkedReport[] }[] = [
   },
 ];
 
+import KpiDefinitionsPanel from './reports/kpi-definitions-panel';
 import QueueSeriesReport from './reports/queue-series-report';
 import ScriptAnswersReportScreen from './reports/script-answers-report';
 import { useSearchParamManager } from '@/hooks/use-search-params';
@@ -205,6 +206,7 @@ const ReportsTab = ({
   // The dropdown is the primary picker; the full catalog opens on demand,
   // matching the console.
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [isDefinitionsOpen, setIsDefinitionsOpen] = useState(false);
   // Which linked report (Call History, Call Volume, etc.) is open in the
   // dialog below — null when the dialog is closed.
   const [openReport, setOpenReport] = useState<LinkedReport | null>(null);
@@ -480,6 +482,14 @@ const ReportsTab = ({
             <LayoutGrid style={{ width: 14, height: 14 }} />
             All reports ({AVAILABLE_REPORT_COUNT} of {TOTAL_REPORT_COUNT})
           </button>
+          <button
+            type="button"
+            className={`btn ${isDefinitionsOpen ? 'primary' : 'ghost'} sm`}
+            onClick={() => setIsDefinitionsOpen((open) => !open)}
+            title="What every measure on these screens counts, and how it is worked out"
+          >
+            Definitions
+          </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -556,6 +566,8 @@ const ReportsTab = ({
           </button>
         )}
       </div>
+
+      {isDefinitionsOpen && <KpiDefinitionsPanel />}
 
       {/* ---- catalog (collapsed by default, like the console) ---- */}
       {isCatalogOpen && (
