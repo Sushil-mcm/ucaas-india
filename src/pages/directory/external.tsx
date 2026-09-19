@@ -95,6 +95,17 @@ const ExternalInner = () => {
     updateContacts: false,
     exportContacts: false,
   });
+  const [contactFormDirty, setContactFormDirty] = useState(false);
+  const [confirmDiscardContact, setConfirmDiscardContact] = useState(false);
+  /* Same "you'll lose what you typed" guard as Directory's own Add-people
+     dialog (people.tsx). */
+  const requestCloseContactForm = () => {
+    if (contactFormDirty) {
+      setConfirmDiscardContact(true);
+    } else {
+      setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }));
+    }
+  };
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<any>(null);
   const [notesContact, setNotesContact] = useState<any>(null);
   const [whatsappTo, setWhatsappTo] = useState<string>('');
@@ -397,9 +408,7 @@ const ExternalInner = () => {
 
       <Dialog
         open={drawerState.addContact}
-        onOpenChange={(next) =>
-          !next && setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
-        }
+        onOpenChange={(next) => !next && requestCloseContactForm()}
       >
         <DialogContent
           className="gp-create-group-dialog gp-contact-form-dialog sm:max-w-[820px]"
@@ -415,9 +424,7 @@ const ExternalInner = () => {
               type="button"
               aria-label="Close"
               className="gp-create-group-close"
-              onClick={() =>
-                setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
-              }
+              onClick={requestCloseContactForm}
             >
               <Icon name="CloseIcon" className="h-4 w-4" />
             </button>
@@ -431,13 +438,35 @@ const ExternalInner = () => {
               keepFormDataAfterSave
               isLead={false}
               largeAvatar
-              handleClose={() =>
-                setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }))
-              }
+              handleClose={requestCloseContactForm}
+              onDirtyChange={setContactFormDirty}
             />
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardContact,
+          setOpen: setConfirmDiscardContact,
+          onConfirm: () => {
+            setConfirmDiscardContact(false);
+            setContactFormDirty(false);
+            setDrawerState((prev) => ({ ...prev, addContact: false, selectedContact: null }));
+          },
+          onCancel: () => setConfirmDiscardContact(false),
+          onClose: () => setConfirmDiscardContact(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started {drawerState.selectedContact ? 'editing this contact' : 'adding a contact'}.
+              Closing now will lose what you've typed.
+            </div>
+          ),
+        }}
+      />
 
       {drawerState.addLead ? (
         <CreateNewLeadGroup

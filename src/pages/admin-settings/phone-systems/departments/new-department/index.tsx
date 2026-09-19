@@ -154,6 +154,12 @@ const NewDepartment = ({
      header (same pattern Invite people's own rail uses). */
   railTitle,
   railSubtitle,
+  /* Same optional, only-Directory-passes-it shape as railTitle/railSubtitle
+     above -- lets a caller show a "you'll lose what you typed" confirm
+     before actually closing, same pattern as Directory's own Add-people
+     dialog (people.tsx). Undefined at the other 2 call sites, so nothing
+     changes there. */
+  onDirtyChange,
 }: any) => {
   const queryClient = useQueryClient();
   const { user } = useUser();
@@ -223,6 +229,10 @@ const NewDepartment = ({
   });
   const { handleSubmit, reset, watch, trigger, setValue } = formInstance;
 
+  useEffect(() => {
+    onDirtyChange?.(formInstance.formState.isDirty);
+  }, [formInstance.formState.isDirty, onDirtyChange]);
+
   const handleTabChange = async (nextTab: string) => {
     const currentIndex = TABS_ORDER.indexOf(currentStep);
     const nextIndex = TABS_ORDER.indexOf(nextTab);
@@ -285,6 +295,11 @@ const NewDepartment = ({
         text: data?.data?.data?.message,
         type: 'success',
       });
+      /* Just-saved data isn't "unsaved" any more -- closing from here
+         shouldn't ask to discard it. Same reasoning as Directory's
+         Add-people dialog (admin-settings/people/add-users/index.tsx,
+         handleSuccess). */
+      reset(formInstance.getValues());
       setDrawerState(false);
       queryClient.invalidateQueries({ queryKey: ['getDepartmentList'] });
       setTabData(data?.data?.data?.result);

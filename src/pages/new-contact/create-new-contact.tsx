@@ -52,6 +52,7 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
   prefill,
   hideCancelButton = false,
   largeAvatar = false,
+  onDirtyChange,
 }) => {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -93,12 +94,16 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
     setValue,
     reset,
     getValues,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<any>({
     defaultValues: contactsInitialValues,
     resolver: yupResolver(newContactValidationSchema),
     mode: 'all',
   });
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     return () => {
@@ -115,6 +120,13 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
     mutationFn: addContact,
     onSuccess: (data, variables: any) => {
       setShowLoader(false);
+      /* The contact just saved is no longer "unsaved" -- closing from here
+         (handleClose, below) shouldn't ask to discard it. `reset` marks
+         the current values as the new baseline without changing what's
+         displayed, so this is safe under `keepFormDataAfterSave` too. Same
+         reasoning as Directory's Add-people dialog
+         (admin-settings/people/add-users/index.tsx, handleSuccess). */
+      reset(getValues());
       handleAlert({
         text: data?.data?.data?.message || `${isLead ? 'Lead' : 'Contact'} Updated successfully`,
         type: 'success',
@@ -162,6 +174,10 @@ const CreateContactNew: React.FC<CreateNewContactProps> = ({
     mutationFn: upsertContact,
     onSuccess: (data, variables: any) => {
       setShowLoader(false);
+      /* Same reasoning as addUserContact's own onSuccess above -- reset the
+         dirty baseline (not the visible values) before handleClose can be
+         gated behind a "you'll lose your changes" confirm. */
+      reset(getValues());
       handleAlert({
         text: data?.data?.data?.message || `${isLead ? 'Lead' : 'Contact'} Updated successfully`,
         type: 'success',

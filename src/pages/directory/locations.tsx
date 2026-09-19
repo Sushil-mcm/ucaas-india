@@ -106,6 +106,17 @@ const Locations = () => {
     queryClient.invalidateQueries({ queryKey: ['siteList'] });
     queryClient.invalidateQueries({ queryKey: ['useGetSite'] });
   };
+  const [locationFormDirty, setLocationFormDirty] = useState(false);
+  const [confirmDiscardLocation, setConfirmDiscardLocation] = useState(false);
+  /* Same "you'll lose what you typed" guard as Directory's own Add-people
+     dialog (people.tsx). */
+  const requestCloseLocationForm = () => {
+    if (locationFormDirty) {
+      setConfirmDiscardLocation(true);
+    } else {
+      closeForm();
+    }
+  };
 
   if (!canView) {
     return (
@@ -284,14 +295,17 @@ const Locations = () => {
           lives on the step rail now (`railTitle`/`railSubtitle` below), so
           this bar is just the close control -- same pattern as Create
           group/Invite people. */}
-      <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
+      <Dialog
+        open={creating || Boolean(editing)}
+        onOpenChange={(next) => !next && requestCloseLocationForm()}
+      >
         <DialogContent className="gp-create-group-dialog sm:max-w-[1100px]" showCloseButton={false}>
           <div className="gp-create-group-head gp-create-group-head--bare">
             <button
               type="button"
               aria-label="Close"
               className="gp-create-group-close"
-              onClick={closeForm}
+              onClick={requestCloseLocationForm}
             >
               <Icon name="CloseIcon" className="h-4 w-4" />
             </button>
@@ -299,13 +313,37 @@ const Locations = () => {
           <div className="gp-create-group-body">
             <NewSiteSteps
               data={editing || {}}
-              handleClose={closeForm}
+              handleClose={requestCloseLocationForm}
+              onDirtyChange={setLocationFormDirty}
               railTitle={editing ? `Update location (${editing?.name || ''})` : 'New location'}
               railSubtitle="Add an office location or branch site for your company."
             />
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardLocation,
+          setOpen: setConfirmDiscardLocation,
+          onConfirm: () => {
+            setConfirmDiscardLocation(false);
+            setLocationFormDirty(false);
+            closeForm();
+          },
+          onCancel: () => setConfirmDiscardLocation(false),
+          onClose: () => setConfirmDiscardLocation(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started {editing ? 'editing this location' : 'adding a location'}. Closing
+              now will lose what you've typed.
+            </div>
+          ),
+        }}
+      />
 
       <AlertConfirm
         {...{

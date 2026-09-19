@@ -143,6 +143,17 @@ const Roles = () => {
     setEditing(null);
     queryClient.invalidateQueries({ queryKey: ['rolesList'] });
   };
+  const [roleFormDirty, setRoleFormDirty] = useState(false);
+  const [confirmDiscardRole, setConfirmDiscardRole] = useState(false);
+  /* Same "you'll lose what you typed" guard as Directory's own Add-people
+     dialog (people.tsx). */
+  const requestCloseRoleForm = () => {
+    if (roleFormDirty) {
+      setConfirmDiscardRole(true);
+    } else {
+      closeForm();
+    }
+  };
 
   return (
     <div className="gp-roles">
@@ -268,7 +279,10 @@ const Roles = () => {
         </table>
       </DirectoryPage>
 
-      <Dialog open={creating || Boolean(editing)} onOpenChange={(next) => !next && closeForm()}>
+      <Dialog
+        open={creating || Boolean(editing)}
+        onOpenChange={(next) => !next && requestCloseRoleForm()}
+      >
         <DialogContent
           className="gp-create-group-dialog gp-role-form-dialog sm:max-w-[860px]"
           showCloseButton={false}
@@ -288,7 +302,7 @@ const Roles = () => {
               type="button"
               aria-label="Close"
               className="gp-create-group-close"
-              onClick={closeForm}
+              onClick={requestCloseRoleForm}
             >
               <Icon name="CloseIcon" className="h-4 w-4" />
             </button>
@@ -297,7 +311,8 @@ const Roles = () => {
             <AddNewRole
               drawerState={creating || Boolean(editing)}
               roleData={editing || null}
-              setDrawerState={closeForm}
+              setDrawerState={(next: boolean) => !next && requestCloseRoleForm()}
+              onDirtyChange={setRoleFormDirty}
             />
           </div>
         </DialogContent>
@@ -311,6 +326,29 @@ const Roles = () => {
           className="gp-assign-users-dialog"
         />
       ) : null}
+
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardRole,
+          setOpen: setConfirmDiscardRole,
+          onConfirm: () => {
+            setConfirmDiscardRole(false);
+            setRoleFormDirty(false);
+            closeForm();
+          },
+          onCancel: () => setConfirmDiscardRole(false),
+          onClose: () => setConfirmDiscardRole(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started {editing ? 'editing this role' : 'creating a role'}. Closing now
+              will lose what you've typed.
+            </div>
+          ),
+        }}
+      />
 
       <AlertConfirm
         {...{

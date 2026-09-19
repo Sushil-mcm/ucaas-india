@@ -13,6 +13,7 @@ import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import NewDepartment from '@/pages/admin-settings/phone-systems/departments/new-department';
+import AlertConfirm from '@/components/custom/alert-confirm';
 import { usePeopleRows, type PersonRow as PeopleRow, type PresenceTone } from './people-rows';
 import { invalidateGlobalUsersDirectory } from '@/lib/invalidate-global-users-directory';
 import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
@@ -127,6 +128,19 @@ const Groups = () => {
   const [groupType, setGroupType] = useState('All');
   const [creating, setCreating] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [groupFormDirty, setGroupFormDirty] = useState(false);
+  const [confirmDiscardGroup, setConfirmDiscardGroup] = useState(false);
+  /* Same "you'll lose what you typed" guard as Directory's own Add-people
+     dialog (people.tsx) -- closes straight away if nothing's been touched,
+     otherwise asks first. */
+  const requestCloseGroupForm = () => {
+    if (groupFormDirty) {
+      setConfirmDiscardGroup(true);
+    } else {
+      setCreating(false);
+      setEditingGroup(null);
+    }
+  };
   const [openUuid, setOpenUuid] = useState<string | null>(null);
   const [editing, setEditing] = useState<GroupPerson | null>(null);
   const [personForm, setPersonForm] = useState({
@@ -136,6 +150,20 @@ const Groups = () => {
     phone: '',
     extension: '',
   });
+  /* Plain useState here, not react-hook-form, so there's no `isDirty` to
+     read -- a snapshot taken the moment the dialog opens (openPerson,
+     below) stands in for it: dirty means the current form no longer
+     matches that snapshot. */
+  const [personFormInitial, setPersonFormInitial] = useState(personForm);
+  const [confirmDiscardPerson, setConfirmDiscardPerson] = useState(false);
+  const isPersonFormDirty = JSON.stringify(personForm) !== JSON.stringify(personFormInitial);
+  const requestClosePersonForm = () => {
+    if (isPersonFormDirty) {
+      setConfirmDiscardPerson(true);
+    } else {
+      setEditing(null);
+    }
+  };
 
   /* Same gate the Department page puts on New Department / Edit. */
   const { features } = useCompanyFeatures();
@@ -228,13 +256,15 @@ const Groups = () => {
 
   const openPerson = (person: GroupPerson) => {
     setEditing(person);
-    setPersonForm({
+    const initial = {
       first_name: person.name.split(' ')[0] || '',
       last_name: person.name.split(' ').slice(1).join(' ') || '',
       email: person.email || '',
       phone: person.phone || '',
       extension: person.extension || '',
-    });
+    };
+    setPersonForm(initial);
+    setPersonFormInitial(initial);
   };
 
   const { mutate: savePerson, isPending: isSavingPerson } = useMutation({
@@ -517,7 +547,7 @@ const Groups = () => {
       {/* One person from that group -- editable, same field set as People's
           own row dialog (people.tsx), reached here too since a manager or
           member is the same record either way. */}
-      <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && setEditing(null)}>
+      <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && requestClosePersonForm()}>
         <DialogContent
           className="sm:max-w-[560px] w-[calc(100vw-32px)] p-0 gap-0 rounded-2xl overflow-hidden border border-[rgba(225,200,165,0.5)]"
           showCloseButton={false}
@@ -651,7 +681,7 @@ const Groups = () => {
                 <button
                   type="button"
                   className="h-9 px-5 rounded-lg border border-primary bg-white text-sm font-medium text-primary hover:bg-primary hover:text-white transition-colors"
-                  onClick={() => setEditing(null)}
+                  onClick={requestClosePersonForm}
                 >
                   Cancel
                 </button>
@@ -676,18 +706,36 @@ const Groups = () => {
         </DialogContent>
       </Dialog>
 
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardPerson,
+          setOpen: setConfirmDiscardPerson,
+          onConfirm: () => {
+            setConfirmDiscardPerson(false);
+            setPersonForm(personFormInitial);
+            setEditing(null);
+          },
+          onCancel: () => setConfirmDiscardPerson(false),
+          onClose: () => setConfirmDiscardPerson(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started editing this person's details. Closing now will lose what you've
+              typed.
+            </div>
+          ),
+        }}
+      />
+
       {/* The platform's own department form, opened as a centered popup
           rather than a side drawer -- shared between Create and Edit, same
           as Admin ▸ Phone Systems ▸ Departments: an empty `rowData` means
           create, a populated one (the row that was clicked) means edit. */}
       <Dialog
         open={creating || Boolean(editingGroup)}
-        onOpenChange={(next) => {
-          if (!next) {
-            setCreating(false);
-            setEditingGroup(null);
-          }
-        }}
+        onOpenChange={(next) => !next && requestCloseGroupForm()}
       >
         <DialogContent className="gp-create-group-dialog sm:max-w-[1100px]" showCloseButton={false}>
           {/* The title lives on the step rail now (`railTitle`/`railSubtitle`
@@ -698,10 +746,7 @@ const Groups = () => {
               type="button"
               aria-label="Close"
               className="gp-create-group-close"
-              onClick={() => {
-                setCreating(false);
-                setEditingGroup(null);
-              }}
+              onClick={requestCloseGroupForm}
             >
               <Icon name="CloseIcon" className="h-4 w-4" />
             </button>
@@ -709,12 +754,8 @@ const Groups = () => {
           <div className="gp-create-group-body">
             <NewDepartment
               rowData={editingGroup || {}}
-              setDrawerState={(next: boolean) => {
-                if (!next) {
-                  setCreating(false);
-                  setEditingGroup(null);
-                }
-              }}
+              setDrawerState={(next: boolean) => !next && requestCloseGroupForm()}
+              onDirtyChange={setGroupFormDirty}
               railTitle={editingGroup ? 'Edit group' : 'Create group'}
               railSubtitle={
                 editingGroup
@@ -725,6 +766,30 @@ const Groups = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertConfirm
+        {...{
+          apiLoading: false,
+          open: confirmDiscardGroup,
+          setOpen: setConfirmDiscardGroup,
+          onConfirm: () => {
+            setConfirmDiscardGroup(false);
+            setGroupFormDirty(false);
+            setCreating(false);
+            setEditingGroup(null);
+          },
+          onCancel: () => setConfirmDiscardGroup(false),
+          onClose: () => setConfirmDiscardGroup(false),
+          confirmBtnText: 'Discard',
+          closeBtnText: 'Keep editing',
+          descriptionTextComp: (
+            <div className="text-md">
+              You've started {editingGroup ? 'editing this group' : 'creating a group'}. Closing
+              now will lose what you've typed.
+            </div>
+          ),
+        }}
+      />
     </div>
   );
 };

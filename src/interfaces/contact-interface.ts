@@ -51,6 +51,10 @@ export interface CreateNewContactProps {
      beside it as always-visible buttons instead of small badges
      overlapping its corners (remove was hover-only there too). */
   largeAvatar?: boolean;
+  /* Optional, every other caller unaffected -- lets a caller show a "you'll
+     lose what you typed" confirm before actually closing, same pattern as
+     Directory's own Add-people dialog (people.tsx). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export type ContactPrefill = Partial<

@@ -23,6 +23,7 @@ interface AddEditRoleProps {
   initialData?: Record<string, unknown> | null;
   roleData?: any;
   viewPermission?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 const AddEditUserRole: FC<AddEditRoleProps> = ({
@@ -30,6 +31,7 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
   initialData = null,
   roleData = null,
   viewPermission = false,
+  onDirtyChange,
 }) => {
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const { companyPlanFeatures } = useCompanyFeatures();
@@ -39,7 +41,11 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
     defaultValues: UPSERT_ROLE_INITIAL,
     resolver: yupResolver(UPSERT_ROLE_SCHEMA as yup.AnyObjectSchema),
   });
-  const { setValue } = form;
+  const { setValue, reset } = form;
+
+  useEffect(() => {
+    onDirtyChange?.(form.formState.isDirty);
+  }, [form.formState.isDirty, onDirtyChange]);
 
   const { data: allRoleList = [], isFetched } = useQuery({
     queryKey: ['useRolesListQueryFn'],
@@ -55,6 +61,11 @@ const AddEditUserRole: FC<AddEditRoleProps> = ({
         type: 'success',
       });
       invalidateRoleLists(queryClient);
+      /* The role just saved is no longer "unsaved" -- closing from here
+         shouldn't ask to discard data that's already been written. Same
+         reasoning as Directory's Add-people dialog
+         (admin-settings/people/add-users/index.tsx, handleSuccess). */
+      reset(form.getValues());
       setDrawerState(false);
     },
   });

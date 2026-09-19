@@ -41,6 +41,12 @@ const NewSiteSteps = ({
      NewDepartment's own railTitle/railSubtitle uses for Create group). */
   railTitle,
   railSubtitle,
+  /* Same optional, only-Directory-passes-it shape as railTitle/railSubtitle
+     above -- lets a caller show a "you'll lose what you typed" confirm
+     before actually closing (same pattern as Directory's own Add-people
+     dialog, people.tsx). Undefined at the other call site, so nothing
+     changes there. */
+  onDirtyChange,
 }: any) => {
   const [currentStep, setCurrentStep] = useState(1);
   const queryClient = useQueryClient();
@@ -78,6 +84,10 @@ const NewSiteSteps = ({
 
   const { handleSubmit, reset } = formInstance;
 
+  useEffect(() => {
+    onDirtyChange?.(formInstance.formState.isDirty);
+  }, [formInstance.formState.isDirty, onDirtyChange]);
+
   const stepLookUp: any = {
     1: <SiteInfo formInstance={formInstance} />,
     // 2: <CallerID formInstance={formInstance} />,
@@ -89,6 +99,11 @@ const NewSiteSteps = ({
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({ queryKey: ['siteList'] });
       handleAlert({ text: data?.data?.message, type: 'success' });
+      /* Just-saved data isn't "unsaved" any more -- closing from here
+         shouldn't ask to discard it. Same reasoning as Directory's
+         Add-people dialog (admin-settings/people/add-users/index.tsx,
+         handleSuccess). */
+      reset(formInstance.getValues());
       handleClose();
     },
   });
