@@ -184,61 +184,6 @@ const tabOptions: Array<{ label: string; value: AgentChatTab }> = [
   { label: 'Resolved', value: 'resolved' },
 ];
 
-const sidebarTabStyles: Record<
-  AgentChatTab,
-  {
-    inactiveText: string;
-    activeText: string;
-    activeBg: string;
-    activeDecoration?: string;
-    inactiveBadgeBg: string;
-    inactiveBadgeText: string;
-    activeBadgeBg?: string;
-    activeBadgeText?: string;
-  }
-> = {
-  unassigned: {
-    inactiveText: 'text-muted-foreground',
-    activeText: 'text-ucass-orange',
-    activeBg: 'bg-white',
-    activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-white/70',
-    inactiveBadgeText: 'text-muted-foreground',
-    activeBadgeBg: 'bg-ucass-orange/10',
-    activeBadgeText: 'text-ucass-orange',
-  },
-  active: {
-    inactiveText: 'text-muted-foreground',
-    activeText: 'text-white',
-    activeBg: 'bg-ucass-active',
-    activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-white/70',
-    inactiveBadgeText: 'text-muted-foreground',
-    activeBadgeBg: 'bg-white/20',
-    activeBadgeText: 'text-white',
-  },
-  missed: {
-    inactiveText: 'text-muted-foreground',
-    activeText: 'text-destructive',
-    activeBg: 'bg-white',
-    activeDecoration: 'shadow-sm',
-    inactiveBadgeBg: 'bg-white/70',
-    inactiveBadgeText: 'text-muted-foreground',
-    activeBadgeBg: 'bg-destructive/10',
-    activeBadgeText: 'text-destructive',
-  },
-  resolved: {
-    inactiveText: 'text-muted-foreground',
-    activeText: 'text-emerald-700',
-    activeBg: 'bg-white',
-    activeDecoration: 'shadow-sm ring-1 ring-emerald-200',
-    inactiveBadgeBg: 'bg-white/70',
-    inactiveBadgeText: 'text-muted-foreground',
-    activeBadgeBg: 'bg-emerald-100',
-    activeBadgeText: 'text-emerald-700',
-  },
-};
-
 const getPinnedAtTimestampForUser = (chat: any, userId?: string) => {
   if (!chat || !userId) return 0;
 
@@ -811,26 +756,21 @@ const SidebarContent = ({
     <div className="w-full flex-1 min-h-0 bg-white">
 
       <div className="px-4 pt-4 pb-5 border-b border-border bg-white">
-        <div className="h-12 rounded-[14px] bg-ucass-primary-100 border border-ucass-primary-200 p-[5px]">
-          <div className="grid h-full grid-cols-[1.5fr_1fr_1fr_1.15fr] gap-1.5">
+        <div className="h-11 rounded-[10px] bg-[#fff1e0] border border-[#ffd9ad] p-[2px]">
+          <div className="grid h-full grid-cols-[1.5fr_1fr_1fr_1.15fr] gap-0.5">
             {tabOptions.map((tab) => {
               const count = tabCounts[tab.value as AgentChatTab] || 0;
               const isActive = activeTab === tab.value;
-              const styles = sidebarTabStyles[tab.value];
-              const badgeBg = isActive
-                ? styles.activeBadgeBg || styles.inactiveBadgeBg
-                : styles.inactiveBadgeBg;
-              const badgeText = isActive
-                ? styles.activeBadgeText || styles.inactiveBadgeText
-                : styles.inactiveBadgeText;
+              const badgeBg = isActive ? 'bg-primary/10' : 'bg-black/5';
+              const badgeText = isActive ? 'text-primary' : 'text-muted-foreground';
 
               return (
                 <button
                   key={tab.value}
-                  className={`h-[38px] min-w-0 rounded-[12px] px-1 text-[10px] sm:text-[11px] font-semibold cursor-pointer ${
+                  className={`h-full min-w-0 rounded-[7px] px-1 text-[10px] sm:text-[11px] font-bold cursor-pointer transition-colors ${
                     isActive
-                      ? `${styles.activeBg} ${styles.activeText} ${styles.activeDecoration || ''}`
-                      : `${styles.inactiveText} hover:text-foreground`
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-[#8a8580] hover:text-foreground'
                   }`}
                   onClick={() => {
                     if (tab.value === 'unassigned' || tab.value === 'missed') {
