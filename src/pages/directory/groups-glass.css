@@ -453,9 +453,17 @@
    gave a tall one, and the container visibly resized on every Next/Prev
    click. Pinning the height once a step rail is present (present on every
    step, not just some) keeps the container the same size throughout the
-   whole wizard; each step's own content scrolls inside it instead. */
+   whole wizard; each step's own content scrolls inside it instead.
+
+   85vh left a lot of unused space below short steps (Department
+   Information, Media) before the Cancel/Prev/Next row -- that space is
+   the gap between a step's real content and the dialog's fixed height,
+   not something a step-specific fix can close without breaking that
+   consistency. Trimmed to 70vh so every step's dialog is more compact
+   overall; steps with more content (Add Members, ...) already scroll
+   inside their own area regardless of the dialog's height. */
 .gp-create-group-dialog:has(.gp-department-rail) {
-  height: 85vh;
+  height: 70vh;
 }
 /* The other half of that gap is the dialog's own `gap-4` (16px) between its
    two children -- the title bar and this body. Nothing else sits between
