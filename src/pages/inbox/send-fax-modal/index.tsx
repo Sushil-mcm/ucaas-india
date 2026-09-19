@@ -316,7 +316,7 @@ const SendFaxModal = ({
             Cancel
           </Button>
           <Button
-            variant="outline"
+            variant="primary"
             type="submit"
             className="w-full sm:w-auto"
             disabled={!canSend || isSubmitting}

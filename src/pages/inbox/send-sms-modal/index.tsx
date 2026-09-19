@@ -566,7 +566,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
             Cancel
           </Button>
           <Button
-            variant="outline"
+            variant="primary"
             type="button"
             className="w-full sm:w-auto"
             onClick={() => {

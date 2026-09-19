@@ -1031,11 +1031,10 @@
   box-shadow: var(--mcm-shadow-lg) !important;
 }
 
-/* The body sits a step below the dialog's own surface, so the white fields
-   inside it read as fields rather than as more of the same sheet -- which is
-   what made the old drawer look like one flat grey panel. */
+/* Plain white body, matching every other form dialog in the app -- the
+   tint step here was the one thing that made this look off-theme. */
 .mcm-formdialog .mcm-formdialog-body {
-  background: var(--mcm-surface-2);
+  background: var(--mcm-surface);
   max-height: min(78vh, 720px);
   overflow-y: auto;
   padding: 22px 24px 20px;
