@@ -220,8 +220,12 @@ const AddGreeting: FC<IAddgreetings> = ({
       <FormProvider {...formInstance}>
         <div className="flex flex-col gap-4 pr-1 flex-1 overflow-y-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col w-full">
-            <div className="border-b border-gray-200 w-full mb-4">
-              <TabsList className="flex text-sm font-semibold text-center p-0 rounded-none h-auto justify-start bg-transparent gap-6">
+            <div className="w-full mb-4">
+              {/* Segmented pill track, same shape as the app's other tab bars
+                  (Messenger's All/Team/Direct/Favorites, Directory's type
+                  filter) -- cream track, orange-tinted active pill -- rather
+                  than a plain underline in the default grey/primary. */}
+              <TabsList className="flex h-auto w-fit items-center gap-0.5 rounded-lg border border-[rgba(225,200,165,0.6)] bg-[#fff6e9] p-1">
                 {Object.entries(TAB_CONSTANT).map(([key, value]) => {
                   const TabIcon = TAB_ICONS[value];
                   return (
@@ -230,7 +234,7 @@ const AddGreeting: FC<IAddgreetings> = ({
                       value={value}
                       type="button"
                       onClick={(event) => event.stopPropagation()}
-                      className="data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-1 pb-3 pt-2 text-gray-600 cursor-pointer rounded-none relative flex items-center gap-1.5 bg-transparent font-semibold data-[state=active]:shadow-none hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1.5 rounded-md border border-transparent px-3 py-1.5 text-sm font-semibold text-[#6b5c4d] transition-colors data-[state=active]:border-[#ffd9ad] data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm hover:text-primary"
                     >
                       {TabIcon ? <TabIcon className="w-3.5 h-3.5" /> : null}
                       {value}
@@ -255,8 +259,8 @@ const AddGreeting: FC<IAddgreetings> = ({
             </TabsContent>
           </Tabs>
 
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+          <div className="flex flex-col gap-3 rounded-xl border border-[rgba(225,200,165,0.6)] bg-[#fffaf3] p-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9A948F]">
               Details
             </span>
             <Input
@@ -280,7 +284,7 @@ const AddGreeting: FC<IAddgreetings> = ({
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-gray-100 pt-4 mt-auto">
+        <div className="flex justify-end gap-2 border-t border-[rgba(225,200,165,0.5)] pt-4 mt-auto">
           <Button
             variant="outline"
             type="button"

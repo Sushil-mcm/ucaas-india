@@ -62,8 +62,10 @@ const ChooseFile: FC = () => {
       <div className="flex items-center justify-center flex-col gap-3 w-full">
         <label
           htmlFor="file-upload"
-          className={`flex flex-col items-center justify-center w-full h-44 border-2 border-dashed rounded-xl cursor-pointer bg-white transition-colors duration-200 ${
-            isDragging ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50'
+          className={`flex flex-col items-center justify-center w-full h-44 border-2 border-dashed rounded-xl cursor-pointer transition-colors duration-200 ${
+            isDragging
+              ? 'border-primary bg-primary/5'
+              : 'border-[#e1c8a5] bg-[#fffaf3] hover:border-primary/50 hover:bg-[#fff6e9]'
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -72,16 +74,16 @@ const ChooseFile: FC = () => {
           <div className="flex flex-col items-center gap-2">
             <span
               className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                isDragging ? 'bg-primary/15 text-primary' : 'bg-gray-100 text-gray-500'
+                isDragging ? 'bg-primary/15 text-primary' : 'bg-[#fff1e0] text-primary'
               }`}
             >
               <UploadCloud className="w-5 h-5" />
             </span>
             <div className="flex flex-col items-center gap-0.5">
-              <p className={`text-sm font-medium ${isDragging ? 'text-primary' : 'text-gray-900'}`}>
+              <p className={`text-sm font-medium ${isDragging ? 'text-primary' : 'text-[#2E2D35]'}`}>
                 {isDragging ? 'Drop the file here' : 'Drag & drop an audio file'}
               </p>
-              <p className="text-xs text-gray-500">or click to browse</p>
+              <p className="text-xs text-[#9A948F]">or click to browse</p>
             </div>
           </div>
 
@@ -100,18 +102,18 @@ const ChooseFile: FC = () => {
         </label>
 
         {WatchUploadFile && audioUrl ? (
-          <div className="flex items-center gap-3 w-full rounded-xl border border-gray-200 bg-white p-2.5">
+          <div className="flex items-center gap-3 w-full rounded-xl border border-[rgba(225,200,165,0.6)] bg-[#fffaf3] p-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Music className="w-4 h-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900">{WatchUploadFile.name}</p>
+              <p className="truncate text-sm font-medium text-[#2E2D35]">{WatchUploadFile.name}</p>
               <ReadyAudio controls src={audioUrl} />
             </div>
             <button
               type="button"
               aria-label="Remove selected file"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#9A948F] hover:bg-[#FBE2C8]/40 hover:text-[#2E2D35]"
               onClick={() => setValue('greetingFile', null, { shouldValidate: true })}
             >
               <X className="w-4 h-4" />
