@@ -410,21 +410,21 @@ const RecordingListingTable = ({
               <DropdownMenuCheckboxItem
                 checked={videosOnly}
                 onCheckedChange={(value) => setVideosOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
               >
                 Videos only
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={sharedOnly}
                 onCheckedChange={(value) => setSharedOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
               >
                 Shared only
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={largeFilesOnly}
                 onCheckedChange={(value) => setLargeFilesOnly(Boolean(value))}
-                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary"
+                className="!pl-2 pr-8 text-sm text-[#334155] data-[state=checked]:font-medium [&>span]:left-auto [&>span]:right-2 [&>span]:size-3 [&_svg]:text-primary hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
               >
                 Large files (&gt; 100 MB)
               </DropdownMenuCheckboxItem>
