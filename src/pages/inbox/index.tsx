@@ -763,7 +763,7 @@ const InnerSidebarInbox = (props: any) => {
           top of this column instead, same fix as Agent Chat/Video/Chat.
           Reuses .mcm-col-title, which already existed here from before
           ActivityPageHead was introduced. */}
-      <div className="mcm-col-title px-2 pt-3">
+      <div className="mcm-col-title px-2 pt-[26px] bg-white">
         <h2>Inbox</h2>
         <CustomTooltip
           text="Faxes, SMS and everything sent to your numbers, in one thread list."
@@ -1931,28 +1931,38 @@ const Inbox = () => {
                         New
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="border-0 min-w-[220px] p-1.5">
                       {messagesAccess?.send_message || messagesAccess?.send_mms ? (
                         <DropdownMenuItem
-                          className="cursor-pointer"
+                          className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg hover:bg-primary/10 focus:bg-primary/10"
                           onClick={() => {
                             setSmsNumber('');
                             openSendModal();
                           }}
                         >
-                          <PlainLine className="text-gray-900 w-8 h-8" /> Send New Message
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff1e0] text-[#c96f1f]">
+                            <PlainLine className="w-3.5 h-3.5" />
+                          </span>
+                          <span className="text-[#2E2D35] group-hover:text-primary">
+                            Send New Message
+                          </span>
                         </DropdownMenuItem>
                       ) : null}
                       {messagesAccess?.send_fax ? (
                         <DropdownMenuItem
-                          className="cursor-pointer"
+                          className="group flex items-center gap-2.5 px-2 py-1.5 text-[13px] font-medium cursor-pointer rounded-lg hover:bg-primary/10 focus:bg-primary/10"
                           onClick={() => {
                             setFaxNumber('');
                             setIsFaxFromDisabled(false);
                             setShowSendFaxModal(true);
                           }}
                         >
-                          <FileText className="ml-1 mr-2 h-6 w-6 text-gray-900" /> Send New Fax
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fff1e0] text-[#c96f1f]">
+                            <FileText className="w-3.5 h-3.5" />
+                          </span>
+                          <span className="text-[#2E2D35] group-hover:text-primary">
+                            Send New Fax
+                          </span>
                         </DropdownMenuItem>
                       ) : null}
                     </DropdownMenuContent>

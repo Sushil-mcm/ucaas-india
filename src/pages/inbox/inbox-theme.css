@@ -178,7 +178,7 @@
 }
 .mcm-inbox .mcm-col-title h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 23px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--mcm-ink);
@@ -219,11 +219,11 @@
   transition: all 0.12s;
 }
 .mcm-inbox .mcm-seg button:hover {
-  color: var(--mcm-ink);
+  color: var(--mcm-accent-ink);
 }
 .mcm-inbox .mcm-seg button[data-state='active'] {
   background: var(--mcm-surface);
-  color: var(--mcm-ink);
+  color: var(--mcm-accent-ink);
   box-shadow: var(--mcm-shadow-sm);
 }
 
@@ -960,17 +960,18 @@
 /* 2. Its two controls step down, and differ from each other so the
       search field and the mode switch do not read as one block. */
 .mcm-inbox .mcm-col-head .mcm-search input {
-  background: var(--mcm-surface-2);
+  background: var(--mcm-surface);
+  border-color: var(--mcm-line-2);
 }
 .mcm-inbox .mcm-col-head .mcm-seg {
-  background: var(--mcm-surface-3);
-  border-color: transparent;
+  background: var(--mcm-surface-2);
+  border-color: var(--mcm-line-2);
 }
 
-/* 3. The conversation list sits on the tint, so every row is already
-      separated from the header without a rule between them. */
+/* 3. Per request, the list is plain white -- no tint step down from the
+      header. */
 .mcm-inbox .mcm-list {
-  background: var(--mcm-surface-2);
+  background: var(--mcm-surface);
 }
 .mcm-inbox .mcm-row {
   background: transparent;
@@ -979,7 +980,7 @@
 /* 4. Hover and selection come back up to white and to the accent, so
       the row under the pointer is the lightest thing in the list. */
 .mcm-inbox .mcm-row:hover {
-  background: var(--mcm-surface);
+  background: var(--mcm-accent-wash);
 }
 .mcm-inbox .mcm-row.is-active {
   background: color-mix(in srgb, var(--mcm-accent-wash) 70%, var(--mcm-surface));
@@ -993,7 +994,7 @@
    the conversation pane in the list's tone and collapsing the two columns
    into one flat surface. */
 .mcm-inbox .mcm-col {
-  background: var(--mcm-surface-2);
+  background: var(--mcm-surface);
 }
 .mcm-inbox .mcm-col-stage {
   background: var(--mcm-ground);
