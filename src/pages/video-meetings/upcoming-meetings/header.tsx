@@ -45,6 +45,18 @@ const MeetingHeader = ({ formInstance, showActions = true }: any) => {
         className="relative w-full overflow-hidden rounded-[24px] border border-[#f5e6d3] px-6 py-8 sm:px-10 sm:py-10"
         style={{ background: 'linear-gradient(120deg, #fffaf3 0%, #fff1e0 55%, #fde3c2 100%)' }}
       >
+        {/* Big faint watermark icons, purely decorative background texture. */}
+        <VideoIcon
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 hidden h-[220px] w-[220px] text-[#f2994a]/10 lg:block"
+          strokeWidth={1}
+        />
+        <CalendarDays
+          aria-hidden
+          className="pointer-events-none absolute -right-2 bottom-[-40px] hidden h-[150px] w-[150px] text-[#c96f1f]/10 lg:block"
+          strokeWidth={1}
+        />
+
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <h2 className="text-[28px] sm:text-[34px] leading-[1.15] font-extrabold text-[#2E2D35]">
             Every meeting,
