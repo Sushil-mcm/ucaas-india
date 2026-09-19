@@ -61,9 +61,11 @@ const PageSidebarLayout = ({
         // is kept alongside upstream's own glass variant for Meetings and
         // Campaign, which those two pages style directly.
         'mcm-sidepanel relative transition-colors duration-300 ease-in-out',
-        isGlassSidebar
-          ? 'bg-white/50 backdrop-blur-2xl shadow-[inset_-1px_0_0_rgba(255,255,255,0.6)]'
-          : 'bg-white',
+        title === 'Meetings'
+          ? 'bg-white'
+          : isGlassSidebar
+            ? 'bg-white/50 backdrop-blur-2xl shadow-[inset_-1px_0_0_rgba(255,255,255,0.6)]'
+            : 'bg-white',
         isCampaignResponsiveTopbar
           ? 'h-auto lg:h-full'
           : isAdminResponsiveTopbar
