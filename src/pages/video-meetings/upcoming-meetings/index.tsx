@@ -615,10 +615,12 @@ const UpcomingMeetings = () => {
             <ScheduleMeeting setDrawerState={setDrawerState} initialData={selectedMeeting} />
           }
           isHeader={true}
-          width="650px"
+          width="min(800px,calc(100vw-2rem))"
           enableResponsive
           responsiveWidth="96vw"
           responsiveBreakpoint={1024}
+          centered
+          portal
         />
       )}
       {modalState?.meetingInvites && (
