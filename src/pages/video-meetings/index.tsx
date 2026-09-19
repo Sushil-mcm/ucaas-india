@@ -8,7 +8,7 @@ import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar, { meetingSidebarArr } from './sidebar';
-import ActivityPageHead from '@/components/custom/activity-page-head';
+import '@/components/custom/activity-page-head.css';
 
 const VideoMeetings = () => {
   const { features } = useCompanyFeatures();
@@ -40,21 +40,15 @@ const VideoMeetings = () => {
   }, [IS_ADMIN, features]);
 
   return (
-    /* One full-width line across the top, above the rail rather than beside it
-       -- the same head Phone, Chat, Agent Chat, Inbox and Campaign carry, and
-       what .mcm-actpage is for: the head keeps its own height and the tinted
-       area below takes the rest.
-
-       It was nested in the content column first, which started it after the
-       sidebar and left the title out of line with the other Activity screens.
-       Out here it also sits on plain white above the sunset gradient rather
-       than on top of it, which is what keeps it legible at every width. */
+    /* Was a full-width ActivityPageHead line above the rail, same as Phone/
+       Chat/Agent Chat/Inbox/Campaign -- but that meant the sidebar's own
+       border-right only ever spanned the tinted area below it, never that
+       row, reading as a gap before the divider "started". Title now lives
+       inline at the top of the sidebar column itself (Sidebar, in
+       ./sidebar/index.tsx) instead, same fix as Agent Chat/Chat. Keeping
+       `.mcm-actpage` for its layout CSS (width: 100%, the #FEF8F1
+       fallback), imported directly below rather than via the component. */
     <div className="mcm-actpage">
-      <ActivityPageHead
-        title="Video"
-        description="Your video room: start a meeting now, schedule one ahead or join with a code, with what is upcoming, ongoing, past and invited beside it."
-      />
-
       <div
         className="relative flex h-full min-h-0 w-full flex-col overflow-hidden md:flex-row"
         style={{

@@ -1,5 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageSidebarLayout from '@/layout/page-sidebar-layout';
+import { Info } from 'lucide-react';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 import './inbox-theme.css';
 import ListItem from './list-item';
 import DidPicker from './did-picker';
@@ -78,7 +80,7 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import useDebounce from '@/hooks/use-debounce';
 import { useMediaBlob } from '@/pages/messenger/chat/message-item/use-media-blob';
 import { useAuthenticatedMediaUrl } from '@/hooks/use-authenticated-media';
-import ActivityPageHead from '@/components/custom/activity-page-head';
+import '@/components/custom/activity-page-head.css';
 
 const messageStatus = function (key: string = '') {
   const status = {
@@ -755,6 +757,28 @@ const InnerSidebarInbox = (props: any) => {
       }}
       className="mcm-col h-full w-full min-h-0 gap-0"
     >
+      {/* PageSidebarLayout's border-right only ever spanned this column's
+          own box, never the page-wide ActivityPageHead row above it -- it
+          read as a gap before the divider "started". Title inline at the
+          top of this column instead, same fix as Agent Chat/Video/Chat.
+          Reuses .mcm-col-title, which already existed here from before
+          ActivityPageHead was introduced. */}
+      <div className="mcm-col-title px-2 pt-3">
+        <h2>Inbox</h2>
+        <CustomTooltip
+          text="Faxes, SMS and everything sent to your numbers, in one thread list."
+          side="bottom"
+          className="max-w-xs"
+        >
+          <button
+            type="button"
+            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-black transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+            aria-label="About Inbox"
+          >
+            <Info size={13} aria-hidden="true" />
+          </button>
+        </CustomTooltip>
+      </div>
       <div className="mcm-col-head">
         {/* New sits beside the SMS/MMS and Fax tabs rather than on a row
             of its own -- with the duplicated title gone that row held
@@ -1873,7 +1897,6 @@ const Inbox = () => {
 
   return (
     <div className="mcm-actpage">
-      <ActivityPageHead title="Inbox" description="Faxes, SMS and everything sent to your numbers, in one thread list." />
       <div className="mcm-inbox w-full h-full min-h-0 flex overflow-hidden bg-white">
       <section
         className={cn(

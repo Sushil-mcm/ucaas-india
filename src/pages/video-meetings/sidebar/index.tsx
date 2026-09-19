@@ -11,6 +11,8 @@ import { useUser } from '@/hooks/use-user';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
+import { Info } from 'lucide-react';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 
 export const meetingSidebarArr = (features: any, IS_ADMIN: boolean) =>
   [
@@ -107,6 +109,27 @@ const Sidebar = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto">
+      {/* PageSidebarLayout renders this panel with `hideHeading`, so its own
+          border-right only ever spanned the space below the page-wide
+          ActivityPageHead row above it, never that row -- it read as a gap
+          before the divider "started". Same fix as Agent Chat/Chat: title
+          inline at the top of the column the border actually wraps. */}
+      <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
+        <h2 className="text-2xl font-bold text-[#2E2D35]">Video</h2>
+        <CustomTooltip
+          text="Your video room: start a meeting now, schedule one ahead or join with a code, with what is upcoming, ongoing, past and invited beside it."
+          side="bottom"
+          className="max-w-xs"
+        >
+          <button
+            type="button"
+            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-black transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+            aria-label="About Video"
+          >
+            <Info size={13} aria-hidden="true" />
+          </button>
+        </CustomTooltip>
+      </div>
       <div className="h-full min-h-0 flex flex-col gap-0.5 p-2">
         {sidebarItems?.map(
           ({ type, icon = '', path, title, children, value, enabled }: any, index: number) => {

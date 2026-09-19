@@ -11,14 +11,22 @@ import { Input } from '@/components/ui/input';
 import { useSocketEvents } from '@/hooks/use-socket-events';
 import { useUser } from '@/hooks/use-user';
 import moment from 'moment';
-import { Pin, CircleCheck, ArrowLeft, CircleAlert } from 'lucide-react';
+import { Pin, CircleCheck, ArrowLeft, CircleAlert, Info } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AgentChat from './components/agent-chat';
 import VisitorProfile from './components/visitor-profile';
 import CustomSelect from '@/components/custom/custom-select';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 import '@/styles/warm-glass.css';
-import ActivityPageHead from '@/components/custom/activity-page-head';
+/* `.mcm-actpage` (used below) is styled in activity-page-head.css, normally
+   pulled in by importing the ActivityPageHead component. That shared head
+   sat above the sidebar+content columns as its own full-width row, so the
+   sidebar's border-right only ever spanned the body below it, never that
+   row -- it read as a gap before the divider "started". Same fix as
+   Phone/Chat: drop the shared head, import its stylesheet directly, and put
+   the title inline inside the column it actually belongs to. */
+import '@/components/custom/activity-page-head.css';
 
 type AgentChatTab = 'unassigned' | 'active' | 'missed' | 'resolved';
 type AgentChatDateRange = 'today' | '7_days' | '30_days';
@@ -800,7 +808,7 @@ const SidebarContent = ({
   ]);
 
   return (
-    <div className="w-full h-full bg-white">
+    <div className="w-full flex-1 min-h-0 bg-white">
 
       <div className="px-4 pt-4 pb-5 border-b border-border bg-white">
         <div className="h-12 rounded-[14px] bg-ucass-primary-100 border border-ucass-primary-200 p-[5px]">
@@ -1060,11 +1068,26 @@ const AgentChatMessenger = () => {
 
   return (
     <div className="mcm-actpage">
-      <ActivityPageHead title="Agent Chat" description="Conversations handled by your agents, with the visitor profile beside each one." />
       <div className="w-full h-full min-h-0 flex overflow-hidden bg-white mcm-warm-glass">
       <section
-        className={`${activeChatId ? 'hidden md:block' : 'w-full'} h-full min-h-0 border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]`}
+        className={`${activeChatId ? 'hidden md:block' : 'w-full'} h-full min-h-0 flex flex-col border-r border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] lg:w-[19rem] lg:min-w-[19rem] lg:max-w-[19rem]`}
       >
+        <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
+          <h2 className="text-2xl font-bold text-[#2E2D35]">Agent Chat</h2>
+          <CustomTooltip
+            text="Conversations handled by your agents, with the visitor profile beside each one."
+            side="bottom"
+            className="max-w-xs"
+          >
+            <button
+              type="button"
+              className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-black transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+              aria-label="About Agent Chat"
+            >
+              <Info size={13} aria-hidden="true" />
+            </button>
+          </CustomTooltip>
+        </div>
         <SidebarContent
           activeTab={activeTab}
           setActiveTab={setActiveTab}

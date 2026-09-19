@@ -11,6 +11,8 @@ import {
 import { IconType } from '@/assets/icons/type';
 import { useUser } from '@/hooks/use-user';
 import { getRoutePrefetchHandlers } from '@/router/route-prefetch';
+import { Info } from 'lucide-react';
+import CustomTooltip from '@/components/custom/custom-tooltip';
 export interface MenuItem {
   label: string;
   value: string;
@@ -137,7 +139,29 @@ const CampaignSidebar: FC = () => {
     manualActiveItem?.pathname === pathname ? manualActiveItem.value : activeItem;
 
   return (
-    <div className="flex w-full overflow-auto lg:h-[calc(100vh_-_8.5rem)] lg:flex-col">
+    <div className="flex h-full min-h-0 w-full flex-col">
+      {/* PageSidebarLayout renders this panel with `hideHeading`, so its own
+          border-right only ever spanned the space below the page-wide
+          ActivityPageHead row above it, never that row -- it read as a gap
+          before the divider "started". Same fix as Agent Chat/Video/Inbox/
+          Chat: title inline at the top of the column the border wraps. */}
+      <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
+        <h2 className="text-2xl font-bold text-[#2E2D35]">Campaign</h2>
+        <CustomTooltip
+          text="Outbound calling campaigns and everything behind them — the leads they dial, the scripts agents read, how each call was dispositioned, and the numbers on the DNC list."
+          side="bottom"
+          className="max-w-xs"
+        >
+          <button
+            type="button"
+            className="inline-flex h-[19px] w-[19px] items-center justify-center rounded-full border border-[#EEE7DD] bg-[#FBE2C8]/25 text-black transition-colors hover:border-primary/40 hover:bg-primary/15 hover:text-primary"
+            aria-label="About Campaign"
+          >
+            <Info size={13} aria-hidden="true" />
+          </button>
+        </CustomTooltip>
+      </div>
+      <div className="flex w-full overflow-auto lg:h-[calc(100vh_-_8.5rem)] lg:flex-col">
       <div className="flex h-full min-w-max flex-row divide-x divide-gray-200 lg:min-w-0 lg:flex-col lg:divide-x-0 lg:divide-y">
         {campaignMenuItems(features, IS_ADMIN)?.map(
           ({ type, icon = '', path, label, children, value, enabled }, index: number) => {
@@ -178,6 +202,7 @@ const CampaignSidebar: FC = () => {
             }
           },
         )}
+      </div>
       </div>
     </div>
   );

@@ -2,23 +2,19 @@ import PageSidebarLayout from '@/layout/page-sidebar-layout';
 import { SuspenseOutlet } from '@/components/custom/route-suspense';
 import CampaignSidebar from './sidebar';
 import '@/components/mcm/mcm-page.css';
-import ActivityPageHead from '@/components/custom/activity-page-head';
+import '@/components/custom/activity-page-head.css';
 
 const AutoDialer = () => {
   return (
-    /* One full-width line across the top, above the rail rather than beside it
-       -- the same head Phone, Chat, Agent Chat and Inbox carry, and the reason
-       .mcm-actpage exists: it is the flex column that keeps the head its own
-       height and hands the rest to whatever follows.
-
-       It was nested inside the content column first, which started it after
-       the sidebar and made Campaign the one Activity screen whose name did not
-       line up with the others. */
+    /* Was a full-width ActivityPageHead line above the rail, same as Phone/
+       Chat/Agent Chat/Inbox/Video -- but that meant the sidebar's own
+       border-right only ever spanned the panel below it, never that row,
+       reading as a gap before the divider "started". Title now lives
+       inline at the top of the sidebar column itself (CampaignSidebar, in
+       ./sidebar/index.tsx) instead, same fix as Agent Chat/Video/Inbox.
+       Keeping `.mcm-actpage` for its layout CSS, imported directly below
+       rather than via the component. */
     <div className="mcm-actpage">
-      <ActivityPageHead
-        title="Campaign"
-        description="Outbound calling campaigns and everything behind them — the leads they dial, the scripts agents read, how each call was dispositioned, and the numbers on the DNC list."
-      />
       <div className="mcm-page mcm-admin cmp-shell">
         <div className="flex h-full w-full min-w-0 flex-col overflow-x-hidden overflow-y-auto lg:flex-row lg:overflow-hidden xs:gap-1 lg:gap-0">
           {/* `title` stays even though the heading is hidden: the layout reads it
