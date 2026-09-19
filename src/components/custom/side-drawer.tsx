@@ -121,7 +121,8 @@ const SideDrawer: FC<SideDrawerProps> = ({
         {title && (
           <div
             className={cn(
-              'flex min-h-11 items-center justify-between gap-1.5 px-5 text-[#2E2D35]',
+              'flex items-center justify-between gap-1.5 px-5 text-[#2E2D35]',
+              centered ? 'min-h-9 pt-5 pb-0' : 'min-h-11',
               /* Room for the close button so a long title cannot run underneath it. */
               isCloseIcon && 'pr-16',
               headerClassName,
@@ -129,7 +130,10 @@ const SideDrawer: FC<SideDrawerProps> = ({
           >
             <h5
               id="drawer-label"
-              className="font-semibold truncate text-base flex items-center justify-between"
+              className={cn(
+                'font-semibold truncate flex items-center justify-between',
+                centered ? 'text-xl' : 'text-base',
+              )}
             >
               {title}
             </h5>
