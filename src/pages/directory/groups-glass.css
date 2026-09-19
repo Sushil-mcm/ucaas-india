@@ -386,7 +386,14 @@
    every other `.gp-create-group-dialog` (New role, New location, ...)
    keeps its normal header's own spacing untouched. */
 .gp-create-group-dialog:has(.gp-create-group-head--bare) .gp-create-group-body {
-  padding-top: 34px;
+  /* 34px cleared the floating close button (top:0, 14px padding, 32px
+     circle -- bottom edge at 46px) by only 12px less than nothing: the
+     Name/Location row's own top actually started at 34px, 12px inside the
+     button's own box. Bumped by one field row's height (measured at 78px
+     between the Name row and the Description row below it) so the form
+     starts clear of the button with real breathing room, not just barely
+     under it. */
+  padding-top: 112px;
 }
 .gp-create-group-head h2 {
   margin: 0;
