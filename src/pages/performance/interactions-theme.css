@@ -93,6 +93,12 @@ body.perf-warm-backdrop.dark {
   border-radius: 16px;
   padding: 18px;
   box-shadow: 0 6px 18px rgba(160, 95, 30, 0.08);
+  /* Grid row items already stretch to the same height by default (the
+     taller Call Volume Trend card sets it) — flex column here so the
+     donut's own content can fill and centre in that height instead of
+     top-aligning and leaving a visible gap underneath it. */
+  display: flex;
+  flex-direction: column;
 }
 .mcm-page .perf-interactions .ic-panel-title {
   font-size: 15px;
@@ -111,18 +117,13 @@ body.perf-warm-backdrop.dark {
   padding: 40px 0;
   text-align: center;
 }
-.mcm-page .perf-interactions .ic-panel-note {
-  font-size: 11px;
-  color: #a39c8e;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed #eee7dd;
-}
 .mcm-page .perf-interactions .ic-donut-wrap {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
+  flex: 1;
 }
 .mcm-page .perf-interactions .ic-donut-legend {
   display: flex;

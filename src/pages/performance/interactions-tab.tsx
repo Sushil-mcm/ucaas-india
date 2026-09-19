@@ -18,11 +18,11 @@ import './interactions-theme.css';
    so it filters the table using its own existing tab-click logic rather
    than this file re-deriving the filter rules. */
 const DONUT_SEGMENTS: Array<{ key: string; label: string; tab: string; color: string }> = [
-  { key: 'inboundCalls', label: 'Answered', tab: 'Answered Calls', color: '#34d399' },
-  { key: 'outboundCalls', label: 'Outgoing', tab: 'Outgoing Calls', color: '#fb923c' },
-  { key: 'missedCalls', label: 'Missed', tab: 'Missed Calls', color: '#f87171' },
-  { key: 'voicemailCalls', label: 'Voicemails', tab: 'Voicemails', color: '#a5b4fc' },
-  { key: 'blockedCalls', label: 'Blocked', tab: 'Blocked', color: '#94a3b8' },
+  { key: 'inboundCalls', label: 'Answered', tab: 'Answered Calls', color: '#6ee7b7' },
+  { key: 'outboundCalls', label: 'Outgoing', tab: 'Outgoing Calls', color: '#fdba74' },
+  { key: 'missedCalls', label: 'Missed', tab: 'Missed Calls', color: '#fca5a5' },
+  { key: 'voicemailCalls', label: 'Voicemails', tab: 'Voicemails', color: '#c7d2fe' },
+  { key: 'blockedCalls', label: 'Blocked', tab: 'Blocked', color: '#cbd5e1' },
 ];
 const TOTAL_CALLS_TAB = 'Total Calls';
 
@@ -175,14 +175,9 @@ const CallVolumeTrend = ({
         Calls per {byHour ? 'hour' : 'day'} across the selected range.
       </div>
       {series.length > 1 ? (
-        <TrendBars data={series} dataKey="v" xKey="label" color="#f2994a" height={170} />
+        <TrendBars data={series} dataKey="v" xKey="label" color="#f2994a" height={158} />
       ) : (
         <div className="ic-panel-empty">Not enough range to chart yet.</div>
-      )}
-      {callStats.isQueueBreakdownSampled && (
-        <div className="ic-panel-note">
-          Based on the most recent {callStats.sampledRowCount.toLocaleString()} calls.
-        </div>
       )}
     </div>
   );
