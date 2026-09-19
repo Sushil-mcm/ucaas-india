@@ -17,6 +17,7 @@ import NotificationContent from './NotificationContent';
 import GlobalSearch from './GlobalSearch';
 import AreaNav from '@/components/custom/area-nav';
 import ThemeToggle from '@/components/custom/theme-toggle';
+import HeaderClock from './HeaderClock';
 import PendingChatRequestsDrawer from './PendingChatRequestsDrawer';
 import { ChevronDown, Menu, Wallet, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -419,6 +420,13 @@ const Header = () => {
             </div>
             <div className="hidden md:order-6 md:flex md:items-center">
               <ThemeToggle />
+            </div>
+            {/* The platform clock: what time it is now, in the zone every
+                time on every screen is shown in. Not hidden on small screens
+                and not inside the collapsible menu — it is the reference
+                every other time is read against. */}
+            <div className="flex items-center md:order-6">
+              <HeaderClock />
             </div>
             <div
               id="mobile-header-wallet-profile"
