@@ -610,6 +610,17 @@ body.perf-warm-backdrop.dark {
 .perf-interactions .table-scroll table {
   border-collapse: collapse !important;
 }
+/* TableManager's own <TableBody> carries a translucent cream fill +
+   blur of its own (`bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px]`,
+   table-manager.tsx) that sits on top of `.table-scroll`'s white
+   background above and reads as an off-white/cream tint over every
+   row — the same clash already fixed for the call-details modal
+   (`.qdv-root`, below) but not this table's own default state. */
+.perf-interactions .table-scroll tbody {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 .perf-interactions .table-scroll tbody tr {
   background: transparent;
   border-color: var(--ic-hairline);
