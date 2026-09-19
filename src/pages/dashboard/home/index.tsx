@@ -27,6 +27,8 @@ import {
   isMonitoringCallForMember,
 } from '@/pages/monitoring/live-call-helpers';
 import { handleDate } from '@/components/custom/date-dropdown/constant';
+import { usePlatformClock } from '@/hooks/use-platform-clock';
+import RecentCalls from './ops/recent-calls';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
@@ -250,6 +252,8 @@ const Home = () => {
 
   // Home always reads today; Performance keeps the date picker.
   const today = useMemo(() => handleDate('Today'), []);
+  const lastWeek = useMemo(() => handleDate('Last 7 Days'), []);
+  const { timeZone } = usePlatformClock(30000);
 
   const live = useLiveContactCentre(today);
   const {
@@ -1046,6 +1050,19 @@ const Home = () => {
         {/* ── communication overview ────────────────────────────────────── */}
         <div style={{ marginTop: 16 }}>
           <CommunicationOverview today={today} />
+        </div>
+
+        {/* ── recent calls (last 7 days) ────────────────────────────────── */}
+        <div style={{ marginTop: 16 }}>
+          <RecentCalls
+            from={lastWeek.from}
+            to={lastWeek.to}
+            timeZone={timeZone}
+            extension={myExtension}
+            myName={myName}
+            dial={dial}
+            isRegistered={isRegistered}
+          />
         </div>
 
 
