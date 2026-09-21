@@ -783,15 +783,17 @@
 
 /* List card */
 .cmp:not(.embedded) .panel-card {
-  background: #fff;
+  background: transparent;
   border: 0;
-  border-radius: 18px;
-  box-shadow: 0 0 0 1px var(--line-2);
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 .cmp:not(.embedded) .pc-head {
-  padding: 18px 20px;
+  padding: 2px 4px 14px;
+  border-bottom: 0;
 }
 .cmp:not(.embedded) .pc-head h3 {
   font-size: 17px;
@@ -803,7 +805,9 @@
    Overrides TableManager's own utility classes by specificity. */
 .cmp:not(.embedded) .panel-card div.min-h-0.flex-1.rounded-xl {
   border: 0;
-  border-radius: 0;
+  border-radius: 18px 18px 0 0;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line-2);
 }
 .cmp:not(.embedded) .panel-card .table-scroll {
   border-radius: 0;
@@ -839,8 +843,9 @@
 .cmp:not(.embedded) .panel-card div.z-10.rounded-xl {
   border: 0;
   border-top: 1px solid rgba(150, 100, 50, 0.12);
-  border-radius: 0;
-  background: transparent;
+  border-radius: 0 0 18px 18px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line-2);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   padding: 12px 22px 14px;
