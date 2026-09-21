@@ -1009,21 +1009,17 @@ const Campaign = ({
 
         <div className="panel-card">
           <div className="pc-head">
-            <span className="pc-ic">
-              <Ic n="list" />
-            </span>
             <h3>All campaigns</h3>
-            {Object.keys(liveBoards).length ? (
-              <span className="src live pc-right">
-                <Ic n="spark" size={10} />
-                live
-              </span>
-            ) : (
-              <span className="src pc-right">
-                <Ic n="refresh" size={12} />
-                Refresh on change
-              </span>
-            )}
+            {embedded ? (
+              Object.keys(liveBoards).length ? (
+                <span className="src live pc-right">
+                  <Ic n="spark" size={10} />
+                  live
+                </span>
+              ) : (
+                <span className="src pc-right">refreshes on change</span>
+              )
+            ) : null}
           </div>
 
           <TableManager

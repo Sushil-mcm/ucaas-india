@@ -793,29 +793,9 @@
 .cmp:not(.embedded) .pc-head {
   padding: 18px 20px;
 }
-.cmp:not(.embedded) .pc-head .pc-ic {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: #fff1e0;
-  color: #f2701f;
-}
-.cmp:not(.embedded) .pc-head .pc-ic .ic {
-  width: 17px;
-  height: 17px;
-}
 .cmp:not(.embedded) .pc-head h3 {
   font-size: 17px;
   color: var(--ink);
-}
-.cmp:not(.embedded) .pc-head .src {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  color: var(--ink-3);
 }
 
 /* List table styled like Directory > People: cream header with a 3px orange
