@@ -712,7 +712,7 @@
 /* Toolbar: one white rounded card holding search + chips */
 .cmp:not(.embedded) .tbar {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   margin-bottom: 18px;
@@ -728,7 +728,7 @@
 .cmp:not(.embedded) .tbar-center {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 10px;
 }
 .cmp:not(.embedded) .fdrop {

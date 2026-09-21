@@ -211,7 +211,7 @@ const FilterDropdown = ({
           <Ic n="chev" className="fdrop-caret" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" className="border-0 min-w-[190px] p-1.5">
+      <DropdownMenuContent align="end" className="border-0 min-w-[190px] p-1.5">
         {options.map(([optionValue, label]) => (
           <DropdownMenuItem
             key={optionValue}
