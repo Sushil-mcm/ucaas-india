@@ -462,7 +462,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
               setValue('dialMethod', val);
               setValue('script', { label: '', value: '' });
             }}
-            className="grid w-full grid-cols-1 gap-3 sm:grid-cols-4"
+            className="acf-types grid w-full grid-cols-1 gap-3 sm:grid-cols-4"
           >
             {CAMPAIGN_TYPE_LIST.map((item, index) => {
               const id = `dial-option-${index}`;
@@ -487,16 +487,16 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           </RadioGroup>
 
           {campaignStatus === 'PROCESSING' && dialMethod !== DIALER_TYPE.INBOUND ? (
-            <div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <div className="acf-note flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               <span>This campaign is running, so its settings are locked. Pause it to make changes; start it again when done.</span>
               <Button type="button" variant="secondary" size="sm" className="shadow-none whitespace-nowrap" disabled={isPausing} onClick={() => mutatePause({ campaignId: campaignData?._id, campaignStatus: 'PAUSE' })}>
                 {isPausing ? 'Pausing…' : 'Pause and edit'}
               </Button>
             </div>
           ) : campaignStatus && campaignStatus !== 'NEW' ? (
-            <p className="text-xs text-gray-500">The number and the lead list are fixed once a campaign has started; everything else can change.</p>
+            <p className="acf-note text-xs text-gray-500">The number and the lead list are fixed once a campaign has started; everything else can change.</p>
           ) : null}
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="acf-steps flex w-full">
             <div className="w-full overflow-x-auto border-b border-[#EEE7DD]">
               <TabsList className="flex min-h-10 min-w-max rounded-none bg-transparent p-0 text-center text-sm font-semibold sm:min-w-full">
                 {Object.entries(CAMPAIGN_UPSERT_TAB_CONSTANT).map(([key, value]) => (
@@ -514,7 +514,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           <FormProvider {...formInstance}>
             <form
               onSubmit={formInstance.handleSubmit(onSubmit)}
-              className="flex h-full w-full min-h-0 flex-col gap-4 justify-between"
+              className="acf-form flex h-full w-full min-h-0 flex-col gap-4 justify-between"
             >
               <div className="flex-1 min-h-0 overflow-y-auto">{stepLookUp?.[activeTab]}</div>
               <div className="flex shrink-0 flex-row items-center justify-between gap-2 border-t border-gray-100 pt-3 pb-1">

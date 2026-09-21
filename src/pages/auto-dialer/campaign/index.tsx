@@ -1082,7 +1082,7 @@ const Campaign = ({
           isHeader
           centered
           portal
-          width="min(62rem, calc(100vw - 2rem))"
+          width="min(76rem, calc(100vw - 2rem))"
           headerClassName="px-6"
           handleClose={() => setDrawerState({ selectedCampaign: null, isModalOpen: false })}
           content={

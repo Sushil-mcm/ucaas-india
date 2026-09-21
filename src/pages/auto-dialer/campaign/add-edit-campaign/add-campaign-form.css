@@ -42,24 +42,80 @@
   line-height: 1.45;
 }
 
-/* Step tabs: a white tray, the current step an orange wash pill */
+/* Layout: steps rail on the left, type cards + step content on the right */
+.acf {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    'steps types'
+    'steps note'
+    'steps form';
+  column-gap: 24px;
+  row-gap: 0;
+}
+.acf > .acf-types {
+  grid-area: types;
+  margin-bottom: 16px;
+}
+.acf > .acf-note {
+  grid-area: note;
+  margin-bottom: 12px;
+}
+.acf > .acf-steps {
+  grid-area: steps;
+  align-self: start;
+}
+.acf > .acf-form {
+  grid-area: form;
+  min-height: 0;
+}
+
+/* Steps rail: a white card, one numbered row per step, current one orange */
 .acf .overflow-x-auto.border-b {
   border-bottom: 0;
+  overflow: visible;
 }
 .acf [role='tablist'] {
+  flex-direction: column;
+  align-items: stretch;
   gap: 4px;
-  padding: 4px;
+  padding: 8px;
+  min-width: 0;
   min-height: 0;
   border: 1px solid rgba(225, 200, 165, 0.9);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #fff;
+  counter-reset: acf-step;
 }
 .acf [role='tab'] {
-  height: 38px;
+  flex: none;
+  justify-content: flex-start;
+  gap: 10px;
+  height: 44px;
+  padding: 0 10px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 11px;
   color: #5a667e;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
   box-shadow: none;
+}
+.acf [role='tab']::before {
+  counter-increment: acf-step;
+  content: counter(acf-step);
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(225, 200, 165, 0.9);
+  background: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #8a8a99;
 }
 .acf [role='tab']:hover {
   color: #c96f1f;
@@ -68,6 +124,37 @@
   background: #fff1e0;
   color: #c96f1f;
   box-shadow: none;
+}
+.acf [role='tab'][data-state='active']::before {
+  border-color: #f2994a;
+  background: #f2994a;
+  color: #fff;
+}
+
+/* Narrow windows: back to one column with the steps as a scrolling row */
+@media (max-width: 900px) {
+  .acf {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .acf > .acf-types,
+  .acf > .acf-note {
+    margin-bottom: 0;
+  }
+  .acf > .acf-steps {
+    order: 1;
+  }
+  .acf > .acf-form {
+    order: 2;
+  }
+  .acf .overflow-x-auto.border-b {
+    overflow-x: auto;
+  }
+  .acf [role='tablist'] {
+    flex-direction: row;
+    min-width: max-content;
+  }
 }
 
 /* Fields */
