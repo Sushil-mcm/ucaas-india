@@ -681,9 +681,10 @@
 .cmp:not(.embedded) .kpi .k {
   font-size: 9.5px;
   letter-spacing: 0.04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  min-height: 2.5em;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .cmp:not(.embedded) .kpi .v {
   margin-top: 4px;
