@@ -814,6 +814,8 @@ const Campaign = ({
   const KPI_CARDS = [
     {
       key: 'live',
+      icon: 'phone' as const,
+      tint: 'orange',
       label: 'Live campaigns',
       value: (
         <>
@@ -825,18 +827,24 @@ const Campaign = ({
     },
     {
       key: 'leads',
+      icon: 'users' as const,
+      tint: 'green',
       label: 'Leads assigned',
       value: fmt(kpis.assigned),
       sub: `${fmt(kpis.pending)} still callable`,
     },
     {
       key: 'dialed',
+      icon: 'phone' as const,
+      tint: 'purple',
       label: 'Dialled',
       value: fmt(kpis.dialed),
       sub: `${pct(kpis.dialed, kpis.assigned)}% of assigned`,
     },
     {
       key: 'answered',
+      icon: 'check' as const,
+      tint: 'blue',
       label: 'Answered',
       value: `${pct(kpis.answered, kpis.dialed)}%`,
       sub: `${fmt(kpis.answered)} connects`,
@@ -844,12 +852,16 @@ const Campaign = ({
     },
     {
       key: 'noanswer',
+      icon: 'x' as const,
+      tint: 'red',
       label: 'No answer',
       value: `${pct(kpis.noAnswer, kpis.dialed)}%`,
       sub: fmt(kpis.noAnswer),
     },
     {
       key: 'dnc',
+      icon: 'shield' as const,
+      tint: 'amber',
       label: 'DNC / blocked',
       value: `${pct(kpis.dnc, kpis.dialed)}%`,
       sub: fmt(kpis.dnc),
@@ -864,12 +876,15 @@ const Campaign = ({
         {!embedded && (
           <div className="page-head">
             <div>
-              <div className="eyebrow">Campaign · Outbound and inbound</div>
+              <div className="eyebrow">
+                Campaign
+                <Ic n="chev" />
+                Outbound and inbound
+              </div>
               <h1>Campaigns</h1>
               <p>
-                Every calling campaign on one line: outbound dialling with its contact outcomes and
-                agent load, and inbound lines where customers call the team. Open one to watch it
-                live.
+                Run, track, and optimize your calling campaigns. Connect with more customers and help
+                your team perform better.
               </p>
             </div>
             <button className="btn ghost" type="button" onClick={() => navigate('/campaign/leads')}>
@@ -893,15 +908,20 @@ const Campaign = ({
           <div className="kpis kpis-cols-6">
             {KPI_CARDS.map((kpi) => (
               <div className="kpi" key={kpi.key}>
-                <div className="k">{kpi.label}</div>
-                <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>
-                  {isLoadingKpis ? (
-                    <span className="skel" style={{ display: 'block', width: 62, height: 24 }} />
-                  ) : (
-                    kpi.value
-                  )}
+                <span className={`kpi-ic ${kpi.tint}`}>
+                  <Ic n={kpi.icon} />
+                </span>
+                <div className="kpi-body">
+                  <div className="k">{kpi.label}</div>
+                  <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>
+                    {isLoadingKpis ? (
+                      <span className="skel" style={{ display: 'block', width: 62, height: 24 }} />
+                    ) : (
+                      kpi.value
+                    )}
+                  </div>
+                  <div className="d">{kpi.sub}</div>
                 </div>
-                <div className="d">{kpi.sub}</div>
               </div>
             ))}
           </div>
@@ -951,6 +971,9 @@ const Campaign = ({
 
         <div className="panel-card">
           <div className="pc-head">
+            <span className="pc-ic">
+              <Ic n="list" />
+            </span>
             <h3>All campaigns</h3>
             {Object.keys(liveBoards).length ? (
               <span className="src live pc-right">
@@ -958,7 +981,10 @@ const Campaign = ({
                 live
               </span>
             ) : (
-              <span className="src pc-right">refreshes on change</span>
+              <span className="src pc-right">
+                <Ic n="refresh" size={12} />
+                Refresh on change
+              </span>
             )}
           </div>
 

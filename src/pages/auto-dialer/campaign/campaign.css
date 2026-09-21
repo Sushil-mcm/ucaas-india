@@ -547,3 +547,232 @@
 .cmp .segfoot {
   margin-top: 3px;
 }
+
+/* ── Campaign list (standalone) restyle: solid white cards, icon-badged
+   KPI tiles, one toolbar card, flat orange CTA. No blur, gradients or
+   heavy shadows. Scoped to `:not(.embedded)` so Performance's embedded
+   copy of this list is untouched. ─────────────────────────────── */
+.cmp:not(.embedded) .page {
+  padding: 26px 30px 40px;
+}
+.cmp:not(.embedded) .page-head {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.cmp:not(.embedded) .page-head .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent-ink);
+}
+.cmp:not(.embedded) .page-head .eyebrow .ic {
+  width: 10px;
+  height: 10px;
+  color: var(--ink-4);
+}
+.cmp:not(.embedded) .page-head h1 {
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.cmp:not(.embedded) .page-head p {
+  margin-top: 6px;
+  max-width: none;
+  font-size: 14.5px;
+  color: var(--ink-3);
+}
+.cmp:not(.embedded) .page-head .btn {
+  height: 46px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+.cmp:not(.embedded) .page-head .btn .ic {
+  width: 17px;
+  height: 17px;
+}
+.cmp:not(.embedded) .page-head .btn.ghost {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .page-head .btn.ghost:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent-edge);
+  color: var(--accent-ink);
+}
+.cmp:not(.embedded) .page-head .btn.primary {
+  margin-left: 0;
+  background: #f2701f;
+  box-shadow: none;
+}
+.cmp:not(.embedded) .page-head .btn.primary:hover {
+  background: #de6113;
+}
+
+/* KPI tiles: six separate cards, icon badge left, text right */
+.cmp:not(.embedded) .kpis.kpis-cols-6 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  margin-bottom: 18px;
+}
+.cmp:not(.embedded) .kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--line-2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .kpi-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+.cmp:not(.embedded) .kpi-ic .ic {
+  width: 22px;
+  height: 22px;
+}
+.cmp:not(.embedded) .kpi-ic.orange {
+  background: #fff1e0;
+  color: #f2701f;
+}
+.cmp:not(.embedded) .kpi-ic.green {
+  background: #e3f6ea;
+  color: #1fa25a;
+}
+.cmp:not(.embedded) .kpi-ic.purple {
+  background: #efe9fb;
+  color: #7c5cd6;
+}
+.cmp:not(.embedded) .kpi-ic.blue {
+  background: #e4f0fd;
+  color: #2b7de9;
+}
+.cmp:not(.embedded) .kpi-ic.red {
+  background: #fde8e8;
+  color: #e5484d;
+}
+.cmp:not(.embedded) .kpi-ic.amber {
+  background: #fff1d6;
+  color: #e8912a;
+}
+.cmp:not(.embedded) .kpi-body {
+  min-width: 0;
+}
+.cmp:not(.embedded) .kpi .k {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.cmp:not(.embedded) .kpi .v {
+  margin-top: 5px;
+  font-size: 28px;
+}
+.cmp:not(.embedded) .kpi .v.num {
+  font-family: inherit;
+}
+.cmp:not(.embedded) .kpi .v small {
+  font-size: 20px;
+  font-weight: 600;
+}
+.cmp:not(.embedded) .kpi .d {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Toolbar: one white rounded card holding search + chips */
+.cmp:not(.embedded) .tbar {
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--line-2);
+}
+.cmp:not(.embedded) .cmp-search {
+  flex: 0 1 260px;
+}
+.cmp:not(.embedded) .cmp-search input {
+  height: 38px;
+  padding-left: 38px;
+  border-radius: 999px;
+  border-color: var(--line);
+  background: var(--surface-2);
+  font-size: 13px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .cmp-search .ic {
+  left: 14px;
+  top: 12px;
+  width: 15px;
+  height: 15px;
+}
+.cmp:not(.embedded) .fchip {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .fchip.on {
+  background: var(--accent-wash);
+}
+
+/* List card */
+.cmp:not(.embedded) .panel-card {
+  background: #fff;
+  border: 0;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px var(--line-2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .pc-head {
+  padding: 18px 20px;
+}
+.cmp:not(.embedded) .pc-head .pc-ic {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #fff1e0;
+  color: #f2701f;
+}
+.cmp:not(.embedded) .pc-head .pc-ic .ic {
+  width: 17px;
+  height: 17px;
+}
+.cmp:not(.embedded) .pc-head h3 {
+  font-size: 17px;
+  color: var(--ink);
+}
+.cmp:not(.embedded) .pc-head .src {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
