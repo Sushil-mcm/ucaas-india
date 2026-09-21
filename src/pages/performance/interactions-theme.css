@@ -581,16 +581,18 @@ body.perf-warm-backdrop.dark {
    those needed their previous room once Action actually fits. */
 /* 10 columns since the call-quality badge landed (call-history/index.tsx):
    Date, From, DID, To, Status, Quality, Duration, Wait Time, Charge, Action.
-   Action carries six icon buttons now (~220px + padding) so it takes a
-   fifth of the row; the rest sum with it to exactly 100. */
+   Date needs ~150px for its direction icon + "Sep 19, 07:00 PM" (nowrap:
+   at 11% the text ran into From); DID/To/From need ~120px of content
+   each. Action's six icons are shrunk to 26px (end of file) so 17% holds
+   them; the rest sum with it to exactly 100. */
 .perf-interactions colgroup col:nth-child(1) {
-  width: 11% !important;
+  width: 14% !important;
 } /* Date */
 .perf-interactions colgroup col:nth-child(2) {
-  width: 11% !important;
+  width: 12% !important;
 } /* From */
 .perf-interactions colgroup col:nth-child(3) {
-  width: 11% !important;
+  width: 12% !important;
 } /* DID */
 .perf-interactions colgroup col:nth-child(4) {
   width: 12% !important;
@@ -599,7 +601,7 @@ body.perf-warm-backdrop.dark {
   width: 8% !important;
 } /* Status */
 .perf-interactions colgroup col:nth-child(6) {
-  width: 7% !important;
+  width: 6% !important;
 } /* Quality */
 .perf-interactions colgroup col:nth-child(7) {
   width: 6% !important;
@@ -608,10 +610,10 @@ body.perf-warm-backdrop.dark {
   width: 6% !important;
 } /* Wait Time */
 .perf-interactions colgroup col:nth-child(9) {
-  width: 8% !important;
+  width: 7% !important;
 } /* Charge */
 .perf-interactions colgroup col:nth-child(10) {
-  width: 20% !important;
+  width: 17% !important;
 } /* Action */
 
 /* `border-collapse: collapse` (mcm-page.css base) restated + `!important`
@@ -1047,4 +1049,24 @@ body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full']
   border-color: transparent;
   box-shadow: none;
   color: inherit !important;
+}
+
+/* Action icons at 100% zoom: six 32px circles + 8px gaps needed ~250px,
+   more than the column can spare without stealing width from Date/From/
+   DID (which is what made their text overlap). 26px circles, 4px gaps,
+   14px glyphs need ~200px. */
+.perf-interactions .table-scroll td:nth-child(10) > span {
+  gap: 4px !important;
+}
+.perf-interactions .table-scroll tbody td:nth-child(10) [class*='rounded-full'][class*='w-8'] {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
+}
+.perf-interactions .table-scroll tbody td:nth-child(10) [class*='rounded-full'] svg {
+  width: 14px !important;
+  height: 14px !important;
 }
