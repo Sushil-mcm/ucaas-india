@@ -120,11 +120,17 @@ body.perf-warm-backdrop.dark {
    Performance ▸ Agents/Calls). */
 .perf-flows .table-scroll {
   border-radius: 0 0 20px 20px;
-  border: 1px solid var(--fl-glass-border);
-  background: var(--fl-glass);
-  backdrop-filter: var(--fl-glass-blur);
-  -webkit-backdrop-filter: var(--fl-glass-blur);
-  box-shadow: var(--fl-glass-shadow);
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: #ffffff;
+  box-shadow: 0 10px 34px rgba(160, 95, 30, 0.14);
+}
+/* TableManager's own <TableBody> carries a translucent cream fill + blur
+   that reads as an off-white tint over the rows; People's rows are plain
+   white. */
+.perf-flows .table-scroll tbody {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 /* TableManager's own outer wrapper div (`rounded-xl border ...
    overflow-hidden`), not `.table-scroll` itself, is what actually clips a
@@ -139,31 +145,28 @@ body.perf-warm-backdrop.dark {
 .perf-flows .table-scroll::-webkit-scrollbar-track {
   margin-bottom: 8px;
 }
-/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
-   (people-glass.css) plus the `.mcm-page th` base it inherits from
-   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
-   12px padding, a 3px warm-orange hairline — read off Directory's own
-   computed styles rather than approximated.
-   Scoped to `.perf-flows thead` directly, NOT `.table-scroll thead` —
-   this table renders with `splitStickyHeader` (flows-tab.tsx), which puts
-   the header in its own non-scrolling box, a *sibling* of `.table-scroll`,
-   not a descendant of it (same gotcha already hit and fixed in
-   agents-theme.css/interactions-theme.css/queues-theme.css). */
+/* Sticky header — Directory ▸ People's current `.gp-people th`
+   (people-glass.css), same values Queues/Agents/Calls copy: light-cream
+   `#fff6e9`, near-black 11.5px/800 labels, 40px tall, 3px orange
+   underline. Scoped to `.perf-flows thead` directly, NOT
+   `.table-scroll thead` — `splitStickyHeader` puts the header in its own
+   non-scrolling box, a *sibling* of `.table-scroll`. */
 .perf-flows thead {
-  background: #fffdfb;
+  background: #fff6e9;
   box-shadow: none;
 }
 .dark .perf-flows thead {
   background: rgba(23, 15, 10, 0.97);
 }
 .perf-flows thead th {
-  color: #8a6f57;
-  font-size: 9.5px;
-  font-weight: 800;
+  color: #1a1a1a !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
-  padding: 9px 12px !important;
+  height: 40px;
+  padding: 0 12px !important;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   background: transparent;
 }
@@ -182,14 +185,23 @@ body.perf-warm-backdrop.dark {
     box-shadow 0.16s ease;
 }
 .perf-flows .table-scroll tbody tr:hover {
-  background: var(--fl-row-hover);
-  box-shadow: inset 3px 0 0 var(--fl-accent);
+  background: rgba(255, 241, 235, 0.55) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
 }
+/* Divider as an inset box-shadow, not border-bottom: a literal 1px cell
+   border under `border-collapse: collapse` renders faint at this app's
+   fractional DPR (same fix as Queues/Agents/Calls). Colour and text are
+   People's own. */
 .perf-flows .table-scroll tbody td {
-  padding-top: 11px;
-  padding-bottom: 11px;
-  border-bottom-color: var(--fl-hairline);
-  color: #334155;
+  padding-top: 13px;
+  padding-bottom: 13px;
+  border-bottom: none !important;
+  box-shadow: inset 0 -1px 0 0 rgba(150, 100, 50, 0.1) !important;
+  color: var(--ink);
+  font-size: 13px !important;
+}
+.perf-flows .table-scroll tbody tr:last-child td {
+  box-shadow: none !important;
 }
 .dark .perf-flows .table-scroll tbody td {
   color: var(--fl-muted);
