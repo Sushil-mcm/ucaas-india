@@ -208,25 +208,8 @@ body.perf-warm-backdrop.dark {
   .mcm-page .perf-agents .ag-layout {
     grid-template-columns: 1fr;
   }
-  /* Stacked under the table now, at the table's own full width (easily
-     1000px+) rather than squeezed into the old 240-340px side column —
-     plenty of room for Agent Status Overview / Status breakdown / Top
-     performers to sit in one row instead of stacking three-deep. Below
-     720px there isn't, so it drops back to a column there. */
-  .mcm-page .perf-agents .ag-side-panels {
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .mcm-page .perf-agents .ag-side-panels > .ag-panel {
-    flex: 1;
-    min-width: 0;
-  }
 }
-@media (max-width: 720px) {
-  .mcm-page .perf-agents .ag-side-panels {
-    flex-direction: column;
-  }
-}
+
 /* Whatever room the grid above leaves the table, a real 8-column roster
    still won't always fit it — scrolling the table horizontally beats
    squeezing every column unreadably, the same fallback every other
@@ -263,6 +246,24 @@ body.perf-warm-backdrop.dark {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+/* Placed after the base rule above on purpose: same specificity, so
+   source order decides. Stacked under the table the panels get its full
+   width, plenty for one row of three; a column again under 720px. */
+@media (max-width: 1600px) {
+  .mcm-page .perf-agents .ag-side-panels {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .mcm-page .perf-agents .ag-side-panels > .ag-panel {
+    flex: 1;
+    min-width: 0;
+  }
+}
+@media (max-width: 720px) {
+  .mcm-page .perf-agents .ag-side-panels {
+    flex-direction: column;
+  }
 }
 .mcm-page .perf-agents .ag-panel {
   background: #fff;
