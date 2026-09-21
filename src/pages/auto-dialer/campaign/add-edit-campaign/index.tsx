@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { CAMPAIGN_UPSERT_TAB_CONSTANT } from '../const';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Stepper from '@/components/custom/stepper';
 import { Button } from '@/components/ui/button';
 import BasicInformation from './basic-info';
 import Settings from './settings';
@@ -38,6 +38,18 @@ const TABS_ORDER = [
   CAMPAIGN_UPSERT_TAB_CONSTANT.REVIEW,
 ];
 const LAST_TAB = TABS_ORDER[TABS_ORDER.length - 1];
+
+/* The rail lists every step in the order the form has always shown them,
+   each with a one-line hint under its title. */
+const STEP_RAIL = [
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.BASIC_INFORMATION, description: 'Name, site, caller IDs and leads' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.SETTING_PERMISSION, description: 'Who can see and run it' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.SETTING, description: 'Timers, retries and pacing' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.AGENTS, description: 'Who takes the calls' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.MEDIA, description: 'Greetings and hold music' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.INBOUND, description: 'Where inbound calls go' },
+  { title: CAMPAIGN_UPSERT_TAB_CONSTANT.REVIEW, description: 'Check everything and launch' },
+];
 
 const collectFormErrorMessages = (errorNode: any): string[] => {
   if (!errorNode) return [];
@@ -496,21 +508,18 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           ) : campaignStatus && campaignStatus !== 'NEW' ? (
             <p className="acf-note text-xs text-gray-500">The number and the lead list are fixed once a campaign has started; everything else can change.</p>
           ) : null}
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="acf-steps flex w-full">
-            <div className="w-full overflow-x-auto border-b border-[#EEE7DD]">
-              <TabsList className="flex min-h-10 min-w-max rounded-none bg-transparent p-0 text-center text-sm font-semibold sm:min-w-full">
-                {Object.entries(CAMPAIGN_UPSERT_TAB_CONSTANT).map(([key, value]) => (
-                  <TabsTrigger
-                    className="relative flex h-full flex-none gap-1 rounded-none border-b-2 bg-transparent px-4 text-xs font-semibold text-[#2E2D35] data-[state=active]:border-b-2 data-[state=active]:border-b-primary data-[state=active]:text-primary data-[state=active]:shadow-2xs sm:flex-1 sm:justify-center sm:px-6 sm:text-sm"
-                    key={key}
-                    value={value}
-                  >
-                    {value}{' '}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </Tabs>
+          <Stepper
+            steps={STEP_RAIL.map((step, index) => ({
+              number: index + 1,
+              title: step.title,
+              description: step.description,
+              handleChange: () => handleTabChange(step.title),
+            }))}
+            currentStep={Math.max(STEP_RAIL.findIndex((step) => step.title === activeTab), 0) + 1}
+            customClass="acf-steps"
+            stickyPanel
+            vertical
+          />
           <FormProvider {...formInstance}>
             <form
               onSubmit={formInstance.handleSubmit(onSubmit)}

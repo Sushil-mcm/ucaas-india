@@ -65,72 +65,12 @@
 .acf > .acf-steps {
   grid-area: steps;
   align-self: start;
+  padding: 4px 0 !important;
+  background: transparent !important;
 }
 .acf > .acf-form {
   grid-area: form;
   min-height: 0;
-}
-
-/* Steps rail: a white card, one numbered row per step, current one orange */
-.acf .overflow-x-auto.border-b {
-  border-bottom: 0;
-  overflow: visible;
-}
-.acf [role='tablist'] {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
-  padding: 8px;
-  width: 100%;
-  height: auto;
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid rgba(225, 200, 165, 0.9);
-  border-radius: 16px;
-  background: #fff;
-  counter-reset: acf-step;
-}
-.acf [role='tab'] {
-  flex: none;
-  justify-content: flex-start;
-  gap: 10px;
-  height: 44px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 11px;
-  color: #5a667e;
-  font-size: 13px;
-  text-align: left;
-  white-space: nowrap;
-  box-shadow: none;
-}
-.acf [role='tab']::before {
-  counter-increment: acf-step;
-  content: counter(acf-step);
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(225, 200, 165, 0.9);
-  background: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #8a8a99;
-}
-.acf [role='tab']:hover {
-  color: #c96f1f;
-}
-.acf [role='tab'][data-state='active'] {
-  background: #fff1e0;
-  color: #c96f1f;
-  box-shadow: none;
-}
-.acf [role='tab'][data-state='active']::before {
-  border-color: #f2994a;
-  background: #f2994a;
-  color: #fff;
 }
 
 /* Narrow windows: back to one column with the steps as a scrolling row */
@@ -146,17 +86,21 @@
   }
   .acf > .acf-steps {
     order: 1;
+    overflow-x: auto;
+  }
+  .acf > .acf-steps ol {
+    flex-direction: row;
+    gap: 14px;
+  }
+  .acf > .acf-steps li {
+    width: auto;
+    flex: none;
+  }
+  .acf > .acf-steps li > span {
+    display: none;
   }
   .acf > .acf-form {
     order: 2;
-  }
-  .acf .overflow-x-auto.border-b {
-    overflow-x: auto;
-  }
-  .acf [role='tablist'] {
-    flex-direction: row;
-    width: max-content;
-    min-width: 100%;
   }
 }
 

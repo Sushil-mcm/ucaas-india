@@ -1083,7 +1083,7 @@ const Campaign = ({
           centered
           portal
           width="min(76rem, calc(100vw - 2rem))"
-          headerClassName="px-6"
+          headerClassName="px-6 pt-8 [&>h5]:text-[28px] [&>h5]:leading-tight"
           handleClose={() => setDrawerState({ selectedCampaign: null, isModalOpen: false })}
           content={
             <div style={{ height: 'min(46rem, calc(85vh - 6.5rem))' }}>
