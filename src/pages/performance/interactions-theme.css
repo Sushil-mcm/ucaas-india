@@ -788,6 +788,12 @@ body.perf-warm-backdrop.dark {
   color: #fff !important;
   box-shadow: 0 6px 14px rgba(249, 115, 22, 0.26);
 }
+.perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='bg-amber-100']:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.32);
+}
 .perf-interactions .table-scroll tbody td [class*='rounded-full'][class*='w-8'][class*='bg-purple-100']:hover {
   background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%) !important;
   border-color: transparent;
