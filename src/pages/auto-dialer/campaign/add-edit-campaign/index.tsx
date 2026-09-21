@@ -452,6 +452,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
   return (
     <>
       <Spin
+        className="h-full [&>div:first-child]:h-full"
         loading={
           isLoadingInventoryNumber ||
           isLoadingScriptListing ||
