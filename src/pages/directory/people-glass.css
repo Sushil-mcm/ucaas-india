@@ -213,7 +213,7 @@
      to 100%, so the row fills its container at any zoom or screen width
      without over-feeding one column or leaving a blank strip after the
      last one. */
-  width: 22%;
+  width: 19%;
   /* 22px matches `.tbar`'s own side padding, so the avatar column lines up
      under the "Groups" pill above it rather than starting 10px to its
      left. */
@@ -242,29 +242,39 @@
    column close to its old fixed-px share of a ~1220px card (Role 100,
    Groups 130, Location 150, Numbers 80, ACD 130, Presence 130), so nothing
    jumps in relative size, it just scales with the container from here on. */
+/* Nine columns since the Status column was added (people.tsx: Person, Role,
+   Status, Groups, Location, Numbers, ACD skills, Presence, Action). These
+   `nth-child` widths are pinned by position, so inserting Status as column 3
+   shifted every rule below it one place -- the Action column's `min-width`
+   ended up on Presence and Action itself had none, which is how its icon
+   buttons wrapped and rows ballooned to ~180px. Sums to 100%. */
 .gp-people th:nth-child(2),
 .gp-people td:nth-child(2) {
   width: 8%;
 }
 .gp-people th:nth-child(3),
 .gp-people td:nth-child(3) {
-  width: 10%;
+  width: 8%;
 }
 .gp-people th:nth-child(4),
 .gp-people td:nth-child(4) {
-  width: 12%;
+  width: 10%;
 }
 .gp-people th:nth-child(5),
 .gp-people td:nth-child(5) {
-  width: 7%;
+  width: 11%;
 }
 .gp-people th:nth-child(6),
 .gp-people td:nth-child(6) {
-  width: 10%;
+  width: 7%;
 }
 .gp-people th:nth-child(7),
 .gp-people td:nth-child(7) {
-  width: 11%;
+  width: 9%;
+}
+.gp-people th:nth-child(8),
+.gp-people td:nth-child(8) {
+  width: 9%;
 }
 /* Five 36px icon buttons with 6px gaps measure 204px, plus the cell's own
    12px side padding = 228px minimum -- under that the last button wraps
@@ -273,9 +283,9 @@
    zoom level the way the other columns are meant to; `min-width` keeps
    this one column from ever going there while it still grows past 236px
    as a percentage on anything wider. */
-.gp-people th:nth-child(8),
-.gp-people td:nth-child(8) {
-  width: 20%;
+.gp-people th:nth-child(9),
+.gp-people td:nth-child(9) {
+  width: 19%;
   min-width: 236px;
 }
 /* This is the scrollbar that now actually starts where the rows do — same

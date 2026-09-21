@@ -553,7 +553,7 @@ const People = () => {
           </thead>
           <tbody>
             {isLoading ? (
-              <EmptyRow span={8} message="Loading the roster…" />
+              <EmptyRow span={9} message="Loading the roster…" />
             ) : visible.length ? (
               paged.map((row: PersonRow) => (
                 <tr key={row.uuid} className="gp-person-row" onClick={() => openPerson(row)}>
@@ -787,7 +787,7 @@ const People = () => {
               ))
             ) : (
               <EmptyRow
-                span={8}
+                span={9}
                 message={
                   rows.length ? 'Nobody matches those filters.' : 'No people on the roster yet.'
                 }
