@@ -546,8 +546,8 @@ body.perf-warm-backdrop.dark {
 .perf-interactions .table-scroll td:nth-child(1) {
   padding-left: 16px !important;
 }
-.perf-interactions thead th:nth-child(9),
-.perf-interactions .table-scroll td:nth-child(9) {
+.perf-interactions thead th:nth-child(10),
+.perf-interactions .table-scroll td:nth-child(10) {
   padding-left: 12px !important;
   padding-right: 16px !important;
 }
@@ -579,32 +579,39 @@ body.perf-warm-backdrop.dark {
    last icon even with the overflow-x:auto fallback above. Date/From/
    DID/Charge each give up a couple of points to fund it — none of
    those needed their previous room once Action actually fits. */
+/* 10 columns since the call-quality badge landed (call-history/index.tsx):
+   Date, From, DID, To, Status, Quality, Duration, Wait Time, Charge, Action.
+   Action carries six icon buttons now (~220px + padding) so it takes a
+   fifth of the row; the rest sum with it to exactly 100. */
 .perf-interactions colgroup col:nth-child(1) {
-  width: 12% !important;
+  width: 11% !important;
 } /* Date */
 .perf-interactions colgroup col:nth-child(2) {
-  width: 12% !important;
+  width: 11% !important;
 } /* From */
 .perf-interactions colgroup col:nth-child(3) {
-  width: 12% !important;
+  width: 11% !important;
 } /* DID */
 .perf-interactions colgroup col:nth-child(4) {
-  width: 13% !important;
+  width: 12% !important;
 } /* To */
 .perf-interactions colgroup col:nth-child(5) {
   width: 8% !important;
 } /* Status */
 .perf-interactions colgroup col:nth-child(6) {
   width: 7% !important;
-} /* Duration */
+} /* Quality */
 .perf-interactions colgroup col:nth-child(7) {
-  width: 7% !important;
-} /* Wait Time */
+  width: 6% !important;
+} /* Duration */
 .perf-interactions colgroup col:nth-child(8) {
-  width: 10% !important;
-} /* Charge */
+  width: 6% !important;
+} /* Wait Time */
 .perf-interactions colgroup col:nth-child(9) {
-  width: 19% !important;
+  width: 8% !important;
+} /* Charge */
+.perf-interactions colgroup col:nth-child(10) {
+  width: 20% !important;
 } /* Action */
 
 /* `border-collapse: collapse` (mcm-page.css base) restated + `!important`
@@ -706,32 +713,34 @@ body.perf-warm-backdrop.dark {
    Utilization/Daily Stats) rather than right-aligning figures against a
    neighbour column. */
 .perf-interactions thead th:nth-child(1),
-.perf-interactions thead th:nth-child(6),
 .perf-interactions thead th:nth-child(7),
 .perf-interactions thead th:nth-child(8),
+.perf-interactions thead th:nth-child(9),
 .perf-interactions .table-scroll td:nth-child(1),
-.perf-interactions .table-scroll td:nth-child(6),
 .perf-interactions .table-scroll td:nth-child(7),
-.perf-interactions .table-scroll td:nth-child(8) {
+.perf-interactions .table-scroll td:nth-child(8),
+.perf-interactions .table-scroll td:nth-child(9) {
   font-variant-numeric: tabular-nums;
 }
 .perf-interactions thead th:nth-child(6),
 .perf-interactions thead th:nth-child(7),
 .perf-interactions thead th:nth-child(8),
+.perf-interactions thead th:nth-child(9),
 .perf-interactions .table-scroll td:nth-child(6),
 .perf-interactions .table-scroll td:nth-child(7),
-.perf-interactions .table-scroll td:nth-child(8) {
+.perf-interactions .table-scroll td:nth-child(8),
+.perf-interactions .table-scroll td:nth-child(9) {
   text-align: center;
 }
-/* Charge (8) is the row's final, most important figure — the only one
+/* Charge (9) is the row's final, most important figure — the only one
    of the three centered figure columns that gets the bolder ink
-   treatment. Duration (6) and Wait Time (7) share the table's plain
+   treatment. Duration (7) and Wait Time (8) share the table's plain
    default styling so they read as equal in weight to each other. */
-.perf-interactions .table-scroll td:nth-child(8) {
+.perf-interactions .table-scroll td:nth-child(9) {
   color: var(--ic-ink);
   font-weight: 600;
 }
-.dark .perf-interactions .table-scroll td:nth-child(8) {
+.dark .perf-interactions .table-scroll td:nth-child(9) {
   color: #f1f5f9;
 }
 
