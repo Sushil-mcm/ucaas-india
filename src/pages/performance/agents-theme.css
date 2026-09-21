@@ -190,15 +190,21 @@ body.perf-warm-backdrop.dark {
    from being squeezed to unreadable at in-between window widths (a
    maximised window resized down to ~80%, not just below the stack
    breakpoint) — the side column gives up its own width first. Stacks to
-   one column under 1300px (was 1100px — that only avoided a full stack,
-   the table was still visibly cramped for a while before it). */
+   one column under 1600px (was 1300px, before that 1100px). The 8-column
+   roster's own natural content width (`white-space: nowrap` headers +
+   real data) needs roughly 1100-1200px on its own — at a common
+   ~1366-1440px browser window, minus the sidebar rail and page padding,
+   there simply isn't 1100px *plus* the side column's 240px+gap left over
+   side-by-side, which is what was clipping the last column or forcing a
+   horizontal scroll the table shouldn't need. Full-width below 1600px
+   gives the table all of that room; the side panels drop underneath. */
 .mcm-page .perf-agents .ag-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
   gap: 16px;
   align-items: start;
 }
-@media (max-width: 1300px) {
+@media (max-width: 1600px) {
   .mcm-page .perf-agents .ag-layout {
     grid-template-columns: 1fr;
   }

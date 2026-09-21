@@ -570,23 +570,26 @@ body.perf-warm-backdrop.dark {
    pushed the table 10% wider than its own container and produced both
    the horizontal scrollbar and the clipped Action column (table-layout:
    fixed renders a column's specified width as given; it does not scale
-   columns down to fit when they overrun). Charge is widened to 11% here
-   (was 8%) — now that it's centered rather than right-padded against
-   Action (below), the extra width is what actually keeps a full ₹ figure
-   clear of Action's icon row instead of relying on a lopsided right
-   padding to buy the same clearance. From/DID each give up a point to
-   fund it. */
+   columns down to fit when they overrun).
+   Action is widened again here (10% -> 19%): at a ~1366px browser
+   window (a common laptop/half-monitor width — the card's own content
+   area works out to roughly 1150-1250px after the sidebar rail and
+   page padding), 10% left only ~120px for the 5 action icon buttons
+   (5 x 32px + gaps, ~190px needed), which is what was clipping the
+   last icon even with the overflow-x:auto fallback above. Date/From/
+   DID/Charge each give up a couple of points to fund it — none of
+   those needed their previous room once Action actually fits. */
 .perf-interactions colgroup col:nth-child(1) {
-  width: 14% !important;
+  width: 12% !important;
 } /* Date */
 .perf-interactions colgroup col:nth-child(2) {
-  width: 14% !important;
+  width: 12% !important;
 } /* From */
 .perf-interactions colgroup col:nth-child(3) {
-  width: 14% !important;
+  width: 12% !important;
 } /* DID */
 .perf-interactions colgroup col:nth-child(4) {
-  width: 15% !important;
+  width: 13% !important;
 } /* To */
 .perf-interactions colgroup col:nth-child(5) {
   width: 8% !important;
@@ -598,10 +601,10 @@ body.perf-warm-backdrop.dark {
   width: 7% !important;
 } /* Wait Time */
 .perf-interactions colgroup col:nth-child(8) {
-  width: 11% !important;
+  width: 10% !important;
 } /* Charge */
 .perf-interactions colgroup col:nth-child(9) {
-  width: 10% !important;
+  width: 19% !important;
 } /* Action */
 
 /* `border-collapse: collapse` (mcm-page.css base) restated + `!important`
