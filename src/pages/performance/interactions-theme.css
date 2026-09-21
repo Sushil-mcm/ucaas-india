@@ -1075,7 +1075,7 @@ body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full']
    Call Intelligence / AI Recap popups (call-history renderCallPopup,
    Performance only). Portalled to <body>, so not under `.perf-interactions`;
    scoped by `.ci-modal`. Same warm language as the other dialogs: white
-   card, cream header with a bold title + icon chip, People's header/label
+   card, white header with a bold title + icon chip, People's header/label
    values for the inner section bars.
    ------------------------------------------------------------ */
 .ci-modal {
@@ -1096,7 +1096,7 @@ body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full']
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: #fff6e9;
+  background: #ffffff;
   border-bottom: 1px solid rgba(242, 153, 74, 0.25);
   flex: none;
 }
