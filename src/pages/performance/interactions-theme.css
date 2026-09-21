@@ -1161,7 +1161,7 @@ body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full']
    the warm palette instead of the cool blue/grey. */
 .ci-modal .grid > section > div:first-child,
 .ci-modal .grid > aside > div:first-child {
-  background: #fff6e9;
+  background: #ffffff;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
   padding: 11px 20px;
 }
