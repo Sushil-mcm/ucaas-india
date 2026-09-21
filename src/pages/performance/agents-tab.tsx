@@ -8,7 +8,6 @@ import {
   ArrowLeftRight,
   AlertCircle,
   Clock,
-  Headset,
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
@@ -216,7 +215,6 @@ const AgentsTab = ({
       (row) => row.status === 'Busy' || row.status === 'Do Not Disturb',
     ).length;
     const offlineStatusCount = rows.filter((row) => row.status === 'Offline').length;
-    const readyPct = rows.length ? Math.round((onQueueCount / rows.length) * 100) : 0;
 
     /* Top performers -- the three highest handled-today counts, ties
        broken by name so the list doesn't reorder on every re-render. */
@@ -243,7 +241,6 @@ const AgentsTab = ({
       onQueueCount,
       auxCount,
       offlineStatusCount,
-      readyPct,
       topThree,
     };
   }, [rows]);
@@ -265,7 +262,6 @@ const AgentsTab = ({
     onQueueCount,
     auxCount,
     offlineStatusCount,
-    readyPct,
     topThree,
   } = kpi;
 
@@ -556,7 +552,6 @@ const AgentsTab = ({
             onCallCount={onCallCount}
             auxCount={auxCount}
             offlineCount={offlineStatusCount}
-            readyPct={readyPct}
           />
           <StatusBreakdownCard breakdown={statusBreakdown} maxCount={maxStatusCount} />
           <TopPerformersCard rows={topThree} />
@@ -582,14 +577,12 @@ const AgentStatusOverview = ({
   onCallCount,
   auxCount,
   offlineCount,
-  readyPct,
 }: {
   total: number;
   onQueueCount: number;
   onCallCount: number;
   auxCount: number;
   offlineCount: number;
-  readyPct: number;
 }) => {
   const counts = { onQueue: onQueueCount, onCall: onCallCount, aux: auxCount, offline: offlineCount };
   const r = 52;
@@ -647,12 +640,6 @@ const AgentStatusOverview = ({
             </span>
           </div>
         ))}
-      </div>
-      <div className="ag-tip-banner">
-        <Headset size={16} />
-        <span>
-          Keep your team productive! {readyPct}% of your team is ready to take calls.
-        </span>
       </div>
     </div>
   );

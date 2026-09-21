@@ -323,24 +323,6 @@ body.perf-warm-backdrop.dark {
   font-weight: 700;
   color: var(--aa-ink);
 }
-.mcm-page .perf-agents .ag-tip-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fdecc8;
-  border-radius: 12px;
-  padding: 10px 12px;
-  color: #7a5a1e;
-}
-.mcm-page .perf-agents .ag-tip-banner svg {
-  flex: none;
-  color: #c96f1f;
-}
-.mcm-page .perf-agents .ag-tip-banner span {
-  font-size: 11.5px;
-  font-weight: 600;
-  line-height: 1.35;
-}
 
 /* Status breakdown — a bar per live status, widest count first. */
 .mcm-page .perf-agents .ag-breakdown-list {
