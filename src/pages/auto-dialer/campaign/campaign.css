@@ -792,11 +792,11 @@
   -webkit-backdrop-filter: none;
 }
 .cmp:not(.embedded) .pc-head {
-  padding: 2px 4px 14px;
+  padding: 14px 4px 14px;
   border-bottom: 0;
 }
 .cmp:not(.embedded) .pc-head h3 {
-  font-size: 17px;
+  font-size: 22px;
   color: var(--ink);
 }
 
