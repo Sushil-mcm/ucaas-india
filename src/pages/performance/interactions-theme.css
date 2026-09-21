@@ -352,17 +352,26 @@ body.perf-warm-backdrop.dark {
   min-height: 36px !important;
   height: 36px !important;
   border-radius: 9999px !important;
-  border-color: rgba(249, 115, 22, 0.2) !important;
+  border: none !important;
   background: #fff !important;
   box-shadow: none !important;
   overflow: hidden !important;
 }
-.perf-interactions .adv-filter-panel .custom-react-select__control:hover {
-  border-color: rgba(249, 115, 22, 0.35) !important;
+.perf-interactions .adv-filter-panel .custom-react-select__control:hover,
+.perf-interactions .adv-filter-panel .custom-react-select__control--is-focused,
+.perf-interactions .adv-filter-panel .custom-react-select__control--menu-is-open {
+  border: none !important;
+  box-shadow: none !important;
 }
-.perf-interactions .adv-filter-panel .custom-react-select__control--is-focused {
-  border-color: var(--ic-accent) !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+/* The opened list is portalled to <body> (CustomSelect's default), so it
+   isn't under `.perf-interactions`; `:has()` scopes it to this page while
+   the filter panel is on screen. Border gone, soft shadow kept so it
+   still lifts off the table. */
+body:has(.perf-interactions .adv-filter-panel) .custom-react-select__menu {
+  border: none !important;
+  box-shadow:
+    0 10px 24px -4px rgba(160, 95, 30, 0.18),
+    0 4px 8px -2px rgba(160, 95, 30, 0.08) !important;
 }
 .perf-interactions .adv-filter-panel .custom-react-select__value-container {
   padding-left: 14px !important;
