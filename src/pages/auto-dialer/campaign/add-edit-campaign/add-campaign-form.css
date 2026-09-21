@@ -1,0 +1,104 @@
+/* Add / Edit Campaign form, shown as a centred modal.
+   Scoped under `.acf` (the form's root) so no other form is touched.
+   The steps were sized against a full-height side drawer (100vh - 22.5rem);
+   in the modal the step region scrolls inside the form instead. */
+
+/* Steps: drop the viewport-height coupling, the region above scrolls. */
+.acf [class*='22.5rem'],
+.acf [class*='100vh_-_41rem'],
+.acf [class*='100vh_-_30rem'] {
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Campaign type cards */
+.acf [role='radiogroup'] > label {
+  border: 1.5px solid rgba(225, 200, 165, 0.9);
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px 16px;
+  box-shadow: none;
+  backdrop-filter: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.acf [role='radiogroup'] > label:hover {
+  border-color: #f2994a;
+}
+.acf [role='radiogroup'] > label:has([data-state='checked']) {
+  border-color: #f2994a;
+  background: #fff6ec;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.14);
+}
+.acf [role='radiogroup'] > label h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.acf [role='radiogroup'] > label p {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* Step tabs: a white tray, the current step an orange wash pill */
+.acf .overflow-x-auto.border-b {
+  border-bottom: 0;
+}
+.acf [role='tablist'] {
+  gap: 4px;
+  padding: 4px;
+  min-height: 0;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 14px;
+  background: #fff;
+}
+.acf [role='tab'] {
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  color: #5a667e;
+  box-shadow: none;
+}
+.acf [role='tab']:hover {
+  color: #c96f1f;
+}
+.acf [role='tab'][data-state='active'] {
+  background: #fff1e0;
+  color: #c96f1f;
+  box-shadow: none;
+}
+
+/* Fields */
+.acf [data-slot='label'],
+.acf label[data-slot='label'] {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2e2d35;
+}
+.acf [data-slot='input'],
+.acf textarea {
+  border: 1px solid rgba(225, 200, 165, 0.9) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.acf [data-slot='input']:hover,
+.acf textarea:hover {
+  border-color: #f2994a !important;
+}
+.acf [data-slot='input']:focus,
+.acf textarea:focus {
+  border-color: #f2994a !important;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15) !important;
+}
+.acf [data-slot='input']:disabled {
+  background: #faf5ee !important;
+}
+
+/* Footer */
+.acf form > div:last-child {
+  border-top: 1px solid rgba(225, 200, 165, 0.6);
+  padding-top: 14px;
+}

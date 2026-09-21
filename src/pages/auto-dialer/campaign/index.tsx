@@ -1079,16 +1079,15 @@ const Campaign = ({
               ? `Update (${drawerState?.selectedCampaign?.name})`
               : 'Add Campaign'
           }
-          isTab={false}
           isHeader
-          enableResponsive
-          width="42rem"
-          responsiveWidth="95%"
-          headerClassName="min-h-8 px-4 sm:px-5"
+          centered
+          portal
+          width="min(62rem, calc(100vw - 2rem))"
+          headerClassName="px-6"
           handleClose={() => setDrawerState({ selectedCampaign: null, isModalOpen: false })}
           content={
-            <div className="h-full">
-              <div className="h-full sm:min-w-[640px] md:min-w-0">
+            <div style={{ height: 'min(46rem, calc(85vh - 6.5rem))' }}>
+              <div className="h-full">
                 <AddEditCampaign
                   drawerState={drawerState?.isModalOpen}
                   setDrawerState={() =>

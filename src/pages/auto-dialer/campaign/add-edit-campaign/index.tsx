@@ -27,6 +27,7 @@ import { defaultCampaignDates, followZoneDates } from '@/lib/campaign-dates';
 import { readBrowserZone } from '@/lib/campaign-timezone';
 import { useCampaignTimers } from '@/hooks/use-campaign-timers';
 import { planCampaignTimerSeed } from '@/lib/campaign-timers';
+import './add-campaign-form.css';
 
 const TABS_ORDER = [
   CAMPAIGN_UPSERT_TAB_CONSTANT.BASIC_INFORMATION,
@@ -452,7 +453,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
           isFetchingCampaignDetail
         }
       >
-        <div className="flex h-full w-full min-h-0 flex-col gap-4 justify-between">
+        <div className="acf flex h-full w-full min-h-0 flex-col gap-4 justify-between">
           <RadioGroup
             value={dialMethod}
             disabled={isEditMode}
@@ -530,7 +531,7 @@ const AddEditCampaign: FC<any> = ({ setDrawerState, selectedCampaign }) => {
                     Prev
                   </Button>
                   {activeTab !== LAST_TAB && (
-                    <Button variant={'outline'} type="button" onClick={handleNext}>
+                    <Button variant={'primary'} type="button" onClick={handleNext}>
                       Next
                     </Button>
                   )}
