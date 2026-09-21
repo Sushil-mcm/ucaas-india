@@ -1009,6 +1009,11 @@ const Campaign = ({
 
         <div className="panel-card">
           <div className="pc-head">
+            {!embedded ? (
+              <span className="pc-ic">
+                <Ic n="list" />
+              </span>
+            ) : null}
             <h3>All campaigns</h3>
             {embedded ? (
               Object.keys(liveBoards).length ? (

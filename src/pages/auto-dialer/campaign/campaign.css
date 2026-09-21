@@ -795,6 +795,19 @@
   padding: 14px 4px 14px;
   border-bottom: 0;
 }
+.cmp:not(.embedded) .pc-head .pc-ic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #fff1e0;
+  color: #f2701f;
+}
+.cmp:not(.embedded) .pc-head .pc-ic .ic {
+  width: 19px;
+  height: 19px;
+}
 .cmp:not(.embedded) .pc-head h3 {
   font-size: 22px;
   color: var(--ink);
