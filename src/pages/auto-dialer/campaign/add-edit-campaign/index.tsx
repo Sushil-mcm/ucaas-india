@@ -29,16 +29,6 @@ import { useCampaignTimers } from '@/hooks/use-campaign-timers';
 import { planCampaignTimerSeed } from '@/lib/campaign-timers';
 import './add-campaign-form.css';
 
-const TABS_ORDER = [
-  CAMPAIGN_UPSERT_TAB_CONSTANT.BASIC_INFORMATION,
-  CAMPAIGN_UPSERT_TAB_CONSTANT.AGENTS,
-  CAMPAIGN_UPSERT_TAB_CONSTANT.SETTING,
-  CAMPAIGN_UPSERT_TAB_CONSTANT.SETTING_PERMISSION,
-  CAMPAIGN_UPSERT_TAB_CONSTANT.INBOUND,
-  CAMPAIGN_UPSERT_TAB_CONSTANT.REVIEW,
-];
-const LAST_TAB = TABS_ORDER[TABS_ORDER.length - 1];
-
 /* The rail lists every step in the order the form has always shown them,
    each with a one-line hint under its title. */
 const STEP_RAIL = [
@@ -50,6 +40,14 @@ const STEP_RAIL = [
   { title: CAMPAIGN_UPSERT_TAB_CONSTANT.INBOUND, description: 'Where inbound calls go' },
   { title: CAMPAIGN_UPSERT_TAB_CONSTANT.REVIEW, description: 'Check everything and launch' },
 ];
+
+/* Next / Prev walk the rail in its own order. Media is the one step with no
+   content of its own (hold music is set under Inbound Routing), so stepping
+   through it would land on a blank page. */
+const TABS_ORDER = STEP_RAIL.map((step) => step.title).filter(
+  (title) => title !== CAMPAIGN_UPSERT_TAB_CONSTANT.MEDIA,
+);
+const LAST_TAB = TABS_ORDER[TABS_ORDER.length - 1];
 
 const collectFormErrorMessages = (errorNode: any): string[] => {
   if (!errorNode) return [];
