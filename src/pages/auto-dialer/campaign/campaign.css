@@ -620,8 +620,8 @@
 
 /* KPI tiles: six separate cards, icon badge left, text right */
 .cmp:not(.embedded) .kpis.kpis-cols-6 {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -631,8 +631,8 @@
 .cmp:not(.embedded) .kpi {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px;
+  gap: 9px;
+  padding: 12px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 0 0 1px var(--line-2);
@@ -643,13 +643,13 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
 }
 .cmp:not(.embedded) .kpi-ic .ic {
-  width: 22px;
-  height: 22px;
+  width: 17px;
+  height: 17px;
 }
 .cmp:not(.embedded) .kpi-ic.orange {
   background: #fff1e0;
@@ -679,28 +679,40 @@
   min-width: 0;
 }
 .cmp:not(.embedded) .kpi .k {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cmp:not(.embedded) .kpi .v {
-  margin-top: 5px;
-  font-size: 28px;
+  margin-top: 4px;
+  font-size: 24px;
 }
 .cmp:not(.embedded) .kpi .v.num {
   font-family: inherit;
 }
 .cmp:not(.embedded) .kpi .v small {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
 }
 .cmp:not(.embedded) .kpi .d {
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 4px;
+  font-size: 11px;
   font-weight: 500;
+  line-height: 1.3;
+}
+@media (max-width: 1180px) {
+  .cmp:not(.embedded) .kpis.kpis-cols-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* Toolbar: one white rounded card holding search + chips */
 .cmp:not(.embedded) .tbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   gap: 10px;
   margin-bottom: 18px;
   padding: 12px 14px;
@@ -709,7 +721,35 @@
   box-shadow: 0 0 0 1px var(--line-2);
 }
 .cmp:not(.embedded) .cmp-search {
-  flex: 0 1 260px;
+  width: 100%;
+  max-width: 280px;
+}
+.cmp:not(.embedded) .tbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.cmp:not(.embedded) .fdrop {
+  gap: 7px;
+  cursor: pointer;
+}
+.cmp:not(.embedded) .fdrop .fdrop-k {
+  font-weight: 600;
+  color: var(--ink-4);
+}
+.cmp:not(.embedded) .fdrop .fdrop-caret {
+  width: 12px;
+  height: 12px;
+  transform: rotate(90deg);
+}
+@media (max-width: 760px) {
+  .cmp:not(.embedded) .tbar {
+    grid-template-columns: 1fr;
+  }
+  .cmp:not(.embedded) .cmp-search {
+    max-width: none;
+  }
 }
 .cmp:not(.embedded) .cmp-search input {
   height: 38px;
@@ -775,4 +815,52 @@
   gap: 7px;
   font-size: 12.5px;
   color: var(--ink-3);
+}
+
+/* List table styled like Directory > People: cream header with a 3px orange
+   underline, faint row rules, orange-barred hover, and a plain footer bar.
+   Overrides TableManager's own utility classes by specificity. */
+.cmp:not(.embedded) .panel-card div.min-h-0.flex-1.rounded-xl {
+  border: 0;
+  border-radius: 0;
+}
+.cmp:not(.embedded) .panel-card .table-scroll {
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .panel-card thead,
+.cmp:not(.embedded) .panel-card thead tr {
+  background: #fff6e9;
+}
+.cmp:not(.embedded) .panel-card th {
+  height: 40px;
+  background: #fff6e9;
+  color: #1a1a1a;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  border-radius: 0;
+}
+.cmp:not(.embedded) .panel-card tbody {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.cmp:not(.embedded) .panel-card td {
+  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+}
+.cmp:not(.embedded) .panel-card tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.cmp:not(.embedded) .panel-card div.z-10.rounded-xl {
+  border: 0;
+  border-top: 1px solid rgba(150, 100, 50, 0.12);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 12px 22px 14px;
 }

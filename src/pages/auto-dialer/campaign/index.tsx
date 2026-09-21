@@ -10,6 +10,12 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import StartPreflight from './start-preflight';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Ic, McmIconSprite } from '@/components/mcm/icons';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { capitalizeFirstLetter, convertDateFormateApis, handleAlert } from '@/lib/utils';
 import {
   allNumbersList,
@@ -179,6 +185,48 @@ export interface ModalState {
   data: any[];
   type: string | null;
 }
+
+const FilterDropdown = ({
+  prefix,
+  options,
+  value,
+  onChange,
+}: {
+  prefix: string;
+  options: Array<[string, string]>;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const current = options.find(([optionValue]) => optionValue === value);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={`fchip fdrop${value !== 'ALL' ? ' on' : ''}`}
+          aria-label={`Filter by ${prefix.toLowerCase()}`}
+        >
+          <span className="fdrop-k">{prefix}</span>
+          {current?.[1] ?? value}
+          <Ic n="chev" className="fdrop-caret" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="border-0 min-w-[190px] p-1.5">
+        {options.map(([optionValue, label]) => (
+          <DropdownMenuItem
+            key={optionValue}
+            onClick={() => onChange(optionValue)}
+            className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[13px] font-medium hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary ${
+              optionValue === value ? 'bg-primary/10 text-primary font-semibold' : ''
+            }`}
+          >
+            {label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const STATUS_FILTERS: Array<[string, string]> = [
   ['ALL', 'All'],
@@ -943,30 +991,20 @@ const Campaign = ({
             />
           </div>
 
-          {STATUS_FILTERS.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={`fchip${statusFilter === value ? ' on' : ''}`}
-              onClick={() => setStatusFilter(value)}
-            >
-              {value === 'PROCESSING' ? <span className="dot green" /> : null}
-              {label}
-            </button>
-          ))}
-
-          <span style={{ width: 1, height: 20, background: 'var(--line)', margin: '0 3px' }} />
-
-          {MODE_FILTERS.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={`fchip${modeFilter === value ? ' on' : ''}`}
-              onClick={() => setModeFilter(value)}
-            >
-              {label}
-            </button>
-          ))}
+          <div className="tbar-center">
+            <FilterDropdown
+              prefix="Status"
+              options={STATUS_FILTERS}
+              value={statusFilter}
+              onChange={setStatusFilter}
+            />
+            <FilterDropdown
+              prefix="Mode"
+              options={MODE_FILTERS}
+              value={modeFilter}
+              onChange={setModeFilter}
+            />
+          </div>
         </div>
 
         <div className="panel-card">
