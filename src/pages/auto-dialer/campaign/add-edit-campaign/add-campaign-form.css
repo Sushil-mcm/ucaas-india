@@ -81,6 +81,8 @@
   align-items: stretch;
   gap: 4px;
   padding: 8px;
+  width: 100%;
+  height: auto;
   min-width: 0;
   min-height: 0;
   border: 1px solid rgba(225, 200, 165, 0.9);
@@ -153,7 +155,8 @@
   }
   .acf [role='tablist'] {
     flex-direction: row;
-    min-width: max-content;
+    width: max-content;
+    min-width: 100%;
   }
 }
 
