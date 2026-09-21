@@ -100,34 +100,9 @@ body.perf-warm-backdrop.dark {
 }
 
 /* ------------------------------------------------------------
-   2. KPI cards — 4 frosted glass tiles.
+   2. KPI tiles — the shared PerfKpiTile (perf-kpi-tile.css), same as
+   Queues/Agents/Calls; no tab-specific card styling needed here.
    ------------------------------------------------------------ */
-.mcm-page .perf-flows .stat {
-  background: var(--fl-glass);
-  backdrop-filter: var(--fl-glass-blur);
-  -webkit-backdrop-filter: var(--fl-glass-blur);
-  border: 1px solid var(--fl-glass-border);
-  border-radius: 20px;
-  box-shadow: var(--fl-glass-shadow);
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-.mcm-page .perf-flows .stat:hover {
-  border-color: rgba(249, 115, 22, 0.3);
-  box-shadow: var(--fl-glass-shadow-hover);
-  transform: translateY(-2px);
-}
-.mcm-page .perf-flows .stat .k {
-  color: var(--fl-muted);
-}
-.mcm-page .perf-flows .stat .v {
-  color: var(--fl-ink);
-}
-.mcm-page .perf-flows .stat .d {
-  color: var(--fl-muted) !important;
-}
 
 /* ------------------------------------------------------------
    3. Flows table — 20px frosted glass card, sticky frosted header,

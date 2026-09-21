@@ -4,7 +4,9 @@ import { Workflow, MapPin, Activity, Flame, Info } from 'lucide-react';
 import TableManager from '@/components/custom/table-manager';
 import { handleDate } from '@/components/custom/date-dropdown/constant';
 import { callList, ivrList } from '@/services/api';
-import PerfStatCard from './stat-card';
+import PerfKpiTile from './perf-kpi-tile';
+import { useKpiHistory } from '@/pages/dashboard/home/use-kpi-history';
+import './perf-kpi-tile.css';
 import './flows-theme.css';
 
 const TODAY_RANGE = handleDate('Today');
@@ -83,6 +85,15 @@ const FlowsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
     [flows, entriesByExtension],
   );
 
+  /* Same rolling in-memory sampler Queues/Agents/Calls use for their tile
+     sparklines and "vs last 30 min" pills — no historical endpoint exists. */
+  const { getHistory, getTrend } = useKpiHistory({
+    flows: flows.length,
+    sites: siteEntries.length,
+    entries: totalEntriesToday,
+    busiest: busiestFlow ? busiestFlow.count : 0,
+  });
+
   const columns = [
     {
       header: 'Flow',
@@ -124,45 +135,54 @@ const FlowsTab = ({ globalSearch }: { globalSearch?: string } = {}) => {
           extension today — per-path analytics aren't available yet.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <PerfStatCard
-          label="Total flows"
-          value={String(flows.length)}
-          /* The only card of the four without a caption, which left it
-             short against its neighbours. Site *count* rather than a
-             repeat of the per-site split next door: it says something the
-             "Flows by site" card doesn't, and it's read off the same
-             derived `siteEntries` rather than a second count that could
-             disagree with it. Dropped entirely at zero flows, where
-             "across 0 sites" would be noise. */
-          sub={
+      <div className="perf-kpi-row">
+        <PerfKpiTile
+          icon={Workflow}
+          color="#60a5fa"
+          title="Total Flows"
+          subtitle={
             siteEntries.length
               ? `across ${siteEntries.length} site${siteEntries.length === 1 ? '' : 's'}`
-              : undefined
+              : 'no flows yet'
           }
-          icon={Workflow}
+          value={flows.length}
+          trend={getTrend('flows')}
+          goodWhenUp
+          chart={{ type: 'area', data: getHistory('flows') }}
         />
-        <PerfStatCard
-          label="Flows by site"
-          value={siteEntries.length ? siteEntries[0][0] : '—'}
-          sub={
+        <PerfKpiTile
+          icon={MapPin}
+          color="#34d399"
+          title="Flows By Site"
+          subtitle={
             siteEntries.length
               ? siteEntries.map(([site, count]) => `${site}: ${count}`).join(' · ')
-              : undefined
+              : 'no sites yet'
           }
-          icon={MapPin}
+          value={siteEntries.length ? siteEntries[0][0] : '—'}
+          trend={getTrend('sites')}
+          goodWhenUp
+          chart={{ type: 'bar', data: getHistory('sites') }}
         />
-        <PerfStatCard
-          label="Entries today"
-          value={String(totalEntriesToday)}
-          sub="across all flows"
+        <PerfKpiTile
           icon={Activity}
+          color="#fb923c"
+          title="Entries Today"
+          subtitle="across all flows"
+          value={totalEntriesToday}
+          trend={getTrend('entries')}
+          goodWhenUp
+          chart={{ type: 'line', data: getHistory('entries') }}
         />
-        <PerfStatCard
-          label="Busiest flow"
-          value={busiestFlow ? busiestFlow.name : '—'}
-          sub={busiestFlow ? `${busiestFlow.count} entries today` : 'nothing routed yet'}
+        <PerfKpiTile
           icon={Flame}
+          color="#c084fc"
+          title="Busiest Flow"
+          subtitle={busiestFlow ? `${busiestFlow.count} entries today` : 'nothing routed yet'}
+          value={busiestFlow ? busiestFlow.name : '—'}
+          trend={getTrend('busiest')}
+          goodWhenUp
+          chart={{ type: 'bar', data: getHistory('busiest') }}
         />
       </div>
       <TableManager
