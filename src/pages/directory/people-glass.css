@@ -262,7 +262,7 @@
 }
 .gp-people th:nth-child(5),
 .gp-people td:nth-child(5) {
-  width: 11%;
+  width: 10%;
 }
 .gp-people th:nth-child(6),
 .gp-people td:nth-child(6) {
@@ -285,7 +285,7 @@
    as a percentage on anything wider. */
 .gp-people th:nth-child(9),
 .gp-people td:nth-child(9) {
-  width: 19%;
+  width: 20%;
   min-width: 236px;
 }
 /* This is the scrollbar that now actually starts where the rows do — same
