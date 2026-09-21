@@ -1070,3 +1070,141 @@ body.perf-warm-backdrop .qdv-root .table-scroll tbody td [class*='rounded-full']
   width: 14px !important;
   height: 14px !important;
 }
+
+/* ------------------------------------------------------------
+   Call Intelligence / AI Recap popups (call-history renderCallPopup,
+   Performance only). Portalled to <body>, so not under `.perf-interactions`;
+   scoped by `.ci-modal`. Same warm language as the other dialogs: white
+   card, cream header with a bold title + icon chip, People's header/label
+   values for the inner section bars.
+   ------------------------------------------------------------ */
+.ci-modal {
+  background: #ffffff !important;
+  border: 1px solid rgba(242, 153, 74, 0.3) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 60px rgba(160, 95, 30, 0.25) !important;
+  display: flex !important;
+  flex-direction: column;
+  max-height: 86vh;
+}
+.ci-modal--tall {
+  height: 78vh;
+  max-width: 64rem !important;
+}
+.ci-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fff6e9;
+  border-bottom: 1px solid rgba(242, 153, 74, 0.25);
+  flex: none;
+}
+.ci-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(242, 153, 74, 0.16);
+  color: #c96f1f;
+  flex: none;
+}
+.ci-modal-titles {
+  flex: 1;
+  min-width: 0;
+}
+.ci-modal-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #2a2733;
+  line-height: 1.2;
+}
+.ci-modal-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #8a7a67;
+}
+.ci-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(242, 153, 74, 0.25);
+  color: #6b5c4d;
+  cursor: pointer;
+  flex: none;
+}
+.ci-modal-close:hover {
+  border-color: #f2994a;
+  color: #c96f1f;
+}
+.ci-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+.ci-modal--tall .ci-modal-body {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+/* Call Intelligence inner layout (pages/phone/transcript-info.tsx) —
+   section bars take People's header treatment, sentiment/summary boxes
+   the warm palette instead of the cool blue/grey. */
+.ci-modal .grid > section > div:first-child,
+.ci-modal .grid > aside > div:first-child {
+  background: #fff6e9;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  padding: 11px 20px;
+}
+.ci-modal .grid > section > div:first-child p,
+.ci-modal .grid > aside > div:first-child p {
+  color: #1a1a1a;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+.ci-modal .grid > section {
+  border-right-color: rgba(242, 153, 74, 0.2);
+}
+.ci-modal .grid > aside > div:last-child {
+  background: #fffdfb;
+}
+.ci-modal [class*='bg-gray-50'][class*='rounded-xl'] {
+  background: #fff6e9;
+  border-color: rgba(242, 153, 74, 0.28);
+}
+.ci-modal [class*='border-dashed'] {
+  border-color: rgba(242, 153, 74, 0.4);
+  background: #fffdfb;
+}
+.ci-modal [class*='rounded-2xl'][class*='bg-primary/10'] {
+  background: rgba(242, 153, 74, 0.14);
+  border-color: rgba(242, 153, 74, 0.35);
+}
+.ci-modal [class*='rounded-2xl'][class*='bg-gray-50'] {
+  background: #faf7f2;
+  border-color: rgba(150, 100, 50, 0.16);
+}
+.ci-modal .grid ~ div {
+  background: #fffdfb;
+  border-top: 1px solid rgba(242, 153, 74, 0.25);
+  padding: 12px 20px;
+}
+.ci-modal .grid ~ div > p {
+  color: #1a1a1a;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+.ci-modal input[type='range'] {
+  accent-color: #f2994a;
+}

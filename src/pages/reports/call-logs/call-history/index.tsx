@@ -21,7 +21,7 @@ import AudioModal from '@/pages/phone/audio-dialog';
 import CommonFilter, { transFilterObject } from '@/components/custom/custom-filter';
 import DateDropdown from '@/components/custom/date-dropdown';
 import { dropdownCallInitialVal, handleDate } from '@/components/custom/date-dropdown/constant';
-import { Merge, Sparkles, X } from 'lucide-react';
+import { AudioLines, Merge, Sparkles, X } from 'lucide-react';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -1071,6 +1071,45 @@ const CallHistory = ({
     </Dialog>
   );
 
+  /* Call Intelligence / AI Recap as a centered popup with its own titled
+     header — Performance only (`detailsAsModal`); every other caller keeps
+     the right-side SideDrawer for both, untouched. Styled by `.ci-modal`
+     in interactions-theme.css. */
+  const renderCallPopup = (
+    isOpen: boolean,
+    onClose: () => void,
+    title: string,
+    subtitle: string,
+    icon: React.ReactNode,
+    content: React.ReactNode,
+    tall = false,
+  ) => (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className={`ci-modal ${tall ? 'ci-modal--tall' : ''} sm:max-w-4xl w-full p-0 gap-0 overflow-hidden`}
+        overlayClassName="bg-black/30 backdrop-blur-sm"
+      >
+        <div className="ci-modal-head">
+          <span className="ci-modal-icon">{icon}</span>
+          <div className="ci-modal-titles">
+            <DialogTitle className="ci-modal-title">{title}</DialogTitle>
+            <p className="ci-modal-sub">{subtitle}</p>
+          </div>
+          <DialogClose aria-label="Close" className="ci-modal-close">
+            <X className="h-4 w-4" />
+          </DialogClose>
+        </div>
+        <div className="ci-modal-body">{content}</div>
+      </DialogContent>
+    </Dialog>
+  );
+
   const Filters = embedded ? (
     <div className="flex w-full flex-wrap items-center justify-between gap-2 filters">
       {searchInput}
@@ -1226,41 +1265,67 @@ const CallHistory = ({
             content={<QueueDetailsView rowData={rowData} />}
           />
         ))}
-      {drawerState?.recap && (
-        <SideDrawer
-          isHeader
-          isOpen={drawerState?.recap}
-          title="AI Recap"
-          backgroundStyle="bg-transparent"
-          handleClose={() => setDrawerState((prev) => ({ ...prev, recap: false }))}
-          content={
-            <div className="p-3">
-              <AiCallRecap
-                callUuid={recapState.callUuid}
-                transcriptFile={recapState.transcriptFile}
-              />
-            </div>
-          }
-        />
-      )}
+      {drawerState?.recap &&
+        (detailsAsModal ? (
+          renderCallPopup(
+            true,
+            () => setDrawerState((prev) => ({ ...prev, recap: false })),
+            'AI Recap',
+            'What was discussed and what happens next.',
+            <Sparkles className="h-4 w-4" />,
+            <AiCallRecap callUuid={recapState.callUuid} transcriptFile={recapState.transcriptFile} />,
+          )
+        ) : (
+          <SideDrawer
+            isHeader
+            isOpen={drawerState?.recap}
+            title="AI Recap"
+            backgroundStyle="bg-transparent"
+            handleClose={() => setDrawerState((prev) => ({ ...prev, recap: false }))}
+            content={
+              <div className="p-3">
+                <AiCallRecap
+                  callUuid={recapState.callUuid}
+                  transcriptFile={recapState.transcriptFile}
+                />
+              </div>
+            }
+          />
+        ))}
 
-      {drawerState?.transcription && (
-        <SideDrawer
-          isHeader
-          isOpen={drawerState?.transcription}
-          title="Call Intelligence"
-          backgroundStyle="bg-transparent"
-          handleClose={() => setDrawerState((prev) => ({ ...prev, transcription: false }))}
-          content={
+      {drawerState?.transcription &&
+        (detailsAsModal ? (
+          renderCallPopup(
+            true,
+            () => setDrawerState((prev) => ({ ...prev, transcription: false })),
+            'Call Intelligence',
+            'Transcript, sentiment, summary and recording.',
+            <AudioLines className="h-4 w-4" />,
             <TranscriptInfo
               initialData={transcriptionState.src}
               transcriptSrcURL={transcriptionState.url}
               callUuid={transcriptionState.callUuid}
               setTranscriptionState={setTranscriptionState}
-            />
-          }
-        />
-      )}
+            />,
+            true,
+          )
+        ) : (
+          <SideDrawer
+            isHeader
+            isOpen={drawerState?.transcription}
+            title="Call Intelligence"
+            backgroundStyle="bg-transparent"
+            handleClose={() => setDrawerState((prev) => ({ ...prev, transcription: false }))}
+            content={
+              <TranscriptInfo
+                initialData={transcriptionState.src}
+                transcriptSrcURL={transcriptionState.url}
+                callUuid={transcriptionState.callUuid}
+                setTranscriptionState={setTranscriptionState}
+              />
+            }
+          />
+        ))}
       {selectedAiCallUuid ? (
         <AiSessionDetailDrawer
           session={selectedAiSession}
