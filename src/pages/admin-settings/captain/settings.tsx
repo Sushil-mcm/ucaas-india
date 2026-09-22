@@ -4,6 +4,7 @@ import { ChevronRight, Save, Shield, BookOpenText, Zap, Bot } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 type Assistant = {
   id: string;
@@ -51,6 +52,9 @@ const ControlCard = ({
 );
 
 const CaptainSettings = () => {
+  useSetAdminPageMeta({
+    description: 'Configure the AI engine and assistant behaviour.',
+  });
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [activeId, setActiveId] = useState<string>('');
   const [handoffMessage, setHandoffMessage] = useState('');
@@ -229,13 +233,8 @@ const CaptainSettings = () => {
   return (
     <div className="flex h-full w-full flex-col gap-6 overflow-y-auto p-6">
 
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">Captain Settings</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">Configure the AI engine and assistant behaviour.</div>
-        </div>
-        {assistants.length > 1 && (
+      {assistants.length > 1 && (
+        <AdminHeadActions>
           <select
             value={activeId}
             onChange={(e) => handleAssistantChange(e.target.value)}
@@ -245,8 +244,8 @@ const CaptainSettings = () => {
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-        )}
-      </div>
+        </AdminHeadActions>
+      )}
 
       {/* Engine strip — Enable + Model */}
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
