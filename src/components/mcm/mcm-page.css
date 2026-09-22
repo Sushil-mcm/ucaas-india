@@ -3585,6 +3585,19 @@
   color: var(--ink-2);
   gap: 10px;
 }
+
+/* Rows are pills, so they need a seam between them. A section and the page
+   inside it are both lit at once -- Captain above Playground -- and with the
+   rows flush they fused into one tall block with no visible boundary.
+
+   Set on the elements that actually paint a fill: the trigger itself and the
+   leaf tiles. Not `.h-14`, which also matches the trigger's inner div -- that
+   div is deliberately transparent, and spacing it would pad the inside of the
+   pill instead of separating pills from each other. */
+.mcm-admin .mcm-adminnav [data-slot='accordion-trigger'],
+.mcm-admin .mcm-adminnav .min-h-14 {
+  margin-bottom: 4px;
+}
 /* The same warm hue the rail hovers with, at less than half strength. At full
    strength this was the exact fill the lit row uses, so pointing at any row
    made it look as current as the row you were actually on. Kept in step with
