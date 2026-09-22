@@ -355,13 +355,26 @@ const CaptainAssistants = () => {
 
   // Helper to format text in Description
   const applyFormatting = (prefix: string, suffix = prefix) => {
-    if (!descTextareaRef.current) return;
-    const start = descTextareaRef.current.selectionStart;
-    const end = descTextareaRef.current.selectionEnd;
+    const el = descTextareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
     const text = form.description;
     const selected = text.substring(start, end);
-    const updated = text.substring(0, start) + prefix + selected + suffix + text.substring(end);
-    setForm((f) => ({ ...f, description: updated.slice(0, 200) }));
+    const updated = (
+      text.substring(0, start) +
+      prefix +
+      selected +
+      suffix +
+      text.substring(end)
+    ).slice(0, 200);
+    setForm((f) => ({ ...f, description: updated }));
+    /* Put the caret back where the person expects it: around the text they
+       had selected, or between the markers when they had selected nothing. */
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+    });
   };
 
   // ═══════════════════════════════════════════════════════════════════
@@ -379,7 +392,7 @@ const CaptainAssistants = () => {
                 onClick={() => setIsAssistantDropdownOpen((prev) => !prev)}
                 className="flex items-center gap-1.5 text-lg font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
               >
-                <span>{(editingId && assistants.find((a) => a.id === editingId)?.name) || form.name || 'New assistant'}</span>
+                <span>{editingId ? assistants.find((a) => a.id === editingId)?.name || 'Assistant' : 'New assistant'}</span>
                 <ChevronDown className="size-4 text-gray-400" />
               </button>
 
@@ -526,7 +539,7 @@ const CaptainAssistants = () => {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, 200) }))}
                 rows={3}
                 placeholder="What does this assistant do?"
-                className="w-full resize-none bg-transparent p-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none dark:text-gray-100"
+                className="mcm-assistant-desc w-full resize-none bg-transparent p-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none dark:text-gray-100"
               />
 
               <div className="flex justify-end px-3 py-1.5 text-xs text-gray-400 font-mono">

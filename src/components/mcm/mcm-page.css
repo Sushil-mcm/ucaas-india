@@ -3204,6 +3204,14 @@
   outline-offset: 1px;
 }
 
+/* The Assistants description sits inside its own bordered card with a
+   toolbar above it, so the shared admin focus outline drew a second ring
+   inside that card's border. The card is the focus affordance here. */
+.mcm-admin textarea.mcm-assistant-desc:focus,
+.mcm-admin textarea.mcm-assistant-desc:focus-visible {
+  outline: none !important;
+}
+
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
   border-radius: 999px;
