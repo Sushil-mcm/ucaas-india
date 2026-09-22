@@ -379,7 +379,7 @@ const CaptainAssistants = () => {
                 onClick={() => setIsAssistantDropdownOpen((prev) => !prev)}
                 className="flex items-center gap-1.5 text-lg font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
               >
-                <span>{form.name || (editingId ? 'Assistant' : 'New assistant')}</span>
+                <span>{(editingId && assistants.find((a) => a.id === editingId)?.name) || form.name || 'New assistant'}</span>
                 <ChevronDown className="size-4 text-gray-400" />
               </button>
 
@@ -447,12 +447,12 @@ const CaptainAssistants = () => {
           {/* 2. Description with Floatchat-style Toolbar */}
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-medium text-gray-900 dark:text-gray-200">Description</Label>
-            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 dark:border-gray-700 dark:bg-[#1a1a1e] dark:focus-within:border-blue-500">
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-2xs dark:border-gray-700 dark:bg-[#1a1a1e]">
               {/* Toolbar */}
               <div className="flex items-center gap-0.5 border-b border-gray-100 bg-gray-50/50 px-3 py-2 text-gray-500 dark:border-gray-700/60 dark:bg-[#1a1a1e] dark:text-gray-400">
                 <button
                   type="button"
-                  onClick={() => applyFormatting('**')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('**'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Bold"
                 >
@@ -460,7 +460,7 @@ const CaptainAssistants = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyFormatting('*')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('*'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Italic"
                 >
@@ -468,7 +468,7 @@ const CaptainAssistants = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyFormatting('`')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('`'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Code"
                 >
@@ -476,7 +476,7 @@ const CaptainAssistants = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyFormatting('[', '](https://)')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('[', '](https://)'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Link"
                 >
@@ -485,7 +485,7 @@ const CaptainAssistants = () => {
                 <div className="mx-1 h-3.5 w-px bg-gray-200 dark:bg-gray-800" />
                 <button
                   type="button"
-                  onClick={() => applyFormatting('\n- ')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('\n- ', ''); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Bullet list"
                 >
@@ -493,7 +493,7 @@ const CaptainAssistants = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyFormatting('\n1. ')}
+                  onMouseDown={(e) => { e.preventDefault(); applyFormatting('\n1. ', ''); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Numbered list"
                 >
@@ -502,7 +502,7 @@ const CaptainAssistants = () => {
                 <div className="mx-1 h-3.5 w-px bg-gray-200 dark:bg-gray-800" />
                 <button
                   type="button"
-                  onClick={() => document.execCommand('undo')}
+                  onMouseDown={(e) => { e.preventDefault(); descTextareaRef.current?.focus(); document.execCommand('undo'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Undo"
                 >
@@ -510,7 +510,7 @@ const CaptainAssistants = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => document.execCommand('redo')}
+                  onMouseDown={(e) => { e.preventDefault(); descTextareaRef.current?.focus(); document.execCommand('redo'); }}
                   className="rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs transition-colors cursor-pointer"
                   title="Redo"
                 >
