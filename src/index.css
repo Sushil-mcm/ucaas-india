@@ -1326,6 +1326,30 @@
     cursor: default !important;
   }
 
+  /* Captain Playground's "Start voice test" button is disabled until a voice
+     number is connected, and the blanket `button:disabled` rule above paints
+     every disabled control grey-on-grey — unreadable against this button's own
+     blue gradient.
+
+     It has to be `!important`, and it has to be here rather than an inline
+     style on the element: an `!important` declaration outranks the style
+     attribute, so the grey wins over any `style={{ color: '#fff' }}`. Inside
+     `@layer base` alongside the rule it overrides, because for `!important`
+     declarations the cascade reverses layer order and treats unlayered styles
+     as lowest priority — an override outside the layer would lose. Within the
+     layer, specificity decides and this wins. */
+  .mcm-voice-start-btn,
+  .mcm-voice-start-btn:disabled,
+  .mcm-voice-start-btn svg,
+  .mcm-voice-start-btn:disabled svg {
+    color: #fff !important;
+  }
+  .mcm-voice-start-btn:disabled {
+    background: linear-gradient(to right, #0ea5e9, #2563eb) !important;
+    border-color: transparent !important;
+    opacity: 1 !important;
+  }
+
   input[type='radio']:disabled,
   input[type='checkbox']:disabled {
     opacity: 0 !important;

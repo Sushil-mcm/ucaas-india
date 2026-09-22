@@ -213,7 +213,9 @@ const CaptainPlayground = () => {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-white p-1 shadow-inner dark:bg-gray-800">
+          {/* The track has to be darker than the pill riding on it — both were
+              white, so the active tab was invisible against its own container. */}
+          <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1 shadow-inner dark:bg-gray-900">
             {(['chat', 'voice'] as const).map((m) => (
               <button
                 key={m}
@@ -301,15 +303,9 @@ const CaptainPlayground = () => {
                   variant="primary"
                   onClick={voice.start}
                   disabled={!voice.numbers.length}
-                  className="mcm-voice-start-btn mt-5 h-11 rounded-full px-8 shadow-md"
-                  style={{
-                    background: 'linear-gradient(to right, #0ea5e9, #2563eb)',
-                    color: '#fff',
-                    opacity: 1,
-                    borderColor: 'transparent',
-                  }}
+                  className="mcm-voice-start-btn mt-5 h-11 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-8 text-white shadow-md"
                 >
-                  <Phone className="size-4" style={{ color: '#fff' }} />
+                  <Phone className="size-4" />
                   {voice.status === 'ended' || voice.status === 'error'
                     ? 'Call again'
                     : 'Start voice test'}
