@@ -3591,7 +3591,6 @@
    the block further down that owns the lit state. */
 .mcm-admin .mcm-adminnav .h-14:hover,
 .mcm-admin .mcm-adminnav .min-h-14:hover {
-  background: #fdf5ec;
   background: color-mix(in oklab, var(--color-ucass-active-bg, #fde9d2) 45%, transparent);
   color: var(--color-ucass-active, #c96f1f);
 }
@@ -8624,7 +8623,6 @@
    The full-strength fill and the 3px bar are left to mean "current" alone. */
 .mcm-admin .mcm-adminnav [data-slot='accordion-trigger']:hover,
 .mcm-admin .mcm-adminnav .min-h-14:hover {
-  background: #fdf5ec;
   background: color-mix(in oklab, var(--color-ucass-active-bg, #fde9d2) 45%, transparent);
   color: var(--color-ucass-active, #c96f1f);
 }
