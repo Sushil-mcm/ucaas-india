@@ -1,0 +1,790 @@
+/* ============================================================
+   Performance › Reports — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-reports`, the tab's own root element, the same pattern
+   `speech-theme.css`/`campaigns-theme.css` use — nothing outside this
+   component is reachable from here. The toolbar and table here are plain
+   inline-styled markup (not `TableManager`/`.fchip`), so this file also
+   introduces a few small class hooks (`rp-toolbar`, `rp-select`,
+   `rp-notice`) on the elements that used to carry their colour inline, so
+   the theme can actually reach and override them.
+   ============================================================ */
+
+.perf-reports {
+  --rp-accent: #f97316;
+  --rp-accent-ink: #ea580c;
+  --rp-wash: #fff1eb;
+  --rp-muted: #666666;
+  --rp-ink: #1a1a1a;
+
+  --rp-glass: rgba(255, 255, 255, 0.85);
+  --rp-glass-border: rgba(255, 255, 255, 0.95);
+  --rp-glass-blur: blur(20px) saturate(190%);
+  --rp-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-reports {
+  --rp-wash: #2a1710;
+  --rp-muted: #93a1ba;
+  --rp-ink: #f4f6fb;
+  --rp-glass: rgba(17, 24, 39, 0.72);
+  --rp-glass-border: rgba(251, 146, 60, 0.18);
+  --rp-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Ambient backdrop, wired via the shared `perf-warm-backdrop` toggle —
+   painted on `.perf-reports` itself, consistent with Campaigns/Speech. */
+body.perf-warm-backdrop .perf-reports {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
+    #fdf6ee;
+}
+.dark body.perf-warm-backdrop .perf-reports {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
+    #0a0f1a;
+}
+
+/* ------------------------------------------------------------
+   1. Top KPI summary cards
+   ------------------------------------------------------------ */
+.perf-reports .stat {
+  background: var(--rp-glass);
+  backdrop-filter: var(--rp-glass-blur);
+  -webkit-backdrop-filter: var(--rp-glass-blur);
+  border: 1px solid var(--rp-glass-border);
+  border-radius: 18px;
+  box-shadow: var(--rp-glass-shadow);
+}
+.perf-reports .stat .k {
+  color: var(--rp-muted);
+  letter-spacing: 0.1em;
+}
+.perf-reports .stat .v {
+  color: var(--rp-ink);
+  font-weight: 800;
+}
+.perf-reports .stat .d {
+  color: var(--rp-muted) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   2. Report selector & action toolbar
+   ------------------------------------------------------------ */
+/* Flat cream tint, the same panel tone the rail/toolbar use elsewhere in
+   Performance — not a per-control background. */
+.perf-reports .rp-toolbar {
+  background: #fffaf4;
+  border: 1px solid rgba(249, 115, 22, 0.14);
+  border-radius: var(--r);
+  box-shadow: 0 1px 2px rgba(234, 88, 12, 0.05);
+}
+.dark .perf-reports .rp-toolbar {
+  background: rgba(23, 15, 10, 0.6);
+  border-color: rgba(251, 146, 60, 0.18);
+}
+
+/* Groups related controls (picker vs. date vs. export) so the bar reads as
+   sections rather than a flat row of loose controls. */
+.perf-reports .rp-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.perf-reports .rp-toolbar-divider {
+  width: 1px;
+  height: 22px;
+  flex: none;
+  background: rgba(249, 115, 22, 0.16);
+}
+.dark .perf-reports .rp-toolbar-divider {
+  background: rgba(251, 146, 60, 0.2);
+}
+
+/* Report selector — a custom dropdown (Radix DropdownMenu) rather than a
+   native `<select>`. A native select's open list is drawn by the OS, not
+   the page, so its hover/selected highlight is whatever blue the platform
+   defaults to and cannot be reached by CSS at all — a custom dropdown is
+   the only way to theme it. Same options, same selection behaviour as the
+   select it replaces. */
+/* Radix's DropdownMenuTrigger renders this as a bare `<button>` via
+   `asChild`, which picks up Tailwind Preflight's browser-default button
+   reset (`font: inherit` off a 16px body, no border) at a layer priority
+   this plain stylesheet can't out-rank on its own — `!important` on the
+   properties Preflight actually touches is what makes them stick. */
+.perf-reports .rp-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  max-width: 250px;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent-ink) !important;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.dark .perf-reports .rp-select-trigger {
+  background: rgba(17, 24, 39, 0.55) !important;
+}
+.perf-reports .rp-select-trigger[data-state='open'] {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15);
+}
+.perf-reports .rp-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perf-reports .rp-select-chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--rp-muted);
+  transition: transform 0.16s ease;
+}
+.perf-reports .rp-select-trigger[data-state='open'] .rp-select-chevron {
+  transform: rotate(180deg);
+  color: var(--accent-ink);
+}
+
+/* The dropdown's own content renders through a portal to `document.body`,
+   outside `.perf-reports` — its own class carries the theme instead of an
+   ancestor selector. */
+.rp-report-menu {
+  min-width: 260px;
+  max-width: 320px;
+  padding: 4px;
+  border-radius: 12px;
+  /* Hardcoded, not var(--accent) — this menu renders through a portal to
+     document.body (see note above), outside .mcm-page's subtree, so the
+     app's own --accent custom property isn't in scope here; it would
+     silently resolve to shadcn's unrelated same-named token instead. */
+  border: 1px solid #f2994a;
+  background: #fff;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+/* This is the scrolling element itself (Radix's own `overflow-y-auto`,
+   from `dropdown-menu.tsx`), not a wrapper around it — so the global
+   scrollbar in `index.css` (`::-webkit-scrollbar{width:4px}` plus a
+   `3px solid` border on the thumb, wider than its own 4px track) rendered
+   here as a fat grey bar poking past this menu's rounded corner. Overriding
+   it locally with a slim borderless thumb, inset from the top/bottom
+   curves, rather than touching that global rule and risking every other
+   scrollbar in the app. */
+.rp-report-menu::-webkit-scrollbar {
+  width: 3px;
+}
+.rp-report-menu::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+  margin: 6px 0;
+}
+.rp-report-menu::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.25);
+  border: none;
+  border-radius: 999px;
+}
+.rp-report-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.45);
+}
+.dark .rp-report-menu {
+  background: #171717;
+  border-color: #ffab5e;
+}
+.rp-report-menu-group + .rp-report-menu-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(249, 115, 22, 0.12);
+}
+.dark .rp-report-menu-group + .rp-report-menu-group {
+  border-top-color: rgba(251, 146, 60, 0.16);
+}
+.rp-report-menu-label {
+  padding: 6px 8px 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #666666;
+}
+.dark .rp-report-menu-label {
+  color: #93a1ba;
+}
+.rp-report-menu-item {
+  border-radius: 6px;
+  padding: 6px 8px !important;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+.dark .rp-report-menu-item {
+  color: #f4f6fb;
+}
+/* Same peach-hover Directory ▸ People uses for its own filter/action menus
+   (page-shell.css / people-glass.css: `background:#fff1e0; color:#c96f1f`). */
+.rp-report-menu-item:focus,
+.rp-report-menu-item:hover:not([data-disabled]) {
+  background: #fff1e0 !important;
+  color: #c96f1f !important;
+}
+.dark .rp-report-menu-item:focus,
+.dark .rp-report-menu-item:hover:not([data-disabled]) {
+  background: rgba(251, 146, 60, 0.14) !important;
+  color: #fdba74 !important;
+}
+.rp-report-menu-item[data-selected] {
+  background: #fff1e0;
+  color: #c96f1f;
+  font-weight: 700;
+}
+.dark .rp-report-menu-item[data-selected] {
+  background: rgba(251, 146, 60, 0.22);
+  color: #fdba74;
+}
+.rp-report-menu-item[data-disabled] {
+  opacity: 0.6;
+}
+.rp-report-menu-hint {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #93a1ba;
+  white-space: nowrap;
+}
+.rp-report-menu-lock {
+  flex: none;
+  color: #93a1ba;
+}
+
+/* Date range — a quiet chip rather than plain text floating in the bar.
+   Same frame (background/border/height) as its "All reports"/"Queue
+   Summary"/"Export CSV" neighbours, so it reads as one more control in the
+   toolbar instead of plain text that happens to sit between them. */
+.perf-reports .rp-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--rp-ink) !important;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dark .perf-reports .rp-range {
+  background: rgba(17, 24, 39, 0.55);
+}
+.perf-reports .rp-range svg {
+  color: var(--accent-ink);
+  flex: none;
+}
+.perf-reports .rp-range-arrow {
+  color: var(--rp-muted);
+  font-weight: 500;
+}
+.perf-reports .rp-range-hint {
+  color: var(--rp-muted) !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* "Export CSV" — same orange-outline-until-filled-on-hover ghost button
+   Directory ▸ People uses for its own "Groups"/"Export" (people-glass.css),
+   not a bespoke gradient-hover pill. "All reports" (`.btn.primary` while
+   the catalog is open) is left on the shared `.mcm-page .btn.primary` this
+   matches too — solid `--accent` fill, white text — rather than toned down
+   to a wash, so "active" reads the same way here as everywhere else. */
+.perf-reports .rp-toolbar .btn.ghost {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.perf-reports .rp-toolbar .btn.ghost:hover:not(:disabled) {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+}
+
+/* "Open a full report page" quick links — same family as the toolbar's
+   ghost buttons above, but scoped separately since these sit in a plain
+   `.pc-body`, not `.rp-toolbar`, and the hover here is a lift rather than
+   a solid-fill flip (a full-page-open action reads better as a subtler
+   nudge than the toolbar's primary-looking accent flip). */
+.perf-reports button.rp-linked-chip {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(249, 115, 22, 0.15) !important;
+  border-radius: 999px !important;
+  color: var(--rp-ink) !important;
+  transition:
+    transform 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.dark .perf-reports button.rp-linked-chip {
+  background: rgba(17, 24, 39, 0.5) !important;
+}
+.perf-reports button.rp-linked-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  color: var(--rp-accent-ink) !important;
+  box-shadow: 0 6px 16px -4px rgba(234, 88, 12, 0.24);
+}
+
+/* ------------------------------------------------------------
+   3. Info/SL notice banner
+   ------------------------------------------------------------ */
+/* One slim pill for every note this panel has to show — the SL% caption
+   and the "sampled data" caveat used to be two different treatments (a
+   styled pill plus a bare unstyled <p> right under it); they're combined
+   into a single string by the caller now, so there's only ever one line
+   here, never a second raw paragraph competing with it. */
+.perf-reports .rp-notice {
+  height: 34px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.perf-reports .rp-notice span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dark .perf-reports .rp-notice {
+  background: rgba(154, 82, 30, 0.22);
+  border-color: rgba(251, 146, 60, 0.28);
+  color: #fdba74;
+}
+
+/* ------------------------------------------------------------
+   4. Panels (catalog, main report table, linked report pages) — frosted
+   glass card, the same treatment `panel-card` gets on Campaigns/Live.
+   ------------------------------------------------------------ */
+.perf-reports .panel-card {
+  background: var(--rp-glass);
+  backdrop-filter: var(--rp-glass-blur);
+  -webkit-backdrop-filter: var(--rp-glass-blur);
+  border: 1px solid var(--rp-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--rp-glass-shadow);
+}
+.perf-reports .pc-head {
+  background: transparent;
+  border-color: rgba(249, 115, 22, 0.12);
+}
+.perf-reports .pc-head h3 {
+  color: var(--rp-ink);
+}
+.perf-reports .pc-right {
+  color: var(--rp-muted) !important;
+}
+.perf-reports .sect-title {
+  color: var(--rp-muted);
+}
+
+/* Report catalog cards — a plain-token grid (var(--surface)/var(--line))
+   that looked flat and off-brand sitting inside an otherwise all-warm-glass
+   panel. Themed as its own small glass card so it reads as part of the
+   same system as the toolbar/table around it. */
+.perf-reports .rp-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+/* mcm-page.css resets every plain button's border/background/color
+   (`.mcm-page button:not([data-slot='tabs-trigger'])`, specificity 0,2,1)
+   so the design system's own buttons start unstyled. That beats a
+   `!important` two-class selector like `.perf-reports .rp-catalog-card`
+   (0,2,0) on specificity even though importance normally wins regardless —
+   in practice here it doesn't, so the fix is to match its own specificity
+   by also selecting the `button` element, not just outrun it with
+   `!important` (kept anyway, as a second guard). */
+.perf-reports button.rp-catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.14) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+.dark .perf-reports button.rp-catalog-card {
+  background: rgba(17, 24, 39, 0.45) !important;
+  border-color: rgba(251, 146, 60, 0.16) !important;
+}
+.perf-reports button.rp-catalog-card:hover:not(.is-locked) {
+  transform: translateY(-2px);
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  box-shadow: 0 10px 24px -8px rgba(234, 88, 12, 0.22);
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+.dark .perf-reports button.rp-catalog-card:hover:not(.is-locked) {
+  background: rgba(17, 24, 39, 0.65) !important;
+}
+.perf-reports button.rp-catalog-card.is-selected {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  background: rgba(249, 115, 22, 0.12) !important;
+  box-shadow: none;
+}
+.dark .perf-reports button.rp-catalog-card.is-selected {
+  background: rgba(251, 146, 60, 0.18) !important;
+}
+.perf-reports button.rp-catalog-card.is-locked {
+  cursor: not-allowed;
+  border-style: dashed !important;
+  border-color: rgba(249, 115, 22, 0.16) !important;
+  background: rgba(249, 115, 22, 0.04) !important;
+  opacity: 0.75;
+}
+.perf-reports button.rp-catalog-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+.dark .perf-reports button.rp-catalog-card.is-locked {
+  background: rgba(17, 24, 39, 0.3) !important;
+}
+.perf-reports .rp-catalog-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--rp-ink);
+}
+.perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
+  color: #ea580c;
+}
+.dark .perf-reports .rp-catalog-card.is-selected .rp-catalog-title {
+  color: #fdba74;
+}
+.perf-reports .rp-catalog-card.is-locked .rp-catalog-title {
+  color: var(--rp-muted);
+}
+.perf-reports .rp-catalog-lock {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--rp-muted);
+}
+.perf-reports .rp-catalog-desc {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--rp-muted);
+}
+
+/* ------------------------------------------------------------
+   5. Main report data table — sticky, near-opaque header, warm row hover,
+   crisp typography.
+   ------------------------------------------------------------ */
+.perf-reports .rp-table-wrap {
+  /* 20px, matching the Directory-benchmark radius every other Performance
+     table now uses — this table's own inner card was 14px, one gap this
+     pass was asked to close. */
+  border-radius: 20px;
+  overflow: hidden;
+  /* The table had a radius and a clip but no edge, so it read as rows
+     floating on the panel rather than as a bounded box — most obvious
+     down the left side and around the corner curve. `--glass-border` is
+     the app's own token for exactly this case (a visible tan edge on a
+     light surface over a light backdrop) and is what Directory ▸ People's
+     own roster card uses, for the same white-on-white reason its rule
+     spells out in people-glass.css. */
+  border: 1px solid var(--glass-border);
+}
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 2px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated. Font styling (size/weight/
+   tracking/case/colour) is set inline in reports-tab.tsx instead of here,
+   since columns are dynamic per report and that inline style is already
+   the one source of truth for it. */
+.perf-reports .rp-table-wrap table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fffdfb;
+  box-shadow: none;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.dark .perf-reports .rp-table-wrap table thead th {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-reports .rp-table-wrap table thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-reports .rp-table-wrap table thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.perf-reports .rp-table-wrap table tbody tr {
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* Directory's signature left accent-bar row hover — the one parity gap
+   this table was missing versus every other Performance table. */
+/* Directory ▸ People's row divider hue (people-glass.css), rather than
+   the opaque cream `--line-2` the `.mcm-admin table tbody td` base rule
+   hands every table — but at more than Directory's own 0.1 alpha.
+   Directory's table sits on a solid surface; this one sits on
+   `.panel-card`'s frosted glass (`rgba(255,255,255,0.85)` +
+   `blur(20px) saturate(1.9)`), which washed a 10% hairline out to
+   nothing. Copying the literal alpha across surfaces lost the line;
+   keeping the hue and raising the alpha is what actually carries
+   Directory's *look* over to this one. */
+.perf-reports .rp-table-wrap table tbody td {
+  border-bottom: 1px solid rgba(150, 100, 50, 0.25);
+}
+/* Directory's exact hover tint, not a second warm-orange wash of its
+   own — the left accent bar was already shared, the background wasn't. */
+.perf-reports .rp-table-wrap table tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 var(--rp-accent);
+}
+.dark .perf-reports .rp-table-wrap table tbody tr:hover {
+  background: rgba(251, 146, 60, 0.08);
+}
+.perf-reports .rp-table-wrap table tbody tr.rp-total-row {
+  background: rgba(254, 215, 170, 0.28);
+}
+.dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row {
+  background: rgba(251, 146, 60, 0.12);
+}
+/* `border-collapse: collapse` on the table (set inline) means a border set
+   on the <tr> itself is silently dropped by the browser — it only ever
+   renders per-cell borders, so the elevated TOTAL row rule lives on `td`. */
+.perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
+  border-top: 1.5px solid rgba(249, 115, 22, 0.25);
+  border-bottom: 1.5px solid rgba(249, 115, 22, 0.25);
+  color: #1a1a1a;
+  font-weight: 800;
+}
+
+/* Row cell colour is set inline as `#334155` (slate-700, readable on the
+   light glass) / `var(--rp-ink)` for the first column — neither adapts to
+   dark mode on its own, so both are restated here for the dark surface. */
+.dark .perf-reports .rp-table-wrap table tbody td {
+  color: var(--rp-muted) !important;
+}
+.dark .perf-reports .rp-table-wrap table tbody td:first-child {
+  color: var(--rp-ink) !important;
+}
+.dark .perf-reports .rp-table-wrap table tbody tr.rp-total-row td {
+  color: var(--rp-ink) !important;
+}
+
+/* ------------------------------------------------------------
+   9. "Open a full report page" modal (the Dialog in reports-tab.tsx that
+   embeds Call History / Local Call List / Outbound / ... unmodified).
+   Scoped to `.rp-report-dialog`, not `.perf-reports` — Radix portals
+   DialogContent to document.body, outside `.perf-reports`'s own DOM
+   subtree, so an ancestor-based selector could never reach in. The class
+   lives on the dialog's own element instead, which survives the portal.
+   Every embedded report renders through TableManager's `splitStickyHeader`
+   (reports-tab.tsx pins it on per report), so the header is a separate
+   sibling box, not a `.table-scroll` descendant — same header-scoping
+   rule this session hit and fixed throughout Performance/Reports.
+   ------------------------------------------------------------ */
+/* The dialog's own "Call Volume"/"Call History"/... title (rp-report-dialog-
+   head, reports-tab.tsx) sits directly above `ReportsPageLayout`'s shared
+   header row (the "Performance" line every report opened from here shows) —
+   two titles, two independent top/bottom paddings, stacking into a gap
+   neither needed on its own. Trimming that shared row's own top padding
+   specifically inside this dialog (not the base rule other, non-dialog
+   report layouts still rely on) is the other half of shrinking it. */
+.rp-report-dialog .flex-1.overflow-auto .shrink-0.border-b {
+  padding-top: 2px !important;
+}
+/* `DialogTitle` ships with `leading-none` (line-height: 1), so a descender
+   — the g in "SMS Log", the y in "Call Analytics" — hangs below its own
+   line box. That was invisible while the header carried bottom padding;
+   once that padding went to zero (to close the gap to the "Performance"
+   heading below), the clipping wrapper around this header cut those
+   descenders off. A real line-height gives the glyphs their own room
+   rather than paying for it in padding that would reopen the gap. */
+.rp-report-dialog-head [data-slot='dialog-title'] {
+  line-height: 1.3;
+}
+/* The dialog's close button (`absolute top-4 right-4`, dialog.tsx) sits
+   directly above the report's own right-aligned toolbar icons (refresh /
+   export / filter), and once the two header rows above were tightened
+   there were only ~6px between the X and the first of those icons —
+   close enough to read as one crowded stack of controls. Lifting the X
+   alone opens that gap without pushing the toolbar row itself back down
+   and undoing the heading spacing. */
+.rp-report-dialog > [data-slot='dialog-close'] {
+  top: 6px;
+}
+.rp-report-dialog div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+.rp-report-dialog .table-scroll {
+  border-radius: 0 0 20px 20px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.rp-report-dialog .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+.rp-report-dialog thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.rp-report-dialog thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  background: transparent;
+}
+.rp-report-dialog thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.rp-report-dialog thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.rp-report-dialog .table-scroll tbody tr:hover {
+  background: rgba(255, 241, 235, 0.55);
+  box-shadow: inset 3px 0 0 #f2994a;
+}
+/* The last column (usually "Action", a row of icon buttons) sat flush
+   against the scrollbar the moment the table needed one to scroll — the
+   shared component's own default right padding wasn't enough once a
+   scrollbar occupied that same space (same bug found and fixed on
+   Performance ▸ Live, live-theme.css). */
+.rp-report-dialog .table-scroll thead th:last-child,
+.rp-report-dialog .table-scroll tbody td:last-child {
+  padding-right: 22px !important;
+}
+/* Status / Duration / Wait Time / Charge — the 2nd-through-5th-from-last
+   column on every one of these call-log reports (Call History, Inbound,
+   Outbound, Local Call List, Voicemail all end in this same run, with or
+   without a DID column earlier). table-manager.tsx's own column-width
+   measurement is proportional to each cell's real rendered footprint
+   (text + padding), so trimming this run's padding directly shrinks what
+   it measures as "needed" here — the freed-up percentage share doesn't
+   vanish, it flows to Date/From/DID/To on the next measure pass, which
+   is what actually had too little room. Counting from the right (not the
+   left) is what stays correct whether or not a given report has DID. */
+.rp-report-dialog thead th:nth-last-child(n + 2):nth-last-child(-n + 5),
+.rp-report-dialog .table-scroll tbody td:nth-last-child(n + 2):nth-last-child(-n + 5) {
+  /* 6px wasn't a big enough cut to visibly shift the balance — the column's
+     real floor is its own text (e.g. "WAIT TIME" at 9.5px/800/0.09em
+     letter-spacing), so padding is the only lever available and needs to
+     be pushed harder to matter. */
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+}
+/* Padding alone stopped moving the needle once it hit 3px — the actual
+   floor left is the header LABEL itself: "WAIT TIME"/"DURATION" at the
+   shared 0.09em tracking measure wider than any value ever shown under
+   them ("00:33"), so table-manager.tsx's `Math.max(headerWidth,
+   maxBodyWidth)` keeps the column pinned to the label's width regardless
+   of how tight the data cells get. Tightening tracking (and dropping a
+   touch of size) only for this run — not the base `.rp-report-dialog
+   thead th` rule everything else still uses — shrinks that floor without
+   touching Directory-matched header styling on Date/From/DID/To/Action. */
+.rp-report-dialog thead th:nth-last-child(n + 2):nth-last-child(-n + 5) {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+/* Date / From / DID / To (and any other identity column before the trailing
+   metric run) — the flip side of the rule above. `:not(:first-child)`
+   excludes the narrow leading icon-only column; `:not(:nth-last-child(-n +
+   5))` excludes the same trailing 5 targeted above. What's left is exactly
+   "every identity column in between", whether that's 3 of them (no DID) or
+   4 (with DID) — robust to column count the same way the trailing rule is,
+   just from the other direction. Extra padding here both reads as more
+   breathing room on its own and grows what this cell measures as needing,
+   pulling percentage share toward it on the next measure pass. */
+.rp-report-dialog thead th:not(:first-child):not(:first-child + *):not(:nth-last-child(-n + 5)),
+.rp-report-dialog .table-scroll tbody td:not(:first-child):not(:first-child + *):not(:nth-last-child(-n + 5)) {
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+/* Date — the leading visible column. Its content (a call-direction icon
+   plus a short timestamp) is the most compact of any column here, but with
+   no padding rule of its own it fell back to the shared default, which
+   measures wider than that content needs. Column widths are a percentage
+   of the table's own width (table-manager.tsx's fixed-layout colgroup), so
+   that unused margin scales up with viewport width — barely visible at a
+   laptop width, a very visible gap on a wide monitor. Trimming it to the
+   same tight padding as the metric run shrinks what it measures as
+   needing, which is what actually shrinks the rendered slack at any width.
+
+   `:first-child + *` (as well as plain `:first-child`) because reports with
+   `hasSubRows` (Call History, Outbound, Inbound, Voicemail) render a hidden,
+   text-free expand-arrow column before Date — making Date the *second*
+   column, not the first, in exactly those reports. Targeting only
+   `:first-child` tightened the empty expand column and left Date itself on
+   the wide 18px identity-column padding above, which is what the visible
+   gap actually was. */
+.rp-report-dialog thead th:first-child,
+.rp-report-dialog .table-scroll tbody td:first-child,
+.rp-report-dialog thead th:first-child + th,
+.rp-report-dialog .table-scroll tbody td:first-child + td {
+  padding-left: 10px !important;
+  padding-right: 6px !important;
+}
+/* The `hasSubRows` expand-toggle column itself (Call History, Outbound,
+   Inbound, Voicemail) — genuinely `:first-child`, unlike Date above. Its
+   rendered *width* is now fixed at the source (table-manager.tsx hardcodes
+   it rather than measuring — an empty column under `table-layout: fixed`
+   never overflows to reveal a smaller natural size, so scrollWidth just
+   echoed back whatever width it was last given); this just tightens the
+   padding around that fixed width to leave more of it to the icon. */
+.rp-report-dialog .table-scroll tbody td:first-child {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}

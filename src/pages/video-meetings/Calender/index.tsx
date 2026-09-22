@@ -311,6 +311,7 @@ const CalendarPage = () => {
   const userId = user?.user_info?.uuid || '';
   const { from, to } = dateRange || {};
   const todayDate = moment().format('YYYY-MM-DD');
+  const weekAheadDate = moment().add(7, 'days').format('YYYY-MM-DD');
   const [gridData, setGridData] = useState([]);
   const [miniCurrentDate, setMiniCurrentDate] = useState<any>(moment());
   const [miniPickerOpen, setMiniPickerOpen] = useState(false);
@@ -361,14 +362,13 @@ const CalendarPage = () => {
     },
   });
 
-  //today scheudle
   const { data: todayTaskListData = [], isLoading: isTodayTaskListLoading } = useQuery({
-    queryKey: ['calendarMeetingListTodayEvents', todayDate],
+    queryKey: ['calendarMeetingListTodayEvents', todayDate, weekAheadDate],
     queryFn: () =>
       calendarMeetingList({
         filters: [
           { key: 'from', value: todayDate },
-          { key: 'to', value: todayDate },
+          { key: 'to', value: weekAheadDate },
         ],
       }),
     select: (data) => data?.data?.data?.result?.rows || [],
@@ -1435,7 +1435,7 @@ const CalendarPage = () => {
                 ref={todayEventsHeaderRef}
                 className="mcm-cal-divider flex shrink-0 items-center justify-between mb-3"
               >
-                <p className="text-sm font-semibold text-mcm-ink">Today Events</p>
+                <p className="text-sm font-semibold text-mcm-ink">Upcoming Events</p>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-mcm-ink-3">{todayEventSchedules?.length || 0}</span>
                   {/* Collapsed, up-arrow: "there's more, expand to see it
@@ -1444,7 +1444,7 @@ const CalendarPage = () => {
                       back". */}
                   <button
                     type="button"
-                    aria-label={isTodayEventsExpanded ? 'Collapse today events' : 'Expand today events'}
+                    aria-label={isTodayEventsExpanded ? 'Collapse upcoming events' : 'Expand upcoming events'}
                     aria-expanded={isTodayEventsExpanded}
                     onClick={() => setIsTodayEventsExpanded((prev) => !prev)}
                     className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-mcm-line text-mcm-ink-3 transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
@@ -1500,8 +1500,9 @@ const CalendarPage = () => {
                           {schedule.title}
                         </p>
                         <p className="text-[11px] text-mcm-ink-3">
-                          {moment(schedule.start).format('hh:mm A')} -{' '}
-                          {moment(schedule.end).format('hh:mm A')}
+                          {moment(schedule.start).isSame(moment(), 'day')
+                            ? `${moment(schedule.start).format('hh:mm A')} - ${moment(schedule.end).format('hh:mm A')}`
+                            : `${moment(schedule.start).format('ddd, D MMM · hh:mm A')}`}
                         </p>
                       </div>
                     </div>
@@ -1510,7 +1511,7 @@ const CalendarPage = () => {
               })}
               {!isTodayTaskListLoading && todayEventSchedules?.length === 0 && (
                 <div className="mcm-cal-well rounded-xl border border-dashed p-3 text-xs text-mcm-ink-3 text-center">
-                  No events for today.
+                  No upcoming events this week.
                 </div>
               )}
               </div>

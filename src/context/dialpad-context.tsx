@@ -759,9 +759,7 @@ const buildPcConfig = (credentials: SipCredentials) => {
     .map((url) => `${url || ''}`.trim())
     .filter((url) => url.length > 0);
 
-  const hasRelay = relayUrls.length > 0 && Boolean(turnPassword);
-
-  if (hasRelay) {
+  if (relayUrls.length > 0 && turnPassword) {
     iceServers.push({
       urls: relayUrls,
       username: turnUsername,
@@ -769,19 +767,21 @@ const buildPcConfig = (credentials: SipCredentials) => {
     });
   }
 
-  // FreeSWITCH does not run real ICE connectivity checks - it just picks
-  // candidate index 0 and hopes. Left to gather every candidate type, the
-  // browser's own virtual adapters (Docker/WSL/VPN) routinely win that slot
-  // over the real network path, so FS ends up stuck sending STUN to an
-  // address that was never reachable. Restricting gathering to relay-only
-  // candidates means every candidate offered is one on our own TURN server
-  // that FS can always reach, so index 0 is never a dead address.
-  //
-  // Only when a relay is actually configured: with none, 'relay' would leave
-  // the call zero usable candidates - a hard failure - which is worse than
-  // today's one-way-audio bug. Falls back to the permissive default so a
-  // response missing TURN credentials still gets a call, even a flaky one.
-  return hasRelay ? { iceServers, iceTransportPolicy: 'relay' as const } : { iceServers };
+  /* No `iceTransportPolicy: 'relay'`. The TURN server is offered as a
+     candidate, never as the only path.
+
+     The unified port on 12 Sep forced relay-only gathering (to stop FreeSWITCH
+     picking a browser's Docker/WSL adapter as its first candidate). On this
+     deployment that silenced every call in both directions: coturn here
+     answers every CREATE_PERMISSION with `403 Forbidden IP`, for any peer, and
+     its logs show zero successful permissions and zero relayed bytes on every
+     day since 11 Sep. The relay has never carried audio. Calls worked until
+     12 Sep only because the browser sent media directly to FreeSWITCH, which
+     relay-only forbids.
+
+     Restore relay-only here only after coturn is shown relaying real bytes -
+     otherwise it removes the one path that works. */
+  return { iceServers };
 };
 
 const CAMPAIGN_CLEARING_TIMER_SECONDS = 30;

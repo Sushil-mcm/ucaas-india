@@ -1,0 +1,432 @@
+/* ============================================================
+   Performance › Callbacks — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-callbacks`, the tab's own root element, exactly the way
+   `live-theme.css` scopes to `.perf-live` — nothing outside this component
+   is reachable from here, so no other Performance tab, the shared toolbar,
+   or the rail is affected.
+   ============================================================ */
+
+.perf-callbacks {
+  --pc-accent: #f97316;
+  --pc-accent-ink: #ea580c;
+  --pc-wash: #fff1eb;
+  --pc-muted: #666666;
+  --pc-ink: #1a1a1a;
+
+  --pc-glass: rgba(255, 255, 255, 0.85);
+  --pc-glass-border: rgba(255, 255, 255, 0.95);
+  --pc-glass-blur: blur(20px) saturate(190%);
+  --pc-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-callbacks {
+  --pc-wash: #2a1710;
+  --pc-muted: #93a1ba;
+  --pc-ink: #f4f6fb;
+  --pc-glass: rgba(17, 24, 39, 0.72);
+  --pc-glass-border: rgba(251, 146, 60, 0.18);
+  --pc-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ------------------------------------------------------------
+   1. Metric summary cards (Scheduled tasks, Overdue, Tasks by source,
+   Voicemails today, Voicemail time)
+   ------------------------------------------------------------ */
+.perf-callbacks .stat {
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  border: 1px solid var(--pc-glass-border);
+  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
+     use for their own KPI cards — this view's own 18px was the one gap. */
+  border-radius: 20px;
+  box-shadow: var(--pc-glass-shadow);
+}
+.perf-callbacks .stat .k {
+  color: var(--pc-muted);
+  letter-spacing: 0.1em;
+}
+.perf-callbacks .stat .v {
+  color: var(--pc-ink);
+  font-weight: 800;
+}
+.perf-callbacks .stat .d {
+  color: var(--pc-muted) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   2. Sub-tab switcher ("Scheduled tasks" / "Queue voicemail")
+   Unified Segmented Frosted Capsule Track — the two triggers live inside
+   one pill-shaped glass track instead of floating as separate buttons, so
+   the active/inactive contrast reads correctly (elevated white pill vs.
+   transparent slate text) rather than inverted (solid white inactive pill
+   outshining a washed-out "active" peach pill).
+   ------------------------------------------------------------ */
+.perf-callbacks [data-slot='tabs-list'] {
+  display: inline-flex !important;
+  width: fit-content !important;
+  align-items: center !important;
+  height: 34px !important;
+  gap: 2px;
+  background: rgba(255, 250, 244, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  border-radius: 9999px;
+  padding: 3px !important;
+  box-shadow: none;
+}
+.dark .perf-callbacks [data-slot='tabs-list'] {
+  background: rgba(17, 24, 39, 0.5) !important;
+  border-color: rgba(251, 146, 60, 0.22);
+}
+
+/* `.mcm-page button[data-slot='tabs-trigger']` (mcm-page.css) sets
+   `background: none` at higher specificity (adds the `button` element to
+   the same attribute selector) than a plain `[data-slot='tabs-trigger']`
+   class rule can out-rank — `!important` on `background` is what makes it
+   stick, the same fix used elsewhere in this theme for the identical
+   mcm-page button-reset fight. */
+.perf-callbacks [data-slot='tabs-trigger'] {
+  flex: none;
+  height: 28px !important;
+  padding: 0 14px !important;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.dark .perf-callbacks [data-slot='tabs-trigger'] {
+  color: #94a3b8;
+}
+.perf-callbacks [data-slot='tabs-trigger']:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
+  color: #1a1a1a;
+}
+.dark .perf-callbacks [data-slot='tabs-trigger']:hover {
+  background: rgba(251, 146, 60, 0.14) !important;
+  color: #f1f5f9;
+}
+.perf-callbacks [data-slot='tabs-trigger'][data-state='active'],
+.perf-callbacks [data-slot='tabs-trigger'][data-state='active']:hover {
+  /* Softened off-white pill (not stark #fff) — elevated but not glaring. */
+  background: rgba(255, 253, 250, 0.92) !important;
+  border: 1px solid rgba(249, 115, 22, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(160, 95, 30, 0.12) !important;
+  color: #ea580c;
+  font-weight: 600;
+}
+.dark .perf-callbacks [data-slot='tabs-trigger'][data-state='active'],
+.dark .perf-callbacks [data-slot='tabs-trigger'][data-state='active']:hover {
+  background: rgba(30, 27, 24, 0.9) !important;
+  border-color: rgba(251, 146, 60, 0.4) !important;
+  color: #fb923c;
+}
+
+/* ------------------------------------------------------------
+   3. Main data container — table + pagination, and the empty state
+   ------------------------------------------------------------ */
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls/Flows). */
+.perf-callbacks .table-scroll {
+  border-radius: 0 0 20px 20px;
+  border: 1px solid var(--pc-glass-border);
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  box-shadow: var(--pc-glass-shadow);
+}
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner. */
+.perf-callbacks div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+.perf-callbacks .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
+}
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-callbacks thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (callbacks-tab.tsx), which
+   puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it. */
+.perf-callbacks thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-callbacks thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-callbacks thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: transparent;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.perf-callbacks thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-callbacks thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.perf-callbacks .table-scroll tbody tr {
+  background: transparent;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* Directory's signature left accent-bar row hover — every other
+   Performance table already carries this; Callbacks was the one gap. */
+.perf-callbacks .table-scroll tbody tr:hover {
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--pc-accent);
+}
+.perf-callbacks .table-scroll tbody td {
+  color: #334155;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+.dark .perf-callbacks .table-scroll tbody td {
+  color: var(--pc-muted);
+}
+
+/* The first column carries the row's own subject — task title, or who left
+   the voicemail — so it reads bolder and darker than the supporting
+   Created/Due/DID columns beside it, the same weight Live gives a caller's
+   name. */
+.perf-callbacks .table-scroll tbody td:first-child {
+  color: var(--pc-ink);
+  font-weight: 600;
+}
+.dark .perf-callbacks .table-scroll tbody td:first-child {
+  color: #f1f5f9;
+}
+
+/* Timestamp-shaped columns (Created, Due, Left at, Length) get tabular
+   figures so the numbers stop jittering column to column. */
+.perf-callbacks .table-scroll tbody td:nth-child(2),
+.perf-callbacks .table-scroll tbody td:nth-child(3),
+.perf-callbacks .table-scroll tbody td:nth-child(4) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Task status ("Pending", "Overdue", "Completed", ...) — Directory's own
+   `.tag` badge system (mcm-page.css: `.tag.pos`/`.tag.neg`/`.tag.warn`),
+   picked per-row in callbacks-tab.tsx rather than one flat pill style for
+   every status, so overdue reads as genuinely critical (red), not the same
+   soft orange as a task that's simply still pending. */
+.perf-callbacks .table-scroll tbody td .tag {
+  font-size: 10.5px;
+  padding: 2px 8px;
+}
+/* The Due column's own timestamp, when that task is overdue — a plain
+   colour cue right next to the Status badge, so an overdue row reads as
+   overdue from either column a supervisor's eye lands on first. */
+.perf-callbacks .table-scroll tbody td .pc-due-overdue {
+  color: var(--crit, #d32f2f);
+  font-weight: 700;
+}
+.dark .perf-callbacks .table-scroll tbody td .pc-due-overdue {
+  color: #f87171;
+}
+
+/* Voicemail row actions (Play, Call back) — the same warm circular button
+   Live uses for its monitoring actions: glass at rest, filled on hover.
+   Call back keeps its own green (a distinct action from Play, same as
+   Live's separate red Hangup), just softened to the rounded, bordered
+   style instead of a flat tint. */
+.perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-ucass-active-bg'] {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: var(--pc-accent-ink);
+  box-shadow: 0 1px 2px rgba(249, 115, 22, 0.06);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+.perf-callbacks
+  .table-scroll
+  tbody
+  td
+  [class*='rounded-full'][class*='bg-ucass-active-bg']:hover {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 10px -2px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
+.perf-callbacks .table-scroll tbody td [class*='rounded-full'][class*='bg-green-100'] {
+  background: rgba(220, 252, 231, 0.9);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 1px 2px rgba(34, 197, 94, 0.06);
+}
+
+/* Empty state — dark charcoal title, muted description, matching the rest
+   of the view rather than the plain gray TableManager ships by default. */
+.perf-callbacks .table-scroll .text-gray-900 {
+  color: var(--pc-ink);
+}
+.perf-callbacks .table-scroll .text-gray-700 {
+  color: var(--pc-muted);
+}
+
+/* Pagination bar under the table. `.table-scroll` also carries `rounded-xl
+   border-gray-200` (table-manager.tsx), so `:not(.table-scroll)` is load
+   bearing here — without it this rule also matched the table container
+   itself and, being more specific than the plain `.table-scroll` rule
+   above, silently overrode its transparent background/border/shadow with
+   a second, overlapping glass card right on top of it. */
+.perf-callbacks div[class*='rounded-xl'][class*='border-gray-200']:not(.table-scroll) {
+  border-radius: 18px;
+  border: 1px solid var(--pc-glass-border);
+  background: var(--pc-glass);
+  backdrop-filter: var(--pc-glass-blur);
+  -webkit-backdrop-filter: var(--pc-glass-blur);
+  box-shadow: var(--pc-glass-shadow);
+}
+.perf-callbacks div[class*='rounded-xl'][class*='border-gray-200']:not(.table-scroll) label {
+  color: var(--pc-muted);
+}
+
+/* Pagination footer's own refresh button (table-manager.tsx,
+   `.table-refresh-btn`) is now styled once, authoritatively, in
+   mcm-page.css — rest/hover colour and a proper 32px circle for every
+   Performance page. Removed the per-page duplicate that used to live
+   here — see live-theme.css for why an unconditional (no `:hover`)
+   per-page rule like this actively broke the hover state elsewhere. */
+
+/* The pager group (« ‹ 1 › ») is intentionally left at its global default
+   (index.css `.mcm-pager*`) — plain white/gray with a solid orange current
+   page — per explicit request to match that look exactly rather than
+   re-theming it warm like the rest of this page. */
+
+/* ------------------------------------------------------------
+   4. Voicemail Playback modal (audio-dialog.tsx)
+   `.vm-modal` is a stable marker class on the Dialog's own content, not a
+   `.perf-callbacks` descendant — Radix portals dialogs to `document.body`,
+   so a page-scoped selector could never reach it. The class only appears
+   when the caller passes `meta` into <AudioModal>, which today is only
+   Performance > Callbacks, so this is safe to leave unscoped globally.
+   ------------------------------------------------------------ */
+.vm-player-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.vm-play-btn {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(234, 88, 12, 0.28);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.vm-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.34);
+}
+.vm-player-track {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.vm-scrubber {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #f97316 var(--vm-progress, 0%),
+    rgba(249, 115, 22, 0.15) var(--vm-progress, 0%)
+  );
+  outline: none;
+  cursor: pointer;
+  accent-color: #f97316;
+}
+.vm-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ea580c;
+  box-shadow: 0 1px 4px rgba(160, 95, 30, 0.4);
+  cursor: pointer;
+}
+.vm-scrubber::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #ea580c;
+  box-shadow: 0 1px 4px rgba(160, 95, 30, 0.4);
+  cursor: pointer;
+}
+.vm-scrubber::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.15);
+}
+.vm-player-timers {
+  display: flex;
+  justify-content: space-between;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  font-size: 11px;
+  color: #64748b;
+}

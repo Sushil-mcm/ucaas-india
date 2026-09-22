@@ -550,7 +550,15 @@ export const makeAISocketConnection = (): ReturnType<typeof io> | null => {
     return null;
   }
 
+  // Same handshake shape as makeSipSocketConnection: the shared socket server
+  // rejects unauthenticated connections, so the session token has to travel
+  // in `auth` (and `query`, for parity with older portal socket servers).
+  const token = localStorage.getItem(SESSION_NAME) || '';
+  const credentials = { token };
+
   const socket = io(url, {
+    auth: credentials,
+    query: credentials,
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,

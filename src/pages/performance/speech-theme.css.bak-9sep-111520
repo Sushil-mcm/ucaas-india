@@ -1,0 +1,324 @@
+/* ============================================================
+   Performance › Speech & Text — warm sunset orange glassmorphism.
+
+   Scoped to `.perf-speech`, the tab's own root element, the same pattern
+   `callbacks-theme.css`/`campaigns-theme.css` use — nothing outside this
+   component is reachable from here.
+   ============================================================ */
+
+.perf-speech {
+  --sp-accent: #f97316;
+  --sp-accent-ink: #ea580c;
+  --sp-wash: #fff1eb;
+  --sp-muted: #666666;
+  --sp-ink: #1a1a1a;
+
+  --sp-glass: rgba(255, 255, 255, 0.85);
+  --sp-glass-border: rgba(255, 255, 255, 0.95);
+  --sp-glass-blur: blur(20px) saturate(190%);
+  --sp-glass-shadow:
+    0 10px 30px -5px rgba(234, 88, 12, 0.1),
+    0 4px 12px -2px rgba(60, 40, 30, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+.dark .perf-speech {
+  --sp-wash: #2a1710;
+  --sp-muted: #93a1ba;
+  --sp-ink: #f4f6fb;
+  --sp-glass: rgba(17, 24, 39, 0.72);
+  --sp-glass-border: rgba(251, 146, 60, 0.18);
+  --sp-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Ambient backdrop, wired via the shared `perf-warm-backdrop` toggle —
+   painted on `.perf-speech` itself (not the generic `.mcm-page` rule),
+   consistent with how Callbacks and Campaigns do it. */
+body.perf-warm-backdrop .perf-speech {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(254, 215, 170, 0.65) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.5) 0%, transparent 55%),
+    #fdf6ee;
+}
+.dark body.perf-warm-backdrop .perf-speech {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(154, 82, 30, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(251, 146, 60, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(194, 65, 12, 0.24) 0%, transparent 55%),
+    #0a0f1a;
+}
+
+/* Page note ("Sentiment for AI receptionist...") — was a raw <p>, floating
+   directly on the ambient gradient with no surface of its own. Wrapped
+   into the same slim frosted notice pill Reports uses for its own SL%/
+   sampled-data caption (`.rp-notice`): one line, ellipsis if it runs long,
+   rather than a bare paragraph that could wrap to two. */
+.perf-speech .st-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.perf-speech .st-notice svg {
+  flex: none;
+  color: var(--sp-accent-ink);
+}
+.perf-speech .st-notice span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dark .perf-speech .st-notice {
+  background: rgba(23, 15, 10, 0.6);
+  border-color: rgba(251, 146, 60, 0.2);
+  color: var(--sp-muted);
+}
+
+/* ------------------------------------------------------------
+   1. Metric summary cards — all three rows (grid3, grid4, PerfStatCard)
+   ------------------------------------------------------------ */
+/* `.grid3`/`.grid4` (mcm-page.css) use `auto-fit, minmax(...)`, which sizes
+   columns by how many fit the container and stretches whatever lands in a
+   half-empty last row to fill the leftover space — with 3 cards in grid3
+   and 8 in grid4 that produced visibly uneven widths row to row. Fixed
+   column counts make every card in every row the same width, and
+   `align-items: stretch` (grid's own default, restated because `.grid3`
+   sets `start`) gives them the same height too. */
+.perf-speech .grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+.perf-speech .grid4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .perf-speech .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .perf-speech .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .perf-speech .grid3,
+  .perf-speech .grid4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.perf-speech .stat {
+  background: var(--sp-glass);
+  backdrop-filter: var(--sp-glass-blur);
+  -webkit-backdrop-filter: var(--sp-glass-blur);
+  border: 1px solid var(--sp-glass-border);
+  /* 20px, matching the Directory-benchmark radius Agents/Live/Flows all
+     use for their own KPI cards — this view's own 18px was the one gap. */
+  border-radius: 20px;
+  box-shadow: var(--sp-glass-shadow);
+  display: flex;
+  flex-direction: column;
+}
+.perf-speech .stat .k {
+  color: var(--sp-muted);
+  letter-spacing: 0.1em;
+}
+.perf-speech .stat .v {
+  color: var(--sp-ink);
+  font-weight: 800;
+}
+.perf-speech .stat .d {
+  color: var(--sp-muted) !important;
+  font-weight: 600;
+}
+
+/* Progress bar tracks (Sentiment distribution, topic Volume) — the flat
+   cool-gray track (`var(--surface-3)`) swapped for a warm peach one. */
+.perf-speech .hbar-t {
+  background: rgba(249, 115, 22, 0.12);
+}
+.dark .perf-speech .hbar-t {
+  background: rgba(251, 146, 60, 0.16);
+}
+/* Fill: warm gradient — but only for the topic Volume bars, which carry a
+   single fill segment (`:only-child`). Sentiment distribution's bar has
+   three segments coloured by sentimentBucketColor() in speech-text-tab.tsx
+   (Positive/Neutral/Negative); forcing one gradient onto all of them here
+   would erase that distinction and read as an odd two-tone blend instead
+   of three separate sentiments. */
+.perf-speech .hbar-t i:only-child {
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%) !important;
+}
+/* Sentiment distribution's own bar — a touch slimmer than the shared 8px
+   default (mcm-page.css), scoped to just this bar rather than `.hbar-t`
+   generally so the Topics table's Volume bars keep their own height.
+   `.hbar-t`'s own `flex: 1` (mcm-page.css) sets flex-basis to 0%, which
+   inside `.stat`'s flex-column layout governs main-axis (height) sizing
+   ahead of a plain `height` — flex-grow then stretched this bar to fill
+   whatever vertical space was left in the card, six-pixel `height` and
+   all. `flex: none` is what actually lets the explicit height stick. */
+.perf-speech .sp-sentiment-bar {
+  flex: none;
+  height: 9px;
+}
+
+/* ------------------------------------------------------------
+   2. Topics & Agent sentiment ranking tables
+   ------------------------------------------------------------ */
+.perf-speech .sect-title {
+  color: var(--sp-muted);
+}
+
+/* Bottom corners only — `splitStickyHeader` puts the header above this in
+   its own separate box (already owning the top corners via the
+   `thead th:first-child`/`:last-child` rules below), so `.table-scroll`
+   isn't the wrapper's own top edge anymore. Rounding all four corners
+   here carves a curved notch into the body box's own top-right corner
+   right where the vertical scrollbar starts (same bug found and fixed on
+   Performance ▸ Agents/Calls/Flows/Callbacks). Applies to both tables on
+   this page (Topics, Agent sentiment). */
+.perf-speech .table-scroll {
+  border-radius: 0 0 20px 20px;
+  border: 1px solid var(--sp-glass-border);
+  background: var(--sp-glass);
+  backdrop-filter: var(--sp-glass-blur);
+  -webkit-backdrop-filter: var(--sp-glass-blur);
+  box-shadow: var(--sp-glass-shadow);
+}
+/* TableManager's own outer wrapper div (`rounded-xl border ...
+   overflow-hidden`), not `.table-scroll` itself, is what actually clips a
+   native scrollbar — a scrollbar isn't clipped by the scrolling
+   element's own border-radius, only by an ancestor's overflow:hidden.
+   That wrapper's default 12px Tailwind radius didn't match this 20px, so
+   the scrollbar rendered as a flat rectangle poking through the corner.
+   Applies to both tables on this page (Topics, Agent sentiment). */
+.perf-speech div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+.perf-speech .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
+}
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated. Applies to both tables on this
+   page (Topics, Agent sentiment).
+   Scoped to `.perf-speech thead` directly, NOT `.table-scroll thead` —
+   these tables render with `splitStickyHeader` (speech-text-tab.tsx),
+   which puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it. */
+.perf-speech thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .perf-speech thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.perf-speech thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background: transparent;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+}
+.perf-speech thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.perf-speech thead th:last-child {
+  border-top-right-radius: 20px;
+}
+.perf-speech .table-scroll tbody tr {
+  background: transparent;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+/* Directory's signature left accent-bar row hover — every other
+   Performance table already carries this; Speech & Text was the one gap.
+   Applies to both tables on this page (Topics, Agent sentiment). */
+.perf-speech .table-scroll tbody tr:hover {
+  background: rgba(254, 215, 170, 0.22);
+  box-shadow: inset 3px 0 0 var(--sp-accent);
+}
+.perf-speech .table-scroll tbody td {
+  color: #334155;
+}
+.dark .perf-speech .table-scroll tbody td {
+  color: var(--sp-muted);
+}
+.perf-speech .table-scroll tbody td:first-child {
+  color: var(--sp-ink);
+  font-weight: 600;
+}
+
+/* Interactions — a short integer count, off-balance pinned to either edge
+   of its column. Two separate tables share this scope (Topics, Agent
+   sentiment ranking), each with "Interactions" at a different column
+   index, so each is targeted through its own wrapper class rather than a
+   single shared nth-child rule. */
+/* Every column but the row's own name (Topic / Agent, both column 1) —
+   centered under its header, both th and td. Share / Avg sentiment / %
+   negative had no alignment rule at all, which does not mean "left": a
+   bare `<th>`'s own browser default is centered while a bare `<td>`
+   defaults left, so all three silently disagreed with their own header. */
+.perf-speech .sp-topics-table .table-scroll th:nth-child(n + 2),
+.perf-speech .sp-topics-table .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Volume's own content is a fixed-width block `<div>` bar (speech-text-
+   tab.tsx), which `text-align:center` on the cell can't center — that
+   only aligns inline content. `margin:auto` centers the block itself. */
+.perf-speech .sp-topics-table .table-scroll td:nth-child(2) .hbar-t {
+  margin-left: auto;
+  margin-right: auto;
+}
+.perf-speech .sp-agents-table .table-scroll th:nth-child(n + 2),
+.perf-speech .sp-agents-table .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Avg sentiment — was plain coloured text (toneColor() in
+   speech-text-tab.tsx sets only `color`); a high-contrast wash pill reads
+   as a genuine status badge instead of just tinted numbers sitting loose
+   in the cell. Tone is still decided in the TSX (the same three-way split
+   `--live`/`--warn`/`--crit` already used), this only adds the badge
+   chrome around whichever tone class it's given. */
+.perf-speech .sp-sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.perf-speech .sp-sentiment-badge.pos {
+  background: var(--live-wash);
+  color: var(--live);
+}
+.perf-speech .sp-sentiment-badge.neu {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.perf-speech .sp-sentiment-badge.neg {
+  background: var(--crit-wash);
+  color: var(--crit);
+}

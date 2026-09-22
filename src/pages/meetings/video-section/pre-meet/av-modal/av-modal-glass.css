@@ -1,0 +1,145 @@
+/* ---- Video preview card ---- */
+.av-video-card {
+  padding: 0;
+  background: transparent;
+  border-radius: 14px;
+  box-shadow: none;
+  border: none;
+}
+
+.av-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.av-video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.av-video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a;
+}
+
+.av-video-placeholder .custom-avatar,
+.av-video-placeholder > div {
+  transform: scale(1.2);
+}
+
+.av-video-error-text {
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.av-video-name {
+  position: absolute;
+  bottom: 10px;
+  left: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 5px 14px;
+  border-radius: 8px;
+}
+
+/* ---- Meeting Settings card ---- */
+.av-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.av-settings-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #1a1a1a !important;
+  margin: 0 !important;
+  letter-spacing: -0.15px;
+}
+
+/* Tighten label text */
+.av-settings-card label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #444 !important;
+}
+
+/* Clean select borders — override global border-border */
+.av-settings-card .selectBox .react-select__control,
+.av-settings-card .selectBox [class*="__control"] {
+  border: 1px solid #e2e2e2 !important;
+  border-radius: 10px !important;
+  min-height: 34px !important;
+  background: #fafafa !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s;
+}
+
+.av-settings-card .selectBox .react-select__control:hover,
+.av-settings-card .selectBox [class*="__control"]:hover {
+  border-color: #ccc !important;
+}
+
+.av-settings-card .selectBox .react-select__control--is-focused,
+.av-settings-card .selectBox [class*="__control--is-focused"] {
+  border-color: var(--primary) !important;
+}
+
+/* Dropdown indicator */
+.av-settings-card .selectBox [class*="__indicator"] svg {
+  color: #999;
+  width: 16px;
+  height: 16px;
+}
+
+/* Selected value text */
+.av-settings-card .selectBox [class*="__single-value"] {
+  font-size: 13px !important;
+  color: #333 !important;
+}
+
+/* Placeholder */
+.av-settings-card .selectBox [class*="__placeholder"] {
+  font-size: 13px !important;
+  color: #aaa !important;
+}
+
+/* Mic test button */
+.av-settings-card button[type="button"] {
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  min-height: 34px !important;
+  border: 1px solid #e2e2e2 !important;
+  background: #fafafa !important;
+  color: var(--primary) !important;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.av-settings-card button[type="button"]:hover {
+  border-color: var(--primary) !important;
+  background: rgba(242, 153, 74, 0.04) !important;
+}

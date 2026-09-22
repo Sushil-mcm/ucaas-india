@@ -1,0 +1,501 @@
+/* ============================================================
+   Performance › Queues Activity — warm sunset orange glassmorphism,
+   brought to Directory-benchmark parity (20px frosted cards, sticky
+   frosted table header, left accent-bar row hover, tag badges).
+
+   Scope, deliberately narrow, the same three-scope convention every other
+   Performance theme in this folder uses (see live-theme.css for the fully
+   annotated version):
+
+     .perf-queues              this tab's own root element (both the queue
+                                list and the per-queue drill-in share it).
+                                Owns the KPI strip, the queue table and the
+                                drill-in's own summary cards/table.
+     body.perf-warm-backdrop   the full-page ambient gradient AND the shared
+                                KPI hero band (Waiting / Longest wait /
+                                Service / Volume / Coverage) rendered one
+                                level up, by the Performance page shell
+                                (index.tsx) — outside this component's own
+                                DOM, so it can only be reached through the
+                                body flag. Toggled on mount/unmount by
+                                queues-activity-tab.tsx. Shared with Live and
+                                Campaigns; Queues is the third adopter, so
+                                the ambient gradient itself (defined once in
+                                live-theme.css) is reused rather than
+                                redeclared here — only the hero/grouped band,
+                                which nothing has themed yet, is added below.
+     body.perf-warm-toolbar    the Performance toolbar — already toggled
+                                unconditionally by index.tsx for every tab,
+                                so nothing to wire here.
+
+   Every selector below is chained through `.mcm-page .perf-queues` (three
+   classes) specifically so it outranks the plain `.mcm-page .kpi-strip` /
+   `.mcm-page .stat` rules defined inline in queues-activity-tab.tsx and
+   mcm-page.css — regardless of which stylesheet the bundler happens to
+   place later in the document.
+   ============================================================ */
+
+.perf-queues,
+body.perf-warm-backdrop {
+  --qa-accent: #f97316;
+  --qa-accent-deep: #ea580c;
+  --qa-accent-ink: #c2410c;
+  --qa-wash: #fff1eb;
+  --qa-ink: #1a1a1a;
+  --qa-muted: #666666;
+  --qa-hairline: rgba(249, 115, 22, 0.08);
+  --qa-row-hover: rgba(255, 241, 235, 0.55);
+
+  --qa-glass: rgba(255, 255, 255, 0.85);
+  --qa-glass-border: rgba(255, 255, 255, 0.95);
+  --qa-glass-blur: blur(20px) saturate(190%);
+  --qa-glass-shadow:
+    0 10px 34px rgba(160, 95, 30, 0.14),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+  --qa-glass-shadow-hover: 0 14px 35px -5px rgba(234, 88, 12, 0.18);
+
+  --qa-crit-glow: rgba(211, 47, 47, 0.28);
+  --qa-crit-glow-soft: rgba(211, 47, 47, 0.14);
+}
+.dark .perf-queues,
+.dark body.perf-warm-backdrop,
+body.perf-warm-backdrop.dark {
+  --qa-accent: #fb923c;
+  --qa-accent-deep: #f97316;
+  --qa-accent-ink: #fdba74;
+  --qa-wash: #2a1710;
+  --qa-ink: #f4f6fb;
+  --qa-muted: #93a1ba;
+  --qa-hairline: rgba(251, 146, 60, 0.14);
+  --qa-row-hover: rgba(251, 146, 60, 0.1);
+
+  --qa-glass: rgba(17, 24, 39, 0.72);
+  --qa-glass-border: rgba(251, 146, 60, 0.18);
+  --qa-glass-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --qa-glass-shadow-hover: 0 16px 38px -5px rgba(251, 146, 60, 0.22);
+}
+
+/* ------------------------------------------------------------
+   1. Shared KPI hero band (Waiting / Longest wait / Service / Volume /
+   Coverage) — rendered by index.tsx, one level above this component, so it
+   is reached through body.perf-warm-backdrop rather than .perf-queues.
+   ------------------------------------------------------------ */
+body.perf-warm-backdrop .mcm-page .hero-row .stat,
+body.perf-warm-backdrop .mcm-page .grouped-row .stat {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--qa-glass-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+body.perf-warm-backdrop .mcm-page .hero-row .stat:hover {
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--qa-glass-shadow-hover);
+  transform: translateY(-2px);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .k {
+  color: var(--qa-muted);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-value {
+  color: var(--qa-ink);
+}
+body.perf-warm-backdrop .mcm-page .hero-row .d {
+  color: var(--qa-muted) !important;
+}
+/* Breaching hero card: heading + bottom line flip to the same crit red as
+   the value, instead of staying the muted grey above — needs to outrank
+   the plain `.hero-row .k` / `.hero-row .d` (incl. its `!important`) rules
+   just above, which is why this repeats the full `body...` chain. */
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach .k,
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach .d {
+  color: var(--crit) !important;
+}
+
+/* "Longest wait", past target, used a flat solid crit-red ring — striking,
+   but reads as an error state rather than a metric worth a second look.
+   A soft rose glass glow underneath keeps the urgency without the alarm. */
+body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
+  border-color: var(--qa-crit-glow);
+  box-shadow:
+    0 0 0 1px var(--qa-crit-glow),
+    0 10px 30px -10px var(--qa-crit-glow-soft);
+  animation: qa-breach-glow 2.2s ease-in-out infinite;
+}
+@keyframes qa-breach-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px var(--qa-crit-glow),
+      0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px var(--qa-crit-glow),
+      0 0 18px 3px var(--qa-crit-glow-soft);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.perf-warm-backdrop .mcm-page .hero-row .hero-stat-breach {
+    animation: none;
+  }
+}
+/* ------------------------------------------------------------
+   2. Live-sync notice — a frosted glass pill instead of floating text.
+   Muted slate on translucent white, matching the notice pill standard set
+   on Dashboards (db-notice) rather than the orange-wash treatment used
+   here originally.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .qa-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  /* A single-line sentence at the very edge of the pill's width can spill
+     past the rounded corner on a narrower real browser window than any
+     one dev viewport tests — overflow:hidden clips it to the pill's own
+     shape instead of the text poking out past its background. */
+  overflow: hidden;
+}
+.dark .mcm-page .perf-queues .qa-notice {
+  color: #475569;
+}
+/* `.page-note` (mcm-page.css) caps itself at `max-width: 100ch`, tuned for
+   a page description rather than a pill with the band's full width to
+   work with — that cap is what forced this long caveat to wrap a few
+   words from the end. */
+.mcm-page .perf-queues .qa-notice .page-note {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  max-width: none;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: inherit;
+}
+
+/* Leadership review: the gap between Row 1 (the shared 8-tile KPI band,
+   `.page-band`, rendered one level up by the Performance page shell) and
+   Row 2 (the 6-metric strip immediately below, `.kpi-strip`) read as an
+   awkward empty band pushing the Queues table too far down. That gap is
+   `.perf-queues`'s own top padding (Tailwind `py-4` in
+   queues-activity-tab.tsx, 16px) — tightened here rather than in the
+   component, so `py-4` can stay as one class covering every other edge
+   (bottom/left/right) without a one-off arbitrary value replacing it. */
+.mcm-page .perf-queues {
+  padding-top: 14px !important;
+}
+
+/* ------------------------------------------------------------
+   3. Six-metric snapshot strip (Busiest queue / Longest waiting / Lowest
+   SLA / Total members / Available now / Total interacting) — one frosted
+   glass bar, each metric its own pill segment rather than hairline-divided
+   flat cells.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .kpi-strip {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--qa-glass-shadow);
+  padding: 6px;
+  gap: 4px;
+}
+/* Leadership review: each cell used to be a translucent
+   `rgba(255,255,255,0.55)` wash — mostly-transparent white sitting directly
+   over the warm gradient page, which read as a flat "stark white box"
+   rather than actual frosted glass. Opaque `#fffdfb` + its own blur/border/
+   shadow gives every cell (breach included, below) real depth instead of
+   just fading into the backdrop. */
+.mcm-page .perf-queues .kpi-strip-cell {
+  border-left: none;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(249, 115, 22, 0.16) !important;
+  box-shadow: 0 4px 16px rgba(160, 95, 30, 0.08) !important;
+  margin: 0 2px;
+  transition: all 0.2s ease;
+}
+.dark .mcm-page .perf-queues .kpi-strip-cell {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+/* One hover treatment for every cell, breach included — a warm peach
+   lift, not a background-colour swap. Previously `.kpi-strip-cell:hover`
+   applied unconditionally (same class present on a breaching cell), so it
+   overrode the breach's own background on hover — Longest Waiting's pink
+   fill would flash to solid white the instant a cursor crossed it. Since
+   neither state has its own solid background any more (both use this same
+   glass card + a peach hover wash), there's nothing left to flash between. */
+.mcm-page .perf-queues .kpi-strip-cell:hover {
+  background: rgba(254, 215, 170, 0.25) !important;
+}
+.dark .mcm-page .perf-queues .kpi-strip-cell:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+/* Longest Waiting, breaching — the card itself stays the same uniform
+   glass every other cell gets (above); the breach reads through the
+   number's own colour, a soft rose hairline and an ambient glow instead
+   of painting the whole card solid pink/red. */
+.mcm-page .perf-queues .kpi-strip-cell-breach {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.12) !important;
+}
+.mcm-page .perf-queues .kpi-strip-label {
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mcm-page .perf-queues .kpi-strip-value {
+  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 800;
+}
+.mcm-page .perf-queues .kpi-strip-value-danger {
+  color: #e11d48 !important;
+}
+.mcm-page .perf-queues .kpi-strip-sub {
+  color: #64748b;
+  font-size: 12px;
+}
+@media (max-width: 1180px) {
+  .mcm-page .perf-queues .kpi-strip-cell {
+    border-bottom: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   4. Drill-in summary cards (per-queue detail — Waiting, Longest wait,
+   Interacting, Members, Handled, Service level, ASA, Abandon) reuse the
+   same PerfStatCard "inline" layout as everywhere else in Performance, so
+   they get the identical frosted treatment as the hero/grouped band above.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .summary-grid .stat {
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  border: 1px solid var(--qa-glass-border);
+  border-radius: 16px;
+  box-shadow: var(--qa-glass-shadow);
+}
+.mcm-page .perf-queues .summary-grid .k {
+  color: var(--qa-muted);
+}
+.mcm-page .perf-queues .summary-grid .stat-inline-value {
+  color: var(--qa-ink);
+}
+.mcm-page .perf-queues .summary-grid .stat-inline-icon {
+  background: var(--qa-wash);
+  color: var(--qa-accent-ink);
+}
+
+/* ------------------------------------------------------------
+   5. Main queues table — 20px frosted glass card, sticky frosted header,
+   Directory's signature left accent-bar row hover.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .table-scroll {
+  /* Bottom corners only — `splitStickyHeader` puts the header above this
+     in its own box, which already owns the top corners (via the
+     `thead th:first-child`/`:last-child` rules below, same precedent as
+     agents-theme.css). Rounding all four here drew a second curve right
+     under the header, where this box's own top corners traced against
+     the header's straight bottom edge. */
+  border-radius: 0 0 20px 20px;
+  /* Directory's exact card border — not `--qa-glass-border` (a near-white
+     rgba(255,255,255,0.95) used by this page's other frosted KPI cards),
+     which read as a mismatched pale line against Directory's warm tan. */
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  background: var(--qa-glass);
+  backdrop-filter: var(--qa-glass-blur);
+  -webkit-backdrop-filter: var(--qa-glass-blur);
+  box-shadow: var(--qa-glass-shadow);
+}
+/* TableManager wraps `.table-scroll` in its own outer div (table-
+   manager.tsx: `rounded-xl border ... overflow-hidden`) — that outer div,
+   not `.table-scroll` itself, is what actually clips a native scrollbar,
+   since a scrollbar's track/thumb isn't clipped by the scrolling
+   element's OWN border-radius, only by an ancestor's overflow:hidden.
+   The outer div's default 12px Tailwind radius didn't match this 20px,
+   so the scrollbar rendered as a flat rectangle poking through the
+   rounded corner. Matching it here fixes that at the source. */
+.mcm-page .perf-queues div:has(> .table-scroll) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-track {
+  margin-bottom: 8px;
+}
+/* Directory's exact thumb recipe (people-glass.css) — without this the
+   thumb falls back to the generic `--line` (#eee7dd) used everywhere else
+   on the page instead of Directory's warm-orange tone. */
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.mcm-page .perf-queues .table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 111, 31, 0.55);
+  background-clip: padding-box;
+}
+
+/* Sticky header — pixel-matched to Directory ▸ People's own `.gp-people th`
+   (people-glass.css) plus the `.mcm-page th` base it inherits from
+   (mcm-page.css): solid `#fffdfb`, `#8a6f57` text, 9.5px/800/0.09em, 9px
+   12px padding, a 3px warm-orange hairline — read off Directory's own
+   computed styles rather than approximated.
+   Scoped to `.perf-queues thead` directly, NOT `.table-scroll thead` —
+   this table renders with `splitStickyHeader` (table-manager.tsx), which
+   puts the header in its own non-scrolling box, a *sibling* of
+   `.table-scroll`, not a descendant of it (same gotcha already hit and
+   fixed in agents-theme.css/interactions-theme.css). A `.table-scroll`-
+   anchored selector would silently never match this table's header.
+   This also fixes a real rendering bug the old non-split header had: its
+   row height came out of flex/table layout as a fraction of a device
+   pixel, so the border-bottom got anti-aliased into a faint, washed-out
+   band despite being the same 3px/0.4-alpha value Directory uses — the
+   split header's own single-row table doesn't share that fractional
+   layout chain, so the identical value renders crisp here (verified
+   against Performance ▸ Calls, `.perf-interactions`, which uses this same
+   splitStickyHeader + plain-`thead` pattern and the exact same rgba). */
+.mcm-page .perf-queues thead {
+  background: #fffdfb;
+  box-shadow: none;
+}
+.dark .mcm-page .perf-queues thead {
+  background: rgba(23, 15, 10, 0.97);
+}
+.mcm-page .perf-queues thead th {
+  color: #8a6f57;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 9px 12px !important;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  background: transparent;
+}
+.mcm-page .perf-queues thead th:first-child {
+  border-top-left-radius: 20px;
+}
+.mcm-page .perf-queues thead th:last-child {
+  border-top-right-radius: 20px;
+}
+
+/* Rows — transparent at rest, warm tint plus the 3px left accent bar on
+   hover; the Directory benchmark's signature row-hover treatment. */
+.mcm-page .perf-queues .table-scroll tbody tr {
+  background: transparent;
+  border-color: var(--qa-hairline);
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mcm-page .perf-queues .table-scroll tbody tr:hover {
+  background: var(--qa-row-hover);
+  box-shadow: inset 3px 0 0 var(--qa-accent);
+}
+.mcm-page .perf-queues .table-scroll tbody td {
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-bottom-color: var(--qa-hairline);
+  color: #334155;
+}
+.dark .mcm-page .perf-queues .table-scroll tbody td {
+  color: var(--qa-muted);
+}
+
+/* Queue name — crisp dark charcoal, not a bright orange link; the row's
+   own hover accent bar already says "clickable", so the text itself reads
+   like the rest of the console (Directory does the same on People). */
+.mcm-page .perf-queues .table-scroll tbody td .qa-queue-name {
+  color: var(--qa-ink);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.14s ease;
+}
+.dark .mcm-page .perf-queues .table-scroll tbody td .qa-queue-name {
+  color: #f1f5f9;
+}
+.mcm-page .perf-queues .table-scroll tbody tr:hover td .qa-queue-name,
+.mcm-page .perf-queues .table-scroll tbody td .qa-queue-name:hover {
+  color: var(--qa-accent-ink);
+}
+
+/* Every column but Queue (1, the row's own name) — Media, Waiting,
+   Longest, Members, Interacting, Offered, Handled, SL today, ASA, AHT,
+   Abandon — centered under its header, both th and td. Offered/Handled
+   had no alignment rule at all before (left by browser default) and
+   SL today/Abandon centered their `<th>` (a `<th>`'s own browser default)
+   while right-aligning only the `<td>` tag beneath it — both mismatches
+   between a column's header and its own values, on top of the numbers
+   themselves reading off-balance. One consistent rule for the whole row
+   fixes both at once, matching the policy every other Performance table
+   now follows (Agents, Flows, Campaigns, Reports, ...). */
+.mcm-page .perf-queues .table-scroll th:nth-child(n + 2),
+.mcm-page .perf-queues .table-scroll td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .perf-queues .table-scroll td:nth-child(6) .live-pulse-dot-wrap {
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------
+   6. Drill-in member table — same frosted card as the main table above,
+   TableManager renders it through the identical `.table-scroll` markup so
+   section 5's rules already apply; only the status pill needs a touch-up
+   to sit on Directory's tag palette instead of ad-hoc bg-* utility colours.
+   ------------------------------------------------------------ */
+.mcm-page .perf-queues .table-scroll tbody td .state {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.q {
+  background: var(--live-wash);
+  color: var(--live);
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.busy {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+.mcm-page .perf-queues .table-scroll tbody td .state.away {
+  background: var(--surface-3);
+  color: var(--ink-3);
+}
+
+/* Breadcrumb + title above the drill-in table. */
+.mcm-page .perf-queues .qa-crumb button {
+  color: var(--qa-accent-ink);
+}

@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useSocketEvents } from '@/hooks/use-socket-events';
+import './av-modal-glass.css';
 
 let removeListener: any = () => null;
 type AVStep = 'av_setup' | 'password_gate' | '';
@@ -319,34 +320,37 @@ const AVModal = ({ meetState, setMeetState }: { meetState: any; setMeetState: an
             <>
               <div className="flex md:flex-row flex-col items-center w-full">
                 <div className="md:w-2/4 w-full">
-                  <div
-                    className={`w-full aspect-video px-3 flex items-center justify-center relative text-white ${AVVideoTrack?.stream?.active ? '' : 'bg-black-600 rounded-xl'}`}
-                  >
-                    {errors?.['avVideo'] || !AVVideoTrack?.stream?.active ? (
-                      <div className="flex justify-center items-center w-full h-full rounded-xl object-cover text-center px-10 bg-black text-md text-white leading-7">
-                        {errors?.['avVideo'] ? (
-                          `${errors['avVideo']} - Your Camera device is being used by another application`
-                        ) : (
-                          <CustomAvatar name={displayName || 'Guest'} size="150" />
-                        )}
-                      </div>
-                    ) : (
-                      <video
-                        style={{ transform: 'rotateY(180deg)' }}
-                        className="pointer-events-none w-full h-full rounded-xl object-cover"
-                        autoPlay
-                        playsInline
-                        id="avPreviewVideo"
-                      ></video>
-                    )}
+                  <div className="av-video-card">
+                    <div className="av-video-frame">
+                      {errors?.['avVideo'] ? (
+                        <div className="av-video-placeholder">
+                          <span className="av-video-error-text">
+                            {errors['avVideo']} — Camera is being used by another application
+                          </span>
+                        </div>
+                      ) : !AVVideoTrack?.stream?.active || isAVVideoMuted ? (
+                        <div className="av-video-placeholder">
+                          <CustomAvatar name={displayName || 'Guest'} size="100" />
+                        </div>
+                      ) : (
+                        <>
+                          <video
+                            style={{ transform: 'rotateY(180deg)' }}
+                            className="av-video-el"
+                            autoPlay
+                            playsInline
+                            id="avPreviewVideo"
+                          />
+                        </>
+                      )}
+                      <span className="av-video-name">{displayName}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="md:w-2/4 px-6 w-full">
-                  <div className="flex flex-col gap-4">
-                    <h3 className="text-gray-900 font-semibold text-lg md:mt-0 mt-2">
-                      Meeting Settings
-                    </h3>
+                  <div className="av-settings-card">
+                    <h3 className="av-settings-title">Meeting Settings</h3>
 
                     <CustomSelect
                       label="Audio Devices"
