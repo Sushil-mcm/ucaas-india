@@ -1326,19 +1326,6 @@
     cursor: default !important;
   }
 
-  /* Captain Playground's "Start voice test" button is disabled until a
-     voice number is connected, but the form-control rule above painted it
-     grey-on-grey — unreadable against its own blue gradient. Same layer
-     trick as the two rules above: this class-selector wins on specificity
-     within `@layer base`, where an unlayered override would lose to the
-     reversed layer order for `!important` declarations. */
-  .mcm-voice-start-btn:disabled {
-    background: linear-gradient(to right, #0ea5e9, #2563eb) !important;
-    border-color: transparent !important;
-    color: #fff !important;
-    opacity: 1 !important;
-  }
-
   input[type='radio']:disabled,
   input[type='checkbox']:disabled {
     opacity: 0 !important;

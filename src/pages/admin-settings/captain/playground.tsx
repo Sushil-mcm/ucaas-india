@@ -222,7 +222,7 @@ const CaptainPlayground = () => {
                 onClick={() => setMode(m)}
                 className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
                   mode === m
-                    ? 'bg-white text-primary shadow-sm ring-1 ring-sky-200 dark:bg-sky-900/40 dark:ring-sky-800'
+                    ? 'bg-white text-primary ring-2 ring-primary shadow-sm dark:bg-sky-900/40 dark:ring-sky-700'
                     : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'
                 }`}
               >
@@ -301,9 +301,15 @@ const CaptainPlayground = () => {
                   variant="primary"
                   onClick={voice.start}
                   disabled={!voice.numbers.length}
-                  className="mcm-voice-start-btn mt-5 h-11 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-8 text-white shadow-md"
+                  className="mcm-voice-start-btn mt-5 h-11 rounded-full px-8 shadow-md"
+                  style={{
+                    background: 'linear-gradient(to right, #0ea5e9, #2563eb)',
+                    color: '#fff',
+                    opacity: 1,
+                    borderColor: 'transparent',
+                  }}
                 >
-                  <Phone className="size-4" />
+                  <Phone className="size-4" style={{ color: '#fff' }} />
                   {voice.status === 'ended' || voice.status === 'error'
                     ? 'Call again'
                     : 'Start voice test'}
