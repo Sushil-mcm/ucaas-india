@@ -12,6 +12,7 @@ import {
   AssigneeTab, StatusFilter, SortOrder, agentName,
 } from './conversation-helpers';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 const POLL_MS = 8000;
 const EMPTY_META: ListMeta = { all: 0, mine: 0, unassigned: 0 };
@@ -29,6 +30,9 @@ const ConversationsView = (props: Props) => {
   const { activeConversationId, onOpenConversation } = props;
   const isAllScope = props.scope === 'all';
   const scopeInboxId = props.scope === 'inbox' ? props.inboxId : null;
+  useSetAdminPageMeta(
+    isAllScope ? { description: 'All conversations across your Captain inboxes.' } : {},
+  );
 
   const [inboxOptions, setInboxOptions] = useState<InboxOption[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -362,28 +366,31 @@ const ConversationsView = (props: Props) => {
             <ArrowLeft className="size-4" />
           </button>
         )}
-        <div className="flex-1">
-          <h2 className="text-lg font-bold text-foreground">Conversations</h2>
-          <p className="text-sm text-muted-foreground">
-            {isAllScope
-              ? 'All conversations across your Captain inboxes.'
-              : 'Conversations for this inbox.'}
-          </p>
-        </div>
-        {isAllScope && (
-          <div className="relative">
-            <select
-              value={inboxFilter}
-              onChange={(e) => setInboxFilter(e.target.value)}
-              className="h-9 appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-7 text-sm text-gray-900 outline-none focus:border-primary dark:focus:border-primary dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            >
-              <option value="">All inboxes</option>
-              {inboxOptions.map((i) => (
-                <option key={i.id} value={i.id}>{i.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+        {!isAllScope && (
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-foreground">Conversations</h2>
+            <p className="text-sm text-muted-foreground">Conversations for this inbox.</p>
           </div>
+        )}
+        {isAllScope && (
+          <>
+            <div className="flex-1" />
+            <AdminHeadActions>
+              <div className="relative">
+                <select
+                  value={inboxFilter}
+                  onChange={(e) => setInboxFilter(e.target.value)}
+                  className="h-9 appearance-none rounded-lg border border-gray-200 bg-white pl-3 pr-7 text-sm text-gray-900 outline-none focus:border-primary dark:focus:border-primary dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                >
+                  <option value="">All inboxes</option>
+                  {inboxOptions.map((i) => (
+                    <option key={i.id} value={i.id}>{i.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              </div>
+            </AdminHeadActions>
+          </>
         )}
         <button
           type="button"

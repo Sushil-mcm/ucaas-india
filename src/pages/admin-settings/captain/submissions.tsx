@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { handleAlert } from '@/lib/utils';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 const PER_PAGE = 25;
 
@@ -120,6 +121,9 @@ const SubmissionDetailDialog = ({
 );
 
 export default function CaptainSubmissions() {
+  useSetAdminPageMeta({
+    description: 'Every lead and form a visitor has actually submitted through your assistant.',
+  });
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -205,13 +209,6 @@ export default function CaptainSubmissions() {
 
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div>
-        <div className="text-lg font-bold text-gray-950 dark:text-gray-100">Activity</div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Every lead and form a visitor has actually submitted through your assistant.
-        </p>
-      </div>
-
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
           <select
