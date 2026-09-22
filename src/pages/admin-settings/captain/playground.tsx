@@ -222,7 +222,7 @@ const CaptainPlayground = () => {
                 onClick={() => setMode(m)}
                 className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition disabled:cursor-not-allowed ${
                   mode === m
-                    ? 'bg-white text-primary ring-1 ring-sky-200 dark:bg-sky-900/40 dark:ring-sky-800'
+                    ? 'bg-white text-primary shadow-sm ring-1 ring-sky-200 dark:bg-sky-900/40 dark:ring-sky-800'
                     : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'
                 }`}
               >
