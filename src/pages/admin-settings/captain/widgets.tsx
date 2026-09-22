@@ -14,6 +14,7 @@ import { createWidget, deleteWidget, listWidgets } from './widget/helpers/api';
 import { buildStarterWidgetConfig, NEW_WIDGET_DEFAULT_TITLE } from './widget/helpers/templates';
 import { draftStore } from './widget/helpers/draft-store';
 import type { CustomTool } from './widget/helpers/types';
+import { AdminHeadActions } from '@/pages/admin-settings/admin-page-head';
 
 const PER_PAGE = 25;
 const BUILDER_PATH = '/admin-settings/captain/widgets';
@@ -184,13 +185,12 @@ export default function CaptainWidgets() {
 
   return (
     <div className="flex h-full w-full flex-col gap-5 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-lg font-bold text-gray-950 dark:text-foreground">Widgets</div>
+      <AdminHeadActions>
         <Button type="button" variant="primary" onClick={goToCreate}>
           <Plus className="size-4" />
           Custom widget
         </Button>
-      </div>
+      </AdminHeadActions>
 
       <div className="flex items-center gap-2">
         <div className="flex h-9 w-72 items-center gap-2 rounded-lg border border-gray-200 dark:border-border bg-gray-50 dark:bg-muted px-3 sm:w-96">

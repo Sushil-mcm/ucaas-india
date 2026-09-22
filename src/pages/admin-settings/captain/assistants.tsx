@@ -27,6 +27,7 @@ import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 type Assistant = {
   id: string;
@@ -72,6 +73,9 @@ const emptyForm = {
 };
 
 const CaptainAssistants = () => {
+  useSetAdminPageMeta({
+    description: 'AI personas that power your Captain chatbot — instructions, guardrails, and behavior.',
+  });
   const [assistants, setAssistants] = useState<Assistant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
@@ -942,18 +946,12 @@ const CaptainAssistants = () => {
   // ═══════════════════════════════════════════════════════════════════
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-950 dark:text-gray-100">Assistants</h1>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            AI personas that power your Captain chatbot — instructions, guardrails, and behavior.
-          </div>
-        </div>
+      <AdminHeadActions>
         <Button type="button" variant="primary" onClick={openCreatePage}>
           <Plus className="size-4" />
           Add Assistant
         </Button>
-      </div>
+      </AdminHeadActions>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">

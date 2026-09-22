@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Play, Wrench, Search, Plug, Zap, MessageSquare, ChevronLeft, ChevronRight, ChevronDown, Users, ClipboardList, MousePointerClick, Bot, Paperclip, Mic, Volume2, ThumbsUp, ThumbsDown, MoreHorizontal, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Play, Wrench, Search, Plug, Zap, ChevronLeft, ChevronRight, ChevronDown, Users, ClipboardList, MousePointerClick, Bot, Paperclip, Mic, Volume2, ThumbsUp, ThumbsDown, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 
 type Param = { name: string; type: string; description: string; required: boolean };
@@ -39,6 +40,10 @@ const fieldClass =
 
 
 const CaptainActions = () => {
+  useSetAdminPageMeta({
+    description:
+      'Integrate Actions to give Captain AI access to your business data across CRM, Finance & Accounting, HR & Recruiting, Sales, E-commerce, File Storage, Issue Tracking, and more. Captain can look up contacts, invoices, employees, orders, and more directly from your connected apps.',
+  });
   const navigate = useNavigate();
   const { assistants, selectedId, selectAssistant, isLoading: isLoadingAssistants } = useSelectedAssistant();
   const [mainTab, setMainTab] = useState<'my-actions' | 'create-action'>('my-actions');
@@ -501,20 +506,6 @@ const CaptainActions = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 overflow-y-auto p-6">
-      <div className="flex items-start gap-3 border-b border-gray-100 pb-5 dark:border-gray-700">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white">
-          <MessageSquare className="size-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-gray-950 dark:text-gray-100">Actions</h2>
-          <p className="text-sm text-gray-500 dark:text-muted-foreground">
-            Integrate Actions to give Captain AI access to your business data across CRM, Finance &amp; Accounting,
-            HR &amp; Recruiting, Sales, E-commerce, File Storage, Issue Tracking, and more. Captain can look up
-            contacts, invoices, employees, orders, and more directly from your connected apps.
-          </p>
-        </div>
-      </div>
-
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>}
 
       <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">

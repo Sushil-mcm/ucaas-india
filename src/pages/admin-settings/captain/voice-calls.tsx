@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CAPTAIN_API_BASE, captainErrorMessage, captainFetch } from '@/lib/captain-api';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 
 
@@ -575,6 +576,9 @@ const ConnectPhoneModal = ({
 // ── Inbox List Page ───────────────────────────────────────────────────────────
 
 const InboxListPage = () => {
+  useSetAdminPageMeta({
+    description: 'Voice inboxes handled by Captain AI',
+  });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isConnectOpen, setIsConnectOpen] = useState(false);
@@ -686,18 +690,7 @@ const InboxListPage = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-5">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Phone className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold text-foreground">AI Voice Calls</h1>
-            <p className="text-xs text-muted-foreground">Voice inboxes handled by Captain AI</p>
-          </div>
-        </div>
-
+      <AdminHeadActions>
         <Button
           type="button"
           onClick={() => setIsConnectOpen(true)}
@@ -706,7 +699,7 @@ const InboxListPage = () => {
           <Plus className="size-4" />
           Connect Phone Number
         </Button>
-      </div>
+      </AdminHeadActions>
 
       {/* Voice channels list / cards */}
       <div className="flex-1 overflow-y-auto px-6 py-6">

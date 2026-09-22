@@ -12,11 +12,16 @@ import { useSelectedAssistant } from './assistant-switcher';
 import InboxDetail, { InboxSummary } from './inbox-detail';
 import AddInboxWizard from './add-inbox-wizard';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 
 type ChannelToggle = { channel_type: string; enabled: boolean };
 
 const CaptainInboxes = () => {
+  useSetAdminPageMeta({
+    description:
+      'A channel is the mode of communication your customer chooses to interact with you. An inbox is where you manage interactions for a specific channel — create as many as you need, independent of one another.',
+  });
   const { assistants, selectedId } = useSelectedAssistant();
   const [, setToggles] = useState<Record<string, boolean>>({});
   const [, setIsLoading] = useState(true);
@@ -177,14 +182,6 @@ const CaptainInboxes = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 p-6">
-      <div>
-        <h2 className="text-lg font-bold text-gray-950 dark:text-foreground">Inboxes</h2>
-        <p className="text-sm text-gray-500 dark:text-muted-foreground">
-          A channel is the mode of communication your customer chooses to interact with you. An inbox is where you
-          manage interactions for a specific channel — create as many as you need, independent of one another.
-        </p>
-      </div>
-
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</div>
       )}
