@@ -15,6 +15,7 @@ import {
   UserCheck,
   Wrench,
 } from 'lucide-react';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormattedMessage } from '@/components/captain/FormattedMessage';
@@ -97,6 +98,9 @@ const Tile = ({ label, value }: { label: string; value: string }) => (
 );
 
 const CaptainPlayground = () => {
+  useSetAdminPageMeta({
+    description: 'Test your assistant by chat or voice before going live.',
+  });
   const { assistants, selectedId: assistantId, selectAssistant } = useSelectedAssistant();
   const [mode, setMode] = useState<Mode>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -194,13 +198,6 @@ const CaptainPlayground = () => {
 
   return (
     <div className="h-full w-full overflow-y-auto p-6">
-      <div className="mb-5">
-        <div className="text-lg font-bold text-gray-950 dark:text-gray-100">Playground</div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Test your assistant by chat or voice before going live.
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)]">
         {/* Test card */}
         <div className={`${CARD} border-sky-300 p-5 dark:border-sky-800`}>
