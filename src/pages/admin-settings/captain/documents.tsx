@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Link2, FileText, MoreVertical, BookOpenText, Sparkles, Trash2, Pencil, Loader2, Bot } from 'lucide-react';
+import { Plus, Link2, FileText, MoreVertical, BookOpenText, Sparkles, Trash2, Pencil, Loader2, Bot, Search, CheckCircle2, AlertCircle, Globe, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,6 +50,25 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(months / 12)} year${Math.floor(months / 12) === 1 ? '' : 's'} ago`;
 }
 
+/* Content length is a raw character count from the crawler. Shown as an
+   approximate reading size, which is what "how much did it learn" means to
+   someone looking at the list. */
+function knowledgeSize(chars: number) {
+  if (!chars) return '—';
+  if (chars < 1000) return `${chars} chars`;
+  if (chars < 1_000_000) return `${(chars / 1000).toFixed(chars < 10_000 ? 1 : 0)}k chars`;
+  return `${(chars / 1_000_000).toFixed(1)}M chars`;
+}
+
+const STATUS_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'ready', label: 'Ready' },
+  { key: 'processing', label: 'Processing' },
+  { key: 'failed', label: 'Failed' },
+] as const;
+
+type StatusFilter = (typeof STATUS_FILTERS)[number]['key'];
+
 const CaptainDocuments = () => {
   const { assistants, selectedId, selectAssistant } = useSelectedAssistant();
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -78,6 +97,8 @@ const CaptainDocuments = () => {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // `silent` re-fetches in place (used by the processing poll) without flashing
   // the full-page loader or clearing an existing error.
@@ -299,6 +320,28 @@ const CaptainDocuments = () => {
     }
   };
 
+  const stats = {
+    total: documents.length,
+    ready: documents.filter((d) => d.status === 'ready').length,
+    processing: documents.filter((d) => d.status === 'processing').length,
+    failed: documents.filter((d) => d.status === 'failed').length,
+    chars: documents.reduce((sum, d) => sum + (d.content_length || 0), 0),
+  };
+
+  const query = search.trim().toLowerCase();
+  const visibleDocs = documents.filter((doc) => {
+    if (statusFilter !== 'all' && doc.status !== statusFilter) return false;
+    if (!query) return true;
+    return (
+      doc.name.toLowerCase().includes(query) || (doc.source_url || '').toLowerCase().includes(query)
+    );
+  });
+
+  /* The meter on each card is relative to the largest source in the set, so it
+     reads as "how much of this library came from here" rather than an absolute
+     size nobody has a reference for. */
+  const maxChars = Math.max(1, ...documents.map((d) => d.content_length || 0));
+
   if (!selectedId && !isLoading) {
     return (
       <div className="flex h-full w-full flex-col gap-5 p-6">
@@ -343,22 +386,99 @@ const CaptainDocuments = () => {
         </div>
       )}
 
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-5 dark:border-gray-700 dark:bg-gray-800/60">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-          <BookOpenText className="size-7 text-primary" />
+      {/* Knowledge overview — what this assistant has actually learned, and
+          from how many sources, rather than a paragraph explaining the concept. */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+              <BookOpenText className="size-6 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-gray-950 dark:text-gray-100">Knowledge library</div>
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                Pages and files your assistant reads before answering. Captain turns them into FAQs.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-stretch sm:gap-2">
+            <div className="rounded-xl bg-gray-50 px-3.5 py-2 text-center dark:bg-gray-900/50">
+              <div className="text-base font-bold leading-tight text-gray-950 dark:text-gray-100">{stats.total}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Sources</div>
+            </div>
+            <div className="rounded-xl bg-emerald-50 px-3.5 py-2 text-center dark:bg-emerald-950/40">
+              <div className="text-base font-bold leading-tight text-emerald-700 dark:text-emerald-300">{stats.ready}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Ready</div>
+            </div>
+            {stats.processing > 0 && (
+              <div className="rounded-xl bg-amber-50 px-3.5 py-2 text-center dark:bg-amber-950/40">
+                <div className="flex items-center justify-center gap-1 text-base font-bold leading-tight text-amber-700 dark:text-amber-300">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  {stats.processing}
+                </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-600/70 dark:text-amber-400/70">Working</div>
+              </div>
+            )}
+            {stats.failed > 0 && (
+              <div className="rounded-xl bg-rose-50 px-3.5 py-2 text-center dark:bg-rose-950/40">
+                <div className="text-base font-bold leading-tight text-rose-700 dark:text-rose-300">{stats.failed}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-rose-600/70 dark:text-rose-400/70">Failed</div>
+              </div>
+            )}
+            <div className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl bg-gray-50 px-3.5 py-2 dark:bg-gray-900/50 sm:col-span-1">
+              <Database className="size-3.5 shrink-0 text-gray-400" />
+              <div>
+                <div className="text-base font-bold leading-tight text-gray-950 dark:text-gray-100">{knowledgeSize(stats.chars)}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Learned</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          A document in Captain serves as a knowledge resource for the assistant. By connecting your help center
-          pages or guides, Captain can analyze the content and generate accurate FAQs for customer inquiries.
-        </p>
       </div>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">{error}</div>
       )}
 
+      {documents.length > 0 && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or URL..."
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </div>
+          <div className="flex shrink-0 items-center gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+            {STATUS_FILTERS.map((f) => {
+              const count =
+                f.key === 'all' ? stats.total : stats[f.key as 'ready' | 'processing' | 'failed'];
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    statusFilter === f.key
+                      ? 'bg-white text-primary shadow-sm dark:bg-gray-900'
+                      : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {f.label}
+                  <span className="ml-1.5 text-gray-400">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <BulkSelectBar
-        items={documents}
+        items={visibleDocs}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         onSelectAllLabel={(count, allSelected) =>
@@ -373,94 +493,178 @@ const CaptainDocuments = () => {
       {isLoading ? (
         <div className="flex h-40 items-center justify-center text-sm text-gray-500 dark:text-gray-400">Loading...</div>
       ) : documents.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white py-16 text-center dark:border-gray-700 dark:bg-gray-800">
-          <FileText className="size-8 text-gray-300 dark:text-gray-600" />
-          <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">No documents available</div>
-          <div className="max-w-sm text-sm text-gray-500 dark:text-gray-400">
-            Documents are used by your assistant to generate FAQs. Import a document to provide context for your
-            assistant.
+        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 py-14 text-center dark:border-gray-700 dark:bg-gray-800">
+          <div className="relative mb-5 flex size-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <BookOpenText className="size-7 text-primary" />
+            <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+              <Plus className="size-3.5" />
+            </span>
           </div>
-          <Button type="button" variant="primary" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="size-4" />
-            Create a new document
-          </Button>
+          <div className="text-lg font-bold text-gray-950 dark:text-gray-100">The library is empty</div>
+          <p className="mt-1.5 max-w-sm text-sm text-gray-500 dark:text-gray-400">
+            Add a help centre page or upload a PDF. Captain reads it, then answers customers from it.
+          </p>
+
+          <div className="mt-6 grid w-full max-w-md gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => { setCreateType('url'); setIsCreateOpen(true); }}
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md dark:border-gray-700"
+            >
+              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Globe className="size-5" />
+              </span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Link a page</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Crawl a URL you already publish</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setCreateType('pdf'); setIsCreateOpen(true); }}
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-gray-200 p-4 text-center transition-all hover:-translate-y-0.5 hover:border-violet-400 hover:shadow-md dark:border-gray-700"
+            >
+              <span className="flex size-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300">
+                <FileText className="size-5" />
+              </span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Upload a PDF</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Manuals, policies, price lists</span>
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3 overflow-auto">
-          {documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800"
-              onMouseEnter={() => handleCardHover(true, doc.id)}
-              onMouseLeave={() => handleCardHover(false, doc.id)}
-            >
-              <div className="flex flex-1 items-start gap-3">
-                <div className="pt-1">
-                  <Checkbox
-                    checked={selectedIds.has(doc.id)}
-                    onCheckedChange={() => handleCardSelect(doc.id)}
-                    className={`transition-opacity ${
-                      hoveredCard === doc.id || selectedIds.size > 0 ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="truncate text-sm font-semibold text-gray-950 dark:text-gray-100">{doc.name}</div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        doc.status === 'ready'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300'
-                          : doc.status === 'failed'
-                            ? 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300'
-                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {doc.status === 'processing' ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Loader2 className="size-3 animate-spin" />
-                          processing
-                        </span>
-                      ) : (
-                        doc.status
-                      )}
-                    </span>
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {doc.type === 'url' ? <Link2 className="size-3.5 shrink-0" /> : <FileText className="size-3.5 shrink-0" />}
-                    {doc.source_url ? (
-                      <a href={doc.source_url} target="_blank" rel="noreferrer" className="truncate text-primary hover:underline">
-                        {doc.source_url}
-                      </a>
-                    ) : (
-                      <span>PDF upload</span>
-                    )}
-                  </div>
-                  {doc.status === 'failed' && doc.error_message && (
-                    <div className="mt-1 text-xs text-red-600 dark:text-red-400">{doc.error_message}</div>
-                  )}
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(doc.created_at)}</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-gray-400 outline-none hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200">
-                    <MoreVertical className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="dark:border-gray-700 dark:bg-gray-800">
-                    <DropdownMenuItem onClick={() => openEdit(doc)} className="dark:text-gray-200 dark:focus:bg-gray-700">
-                      <Pencil className="size-3.5" />
-                      Edit content
-                    </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive" onClick={() => setPendingDeleteId(doc.id)}>
-                      <Trash2 className="size-3.5" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+        <div className="min-h-0 flex-1 overflow-auto pb-1">
+          {visibleDocs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 py-14 text-center dark:border-gray-700">
+              <Search className="size-6 text-gray-300 dark:text-gray-600" />
+              <div className="text-sm font-semibold text-gray-700 dark:text-gray-200">No matching sources</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Try a different search term or clear the status filter.
+              </p>
             </div>
-          ))}
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleDocs.map((doc) => {
+                const isUrl = doc.type === 'url';
+                const isSelected = selectedIds.has(doc.id);
+                const pct = Math.round(((doc.content_length || 0) / maxChars) * 100);
+                return (
+                  <div
+                    key={doc.id}
+                    onMouseEnter={() => handleCardHover(true, doc.id)}
+                    onMouseLeave={() => handleCardHover(false, doc.id)}
+                    className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white transition-all dark:bg-gray-800 ${
+                      isSelected
+                        ? 'border-primary ring-2 ring-primary/15'
+                        : 'border-gray-200 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700'
+                    }`}
+                  >
+                    {/* Type spine — the one glance that says "web page" vs "file". */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-y-0 left-0 w-1 ${isUrl ? 'bg-primary' : 'bg-violet-500'}`}
+                    />
+
+                    <div className="flex items-start gap-3 p-4 pl-5">
+                      <div
+                        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                          isUrl
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-violet-100 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300'
+                        }`}
+                      >
+                        {isUrl ? <Globe className="size-5" /> : <FileText className="size-5" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-gray-950 dark:text-gray-100" title={doc.name}>
+                          {doc.name}
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          {isUrl && doc.source_url ? (
+                            <a
+                              href={doc.source_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex min-w-0 items-center gap-1 truncate hover:text-primary hover:underline"
+                              title={doc.source_url}
+                            >
+                              <Link2 className="size-3 shrink-0" />
+                              <span className="truncate">{doc.source_url}</span>
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              <FileText className="size-3 shrink-0" />
+                              PDF upload
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleCardSelect(doc.id)}
+                          className={`transition-opacity ${
+                            hoveredCard === doc.id || selectedIds.size > 0 ? 'opacity-100' : 'opacity-0'
+                          }`}
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="flex size-7 items-center justify-center rounded-md text-gray-400 outline-none transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200">
+                            <MoreVertical className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="dark:border-gray-700 dark:bg-gray-800">
+                            <DropdownMenuItem onClick={() => openEdit(doc)} className="dark:text-gray-200 dark:focus:bg-gray-700">
+                              <Pencil className="size-3.5" />
+                              Edit content
+                            </DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onClick={() => setPendingDeleteId(doc.id)}>
+                              <Trash2 className="size-3.5" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    {doc.status === 'failed' && doc.error_message && (
+                      <div className="mx-4 mb-3 ml-5 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs text-rose-600 dark:bg-rose-950/40 dark:text-rose-300">
+                        {doc.error_message}
+                      </div>
+                    )}
+
+                    {/* How much of the library came from this source. */}
+                    {doc.status === 'ready' && (
+                      <div className="mb-3 ml-5 mr-4">
+                        <div className="h-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                          <div
+                            className={`h-full rounded-full ${isUrl ? 'bg-primary' : 'bg-violet-500'}`}
+                            style={{ width: `${Math.max(pct, 3)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 px-4 py-2.5 pl-5 dark:border-gray-700/70">
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
+                          doc.status === 'ready'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : doc.status === 'failed'
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : 'text-amber-600 dark:text-amber-400'
+                        }`}
+                      >
+                        {doc.status === 'ready' && <CheckCircle2 className="size-3.5" />}
+                        {doc.status === 'failed' && <AlertCircle className="size-3.5" />}
+                        {doc.status === 'processing' && <Loader2 className="size-3.5 animate-spin" />}
+                        {doc.status === 'ready' ? knowledgeSize(doc.content_length) : doc.status}
+                      </span>
+                      <span className="truncate text-xs text-gray-400 dark:text-gray-500">{timeAgo(doc.created_at)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
