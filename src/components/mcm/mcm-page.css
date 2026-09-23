@@ -10242,41 +10242,17 @@
   padding-left: 34px;
   background: #ffffff;
 }
-/* One shape for every dropdown on the screen - the three filters and
-   the bulk role picker - with our own chevron, because the platform
-   arrow sits at a different inset in each browser and the row of them
-   never lined up. */
-.mcm-page .mcm-people-sel {
-  position: relative;
-  display: inline-flex;
+/* Every dropdown on the screen is the app's own select, so the open list
+   is drawn by the page - console orange for what is picked - instead of
+   by the operating system in its own blue. These only fix the width, so
+   the row of fields is a row rather than four different lengths. */
+.mcm-page .mcm-people-pick {
+  display: flex;
+  width: 168px;
+  flex: none;
 }
-.mcm-page .mcm-people-sel > svg {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  width: 15px;
-  height: 15px;
-  transform: translateY(-50%);
-  color: var(--ink-4);
-  pointer-events: none;
-}
-.mcm-page .mcm-people-sel select {
-  height: 40px;
-  min-width: 152px;
-  width: 100%;
-  appearance: none;
-  padding: 0 32px 0 12px;
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  font-size: 12.5px;
-  color: var(--ink);
-  cursor: pointer;
-}
-.mcm-page .mcm-people-sel select:focus,
-.mcm-page .mcm-people-sel select:focus-visible {
-  outline: none;
-  border-color: var(--accent);
+.mcm-page .mcm-people-pick.is-wide {
+  width: 212px;
 }
 
 /* ---- the bulk strip ---- */
@@ -10291,9 +10267,6 @@
   border-radius: 16px;
   font-size: 12.5px;
   color: var(--ink);
-}
-.mcm-page .mcm-people-bulk .mcm-people-sel select {
-  height: 34px;
 }
 
 /* ---- the list ---- */

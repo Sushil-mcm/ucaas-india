@@ -16,13 +16,14 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, SearchLine } from '@/assets/icons';
-import { ChevronDown, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import SideDrawer from '@/components/custom/side-drawer';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomAvatar from '@/components/custom/custom-avatar';
+import CustomSelect from '@/components/custom/custom-select';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import useDebounce from '@/hooks/use-debounce';
 import { useUser } from '@/hooks/use-user';
@@ -66,6 +67,16 @@ import {
 } from '@/lib/people-screen';
 
 type BulkAction = 'role' | 'suspend' | 'remove' | 'signout';
+
+/* The "everything" row of each filter, and the whole last-seen list. The
+   label carries the filter's name - "Location: All" - so a closed field
+   still says what it filters once the list is shut. */
+const LOCATION_ALL = [{ label: 'Location: All', value: 'All' }];
+const ROLE_ALL = [{ label: 'Role: All', value: 'All' }];
+const LAST_SEEN_OPTIONS = LAST_SEEN_FILTERS.map((f) => ({
+  label: `Last signed in: ${f.label}`,
+  value: f.key,
+}));
 
 const TABS: Array<{ key: PersonTab; label: string }> = [
   { key: 'active', label: 'Active' },
@@ -315,28 +326,35 @@ const PeopleScreen: FC = () => {
                 <SearchLine />
                 <Input placeholder="Search name, e-mail, extension" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
-              {/* `appearance-none` and our own chevron: the platform draws its
-                  arrow wherever it likes, and three selects side by side made
-                  three different arrows at three different insets. */}
-              <div className="mcm-people-sel">
-                <select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Location">
-                  <option value="All">Location: All</option>
-                  {locationNames.map((n: string) => <option key={n} value={n}>{n}</option>)}
-                </select>
-                <ChevronDown />
+              {/* The app's own dropdown, not a native `<select>`. A native one
+                  draws its list with the operating system: the open list was
+                  the Windows blue, in Windows' own typeface, at Windows' idea
+                  of where the list goes - which is why it sat over the control
+                  and off its left edge. This one is drawn by the page, so it
+                  keeps the console's orange and lines up under the field. */}
+              <div className="mcm-people-pick">
+                <CustomSelect
+                  isSearchable={false}
+                  options={LOCATION_ALL.concat(locationNames.map((n: string) => ({ label: n, value: n })))}
+                  value={{ label: location === 'All' ? 'Location: All' : location, value: location }}
+                  handleChange={(o: any) => setLocation(o?.value ?? 'All')}
+                />
               </div>
-              <div className="mcm-people-sel">
-                <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} aria-label="Role">
-                  <option value="All">Role: All</option>
-                  {roleLabels.map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-                <ChevronDown />
+              <div className="mcm-people-pick">
+                <CustomSelect
+                  isSearchable={false}
+                  options={ROLE_ALL.concat(roleLabels.map((n) => ({ label: n, value: n })))}
+                  value={{ label: roleFilter === 'All' ? 'Role: All' : roleFilter, value: roleFilter }}
+                  handleChange={(o: any) => setRoleFilter(o?.value ?? 'All')}
+                />
               </div>
-              <div className="mcm-people-sel">
-                <select value={lastSeen} onChange={(e) => setLastSeen(e.target.value as LastSeenFilter)} aria-label="Last signed in">
-                  {LAST_SEEN_FILTERS.map((f) => <option key={f.key} value={f.key}>Last signed in: {f.label}</option>)}
-                </select>
-                <ChevronDown />
+              <div className="mcm-people-pick is-wide">
+                <CustomSelect
+                  isSearchable={false}
+                  options={LAST_SEEN_OPTIONS}
+                  value={LAST_SEEN_OPTIONS.find((f) => f.value === lastSeen) || LAST_SEEN_OPTIONS[0]}
+                  handleChange={(o: any) => setLastSeen((o?.value as LastSeenFilter) ?? 'any')}
+                />
               </div>
               <div className="mcm-people-spacer" />
               <Button variant="outline" size="sm" onClick={exportRoster} disabled={!visible.length}>Export CSV</Button>
@@ -349,12 +367,14 @@ const PeopleScreen: FC = () => {
             <b className="tabular-nums">{selectedRows.length} selected</b>
             {bulkAction === 'role' ? (
               <>
-                <div className="mcm-people-sel">
-                  <select value={bulkRole} onChange={(e) => setBulkRole(e.target.value)} aria-label="New role">
-                    <option value="">Choose a role</option>
-                    {roleOptions.map((r: any) => <option key={r.uuid} value={r.uuid}>{r.name}</option>)}
-                  </select>
-                  <ChevronDown />
+                <div className="mcm-people-pick">
+                  <CustomSelect
+                    isSearchable={false}
+                    placeholder="Choose a role"
+                    options={roleOptions.map((r: any) => ({ label: r.name, value: r.uuid }))}
+                    value={roleOptions.filter((r: any) => r.uuid === bulkRole).map((r: any) => ({ label: r.name, value: r.uuid }))[0] || null}
+                    handleChange={(o: any) => setBulkRole(o?.value || '')}
+                  />
                 </div>
                 <Button size="sm" onClick={runBulk} disabled={!bulkRole || bulkBusy}>Apply</Button>
                 <Button size="sm" variant="ghost" onClick={() => setBulkAction(null)}>Cancel</Button>
