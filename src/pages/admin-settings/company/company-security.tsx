@@ -693,7 +693,7 @@ const CompanySecurity = () => {
   }
 
   return (
-    <section className="cs-section flex w-full flex-col gap-4">
+    <section className="mcm-spaced-cards cs-section flex w-full flex-col gap-4">
       <div className="cs-block">
         <SectionHeading
           icon={<ShieldCheck className="h-[18px] w-[18px]" />}

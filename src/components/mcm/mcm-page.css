@@ -4298,6 +4298,22 @@
   padding: 4px 16px;
 }
 
+/* A card body sets padding but no gap, so a card whose children are several
+   stacked blocks — a notice, a paragraph, a search field, a list — has them
+   butting into each other and into the note underneath. Opt a page in with
+   `mcm-spaced-cards` and every card on it breathes.
+
+   Opt-in rather than changed on `.mcm-setcard-body` itself, which 98 cards
+   across 36 files share; spacing all of them is not a change to make in
+   passing. */
+.mcm-spaced-cards .mcm-setcard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 10px;
+  padding-bottom: 12px;
+}
+
 /* One decision. Label and explanation left, control right; the control drops
    below the text on narrow screens rather than being squeezed. */
 .mcm-setrow {
