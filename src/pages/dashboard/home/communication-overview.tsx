@@ -18,6 +18,11 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key'];
 
+/* How many agents the AI tab names before it stops and counts the rest.
+   Enough to be useful on a small account, few enough that a large one does
+   not turn the tab into a directory. */
+const AI_AGENT_CHIPS = 12;
+
 /** Hourly call volume (offered) — same report Performance's own trend chart
  * reads, `useQueueSeries`, just plotted here instead of re-fetched with a
  * bespoke query. */
@@ -50,6 +55,48 @@ const useMeetingsTrend = (today: Range) => {
   }, [data]);
 };
 
+/** A tab whose whole content is one number.
+ *
+ * Messages and AI Agents each have a single figure and no series behind it,
+ * and they were rendering as a small chip parked in the top-left of the
+ * body -- a number, three words, and a lot of nothing, which reads as a
+ * screen someone abandoned halfway. The figure is the content here, so it
+ * is given the room: a full-width block with the count at display size and
+ * a line underneath saying what it counts and over what window, since "0
+ * agents configured" otherwise leaves the reader guessing whether it means
+ * none exist or none are busy. */
+const CommsHero = ({
+  icon,
+  color,
+  value,
+  label,
+  note,
+  children,
+}: {
+  /* the same literal union the tab list already carries, so a typo here is
+     a build error rather than a missing glyph */
+  icon: (typeof TABS)[number]['icon'];
+  color: string;
+  value: number;
+  label: string;
+  note: string;
+  children?: React.ReactNode;
+}) => (
+  <div className="comms-hero">
+    <div className="comms-hero-fig">
+      <span className="comms-hero-ic" style={{ background: `${color}1f`, color }}>
+        <Ic n={icon} size={22} />
+      </span>
+      <div className="comms-hero-body">
+        <div className="comms-hero-num num">{value}</div>
+        <div className="comms-hero-label">{label}</div>
+      </div>
+    </div>
+    <p className="comms-hero-note">{note}</p>
+    {children}
+  </div>
+);
+
 const CommunicationOverview = ({ today }: { today: Range }) => {
   const [tab, setTab] = useState<TabKey>('calls');
 
@@ -64,12 +111,17 @@ const CommunicationOverview = ({ today }: { today: Range }) => {
     staleTime: 30000,
   });
 
-  const { data: activeAgentCount = 0 } = useQuery({
+  /* Same request as before -- it was already being fetched and then reduced
+     to a single `.length`, throwing away the names. The AI tab can say which
+     agents it is counting rather than only how many, which costs nothing
+     extra over the wire. */
+  const { data: agentRows = [] } = useQuery({
     queryKey: ['homeChatAgentCount'],
     queryFn: () => getChatAgentList(),
-    select: (res: any) => (res?.data?.data?.result?.rows || []).length,
+    select: (res: any) => res?.data?.data?.result?.rows || [],
     staleTime: 60000,
   });
+  const activeAgentCount = agentRows.length;
 
   const smsAnimated = useAnimatedNumber(smsCount);
   const agentAnimated = useAnimatedNumber(activeAgentCount);
@@ -118,9 +170,9 @@ const CommunicationOverview = ({ today }: { today: Range }) => {
               <TrendLine data={callsTrend} dataKey="value" color={active.color} unit="calls" />
             </>
           ) : (
-            <div className="empty">
+            <div className="empty comms-empty">
               <Ic n="phone" />
-              <p>No call activity yet today.</p>
+              <p>No calls have been offered on this account yet today.</p>
             </div>
           )
         ) : null}
@@ -135,41 +187,47 @@ const CommunicationOverview = ({ today }: { today: Range }) => {
               <TrendLine data={meetingsTrend} dataKey="value" color={active.color} unit="meetings" />
             </>
           ) : (
-            <div className="empty">
+            <div className="empty comms-empty">
               <Ic n="video" />
-              <p>No meeting activity yet today.</p>
+              <p>No meetings have been held yet today.</p>
             </div>
           )
         ) : null}
 
         {tab === 'messages' ? (
-          <div className="comms-stat">
-            <span
-              className="comms-stat-icon"
-              style={{ background: `${active.color}1f`, color: active.color }}
-            >
-              <Ic n="chat" size={20} />
-            </span>
-            <div>
-              <div className="comms-stat-num">{Math.round(smsAnimated)}</div>
-              <div className="comms-stat-label">messages sent/received today</div>
-            </div>
-          </div>
+          <CommsHero
+            icon="chat"
+            color={active.color}
+            value={Math.round(smsAnimated)}
+            label="messages sent and received today"
+            note="Both directions, counted from today's SMS log. There is no hourly breakdown behind this figure, so it is shown as a total rather than a chart."
+          />
         ) : null}
 
         {tab === 'ai' ? (
-          <div className="comms-stat">
-            <span
-              className="comms-stat-icon"
-              style={{ background: `${active.color}1f`, color: active.color }}
-            >
-              <Ic n="spark" size={20} fill />
-            </span>
-            <div>
-              <div className="comms-stat-num">{Math.round(agentAnimated)}</div>
-              <div className="comms-stat-label">AI agents configured</div>
-            </div>
-          </div>
+          <CommsHero
+            icon="spark"
+            color={active.color}
+            value={Math.round(agentAnimated)}
+            label="AI agents configured"
+            note="How many agents exist on this account, not how busy they are — a configured agent that took no calls today still counts here."
+          >
+            {agentRows.length ? (
+              <div className="comms-agents">
+                {agentRows.slice(0, AI_AGENT_CHIPS).map((agent: any, index: number) => (
+                  <span className="comms-agent" key={agent?.id ?? index}>
+                    <i />
+                    {String(agent?.agentName || '').trim() || 'Untitled agent'}
+                  </span>
+                ))}
+                {agentRows.length > AI_AGENT_CHIPS ? (
+                  <span className="comms-agent is-more">
+                    +{agentRows.length - AI_AGENT_CHIPS} more
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </CommsHero>
         ) : null}
       </div>
     </div>

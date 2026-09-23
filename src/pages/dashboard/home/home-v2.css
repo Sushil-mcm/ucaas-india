@@ -545,30 +545,123 @@
   font-size: 12.5px;
   color: var(--ink-3, #6b7891);
 }
-.home-v2 .comms-stat {
+/* ── a tab that is just one figure ────────────────────────────────────
+   Messages and AI Agents have a single number and no series behind them.
+   They used to render as a 44px icon and a 26px figure sitting in the
+   top-left of the body, which looked like a placeholder someone forgot to
+   finish. The figure is the content, so it gets the room: display-size
+   number, and a line saying what it counts. */
+.home-v2 .comms-hero {
+  padding: 4px 0 2px;
+}
+.home-v2 .comms-hero-fig {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 4px;
 }
-.home-v2 .comms-stat-icon {
+.home-v2 .comms-hero-ic {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   flex: none;
-  border-radius: 12px;
+  border-radius: 13px;
 }
-.home-v2 .comms-stat-num {
-  font-size: 26px;
+.home-v2 .comms-hero-body {
+  min-width: 0;
+}
+.home-v2 .comms-hero-num {
+  font-size: 38px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  line-height: 1;
+  letter-spacing: -0.04em;
   color: var(--ink, #0d1526);
 }
-.home-v2 .comms-stat-label {
+.home-v2 .comms-hero-label {
+  margin-top: 5px;
   font-size: 12.5px;
   color: var(--ink-3, #6b7891);
+}
+/* The caption carries what the figure does not: the window it covers, and
+   in the AI tab's case that "configured" is not "busy". Measure is capped
+   so it reads as a sentence rather than running the full card width. */
+.home-v2 .comms-hero-note {
+  max-width: 78ch;
+  margin: 14px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid rgba(150, 100, 50, 0.1);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-4, #93a0b8);
+}
+
+/* ── the agents behind the AI count ───────────────────────────────────
+   The rows were already fetched and reduced to a `.length`. Naming them
+   turns "0 agents configured" from a figure you have to trust into one you
+   can check. */
+.home-v2 .comms-agents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+.home-v2 .comms-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 5px 11px;
+  border: 1px solid var(--line-2, #f0e4d3);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  font-size: 11.5px;
+  color: var(--ink-2, #3d4a63);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .comms-agent i {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--accent, #f2994a);
+}
+.home-v2 .comms-agent.is-more {
+  background: none;
+  border-style: dashed;
+  color: var(--ink-4, #93a0b8);
+}
+.home-v2 .comms-agent.is-more i {
+  display: none;
+}
+
+/* ── the tabs' empty states ───────────────────────────────────────────
+   Same problem the attention panel had: the shared `.empty` centres a
+   column and pads 36px, so one short sentence reserved 134px of the card.
+   A row instead, at half the height. Specificity has to beat
+   `.mcm-page .empty` (0,2,0) rather than follow it -- Home is a lazy
+   route, so its stylesheet is injected ahead of the entry CSS. */
+.mcm-page.home-v2 .comms-empty {
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 13px;
+  text-align: left;
+  padding: 14px 2px;
+}
+.mcm-page.home-v2 .comms-empty .ic {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+.mcm-page.home-v2 .comms-empty p {
+  margin: 0;
+  max-width: 78ch;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .dark .home-v2 .quick-action {
@@ -591,6 +684,13 @@
 }
 .dark .home-v2 .trend-tip-v b {
   color: var(--mcm-ink, #f8fafc);
+}
+.dark .home-v2 .comms-hero-num {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .home-v2 .comms-agent {
+  background: var(--mcm-surface, #1e293b);
+  border-color: #1b2934;
 }
 .dark .home-v2 .comms-tab {
   background: var(--mcm-surface, #1e293b);
