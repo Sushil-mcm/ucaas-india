@@ -173,11 +173,11 @@ const AvatarContent = ({ setProfileState }: any) => {
             image={user?.user_info?.profile}
             isActivityInfo={false}
           />
-          <div className="flex flex-col items-start gap-1.5 min-w-0 pr-16">
+          <div className="flex flex-col items-start gap-1.5 min-w-0 pr-20">
             <p className="text-[15px] font-bold leading-snug text-gray-900 dark:text-mcm-ink truncate max-w-40">
               {fullName}
             </p>
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap text-primary">
               <Crown className="w-3.5 h-3.5" />
               {roleLabel}
             </span>
