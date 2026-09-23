@@ -442,8 +442,12 @@ const CompanyEmergencyAddress = () => {
             {...register('address_line_2')}
           />
 
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className={`relative flex w-full gap-1 ${hasStates ? 'md:w-1/2' : 'md:w-full'}`}>
+          {/* One grid for the whole address block rather than a flex row per
+              pair. The fields then flow into two even columns in source order
+              and line up across rows whether or not this country has a State
+              field — as three independent rows they did not. */}
+          <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="relative flex w-full gap-1">
               <Controller
                 control={control}
                 name="country"
@@ -465,7 +469,7 @@ const CompanyEmergencyAddress = () => {
               />
             </div>
             {hasStates && (
-              <div className="relative flex w-full gap-1 md:w-1/2">
+              <div className="relative flex w-full gap-1">
                 <Controller
                   control={control}
                   name="state"
@@ -486,11 +490,8 @@ const CompanyEmergencyAddress = () => {
                 />
               </div>
             )}
-          </div>
-
-          <div className="flex w-full flex-col gap-4 md:flex-row">
             {hasCities ? (
-              <div className="relative flex w-full gap-1 md:w-1/2">
+              <div className="relative flex w-full gap-1">
                 <Controller
                   control={control}
                   name="city"
@@ -509,7 +510,7 @@ const CompanyEmergencyAddress = () => {
                 />
               </div>
             ) : (
-              <div className="relative flex w-full gap-1 md:w-1/2">
+              <div className="relative flex w-full gap-1">
                 <Controller
                   control={control}
                   name="city"
@@ -530,7 +531,7 @@ const CompanyEmergencyAddress = () => {
                 />
               </div>
             )}
-            <div className="relative flex w-full gap-1 md:w-1/2">
+            <div className="relative flex w-full gap-1">
               <Input
                 label="Postal code"
                 placeholder="Enter postal code"
@@ -540,10 +541,7 @@ const CompanyEmergencyAddress = () => {
                 {...register('postal_code')}
               />
             </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-4 md:flex-row">
-            <div className="relative flex w-full gap-1 md:w-1/2">
+            <div className="relative flex w-full gap-1">
               <Input
                 label="Emergency callback number"
                 placeholder="e.g. +14155550123"
@@ -554,13 +552,14 @@ const CompanyEmergencyAddress = () => {
                 {...register('callback_number')}
               />
             </div>
-            <div className="flex w-full items-end md:w-1/2">
-              <p className="text-xs text-[#9A948F]">
-                The number responders would ring if the emergency call drops. Today nothing dials it
-                automatically - it is stored for your records and for whoever you hand this address
-                to.
-              </p>
-            </div>
+            {/* Spans both columns so it reads as a note under the field it
+                describes, rather than landing in whichever cell is free —
+                which column that is depends on the State field existing. */}
+            <p className="text-xs text-[#9A948F] md:col-span-2">
+              The number responders would ring if the emergency call drops. Today nothing dials it
+              automatically - it is stored for your records and for whoever you hand this address
+              to.
+            </p>
           </div>
 
           <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
