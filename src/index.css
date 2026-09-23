@@ -2422,8 +2422,19 @@
   max-width: 68ch;
 }
 .mcm-setupguide-action {
-  flex: none;
-  align-self: center;
+  /* The row is a two-column grid — mark, then body — and this is its third
+     child, so with no placement it wrapped onto a new row in the 26px mark
+     column and spilled out of that track. That is what left the border sitting
+     off to the left of everything above it.
+
+     `flex: none` and `align-self: center` were left from when the row was a
+     flexbox and this sat inline at its end; neither does anything in a grid.
+
+     The placement used to live in a max-width: 640px block, so the narrow
+     layout was right and every wider one was not. It belongs here. */
+  grid-column: 2;
+  justify-self: start;
+  margin-top: 8px;
   padding: 6px 12px;
   border: 1px solid #d5dae5;
   border-radius: 8px;
@@ -2437,17 +2448,6 @@
   background: #fff1e0;
   border-color: #ffd9ad;
 }
-@media (max-width: 640px) {
-  .mcm-setupguide li {
-    grid-template-columns: 26px 1fr;
-  }
-  .mcm-setupguide-action {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: 8px;
-  }
-}
-
 /* ==================================================================
    Calendar sidebar — tonal grading.
 
