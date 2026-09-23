@@ -2281,8 +2281,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* the dot between the timestamp and the number, when both are shown */
-.home-v2 .rc-sep {
+/* The dot between two facts on a meta line. Shared by the recent-calls
+   rows and the live-interaction rows rather than defined twice. */
+.home-v2 .dot-sep {
   display: inline-block;
   width: 3px;
   height: 3px;
@@ -2483,5 +2484,93 @@
 
 .dark .home-v2 .q-name,
 .dark .home-v2 .q-stat-v {
+  color: var(--mcm-ink, #f8fafc);
+}
+
+/* ── Interactions ──────────────────────────────────────────────────────────
+   A row per live call, replacing a seven-column table.
+
+   Seven columns shared this half-width card with Queues' eight and hit the
+   same wall: Time, Number and Duration each held a handful of characters in
+   a cell sized for its own heading, while Customer, Queue and Agent were
+   three names competing for what was left.
+
+   A live call is one thing happening, so it reads as one row — who is on it,
+   and underneath, when it started and where it is routed. State and elapsed
+   time sit right, which is where the eye goes looking for the call that has
+   been running too long. */
+.home-v2 .ix-list {
+  display: flex;
+  flex-direction: column;
+  /* a busy floor can put a lot of calls up at once; the old .tbl-wrap
+     capped and scrolled for the same reason */
+  max-height: 360px;
+  overflow-y: auto;
+}
+.home-v2 .ix-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto 56px;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line-2, #f0e4d3);
+}
+.home-v2 .ix-list .ix-row:last-child {
+  border-bottom: none;
+}
+.home-v2 .ix-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.home-v2 .ix-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink, #0d1526);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Three facts on one line — when it started, which queue, which agent. It
+   truncates rather than wraps, because a wrapping second line would make
+   the rows different heights and cost the list its rhythm. */
+.home-v2 .ix-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 10.5px;
+  color: var(--ink-4, #93a0b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .ix-state {
+  justify-self: end;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.home-v2 .ix-dur {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-2, #3d4a63);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Narrow: the state chip drops under the identity rather than squeezing the
+   name to a few characters. */
+@media (max-width: 560px) {
+  .home-v2 .ix-row {
+    grid-template-columns: 28px minmax(0, 1fr) 56px;
+    row-gap: 6px;
+  }
+  .home-v2 .ix-state {
+    grid-column: 2 / 3;
+    justify-self: start;
+  }
+}
+
+.dark .home-v2 .ix-name {
   color: var(--mcm-ink, #f8fafc);
 }

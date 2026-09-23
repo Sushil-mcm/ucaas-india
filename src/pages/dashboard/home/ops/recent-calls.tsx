@@ -197,7 +197,7 @@ const RecentCalls = ({
                       {row.start_stamp ? dayTimeText(row.start_stamp, timeZone) : '—'}
                       {number && number !== name ? (
                         <>
-                          <i className="rc-sep" />
+                          <i className="dot-sep" />
                           <span className="num">{number}</span>
                         </>
                       ) : null}

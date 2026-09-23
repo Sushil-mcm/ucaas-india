@@ -1353,64 +1353,73 @@ const Home = () => {
               {interactions.length} in progress
             </span>
           </div>
-          <div className="tbl-wrap tbl-enhanced">
-            <table>
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Customer</th>
-                  <th>Number</th>
-                  <th>Queue</th>
-                  <th>Agent</th>
-                  <th>Duration</th>
-                  <th>State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {interactions.length ? (
-                  interactions.map((call) => (
-                    <tr key={call.id}>
-                      <td className="num">
-                        {call.startedAt ? moment(call.startedAt).format('HH:mm') : '—'}
-                      </td>
-                      <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                        <span className="tbl-row-name">
-                          {nameAvatar(call.customer)}
+          {/* A row per live call, not a seven-column table.
+
+              Seven columns shared this half-width card with Queues' eight and
+              hit the same wall: Time, Number and Duration each held a handful
+              of characters in a cell sized for its heading, while Customer,
+              Queue and Agent were three names competing for what was left.
+
+              A live call is one thing happening, so it reads as one row: who
+              is on it, and underneath, when it started and where it is
+              routed. State and elapsed time sit right, which is where you
+              scan for the call that has been running too long.
+
+              Same seven fields, same sources. */}
+          <div className="pc-body">
+            {interactions.length ? (
+              <div className="ix-list">
+                {interactions.map((call) => {
+                  /* getMonitoringContactValue returns the number itself when
+                     there is no contact record, so repeating it in the meta
+                     line would print the same digits twice -- the trap the
+                     recent-calls rows fell into. */
+                  const showNumber =
+                    call.number && call.number !== '—' && call.number !== call.customer;
+                  return (
+                    <div className="ix-row" key={call.id}>
+                      {nameAvatar(call.customer, undefined, 28)}
+                      <span className="ix-id">
+                        <span className="ix-name" title={call.customer}>
                           {call.customer}
                         </span>
-                      </td>
-                      <td className="num">{call.number}</td>
-                      <td>{call.queue}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{call.agent}</td>
-                      <td className="num">
+                        <span className="ix-meta">
+                          {call.startedAt ? moment(call.startedAt).format('HH:mm') : '—'}
+                          {showNumber ? (
+                            <>
+                              <i className="dot-sep" />
+                              <span className="num">{call.number}</span>
+                            </>
+                          ) : null}
+                          <i className="dot-sep" />
+                          {call.queue}
+                          <i className="dot-sep" />
+                          {call.agent}
+                        </span>
+                      </span>
+                      <span className={`state ${call.waiting ? 'acw' : 'busy'} ix-state`}>
+                        {call.state}
+                      </span>
+                      <span className="ix-dur num">
                         {call.startedAt ? (
                           <Timer startTime={call.startedAt} />
                         ) : (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
+                          <span className="q-none">—</span>
                         )}
-                      </td>
-                      <td>
-                        <span
-                          className={call.waiting ? 'state acw' : 'state busy'}
-                          style={{ textTransform: 'capitalize' }}
-                        >
-                          {call.state}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7}>
-                      <div className="empty">
-                        <Ic n="phone" />
-                        <p>Nothing on the wire right now.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty comms-empty">
+                <Ic n="phone" />
+                <p>
+                  Nothing on the wire right now. Live calls appear here as they arrive,
+                  longest-running first.
+                </p>
+              </div>
+            )}
           </div>
         </div>
         </div>
