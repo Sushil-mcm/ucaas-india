@@ -4470,6 +4470,13 @@
   color: var(--warn);
   font-size: 11.5px;
   line-height: 1.5;
+  /* The note is the card's last child and the only one with a solid fill, so
+     its square corners overhung the card's rounded ones. Rounded here rather
+     than clipped with `overflow: hidden` on the card: that would also clip any
+     menu or popover opened from inside one, which is what the note on
+     `.mcm-setcard` warns about. Less the 1px border, so it sits snug. */
+  border-bottom-left-radius: calc(var(--r) - 1px);
+  border-bottom-right-radius: calc(var(--r) - 1px);
 }
 .mcm-setcard-note.is-on {
   background: var(--live-wash);

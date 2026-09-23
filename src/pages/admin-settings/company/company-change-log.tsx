@@ -330,7 +330,7 @@ const PropagationDashboardPanel = () => {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="mcm-plain-rows w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr><th className="px-3 py-2">When</th><th className="px-3 py-2">Change</th><th className="px-3 py-2">Subject</th><th className="px-3 py-2">PBX</th><th className="px-3 py-2">Video</th><th className="px-3 py-2">Campaigns</th><th className="px-3 py-2">AI</th><th className="px-3 py-2">Billing</th><th className="px-3 py-2">Correlation</th></tr>
             </thead>
@@ -523,7 +523,7 @@ const CompanyChangeLog = () => {
         </p>
       ) : (
         <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-sm">
+          <table className="mcm-plain-rows w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">When</th>

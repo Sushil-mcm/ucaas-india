@@ -208,7 +208,7 @@ const CompanyDeskPhones = () => {
       </SettingCard>
 
       <SectionActions>
-        <Button variant="primary" type="button" disabled={isSaving || !dirty} onClick={handleSave}>
+        <Button variant="primary" size="sm" type="button" disabled={isSaving || !dirty} onClick={handleSave}>
           {isSaving ? 'Saving…' : 'Save desk phone settings'}
         </Button>
       </SectionActions>
