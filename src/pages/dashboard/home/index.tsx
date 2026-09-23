@@ -819,12 +819,14 @@ const Home = () => {
                           color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                           height={40}
                           minBar={2}
+                          fillOpacity={0.8}
                         />
                       ) : (
                         <SparkLine
                           data={getHistory(kpi.key)}
                           color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                           height={40}
+                          strokeWidth={2.5}
                         />
                       )
                     ) : (
@@ -884,6 +886,7 @@ const Home = () => {
                   data={getHistory('needsAttention')}
                   color={attention.length ? 'var(--crit, #d32f2f)' : 'var(--live)'}
                   height={28}
+                  fillOpacity={0.8}
                 />
               </div>
               <span className="src live pc-right">

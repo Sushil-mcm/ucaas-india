@@ -220,6 +220,7 @@ export const SparkBars = ({
   color = 'var(--accent)',
   height = 44,
   minBar = 0,
+  fillOpacity = 0.35,
 }: {
   data: HistoryPoint[];
   color?: string;
@@ -230,6 +231,12 @@ export const SparkBars = ({
    *  than an empty card. A zero-height bar is accurate and invisible, which
    *  reads as "no chart" instead of "no calls". */
   minBar?: number;
+  /** Bar fill opacity. 0.35 is the existing weight and stays the default for
+   *  the Performance tiles; the Home KPI strip passes a heavier value because
+   *  its bars are drawn in the lightened `KPI_CHART_COLOR` tints, and a light
+   *  tint at 0.35 on a warm card is very close to invisible. Weight only --
+   *  the colour value itself is untouched. */
+  fillOpacity?: number;
 }) => (
   <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%">
@@ -238,7 +245,7 @@ export const SparkBars = ({
         <Bar
           dataKey="v"
           fill={color}
-          fillOpacity={0.35}
+          fillOpacity={fillOpacity}
           radius={[2, 2, 0, 0]}
           minPointSize={minBar}
           isAnimationActive
@@ -254,10 +261,15 @@ export const SparkLine = ({
   data,
   color = 'var(--accent)',
   height = 44,
+  strokeWidth = 2,
 }: {
   data: HistoryPoint[];
   color?: string;
   height?: number;
+  /** Stroke weight. 2 is the existing value and stays the default; the Home
+   *  KPI strip passes a little more so a light tint still reads as a line.
+   *  Weight only -- the colour value itself is untouched. */
+  strokeWidth?: number;
 }) => (
   <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%">
@@ -267,7 +279,7 @@ export const SparkLine = ({
           type="monotone"
           dataKey="v"
           stroke={color}
-          strokeWidth={2}
+          strokeWidth={strokeWidth}
           dot={false}
           isAnimationActive
         />
