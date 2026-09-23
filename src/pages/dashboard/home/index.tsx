@@ -777,14 +777,14 @@ const Home = () => {
                       <SparkBars
                         data={getHistory(kpi.key)}
                         color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                        height={32}
+                        height={52}
                       />
                     ) : null}
                     {kpi.chartType === 'line' ? (
                       <SparkLine
                         data={getHistory(kpi.key)}
                         color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                        height={32}
+                        height={52}
                       />
                     ) : null}
                     {kpi.chartType === 'meter' && kpi.meter ? (

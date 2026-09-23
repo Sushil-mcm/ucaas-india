@@ -298,10 +298,19 @@
   font-weight: 600;
   color: var(--ink-3, #6b7891);
 }
+/* The sparkline was 32px tall inside the card's own padding, which left it
+   reading as a decorative squiggle beside the number rather than as data.
+   It now runs edge to edge as its own band, separated by a hairline: the
+   same area of card, spent on the chart instead of on gutters. No new data
+   behind it — this is the existing in-session history (use-kpi-history.ts),
+   just given room to be legible. */
 .home-v2 .kpi-chart {
   display: flex;
   align-items: flex-end;
-  min-height: 32px;
+  min-height: 52px;
+  margin: 8px -18px 0;
+  padding: 8px 12px 0;
+  border-top: 1px solid rgba(225, 200, 165, 0.45);
 }
 .home-v2 .kpi-chart-donut {
   position: relative;
@@ -955,4 +964,76 @@
 
 :root[data-theme='dark'] .home-v2 .home-feed-error-d {
   color: #fca5a5;
+}
+
+/* ── Hero strip ───────────────────────────────────────────────────────────
+   Scoped to .home-v2 on purpose. The base `.hero` rules live in
+   components/mcm/mcm-page.css, which 33 screens read — restyling there to
+   suit Home would silently move every other page that uses it. These
+   overrides only apply where the home-v2 class is on the page wrapper.
+
+   What changes: the greeting and the controls sat on one centred row, so a
+   long queue sentence pushed the buttons around and the freshness chip got
+   lost between them. The text block now owns the left and the controls sit
+   top-right on their own baseline, which holds still whatever the sentence
+   length. Everything here is presentation — no new data. */
+.mcm-page.home-v2 .hero {
+  align-items: flex-start;
+  gap: 16px 22px;
+  padding: 22px 24px 20px;
+  /* a soft wash toward the brand, so the opener reads as the page's head
+     rather than as the first of nine identical white cards */
+  background:
+    radial-gradient(760px 220px at 0% -40%, rgba(242, 153, 74, 0.1), rgba(242, 153, 74, 0) 70%),
+    var(--surface);
+}
+
+.mcm-page.home-v2 .hero h1 {
+  font-size: 29px;
+  letter-spacing: -0.045em;
+}
+
+/* The sentence carries the queue assignment and the attention count, so it
+   is the one line on the page worth reading in full — give it room and a
+   measure rather than the tighter 56ch the shared rule sets. */
+.mcm-page.home-v2 .hero p {
+  margin-top: 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 68ch;
+  color: var(--ink-2, #4a5568);
+}
+
+/* Controls pinned to the top-right: aligned with the greeting's cap height
+   instead of floating against the vertical centre of a two-line paragraph. */
+.mcm-page.home-v2 .hero-right {
+  align-items: center;
+  align-self: flex-start;
+  gap: 9px;
+}
+
+/* The freshness chip is a reading, not a control — it sits with the buttons
+   but must not look like one, so it keeps a quieter weight and its own
+   divider rather than matching the button chrome beside it. */
+.mcm-page.home-v2 .hero-right .fchip {
+  margin-right: 3px;
+  padding-right: 12px;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+}
+
+@media (max-width: 720px) {
+  .mcm-page.home-v2 .hero {
+    padding: 18px 18px 16px;
+  }
+  .mcm-page.home-v2 .hero h1 {
+    font-size: 24px;
+  }
+  /* on a phone the controls lead the row rather than hanging off the right
+     edge of a wrapped column */
+  .mcm-page.home-v2 .hero-right {
+    margin-left: 0;
+    width: 100%;
+  }
 }
