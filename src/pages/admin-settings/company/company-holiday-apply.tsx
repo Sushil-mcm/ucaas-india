@@ -703,17 +703,6 @@ const CompanyHolidayApply = () => {
             </p>
           </div>
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen((previous) => !previous)}
-          disabled={running}
-        >
-          {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          {open ? 'Hide lines' : 'Choose lines'}
-        </Button>
       </div>
 
       <div className="mt-3 flex items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
@@ -737,6 +726,20 @@ const CompanyHolidayApply = () => {
           </p>
         </div>
       )}
+
+      {/* Below the explanation and the warning rather than beside the heading:
+          both say what the button is about to do, so it belongs after them. */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="mt-3"
+        onClick={() => setOpen((previous) => !previous)}
+        disabled={running}
+      >
+        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        {open ? 'Hide lines' : 'Choose lines'}
+      </Button>
 
       {open && (
         <>
@@ -800,7 +803,12 @@ const CompanyHolidayApply = () => {
                           return (
                             <label
                               key={line.key}
-                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-[#FBE2C8]/45"
+                              /* Hover was `#FBE2C8/45` — the exact fill the
+                                 group header above uses, so pointing at a row
+                                 made it look like another header and gave no
+                                 feedback. A brand-orange wash instead: same
+                                 warm family, plainly not the header. */
+                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-primary/10"
                             >
                               <span className="flex min-w-0 items-center gap-2">
                                 <Checkbox

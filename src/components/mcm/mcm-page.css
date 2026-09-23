@@ -4948,6 +4948,16 @@
   background: var(--input);
 }
 
+/* And an outline button, which is `rounded-lg` + `bg-white` for the same
+   reason and was tinted by the same rule — Holidays' "Choose lines" is one.
+
+   `.bg-white` has to stay in the selector: without it this matches every
+   rounded button and repaints the solid ones, turning a primary button white.
+   `:not(:hover)` leaves the variant's own hover to take over. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).bg-white[data-slot='button']:not(:hover) {
+  background: #ffffff;
+}
+
 /* ---- dialogs ---- */
 .mcm-page [role='dialog'],
 [role='dialog'].mcm-glass {
