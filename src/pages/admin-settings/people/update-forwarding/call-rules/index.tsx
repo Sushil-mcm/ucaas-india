@@ -260,15 +260,23 @@ const CallRules: FC<CallRulesProps> = ({
             describes an intention, not what happens to a caller today. Saying
             "checked first" without this reads as a working precedence order.
             Delete this in the same change that makes the rules real. */}
-        <p className="mcm-setrow-note is-info mb-3">
-          Live for calls straight to this person: forward all calls, do not disturb, which desktop
-          and desk phones ring, in what order and for how long (since 8 September 2026), and what
-          happens after ringing when it is voicemail, an extension or hang up. An outside number, a
-          queue or a menu after the ring is saved but not followed yet, and ringing a mobile app
-          is not offered yet. An outside number rings with the other devices once a number is
-          saved on its row. Calls through a queue or a menu follow that queue's or menu's own
-          rules.
-        </p>
+        {/* Folded away. This is the exact split of what the switch acts on and
+            what it only stores — six lines of it, standing between the summary
+            and the first control. Someone checking whether a rule will actually
+            fire needs it; someone flicking Do Not Disturb on does not, every
+            time. Open by nobody's default, one click away for anybody. */}
+        <details className="mcm-rule-live mb-3">
+          <summary>What is live today</summary>
+          <p>
+            Live for calls straight to this person: forward all calls, do not disturb, which
+            desktop and desk phones ring, in what order and for how long (since 8 September 2026),
+            and what happens after ringing when it is voicemail, an extension or hang up. An
+            outside number, a queue or a menu after the ring is saved but not followed yet, and
+            ringing a mobile app is not offered yet. An outside number rings with the other
+            devices once a number is saved on its row. Calls through a queue or a menu follow that
+            queue's or menu's own rules.
+          </p>
+        </details>
         <div className="mcm-rule">
           <span className="block">
             <div className="mcm-rule-h">

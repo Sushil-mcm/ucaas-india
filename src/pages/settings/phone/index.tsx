@@ -575,14 +575,6 @@ const IncomingCalls = () => {
                   Still stored and not read: which devices are on and their ring
                   order. The shared editor below carries no badge of its own, so
                   the split is stated here, first. */}
-              <div className="mcm-callsummary" role="status">
-                <span className="mcm-callsummary-l">What works today</span>
-                <p>
-                  Live for direct calls: Forward All, Do Not Disturb, presence, ring time, device order,
-                  Caller ID, and after-ring voicemail/extension/hangup.
-                </p>
-              </div>
-
               {!fallbackSaved ? (
                 <div className="mcm-notsaved" role="status">
                   <strong>Voicemail is not saved yet.</strong>

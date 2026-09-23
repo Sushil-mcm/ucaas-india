@@ -5048,6 +5048,45 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
 }
 
+/* The "what is live today" disclosure above the call rules. Closed it is one
+   quiet line; open it reads as the note it replaced. */
+.mcm-page .mcm-rule-live > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.mcm-page .mcm-rule-live > summary::-webkit-details-marker {
+  display: none;
+}
+/* A caret of our own, so it turns with the disclosure on every browser rather
+   than relying on the platform's marker, which we have just hidden. */
+.mcm-page .mcm-rule-live > summary::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.mcm-page .mcm-rule-live[open] > summary::before {
+  transform: rotate(45deg);
+}
+.mcm-page .mcm-rule-live > summary:hover {
+  color: var(--ink);
+}
+.mcm-page .mcm-rule-live > p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
 /* A row that is not a row: an empty state or a loading line spanning the whole
    table. The shared hover says "this is selectable", which is a promise a
    placeholder cannot keep, so it keeps whatever is behind it. */
