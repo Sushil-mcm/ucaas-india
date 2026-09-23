@@ -1667,3 +1667,125 @@
   .mcm-page.home-v2 .hero { padding: 22px 20px; border-radius: 18px; }
   .mcm-page.home-v2 .hero h1 { font-size: 26px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   The floor — alignment, motion and figure treatment
+
+   ALIGNMENT was the real defect. The four cards carry different anatomy:
+   Waiting and Longest Wait are a bare number, Service Level adds a meter,
+   On Queue adds a ring beside the value. Laid out as plain flex columns the
+   numbers landed at four different heights and the captions at four more,
+   so the row read as four unrelated boxes. Each card is now the same four
+   bands — head, figure, accessory, caption — with the figure band a fixed
+   height and the caption pinned to the floor of the card, so all four align
+   across the row whatever they contain.
+
+   No colour is changed here: sizes, spacing, alignment and motion only.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.home-v2 .rail-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* the tallest anatomy (Service Level: head + figure + meter + caption)
+     sets the floor, so nothing stretches and nothing is cramped */
+  min-height: 176px;
+  padding: 17px 19px 16px;
+}
+
+/* head: fixed so every title and subtitle sits on the same two baselines
+   even when one subtitle wraps */
+.home-v2 .rail-head {
+  min-height: 40px;
+  align-items: flex-start;
+}
+.home-v2 .rail-k {
+  font-size: 13px;
+  line-height: 1.25;
+}
+.home-v2 .rail-sub {
+  font-size: 11px;
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+/* the figure band — one height for all four, so 0 / 00:00 / — / 1 share a
+   baseline instead of drifting with their own glyph heights */
+.home-v2 .rail-row {
+  min-height: 46px;
+  align-items: center;
+}
+.home-v2 .rail-v {
+  font-size: 34px;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  /* clocks and counts line up digit for digit down the row */
+  font-variant-numeric: tabular-nums;
+}
+
+/* the ring sits in the figure band without pushing the number off-centre */
+.home-v2 .rail-donut {
+  margin-left: auto;
+}
+
+/* accessory band: the meter keeps a lane of its own so the caption below it
+   stays level with the captions on cards that have no meter */
+.home-v2 .rail-cell .kpi-linear-meter {
+  margin: 0;
+}
+
+.home-v2 .rail-d {
+  margin-top: auto;
+  padding-top: 2px;
+  font-size: 11.5px;
+}
+
+/* ── motion ─────────────────────────────────────────────────────────────
+   Entrance is staggered left to right so the row assembles in reading
+   order rather than appearing as one block, and the meter grows to its
+   value instead of being drawn at it. Everything is disabled wholesale
+   under prefers-reduced-motion at the end of this file. */
+.home-v2 .rail-cell {
+  animation: home-fade-up 0.42s cubic-bezier(0.22, 0.9, 0.24, 1) both;
+}
+.home-v2 .rail > :nth-child(1) { animation-delay: 0.02s; }
+.home-v2 .rail > :nth-child(2) { animation-delay: 0.08s; }
+.home-v2 .rail > :nth-child(3) { animation-delay: 0.14s; }
+.home-v2 .rail > :nth-child(4) { animation-delay: 0.2s; }
+
+.home-v2 .rail-cell .kpi-linear-meter > span {
+  transition: width 0.9s cubic-bezier(0.22, 0.9, 0.24, 1);
+}
+
+/* the card answers the pointer — it is a reading you can open, not a poster */
+.home-v2 .rail-cell {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 0.9, 0.24, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.home-v2 .rail-cell:hover {
+  transform: translateY(-3px);
+}
+
+/* the live marker on the band rule breathes, so "live" is shown rather than
+   only claimed */
+.home-v2 .sect-rule .note .dot {
+  animation: home-live-pulse 2.4s ease-in-out infinite;
+}
+@keyframes home-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v2 .rail-cell,
+  .home-v2 .sect-rule .note .dot {
+    animation: none !important;
+  }
+  .home-v2 .rail-cell:hover { transform: none; }
+}
+
+@media (max-width: 720px) {
+  .home-v2 .rail-cell { min-height: 0; }
+}
