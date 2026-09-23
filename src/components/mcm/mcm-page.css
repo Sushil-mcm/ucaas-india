@@ -4926,10 +4926,26 @@
   background: #ffffff;
   border-color: var(--color-gray-200);
 }
+
 .dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-search,
 .dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-filter {
   background: var(--muted);
   border-color: var(--border);
+}
+
+/* Same story for every text field built on the shared Input: it renders
+   `rounded-xl` + `bg-white`, so the glass rule filled each one with
+   translucent cream and a form read as a column of tinted boxes — Company
+   Rules' emergency address is the clearest example.
+
+   Keyed on the `data-slot` the component already sets, so every screen is
+   covered at once instead of each opting out by hand. Same specificity as the
+   glass rule, after it, so order decides. Dark mode keeps the shared token. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full'])[data-slot='input'] {
+  background: #ffffff;
+}
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full'])[data-slot='input'] {
+  background: var(--input);
 }
 
 /* ---- dialogs ---- */
