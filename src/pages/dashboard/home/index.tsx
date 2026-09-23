@@ -1520,7 +1520,7 @@ const Home = () => {
               All agents
             </button>
           </div>
-          <div className="tbl-wrap tbl-enhanced">
+          <div className="tbl-wrap tbl-enhanced agents-tbl">
             <table>
               <thead>
                 <tr>
@@ -1550,7 +1550,19 @@ const Home = () => {
                           ) : null}
                         </span>
                       </td>
-                      <td>{agent.queueOrCampaign}</td>
+                      {/* agent-rows.ts uses '--' as its no-queue sentinel and
+                          the Performance agents tab already renders that as a
+                          dash rather than printing it. Home printed it raw, so
+                          this column read "--" while every other empty cell on
+                          the page reads "—". Same treatment here; the shared
+                          sentinel itself is left alone. */}
+                      <td>
+                        {agent.queueOrCampaign && agent.queueOrCampaign !== '--' ? (
+                          agent.queueOrCampaign
+                        ) : (
+                          <span className="q-none">—</span>
+                        )}
+                      </td>
                       <td>
                         <span className={STATE_CLASS[agent.status] || 'state away'}>
                           {agent.status}
@@ -1576,7 +1588,7 @@ const Home = () => {
                 ) : (
                   <tr>
                     <td colSpan={6}>
-                      <div className="empty">
+                      <div className="empty comms-empty">
                         <Ic n="users" />
                         <p>No agents on the roster yet.</p>
                       </div>

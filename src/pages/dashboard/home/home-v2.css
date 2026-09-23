@@ -1016,8 +1016,24 @@
   border-collapse: separate;
   border-spacing: 0;
 }
+/* The header stays put while the body scrolls.
+
+   Agents is 617px of rows inside a 500px box, so it scrolls -- and the head
+   was static, which meant the column labels left the screen on the first
+   scroll and the rest of the roster read as five unlabelled columns of
+   dashes and zeroes. On a table whose figures are mostly blank, the labels
+   are what make the blanks mean anything.
+
+   The background has to be opaque or the rows show through it as they pass
+   underneath. It is the same 0.07 wash as before, laid over the surface as a
+   flat gradient so the colour is unchanged and only the transparency goes. */
 .home-v2 .tbl-enhanced thead th {
-  background: rgba(242, 153, 74, 0.07);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background:
+    linear-gradient(rgba(242, 153, 74, 0.07), rgba(242, 153, 74, 0.07)),
+    var(--surface, #fff);
   border-bottom: 2px solid rgba(242, 153, 74, 0.35);
   color: var(--ink, #0d1526);
 }
@@ -1033,10 +1049,19 @@
 .home-v2 .tbl-enhanced tbody tr:hover td {
   background: rgba(242, 153, 74, 0.09);
 }
+/* The name and the extension are one label, so they stay on one line. The
+   flex children were wrapping, which dropped "· 7242" under "Neel Sahani"
+   and made those rows taller than the rest. */
 .home-v2 .tbl-row-name {
   display: inline-flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .home-v2 .tbl-dot {
   flex: none;
@@ -2628,4 +2653,55 @@
 
 .dark .home-v2 .ix-name {
   color: var(--mcm-ink, #f8fafc);
+}
+
+/* ── Agents ────────────────────────────────────────────────────────────────
+   Left as a table, deliberately. Fifteen people against six attributes is
+   what a table is for, and the rest of this page moved to card rows because
+   those panels held two or three items, not fifteen. Forcing this one to
+   match would trade a scannable grid for consistency's own sake.
+
+   What it needed was column widths that survive real data. Queue sat at 56px
+   -- wide enough for the "--" it shows today and nothing else, so the first
+   real queue name would have been crushed. The figures are narrow and fixed,
+   the two name-bearing columns get what is left. */
+.home-v2 .agents-tbl table {
+  table-layout: fixed;
+  width: 100%;
+}
+.home-v2 .agents-tbl th:nth-child(1),
+.home-v2 .agents-tbl td:nth-child(1) {
+  width: 34%;
+}
+.home-v2 .agents-tbl th:nth-child(2),
+.home-v2 .agents-tbl td:nth-child(2) {
+  width: 21%;
+}
+.home-v2 .agents-tbl th:nth-child(3),
+.home-v2 .agents-tbl td:nth-child(3) {
+  width: 17%;
+}
+.home-v2 .agents-tbl th:nth-child(4),
+.home-v2 .agents-tbl td:nth-child(4) {
+  width: 13%;
+}
+.home-v2 .agents-tbl th:nth-child(5),
+.home-v2 .agents-tbl td:nth-child(5) {
+  width: 8%;
+}
+.home-v2 .agents-tbl th:nth-child(6),
+.home-v2 .agents-tbl td:nth-child(6) {
+  width: 7%;
+}
+/* fixed layout will not shrink a cell for you -- anything too long for its
+   column has to be told to cut rather than force the table wider */
+.home-v2 .agents-tbl td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* the three figure columns read as figures, not prose */
+.home-v2 .agents-tbl th:nth-child(n + 4),
+.home-v2 .agents-tbl td:nth-child(n + 4) {
+  text-align: right;
 }
