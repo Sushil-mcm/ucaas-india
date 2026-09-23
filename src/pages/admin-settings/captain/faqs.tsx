@@ -246,7 +246,11 @@ const CaptainFaqs = () => {
       </div>
 
       <div className="relative w-full max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+        {/* `z-10` because the shared Input wraps its field in a positioned div
+            of its own. Both that wrapper and this icon sit at `z-index: auto`,
+            so they paint in tree order and the wrapper's background — coming
+            second — washed the icon out from underneath. */}
+        <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
         <Input
           type="text"
           value={search}
