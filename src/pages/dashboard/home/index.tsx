@@ -1229,13 +1229,20 @@ const Home = () => {
 
 
         {/* ── Queues + agent status, side by side ──────────────────────── */}
-        <div className="grid2 grid2-stretch-cols" style={{ marginTop: 16 }}>
-        {/* Queues stacked with Interactions below it — Queues alone left a
-            lot of dead space under the right column's taller
-            agent-status + agents stack, and Interactions was a separate
-            full-width row after both; folding it in here uses that space
-            instead of leaving it empty. */}
-        <div className="stack">
+        {/* Four cards in one two-column grid, not two independent stacks.
+
+            As two stacks, each column laid its own cards out with no
+            knowledge of the other, so the seam between the first and second
+            card fell at a different height on each side — 193px on the left
+            against 82px on the right. Nothing could line them up, because
+            nothing connected them.
+
+            In one grid the four cards share their rows, so that seam is a
+            single line across the page by construction. Rows size to their
+            taller card and each card keeps its natural height (.grid2 aligns
+            to start), so a short card leaves background beneath it rather
+            than stretching and hollowing itself out. */}
+        <div className="grid2" style={{ marginTop: 16 }}>
         {/* ── Queues ──────────────────────────────────────────────────────
             The whole floor, worst first — Home answers "where is it hurting"
             before you go to Performance to work the detail. */}
@@ -1330,91 +1337,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* ── Interactions ───────────────────────────────────────────────
-            Live calls only. Sentiment is in the artifact but needs the
-            Copilot transcript service, so the column is left out rather
-            than shown empty. */}
-        <div className="panel-card">
-          <div className="pc-head">
-            <h3>Interactions</h3>
-            <span className="pc-right num" style={{ color: 'var(--ink-4)', fontSize: 11 }}>
-              {interactions.length} in progress
-            </span>
-          </div>
-          {/* A row per live call, not a seven-column table.
-
-              Seven columns shared this half-width card with Queues' eight and
-              hit the same wall: Time, Number and Duration each held a handful
-              of characters in a cell sized for its heading, while Customer,
-              Queue and Agent were three names competing for what was left.
-
-              A live call is one thing happening, so it reads as one row: who
-              is on it, and underneath, when it started and where it is
-              routed. State and elapsed time sit right, which is where you
-              scan for the call that has been running too long.
-
-              Same seven fields, same sources. */}
-          <div className="pc-body">
-            {interactions.length ? (
-              <div className="ix-list">
-                {interactions.map((call) => {
-                  /* getMonitoringContactValue returns the number itself when
-                     there is no contact record, so repeating it in the meta
-                     line would print the same digits twice -- the trap the
-                     recent-calls rows fell into. */
-                  const showNumber =
-                    call.number && call.number !== '—' && call.number !== call.customer;
-                  return (
-                    <div className="ix-row" key={call.id}>
-                      {nameAvatar(call.customer, undefined, 28)}
-                      <span className="ix-id">
-                        <span className="ix-name" title={call.customer}>
-                          {call.customer}
-                        </span>
-                        <span className="ix-meta">
-                          {call.startedAt ? moment(call.startedAt).format('HH:mm') : '—'}
-                          {showNumber ? (
-                            <>
-                              <i className="dot-sep" />
-                              <span className="num">{call.number}</span>
-                            </>
-                          ) : null}
-                          <i className="dot-sep" />
-                          {call.queue}
-                          <i className="dot-sep" />
-                          {call.agent}
-                        </span>
-                      </span>
-                      <span className={`state ${call.waiting ? 'acw' : 'busy'} ix-state`}>
-                        {call.state}
-                      </span>
-                      <span className="ix-dur num">
-                        {call.startedAt ? (
-                          <Timer startTime={call.startedAt} />
-                        ) : (
-                          <span className="q-none">—</span>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty comms-empty">
-                <Ic n="phone" />
-                <p>
-                  Nothing on the wire right now. Live calls appear here as they arrive,
-                  longest-running first.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-        </div>
-
-        {/* ── Agent status distribution + agents, stacked in this column
-            so they fill the height Queues sets on the left ─────────────── */}
-        <div className="stack">
         <div className="panel-card">
           <div className="pc-head dist-head">
             <span className="dist-head-icon">
@@ -1500,13 +1422,93 @@ const Home = () => {
           </div>
         </div>
 
+        {/* ── Interactions ───────────────────────────────────────────────
+            Live calls only. Sentiment is in the artifact but needs the
+            Copilot transcript service, so the column is left out rather
+            than shown empty. */}
+        <div className="panel-card">
+          <div className="pc-head">
+            <h3>Interactions</h3>
+            <span className="pc-right num" style={{ color: 'var(--ink-4)', fontSize: 11 }}>
+              {interactions.length} in progress
+            </span>
+          </div>
+          {/* A row per live call, not a seven-column table.
+
+              Seven columns shared this half-width card with Queues' eight and
+              hit the same wall: Time, Number and Duration each held a handful
+              of characters in a cell sized for its heading, while Customer,
+              Queue and Agent were three names competing for what was left.
+
+              A live call is one thing happening, so it reads as one row: who
+              is on it, and underneath, when it started and where it is
+              routed. State and elapsed time sit right, which is where you
+              scan for the call that has been running too long.
+
+              Same seven fields, same sources. */}
+          <div className="pc-body">
+            {interactions.length ? (
+              <div className="ix-list">
+                {interactions.map((call) => {
+                  /* getMonitoringContactValue returns the number itself when
+                     there is no contact record, so repeating it in the meta
+                     line would print the same digits twice -- the trap the
+                     recent-calls rows fell into. */
+                  const showNumber =
+                    call.number && call.number !== '—' && call.number !== call.customer;
+                  return (
+                    <div className="ix-row" key={call.id}>
+                      {nameAvatar(call.customer, undefined, 28)}
+                      <span className="ix-id">
+                        <span className="ix-name" title={call.customer}>
+                          {call.customer}
+                        </span>
+                        <span className="ix-meta">
+                          {call.startedAt ? moment(call.startedAt).format('HH:mm') : '—'}
+                          {showNumber ? (
+                            <>
+                              <i className="dot-sep" />
+                              <span className="num">{call.number}</span>
+                            </>
+                          ) : null}
+                          <i className="dot-sep" />
+                          {call.queue}
+                          <i className="dot-sep" />
+                          {call.agent}
+                        </span>
+                      </span>
+                      <span className={`state ${call.waiting ? 'acw' : 'busy'} ix-state`}>
+                        {call.state}
+                      </span>
+                      <span className="ix-dur num">
+                        {call.startedAt ? (
+                          <Timer startTime={call.startedAt} />
+                        ) : (
+                          <span className="q-none">—</span>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty comms-empty">
+                <Ic n="phone" />
+                <p>
+                  Nothing on the wire right now. Live calls appear here as they arrive,
+                  longest-running first.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
         {/* ── Agents ─────────────────────────────────────────────────────
             Adherence and sentiment are in the artifact but have no service
             behind them yet, so this shows what the platform knows rather than
             filling the columns in. Occupancy needs how long each person spent
             in each status: agent_status_history started recording that on
             9 Sep 2026, so it becomes answerable once a range of it exists. */}
-        <div className="panel-card roomy-rows fill-remaining">
+        <div className="panel-card roomy-rows">
           <div className="pc-head">
             <h3>Agents</h3>
             <button
@@ -1584,7 +1586,6 @@ const Home = () => {
               </tbody>
             </table>
           </div>
-        </div>
         </div>
         </div>
       </div>
