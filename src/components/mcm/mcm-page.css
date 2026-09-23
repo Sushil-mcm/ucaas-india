@@ -2494,8 +2494,14 @@
 .mcm-page .mcm-rule-h.tap {
   cursor: pointer;
 }
-.mcm-page .mcm-rule-h.tap:hover {
-  background: var(--surface-2);
+/* Only the edge lights on hover. Filling the whole row with `--surface-2`
+   read as "this row is chosen" rather than "you are pointing at it", which on
+   a list where one row really can be open is the wrong thing to say.
+
+   The border belongs to `.mcm-rule`, the card, while the hover happens on the
+   header inside it — `:has()` is what reaches the parent from the child. */
+.mcm-page .mcm-rule:has(.mcm-rule-h.tap:hover) {
+  border-color: var(--accent);
 }
 
 .mcm-page .mcm-rule-t {
