@@ -5000,6 +5000,14 @@
   background: #ffffff;
 }
 
+/* A row that is not a row: an empty state or a loading line spanning the whole
+   table. The shared hover says "this is selectable", which is a promise a
+   placeholder cannot keep, so it keeps whatever is behind it. */
+.mcm-page tbody tr.mcm-no-hover:hover,
+.mcm-admin table tbody tr.mcm-no-hover:hover {
+  background: transparent;
+}
+
 /* A field that keeps its own edge instead of the offset admin focus ring: it
    already has a border, so the ring drew a second one outside it. One class
    for inputs, selects and textareas alike — this replaces the per-screen

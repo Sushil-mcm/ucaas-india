@@ -269,14 +269,14 @@ const DeskPhones = () => {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
+                  <tr className="mcm-no-hover">
                     <td colSpan={8} className="py-6 text-center text-gray-500">
                       Loading…
                     </td>
                   </tr>
                 ) : null}
                 {!isLoading && !rows.length ? (
-                  <tr>
+                  <tr className="mcm-no-hover">
                     <td colSpan={8} className="px-6 py-14 text-center">
                       <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                         <Plus className="size-6" />

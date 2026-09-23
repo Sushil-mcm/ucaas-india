@@ -18,7 +18,11 @@ import {
 
 const VENDOR_NAME: Record<string, string> = { yealink: 'Yealink', poly: 'Poly', 'poly-obi': 'Poly OBi', cisco: 'Cisco', grandstream: 'Grandstream' };
 
-const selectClass = 'min-h-10 rounded-lg border border-gray-200 px-3';
+/* `bg-white` needs `mcm-solid-card` beside it: rounded + bg-white is exactly
+   what the glass rule tints. `mcm-plain-field` trades the admin focus ring
+   for the border this already has. */
+const selectClass =
+  'mcm-solid-card mcm-plain-field min-h-10 rounded-lg border border-gray-200 bg-white px-3 outline-none';
 
 const EditPhoneForm = ({ phone, onDone }: { phone: DeskPhone; onDone: () => void }) => {
   const queryClient = useQueryClient();
