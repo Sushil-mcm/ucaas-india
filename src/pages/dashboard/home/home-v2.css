@@ -360,6 +360,31 @@
   align-items: flex-start;
   gap: 12px;
 }
+/* ── the top row of the Queues / Agent-status grid ─────────────────────
+   The seam between the rows lines up, but the two cards in the top row
+   still ended at different heights -- Queues 365, Agent status 254 -- so
+   the right one stopped short with background under it.
+
+   They stretch to a common height now. Stretching alone would just move the
+   emptiness inside the card, so the note at the foot of Agent status is
+   pushed to the bottom edge: the surplus lands between the stat cards and
+   the note, where it reads as a card with a footer rather than a card that
+   ran out. Same trick as the day card's footer.
+
+   Only the first row. The second pairs Interactions against the Agents
+   table, which is 425px taller -- stretching there would put half a
+   screen of nothing inside a card whose whole content is one sentence. */
+.mcm-page.home-v2 .grid2 > .panel-card:nth-child(-n + 2) {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+.mcm-page.home-v2 .grid2 > .panel-card:nth-child(-n + 2) > .pc-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 /* Neutral, not an orange block. This panel was carrying colour in eight
    places at once -- head tile, two bar segments, two card washes, two
    tinted percentages and an amber tip -- which left nothing for the eye to
@@ -512,8 +537,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
-  padding-top: 13px;
+  /* auto, so when this card is stretched to match Queues the surplus lands
+     above the note and the note sits on the card's bottom edge. padding-top
+     carries the minimum separation the fixed margin used to. */
+  margin-top: auto;
+  padding-top: 16px;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
   color: var(--ink-4, #93a0b8);
   font-size: 11.5px;
