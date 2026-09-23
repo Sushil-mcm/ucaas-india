@@ -341,6 +341,7 @@ const PeopleScreen: FC = () => {
                   keeps the console's orange and lines up under the field. */}
               <div className="mcm-people-pick">
                 <CustomSelect
+                  inputClass="mcm-people-opt"
                   isSearchable={false}
                   options={LOCATION_ALL.concat(locationNames.map((n: string) => ({ label: n, value: n })))}
                   value={{ label: location === 'All' ? 'Location: All' : location, value: location }}
@@ -349,6 +350,7 @@ const PeopleScreen: FC = () => {
               </div>
               <div className="mcm-people-pick">
                 <CustomSelect
+                  inputClass="mcm-people-opt"
                   isSearchable={false}
                   options={ROLE_ALL.concat(roleLabels.map((n) => ({ label: n, value: n })))}
                   value={{ label: roleFilter === 'All' ? 'Role: All' : roleFilter, value: roleFilter }}
@@ -357,6 +359,7 @@ const PeopleScreen: FC = () => {
               </div>
               <div className="mcm-people-pick is-wide">
                 <CustomSelect
+                  inputClass="mcm-people-opt"
                   isSearchable={false}
                   options={LAST_SEEN_OPTIONS}
                   value={LAST_SEEN_OPTIONS.find((f) => f.value === lastSeen) || LAST_SEEN_OPTIONS[0]}
@@ -376,6 +379,7 @@ const PeopleScreen: FC = () => {
               <>
                 <div className="mcm-people-pick">
                   <CustomSelect
+                    inputClass="mcm-people-opt"
                     isSearchable={false}
                     placeholder="Choose a role"
                     options={roleOptions.map((r: any) => ({ label: r.name, value: r.uuid }))}

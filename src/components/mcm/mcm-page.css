@@ -10223,8 +10223,13 @@
   flex: 1 1 220px;
   max-width: 300px;
 }
+/* `z-index`, or the icon is drawn and then covered: the shared Input
+   wraps its field in a `relative` div, and two positioned boxes with no
+   z-index paint in DOM order - the later one, the white field, on top of
+   the icon that came before it. */
 .mcm-page .mcm-people-search > svg {
   position: absolute;
+  z-index: 2;
   left: 11px;
   top: 50%;
   width: 15px;
