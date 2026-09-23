@@ -924,11 +924,15 @@ const Home = () => {
                   </div>
                 ))
               ) : (
-                <div className="empty">
+                /* `attn-empty` is a hook for the scoped override in
+                   home-v2.css — the base `.empty` (mcm-page.css:1936) centres
+                   a column and pads 36px, which is right for a page-sized
+                   blank but turns good news into 250px of white here. */
+                <div className="empty attn-empty">
                   <Ic n="check" />
                   <p>
-                    Every queue is inside its service level and nobody is waiting past the breach
-                    mark. This list fills itself the moment that changes.
+                    <b>Nothing needs you.</b> Every queue is inside its service level and nobody is
+                    waiting past the breach mark — this list fills itself the moment that changes.
                   </p>
                 </div>
               )}

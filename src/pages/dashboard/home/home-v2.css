@@ -1858,3 +1858,43 @@
   margin-top: 16px;
   margin-bottom: 16px;
 }
+
+/* ── "Needs you now", all clear ───────────────────────────────────────────
+   The shared `.empty` (mcm-page.css:1936) centres a column, pads 36px and
+   stretches with flex: 1 — correct for a page-sized blank state, wrong for
+   this panel, where it turned "everything is fine" into 250px of white with
+   four short centred lines floating in it.
+
+   Good news should be legible and small. It is now a single row that reads
+   left to right like any other line on the page, at roughly a third of the
+   height. Layout and size only — the base rule keeps its colours. */
+.home-v2 .attn-empty {
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  text-align: left;
+  padding: 18px 20px;
+}
+.home-v2 .attn-empty .ic {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+.home-v2 .attn-empty p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  /* a wide measure so the sentence runs on one or two lines instead of
+     wrapping into a narrow centred stack */
+  max-width: 92ch;
+}
+.home-v2 .attn-empty p b {
+  font-weight: 700;
+}
+
+/* the panel no longer needs to hold a tall empty column */
+.home-v2 .panel-card:has(.attn-empty) .pc-body {
+  min-height: 0;
+}
