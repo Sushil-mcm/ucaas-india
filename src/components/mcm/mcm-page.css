@@ -3240,6 +3240,20 @@
   border-color: var(--accent) !important;
 }
 
+/* Both fields already fill with #fff. What made them read cream was the edge:
+   the console rule further up swaps the `border-gray-200` their markup asks
+   for to the warm `--line` (#eee7dd), and at this size a warm edge tints the
+   whole control. A neutral edge lets the white fill read as white. Dark mode
+   keeps the shared border token, where a light grey would be wrong. */
+.mcm-admin .mcm-widget-search,
+.mcm-admin .mcm-widget-filter {
+  border-color: var(--color-gray-200);
+}
+.dark .mcm-admin .mcm-widget-search,
+.dark .mcm-admin .mcm-widget-filter {
+  border-color: var(--border);
+}
+
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
   border-radius: 999px;
