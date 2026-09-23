@@ -979,6 +979,33 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
+/* Closing the dead space under the list.
+
+   This card is height-matched with "Your day so far" (.grid2-stretch-cols
+   sets align-items: stretch), and the day card is the taller of the two, so
+   anything Quick dial does not use shows as a blank third of a card. Two
+   things close it: the list now shows more of the real roster
+   (QUICK_DIAL_MAX), and the rows share out whatever height is left rather
+   than stacking from the top and stopping.
+
+   The row height is bounded at both ends on purpose. The floor keeps a long
+   roster compact; the ceiling stops a short one inflating three tiles to
+   110px each, which would trade dead space for absurd ones. Any remainder
+   past the ceiling spreads through the gaps instead. */
+.mcm-page.home-v2 .panel-card:has(.qd-grid) {
+  display: flex;
+  flex-direction: column;
+}
+.mcm-page.home-v2 .panel-card:has(.qd-grid) > .pc-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.home-v2 .qd-grid {
+  flex: 1;
+  align-content: space-between;
+  grid-auto-rows: minmax(52px, 76px);
+}
 @media (max-width: 560px) {
   .home-v2 .qd-grid {
     grid-template-columns: 1fr;

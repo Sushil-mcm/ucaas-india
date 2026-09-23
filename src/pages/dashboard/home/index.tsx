@@ -17,6 +17,14 @@ import DataFreshness from '@/pages/performance/data-freshness';
  * in step with still writes `KPI_REFRESH_MS * 15`, which reads as 30s there
  * and would be 2.5 minutes here — keep this constant when porting. */
 const HOME_COUNTER_REFRESH_MS = 30000;
+
+/* How many teammates Quick dial lists. It shares its row with "Your day so
+   far", the two cards are height-matched, and the day card is the taller of
+   the two -- at six names the list ran out a third of the way up and the rest
+   of the card was dead space. Ten fills it at the roster sizes this portal
+   sees, and the header says "10 of 14" so the cap never reads as the whole
+   roster. Same already-fetched agent rows; nothing new is requested. */
+const QUICK_DIAL_MAX = 10;
 import { serviceLevelBand } from '@/lib/queue-series';
 import { useAnimatedNumber } from '@/pages/performance/use-animated-number';
 import { formatSecsToClock } from '@/pages/performance/format';
@@ -449,11 +457,21 @@ const Home = () => {
   });
 
   /* ── quick dial: the people you actually call ────────────────────────── */
+  /* Everyone this user could dial, before the display cap -- kept apart from
+     the list below purely so the panel header can say how many it is showing
+     out of how many there are. */
+  const dialRoster = useMemo(
+    () =>
+      agentRows.filter(
+        (agent: any) => agent?.extension && String(agent.extension) !== myExtension,
+      ),
+    [agentRows, myExtension],
+  );
+
   const quickDial = useMemo<{ name: string; extension: string; online: boolean }[]>(
     () =>
-      agentRows
-        .filter((agent: any) => agent?.extension && String(agent.extension) !== myExtension)
-        .slice(0, 6)
+      dialRoster
+        .slice(0, QUICK_DIAL_MAX)
         .map((agent: any) => {
           const name = `${agent?.first_name || ''} ${agent?.last_name || ''}`.trim() || 'Teammate';
           const online = usersOnlineStatus.some(
@@ -461,7 +479,7 @@ const Home = () => {
           );
           return { name, extension: String(agent.extension), online };
         }),
-    [agentRows, myExtension, usersOnlineStatus],
+    [dialRoster, usersOnlineStatus],
   );
 
   /* ── attention list ──────────────────────────────────────────────────── */
@@ -1151,7 +1169,14 @@ const Home = () => {
             <div className="panel-card">
               <div className="pc-head">
                 <h3>Quick dial</h3>
-                <span className="src pc-right">{quickDial.length} on the roster</span>
+                {/* "6 on the roster" was wrong whenever the cap bit -- the
+                    roster had fourteen. Report both when the list is
+                    truncated. */}
+                <span className="src pc-right">
+                  {dialRoster.length > quickDial.length
+                    ? `${quickDial.length} of ${dialRoster.length}`
+                    : `${quickDial.length} on the roster`}
+                </span>
               </div>
               <div className="pc-body">
                 {/* Two-up tiles rather than one full-width row each.
