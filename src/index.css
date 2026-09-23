@@ -1447,9 +1447,14 @@
   /* Was `flex: 1 1 0%` — a flex-grow item ignores its own width classes and
      stretches to fill whatever space its flex parent has free, which is
      exactly why narrowing the w-[...] classes on this element had no
-     visible effect. `flex: none` lets its own width win. */
-  flex: none;
-  min-width: 120px;
+     visible effect. `flex: 0 1 auto` keeps the w-[...] classes as the basis
+     (so they still win when the bar has room) while allowing the pill to
+     give way when it does not. It was `flex: none`, which refused to shrink
+     at all: at 1280px the header bar has no slack left, so the 190px pill
+     overflowed its own 111px wrapper and rendered underneath the bell and
+     theme toggle. */
+  flex: 0 1 auto;
+  min-width: 110px;
   max-width: 420px;
 }
 
@@ -1493,8 +1498,12 @@
 }
 
 /* The ⌘K affordance. Hidden once the field is in use — the hint has done its
-   job by then, and the shortcut is what selects the existing text. */
+   job by then, and the shortcut is what selects the existing text. Also
+   hidden until the bar is wide enough to afford it: below 1440px the pill
+   shrinks toward its 110px floor, and the badge ate so much of that the
+   placeholder was clipped to a single letter. The shortcut still works. */
 .global-search-kbd {
+  display: none;
   flex: none;
   font-family: inherit;
   font-size: 11px;
@@ -1507,6 +1516,12 @@
   border-radius: 5px;
   padding: 3px 6px;
   white-space: nowrap;
+}
+
+@media (min-width: 1440px) {
+  .global-search-kbd {
+    display: inline-block;
+  }
 }
 
 .global-search-input-wrapper:focus-within .global-search-kbd {
@@ -2138,9 +2153,13 @@
   place-items: center;
 }
 
+/* 36px tall, matching the notification button and sitting in the same optical
+   band as the search pill (32px). It was 48px in a 64px bar — three quarters
+   of the header's height, which made the mark read as oversized next to every
+   other control and cost 24px of horizontal space in a bar that has none. */
 .mcm-brand-mark img {
-  width: 96.27px;
-  height: 48px;
+  width: 72.2px;
+  height: 36px;
   object-fit: contain;
   display: block;
   margin: 0 auto;
