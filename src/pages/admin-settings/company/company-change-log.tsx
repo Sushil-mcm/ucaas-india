@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, History } from 'lucide-react';
+import { AlertTriangle, ChevronDown, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Loader from '@/components/custom/loader';
@@ -46,6 +46,14 @@ import { BackButton } from './section-actions';
  * recording access, written by the audit trail on those routers. Until that
  * build is on the server the request 404s and this screen simply shows the
  * two older sources; the note at the top says which it has. */
+
+/* The filter row: `appearance-none` so the chevron sits where we put it rather
+   than wherever the platform draws its own, and `mcm-plain-select` to trade the
+   admin focus ring for the border it already has. */
+const FILTER_SELECT =
+  'mcm-solid-card mcm-plain-select h-9 appearance-none rounded-md border border-gray-200 bg-white pl-3 pr-8 text-sm outline-none cursor-pointer';
+const FILTER_CHEVRON =
+  'pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400';
 
 const HISTORY_PER_SECTION = 50;
 const CHANGE_LOG_QUERY_KEY = ['companyChangeLog'];
@@ -283,7 +291,7 @@ const PropagationDashboardPanel = () => {
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="mcm-plain-rows w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr><th className="px-3 py-2">Central change</th><th className="px-3 py-2">Must reach</th><th className="px-3 py-2">Fresh heartbeat</th><th className="px-3 py-2">Stale / absent</th></tr>
             </thead>
@@ -457,32 +465,38 @@ const CompanyChangeLog = () => {
       </div> : null}
       {central.isLoading ? <p className="text-sm text-muted-foreground">Loading central history…</p> : null}
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          className="h-9 rounded-md border bg-background px-2 text-sm"
-          value={section}
-          onChange={(e) => setSection(e.target.value)}
-          aria-label="Filter by section"
-        >
-          <option value="">All sections</option>
-          {sections.map((key) => (
-            <option key={key} value={key}>
-              {sectionLabel(key)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-9 rounded-md border bg-background px-2 text-sm"
-          value={actor}
-          onChange={(e) => setActor(e.target.value)}
-          aria-label="Filter by person"
-        >
-          <option value="">Everyone</option>
-          {actors.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            className={FILTER_SELECT}
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+            aria-label="Filter by section"
+          >
+            <option value="">All sections</option>
+            {sections.map((key) => (
+              <option key={key} value={key}>
+                {sectionLabel(key)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={FILTER_CHEVRON} />
+        </div>
+        <div className="relative">
+          <select
+            className={FILTER_SELECT}
+            value={actor}
+            onChange={(e) => setActor(e.target.value)}
+            aria-label="Filter by person"
+          >
+            <option value="">Everyone</option>
+            {actors.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={FILTER_CHEVRON} />
+        </div>
         <Input
           className="h-9 w-64"
           placeholder="Search setting, value or correlation"
@@ -490,7 +504,9 @@ const CompanyChangeLog = () => {
           onChange={(e) => setText(e.target.value)}
           aria-label="Search the change log"
         />
-        <span className="text-xs text-muted-foreground">
+        {/* Pushed to the far end so the count reads as a result of the filters
+            rather than a fourth control in the row. */}
+        <span className="ml-auto text-xs text-muted-foreground">
           {rows.length} of {entries.length} changes
         </span>
       </div>

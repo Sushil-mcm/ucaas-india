@@ -4982,6 +4982,25 @@
   border: 1px solid var(--glass-border);
 }
 
+/* A log is read, not picked from. `mcm-plain-rows` gives a table's rows their
+   own white and stops them lighting on hover — the shared hover says "this row
+   is selectable", which is a promise a read-only history cannot keep. Outranks
+   both `.mcm-page tbody tr:hover` and `.mcm-admin table tbody tr:hover`. */
+.mcm-page table.mcm-plain-rows tbody tr,
+.mcm-page table.mcm-plain-rows tbody tr:hover,
+.mcm-admin table.mcm-plain-rows tbody tr,
+.mcm-admin table.mcm-plain-rows tbody tr:hover {
+  background: #ffffff;
+}
+
+/* A select that keeps its edge instead of the offset admin focus ring, for the
+   same reason the other fields do: it already has a border to light. */
+.mcm-admin .mcm-plain-select:focus,
+.mcm-admin .mcm-plain-select:focus-visible {
+  outline: none !important;
+  border-color: var(--accent) !important;
+}
+
 /* Opt-out for a surface that is a control or a data panel rather than a card:
    add `mcm-solid-card` and the glass tint above is skipped. Reusable, so a
    screen that wants a plain white panel does not need a class of its own each
