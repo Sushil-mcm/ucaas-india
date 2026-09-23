@@ -21,6 +21,7 @@ import AlertConfirm from '@/components/custom/alert-confirm';
 import useDebounce from '@/hooks/use-debounce';
 import { handleAlert } from '@/lib/utils';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import AddPhoneForm from './add-phone-form';
 import EditPhoneForm from './edit-phone-form';
 import BulkAdd from './bulk-add';
@@ -84,6 +85,12 @@ const when = (iso: string | null) => {
 };
 
 const DeskPhones = () => {
+  /* Handed to the shared head rather than printed on the page, so it sits on
+     the info button beside the title like every other Admin screen. */
+  useSetAdminPageMeta({
+    description:
+      'Physical handsets: who each belongs to, or which room it stands in. Add one, or a whole delivery from a spreadsheet.',
+  });
   const queryClient = useQueryClient();
   const [kind, setKind] = useState<DeskPhoneKind>('user');
   const [search, setSearch] = useState('');
@@ -154,18 +161,16 @@ const DeskPhones = () => {
 
   return (
     <>
+      {/* `hideHead`: the shared Admin head already prints this screen's title
+          from the nav registry and carries the description on its info button,
+          so a title, a "Company" eyebrow and a crumb trail here all said again
+          what the head and the lit nav entry say. The buttons forward up to
+          that head on their own. */}
       <AdminPage
-        crumbs={[
-          { label: 'Admin settings', to: '/admin-settings' },
-          { label: 'Company', to: '/admin-settings/company' },
-          { label: 'Desk phones' },
-        ]}
-        section="Company"
-        title="Desk phones"
-        description="Physical handsets: who each belongs to, or which room it stands in. Add one, or a whole delivery from a spreadsheet."
+        hideHead
         actions={
           <>
-            <button type="button" className="btn" onClick={() => setDrawer('bulk')} disabled={absent}>
+            <button type="button" className="btn ghost" onClick={() => setDrawer('bulk')} disabled={absent}>
               Add many
             </button>
             <button type="button" className="btn primary" onClick={() => setDrawer('add')} disabled={absent}>
@@ -248,7 +253,9 @@ const DeskPhones = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              {/* Headings only once there are rows to head: eight column
+                  labels over an empty table describe nothing. */}
+              <thead className={rows.length ? '' : 'hidden'}>
                 <tr>
                   <th>Phone</th>
                   <th>MAC address</th>
@@ -270,15 +277,28 @@ const DeskPhones = () => {
                 ) : null}
                 {!isLoading && !rows.length ? (
                   <tr>
-                    <td colSpan={8} className="py-10 text-center text-gray-500">
-                      <div className="font-medium text-gray-700">
+                    <td colSpan={8} className="px-6 py-14 text-center">
+                      <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <Plus className="size-6" />
+                      </span>
+                      <div className="text-sm font-semibold text-[#2E2D35]">
                         {kind === 'room' ? 'No room phones yet' : 'No user phones yet'}
                       </div>
-                      <div className="mt-1 text-xs">
+                      <div className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#9A948F]">
                         {kind === 'room'
                           ? 'Add the handsets in reception and meeting rooms. Each gets its own extension.'
                           : "Add the handsets on people's desks. Each one is identified by the MAC address printed under it."}
                       </div>
+                      {!absent ? (
+                        <button
+                          type="button"
+                          className="btn primary mt-4"
+                          onClick={() => setDrawer('add')}
+                        >
+                          <Plus className="w-3 h-3" />
+                          {kind === 'room' ? 'Add room phone' : 'Add user phone'}
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ) : null}
