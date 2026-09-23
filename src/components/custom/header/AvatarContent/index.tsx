@@ -156,29 +156,29 @@ const AvatarContent = ({ setProfileState }: any) => {
           an Edit shortcut straight into the same profile page the menu item
           below opens — the two used to be the only way in, this is the
           quicker one for the most common edit. */}
-      <div className="relative -mx-3 -mt-3 px-4 pt-3.5 pb-3.5 bg-ucass-primary-200/50 rounded-t-md">
+      <div className="relative -mx-2 -mt-2 px-3 pt-3 pb-3 bg-ucass-primary-200/50 rounded-t-md">
         <button
           type="button"
           onClick={goToProfile}
-          className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm cursor-pointer transition-colors hover:bg-gray-50"
+          className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 shadow-sm cursor-pointer transition-colors hover:bg-gray-50"
         >
-          <Pencil className="w-3.5 h-3.5" />
+          <Pencil className="w-3 h-3" />
           Edit
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <CustomAvatar
             name={fullName}
-            size="48"
+            size="44"
             extension={user?.user_info?.extension}
             image={user?.user_info?.profile}
             isActivityInfo={false}
           />
-          <div className="flex flex-col items-start gap-1.5 min-w-0 pr-20">
-            <p className="text-[15px] font-bold leading-snug text-gray-900 dark:text-mcm-ink truncate max-w-40">
+          <div className="flex flex-col items-start gap-1 min-w-0 pr-[68px]">
+            <p className="text-sm font-bold leading-snug text-gray-900 dark:text-mcm-ink truncate max-w-40">
               {fullName}
             </p>
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap text-primary">
-              <Crown className="w-3.5 h-3.5" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap text-primary">
+              <Crown className="w-3 h-3" />
               {roleLabel}
             </span>
           </div>
@@ -188,28 +188,28 @@ const AvatarContent = ({ setProfileState }: any) => {
       {/* Availability — the same presence popover as before, now a
           full-width row that reads as "current status, tap to change"
           instead of a small chip tucked into the banner. */}
-      <div className="px-1 pt-2.5">
+      <div className="px-0.5 pt-2">
         <Popover open={showPresence} onOpenChange={(val) => setShowPresence(val)}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-lg bg-green-50 dark:bg-mcm-surface-3 px-3 py-2 cursor-pointer transition-colors hover:bg-green-100/70"
+              className="flex w-full items-center gap-2.5 rounded-lg bg-green-50 dark:bg-mcm-surface-3 px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-green-100/70"
             >
-              <div className="w-3.5 h-3.5 shrink-0">
+              <div className="w-3 h-3 shrink-0">
                 {statusImageLookup[effectiveSocketStatus] ?? statusImageLookup['online']}
               </div>
               <div className="flex flex-col items-start gap-0.5 min-w-0">
-                <span className="text-sm font-semibold leading-snug text-gray-900 dark:text-mcm-ink">
+                <span className="text-[13px] font-semibold leading-tight text-gray-900 dark:text-mcm-ink">
                   {presenceLabel}
                   {presenceNote && presenceNote !== presenceLabel ? (
                     <span className="font-normal text-gray-500 dark:text-mcm-ink-3"> · {presenceNote}</span>
                   ) : null}
                 </span>
-                <span className="text-xs leading-snug text-gray-500 dark:text-mcm-ink-3">
+                <span className="text-[10px] leading-tight text-gray-500 dark:text-mcm-ink-3">
                   Set your availability status
                 </span>
               </div>
-              <ChevronDown className="w-4 h-4 ml-auto shrink-0 text-gray-500" />
+              <ChevronDown className="w-3.5 h-3.5 ml-auto shrink-0 text-gray-500" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="p-1 flex flex-col gap-1" side="left" align="start">
@@ -242,19 +242,19 @@ const AvatarContent = ({ setProfileState }: any) => {
       {/* Contact details, each with its own copy button — the old version
           only ever showed these as read-only text, so getting the extension
           or DID into a dialer meant retyping it by hand. */}
-      <div className="flex flex-col mx-1 mt-2.5 mb-1 px-3 py-2 rounded-lg bg-gray-50 dark:bg-mcm-surface-3">
+      <div className="flex flex-col mx-0.5 mt-2 mb-0.5 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-mcm-surface-3">
         {contactRows.map(({ icon: RowIcon, label, value }, index) => (
           <div key={label}>
-            {index > 0 && <DropdownMenuSeparator className="my-2" />}
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            {index > 0 && <DropdownMenuSeparator className="my-1.5" />}
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <RowIcon className="w-3.5 h-3.5" />
               </span>
               <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-[11px] uppercase tracking-wide leading-none text-gray-500 dark:text-mcm-ink-3">
+                <span className="text-[10px] uppercase tracking-wide leading-none text-gray-500 dark:text-mcm-ink-3">
                   {label}
                 </span>
-                <span className="text-sm font-medium leading-snug text-gray-900 dark:text-mcm-ink truncate max-w-44">
+                <span className="text-[13px] font-medium leading-tight text-gray-900 dark:text-mcm-ink truncate max-w-44">
                   {value}
                 </span>
               </div>
@@ -263,48 +263,48 @@ const AvatarContent = ({ setProfileState }: any) => {
                 aria-label={`Copy ${label.toLowerCase()}`}
                 title={`Copy ${label.toLowerCase()}`}
                 onClick={() => copyValue(value, label)}
-                className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 cursor-pointer transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-mcm-surface"
+                className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-gray-400 cursor-pointer transition-colors hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-mcm-surface"
               >
-                <Copy className="w-3.5 h-3.5" />
+                <Copy className="w-3 h-3" />
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      <DropdownMenuSeparator className="my-1.5" />
+      <DropdownMenuSeparator className="my-1" />
 
-      <div className="flex flex-col gap-0.5 px-1 pb-1">
+      <div className="flex flex-col px-0.5">
         {menuItems.map(({ icon: ItemIcon, title, onClick, prefetch }) => (
           <div
             key={title}
-            className="flex items-center gap-3 rounded-lg px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
+            className="flex items-center gap-2.5 rounded-lg px-2 py-1 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
             {...(prefetch ? getRoutePrefetchHandlers(prefetch) : {})}
             onClick={onClick}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <ItemIcon className="w-3.5 h-3.5" />
             </span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink min-w-0 truncate">
+            <span className="text-[13px] font-semibold text-gray-900 dark:text-mcm-ink min-w-0 truncate">
               {title}
             </span>
-            <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-gray-400" />
+            <ChevronRight className="w-3.5 h-3.5 ml-auto shrink-0 text-gray-400" />
           </div>
         ))}
 
         <button
           type="button"
           onClick={logoutDevice}
-          className="mt-1 flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 cursor-pointer transition-colors bg-red-50 hover:bg-red-100"
+          className="mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-2 py-1 cursor-pointer transition-colors bg-red-50 hover:bg-red-100"
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
+          <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-red-100 text-red-600">
             <LogOut className="w-3.5 h-3.5" />
           </span>
-          <span className="text-sm font-semibold text-red-600">Sign out</span>
-          <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-red-300" />
+          <span className="text-[13px] font-semibold text-red-600">Sign out</span>
+          <ChevronRight className="w-3.5 h-3.5 ml-auto shrink-0 text-red-300" />
         </button>
       </div>
-      <p className="mt-1 text-[11px] text-gray-400 dark:text-mcm-ink-3 text-right px-2">v{packageJson.version}</p>
+      <p className="mt-0.5 text-[10px] leading-none text-gray-400 dark:text-mcm-ink-3 text-right px-1.5">v{packageJson.version}</p>
     </div>
   );
 };

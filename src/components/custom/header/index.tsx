@@ -486,7 +486,7 @@ const Header = () => {
                       )}
                     />
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-3 mt-2 mr-2 shadow-xl ring-1 ring-black/5">
+                  <PopoverContent className="w-80 p-2 mt-2 mr-2 shadow-xl ring-1 ring-black/5">
                     <AvatarContent setProfileState={setProfileState} />
                   </PopoverContent>
                 </Popover>
