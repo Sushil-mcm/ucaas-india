@@ -16,7 +16,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, SearchLine } from '@/assets/icons';
-import { Pencil } from 'lucide-react';
+import { ChevronDown, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -49,6 +49,7 @@ import usePeopleRows, {
   ROSTER_LIMIT,
 } from '@/pages/directory/people-rows';
 import RemovedPeople from '@/pages/directory/people-removed';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import AddUsers from './add-users';
 import UpdateForwarding from './update-forwarding';
 import RoleChangeModal from './role-change-modal';
@@ -82,6 +83,12 @@ const PeopleScreen: FC = () => {
   const myUuid = String(user?.uuid || user?.user_info?.uuid || '');
   const { features } = useCompanyFeatures();
   const virtualNumbersAccess = (features as any)?.plan_features?.virtual_numbers?.action;
+
+  /* The head prints the title; this is the line it shows beside it. */
+  useSetAdminPageMeta({
+    description:
+      'Everyone in the company. Add, invite, edit, suspend, remove and restore people here; the Directory only looks them up.',
+  });
 
   const [tab, setTab] = useState<PersonTab>('active');
   const [search, setSearch] = useState('');
@@ -253,74 +260,102 @@ const PeopleScreen: FC = () => {
 
   return (
     <>
-      <section className="w-full">
-        <div className="flex items-start justify-between gap-4 px-3 pt-3">
-          <div>
-            <h2 className="text-xl font-semibold">People</h2>
-            <p className="text-sm text-muted-foreground">Everyone in the company. Add, invite, edit, suspend, remove and restore people here; the Directory only looks them up.</p>
-          </div>
+      <section className="mcm-people">
+        {/* The head above already prints "People": the screen printed it a
+            second time, with the description beside it, so the page opened on
+            two identical titles. The button goes up into the head's own action
+            slot, on the title's line, and the description into its tooltip. */}
+        <AdminHeadActions>
           {isAdministrator && (
-            <Button className="gap-2" onClick={() => setDrawerState({ addUser: true })}><Plus className="w-4 h-4" /> Add people</Button>
+            <Button className="gap-2" onClick={() => setDrawerState({ addUser: true })}>
+              <Plus className="w-4 h-4" /> Add people
+            </Button>
           )}
-        </div>
+        </AdminHeadActions>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 px-3 pt-3">
+        <div className="mcm-people-stats">
           {[
             ['People', counts.active, `${counts.suspended} suspended`],
             ['Pending invites', counts.pending, invites.size ? `${Array.from(invites.values()).filter((i) => i.expired).length} expired` : 'none waiting'],
             ['Never signed in', counts.never, 'active people with no sign-in yet'],
             ['Showing', visible.length, `of ${rows.length} loaded`],
           ].map(([l, v, s]) => (
-            <div key={String(l)} className="rounded-lg border bg-card px-3 py-2">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{l}</div>
-              <div className="text-xl font-semibold tabular-nums">{v}</div>
-              <div className="text-xs text-muted-foreground">{s}</div>
+            <div key={String(l)} className="mcm-people-stat">
+              <span className="mcm-people-stat-l">{l}</span>
+              <span className="mcm-people-stat-v">{v}</span>
+              <span className="mcm-people-stat-s">{s}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex gap-1 border-b px-3 mt-3" role="tablist">
-          {TABS.map((t) => (
-            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => { setTab(t.key); setSelected(new Set()); }}
-              className={`px-3 py-2 text-sm border-b-2 -mb-px ${tab === t.key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground'}`}>
-              {t.label}
-              {t.key === 'active' && <span className="ml-1.5 rounded-full bg-muted px-1.5 text-xs tabular-nums">{counts.active}</span>}
-              {t.key === 'pending' && <span className="ml-1.5 rounded-full bg-muted px-1.5 text-xs tabular-nums">{counts.pending}</span>}
-            </button>
-          ))}
-        </div>
-
-        {tab !== 'removed' && tab !== 'reserved' && (
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2">
-            <div className="relative">
-              <SearchLine className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
-              <Input className="pl-8 w-64" placeholder="Search name, e-mail, extension" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Location">
-              <option value="All">Location: All</option>
-              {locationNames.map((n: string) => <option key={n} value={n}>{n}</option>)}
-            </select>
-            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} aria-label="Role">
-              <option value="All">Role: All</option>
-              {roleLabels.map((n) => <option key={n} value={n}>{n}</option>)}
-            </select>
-            <select className="h-9 rounded-md border bg-background px-2 text-sm" value={lastSeen} onChange={(e) => setLastSeen(e.target.value as LastSeenFilter)} aria-label="Last signed in">
-              {LAST_SEEN_FILTERS.map((f) => <option key={f.key} value={f.key}>Last signed in: {f.label}</option>)}
-            </select>
-            <div className="flex-1" />
-            <Button variant="outline" size="sm" onClick={exportRoster} disabled={!visible.length}>Export CSV</Button>
+        {/* Tabs and filters in one card, because they do one job: they decide
+            which rows the table below shows. They were three loose strips on
+            the page ground, each with its own left edge. */}
+        <div className="mcm-people-bar">
+          <div className="mcm-people-tabs" role="tablist">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => { setTab(t.key); setSelected(new Set()); }}
+                className={`mcm-people-tab${tab === t.key ? ' is-on' : ''}`}
+              >
+                {t.label}
+                {t.key === 'active' && <span className="mcm-people-tab-n">{counts.active}</span>}
+                {t.key === 'pending' && <span className="mcm-people-tab-n">{counts.pending}</span>}
+              </button>
+            ))}
           </div>
-        )}
+
+          {tab !== 'removed' && tab !== 'reserved' && (
+            <div className="mcm-people-filters">
+              <div className="mcm-people-search">
+                <SearchLine />
+                <Input placeholder="Search name, e-mail, extension" value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              {/* `appearance-none` and our own chevron: the platform draws its
+                  arrow wherever it likes, and three selects side by side made
+                  three different arrows at three different insets. */}
+              <div className="mcm-people-sel">
+                <select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Location">
+                  <option value="All">Location: All</option>
+                  {locationNames.map((n: string) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <ChevronDown />
+              </div>
+              <div className="mcm-people-sel">
+                <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} aria-label="Role">
+                  <option value="All">Role: All</option>
+                  {roleLabels.map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <ChevronDown />
+              </div>
+              <div className="mcm-people-sel">
+                <select value={lastSeen} onChange={(e) => setLastSeen(e.target.value as LastSeenFilter)} aria-label="Last signed in">
+                  {LAST_SEEN_FILTERS.map((f) => <option key={f.key} value={f.key}>Last signed in: {f.label}</option>)}
+                </select>
+                <ChevronDown />
+              </div>
+              <div className="mcm-people-spacer" />
+              <Button variant="outline" size="sm" onClick={exportRoster} disabled={!visible.length}>Export CSV</Button>
+            </div>
+          )}
+        </div>
 
         {tab !== 'removed' && tab !== 'reserved' && selectedRows.length > 0 && (
-          <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+          <div className="mcm-people-bulk">
             <b className="tabular-nums">{selectedRows.length} selected</b>
             {bulkAction === 'role' ? (
               <>
-                <select className="h-8 rounded-md border bg-background px-2 text-sm" value={bulkRole} onChange={(e) => setBulkRole(e.target.value)} aria-label="New role">
-                  <option value="">Choose a role</option>
-                  {roleOptions.map((r: any) => <option key={r.uuid} value={r.uuid}>{r.name}</option>)}
-                </select>
+                <div className="mcm-people-sel">
+                  <select value={bulkRole} onChange={(e) => setBulkRole(e.target.value)} aria-label="New role">
+                    <option value="">Choose a role</option>
+                    {roleOptions.map((r: any) => <option key={r.uuid} value={r.uuid}>{r.name}</option>)}
+                  </select>
+                  <ChevronDown />
+                </div>
                 <Button size="sm" onClick={runBulk} disabled={!bulkRole || bulkBusy}>Apply</Button>
                 <Button size="sm" variant="ghost" onClick={() => setBulkAction(null)}>Cancel</Button>
               </>
@@ -341,83 +376,105 @@ const PeopleScreen: FC = () => {
           </div>
         )}
 
-        <div className="px-3 pb-6">
-          {tab === 'removed' ? (
-            <RemovedPeople canRestore={isAdministrator} />
-          ) : tab === 'reserved' ? (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-xs uppercase text-muted-foreground"><th className="py-2">Number</th><th>Why it is free</th><th>Since</th><th>Note</th></tr></thead>
-              <tbody>
-                {isReservedLoading ? <tr><td className="py-6 text-muted-foreground" colSpan={4}>Loading…</td></tr>
-                  : reserved.length === 0 ? <tr><td className="py-6 text-muted-foreground" colSpan={4}>No unassigned or released numbers. A number freed by removing a person appears here.</td></tr>
-                  : reserved.map((n: any) => (
-                    <tr key={`${n.kind}-${n.number}`} className="border-t"><td className="py-2 font-mono">{n.number}</td><td>{n.kind === 'released' ? 'Released' : 'Unassigned'}</td><td className="tabular-nums">{n.since ? String(n.since).slice(0, 10) : '—'}</td><td className="text-muted-foreground">{n.note || '—'}</td></tr>
-                  ))}
-              </tbody>
-            </table>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase text-muted-foreground">
-                  {isAdministrator && <th className="py-2 w-8"><input type="checkbox" aria-label="Select everyone shown" checked={visible.length > 0 && visible.every((r) => selected.has(r.uuid))} onChange={(e) => setSelected(e.target.checked ? new Set(visible.map((r) => r.uuid)) : new Set())} /></th>}
-                  <th className="py-2">Person</th><th>Role</th><th>Location</th><th>Ext</th>
-                  {tab === 'pending' ? <th>Invite expires</th> : <th>Last signed in</th>}
-                  <th>Status</th><th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? <tr><td className="py-6 text-muted-foreground" colSpan={8}>Loading people…</td></tr>
-                  : visible.length === 0 ? <tr><td className="py-6 text-muted-foreground" colSpan={8}>{tab === 'pending' ? 'Nobody is waiting on an invite.' : 'Nobody matches these filters.'}</td></tr>
-                  : visible.map((row) => {
-                    const inv = invites.get(row.uuid);
-                    const state = row.state ? PERSON_STATE_LABEL[row.state] : null;
-                    const actionable = canActOn(row);
-                    return (
-                      <tr key={row.uuid} className="border-t hover:bg-muted/40">
-                        {isAdministrator && <td><input type="checkbox" aria-label={`Select ${row.name}`} disabled={!actionable} checked={selected.has(row.uuid)} onChange={() => toggleRow(row.uuid)} /></td>}
-                        <td className="py-2">
-                          <div className="flex items-center gap-2">
-                            <CustomAvatar name={row.name} image={row.image} />
-                            <div><div className="font-medium">{row.name}</div><div className="text-xs text-muted-foreground">{row.email}</div></div>
-                          </div>
-                        </td>
-                        <td><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{row.roleLabel}</span>{row.scopeSuffix ? <div className="text-xs text-muted-foreground">{row.scopeSuffix}</div> : null}</td>
-                        <td>{row.location || '—'}{row.department ? <div className="text-xs text-muted-foreground">{row.department}</div> : null}</td>
-                        <td className="font-mono">{row.extension || '—'}</td>
-                        {tab === 'pending'
-                          ? <td className="tabular-nums">{inv?.expired ? <span className="rounded-full bg-destructive/10 text-destructive px-2 py-0.5 text-xs">Expired {inv.expiresText}</span> : <span>{inv?.expiresText || '—'}</span>}</td>
-                          : <td className="tabular-nums">{row.raw?.last_login_at ? lastSeenText(row.raw.last_login_at) : <span className="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs">Never</span>}</td>}
-                        <td>{state ? <span className={`rounded-full px-2 py-0.5 text-xs ${row.state === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : row.state === 'SUSPENDED' ? 'bg-red-100 text-red-800' : 'bg-muted'}`}>{state.label}</span> : '—'}</td>
-                        <td className="text-right">
-                          <div className="inline-flex items-center gap-1">
-                            {tab === 'pending' && actionable && (
-                              <Button size="sm" variant="outline" disabled={isResending} onClick={() => doResend({ user_uuid: row.uuid })}>{inv?.expired ? 'Re-invite' : 'Resend'}</Button>
-                            )}
-                            <CustomTooltip text="Edit"><button aria-label={`Edit ${row.name}`} className="p-1 rounded hover:bg-muted" onClick={() => openFor(row, 'updateForwarding')}><Pencil className="w-4 h-4" /></button></CustomTooltip>
-                            {actionable && (
-                              <details className="relative">
-                                <summary className="list-none cursor-pointer rounded border px-2 py-0.5 text-xs">More ▾</summary>
-                                <div className="absolute right-0 z-10 mt-1 w-56 rounded-md border bg-popover p-1 text-left shadow-md">
-                                  <button className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => openFor(row, 'changeRole')}>Change role</button>
-                                  {virtualNumbersAccess?.assign_number && <button className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => openFor(row, 'assignUser')}>Assign a number</button>}
-                                  <div className="my-1 border-t" />
-                                  <button className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => setConfirm({ kind: 'signout', row })}>Sign out everywhere</button>
-                                  {row.state === 'SUSPENDED'
-                                    ? <button className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => doReactivate(row.uuid)}>Reactivate</button>
-                                    : <button className="block w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => setConfirm({ kind: 'suspend', row })}>Suspend</button>}
-                                  <button className="block w-full rounded px-2 py-1.5 text-left text-destructive hover:bg-muted" onClick={() => setConfirm({ kind: 'remove', row })}>Remove (restorable 72 h)</button>
+        {tab === 'removed' ? (
+          <RemovedPeople canRestore={isAdministrator} />
+        ) : (
+          <div className="mcm-people-table">
+            <div className="mcm-people-scroll">
+              {tab === 'reserved' ? (
+                <table className="mcm-people-t">
+                  <thead>
+                    <tr><th>Number</th><th>Why it is free</th><th>Since</th><th>Note</th></tr>
+                  </thead>
+                  <tbody>
+                    {isReservedLoading ? <tr className="mcm-no-hover"><td className="mcm-people-empty" colSpan={4}>Loading…</td></tr>
+                      : reserved.length === 0 ? <tr className="mcm-no-hover"><td className="mcm-people-empty" colSpan={4}>No unassigned or released numbers. A number freed by removing a person appears here.</td></tr>
+                      : reserved.map((n: any) => (
+                        <tr key={`${n.kind}-${n.number}`}>
+                          <td className="mcm-people-mono">{n.number}</td>
+                          <td>{n.kind === 'released' ? 'Released' : 'Unassigned'}</td>
+                          <td className="tabular-nums">{n.since ? String(n.since).slice(0, 10) : '—'}</td>
+                          <td className="mcm-people-dim">{n.note || '—'}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="mcm-people-t">
+                  <thead>
+                    <tr>
+                      {isAdministrator && <th className="is-pick"><input type="checkbox" aria-label="Select everyone shown" checked={visible.length > 0 && visible.every((r) => selected.has(r.uuid))} onChange={(e) => setSelected(e.target.checked ? new Set(visible.map((r) => r.uuid)) : new Set())} /></th>}
+                      <th>Person</th><th>Role</th><th>Location</th>
+                      <th className="is-num">Ext</th>
+                      {tab === 'pending' ? <th>Invite expires</th> : <th>Last signed in</th>}
+                      <th>Status</th>
+                      <th className="is-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? <tr className="mcm-no-hover"><td className="mcm-people-empty" colSpan={8}>Loading people…</td></tr>
+                      : visible.length === 0 ? <tr className="mcm-no-hover"><td className="mcm-people-empty" colSpan={8}>{tab === 'pending' ? 'Nobody is waiting on an invite.' : 'Nobody matches these filters.'}</td></tr>
+                      : visible.map((row) => {
+                        const inv = invites.get(row.uuid);
+                        const state = row.state ? PERSON_STATE_LABEL[row.state] : null;
+                        const actionable = canActOn(row);
+                        return (
+                          <tr key={row.uuid}>
+                            {isAdministrator && <td className="is-pick"><input type="checkbox" aria-label={`Select ${row.name}`} disabled={!actionable} checked={selected.has(row.uuid)} onChange={() => toggleRow(row.uuid)} /></td>}
+                            <td>
+                              <div className="mcm-people-who">
+                                <CustomAvatar name={row.name} image={row.image} />
+                                <div className="min-w-0">
+                                  <div className="mcm-people-name" title={row.name}>{row.name}</div>
+                                  <div className="mcm-people-sub" title={row.email}>{row.email}</div>
                                 </div>
-                              </details>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="mcm-people-role">{row.roleLabel}</span>
+                              {row.scopeSuffix ? <div className="mcm-people-sub">{row.scopeSuffix}</div> : null}
+                            </td>
+                            <td>
+                              <div className="mcm-people-name">{row.location || '—'}</div>
+                              {row.department ? <div className="mcm-people-sub" title={row.department}>{row.department}</div> : null}
+                            </td>
+                            <td className="is-num mcm-people-mono">{row.extension || '—'}</td>
+                            {tab === 'pending'
+                              ? <td className="tabular-nums">{inv?.expired ? <span className="mcm-people-pill is-bad">Expired {inv.expiresText}</span> : <span>{inv?.expiresText || '—'}</span>}</td>
+                              : <td className="tabular-nums">{row.raw?.last_login_at ? lastSeenText(row.raw.last_login_at) : <span className="mcm-people-pill is-wait">Never</span>}</td>}
+                            <td>{state ? <span className={`mcm-people-pill ${row.state === 'ACTIVE' ? 'is-good' : row.state === 'SUSPENDED' ? 'is-bad' : 'is-idle'}`}>{state.label}</span> : '—'}</td>
+                            <td className="is-right">
+                              <div className="mcm-people-acts">
+                                {tab === 'pending' && actionable && (
+                                  <Button size="sm" variant="outline" disabled={isResending} onClick={() => doResend({ user_uuid: row.uuid })}>{inv?.expired ? 'Re-invite' : 'Resend'}</Button>
+                                )}
+                                <CustomTooltip text="Edit"><button type="button" aria-label={`Edit ${row.name}`} className="mcm-people-icon" onClick={() => openFor(row, 'updateForwarding')}><Pencil className="w-4 h-4" /></button></CustomTooltip>
+                                {actionable && (
+                                  <details className="mcm-people-more">
+                                    <summary>More <ChevronDown /></summary>
+                                    <div className="mcm-people-menu">
+                                      <button type="button" onClick={() => openFor(row, 'changeRole')}>Change role</button>
+                                      {virtualNumbersAccess?.assign_number && <button type="button" onClick={() => openFor(row, 'assignUser')}>Assign a number</button>}
+                                      <div className="mcm-people-menu-sep" />
+                                      <button type="button" onClick={() => setConfirm({ kind: 'signout', row })}>Sign out everywhere</button>
+                                      {row.state === 'SUSPENDED'
+                                        ? <button type="button" onClick={() => doReactivate(row.uuid)}>Reactivate</button>
+                                        : <button type="button" onClick={() => setConfirm({ kind: 'suspend', row })}>Suspend</button>}
+                                      <button type="button" className="is-risk" onClick={() => setConfirm({ kind: 'remove', row })}>Remove (restorable 72 h)</button>
+                                    </div>
+                                  </details>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {drawerState.addUser && (

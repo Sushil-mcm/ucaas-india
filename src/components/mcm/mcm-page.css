@@ -10083,3 +10083,427 @@
   margin-left: auto;
   flex: none;
 }
+
+/* ==================================================================
+   Admin › People
+   ------------------------------------------------------------------
+   The screen was written as loose strips on the page ground: a second
+   copy of the title the head already prints, four count tiles, a tab
+   row, a filter row and a bare table, each with its own left edge and
+   its own idea of spacing. Everything below puts them on one grid -
+   tiles of one height, tabs and filters in a single card because they
+   do one job, and the table inside a card of its own so the rows read
+   as a list rather than running off both sides of the page.
+   ================================================================== */
+.mcm-page .mcm-people {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 22px 24px;
+}
+
+/* ---- the four counts ---- */
+.mcm-page .mcm-people-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 1000px) {
+  .mcm-page .mcm-people-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+/* `align-content: start` with the tiles stretched: every tile is the
+   height of the tallest, and the label, number and hint inside still
+   sit on the same three lines whatever the hint runs to. */
+.mcm-page .mcm-people-stat {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.mcm-page .mcm-people-stat-l {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-page .mcm-people-stat-v {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .mcm-people-stat-s {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* ---- tabs and filters, one card ---- */
+.mcm-page .mcm-people-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.mcm-page .mcm-people-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 3px;
+  background: #f4f5f7;
+  border-radius: 12px;
+}
+.mcm-page .mcm-people-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-page .mcm-people-tab:hover {
+  color: var(--ink);
+}
+.mcm-page .mcm-people-tab.is-on {
+  background: #ffffff;
+  color: var(--accent-ink);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+.mcm-page .mcm-people-tab-n {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eceef1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .mcm-people-tab.is-on .mcm-people-tab-n {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+.mcm-page .mcm-people-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.mcm-page .mcm-people-spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.mcm-page .mcm-people-search {
+  position: relative;
+  flex: 1 1 220px;
+  max-width: 300px;
+}
+.mcm-page .mcm-people-search > svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--ink-4);
+  pointer-events: none;
+}
+/* 40px and a 12px radius, matching the shared Input's own `min-h-10`
+   and `rounded-xl`: the selects are hand-built, so they have to be told
+   the shape the input already has or the row is a step. */
+.mcm-page .mcm-people-search input {
+  height: 40px;
+  width: 100%;
+  padding-left: 34px;
+  background: #ffffff;
+}
+/* One shape for every dropdown on the screen - the three filters and
+   the bulk role picker - with our own chevron, because the platform
+   arrow sits at a different inset in each browser and the row of them
+   never lined up. */
+.mcm-page .mcm-people-sel {
+  position: relative;
+  display: inline-flex;
+}
+.mcm-page .mcm-people-sel > svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--ink-4);
+  pointer-events: none;
+}
+.mcm-page .mcm-people-sel select {
+  height: 40px;
+  min-width: 152px;
+  width: 100%;
+  appearance: none;
+  padding: 0 32px 0 12px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.mcm-page .mcm-people-sel select:focus,
+.mcm-page .mcm-people-sel select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ---- the bulk strip ---- */
+.mcm-page .mcm-people-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-edge);
+  border-radius: 16px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.mcm-page .mcm-people-bulk .mcm-people-sel select {
+  height: 34px;
+}
+
+/* ---- the list ---- */
+.mcm-page .mcm-people-table {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.mcm-page .mcm-people-scroll {
+  overflow-x: auto;
+}
+.mcm-page table.mcm-people-t {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.mcm-page table.mcm-people-t thead th {
+  padding: 11px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--ink-4);
+}
+.mcm-page table.mcm-people-t tbody td {
+  padding: 11px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line-2);
+  font-size: 12.5px;
+  vertical-align: middle;
+}
+.mcm-page table.mcm-people-t tbody tr:last-child td {
+  border-bottom: none;
+}
+.mcm-page table.mcm-people-t tbody tr:hover td {
+  background: #f8f9fb;
+}
+.mcm-page table.mcm-people-t tbody tr.mcm-no-hover:hover td {
+  background: #ffffff;
+}
+/* The pick column is one checkbox wide and the actions column is read
+   from its right edge, so both are sized to what they hold rather than
+   to their heading. */
+.mcm-page table.mcm-people-t .is-pick {
+  width: 40px;
+}
+.mcm-page table.mcm-people-t .is-num {
+  width: 90px;
+}
+.mcm-page table.mcm-people-t .is-right {
+  text-align: right;
+}
+.mcm-page table.mcm-people-t .mcm-people-empty {
+  padding: 26px 14px;
+  color: var(--ink-3);
+  text-align: center;
+}
+.mcm-page .mcm-people-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.mcm-page .mcm-people-name {
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcm-page .mcm-people-sub {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcm-page .mcm-people-dim {
+  color: var(--ink-3);
+}
+.mcm-page .mcm-people-mono {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+.mcm-page .mcm-people-role {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #f1f2f4;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2, var(--ink));
+}
+.mcm-page .mcm-people-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mcm-page .mcm-people-pill.is-good {
+  background: #e7f6ed;
+  color: #10693b;
+}
+.mcm-page .mcm-people-pill.is-bad {
+  background: #fdecec;
+  color: #b42318;
+}
+.mcm-page .mcm-people-pill.is-wait {
+  background: #fdf1dd;
+  color: #9a6210;
+}
+.mcm-page .mcm-people-pill.is-idle {
+  background: #f1f2f4;
+  color: var(--ink-3);
+}
+
+.mcm-page .mcm-people-acts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.mcm-page .mcm-people-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-page .mcm-people-icon:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-people-more {
+  position: relative;
+}
+.mcm-page .mcm-people-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  list-style: none;
+  cursor: pointer;
+}
+.mcm-page .mcm-people-more > summary::-webkit-details-marker {
+  display: none;
+}
+.mcm-page .mcm-people-more > summary > svg {
+  width: 13px;
+  height: 13px;
+}
+.mcm-page .mcm-people-more[open] > summary,
+.mcm-page .mcm-people-more > summary:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.mcm-page .mcm-people-menu {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  margin-top: 6px;
+  width: 224px;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--lift, 0 8px 24px rgba(16, 24, 40, 0.12));
+  text-align: left;
+}
+.mcm-page .mcm-people-menu button {
+  display: block;
+  width: 100%;
+  padding: 7px 9px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.mcm-page .mcm-people-menu button:hover {
+  background: #f4f5f7;
+}
+.mcm-page .mcm-people-menu button.is-risk {
+  color: var(--crit);
+}
+.mcm-page .mcm-people-menu-sep {
+  margin: 5px 4px;
+  border-top: 1px solid var(--line-2);
+}
