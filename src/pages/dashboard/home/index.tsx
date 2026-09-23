@@ -150,14 +150,31 @@ const STATE_DESC: Record<string, string> = {
   Offline: 'Agents not available',
 };
 
-/** Service level, on the artifact's thresholds: 85+ good, 80+ neutral, below that bad. */
+/** Service level, on the artifact's thresholds: 85+ good, 80+ neutral, below that bad.
+ *
+ * Drawn against its own target rather than printed beside it. "64%" and
+ * "/80%" side by side make the reader do the subtraction; a fill with the
+ * goal marked shows the shortfall at a glance, and how one queue's gap
+ * compares to another's down the column. Same two numbers, same feed — only
+ * the presentation changes. The percentage is still written out, so the
+ * reading never depends on judging a bar by eye. */
 const slTag = (sla: number | null, targetPct?: number | null) => {
   if (sla === null) return <span style={{ color: 'var(--ink-4)' }}>—</span>;
   const tone = sla >= 85 ? 'pos' : sla >= 80 ? 'neu' : 'neg';
+  const pct = Math.max(0, Math.min(100, sla));
   return (
-    <span className="sl-cell">
-      <span className={`tag ${tone}`}>{Math.round(sla)}%</span>
-      {targetPct ? <span className="sl-target">/{targetPct}%</span> : null}
+    <span className={`sl-cell sl-${tone}`}>
+      <span className="sl-track">
+        <span className="sl-fill" style={{ width: `${pct}%` }} />
+        {targetPct ? (
+          <span
+            className="sl-goal"
+            style={{ left: `${Math.max(0, Math.min(100, targetPct))}%` }}
+            title={`Target ${targetPct}%`}
+          />
+        ) : null}
+      </span>
+      <span className="sl-pct">{Math.round(sla)}%</span>
     </span>
   );
 };
