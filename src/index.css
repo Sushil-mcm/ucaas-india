@@ -729,14 +729,33 @@
     border-radius: 0.5rem !important;
   }
 
+  /* Hover and selected were two rules with the same two declarations —
+     #fff1e0 on #c96f1f, both — so the option under the pointer looked exactly
+     as chosen as the one that actually was, and an open menu appeared to have
+     two current items.
+
+     Neutral for hover, so it cannot be read as a choice: it is 29 from white,
+     enough to follow the pointer, and 49 from the selected fill. Selected
+     keeps the warm tint and gains weight, which is a second signal that
+     survives whatever the pointer is doing. */
   .custom-react-select__option:hover,
   .custom-react-select__option--is-focused {
-    background-color: #fff1e0 !important;
-    color: #c96f1f !important;
+    background-color: #f4f5f7 !important;
+    color: var(--color-gray-900) !important;
   }
 
   .custom-react-select__option--is-selected {
-    background-color: #fff1e0 !important;
+    background-color: #fdebd9 !important;
+    color: #c96f1f !important;
+    font-weight: 600;
+  }
+
+  /* Pointing at the chosen one must not demote it back to a plain row, so it
+     deepens rather than switching to the hover grey. Last, because it has to
+     beat the hover rule above on order as well as specificity. */
+  .custom-react-select__option--is-selected:hover,
+  .custom-react-select__option--is-selected.custom-react-select__option--is-focused {
+    background-color: #fbdcc0 !important;
     color: #c96f1f !important;
   }
 
