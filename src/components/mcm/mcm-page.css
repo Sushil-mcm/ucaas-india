@@ -4958,6 +4958,14 @@
   background: #ffffff;
 }
 
+/* Holidays' First/Last day triggers carry the same edge as the Name input
+   beside them. Width and style are spelled out rather than left to the
+   `border` utility, which resolves its style through `--tw-border-style`;
+   the colour matches what the glass rule gives the input next to it. */
+.mcm-page [data-slot='button'].mcm-holiday-date {
+  border: 1px solid var(--glass-border);
+}
+
 /* ---- dialogs ---- */
 .mcm-page [role='dialog'],
 [role='dialog'].mcm-glass {

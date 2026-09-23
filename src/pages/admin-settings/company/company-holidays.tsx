@@ -587,7 +587,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
                 /* Matches the Name field beside it. The trigger is a button,
                    so it came with the button radius, no inner padding and no
                    shadow; these are the three that differed. */
-                className="rounded-xl px-3 shadow-sm"
+                className="mcm-holiday-date rounded-xl px-3 shadow-sm"
                 value={draft.from ? isoToDate(draft.from) : null}
                 onChange={(date) => {
                   if (!date) return;
@@ -606,7 +606,7 @@ const CompanyHolidays = forwardRef<CompanyHolidaysHandle>((_props, ref) => {
               <CustomDatePicker
                 label="Last day"
                 placeholder="Same day"
-                className="rounded-xl px-3 shadow-sm"
+                className="mcm-holiday-date rounded-xl px-3 shadow-sm"
                 minDate={draft.from ? isoToDate(draft.from) || undefined : undefined}
                 value={draft.to ? isoToDate(draft.to) : null}
                 onChange={(date) =>
