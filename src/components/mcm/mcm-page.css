@@ -7814,7 +7814,12 @@
 @media (min-width: 900px) {
   .mcm-page .mcm-seccards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+    /* `start`, not `stretch`. Trusted devices grows with however many devices
+       are listed, and stretching made whatever shared its row grow with it —
+       so "Sign out everywhere", four lines of card, was drawn as a box the
+       height of a device list with the rest of it empty. Each card ends where
+       its own content does. */
+    align-items: start;
   }
 }
 

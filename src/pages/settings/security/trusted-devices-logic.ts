@@ -94,20 +94,21 @@ export const describeTrust = (
   now: Date = new Date(),
   status?: TwoStepStatus | null,
 ): string => {
+  /* Only what is true of THIS row. Whether the company still asks for a code
+     is a property of the account, not of a device, and the card's intro above
+     the list already states it — `describeTrustedDevicesIntro`. Repeating it
+     here printed the same clause verbatim on every row, so a list of six
+     devices said it six times and the one fact that differs between them, how
+     much trust is left, was buried inside it. */
   const enforced = status ? status.enforced !== false : true;
   if (!enforced) {
-    return row.trusted
-      ? 'Passed a code recently. You are not asked for one at sign-in, so this makes no difference.'
-      : 'Not asked for a code at sign-in.';
+    return row.trusted ? 'Passed a code recently.' : 'Not asked for a code at sign-in.';
   }
   if (row.trusted) {
     const d = daysLeft(row.trusted_until, now);
-    const left =
-      d === null ? ''
-      : d <= 0 ? ' (trust has run out)'
-      : d === 1 ? ' (1 day of trust left)'
-      : ` (${d} days of trust left)`;
-    return `Passed a code recently${left}, but your company asks for a code at every sign-in, so this device is asked too.`;
+    if (d === null) return 'Passed a code recently.';
+    if (d <= 0) return 'Trust has run out.';
+    return d === 1 ? '1 day of trust left.' : `${d} days of trust left.`;
   }
   return 'Asks for a code at sign-in.';
 };
