@@ -2408,6 +2408,11 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px 18px;
+  /* `start`, not the grid default of `stretch`: a field that carries anything
+     under its input — a character counter, an error line — makes its row
+     taller, and stretching dragged the plain field beside it down with it, so
+     two fields on one row stopped sharing a baseline. */
+  align-items: start;
 }
 @media (min-width: 640px) {
   .mcm-page .mcm-fgrid {
