@@ -699,6 +699,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Whichever of these two height-matched cards is the shorter one gets the
+   leftover. On the day card that surplus used to fall below the footer as a
+   void; with the body a column and the footer pushed to the end, it lands
+   above the footer instead, which reads as the footer sitting on the card's
+   bottom edge rather than as the card running out of content. */
+.mcm-page.home-v2 .grid2-stretch-cols > .panel-card {
+  display: flex;
+  flex-direction: column;
+}
+.mcm-page.home-v2 .grid2-stretch-cols > .panel-card > .pc-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 /* ── the inbound/outbound split ────────────────────────────────────────
    Replaces the donut and the five-dot legend that sat beside it. One
    divided bar, its two counts named on the line above it, and a plain
@@ -821,8 +836,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 20px;
-  padding-top: 16px;
+  /* auto, not a fixed 20px: this pushes the footer to the bottom of the
+     card, so when the card next door is the taller one the surplus lands
+     above the footer rather than below it. padding-top carries the minimum
+     separation that the margin used to. */
+  margin-top: auto;
+  padding-top: 20px;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
 }
 .home-v2 .day-station {
@@ -1003,8 +1022,19 @@
 }
 .home-v2 .qd-grid {
   flex: 1;
-  align-content: space-between;
-  grid-auto-rows: minmax(52px, 76px);
+  /* minmax(floor, 1fr), not minmax(floor, ceiling): a fixed ceiling made the
+     grid's own min-content height taller than the day card next to it, so
+     Quick dial became the card driving the row and the void simply moved
+     across to the other one. 1fr lets the rows absorb whatever height the
+     row ends up being without ever demanding more than the floor. */
+  grid-auto-rows: minmax(52px, 1fr);
+}
+/* A two-name roster would otherwise stretch two tiles to half a card each.
+   Capped and centred in its row, so the tile stays a tile and any surplus
+   reads as spacing. */
+.home-v2 .qd-tile {
+  max-height: 88px;
+  align-self: center;
 }
 @media (max-width: 560px) {
   .home-v2 .qd-grid {
