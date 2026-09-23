@@ -2047,7 +2047,7 @@
   /* Enough to read as five destinations rather than one strip, without the
      row spreading wider than it needs. Only applies at >=1280px where the
      labels show; the icon-only override further down keeps its own spacing. */
-  gap: 3px;
+  gap: 2px;
   height: 100%;
   min-width: 0;
 }
@@ -2062,7 +2062,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   /* min-width, not width: a hard fixed width forced every tab to the same
      size, but "Directory" and "Performance" don't fit 90px next to a 16px
      icon with white-space: nowrap. Flexbox had nowhere else to take the
@@ -2070,7 +2070,10 @@
      so the icon collapsed toward 0 instead of the tab widening. */
   min-width: 60px;
   height: 34px;
-  padding: 8px 12px;
+  /* 8px sides, not 12px. Five tabs at 12px spent ~50px of the bar on padding
+     alone, and the bar has no slack to spare — that width is better given to
+     the search pill on the right, which was the thing getting squeezed. */
+  padding: 8px 8px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.01em;
