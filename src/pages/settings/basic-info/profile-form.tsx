@@ -73,10 +73,18 @@ const Field = ({
    label row above the one `Field` has already drawn. */
 const errorEdge = (error?: string) => (error ? 'border-red-500 focus:border-red-500' : '');
 
-const ReadOnly = ({ label, value, note }: { label: string; value?: string; note?: string }) => (
-  <Field label={label} note={note} aside={<span className="mcm-lock">Read only</span>}>
-    <Input placeholder="—" disabled value={value || ''} readOnly />
-  </Field>
+/* A value somebody else owns, shown as a value. It used to be a disabled
+   `Input` with a "Read only" chip: a box shaped exactly like the ones above
+   it that you cannot type into, needing a chip to explain the difference.
+   Read as a fact it explains itself, and the card is half the height. */
+const Fact = ({ label, value, note }: { label: string; value?: string; note?: string }) => (
+  <div className="min-w-0">
+    <dt className="text-[11px] font-semibold uppercase tracking-wider text-[#9A948F]">{label}</dt>
+    <dd className="mt-1 truncate text-sm font-medium text-[#2E2D35]" title={value || undefined}>
+      {value || '—'}
+    </dd>
+    {note ? <p className="mt-0.5 text-xs text-[#9A948F]">{note}</p> : null}
+  </div>
 );
 
 /* `selfProfile` says whether this server can save pronouns and language:
@@ -98,15 +106,21 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
   const aboutLocked = selfProfile === false;
 
   return (
-    <div className="flex flex-col pr-1 pt-1">
-      <section className="mcm-fsec">
-        <div className="mcm-fsec-h">
-          <div className="mcm-fsec-t">Identity</div>
-          <div className="mcm-fsec-d">
-            Your name as it shows across the console, the directory and on caller ID.
-          </div>
-        </div>
-        <div className="mcm-fgrid">
+    <div className="flex flex-col gap-4 pr-1 pt-1">
+      {/* Two cards, split by who may change what, rather than four alike.
+          Identity, About, Workplace and Contact were four bordered sections of
+          the same weight, so nothing on the page said that the first two are
+          yours and the last two are an administrator's. */}
+      <section className="mcm-solid-card rounded-2xl border border-[#EEE7DD] bg-white p-5">
+        <header className="border-b border-[#EEE7DD] pb-3">
+          <h3 className="text-sm font-bold text-[#2E2D35]">Your details</h3>
+          <p className="mt-0.5 text-xs leading-5 text-[#9A948F]">
+            How you appear across the console, the directory and on caller ID. These are yours to
+            change.
+          </p>
+        </header>
+
+        <div className="mcm-fgrid mt-4">
           <Field label="First Name" error={fieldErrors?.first_name?.message}>
             <Input
               placeholder="Enter first name"
@@ -124,8 +138,6 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
             />
           </Field>
           <div className="wide">
-            {/* The counter is the only warning a person gets before the limit
-                stops their typing; without it the field just goes quiet. */}
             <Field
               label="Job Title"
               error={fieldErrors?.job_title?.message}
@@ -139,23 +151,7 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
               />
             </Field>
           </div>
-        </div>
-      </section>
 
-      <section className="mcm-fsec">
-        <div className="mcm-fsec-h">
-          <div className="mcm-fsec-t">About you</div>
-          <div className="mcm-fsec-d">
-            How you would like to be referred to, and the language you would like the console in.
-          </div>
-        </div>
-        {aboutLocked ? (
-          <span className="mcm-setrow-note">
-            Pronouns and language are not saved on this server yet. Your name and job title still
-            save as before.
-          </span>
-        ) : null}
-        <div className="mcm-fgrid">
           <Field
             label="Pronouns"
             error={fieldErrors?.pronouns?.message}
@@ -169,11 +165,15 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
               disabled={aboutLocked}
             />
           </Field>
-          <div className="mcm-fitem">
-            <div className="mcm-field-h">
-              <Label>Interface language</Label>
-              {HAS_TRANSLATIONS ? null : <NotAppliedFlag>Coming soon</NotAppliedFlag>}
-            </div>
+          <Field
+            label="Interface language"
+            aside={HAS_TRANSLATIONS ? null : <NotAppliedFlag>Coming soon</NotAppliedFlag>}
+            note={
+              HAS_TRANSLATIONS
+                ? 'The console switches to this language after you save.'
+                : 'The console is in English today. Your choice is saved for when more languages are ready.'
+            }
+          >
             <CustomSelect
               options={INTERFACE_LANGUAGES.map((l) => ({ label: l.label, value: l.value }))}
               value={languageOption(watch('basic.interface_language'))}
@@ -184,46 +184,40 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
               }
               isDisabled={aboutLocked}
             />
-            {/* One language today means nothing to choose. The choice is
-                still saved so it is there when translations arrive - said
-                plainly rather than dressed up as a working setting. */}
-            <span className="mcm-field-note">
-              {HAS_TRANSLATIONS
-                ? 'The console switches to this language after you save.'
-                : 'The console is in English today. Your choice is saved for when more languages are ready.'}
-            </span>
-          </div>
+          </Field>
         </div>
+
+        {aboutLocked ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            Pronouns and language are not saved on this server yet. Your name and job title still
+            save as before.
+          </p>
+        ) : null}
       </section>
 
-      <section className="mcm-fsec">
-        <div className="mcm-fsec-h">
-          <div className="mcm-fsec-t">Workplace</div>
-          <div className="mcm-fsec-d">
-            Your location and extension are set by an administrator under People.
-          </div>
-        </div>
-        <div className="mcm-fgrid">
-          <ReadOnly label="Location" value={watch('basic.site')?.label} />
-          <ReadOnly
+      {/* Facts, not fields. These were four disabled inputs, which look like
+          something you could type in and cannot — the lock chip beside each one
+          was the only thing saying otherwise. Read as values, they need no
+          chip and take half the height. */}
+      <section className="mcm-solid-card rounded-2xl border border-[#EEE7DD] bg-white p-5">
+        <header className="border-b border-[#EEE7DD] pb-3">
+          <h3 className="text-sm font-bold text-[#2E2D35]">Set by your administrator</h3>
+          <p className="mt-0.5 text-xs leading-5 text-[#9A948F]">
+            Where you sit and how the company reaches you. Ask an administrator under People to
+            change any of these.
+          </p>
+        </header>
+
+        <dl className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          <Fact label="Location" value={watch('basic.site')?.label} />
+          <Fact
             label="Extension"
             value={watch('basic.extension') ? String(watch('basic.extension')) : ''}
             note="Set when your account was created."
           />
-        </div>
-      </section>
-
-      <section className="mcm-fsec">
-        <div className="mcm-fsec-h">
-          <div className="mcm-fsec-t">Contact</div>
-          <div className="mcm-fsec-d">
-            How the company reaches you. Ask an administrator to change either of these.
-          </div>
-        </div>
-        <div className="mcm-fgrid">
-          <ReadOnly label="Phone" value={watch('basic.phone')} />
-          <ReadOnly label="Email" value={watch('basic.email')} note="Also the sign-in address." />
-        </div>
+          <Fact label="Phone" value={watch('basic.phone')} />
+          <Fact label="Email" value={watch('basic.email')} note="Also the sign-in address." />
+        </dl>
       </section>
     </div>
   );
