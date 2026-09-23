@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { History } from 'lucide-react';
+import { AlertTriangle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Loader from '@/components/custom/loader';
@@ -180,10 +180,31 @@ const PropagationDashboardPanel = () => {
 
   if (isLoading) return <Loader />;
   if (isError || !data) {
+    /* A 404 here is the ordinary case on a server without the propagation
+       service, not a fault to shout about — it reads as "not available",
+       with the raw message kept underneath for whoever is diagnosing. */
+    const message = String((error as any)?.message || 'unknown error');
+    const missing = /404/.test(message);
     return (
-      <p className="text-sm text-red-600">
-        The propagation dashboard could not be read: {String((error as any)?.message || 'unknown error')}.
-      </p>
+      <div className="mcm-solid-card flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+          <AlertTriangle className="size-6" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-[#2E2D35]">
+            {missing ? 'Delivery receipts are not available on this server' : 'Delivery receipts could not be read'}
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#9A948F]">
+            {missing
+              ? 'The propagation service is not switched on here, so there is nothing to report on what each product received. Configuration history still works.'
+              : 'The propagation dashboard did not answer. It may be a moment’s trouble rather than a missing service.'}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
+          {isFetching ? 'Checking…' : 'Try again'}
+        </Button>
+        <p className="text-[11px] text-gray-400">{message}</p>
+      </div>
     );
   }
 
@@ -393,9 +414,27 @@ const CompanyChangeLog = () => {
         ) : undefined}
       />
 
-      <div className="flex gap-2 border-b pb-3">
-        <Button size="sm" variant={view === 'delivery' ? 'primary' : 'outline'} onClick={() => setView('delivery')}>Delivery</Button>
-        <Button size="sm" variant={view === 'history' ? 'primary' : 'outline'} onClick={() => setView('history')}>Configuration history</Button>
+      {/* A segmented control rather than two buttons: these are two views of
+          one screen, and as separate buttons the inactive one read as an
+          action you could take rather than a place you could be. */}
+      <div className="inline-flex w-fit items-center gap-1 rounded-xl bg-gray-100 p-1">
+        {([
+          { key: 'delivery', label: 'Delivery' },
+          { key: 'history', label: 'Configuration history' },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setView(tab.key)}
+            className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              view === tab.key
+                ? 'mcm-solid-card bg-white text-primary shadow-sm'
+                : 'text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {view === 'delivery' ? <PropagationDashboardPanel /> : <>

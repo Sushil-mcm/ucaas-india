@@ -981,7 +981,7 @@ const CompanySecurity = () => {
               both tabs - not something a locked-out admin can reach for -
               the escape route for that case is the operations runbook in
               backend-patches/default-api/, not a button on this screen. */}
-            <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
+            <div className="mcm-solid-card rounded-lg border border-[rgba(225,200,165,0.9)] bg-white p-3">
               <p className="flex items-center gap-1.5 text-xs font-semibold text-[#2E2D35]">
                 <Unlock className="h-3.5 w-3.5" />
                 Emergency bypass
@@ -1226,7 +1226,7 @@ const CompanySecurity = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 p-4">
-              <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
+              <div className="mcm-solid-card rounded-lg border border-[rgba(225,200,165,0.9)] bg-white p-3">
                 <p className="text-sm font-semibold text-[#2E2D35]">Passwords</p>
                 <p className="text-xs text-[#9A948F]">
                   A new password must differ from the current one and must not appear in the public
@@ -1235,7 +1235,7 @@ const CompanySecurity = () => {
                   used again. Changing a password signs the person out of every device.
                 </p>
               </div>
-              <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
+              <div className="mcm-solid-card rounded-lg border border-[rgba(225,200,165,0.9)] bg-white p-3">
                 <p className="text-sm font-semibold text-[#2E2D35]">Failed sign-ins</p>
                 <p className="text-xs text-[#9A948F]">
                   {LOGIN_FAILURES_PER_IP} failed password sign-ins from the same network address
@@ -1246,7 +1246,7 @@ const CompanySecurity = () => {
                   {OTP_WAIT_MINUTES}-minute wait before a new one can be requested.
                 </p>
               </div>
-              <div className="rounded-lg border border-[rgba(225,200,165,0.9)] p-3">
+              <div className="mcm-solid-card rounded-lg border border-[rgba(225,200,165,0.9)] bg-white p-3">
                 <p className="text-sm font-semibold text-[#2E2D35]">Session length</p>
                 <p className="text-xs text-[#9A948F]">
                   A sign-in lasts {SESSION_TOKEN_DAYS} days unless the person signs out, changes
