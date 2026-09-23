@@ -1472,3 +1472,208 @@
   background: rgba(242, 153, 74, 0.16);
   color: var(--accent-ink, #c96f1f);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Quick actions — four destinations, each carrying its own colour.
+
+   They were four white boxes with a small tinted square, indistinguishable
+   from every other card on the page and from each other at a glance. The
+   colour each one already owns (phone/orange, message/violet, meeting/teal,
+   AI/amber) now runs through the whole card, so the row reads as four
+   distinct things to do rather than a repeated shape.
+
+   Tints are applied by position because the hue lives in an inline style on
+   the icon tile (quick-actions.tsx) — no markup change needed.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.home-v2 .quick-action {
+  padding: 18px 19px;
+  border-radius: 18px;
+  gap: 14px;
+  overflow: hidden;
+  transition:
+    transform 0.18s cubic-bezier(0.22, 0.9, 0.24, 1),
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+/* the tile is the object's identity — big enough to read as a button face */
+.home-v2 .quick-action-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  transition: transform 0.2s cubic-bezier(0.22, 0.9, 0.24, 1), box-shadow 0.2s ease;
+}
+.home-v2 .quick-action svg { width: 21px; height: 21px; }
+
+.home-v2 .quick-action-title { font-size: 15px; letter-spacing: -0.018em; }
+.home-v2 .quick-action-desc { font-size: 12px; color: var(--ink-3, #6b7891); }
+
+/* 1 make a call — brand orange, the one the hero's primary button echoes */
+.home-v2 .quick-actions > :nth-child(1) {
+  background: linear-gradient(160deg, #fff5ea 0%, #fffdfb 62%);
+  border-color: rgba(242, 153, 74, 0.34);
+}
+.home-v2 .quick-actions > :nth-child(1):hover {
+  border-color: rgba(242, 153, 74, 0.6);
+  box-shadow: 0 14px 30px -14px rgba(242, 153, 74, 0.75);
+}
+/* 2 send a message — violet */
+.home-v2 .quick-actions > :nth-child(2) {
+  background: linear-gradient(160deg, #f5f1fe 0%, #fdfcff 62%);
+  border-color: rgba(124, 58, 237, 0.28);
+}
+.home-v2 .quick-actions > :nth-child(2):hover {
+  border-color: rgba(124, 58, 237, 0.52);
+  box-shadow: 0 14px 30px -14px rgba(124, 58, 237, 0.62);
+}
+/* 3 start a meeting — teal */
+.home-v2 .quick-actions > :nth-child(3) {
+  background: linear-gradient(160deg, #eef8f6 0%, #fbfefd 62%);
+  border-color: rgba(13, 148, 136, 0.28);
+}
+.home-v2 .quick-actions > :nth-child(3):hover {
+  border-color: rgba(13, 148, 136, 0.52);
+  box-shadow: 0 14px 30px -14px rgba(13, 148, 136, 0.6);
+}
+/* 4 AI agent — amber */
+.home-v2 .quick-actions > :nth-child(4) {
+  background: linear-gradient(160deg, #fdf3e7 0%, #fffdfa 62%);
+  border-color: rgba(201, 111, 31, 0.3);
+}
+.home-v2 .quick-actions > :nth-child(4):hover {
+  border-color: rgba(201, 111, 31, 0.55);
+  box-shadow: 0 14px 30px -14px rgba(201, 111, 31, 0.6);
+}
+
+.home-v2 .quick-action:hover {
+  transform: translateY(-3px);
+}
+.home-v2 .quick-action:hover .quick-action-icon {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+/* the chevron sits in a soft well so it reads as a control, not a stray
+   glyph floating at the card edge */
+.home-v2 .quick-action::after {
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-width: 2.5px;
+  border-color: currentColor;
+  opacity: 0;
+  color: var(--ink-4, #93a0b8);
+}
+.home-v2 .quick-action:hover::after { opacity: 0.85; }
+
+@media (max-width: 720px) {
+  .home-v2 .quick-action { padding: 15px 16px; border-radius: 15px; }
+  .home-v2 .quick-action-icon { width: 44px; height: 44px; border-radius: 13px; }
+}
+
+/* ── section divider ──────────────────────────────────────────────────────
+   NOT `.rule`: mcm-page.css:1801 defines that as a padded, bordered card,
+   and this element sits inside .mcm-page, so the shared rule won and turned
+   a hairline into a full-width beige pill. */
+.home-v2 .sect-rule .sect-line {
+  flex: 1;
+  height: 1px;
+  border: 0;
+  padding: 0;
+  background: linear-gradient(90deg, var(--line-strong, #ded4c6), transparent);
+}
+
+/* ── hero: a dark anchor ──────────────────────────────────────────────────
+   The page opened with five white cards on cream and nothing leading. The
+   greeting becomes a dark surface so there is one thing the eye lands on,
+   and the pinned brand orange finally does some work as a light on dark
+   rather than a tint on white. */
+.mcm-page.home-v2 .hero {
+  position: relative;
+  overflow: hidden;
+  padding: 30px 32px 28px;
+  border: 0;
+  border-radius: 22px;
+  background:
+    radial-gradient(760px 300px at 0% -20%, rgba(242, 153, 74, 0.35), rgba(242, 153, 74, 0) 62%),
+    radial-gradient(560px 280px at 100% 120%, rgba(13, 148, 136, 0.22), rgba(13, 148, 136, 0) 65%),
+    linear-gradient(145deg, #2b2019 0%, #1d1512 55%, #241a14 100%);
+  box-shadow: 0 2px 4px rgba(45, 28, 12, 0.14), 0 22px 44px -24px rgba(45, 28, 12, 0.7);
+}
+.mcm-page.home-v2 .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(247, 200, 154, 0.75), rgba(247, 200, 154, 0.1) 55%, transparent);
+}
+.mcm-page.home-v2 .hero h1 {
+  font-size: 34px;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  color: #fdf6ef;
+}
+.mcm-page.home-v2 .hero p {
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 72ch;
+  color: rgba(253, 246, 239, 0.62);
+}
+.mcm-page.home-v2 .hero-right {
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+}
+.mcm-page.home-v2 .hero-right .fchip {
+  margin-right: 3px;
+  padding-right: 12px;
+  border-right: 1px solid rgba(253, 246, 239, 0.18);
+  border-radius: 0;
+  background: none;
+  color: rgba(253, 246, 239, 0.66);
+}
+/* a ghost button on a dark ground reads as a hole unless it is given glass */
+.mcm-page.home-v2 .hero-right .btn.ghost {
+  background: rgba(253, 246, 239, 0.08);
+  border-color: rgba(253, 246, 239, 0.16);
+  color: #fdf6ef;
+}
+.mcm-page.home-v2 .hero-right .btn.ghost:hover {
+  background: rgba(253, 246, 239, 0.14);
+  border-color: rgba(253, 246, 239, 0.28);
+}
+.mcm-page.home-v2 .hero-right .btn.primary {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 10px 24px -10px rgba(242, 153, 74, 0.85);
+}
+
+/* ── verdict: the state colours the whole card, not a 3px edge ─────────── */
+.home-v2 .hv {
+  padding: 20px 22px;
+  border-radius: 18px;
+  background:
+    radial-gradient(520px 200px at 0% -40%, rgba(211, 47, 47, 0.08), rgba(211, 47, 47, 0) 72%),
+    linear-gradient(180deg, #fffdfd, var(--surface, #fff));
+  border-color: rgba(211, 47, 47, 0.28);
+}
+.home-v2 .hv.is-calm {
+  background:
+    radial-gradient(520px 200px at 0% -40%, rgba(13, 148, 136, 0.09), rgba(13, 148, 136, 0) 72%),
+    linear-gradient(180deg, #fcfefd, var(--surface, #fff));
+  border-color: rgba(13, 148, 136, 0.26);
+}
+.home-v2 .hv-mark { width: 42px; height: 42px; border-radius: 13px; }
+.home-v2 .hv-t { font-size: 20px; letter-spacing: -0.03em; }
+.home-v2 .hv-d { font-size: 13px; margin-top: 6px; color: var(--ink-2, #4a5568); }
+
+/* the caption was pinned to the bottom of a card stretched to its tallest
+   sibling, opening a dead band between the number and its own label */
+.home-v2 .rail-d,
+.home-v2 .kcard-d { margin-top: 0; }
+
+@media (max-width: 720px) {
+  .mcm-page.home-v2 .hero { padding: 22px 20px; border-radius: 18px; }
+  .mcm-page.home-v2 .hero h1 { font-size: 26px; }
+}

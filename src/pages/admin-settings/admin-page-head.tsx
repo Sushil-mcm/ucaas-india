@@ -4,7 +4,9 @@ import {
   useEffect,
   useMemo,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
@@ -40,7 +42,9 @@ export type AdminPageMeta = {
 
 const AdminPageMetaContext = createContext<{
   meta: AdminPageMeta;
-  setMeta: (meta: AdminPageMeta) => void;
+  /* The state setter itself, so a caller can merge into what is already there
+     rather than replace it — see `useSetAdminPageMeta`. */
+  setMeta: Dispatch<SetStateAction<AdminPageMeta>>;
   /* The head's right-hand slot, handed out so a screen can render into it. */
   actionsSlot: HTMLElement | null;
   setActionsSlot: (node: HTMLElement | null) => void;
@@ -85,8 +89,26 @@ export const useSetAdminPageMeta = (meta: AdminPageMeta) => {
   const { title, description, actions } = meta;
 
   useEffect(() => {
-    setMeta({ title, description, actions });
-    return () => setMeta({});
+    /* Only the fields this call passes are written, and only those are cleared
+       again on unmount.
+
+       It used to replace the whole object, which made a layout and the screen
+       inside it exclusive: React runs a child's effects before its parent's,
+       so a layout supplying the section title overwrote the description the
+       screen had just set. Company needs both — the title follows the open tab
+       while each screen keeps its own description. */
+    const own = {
+      ...(title !== undefined ? { title } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(actions !== undefined ? { actions } : {}),
+    };
+    setMeta((prev) => ({ ...prev, ...own }));
+    return () =>
+      setMeta((prev) => {
+        const next = { ...prev };
+        Object.keys(own).forEach((key) => delete next[key as keyof AdminPageMeta]);
+        return next;
+      });
     // `actions` is deliberately NOT a dependency. It is JSX, so it is a new
     // object on every render of the screen; depending on it would set state,
     // re-render, produce new JSX and set state again — an endless loop. The

@@ -755,7 +755,7 @@ const Home = () => {
         {/* ── Right now — live state, no history behind these ───────────── */}
         <div className="sect-rule">
           <h4>Right now</h4>
-          <span className="rule" />
+          <span className="sect-line" />
           <span className="note">
             <span className="dot green" /> live
           </span>
@@ -801,7 +801,7 @@ const Home = () => {
         {/* ── Today so far — figures scoped to the day ──────────────────── */}
         <div className="sect-rule">
           <h4>Today so far</h4>
-          <span className="rule" />
+          <span className="sect-line" />
           <span className="note">since midnight</span>
         </div>
 

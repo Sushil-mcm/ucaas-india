@@ -32,6 +32,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import { useUser } from '@/hooks/use-user';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { COMPANY_ROOT, COMPANY_RULES_PATH, COMPANY_SECTIONS } from './company-sections';
 
 import '@/components/mcm/mcm-page.css';
@@ -51,6 +52,21 @@ const IS_ID = /^\d+$|^[0-9a-f]{8}-[0-9a-f]{4}-/i;
 const CompanyLayout = () => {
   const { user } = useUser();
   const { pathname } = useLocation();
+
+  /* The head beside "Admin Hub" reads its title from the nav registry, which
+     knows this area but not the fourteen tabs inside it — so it said "Company
+     & Locations" whichever one was open and never named the screen you were
+     on. The strip already knows; the title follows it.
+
+     `undefined` for a path the strip has no tab for, which leaves the head to
+     fall back to the registry rather than printing a blank. */
+  const sectionTitle = useMemo(() => {
+    const rest = pathname.startsWith(`${COMPANY_ROOT}/`)
+      ? pathname.slice(COMPANY_ROOT.length + 1)
+      : '';
+    return SECTION_LABELS.get(rest.split('/')[0]);
+  }, [pathname]);
+  useSetAdminPageMeta({ title: sectionTitle });
 
   /* Twelve sections do not fit across the strip on a laptop, so the tabs past
      Policies were reachable only by dragging a scrollbar that was hidden — the
