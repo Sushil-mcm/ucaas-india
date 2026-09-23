@@ -7000,9 +7000,13 @@
   gap: 12px;
   margin-top: 14px;
   padding: 11px 14px;
+  /* A closed box. The bottom edge used to be transparent with the corners
+     rounded only at the top, which suits a bar wedged against the foot of the
+     window — but this one is sticky, so it spends just as much time sitting at
+     the end of the content, where an open bottom reads as a missing border.
+     The shadow above it is what separates it from the page either way. */
   border: 1px solid var(--line);
-  border-bottom-color: transparent;
-  border-radius: var(--r) var(--r) 0 0;
+  border-radius: var(--r);
   background: var(--surface);
   box-shadow: 0 -6px 18px -10px rgba(13, 21, 38, 0.28);
 }
@@ -7034,7 +7038,14 @@
 
 .mcm-page .mcm-savebar-discard {
   flex: none;
-  padding: 7px 12px;
+  /* Matched to the primary Button beside it, which carries `min-h-10` from
+     its variant. This one is a plain button styled by hand, so it sized to
+     its own padding and stood about ten pixels shorter than its partner. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 7px 14px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--surface);
