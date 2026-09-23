@@ -510,6 +510,14 @@ const Home = () => {
     needsAttention: attention.length,
   });
 
+  /* Which band each figure belongs to. The split is by what the number
+     describes, not by taste: the rail holds live state that is true this
+     second, the cards hold figures scoped to the day. Service level sits
+     with the day because it is "calls answered in target today", not a
+     reading of the floor right now. */
+  const LIVE_KEYS = ['waiting', 'longest', 'onqueue', 'agentsOnCall'];
+  const TODAY_KEYS = ['sla', 'answered', 'abandon', 'aht'];
+
   const kpis: Kpi[] = [
     {
       key: 'waiting',
@@ -711,121 +719,159 @@ const Home = () => {
           </div>
         ) : null}
 
-        {/* ── KPI strip: one hero card, then the 8 tiles as a 4x2 grid
-            beside it ──────────────────────────────────────────────────── */}
-        <div className="kpis kpis-onerow kpis-with-hero">
-          <div className="kpi-hero">
-            <span className="kpi-hero-live">
-              <span className="dot green" />
-              live
-            </span>
-            <h4>Live Performance</h4>
-            <p>
-              Everything you need, in real-time — wait times, service levels, occupancy and agent
-              activity across your contact centre.
+        {/* ── Verdict ──────────────────────────────────────────────────────
+            The page states its conclusion before it measures. This replaces a
+            static "Everything you need, in real-time — wait times, service
+            levels..." card, which described the product rather than reporting
+            the floor and took the largest block of space on the page to do it.
+            Every figure below is derived from the same feeds the bands beneath
+            it render, so the sentence cannot disagree with them. ─────────── */}
+        <div className={`hv${attention.length ? '' : ' is-calm'}`}>
+          <span className="hv-mark">
+            <Ic n={attention.length ? 'alert' : 'check'} size={19} />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <p className="hv-t">
+              {attention.length
+                ? `${attention.length} thing${attention.length === 1 ? '' : 's'} need${
+                    attention.length === 1 ? 's' : ''
+                  } you.`
+                : 'Everything is inside target.'}
             </p>
-            <div className={`kpi-hero-status${attention.length ? ' is-warn' : ''}`}>
-              <Ic n={attention.length ? 'alert' : 'bolt'} size={16} />
-              <div>
-                <div className="kpi-hero-status-title">
-                  {attention.length ? 'Needs attention' : 'System Healthy'}
-                </div>
-                <div className="kpi-hero-status-sub">
-                  {attention.length
-                    ? `${attention.length} item${attention.length === 1 ? '' : 's'} to review`
-                    : 'All queues operational'}
-                </div>
-              </div>
-            </div>
+            <p className="hv-d">
+              {attention.length
+                ? attention.slice(0, 2).map((item) => item.title).join(' · ')
+                : `${queueRows.length} queue${queueRows.length === 1 ? '' : 's'} active, ${
+                    waitingCalls.length === 0 ? 'nobody waiting' : `${waitingCalls.length} waiting`
+                  }, ${onlineAgentsCount} of ${agentRows.length} agents on queue.`}
+            </p>
           </div>
-          {kpis.map((kpi) => {
-            const trend = getTrend(kpi.key);
-            const trendGood = trend ? trend.direction === kpi.goodDirection : true;
-            /* use-kpi-history samples once a minute and starts empty on every
-               page load, so for the first minutes after a reload there is no
-               series to draw. The chart band is only worth its height once it
-               has something in it — an empty 52px strip under the number reads
-               as a broken tile, not as a chart waiting for data. The meter is
-               exempt: it plots a live value against a target, not history. */
-            const series = getHistory(kpi.key);
-            const showChart =
-              kpi.chartType === 'meter'
-                ? Boolean(kpi.meter)
-                : (kpi.chartType === 'bar' || kpi.chartType === 'line') && series.length > 1;
-            return (
-              // A breaching figure tints the whole tile, not just the number —
-              // the artifact's `alert` treatment, so it reads at a glance.
-              <div key={kpi.key} className={`kpi kpi-v2${kpi.tone === 'bad' ? ' alert' : ''}`}>
-                <div className="kpi-top">
-                  <span
-                    className="kpi-badge"
-                    style={{ background: `${kpi.color}1f`, color: kpi.color }}
-                  >
-                    <Ic n={kpi.icon} size={18} />
+          <button type="button" className="btn sm ghost hv-go" onClick={() => navigate('/performance')}>
+            <Ic n="trend" />
+            Performance
+          </button>
+        </div>
+
+        {/* ── Right now — live state, no history behind these ───────────── */}
+        <div className="sect-rule">
+          <h4>Right now</h4>
+          <span className="rule" />
+          <span className="note">
+            <span className="dot green" /> live
+          </span>
+        </div>
+
+        <div className="rail">
+          {kpis
+            .filter((kpi) => LIVE_KEYS.includes(kpi.key))
+            .map((kpi) => (
+              <div key={kpi.key} className={`rail-cell${kpi.tone === 'bad' ? ' alert' : ''}`}>
+                <div className="rail-head">
+                  <span className="rail-ic" style={{ background: `${kpi.color}1f`, color: kpi.color }}>
+                    <Ic n={kpi.icon} size={17} />
                   </span>
-                  <div className="kpi-titles">
-                    <span className="kpi-title">{kpi.title}</span>
-                    <span className="kpi-subtitle">{kpi.subtitle}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="rail-k">{kpi.title}</div>
+                    <div className="rail-sub">{kpi.subtitle}</div>
                   </div>
                 </div>
-                <div className="kpi-value-row">
-                  <div className="kpi-value-block">
-                    <div className={`v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
-                    {kpi.compactSub ? (
-                      <div className="kpi-compact-sub">{kpi.compactSub}</div>
-                    ) : null}
-                  </div>
-                  {trend ? (
-                    <span className={`kpi-trend${trendGood ? ' is-good' : ' is-bad'}`}>
-                      <Ic n={trend.direction === 'down' ? 'down' : 'up'} size={10} />
-                      {trend.pct}%<small>vs last 30 min</small>
-                    </span>
-                  ) : null}
-                  {/* The two roster-share metrics put their gauge beside the
-                      value instead of below it -- there's no history to
-                      chart for "share of roster right now", so it reads as
-                      one compact row rather than a tall tile with an empty
-                      gap under a short number. */}
+                <div className="rail-row">
+                  <div className={`rail-v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                  {/* On Queue and On a Call Now measure a share of the roster,
+                      not a count over time — there is no history to chart for
+                      "how much of the floor is on a call right now", so they
+                      keep the ring the old tiles used rather than losing the
+                      proportion entirely. */}
                   {kpi.chartType === 'donut' ? (
-                    <div className="kpi-chart-donut">
+                    <span className="rail-donut">
                       <RadialGauge
                         value={kpi.progressPct}
-                        size={90}
+                        size={62}
                         color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                       />
-                      <span className="kpi-chart-donut-label">{Math.round(kpi.progressPct)}%</span>
+                      <span className="rail-donut-l">{Math.round(kpi.progressPct)}%</span>
+                    </span>
+                  ) : null}
+                </div>
+                {kpi.sub ? <div className="rail-d">{kpi.sub}</div> : null}
+              </div>
+            ))}
+        </div>
+
+        {/* ── Today so far — figures scoped to the day ──────────────────── */}
+        <div className="sect-rule">
+          <h4>Today so far</h4>
+          <span className="rule" />
+          <span className="note">since midnight</span>
+        </div>
+
+        <div className="kcards">
+          {kpis
+            .filter((kpi) => TODAY_KEYS.includes(kpi.key))
+            .map((kpi) => {
+              const trend = getTrend(kpi.key);
+              const trendGood = trend ? trend.direction === kpi.goodDirection : true;
+              const series = getHistory(kpi.key);
+              const showChart =
+                kpi.chartType === 'meter'
+                  ? Boolean(kpi.meter)
+                  : (kpi.chartType === 'bar' || kpi.chartType === 'line') && series.length > 1;
+              return (
+                <div key={kpi.key} className={`kcard${kpi.tone === 'bad' ? ' alert' : ''}`}>
+                  <div className="kcard-body">
+                    <div className="kcard-head">
+                      <span
+                        className="kcard-ic"
+                        style={{ background: `${kpi.color}1f`, color: kpi.color }}
+                      >
+                        <Ic n={kpi.icon} size={17} />
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="kcard-k">{kpi.title}</div>
+                        <div className="kcard-sub">{kpi.subtitle}</div>
+                      </div>
+                    </div>
+                    <div className="kcard-row">
+                      <div className={`kcard-v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
+                      {trend ? (
+                        <span className={`kpi-trend${trendGood ? ' is-good' : ' is-bad'}`}>
+                          <Ic n={trend.direction === 'down' ? 'down' : 'up'} size={10} />
+                          {trend.pct}%<small>vs last 30 min</small>
+                        </span>
+                      ) : null}
+                    </div>
+                    {kpi.sub ? <div className="kcard-d">{kpi.sub}</div> : null}
+                  </div>
+                  {showChart ? (
+                    <div className="kcard-chart">
+                      {kpi.chartType === 'bar' ? (
+                        <SparkBars
+                          data={series}
+                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                          height={58}
+                        />
+                      ) : null}
+                      {kpi.chartType === 'line' ? (
+                        <SparkLine
+                          data={series}
+                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                          height={58}
+                        />
+                      ) : null}
+                      {kpi.chartType === 'meter' && kpi.meter ? (
+                        <div className="kcard-meter">
+                          <LinearMeter
+                            value={kpi.meter.value}
+                            target={kpi.meter.target}
+                            color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
-                {showChart ? (
-                  <div className="kpi-chart">
-                    {kpi.chartType === 'bar' ? (
-                      <SparkBars
-                        data={series}
-                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                        height={52}
-                      />
-                    ) : null}
-                    {kpi.chartType === 'line' ? (
-                      <SparkLine
-                        data={series}
-                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                        height={52}
-                      />
-                    ) : null}
-                    {kpi.chartType === 'meter' && kpi.meter ? (
-                      <LinearMeter
-                        value={kpi.meter.value}
-                        target={kpi.meter.target}
-                        color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
-                {kpi.sub ? <div className="d">{kpi.sub}</div> : null}
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
 
         {/* ── needs you now, full width on its own row ─────────────────── */}
@@ -871,13 +917,26 @@ const Home = () => {
             </div>
             <div className={`pc-body${attention.length ? ' attn-row' : ''}`}>
               {attention.length ? (
-                attention.map((item) => (
+                attention.map((item, index) => (
+                  /* A ranked work list, not a set of equal cards. attention.ts
+                     already orders these critical-first and worst-number-first
+                     within a tier, so the position carries real meaning — the
+                     number just makes that ordering visible instead of leaving
+                     the reader to infer it from colour. */
                   <div key={item.id} className={`attn ${item.level}`}>
+                    <span className="attn-rank num">{index + 1}</span>
                     <span className="attn-ic">
                       <Ic n={item.icon} size={15} />
                     </span>
                     <div style={{ minWidth: 0 }}>
-                      <div className="attn-t">{item.title}</div>
+                      <div className="attn-t">
+                        <span className="attn-t-text">{item.title}</span>
+                        {/* severity in a word as well as a colour — the stripe
+                            and tint alone leave it to be read by hue */}
+                        <span className={`attn-sev is-${item.level}`}>
+                          {item.level === 'crit' ? 'Critical' : 'Warning'}
+                        </span>
+                      </div>
                       <div className="attn-d">{item.detail}</div>
                     </div>
                     <button
