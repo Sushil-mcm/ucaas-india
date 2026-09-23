@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BellRing } from 'lucide-react';
+import { BellOff, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -206,17 +206,43 @@ const CompanyAlerts = () => {
       ) : null}
 
       {/* The rules */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="grid grid-cols-[1fr_200px_220px_120px] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
-          <span>Rule</span>
-          <span>Queues</span>
-          <span>Who is told</span>
-          <span className="text-right">On</span>
-        </div>
+      <div className="mcm-solid-card rounded-xl border border-gray-200 bg-white overflow-hidden">
+        {rules.length > 0 ? (
+          <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-2">
+            <span className="text-[11px] uppercase tracking-wide text-gray-500">
+              {rules.length} rule{rules.length === 1 ? '' : 's'}
+              <span className="text-gray-400">
+                {' · '}
+                {rules.filter((r) => r.enabled).length} switched on
+              </span>
+            </span>
+          </div>
+        ) : null}
+        {rules.length > 0 || editing ? (
+          <div className="grid grid-cols-[1fr_200px_220px_120px] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
+            <span>Rule</span>
+            <span>Queues</span>
+            <span>Who is told</span>
+            <span className="text-right">On</span>
+          </div>
+        ) : null}
         {rules.length === 0 && !editing ? (
-          <div className="px-4 py-6 text-sm text-gray-500">
-            No rules yet. A good first one: service level drops below 80% over the last 15 minutes, to all admins and
-            supervisors.
+          <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <BellRing className="size-6" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-[#2E2D35]">No queue is being watched yet</p>
+              <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#9A948F]">
+                A good first rule: service level drops below 80% over the last 15 minutes, told to
+                every admin and supervisor.
+              </p>
+            </div>
+            {isAdmin && !serverMissing ? (
+              <Button type="button" variant="primary" className="min-h-9" onClick={startNew}>
+                Add your first rule
+              </Button>
+            ) : null}
           </div>
         ) : null}
         {rules.map((r) => (
@@ -485,16 +511,31 @@ const CompanyAlerts = () => {
       ) : null}
 
       {/* Recent alerts */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="mcm-solid-card rounded-xl border border-gray-200 bg-white overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
-          <span className="text-[11px] uppercase tracking-wide text-gray-500">Recent alerts</span>
-          <button type="button" className="text-xs underline underline-offset-2" onClick={() => historyQuery.refetch()}>
+          <span className="text-[11px] uppercase tracking-wide text-gray-500">
+            Recent alerts
+            {history.length ? <span className="text-gray-400">{` · ${history.length}`}</span> : null}
+          </span>
+          <button
+            type="button"
+            className="text-xs font-semibold text-primary hover:underline underline-offset-2"
+            onClick={() => historyQuery.refetch()}
+          >
             Refresh
           </button>
         </div>
         {history.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-gray-500">
-            {historyQuery.isError ? 'Recent alerts could not be loaded.' : 'Nothing has fired yet.'}
+          <div className="flex flex-col items-center gap-1.5 px-6 py-10 text-center">
+            <BellOff className="size-5 text-gray-300" />
+            <p className="text-sm text-gray-500">
+              {historyQuery.isError ? 'Recent alerts could not be loaded.' : 'Nothing has fired yet.'}
+            </p>
+            {!historyQuery.isError ? (
+              <p className="text-xs text-[#9A948F]">
+                Anything a rule catches is written here, with what was sent.
+              </p>
+            ) : null}
           </div>
         ) : (
           history.map((ev) => (
