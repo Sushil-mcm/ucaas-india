@@ -2197,9 +2197,25 @@
   background: rgba(255, 255, 255, 0.24);
 }
 
+/* Two-up, because this panel is the full width of the page and a call-log
+   row is short. In one column the identity cell stretched to ~944px, so each
+   row was a name, then a long run of nothing, then its chips pinned to the
+   far right -- the eye had to cross the whole page to connect a number to its
+   duration. Paired, the identity settles to about a third of that, the fields
+   sit near each other, and ten calls take five rows instead of ten.
+
+   Row-wise flow (the default) rather than column-wise: it fills left to right
+   whatever the count, where a column-wise fill with a fixed row count would
+   leave the entire right half empty on a quiet week. */
 .home-v2 .rc-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+}
+@media (max-width: 900px) {
+  .home-v2 .rc-list {
+    grid-template-columns: 1fr;
+  }
 }
 /* Six columns, in reading order: which way the call went, who it was and
    when, the number, what kind it was, how long it lasted, and a way to call
@@ -2216,8 +2232,17 @@
   padding: 9px 2px;
   border-bottom: 1px solid var(--line-2, #f0e4d3);
 }
-.home-v2 .rc-list .rc-row:last-child {
+/* both cells of the final row, not just the very last item */
+.home-v2 .rc-list .rc-row:nth-last-child(-n + 2) {
   border-bottom: none;
+}
+@media (max-width: 900px) {
+  .home-v2 .rc-list .rc-row:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--line-2, #f0e4d3);
+  }
+  .home-v2 .rc-list .rc-row:last-child {
+    border-bottom: none;
+  }
 }
 .home-v2 .rc-dir {
   display: inline-flex;
