@@ -107,7 +107,10 @@ const DeviceRow = ({
 }) => {
   const isPhone = row.device_type === 'A' || row.device_type === 'I';
   return (
-    <div className="border p-3 flex sm:flex-row flex-col gap-2 rounded-lg sm:justify-between bg-white">
+    /* `mcm-solid-card`: rounded plus `bg-white` is what the console's glass
+       rule matches, and it was painting each device row cream. The card
+       around them keeps the tint; only the rows opt out. */
+    <div className="mcm-solid-card border p-3 flex sm:flex-row flex-col gap-2 rounded-lg sm:justify-between bg-white">
       <div className="flex items-start gap-3 w-full">
         <span className="w-8 min-w-8 h-8 rounded-sm bg-ucass-primary-200 text-primary p-1.5 flex items-center justify-center">
           {isPhone ? <LucideSmartphone className="w-4 h-4" /> : <LucideMonitor className="w-4 h-4" />}
