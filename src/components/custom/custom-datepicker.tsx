@@ -16,6 +16,8 @@ interface CustomDatePickerProps {
   minDate?: Date;
   label?: React.ReactNode;
   error?: any;
+  /** Overrides on the trigger, for matching a text field it sits beside. */
+  className?: string;
 }
 
 export function CustomDatePicker({
@@ -26,6 +28,7 @@ export function CustomDatePicker({
   minDate,
   label = null,
   error = '',
+  className,
 }: CustomDatePickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -47,6 +50,7 @@ export function CustomDatePicker({
             className={cn(
               'w-full justify-between text-left font-normal p-0 border-gray-300 hover:bg-white hover:border-primary hover:text-gray-900 gap-2',
               !value && 'text-gray-900',
+              className,
             )}
           >
             {value ? moment(value).format('YYYY-MM-DD') : <span>{placeholder}</span>}
