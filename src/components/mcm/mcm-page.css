@@ -5016,6 +5016,16 @@
   background: #ffffff;
 }
 
+/* A tab pill keeps its focus ring inside its own edge. The page's ring is
+   drawn 2px outside whatever has focus, and Radix moves focus onto a tab when
+   you activate it — so clicking a tab left an orange box floating around the
+   word, on top of the fill that already says which tab is current. Inset, it
+   stays reachable for the keyboard without drawing a second marker. */
+.mcm-page .mcm-tabpills [data-slot='tabs-trigger']:focus-visible {
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
 /* A row that is not a row: an empty state or a loading line spanning the whole
    table. The shared hover says "this is selectable", which is a promise a
    placeholder cannot keep, so it keeps whatever is behind it. */

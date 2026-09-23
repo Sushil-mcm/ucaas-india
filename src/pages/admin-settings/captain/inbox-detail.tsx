@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Copy, Check, RefreshCw, Search, X, Codepen, LogOut, GripVertical } from 'lucide-react';
+import { ChevronLeft, Copy, Check, RefreshCw, Search, X, Codepen, LogOut, GripVertical, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -452,8 +452,15 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           <ChevronLeft className="size-3.5" />
           Inboxes
         </button>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2 className="text-lg font-bold text-gray-950 dark:text-foreground">{inbox.name}</h2>
+          {/* Which inbox this is, not just what it is called: two website
+              inboxes differ only by their domain, and the name alone left you
+              checking the URL to be sure you were editing the right one. */}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            <Globe className="size-3" />
+            {inbox.website_domain || 'No domain set'}
+          </span>
           {saved && <span className="text-xs font-medium text-green-600">Saved</span>}
         </div>
         {inbox.legacy_assistant_id && (
@@ -465,12 +472,18 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 min-w-0 flex-col gap-4">
-          <TabsList className="h-auto w-full shrink-0 flex-wrap justify-start gap-5 rounded-none border-b border-gray-200 bg-transparent p-0 dark:border-gray-700">
+          {/* A segmented control rather than six underlined words. Six labels
+              wrapped onto two lines at this width, and the page's offset focus
+              ring drew a box around whichever one you had just clicked —
+              Radix moves focus to the trigger on activation, so it showed on a
+              plain click, not only on keyboard. A filled pill carries the
+              current tab on its own and the row scrolls rather than wraps. */}
+          <TabsList className="mcm-tabpills h-auto w-full shrink-0 justify-start gap-1 overflow-x-auto rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
             {TABS.map((t) => (
               <TabsTrigger
                 key={t.key}
                 value={t.key}
-                className="rounded-none border-b-2 border-transparent bg-transparent px-0.5 pb-2.5 text-sm font-medium text-gray-500 dark:text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-gray-900 dark:data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 dark:text-muted-foreground shadow-none data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900"
               >
                 {t.label}
               </TabsTrigger>

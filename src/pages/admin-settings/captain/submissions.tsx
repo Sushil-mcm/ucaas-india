@@ -231,14 +231,14 @@ export default function CaptainSubmissions() {
             type="date"
             value={fromDate}
             onChange={(e) => handleDateChange('from', e.target.value)}
-            className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2.5 text-sm text-gray-900 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+            className="mcm-solid-card mcm-plain-field h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-sm text-gray-900 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
           />
           <span className="text-sm text-gray-400">to</span>
           <input
             type="date"
             value={toDate}
             onChange={(e) => handleDateChange('to', e.target.value)}
-            className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-2.5 text-sm text-gray-900 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+            className="mcm-solid-card mcm-plain-field h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-sm text-gray-900 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
           />
         </div>
         <Button type="button" variant="outline" onClick={exportCsv} disabled={isExporting || (!isLoading && totalCount === 0)}>
