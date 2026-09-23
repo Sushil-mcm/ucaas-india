@@ -818,6 +818,7 @@ const Home = () => {
                           data={getHistory(kpi.key)}
                           color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                           height={40}
+                          minBar={2}
                         />
                       ) : (
                         <SparkLine

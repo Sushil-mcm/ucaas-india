@@ -219,16 +219,30 @@ export const SparkBars = ({
   data,
   color = 'var(--accent)',
   height = 44,
+  minBar = 0,
 }: {
   data: HistoryPoint[];
   color?: string;
   height?: number;
+  /** Floor, in pixels, for a bar whose value is 0. Default 0 keeps the
+   *  existing behaviour everywhere this is already used; the Home KPI strip
+   *  passes 2 so a genuinely quiet hour draws as a flat row of marks rather
+   *  than an empty card. A zero-height bar is accurate and invisible, which
+   *  reads as "no chart" instead of "no calls". */
+  minBar?: number;
 }) => (
   <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
         <YAxis hide domain={paddedDomain()} />
-        <Bar dataKey="v" fill={color} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive />
+        <Bar
+          dataKey="v"
+          fill={color}
+          fillOpacity={0.35}
+          radius={[2, 2, 0, 0]}
+          minPointSize={minBar}
+          isAnimationActive
+        />
       </BarChart>
     </ResponsiveContainer>
   </div>
