@@ -133,18 +133,6 @@ const KPI_CHART_COLOR: Record<string, string> = {
   '#0d9488': '#7fd4c7',
 };
 
-/* Existing wash tokens (mcm-page.css), reused as each state card's tint --
- * matches the card border/background family already used for tags and
- * status pills elsewhere instead of computing a tint at render time. */
-const STATE_TINT: Record<string, string> = {
-  'On Call': 'var(--accent-wash)',
-  Ringing: 'var(--warn-wash)',
-  'On Hold': 'var(--warn-wash)',
-  Available: 'var(--live-wash)',
-  Busy: 'var(--accent-wash)',
-  'Do Not Disturb': 'var(--accent-wash)',
-  Offline: 'var(--surface-3)',
-};
 
 /** One line under each state's name on the distribution card -- what the
  * status actually means for wait times, not just its label. */
@@ -1467,18 +1455,12 @@ const Home = () => {
                         width: `${slice.pct}%`,
                         background: STATE_BAR_COLOR[slice.state] || '#c3cbdb',
                       }}
-                    >
-                      {slice.pct >= 10 ? `${slice.pct}%` : null}
-                    </span>
+                    />
                   ))}
                 </div>
                 <div className="dist-cards">
                   {stateDistribution.map((slice) => (
-                    <div
-                      className="dist-card"
-                      key={slice.state}
-                      style={{ background: STATE_TINT[slice.state] || 'var(--surface-3)' }}
-                    >
+                    <div className="dist-card" key={slice.state}>
                       <i
                         className="tbl-dot"
                         style={{ background: STATE_COLOR[slice.state] || 'var(--ink-4)' }}
@@ -1491,12 +1473,7 @@ const Home = () => {
                       </div>
                       <div className="dist-card-figs">
                         <span className="dist-card-count num">{slice.count}</span>
-                        <span
-                          className="dist-card-pct num"
-                          style={{ color: STATE_COLOR[slice.state] || 'var(--ink-4)' }}
-                        >
-                          {slice.pct}%
-                        </span>
+                        <span className="dist-card-pct num">{slice.pct}%</span>
                       </div>
                     </div>
                   ))}
