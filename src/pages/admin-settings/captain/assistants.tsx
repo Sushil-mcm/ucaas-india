@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
+  ArrowLeft,
   Pencil,
   Trash2,
   Plus,
@@ -80,6 +82,8 @@ const CaptainAssistants = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -164,6 +168,29 @@ const CaptainAssistants = () => {
     }
   };
 
+  /* The editor is view state rather than its own route, so the browser had no
+     entry to return to and Back left the Assistants page entirely. Opening the
+     editor pushes a marker onto the router's own history; pressing Back drops
+     the marker, which the effect below reads as "show the list again".
+
+     Through `navigate` rather than `history.pushState` so React Router stays
+     the single owner of the history stack — a raw push desyncs its internal
+     state. */
+  const EDITOR_MARK = 'editing=1';
+  const inEditorHistory = location.search.includes(EDITOR_MARK);
+
+  useEffect(() => {
+    if (viewMode === 'editor' && !inEditorHistory) setViewMode('list');
+  }, [inEditorHistory, viewMode]);
+
+  /* Cancel and a successful save pop the entry rather than pushing a clean one,
+     so leaving by button and leaving by Back land in the same place and Back
+     never has to be pressed twice. */
+  const leaveEditor = () => {
+    if (inEditorHistory) navigate(-1);
+    else setViewMode('list');
+  };
+
   const openCreatePage = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -177,6 +204,7 @@ const CaptainAssistants = () => {
     setActivePopover(null);
     setIsAssistantDropdownOpen(false);
     setViewMode('editor');
+    if (!inEditorHistory) navigate({ search: EDITOR_MARK });
     fetchTools();
   };
 
@@ -210,6 +238,7 @@ const CaptainAssistants = () => {
       guardrails: (a.guardrails || []).join('\n'),
     });
     setViewMode('editor');
+    if (!inEditorHistory) navigate({ search: EDITOR_MARK });
   };
 
   // Group Composio dynamic tools by app
@@ -330,7 +359,7 @@ const CaptainAssistants = () => {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error((await res.json())?.message || 'Failed to save assistant');
-      setViewMode('list');
+      leaveEditor();
       fetchAssistants();
     } catch (err: any) {
       setError(err?.message || 'Failed to save assistant');
@@ -386,6 +415,17 @@ const CaptainAssistants = () => {
         <div className="mx-auto w-full max-w-3xl flex flex-col gap-6 pb-24">
           {/* Header with Assistant Switcher & Title */}
           <div className="flex items-center gap-3 relative">
+            {/* The only ways back were the Cancel button at the foot of a long
+                form and the browser's Back. */}
+            <button
+              type="button"
+              onClick={leaveEditor}
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 cursor-pointer"
+              aria-label="Back to assistants"
+              title="Back to assistants"
+            >
+              <ArrowLeft className="size-4" />
+            </button>
             <div className="relative">
               <button
                 type="button"
@@ -854,7 +894,7 @@ const CaptainAssistants = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setViewMode('list')}
+              onClick={leaveEditor}
               className="h-11 flex-1 rounded-xl !border-gray-300 !bg-white !text-gray-900 text-sm font-semibold hover:!bg-gray-100 dark:!border-gray-600 dark:!bg-gray-800 dark:!text-white dark:hover:!bg-gray-700 cursor-pointer"
             >
               Cancel
