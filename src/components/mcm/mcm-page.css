@@ -4966,6 +4966,17 @@
   border: 1px solid var(--glass-border);
 }
 
+/* Opt-out for a surface that is a control or a data panel rather than a card:
+   add `mcm-solid-card` and the glass tint above is skipped. Reusable, so a
+   screen that wants a plain white panel does not need a class of its own each
+   time. Same specificity as the glass rule, after it, so order decides. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-solid-card {
+  background: #ffffff;
+}
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-solid-card {
+  background: var(--card);
+}
+
 /* Messaging's reply field already draws its own edge, so the shared admin
    focus outline added a second ring outside it. The field's own
    `focus-visible:outline-0` cannot win — that rule selects on the element,

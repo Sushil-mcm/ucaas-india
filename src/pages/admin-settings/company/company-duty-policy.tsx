@@ -69,7 +69,7 @@ const Permission = ({
   onToggle: (checked: boolean) => void;
 }) => (
   <div
-    className={`flex h-full flex-col gap-2 rounded-xl border bg-white p-4 transition-colors ${
+    className={`mcm-solid-card flex h-full flex-col gap-2 rounded-xl border bg-white p-4 transition-colors ${
       on ? 'border-primary/40 ring-1 ring-primary/15' : 'border-[#EEE7DD]'
     }`}
   >
