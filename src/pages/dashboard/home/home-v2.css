@@ -2375,3 +2375,113 @@
 .dark .home-v2 .rc-name {
   color: var(--mcm-ink, #f8fafc);
 }
+
+/* ── Queues ────────────────────────────────────────────────────────────────
+   A block per queue, replacing an eight-column table.
+
+   Eight columns in a half-width card left SL a 25px cell and wrapped
+   "Inbound - the-farewell" across two lines, breaking the row rhythm the
+   table existed to provide. The heads were 9px caps, far enough from the
+   figures that you had to look back up to remember which column you were
+   reading — and five of the eight are a dash or a zero most of the day, so
+   the density bought nothing.
+
+   Name and service level lead, since those decide whether the queue needs
+   you; the six figures sit underneath, each against its own label. */
+.home-v2 .q-list {
+  display: flex;
+  flex-direction: column;
+  /* The old .tbl-wrap capped itself at 500px and scrolled. Keeping a cap
+     means a tenant with twenty queues does not push Interactions, and the
+     whole page, off the bottom. */
+  max-height: 440px;
+  overflow-y: auto;
+}
+.home-v2 .q-item {
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--line-2, #f0e4d3);
+}
+.home-v2 .q-list .q-item:first-child {
+  padding-top: 2px;
+}
+.home-v2 .q-list .q-item:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+.home-v2 .q-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+.home-v2 .q-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink, #0d1526);
+  /* the name gets a whole line to itself now, so it no longer has to wrap */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .q-sl {
+  flex: none;
+}
+
+/* Three across, two down. Six equal cells read as one instrument; the
+   auto-fit alternatives left an orphan on the second row. */
+.home-v2 .q-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+@media (max-width: 520px) {
+  .home-v2 .q-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.home-v2 .q-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.home-v2 .q-stat-k {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4, #93a0b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .q-stat-v {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink, #0d1526);
+}
+.home-v2 .q-none {
+  color: var(--ink-4, #93a0b8);
+  font-weight: 600;
+}
+
+/* Both of these were built to sit in a right-aligned table cell. Under a
+   label in a left-aligned block they need to start at the label's edge. */
+.home-v2 .q-stat-v .occ-cell,
+.home-v2 .q-stat-v .sl-cell {
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.dark .home-v2 .q-name,
+.dark .home-v2 .q-stat-v {
+  color: var(--mcm-ink, #f8fafc);
+}

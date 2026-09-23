@@ -1259,69 +1259,86 @@ const Home = () => {
               All queues
             </button>
           </div>
-          <div className="tbl-wrap tbl-enhanced">
-            <table>
-              <thead>
-                <tr>
-                  <th>Queue</th>
-                  <th>Waiting</th>
-                  <th>Longest</th>
-                  <th>On queue</th>
-                  <th>Interacting</th>
-                  <th>SL</th>
-                  <th>ASA</th>
-                  <th>Abandon</th>
-                </tr>
-              </thead>
-              <tbody>
-                {queueRows.length ? (
-                  queueRows.map((row) => (
-                    <tr key={row.uuid}>
-                      <td style={{ fontWeight: 700 }}>
-                        <span className="tbl-row-name">
-                          <i className={`tbl-dot ${slDotClass(row.sla)}`} />
-                          {row.name}
+          {/* A block per queue, not an eight-column table.
+
+              Eight columns into a half-width card gave SL a 25px cell and
+              wrapped "Inbound - the-farewell" onto two lines, breaking the
+              row rhythm; the column heads were 9px caps you had to look back
+              up at to remember which figure you were reading. Five of the
+              eight columns are a dash or a zero most of the day, so the
+              density bought nothing.
+
+              Each queue now leads with its name and service level -- the two
+              things that decide whether you care -- and its six figures sit
+              underneath, each next to its own label. Same six figures, same
+              sources; only the arrangement changed. */}
+          <div className="pc-body">
+            {queueRows.length ? (
+              <div className="q-list">
+                {queueRows.map((row) => (
+                  <div className="q-item" key={row.uuid}>
+                    <div className="q-item-head">
+                      <span className="q-name">
+                        <i className={`tbl-dot ${slDotClass(row.sla)}`} />
+                        {row.name}
+                      </span>
+                      <span className="q-sl">{slTag(row.sla, row.slaTargetPct)}</span>
+                    </div>
+                    <div className="q-stats">
+                      <span className="q-stat">
+                        <span className="q-stat-k">Waiting</span>
+                        <span className="q-stat-v num">
+                          {row.waiting > 0 ? (
+                            <span className="tag warn">{row.waiting}</span>
+                          ) : (
+                            row.waiting
+                          )}
                         </span>
-                      </td>
-                      <td className="num">
-                        {row.waiting > 0 ? (
-                          <span className="tag warn">{row.waiting}</span>
-                        ) : (
-                          row.waiting
-                        )}
-                      </td>
-                      <td className="num">
-                        {row.longestWaitTimestamp ? (
-                          <Timer startTime={row.longestWaitTimestamp} />
-                        ) : (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        )}
-                      </td>
-                      <td className="num">{occupancyBar(row.available, row.membersCount)}</td>
-                      <td className="num">{row.interacting}</td>
-                      <td className="num">{slTag(row.sla, row.slaTargetPct)}</td>
-                      <td className="num">
-                        {row.asa === null ? (
-                          <span style={{ color: 'var(--ink-4)' }}>—</span>
-                        ) : (
-                          formatSecsToClock(Math.round(row.asa))
-                        )}
-                      </td>
-                      <td className="num">{row.abandonRate}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8}>
-                      <div className="empty">
-                        <Ic n="list" />
-                        <p>No queues are configured yet.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      </span>
+                      <span className="q-stat">
+                        <span className="q-stat-k">Longest</span>
+                        <span className="q-stat-v num">
+                          {row.longestWaitTimestamp ? (
+                            <Timer startTime={row.longestWaitTimestamp} />
+                          ) : (
+                            <span className="q-none">—</span>
+                          )}
+                        </span>
+                      </span>
+                      <span className="q-stat">
+                        <span className="q-stat-k">On queue</span>
+                        <span className="q-stat-v num">
+                          {occupancyBar(row.available, row.membersCount)}
+                        </span>
+                      </span>
+                      <span className="q-stat">
+                        <span className="q-stat-k">Interacting</span>
+                        <span className="q-stat-v num">{row.interacting}</span>
+                      </span>
+                      <span className="q-stat">
+                        <span className="q-stat-k">ASA</span>
+                        <span className="q-stat-v num">
+                          {row.asa === null ? (
+                            <span className="q-none">—</span>
+                          ) : (
+                            formatSecsToClock(Math.round(row.asa))
+                          )}
+                        </span>
+                      </span>
+                      <span className="q-stat">
+                        <span className="q-stat-k">Abandon</span>
+                        <span className="q-stat-v num">{row.abandonRate}</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty comms-empty">
+                <Ic n="list" />
+                <p>No queues are configured on this account yet.</p>
+              </div>
+            )}
           </div>
         </div>
 
