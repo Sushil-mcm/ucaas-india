@@ -206,7 +206,7 @@ export default function CaptainWidgets() {
           <select
             value={connection}
             onChange={(e) => setConnection(e.target.value as ConnectionFilter)}
-            className="h-9 appearance-none rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted pl-3 pr-8 text-sm text-gray-900 dark:text-foreground outline-none cursor-pointer"
+            className="mcm-widget-filter h-9 appearance-none rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted pl-3 pr-8 text-sm text-gray-900 dark:text-foreground outline-none cursor-pointer"
           >
             <option value="">All</option>
             <option value="connected">Connected</option>

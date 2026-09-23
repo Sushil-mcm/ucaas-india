@@ -3232,6 +3232,14 @@
   border-color: var(--accent);
 }
 
+/* The type filter beside it, matched. This one carries its own border, so the
+   colour goes straight on the element rather than on a parent. */
+.mcm-admin .mcm-widget-filter:focus,
+.mcm-admin .mcm-widget-filter:focus-visible {
+  outline: none !important;
+  border-color: var(--accent) !important;
+}
+
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
   border-radius: 999px;
