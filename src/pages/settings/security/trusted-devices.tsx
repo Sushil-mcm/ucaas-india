@@ -59,15 +59,24 @@ const Card = ({
   badge,
   intro,
   aside,
+  wide,
   children,
 }: {
   title: string;
   badge?: React.ReactNode;
   intro: React.ReactNode;
   aside?: React.ReactNode;
+  /* Takes the whole row of the two-column grid. A card that grows with its
+     contents leaves its neighbour's column empty for the rest of its height;
+     spanning both columns is what stops that gap appearing. */
+  wide?: boolean;
   children?: React.ReactNode;
 }) => (
-  <div className="flex flex-col gap-3 bg-white p-4 rounded-lg border border-gray-200">
+  <div
+    className={`flex flex-col gap-3 bg-white p-4 rounded-lg border border-gray-200${
+      wide ? ' mcm-seccard-wide' : ''
+    }`}
+  >
     <div className="flex sm:flex-row flex-col sm:items-center justify-between gap-4">
       <div className="flex flex-col gap-1 sm:w-2/3 w-full">
         <p className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
@@ -254,6 +263,7 @@ const TrustedDevices = () => {
 
       <Card
         title="Trusted devices"
+        wide
         /* One line, by the same status as the card above: with two-step off
            (or this person excused) trust makes no difference, and with it on
            the server still asks every device - so the old "skip the emailed

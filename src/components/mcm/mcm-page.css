@@ -7821,6 +7821,14 @@
        its own content does. */
     align-items: start;
   }
+  /* Trusted devices grows with the device list and "Sign out everywhere" is
+     the last thing on the page: both take the full row rather than leaving
+     the column beside them empty. The two short cards - Password and
+     Two-step sign-in - still share row one. */
+  .mcm-page .mcm-seccards .mcm-seccard-wide,
+  .mcm-page .mcm-seccards .mcm-seccard.is-risk {
+    grid-column: 1 / -1;
+  }
 }
 
 .mcm-page .mcm-seccard {
