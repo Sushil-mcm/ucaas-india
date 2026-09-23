@@ -178,10 +178,18 @@ const CaptainAssistants = () => {
      state. */
   const EDITOR_MARK = 'editing=1';
   const inEditorHistory = location.search.includes(EDITOR_MARK);
+  const hadEditorMark = useRef(inEditorHistory);
 
+  /* Watch for the marker being REMOVED, not merely absent. Opening the editor
+     sets `viewMode` and calls `navigate` in one batch, so the render right
+     after the click still carries the old location — an "is it absent?" test
+     read that as Back and shut the editor before it appeared, which took two
+     clicks to open. A present-then-gone transition only ever means Back. */
   useEffect(() => {
-    if (viewMode === 'editor' && !inEditorHistory) setViewMode('list');
-  }, [inEditorHistory, viewMode]);
+    const wasMarked = hadEditorMark.current;
+    hadEditorMark.current = inEditorHistory;
+    if (wasMarked && !inEditorHistory) setViewMode('list');
+  }, [inEditorHistory]);
 
   /* Cancel and a successful save pop the entry rather than pushing a clean one,
      so leaving by button and leaving by Back land in the same place and Back
