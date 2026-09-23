@@ -188,7 +188,9 @@ const CaptainInboxes = () => {
 
       <div className="flex items-center justify-between gap-3">
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+          {/* z-10: the shared Input's own positioned wrapper paints later and
+              would otherwise lay its background over this icon. */}
+          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
           <Input type="text" value={inboxSearch} onChange={(e) => setInboxSearch(e.target.value)} placeholder="Search inboxes..." className="pl-9" />
         </div>
         <div className="flex items-center gap-3">

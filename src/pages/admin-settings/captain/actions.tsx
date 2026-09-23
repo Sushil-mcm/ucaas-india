@@ -536,7 +536,9 @@ const CaptainActions = () => {
         <>
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+              {/* z-10: the shared Input's own positioned wrapper paints later
+                  and would otherwise lay its background over this icon. */}
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
               <Input type="text" value={actionsSearch} onChange={(e) => setActionsSearch(e.target.value)} placeholder="Search your actions..." className="pl-9" />
             </div>
             <select value={myActionsTypeFilter} onChange={(e) => setMyActionsTypeFilter(e.target.value as any)} className={`${fieldClass} w-40`}>
@@ -744,7 +746,9 @@ const CaptainActions = () => {
 
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              {/* z-10: the shared Input's own positioned wrapper paints later
+                  and would otherwise lay its background over this icon. */}
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <Input
                 type="text"
                 value={toolkitSearch}

@@ -638,7 +638,9 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
             <Label>Agents</Label>
             <p className="text-xs text-gray-400 dark:text-muted-foreground">Add or remove agents from this inbox. Leave empty to allow every agent.</p>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+              {/* z-10: the shared Input's own positioned wrapper paints later
+                  and would otherwise lay its background over this icon. */}
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
               <Input type="text" value={agentSearch} onChange={(e) => setAgentSearch(e.target.value)} placeholder="Search team members..." className="pl-9" />
             </div>
             <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700">

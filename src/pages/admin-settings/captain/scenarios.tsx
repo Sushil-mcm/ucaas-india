@@ -347,7 +347,9 @@ const CaptainScenarios = () => {
 
       {selectedId && (
         <div className="relative w-full max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+          {/* z-10: the shared Input's own positioned wrapper paints later and
+              would otherwise lay its background over this icon. */}
+          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
           <Input
             type="text"
             value={search}
