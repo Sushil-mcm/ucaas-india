@@ -18,6 +18,7 @@ import '@/components/mcm/mcm-page.css';
  */
 
 export const AdminPage = ({
+  className,
   section,
   title,
   description,
@@ -54,9 +55,11 @@ export const AdminPage = ({
    * showing around and below the table with nothing in it.
    */
   bareBody?: boolean;
+  /** Extra classes on the shell, so a screen can opt into a variant. */
+  className?: string;
   children: ReactNode;
 }) => (
-  <section className="mcm-adminpage">
+  <section className={className ? `mcm-adminpage ${className}` : 'mcm-adminpage'}>
     <McmIconSprite />
     {hideHead ? (
       /* The buttons that sat in the dropped head move up beside the screen

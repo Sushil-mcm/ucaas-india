@@ -168,6 +168,7 @@ const DeskPhones = () => {
           that head on their own. */}
       <AdminPage
         hideHead
+        className="mcm-card-bar"
         actions={
           <>
             <button type="button" className="btn ghost" onClick={() => setDrawer('bulk')} disabled={absent}>
