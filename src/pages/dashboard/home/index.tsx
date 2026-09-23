@@ -8,6 +8,7 @@ import { Ic, McmIconSprite, type McmIconName } from '@/components/mcm/icons';
 import Timer from '@/components/timer';
 import { useConsoleDialer } from '@/pages/phone/console/dial-number';
 import { useLiveContactCentre } from '@/hooks/use-live-contact-centre';
+import DataFreshness from '@/pages/performance/data-freshness';
 
 /* Today's voicemail and missed-call counts. Held as its own number rather than
  * a multiple of the contact-centre poll: these two only need to keep up with
@@ -271,6 +272,15 @@ const Home = () => {
     avgHandleTime,
     abandonRate,
     agentsOnCallPct,
+    /* Performance already learned this lesson (performance/index.tsx): every
+       query here defaults to an empty list, so an unreachable API renders
+       "Waiting Now 0, Answered Today 0" — the identical screen a genuinely
+       quiet contact centre produces. Home read the figures but never these
+       four, so a dead feed looked like a calm morning. */
+    hasSourceError,
+    failedSources,
+    lastUpdatedAt,
+    retryFailedSources,
   } = live;
 
   const firstName = String(user?.user_info?.first_name || '').trim();
@@ -503,7 +513,10 @@ const Home = () => {
       title: 'Longest Wait',
       subtitle: 'Current longest wait time',
       value: longestWaitTimestamp ? <Timer startTime={longestWaitTimestamp} /> : '00:00',
-      sub: longestWaitSecs > 120 ? 'past the breach mark' : 'within target',
+      /* Was 'past the breach mark': SLA jargon that named neither the rule
+         nor the threshold it had crossed. The 120s here is the same
+         LONGEST_WAIT_BREACH_SECS the attention list scores against. */
+      sub: longestWaitSecs > 120 ? 'over the 2-minute target' : 'within target',
       tone: longestWaitSecs > 120 ? 'bad' : undefined,
       icon: 'clock',
       color: 'var(--accent)',
@@ -575,7 +588,11 @@ const Home = () => {
     {
       key: 'aht',
       title: 'Avg Handle Time',
-      subtitle: 'Average call duration',
+      /* Not 'Average call duration', which reads as talk time and does not
+         match this product's own definition of AHT (lib/kpi-definitions.ts:
+         talking + holding + the paperwork afterwards). Two meanings for one
+         metric is how a tile gets reconciled against call logs and loses. */
+      subtitle: 'Talk, hold and wrap-up per call',
       value: avgHandleTime === null ? '—' : formatSecsToClock(ahtAnimated),
       sub: 'based on completed calls today',
       icon: 'bolt',
@@ -640,6 +657,7 @@ const Home = () => {
             </p>
           </div>
           <div className="hero-right">
+            <DataFreshness updatedAt={lastUpdatedAt} />
             <button className="btn ghost" onClick={() => navigate('/performance')}>
               <Ic n="trend" />
               Performance
@@ -653,6 +671,28 @@ const Home = () => {
 
         {/* ── quick actions ────────────────────────────────────────────── */}
         <QuickActions />
+
+        {/* Named feeds, not a generic "something went wrong": which source
+            failed decides which tiles below are stale, and the retry re-runs
+            only the queries that actually failed. Styles are local to
+            home-v2.css rather than imported from the Performance theme —
+            pulling that whole stylesheet in to reuse one block would restyle
+            the rest of this page. */}
+        {hasSourceError ? (
+          <div className="home-feed-error" role="alert">
+            <Ic n="alert" size={18} />
+            <div className="home-feed-error-body">
+              <p className="home-feed-error-t">Some figures below could not be read</p>
+              <p className="home-feed-error-d">
+                {failedSources.length} of 5 sources failed ({failedSources.join(', ')}). The cards
+                they feed are showing the last value received, which may be out of date.
+              </p>
+            </div>
+            <button type="button" className="btn sm home-feed-error-retry" onClick={retryFailedSources}>
+              Try again
+            </button>
+          </div>
+        ) : null}
 
         {/* ── KPI strip: one hero card, then the 8 tiles as a 4x2 grid
             beside it ──────────────────────────────────────────────────── */}

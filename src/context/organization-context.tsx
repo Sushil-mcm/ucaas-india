@@ -9,6 +9,11 @@ import { Elements } from '@stripe/react-stripe-js';
 
 const NO_ORGANIZATION_PATH = '/no-organization';
 
+/* Shown in the tab only when the organization call gives us nothing usable.
+   Generic by design: this console is white-labelled per organization, so a
+   product or company name here would be wrong for most tenants. */
+const FALLBACK_DOCUMENT_TITLE = 'Console';
+
 const getFirstNonEmptyString = (...values: unknown[]) => {
   for (const value of values) {
     if (typeof value === 'string' && value.trim()) return value.trim();
@@ -113,6 +118,23 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     document.title = '';
     fetchMainSiteInfo();
   }, [fetchMainSiteInfo]);
+
+  /* The blank title above is deliberate — it avoids a visible flicker from a
+     placeholder to the org's real name on every load — but it had no floor
+     under it. The branding effect below returns early on `!mainSiteInfo`, and
+     the fetch returns early in its catch, so a failed or empty organization
+     call left the tab blank for the rest of the session: no name in the tab
+     strip, and a bookmark or history entry saved as a bare URL.
+
+     This runs only once loading has settled, so it cannot reintroduce the
+     flash it was written to avoid — during the fetch the title stays empty
+     exactly as before, and this fills in only when we know nothing better is
+     coming. Generic on purpose: the product is white-labelled, so guessing a
+     brand here would be worse than saying nothing. */
+  useEffect(() => {
+    if (typeof document === 'undefined' || isLoading) return;
+    if (!document.title.trim()) document.title = FALLBACK_DOCUMENT_TITLE;
+  }, [isLoading, mainSiteInfo, error]);
   // Apply mainSiteInfo colors to CSS variables: --primary, --color-ucass-primary-200, --color-ucass-active
   useEffect(() => {
     if (!mainSiteInfo || typeof document === 'undefined') return;
@@ -161,7 +183,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
     );
     const pageUrl = window.location.href;
 
-    document.title = title;
+    /* `title` is whatever the org record had, which can be empty — assigning
+       it unguarded is the other way the tab ends up blank. */
+    document.title = title || FALLBACK_DOCUMENT_TITLE;
     setMetaContent('name', 'description', description);
     setMetaContent('property', 'og:type', 'website');
     setMetaContent('property', 'og:title', organizationName || title);

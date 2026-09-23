@@ -28,6 +28,12 @@
       media="(prefers-color-scheme: dark)"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Authenticated console: nothing here should be indexed. Pairs with
+         public/robots.txt — robots.txt asks a crawler not to fetch, this tells
+         one that already has the page not to list it, which is the half that
+         actually removes an already-indexed URL. Link-preview tags (og:*,
+         twitter:*) are set at runtime from the org record and are not affected. -->
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -878,3 +878,81 @@
   background: var(--accent-wash, #fff1e0);
   color: var(--accent-ink, #c96f1f);
 }
+
+/* ── Failed-feed banner ──────────────────────────────────────────────────
+   Home reads the same five REST sources as Performance, and every one of
+   them defaults to an empty list on failure — so an unreachable API used to
+   render "Waiting Now 0" and look exactly like a quiet morning. This says
+   which source could not be read and offers to re-run only those.
+
+   Deliberately NOT the `.hero-error` block from performance/live-theme.css:
+   Home does not import that stylesheet, and pulling a whole page theme in to
+   reuse one component would restyle the rest of this page. Same visual
+   language, local class names, no collision if the two ever meet. */
+.home-v2 .home-feed-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #7f1d1d;
+}
+
+.home-v2 .home-feed-error > svg {
+  flex: none;
+  margin-top: 1px;
+  color: #dc2626;
+}
+
+.home-v2 .home-feed-error-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.home-v2 .home-feed-error-t {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* The detail names the failed sources, so it must wrap rather than truncate —
+   a clipped "Queues, Queue sta…" hides the part that decides which tiles to
+   distrust. */
+.home-v2 .home-feed-error-d {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #991b1b;
+}
+
+.home-v2 .home-feed-error-retry {
+  flex: none;
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .home-v2 .home-feed-error {
+    border-color: #7f1d1d;
+    background: rgba(127, 29, 29, 0.18);
+    color: #fecaca;
+  }
+
+  :root:not([data-theme='light']) .home-v2 .home-feed-error-d {
+    color: #fca5a5;
+  }
+}
+
+:root[data-theme='dark'] .home-v2 .home-feed-error {
+  border-color: #7f1d1d;
+  background: rgba(127, 29, 29, 0.18);
+  color: #fecaca;
+}
+
+:root[data-theme='dark'] .home-v2 .home-feed-error-d {
+  color: #fca5a5;
+}

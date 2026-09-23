@@ -1,0 +1,10 @@
+# app.ucaas.in is an authenticated console, not a public site. There is no
+# page here worth ranking and several — the login screen, any shared invite
+# or verify link — that should never appear in a search result.
+#
+# This is the whole SEO posture for this host, deliberately: the OG/Twitter
+# tags set at runtime in src/context/organization-context.tsx still work for
+# link previews in chat, because those are fetched on demand rather than
+# crawled, and are unaffected by the rules below.
+User-agent: *
+Disallow: /
