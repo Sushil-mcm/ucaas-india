@@ -454,7 +454,10 @@ const CompanyPolicies = () => {
     const error = errors[key];
     return (
       <div className="flex flex-col gap-2">
-        <div className="grid gap-3 sm:grid-cols-2">
+        {/* Stacked, not side by side: the two retention blocks now sit in one
+            row of their own, so "Days to keep" belongs under its select rather
+            than competing with it for half a column. */}
+        <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <CustomSelect
               label={label}
@@ -545,7 +548,7 @@ const CompanyPolicies = () => {
             status="active"
             note="Active. Used when you record a new greeting — it opens in this language. Greetings and menus you already have keep the language they were made in."
           >
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 py-2 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <CustomSelect
                   label="Prompt language"
@@ -616,7 +619,7 @@ const CompanyPolicies = () => {
             status="active"
             note="Active. A new or changed voicemail PIN shorter than the rule is refused wherever it is set, admins included; a PIN set before the rule keeps working until it is changed. The phone system stops a caller's message at the limit on every way into voicemail: a person's mailbox, a number pointed at voicemail, and a queue that gives up. Voicemail transcription is not set here — it follows Phone rules › Transcription."
           >
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 py-2 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <Input
                   type="number"
@@ -787,16 +790,21 @@ const CompanyPolicies = () => {
             status="active"
             note="Active. A sweep runs on the server every night (03:40 UTC) and removes recordings and messages older than the limit — the audio and any transcript go, the call stays in the log without them. Until your server's sweep is switched to live mode it only reports what it would remove. Nothing is removed while a legal hold is set."
           >
-            {renderRetention(
-              'retention_recordings',
-              'Call recordings',
-              'How long a recorded call is kept once it ends.',
-            )}
-            {renderRetention(
-              'retention_voicemails',
-              'Voicemail messages',
-              'How long a voicemail is kept once it is left.',
-            )}
+            {/* The two limits read as a pair, so they sit as one — and the
+                columns keep them aligned even when only one is set to a day
+                count and grows a second field. */}
+            <div className="grid items-start gap-4 py-2 sm:grid-cols-2">
+              {renderRetention(
+                'retention_recordings',
+                'Call recordings',
+                'How long a recorded call is kept once it ends.',
+              )}
+              {renderRetention(
+                'retention_voicemails',
+                'Voicemail messages',
+                'How long a voicemail is kept once it is left.',
+              )}
+            </div>
           </SettingCard>
 
           <SettingCard
@@ -806,7 +814,7 @@ const CompanyPolicies = () => {
             status="active"
             note="Active. The server gives every newly added person this setting, whichever screen adds them, unless the admin chose for that person on the add form. It does not change anyone already added."
           >
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 py-2 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <CustomSelect
                   label="Default for new users"
