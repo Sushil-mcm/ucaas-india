@@ -10415,10 +10415,9 @@
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+/* The trigger for the row menu. The menu itself is portalled to the
+   body by Radix, so it is styled where it lands, not from here. */
 .mcm-page .mcm-people-more {
-  position: relative;
-}
-.mcm-page .mcm-people-more > summary {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -10430,53 +10429,17 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-3);
-  list-style: none;
   cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
-.mcm-page .mcm-people-more > summary::-webkit-details-marker {
-  display: none;
-}
-.mcm-page .mcm-people-more > summary > svg {
+.mcm-page .mcm-people-more > svg {
   width: 13px;
   height: 13px;
 }
-.mcm-page .mcm-people-more[open] > summary,
-.mcm-page .mcm-people-more > summary:hover {
+.mcm-page .mcm-people-more:hover,
+.mcm-page .mcm-people-more[data-state='open'] {
   border-color: var(--accent);
   color: var(--accent-ink);
-}
-.mcm-page .mcm-people-menu {
-  position: absolute;
-  right: 0;
-  z-index: 20;
-  margin-top: 6px;
-  width: 224px;
-  padding: 5px;
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: var(--lift, 0 8px 24px rgba(16, 24, 40, 0.12));
-  text-align: left;
-}
-.mcm-page .mcm-people-menu button {
-  display: block;
-  width: 100%;
-  padding: 7px 9px;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  font-size: 12.5px;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-.mcm-page .mcm-people-menu button:hover {
-  background: #f4f5f7;
-}
-.mcm-page .mcm-people-menu button.is-risk {
-  color: var(--crit);
-}
-.mcm-page .mcm-people-menu-sep {
-  margin: 5px 4px;
-  border-top: 1px solid var(--line-2);
 }

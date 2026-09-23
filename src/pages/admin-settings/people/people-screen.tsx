@@ -20,6 +20,13 @@ import { ChevronDown, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import SideDrawer from '@/components/custom/side-drawer';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import CustomAvatar from '@/components/custom/custom-avatar';
@@ -469,20 +476,33 @@ const PeopleScreen: FC = () => {
                                   <Button size="sm" variant="outline" disabled={isResending} onClick={() => doResend({ user_uuid: row.uuid })}>{inv?.expired ? 'Re-invite' : 'Resend'}</Button>
                                 )}
                                 <CustomTooltip text="Edit"><button type="button" aria-label={`Edit ${row.name}`} className="mcm-people-icon" onClick={() => openFor(row, 'updateForwarding')}><Pencil className="w-4 h-4" /></button></CustomTooltip>
+                                {/* A menu, not a `<details>` panel. The panel was
+                                    a child of the table card, and a card that
+                                    scrolls sideways has to clip what overflows
+                                    it - so on the last rows the menu was cut off
+                                    at the card's edge. This one is portalled out
+                                    of the table and flips above the button when
+                                    the space below runs out. */}
                                 {actionable && (
-                                  <details className="mcm-people-more">
-                                    <summary>More <ChevronDown /></summary>
-                                    <div className="mcm-people-menu">
-                                      <button type="button" onClick={() => openFor(row, 'changeRole')}>Change role</button>
-                                      {virtualNumbersAccess?.assign_number && <button type="button" onClick={() => openFor(row, 'assignUser')}>Assign a number</button>}
-                                      <div className="mcm-people-menu-sep" />
-                                      <button type="button" onClick={() => setConfirm({ kind: 'signout', row })}>Sign out everywhere</button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger className="mcm-people-more" aria-label={`More for ${row.name}`}>
+                                      More <ChevronDown />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56 bg-white">
+                                      <DropdownMenuItem onSelect={() => openFor(row, 'changeRole')}>Change role</DropdownMenuItem>
+                                      {virtualNumbersAccess?.assign_number && (
+                                        <DropdownMenuItem onSelect={() => openFor(row, 'assignUser')}>Assign a number</DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onSelect={() => setConfirm({ kind: 'signout', row })}>Sign out everywhere</DropdownMenuItem>
                                       {row.state === 'SUSPENDED'
-                                        ? <button type="button" onClick={() => doReactivate(row.uuid)}>Reactivate</button>
-                                        : <button type="button" onClick={() => setConfirm({ kind: 'suspend', row })}>Suspend</button>}
-                                      <button type="button" className="is-risk" onClick={() => setConfirm({ kind: 'remove', row })}>Remove (restorable 72 h)</button>
-                                    </div>
-                                  </details>
+                                        ? <DropdownMenuItem onSelect={() => doReactivate(row.uuid)}>Reactivate</DropdownMenuItem>
+                                        : <DropdownMenuItem onSelect={() => setConfirm({ kind: 'suspend', row })}>Suspend</DropdownMenuItem>}
+                                      <DropdownMenuItem variant="destructive" onSelect={() => setConfirm({ kind: 'remove', row })}>
+                                        Remove (restorable 72 h)
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 )}
                               </div>
                             </td>
