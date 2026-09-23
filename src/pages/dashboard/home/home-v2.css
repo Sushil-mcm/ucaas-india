@@ -1789,3 +1789,24 @@
 @media (max-width: 720px) {
   .home-v2 .rail-cell { min-height: 0; }
 }
+
+/* ── On Queue: keep the ring out of the figure's way ──────────────────────
+   RadialGauge renders at 62px, taller than the 46px figure band, so the row
+   grew to fit it and re-centred the number — leaving `1` sitting 8px below
+   the `0`, `00:00` and `—` on its neighbours. Fixing the band height stops
+   the ring driving the layout; it is centred on the band and allowed to
+   extend past it, which is invisible because the accessory lane beneath is
+   empty on this card. */
+.home-v2 .rail-cell .rail-row {
+  height: 46px;
+  min-height: 46px;
+  align-items: center;
+}
+.home-v2 .rail-donut {
+  height: 46px;
+  display: grid;
+  place-items: center;
+  /* the ring is decoration on a number that is already written out, so it
+     yields to the figure rather than the other way round */
+  overflow: visible;
+}
