@@ -92,10 +92,6 @@ const OfficePolicy = lazy(() => import('@/pages/admin-settings/company/office-po
 const CompanyProfileFieldsPage = lazy(() => import('@/pages/admin-settings/company/company-profile-fields'));
 const CompanyDeskPhonesPage = lazy(() => import('@/pages/admin-settings/company/company-desk-phones'));
 const Dashboard = lazy(() => import('@/pages/dashboard'));
-/* The redesigned operations console, on its own route so nobody's daily Home
-   changes until it is switched over. It owns its stylesheet and does not
-   import mcm-page.css — see pages/dashboard/console/console.css. */
-const Console = lazy(() => import('@/pages/dashboard/console'));
 /* Directory and Performance used to carry the page in a query --
    `/directory?view=groups`, `/performance?view=agents`. Those addresses are in
    bookmarks and in links already sent out, so the index of each area honours
@@ -448,18 +444,9 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage text="Error Occurred 😔" />,
     children: [
       {
-        /* Home is the redesigned console. The previous Home is still built and
-           routed at /dashboard/classic — it is the fallback if anything on the
-           new page turns out to be wrong for a real shift, and it costs one
-           lazy chunk nobody loads. Swap the two elements to revert. */
         path: 'dashboard',
-        element: <Console />,
-        id: 'Dashboard',
-      },
-      {
-        path: 'dashboard/classic',
         element: <Dashboard />,
-        id: 'DashboardClassic',
+        id: 'Dashboard',
       },
       {
         /* Same as Directory: a segment per page instead of one address with a
