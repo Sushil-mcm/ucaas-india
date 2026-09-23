@@ -213,6 +213,95 @@ export const TrendBars = ({
   );
 };
 
+/** Hourly (or daily) volume as a line with a soft fill beneath it -- the
+ * line counterpart to TrendBars, which Home's Communication overview reads
+ * instead of bars.
+ *
+ * Bars were the wrong mark for this data. At the volumes this portal
+ * actually sees most hours are genuinely zero, and a row of zero-height
+ * bars reads as a chart that failed to draw; a flat line reads as a quiet
+ * day, which is what it is. A line also makes the shape of the day legible
+ * across 24 buckets, where 24 thin bars just read as a texture.
+ *
+ * Hovering any bucket gives that bucket's own figure, so the detail the
+ * bars' single "Peak" callout used to carry is available for every hour
+ * rather than only the busiest one.
+ *
+ * TrendBars is deliberately left alone -- Performance's Interactions tab
+ * still reads it. */
+export const TrendLine = ({
+  data,
+  dataKey,
+  xKey = 'label',
+  color = 'var(--accent)',
+  height = 190,
+  unit = '',
+}: {
+  data: Record<string, any>[];
+  dataKey: string;
+  xKey?: string;
+  color?: string;
+  height?: number;
+  /** Plural noun for the tooltip, e.g. "calls". Recharts' default tooltip
+   *  renders the raw series key ("value : 0"), which tells the reader
+   *  nothing; naming the unit here makes the hover read as a sentence. */
+  unit?: string;
+}) => {
+  const gradientId = useMemo(() => `trend-line-${Math.random().toString(36).slice(2, 8)}`, []);
+  return (
+    <div style={{ width: '100%', height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 12, right: 8, bottom: 4, left: 8 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.32} />
+              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey={xKey}
+            tick={{ fontSize: 9.5, fill: 'var(--ink-4)' }}
+            axisLine={false}
+            tickLine={false}
+            interval="preserveStartEnd"
+            minTickGap={14}
+          />
+          <YAxis hide domain={paddedDomain()} />
+          <Tooltip
+            cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
+            content={((props: any) => {
+              const { active, payload, label } = props || {};
+              if (!active || !payload || !payload.length) return null;
+              const value = Number(payload[0].value) || 0;
+              const noun = unit && value === 1 ? unit.replace(/s$/, '') : unit;
+              return (
+                <div className="trend-tip">
+                  <span className="trend-tip-h">{label}</span>
+                  <span className="trend-tip-v">
+                    <b className="num">{value}</b>
+                    {noun}
+                  </span>
+                </div>
+              );
+            }) as any}
+          />
+          <Area
+            type="monotone"
+            dataKey={dataKey}
+            stroke={color}
+            strokeWidth={2.5}
+            fill={`url(#${gradientId})`}
+            dot={false}
+            activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface, #fff)', fill: color }}
+            isAnimationActive
+            animationDuration={700}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 /** Tiny bar sparkline for a count-type KPI's own recent history
  * (`useKpiHistory`) -- Waiting Now, Answered Today, Abandon Rate. */
 export const SparkBars = ({

@@ -578,6 +578,20 @@
 .dark .home-v2 .quick-action-title {
   color: var(--mcm-ink, #f8fafc);
 }
+.dark .home-v2 .qd-tile {
+  background: var(--mcm-surface, #1e293b);
+  border-color: #1b2934;
+}
+.dark .home-v2 .qd-tile-name {
+  color: var(--mcm-ink, #f8fafc);
+}
+.dark .home-v2 .trend-tip {
+  background: var(--mcm-surface, #1e293b);
+  border-color: #1b2934;
+}
+.dark .home-v2 .trend-tip-v b {
+  color: var(--mcm-ink, #f8fafc);
+}
 .dark .home-v2 .comms-tab {
   background: var(--mcm-surface, #1e293b);
   border-color: #1b2934;
@@ -685,75 +699,123 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.home-v2 .day-split-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 18px 0;
+/* ── the inbound/outbound split ────────────────────────────────────────
+   Replaces the donut and the five-dot legend that sat beside it. One
+   divided bar, its two counts named on the line above it, and a plain
+   sentence when there is nothing to divide -- a state the donut could only
+   express as a grey ring. */
+.home-v2 .day-mix {
+  padding: 16px 0;
   border-top: 1px solid rgba(150, 100, 50, 0.1);
   border-bottom: 1px solid rgba(150, 100, 50, 0.1);
 }
-/* 3 items on top, 2 underneath -- equal-width (1fr) columns instead of
-   auto/content-sized ones, so a long "Missed calls today" can never push
-   the grid wider than the card (it wraps to a second line in its own
-   column instead), and every row stays aligned regardless of card width.
-   Capped at 400px so on a wide card the block stays compact next to the
-   donut instead of the 1fr columns stretching to the card's full width. */
-.home-v2 .day-split-legend {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 400px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: center;
-  column-gap: 14px;
-  row-gap: 8px;
-}
-.home-v2 .day-split-item {
+.home-v2 .day-mix-keys {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 11px;
+}
+.home-v2 .day-mix-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
   color: var(--ink-2, #3d4a63);
 }
-.home-v2 .day-split-item .dot {
+.home-v2 .day-mix-key i {
   width: 8px;
   height: 8px;
+  flex: none;
+  border-radius: 999px;
 }
-.home-v2 .day-bars {
+.home-v2 .day-mix-key b {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink, #0d1526);
+}
+.home-v2 .day-mix-bar {
+  display: flex;
+  align-items: stretch;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(150, 100, 50, 0.08);
+  overflow: hidden;
+}
+.home-v2 .day-mix-seg {
+  transition: width 0.4s ease;
+}
+.home-v2 .day-mix-none {
+  display: block;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: var(--ink-4, #93a0b8);
+}
+
+/* ── the three digest rows ─────────────────────────────────────────────
+   Label, proportional bar and figure on one line. The label column is
+   fixed so all three bars start at the same x and stay comparable; below
+   520px the bar drops to its own full-width line rather than being
+   squeezed to nothing between the label and the number. */
+.home-v2 .day-digest {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 18px;
+  gap: 11px;
+  margin-top: 16px;
 }
-/* Two columns, not three -- the label lives in the shared
-   `.day-split-legend` dot legend above now, so each row is just the bar
-   itself and its value. */
-.home-v2 .day-bar-row {
+.home-v2 .day-digest-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 142px) 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
-.home-v2 .day-bar-track {
+.home-v2 .day-digest-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--ink-2, #3d4a63);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .day-digest-label i {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 999px;
+}
+.home-v2 .day-digest-bar {
+  display: block;
   height: 6px;
   border-radius: 999px;
   background: rgba(150, 100, 50, 0.08);
+  overflow: hidden;
 }
-.home-v2 .day-bar-track span {
+.home-v2 .day-digest-bar span {
   display: block;
   height: 100%;
   border-radius: 999px;
   transition: width 0.4s ease;
 }
-.home-v2 .day-bar-value {
-  font-size: 12px;
-  font-weight: 700;
+.home-v2 .day-digest-num {
+  font-size: 13.5px;
+  font-weight: 800;
   color: var(--ink, #0d1526);
-  min-width: 16px;
+  min-width: 18px;
   text-align: right;
 }
+@media (max-width: 520px) {
+  .home-v2 .day-digest-row {
+    grid-template-columns: 1fr auto;
+    row-gap: 7px;
+  }
+  .home-v2 .day-digest-bar {
+    grid-column: 1 / -1;
+  }
+}
+
 .home-v2 .day-foot {
   display: flex;
   align-items: center;
@@ -907,67 +969,116 @@
 }
 
 /* ── Quick dial ────────────────────────────────────────────────────────
-   A contact-list row instead of a grid of little cards -- avatar, name +
-   live status on one line, a call affordance on the right, divided rows
-   instead of boxed ones. */
-.home-v2 .qd-list {
-  display: flex;
-  flex-direction: column;
+   Two-up tiles instead of one full-width row per person. Six rows at ~59px
+   spanned the whole card for a six-name list, and the name sat hard left
+   while its extension floated in the middle of the gap, so the two read as
+   unrelated columns. Name over extension, paired across, halves the height
+   and keeps each person's details together. */
+.home-v2 .qd-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
-.home-v2 .qd-row {
+@media (max-width: 560px) {
+  .home-v2 .qd-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.home-v2 .qd-tile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 12px 4px;
-  border: none;
-  border-bottom: 1px solid var(--line-2, #f0e4d3);
-  background: none;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line-2, #f0e4d3);
+  border-radius: 12px;
+  background: var(--surface, #fff);
   text-align: left;
-  transition: background-color 0.15s ease;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
-/* Corner radius on the row itself curved the divider line where it met the
-   rounded edge instead of drawing straight -- dropped, so the border
-   stays a flat line edge to edge. */
-.home-v2 .qd-row:hover {
+.home-v2 .qd-tile:hover {
+  border-color: rgba(242, 153, 74, 0.5);
   background: rgba(242, 153, 74, 0.07);
 }
-.home-v2 .qd-list .qd-row:last-child {
-  border-bottom: none;
+.home-v2 .qd-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
-.home-v2 .qd-row-name {
-  flex: none;
-  max-width: 40%;
-  font-size: 13px;
+.home-v2 .qd-tile-name {
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--ink, #0d1526);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.home-v2 .qd-row-meta {
-  flex: 1;
-  min-width: 0;
+.home-v2 .qd-tile-ext {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 11.5px;
+  gap: 5px;
+  font-size: 10.5px;
   color: var(--ink-4, #93a0b8);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.home-v2 .qd-row-call {
-  flex: none;
+/* the whole tile is the button, so the glyph is an affordance rather than
+   a second target -- it firms up on hover instead of inviting a click of
+   its own */
+.home-v2 .qd-tile-call {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
+  flex: none;
   border-radius: 999px;
   background: var(--accent-wash, #fff1e0);
   color: var(--accent-ink, #c96f1f);
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+.home-v2 .qd-tile:hover .qd-tile-call {
+  opacity: 1;
+}
+
+/* ── the trend chart's own tooltip ─────────────────────────────────────
+   Recharts' default renders the raw series key ("value : 0"), which names
+   the data structure rather than the fact. This reads as the hour and the
+   figure for that hour. */
+.home-v2 .trend-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 11px;
+  border: 1px solid rgba(225, 200, 165, 0.9);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  box-shadow: 0 6px 18px rgba(80, 50, 20, 0.1);
+}
+.home-v2 .trend-tip-h {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4, #93a0b8);
+}
+.home-v2 .trend-tip-v {
+  font-size: 12.5px;
+  color: var(--ink-2, #3d4a63);
+}
+.home-v2 .trend-tip-v b {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink, #0d1526);
+  margin-right: 4px;
 }
 
 /* ── Failed-feed banner ──────────────────────────────────────────────────

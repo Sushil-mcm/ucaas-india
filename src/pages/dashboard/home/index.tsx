@@ -33,7 +33,7 @@ import RecentCalls from './ops/recent-calls';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut } from './charts';
+import { LinearMeter, RadialGauge, SparkBars, SparkLine } from './charts';
 import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
@@ -996,89 +996,118 @@ const Home = () => {
                       </div>
                     </div>
 
-                    {/* Inbound/outbound as a split, not two more kv rows --
-                        and the "since you logged off" digest's own dot
-                        legend joins the same line, so every colour on the
-                        card is explained in one place instead of two. */}
-                    <div className="day-split-row">
-                      <StatusDonut
-                        data={(() => {
-                          const inbound = Number(myStats.incoming_calls) || 0;
-                          const outbound = Number(myStats.outgoing_calls) || 0;
-                          const total = inbound + outbound || 1;
-                          return [
-                            {
-                              state: 'Inbound',
-                              count: inbound,
-                              pct: Math.round((inbound / total) * 100),
-                            },
-                            {
-                              state: 'Outbound',
-                              count: outbound,
-                              pct: Math.round((outbound / total) * 100),
-                            },
-                          ];
-                        })()}
-                        colors={{ Inbound: '#93b4f5', Outbound: '#c4b5f7' }}
-                        size={88}
-                      />
-                      <div className="day-split-legend">
-                        <div className="day-split-item">
-                          <span className="dot" style={{ background: '#2563eb' }} />
-                          Inbound
-                        </div>
-                        <div className="day-split-item">
-                          <span className="dot" style={{ background: '#7c3aed' }} />
-                          Outbound
-                        </div>
-                        {[
-                          { label: 'Voicemails today', color: 'var(--accent)' },
-                          { label: 'Missed calls today', color: 'var(--crit, #d32f2f)' },
-                          { label: 'Callers still waiting', color: '#7c3aed' },
-                        ].map((row) => (
-                          <div className="day-split-item" key={row.label}>
-                            <span className="dot" style={{ background: row.color }} />
-                            {row.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    {/* Inbound vs outbound as one divided bar, not a donut.
 
+                        The donut was a 88px ring that renders as a flat grey
+                        circle whenever the agent has taken no calls, which is
+                        most of the day on this deployment -- a chart shaped
+                        like "no data" sitting in the middle of the card. The
+                        same two numbers as a single split bar stay legible at
+                        zero (an empty track and a line of text saying so) and
+                        give the counts back, which the donut never showed. */}
+                    {(() => {
+                      const inbound = Number(myStats.incoming_calls) || 0;
+                      const outbound = Number(myStats.outgoing_calls) || 0;
+                      const total = inbound + outbound;
+                      return (
+                        <div className="day-mix">
+                          <div className="day-mix-keys">
+                            <span className="day-mix-key">
+                              <i style={{ background: '#2563eb' }} />
+                              Inbound
+                              <b className="num">{inbound}</b>
+                            </span>
+                            <span className="day-mix-key">
+                              <i style={{ background: '#7c3aed' }} />
+                              Outbound
+                              <b className="num">{outbound}</b>
+                            </span>
+                          </div>
+                          <div
+                            className="day-mix-bar"
+                            role="img"
+                            aria-label={`${inbound} inbound, ${outbound} outbound`}
+                          >
+                            {total ? (
+                              <>
+                                <span
+                                  className="day-mix-seg"
+                                  style={{
+                                    width: `${(inbound / total) * 100}%`,
+                                    background: '#93b4f5',
+                                  }}
+                                />
+                                <span
+                                  className="day-mix-seg"
+                                  style={{
+                                    width: `${(outbound / total) * 100}%`,
+                                    background: '#c4b5f7',
+                                  }}
+                                />
+                              </>
+                            ) : null}
+                          </div>
+                          {total ? null : (
+                            <span className="day-mix-none">
+                              no calls on your extension yet today
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* The digest rows carry their own labels now.
+
+                        They used to be three bare tracks with a number on the
+                        right, and the only way to tell which row was which was
+                        to match its colour against a five-dot legend sitting
+                        above the donut -- two of whose dots belonged to the
+                        donut, not to these bars. Nobody reads a chart that
+                        way. Label, bar and figure now sit on one line, and the
+                        legend that explained them is gone because it has
+                        nothing left to explain.
+
+                        Bars are scaled against the largest of the three, so a
+                        single missed call no longer draws a full-width bar. */}
                     {(() => {
                       const digestRows = [
                         {
                           label: 'Voicemails today',
                           value: voicemails,
-                          color: 'var(--accent)',
+                          dotColor: 'var(--accent)',
                           barColor: '#f7c896',
                         },
                         {
                           label: 'Missed calls today',
                           value: missedRows.length,
-                          color: 'var(--crit, #d32f2f)',
+                          dotColor: 'var(--crit, #d32f2f)',
                           barColor: '#f0a8a5',
                         },
                         {
                           label: 'Callers still waiting',
                           value: waitingCalls.length,
-                          color: '#7c3aed',
+                          dotColor: '#7c3aed',
                           barColor: '#c4b5f7',
                         },
                       ];
                       const max = Math.max(voicemails, missedRows.length, waitingCalls.length, 1);
                       return (
-                        <div className="day-bars">
+                        <div className="day-digest">
                           {digestRows.map((row) => (
-                            <div className="day-bar-row" key={row.label}>
-                              <div className="day-bar-track">
+                            <div className="day-digest-row" key={row.label}>
+                              <span className="day-digest-label">
+                                <i style={{ background: row.dotColor }} />
+                                {row.label}
+                              </span>
+                              <span className="day-digest-bar">
                                 <span
                                   style={{
-                                    width: `${Math.max(3, (row.value / max) * 100)}%`,
+                                    width: `${row.value ? Math.max(4, (row.value / max) * 100) : 0}%`,
                                     background: row.barColor,
                                   }}
                                 />
-                              </div>
-                              <span className="day-bar-value num">{row.value}</span>
+                              </span>
+                              <span className="day-digest-num num">{row.value}</span>
                             </div>
                           ))}
                         </div>
@@ -1125,22 +1154,33 @@ const Home = () => {
                 <span className="src pc-right">{quickDial.length} on the roster</span>
               </div>
               <div className="pc-body">
+                {/* Two-up tiles rather than one full-width row each.
+
+                    Six people took six ~59px rows spanning the whole card,
+                    with the name pinned left and the extension floating in
+                    the middle of a wide gap -- a lot of panel for a very
+                    short list, and the name and the number it dials read as
+                    two unrelated columns. Stacking name over extension and
+                    pairing the tiles halves the height and puts each
+                    person's details together. Same roster, same click. */}
                 {quickDial.length ? (
-                  <div className="qd-list">
+                  <div className="qd-grid">
                     {quickDial.map((person) => (
                       <button
                         key={person.extension}
-                        className="qd-row"
+                        className="qd-tile"
                         title={`Call ${person.name} on ${person.extension}`}
                         onClick={() => dial(person.extension)}
                       >
-                        {nameAvatar(person.name, initials(person.name), 34)}
-                        <span className="qd-row-name">{person.name}</span>
-                        <span className="qd-row-meta">
-                          <i className={`tbl-dot ${person.online ? 'pos' : 'neu'}`} />
-                          Ext. {person.extension} · {person.online ? 'Available' : 'Offline'}
+                        {nameAvatar(person.name, initials(person.name), 30)}
+                        <span className="qd-tile-text">
+                          <span className="qd-tile-name">{person.name}</span>
+                          <span className="qd-tile-ext">
+                            <i className={`tbl-dot ${person.online ? 'pos' : 'neu'}`} />
+                            Ext. {person.extension} · {person.online ? 'Available' : 'Offline'}
+                          </span>
                         </span>
-                        <span className="qd-row-call">
+                        <span className="qd-tile-call">
                           <Ic n="phone" size={13} />
                         </span>
                       </button>
