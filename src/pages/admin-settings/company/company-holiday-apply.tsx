@@ -773,7 +773,10 @@ const CompanyHolidayApply = () => {
                 const allOn = groupLines.length > 0 && chosen === groupLines.length;
 
                 return (
-                  <div key={group.type} className="rounded-lg border border-[#EEE7DD]">
+                  {/* `overflow-hidden` so the band's square corners are clipped
+                      to this radius. Without it the fill of the first child
+                      spills past the rounded border at the top corners. */}
+                  <div key={group.type} className="overflow-hidden rounded-lg border border-[#EEE7DD]">
                     {/* The group band carries the warm tone at full strength;
                         at `#FBE2C8/45` it was too faint to separate a section
                         from the rows under it. */}
