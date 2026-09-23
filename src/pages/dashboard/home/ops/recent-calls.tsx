@@ -107,19 +107,31 @@ const RecentCalls = ({
     )
     .slice(0, 10);
 
+  /* Every class below is one Home's own stylesheet defines.
+     This panel was written against an `ops-*` vocabulary that only exists in
+     the console page's stylesheet, which Home does not import -- so all 99 of
+     those rules were missing and the whole panel rendered as raw text with no
+     card, no rows and no columns. Rather than import a dead page's theme, it
+     now uses the same panel chrome and pill tabs as every other section
+     here. */
   return (
-    <section className="ops-card ops-recent h3-rise" aria-label="Recent calls">
-      <div className="ops-card-head">
-        <div>
-          <h3>Recent calls</h3>
-          <p>Last 7 days{extension ? ` on ext ${extension}` : ''}</p>
-        </div>
-        <button type="button" className="ops-link" onClick={() => navigate('/reports/call-history')}>
-          Call history ›
+    <section className="panel-card" aria-label="Recent calls">
+      <div className="pc-head">
+        <h3>Recent calls</h3>
+        <span className="src">Last 7 days{extension ? ` on ext ${extension}` : ''}</span>
+        <button
+          type="button"
+          className="mini pc-right"
+          onClick={() => navigate('/reports/call-history')}
+        >
+          <Ic n="list" size={12} />
+          Call history
         </button>
       </div>
 
-      <div className="ops-tabs" role="tablist" aria-label="Filter calls">
+      {/* the same pill tabs as Communication overview, so the two filter
+          strips on this page do not read as two different controls */}
+      <div className="comms-tabs" role="tablist" aria-label="Filter calls">
         {(
           [
             ['all', 'All'],
@@ -133,60 +145,84 @@ const RecentCalls = ({
             type="button"
             role="tab"
             aria-selected={filter === key}
-            className={filter === key ? 'is-on' : ''}
+            className={`comms-tab${filter === key ? ' is-active' : ''}`}
+            style={filter === key ? ({ '--tab-color': 'var(--accent)' } as any) : undefined}
             onClick={() => setFilter(key)}
           >
             {label}
-            <span className="ops-mono">{counts[key]}</span>
+            <span className="rc-count num">{counts[key]}</span>
           </button>
         ))}
       </div>
 
-      {isPending ? (
-        <p className="ops-empty">Loading calls…</p>
-      ) : isError ? (
-        <p className="ops-empty">Recent calls could not load.</p>
-      ) : !visible.length ? (
-        <p className="ops-empty">
-          {items.length ? 'No calls match this filter.' : 'No calls in the last 7 days.'}
-        </p>
-      ) : (
-        <div className="ops-calls">
-          {visible.map(({ row, kind, number, name }) => {
-            const meta = KIND_META[kind];
-            return (
-              <div key={`${row.id}-${row.start_stamp}`} className="ops-call">
-                <span className={`ops-dir ${meta.tone}`} aria-hidden="true">
-                  <Ic n={meta.icon} size={14} />
-                </span>
-                <span className="ops-call-id">
-                  <span className="t" title={name}>
-                    {name}
+      <div className="pc-body">
+        {isPending ? (
+          <div className="empty comms-empty">
+            <Ic n="clock" />
+            <p>Loading the last seven days of calls…</p>
+          </div>
+        ) : isError ? (
+          <div className="empty comms-empty">
+            <Ic n="phone" />
+            <p>Recent calls could not load, so this list is showing nothing rather than a partial history.</p>
+          </div>
+        ) : !visible.length ? (
+          <div className="empty comms-empty">
+            <Ic n="phone" />
+            <p>
+              {items.length
+                ? 'No calls match this filter. The counts on the tabs above show where the calls are.'
+                : 'No calls on this extension in the last seven days.'}
+            </p>
+          </div>
+        ) : (
+          <div className="rc-list">
+            {visible.map(({ row, kind, number, name }) => {
+              const meta = KIND_META[kind];
+              return (
+                <div key={`${row.id}-${row.start_stamp}`} className="rc-row">
+                  <span className={`rc-dir is-${meta.tone}`} aria-hidden="true">
+                    <Ic n={meta.icon} size={13} />
                   </span>
-                  <span className="d">{row.start_stamp ? dayTimeText(row.start_stamp, timeZone) : '—'}</span>
-                </span>
-                <span className="ops-mono ops-call-num" title={number}>
-                  {number || '—'}
-                </span>
-                <span className={`ops-type ${meta.tone}`}>{meta.chip}</span>
-                <span className="ops-mono ops-call-dur">
-                  {row.billsec && row.billsec !== '00:00:00' ? row.billsec.replace(/^00:/, '') : '—'}
-                </span>
-                <button
-                  type="button"
-                  className="ops-callbtn"
-                  disabled={!number || !isRegistered}
-                  aria-label={number ? `Call ${name}` : 'No number to call'}
-                  title={!number ? 'No number to call back' : !isRegistered ? "Your phone isn't connected yet" : `Call ${number}`}
-                  onClick={() => number && isRegistered && dial(number)}
-                >
-                  <Ic n="phone" size={14} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  <span className="rc-id">
+                    <span className="rc-name" title={name}>
+                      {name}
+                    </span>
+                    <span className="rc-when">
+                      {row.start_stamp ? dayTimeText(row.start_stamp, timeZone) : '—'}
+                    </span>
+                  </span>
+                  <span className="rc-num num" title={number}>
+                    {number || '—'}
+                  </span>
+                  <span className={`rc-kind is-${meta.tone}`}>{meta.chip}</span>
+                  <span className="rc-dur num">
+                    {row.billsec && row.billsec !== '00:00:00'
+                      ? row.billsec.replace(/^00:/, '')
+                      : '—'}
+                  </span>
+                  <button
+                    type="button"
+                    className="rc-call"
+                    disabled={!number || !isRegistered}
+                    aria-label={number ? `Call ${name}` : 'No number to call'}
+                    title={
+                      !number
+                        ? 'No number to call back'
+                        : !isRegistered
+                          ? "Your phone isn't connected yet"
+                          : `Call ${number}`
+                    }
+                    onClick={() => number && isRegistered && dial(number)}
+                  >
+                    <Ic n="phone" size={13} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 };
