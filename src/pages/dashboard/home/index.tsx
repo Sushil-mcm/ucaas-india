@@ -1527,7 +1527,7 @@ const Home = () => {
                   <th>Agent</th>
                   <th>Queue</th>
                   <th>State</th>
-                  <th>Time in state</th>
+                  <th>In state</th>
                   <th>Handled</th>
                   <th>AHT</th>
                 </tr>
