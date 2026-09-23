@@ -7677,7 +7677,11 @@
     gap: 10px;
   }
   .mcm-page .mcm-notif-head {
-    align-items: end;
+    /* `start`, not `end`: each header is a label over a description of its
+       own length, so bottom-aligning them lined up the descriptions and left
+       the labels themselves at four different heights. The labels are the
+       part being read across. */
+    align-items: start;
     padding: 12px 14px 10px;
     border-bottom: 1px solid var(--line);
     background: var(--surface-2);
@@ -7702,12 +7706,15 @@
     border-color: transparent;
     background: transparent;
   }
-  /* Declared after the hover rule and at equal specificity, so a
-     channel that is on keeps its edge while the pointer is over it
-     instead of flickering off. */
+  /* Nothing here either. Up here the cell is invisible padding around a
+     switch, and the switch already shows whether the channel is on — so
+     filling it drew a bordered box around some switches and not others,
+     which across twelve cells reads as a patchwork rather than a grid.
+     The narrow layout keeps its fill: there the cell IS the row, and the
+     tint is what marks it. */
   .mcm-page .mcm-notif-cell.is-on {
-    border-color: var(--accent-edge);
-    background: var(--accent-wash);
+    border-color: transparent;
+    background: transparent;
   }
   .mcm-page .mcm-notif-cell.is-na,
   .mcm-page .mcm-notif-cell.is-na:hover {
