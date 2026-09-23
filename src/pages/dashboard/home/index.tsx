@@ -724,6 +724,17 @@ const Home = () => {
           {kpis.map((kpi) => {
             const trend = getTrend(kpi.key);
             const trendGood = trend ? trend.direction === kpi.goodDirection : true;
+            /* use-kpi-history samples once a minute and starts empty on every
+               page load, so for the first minutes after a reload there is no
+               series to draw. The chart band is only worth its height once it
+               has something in it — an empty 52px strip under the number reads
+               as a broken tile, not as a chart waiting for data. The meter is
+               exempt: it plots a live value against a target, not history. */
+            const series = getHistory(kpi.key);
+            const showChart =
+              kpi.chartType === 'meter'
+                ? Boolean(kpi.meter)
+                : (kpi.chartType === 'bar' || kpi.chartType === 'line') && series.length > 1;
             return (
               // A breaching figure tints the whole tile, not just the number —
               // the artifact's `alert` treatment, so it reads at a glance.
@@ -769,20 +780,18 @@ const Home = () => {
                     </div>
                   ) : null}
                 </div>
-                {kpi.chartType === 'bar' ||
-                kpi.chartType === 'line' ||
-                kpi.chartType === 'meter' ? (
+                {showChart ? (
                   <div className="kpi-chart">
                     {kpi.chartType === 'bar' ? (
                       <SparkBars
-                        data={getHistory(kpi.key)}
+                        data={series}
                         color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                         height={52}
                       />
                     ) : null}
                     {kpi.chartType === 'line' ? (
                       <SparkLine
-                        data={getHistory(kpi.key)}
+                        data={series}
                         color={KPI_CHART_COLOR[kpi.color] || kpi.color}
                         height={52}
                       />
