@@ -448,14 +448,18 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage text="Error Occurred 😔" />,
     children: [
       {
+        /* Home is the redesigned console. The previous Home is still built and
+           routed at /dashboard/classic — it is the fallback if anything on the
+           new page turns out to be wrong for a real shift, and it costs one
+           lazy chunk nobody loads. Swap the two elements to revert. */
         path: 'dashboard',
-        element: <Dashboard />,
+        element: <Console />,
         id: 'Dashboard',
       },
       {
-        path: 'console',
-        element: <Console />,
-        id: 'Console',
+        path: 'dashboard/classic',
+        element: <Dashboard />,
+        id: 'DashboardClassic',
       },
       {
         /* Same as Directory: a segment per page instead of one address with a
