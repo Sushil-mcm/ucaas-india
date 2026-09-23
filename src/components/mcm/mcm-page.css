@@ -5000,10 +5000,12 @@
   background: #ffffff;
 }
 
-/* A select that keeps its edge instead of the offset admin focus ring, for the
-   same reason the other fields do: it already has a border to light. */
-.mcm-admin .mcm-plain-select:focus,
-.mcm-admin .mcm-plain-select:focus-visible {
+/* A field that keeps its own edge instead of the offset admin focus ring: it
+   already has a border, so the ring drew a second one outside it. One class
+   for inputs, selects and textareas alike — this replaces the per-screen
+   classes that each did the same thing. */
+.mcm-admin .mcm-plain-field:focus,
+.mcm-admin .mcm-plain-field:focus-visible {
   outline: none !important;
   border-color: var(--accent) !important;
 }
@@ -5017,16 +5019,6 @@
 }
 .dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-solid-card {
   background: var(--card);
-}
-
-/* Messaging's reply field already draws its own edge, so the shared admin
-   focus outline added a second ring outside it. The field's own
-   `focus-visible:outline-0` cannot win — that rule selects on the element,
-   which outranks a utility class — so the override lives here. */
-.mcm-admin textarea.mcm-msg-field:focus,
-.mcm-admin textarea.mcm-msg-field:focus-visible {
-  outline: none !important;
-  border-color: var(--accent);
 }
 
 /* ---- dialogs ---- */

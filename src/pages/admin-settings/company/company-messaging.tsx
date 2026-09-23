@@ -466,8 +466,8 @@ const CompanyMessaging = () => {
               <textarea
                 /* The field's own `focus-visible:outline-0` loses to the shared
                    admin rule, whose element selector outranks a utility class;
-                   `mcm-msg-field` carries an override that can win. */
-                className="mcm-msg-field w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] p-3 text-sm leading-6 text-[#2E2D35] shadow-none placeholder:text-gray-400 focus:ring-0 focus-visible:shadow-none focus-visible:outline-0"
+                   `mcm-plain-field` carries an override that can win. */
+                className="mcm-plain-field w-full resize-none rounded-xl border border-[rgba(225,200,165,0.9)] p-3 text-sm leading-6 text-[#2E2D35] shadow-none placeholder:text-gray-400 focus:ring-0 focus-visible:shadow-none focus-visible:outline-0"
                 rows={4}
                 value={form.help_message}
                 placeholder={HELP_MESSAGE_TEMPLATE}

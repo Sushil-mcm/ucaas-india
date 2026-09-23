@@ -713,7 +713,7 @@ const CompanyPolicies = () => {
                     updateForm({ recording_announcement_text: event.target.value })
                   }
                   placeholder="This call may be recorded or transcribed by us, or by a third party acting on our behalf."
-                  className="w-full rounded-lg border border-[rgba(225,200,165,0.9)] p-2 text-sm text-[#2E2D35] focus:border-primary focus:outline-none"
+                  className="mcm-plain-field w-full rounded-lg border border-[rgba(225,200,165,0.9)] p-2 text-sm text-[#2E2D35] focus:border-primary focus:outline-none"
                 />
 
                 {form.recording_announcement_text.trim() && (

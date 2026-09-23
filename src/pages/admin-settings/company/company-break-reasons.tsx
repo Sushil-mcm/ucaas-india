@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Coffee } from 'lucide-react';
+import { ChevronDown, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Loader from '@/components/custom/loader';
@@ -89,7 +89,7 @@ const CompanyBreakReasons = () => {
         description="What a person can be doing when not on a call: Lunch and Break are built in and picked on the chip; codes with 'Agent may pick' off (training, meetings, time off) are placed by a schedule instead. The category decides paid, work and shrinkage defaults. Lunch and Break are built in. The minutes are an allowance, not a cut-off: past it the agent's clock turns amber and supervisors see how far over they are. One list for the whole company."
       />
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="grid grid-cols-[1fr_150px_120px_120px_70px_70px_90px_80px] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
+        <div className="grid grid-cols-[1fr_150px_120px_120px_70px_70px_90px_80px] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-gray-500 bg-[#FDF9F4] border-b border-gray-200">
           <span>Code</span>
           <span>Category</span>
           <span>Allowance (min)</span>
@@ -125,19 +125,25 @@ const CompanyBreakReasons = () => {
                 </span>
               ) : null}
             </div>
-            <select
-              className="h-9 rounded-md border bg-background px-2 text-sm"
-              value={r.category}
-              aria-label={`Category of ${r.name}`}
-              onChange={(e) => {
-                const c = categoryOf(e.target.value);
-                update(r.id, { category: c.key, paid: c.paid, counts_as_work: c.work, shrinkage: c.shrinkage });
-              }}
-            >
-              {ACTIVITY_CATEGORIES.map((c) => (
-                <option key={c.key} value={c.key}>{c.label}</option>
-              ))}
-            </select>
+            {/* `appearance-none` and an overlaid chevron, so the icon sits
+                where we put it rather than wherever the platform draws its own
+                and every row's arrow lines up. */}
+            <div className="relative">
+              <select
+                className="mcm-solid-card mcm-plain-field h-9 w-full appearance-none rounded-md border border-gray-200 bg-white pl-3 pr-8 text-sm outline-none cursor-pointer"
+                value={r.category}
+                aria-label={`Category of ${r.name}`}
+                onChange={(e) => {
+                  const c = categoryOf(e.target.value);
+                  update(r.id, { category: c.key, paid: c.paid, counts_as_work: c.work, shrinkage: c.shrinkage });
+                }}
+              >
+                {ACTIVITY_CATEGORIES.map((c) => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+            </div>
             <Input
               type="number"
               min={LIMIT_RANGE.min}
@@ -196,7 +202,7 @@ const CompanyBreakReasons = () => {
             </div>
           </div>
         ))}
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="flex items-center gap-2 px-4 py-3 bg-[#FDF9F4] border-t border-gray-200">
           <div className="w-72">
             <Input
               type="text"

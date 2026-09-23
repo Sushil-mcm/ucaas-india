@@ -48,10 +48,10 @@ import { BackButton } from './section-actions';
  * two older sources; the note at the top says which it has. */
 
 /* The filter row: `appearance-none` so the chevron sits where we put it rather
-   than wherever the platform draws its own, and `mcm-plain-select` to trade the
+   than wherever the platform draws its own, and `mcm-plain-field` to trade the
    admin focus ring for the border it already has. */
 const FILTER_SELECT =
-  'mcm-solid-card mcm-plain-select h-9 appearance-none rounded-md border border-gray-200 bg-white pl-3 pr-8 text-sm outline-none cursor-pointer';
+  'mcm-solid-card mcm-plain-field h-9 appearance-none rounded-md border border-gray-200 bg-white pl-3 pr-8 text-sm outline-none cursor-pointer';
 const FILTER_CHEVRON =
   'pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400';
 
