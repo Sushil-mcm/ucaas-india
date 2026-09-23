@@ -184,16 +184,24 @@ const RecentCalls = ({
                   <span className={`rc-dir is-${meta.tone}`} aria-hidden="true">
                     <Ic n={meta.icon} size={13} />
                   </span>
+                  {/* `name` falls back to the number when the log has no
+                      contact_name, which is most rows here -- so a separate
+                      number column printed the same digits twice with a wide
+                      gap between them. The number joins the meta line only
+                      when it says something the headline does not. */}
                   <span className="rc-id">
                     <span className="rc-name" title={name}>
                       {name}
                     </span>
                     <span className="rc-when">
                       {row.start_stamp ? dayTimeText(row.start_stamp, timeZone) : '—'}
+                      {number && number !== name ? (
+                        <>
+                          <i className="rc-sep" />
+                          <span className="num">{number}</span>
+                        </>
+                      ) : null}
                     </span>
-                  </span>
-                  <span className="rc-num num" title={number}>
-                    {number || '—'}
                   </span>
                   <span className={`rc-kind is-${meta.tone}`}>{meta.chip}</span>
                   <span className="rc-dur num">
