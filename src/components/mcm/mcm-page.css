@@ -3240,19 +3240,8 @@
   border-color: var(--accent) !important;
 }
 
-/* Both fields already fill with #fff. What made them read cream was the edge:
-   the console rule further up swaps the `border-gray-200` their markup asks
-   for to the warm `--line` (#eee7dd), and at this size a warm edge tints the
-   whole control. A neutral edge lets the white fill read as white. Dark mode
-   keeps the shared border token, where a light grey would be wrong. */
-.mcm-admin .mcm-widget-search,
-.mcm-admin .mcm-widget-filter {
-  border-color: var(--color-gray-200);
-}
-.dark .mcm-admin .mcm-widget-search,
-.dark .mcm-admin .mcm-widget-filter {
-  border-color: var(--border);
-}
+/* The fill for these two lives beside the glass-card rule that was tinting
+   them — see `.mcm-widget-search` further down this file. */
 
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
@@ -4922,6 +4911,25 @@
    not sit on top of the glass. */
 .mcm-page [class*='rounded-']:not([class*='rounded-full']).bg-white .divide-gray-200 > * + * {
   border-color: var(--glass-line);
+}
+
+/* A form control is not a card. Widgets' search field and type filter are
+   `rounded-lg` + `bg-white`, so the glass rule above caught them and filled
+   them with translucent warm cream (`--glass-surface`, 85% over a cream
+   page) — which is why they read cream however white the utility said.
+
+   Same specificity as that rule, placed after it so order decides; anything
+   weaker simply loses. Dark mode is spelled out too, since the glass rule
+   keys on the `bg-white` class and matches there as well. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-search,
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-filter {
+  background: #ffffff;
+  border-color: var(--color-gray-200);
+}
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-search,
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-filter {
+  background: var(--muted);
+  border-color: var(--border);
 }
 
 /* ---- dialogs ---- */
