@@ -7532,9 +7532,13 @@
 .mcm-page .mcm-notif-row + .mcm-notif-row {
   border-top: 1px solid var(--line-2);
 }
-.mcm-page .mcm-notif-row:hover {
-  background: var(--surface-2);
-}
+/* No hover tint. The row is not a control — the switches in it are — so
+   lighting the whole row as the pointer passed marked a thing that cannot be
+   clicked, and on a three-row grid it read as a selected row.
+
+   `:focus-within` stays, and is not the same thing: it fires when a switch in
+   the row takes keyboard focus, which is the only way a keyboard user can see
+   which row they have arrived at. */
 .mcm-page .mcm-notif-row:focus-within {
   background: var(--surface-2);
 }
