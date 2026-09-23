@@ -94,15 +94,21 @@ const CompanyBreakReasons = () => {
           <span>Category</span>
           <span>Allowance (min)</span>
           <span>Max per day</span>
-          <span>Paid</span>
-          <span>Work</span>
-          <span>Agent may pick</span>
+          {/* Centred to sit over their checkboxes, which are ~16px in a 70-90px
+              column — left-aligned headings pointed at empty space. */}
+          <span className="text-center">Paid</span>
+          <span className="text-center">Work</span>
+          <span className="text-center">Agent may pick</span>
           <span />
         </div>
         {reasons.map((r) => (
           <div
             key={r.id}
-            className="grid grid-cols-[1fr_150px_120px_120px_70px_70px_90px_80px] gap-3 items-center px-4 py-2 border-b last:border-b-0 border-gray-100"
+            /* The rows carry their own white: the card around them is rounded
+               and `bg-white`, which the glass rule tints, and a transparent row
+               simply showed that tint through. Rows are not rounded, so the
+               rule does not reach them. */
+            className="grid grid-cols-[1fr_150px_120px_120px_70px_70px_90px_80px] gap-3 items-center bg-white px-4 py-2 border-b last:border-b-0 border-gray-100"
           >
             <div className="flex items-center gap-2">
               <Input
@@ -111,8 +117,10 @@ const CompanyBreakReasons = () => {
                 maxLength={50}
                 onChange={(e) => update(r.id, { name: e.target.value })}
               />
+              {/* The badge had no fill of its own and no vertical padding, so
+                  it took the card's tint and sat as a squashed outline. */}
               {r.built_in ? (
-                <span className="text-[10px] uppercase tracking-wide text-gray-500 border border-gray-200 rounded-full px-1.5 whitespace-nowrap">
+                <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] uppercase leading-none tracking-wide text-gray-500">
                   built in
                 </span>
               ) : null}
@@ -162,9 +170,15 @@ const CompanyBreakReasons = () => {
                 });
               }}
             />
-            <input type="checkbox" aria-label={`${r.name} is paid`} checked={r.paid} onChange={(e) => update(r.id, { paid: e.target.checked })} />
-            <input type="checkbox" aria-label={`${r.name} counts as work`} checked={r.counts_as_work} onChange={(e) => update(r.id, { counts_as_work: e.target.checked })} />
-            <input type="checkbox" aria-label={`Agents may pick ${r.name}`} checked={r.agent_may_pick} onChange={(e) => update(r.id, { agent_may_pick: e.target.checked })} />
+            <div className="flex justify-center">
+              <input type="checkbox" aria-label={`${r.name} is paid`} checked={r.paid} onChange={(e) => update(r.id, { paid: e.target.checked })} />
+            </div>
+            <div className="flex justify-center">
+              <input type="checkbox" aria-label={`${r.name} counts as work`} checked={r.counts_as_work} onChange={(e) => update(r.id, { counts_as_work: e.target.checked })} />
+            </div>
+            <div className="flex justify-center">
+              <input type="checkbox" aria-label={`Agents may pick ${r.name}`} checked={r.agent_may_pick} onChange={(e) => update(r.id, { agent_may_pick: e.target.checked })} />
+            </div>
             <div className="flex justify-end">
               {r.built_in ? (
                 <span className="text-[11px] text-gray-400" title="Built in: it can be renamed, not removed.">
