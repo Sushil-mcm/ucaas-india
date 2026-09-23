@@ -513,6 +513,16 @@
      freely is what actually gets rid of the gap instead of shrinking it. */
   flex: 1 1 520px;
   min-width: 420px;
+  /* Rounded, so the dialler reads as its own pane rather than a cream block
+     butting square against the header and the columns either side. It
+     already clips (`.col` sets overflow: hidden), so the curve cuts its
+     contents cleanly.
+
+     No margin with it: the comments above record a long fight to get rid of
+     a visible gap between these columns, and insetting this one would put
+     that gap straight back. The corners simply round in place, which leaves
+     four small notches at the seams and nothing else. */
+  border-radius: 16px;
 }
 .mcm-console .col.panel-col {
   /* Wide enough that all six tabs (Copilot, Summary, Transcript, Notes,
