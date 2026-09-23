@@ -7532,16 +7532,15 @@
 .mcm-page .mcm-notif-row + .mcm-notif-row {
   border-top: 1px solid var(--line-2);
 }
-/* No hover tint. The row is not a control — the switches in it are — so
-   lighting the whole row as the pointer passed marked a thing that cannot be
-   clicked, and on a three-row grid it read as a selected row.
+/* Neither hover nor focus tints the row. It is not a control — the switches
+   in it are — so filling it marked something that cannot be clicked, and on a
+   three-row grid a filled row reads as the selected one.
 
-   `:focus-within` stays, and is not the same thing: it fires when a switch in
-   the row takes keyboard focus, which is the only way a keyboard user can see
-   which row they have arrived at. */
-.mcm-page .mcm-notif-row:focus-within {
-  background: var(--surface-2);
-}
+   `:focus-within` went with the hover rule because it could not tell a click
+   from a keystroke: clicking a switch focuses it, so every toggle left the row
+   shaded until you clicked elsewhere. Keyboard users lose nothing — the switch
+   itself carries a `:focus-visible` outline further down this file, and that
+   one does distinguish the two. */
 
 /* The event itself: icon tile, name, one line of plain English. */
 .mcm-page .mcm-notif-ev {
@@ -8239,7 +8238,10 @@
 /* Keyboard parity. Everything above answers "am I pointing at this";
    this answers the same question for somebody who never touches a
    mouse, and it is the one state the pass had missing. */
-.mcm-acct .mcm-notif-cell:focus-within,
+/* `.mcm-notif-cell` is deliberately absent: on a wide screen that cell is
+   invisible padding around a switch, so bordering it on focus drew a box out
+   of nowhere the moment anyone clicked a toggle — and the switch's own
+   focus-visible outline already answers this for the keyboard. */
 .mcm-acct .mcm-lineband-item:focus-within,
 .mcm-acct .mcm-seccard:focus-within,
 .mcm-acct .mcm-device:focus-within {
