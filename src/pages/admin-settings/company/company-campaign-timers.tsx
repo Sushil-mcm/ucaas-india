@@ -184,7 +184,7 @@ const CompanyCampaignTimers = () => {
         <Button
           type="button"
           variant="primary"
-          className="min-h-9"
+          size="sm"
           disabled={!dirty || hasError || isPending}
           onClick={() => save()}
         >

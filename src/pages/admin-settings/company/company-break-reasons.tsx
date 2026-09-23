@@ -227,7 +227,7 @@ const CompanyBreakReasons = () => {
         <Button
           type="button"
           variant="primary"
-          className="min-h-9"
+          size="sm"
           disabled={!dirty || isPending}
           onClick={() => save()}
         >

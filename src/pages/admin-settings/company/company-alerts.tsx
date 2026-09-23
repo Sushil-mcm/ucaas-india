@@ -504,7 +504,7 @@ const CompanyAlerts = () => {
 
       {isAdmin && !serverMissing ? (
         <SectionActions>
-          <Button type="button" variant="primary" className="min-h-9" disabled={!dirty || isPending || !!editing} onClick={() => save(rules)}>
+          <Button type="button" variant="primary" size="sm" disabled={!dirty || isPending || !!editing} onClick={() => save(rules)}>
             {isPending ? 'Saving…' : 'Save'}
           </Button>
         </SectionActions>
