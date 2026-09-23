@@ -1810,3 +1810,51 @@
      yields to the figure rather than the other way round */
   overflow: visible;
 }
+
+/* ── the chart lane ───────────────────────────────────────────────────────
+   Every card gets a graphic in the same lane and at the same height —
+   sparkline, meter or ring — so the four read as one instrument row rather
+   than two cards with pictures and two without.
+
+   Height is fixed so the caption below stays level across the row whether
+   the lane holds a chart or the collecting notice. */
+.home-v2 .rail-chart {
+  height: 40px;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+.home-v2 .rail-chart > div {
+  width: 100%;
+}
+
+/* the honest empty state: a baseline and a word, occupying exactly the
+   space the chart will, so the card does not change shape when data
+   arrives a minute later */
+.home-v2 .rail-chart-wait {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 10px;
+  color: var(--ink-4, #93a0b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .rail-chart-wait i {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--line-strong, #ded4c6) 0 4px,
+    transparent 4px 9px
+  );
+}
+
+/* the meter takes the same lane height so its caption lines up with the
+   sparkline cards' captions */
+.home-v2 .rail-cell .kpi-linear-meter {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}

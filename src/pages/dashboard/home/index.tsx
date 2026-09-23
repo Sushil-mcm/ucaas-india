@@ -33,7 +33,7 @@ import RecentCalls from './ops/recent-calls';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { LinearMeter, RadialGauge, SparkBars, StatusDonut } from './charts';
+import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut } from './charts';
 import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
@@ -800,10 +800,43 @@ const Home = () => {
                     </span>
                   ) : null}
                 </div>
+                {/* Every card carries a graphic, including at zero. A count
+                    of 0 across a quiet hour is a real shape — a flat line at
+                    the floor — and drawing it is more honest than an empty
+                    card, which reads as broken rather than calm.
+
+                    use-kpi-history samples once a minute and starts empty on
+                    every page load, so a freshly opened tab has nothing to
+                    plot yet. That case says so in the chart's own lane
+                    instead of collapsing the card to a different shape than
+                    its neighbours. */}
+                {kpi.chartType === 'bar' || kpi.chartType === 'line' ? (
+                  <div className="rail-chart">
+                    {getHistory(kpi.key).length > 1 ? (
+                      kpi.chartType === 'bar' ? (
+                        <SparkBars
+                          data={getHistory(kpi.key)}
+                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                          height={40}
+                        />
+                      ) : (
+                        <SparkLine
+                          data={getHistory(kpi.key)}
+                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                          height={40}
+                        />
+                      )
+                    ) : (
+                      <span className="rail-chart-wait">
+                        <i />
+                        collecting — one reading a minute
+                      </span>
+                    )}
+                  </div>
+                ) : null}
                 {/* Service level is the one figure with a target, so it keeps
                     its meter — the number alone does not say how far from the
-                    goal it sits. The other three are counts and a clock, with
-                    nothing to plot them against. */}
+                    goal it sits. */}
                 {kpi.chartType === 'meter' && kpi.meter ? (
                   <LinearMeter
                     value={kpi.meter.value}
