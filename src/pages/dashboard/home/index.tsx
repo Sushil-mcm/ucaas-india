@@ -25,6 +25,16 @@ const HOME_COUNTER_REFRESH_MS = 30000;
    sees, and the header says "10 of 14" so the cap never reads as the whole
    roster. Same already-fetched agent rows; nothing new is requested. */
 const QUICK_DIAL_MAX = 10;
+
+/* How many agents Home lists. The card's height was already capped, so a big
+   roster never made it taller -- it made it a hundred rows behind a tiny
+   scrollbar thumb, which is worse: you scroll blind looking for someone.
+
+   Seven, and no scrolling at all, at any roster size. agentsByActivity is
+   already ordered on-call first, then online, then most calls handled, so the
+   seven shown are the seven a dashboard is for; the idle remainder is what
+   "All agents" is for. The header says how many are being held back. */
+const AGENTS_SHOWN = 7;
 import { serviceLevelBand } from '@/lib/queue-series';
 import { useAnimatedNumber } from '@/pages/performance/use-animated-number';
 import { formatSecsToClock } from '@/pages/performance/format';
@@ -1511,6 +1521,11 @@ const Home = () => {
         <div className="panel-card roomy-rows">
           <div className="pc-head">
             <h3>Agents</h3>
+            <span className="src pc-right">
+              {agentsByActivity.length > AGENTS_SHOWN
+                ? `${AGENTS_SHOWN} of ${agentsByActivity.length}`
+                : `${agentsByActivity.length} on the roster`}
+            </span>
             <button
               type="button"
               className="btn sm ghost"
@@ -1534,7 +1549,7 @@ const Home = () => {
               </thead>
               <tbody>
                 {agentsByActivity.length ? (
-                  agentsByActivity.map((agent) => (
+                  agentsByActivity.slice(0, AGENTS_SHOWN).map((agent) => (
                     <tr key={agent.extension || agent.name}>
                       <td>
                         <span className="tbl-row-name">

@@ -2728,18 +2728,11 @@
   flex: none;
 }
 
-/* Shorter. The shared rule lets a table in this grid run to 500px before it
-   scrolls, which on a fifteen-person roster made Agents 560px — the tallest
-   card on Home, for the panel that says the least. Home is a summary and
-   "All agents" is right there in its header for the full roster.
+/* No height cap here any more -- the list is capped at AGENTS_SHOWN rows
+   instead, so the table cannot outgrow its box in the first place. One
+   mechanism rather than two: a cap on the height only hid the overflow
+   behind a scrollbar, and on a hundred-agent roster that meant scrolling
+   blind through a 296px window. The shared 500px rule still stands behind
+   this as a safety net if the row cap is ever raised.
 
-   About seven rows, cut mid-row on purpose: a row sliced by the bottom edge
-   is what tells you there is more below, where a clean cut just looks like
-   the end of the list.
-
-   Specificity has to beat `.mcm-page .grid2 .panel-card > .tbl-wrap` (0,4,0),
-   so this is (0,5,0) rather than a shorter selector that would silently
-   lose — the trap that has come up repeatedly on this page. */
-.mcm-page.home-v2 .grid2 .panel-card > .agents-tbl {
-  max-height: 296px;
-}
+   The sticky header stays for that same reason. */
