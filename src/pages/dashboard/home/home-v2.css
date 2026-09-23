@@ -1585,68 +1585,58 @@
   background: linear-gradient(90deg, var(--line-strong, #ded4c6), transparent);
 }
 
-/* ── hero: a dark anchor ──────────────────────────────────────────────────
-   The page opened with five white cards on cream and nothing leading. The
-   greeting becomes a dark surface so there is one thing the eye lands on,
-   and the pinned brand orange finally does some work as a light on dark
-   rather than a tint on white. */
+/* ── hero ─────────────────────────────────────────────────────────────────
+   A dark version of this was tried and rejected — too heavy for a product
+   that is otherwise warm and light. This keeps the page light while giving
+   the opener presence a plain white card never had: the brand's own orange
+   as a soft wash across the block, a crisp accent edge, and type with
+   enough scale to lead. Light, but not blank. */
 .mcm-page.home-v2 .hero {
   position: relative;
   overflow: hidden;
-  padding: 30px 32px 28px;
-  border: 0;
-  border-radius: 22px;
+  padding: 28px 30px 26px;
+  border: 1px solid rgba(238, 205, 165, 0.9);
+  border-radius: 20px;
   background:
-    radial-gradient(760px 300px at 0% -20%, rgba(242, 153, 74, 0.35), rgba(242, 153, 74, 0) 62%),
-    radial-gradient(560px 280px at 100% 120%, rgba(13, 148, 136, 0.22), rgba(13, 148, 136, 0) 65%),
-    linear-gradient(145deg, #2b2019 0%, #1d1512 55%, #241a14 100%);
-  box-shadow: 0 2px 4px rgba(45, 28, 12, 0.14), 0 22px 44px -24px rgba(45, 28, 12, 0.7);
+    radial-gradient(720px 280px at 0% -25%, rgba(242, 153, 74, 0.2), rgba(242, 153, 74, 0) 62%),
+    radial-gradient(520px 240px at 100% 118%, rgba(13, 148, 136, 0.1), rgba(13, 148, 136, 0) 66%),
+    linear-gradient(160deg, #fff6ec 0%, #fffdfb 58%);
+  box-shadow: 0 1px 2px rgba(160, 95, 30, 0.05), 0 16px 34px -22px rgba(160, 95, 30, 0.4);
 }
+/* the accent edge carries the brand without tinting the whole surface */
 .mcm-page.home-v2 .hero::before {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(247, 200, 154, 0.75), rgba(247, 200, 154, 0.1) 55%, transparent);
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent, #f2994a), #f8c795 45%, transparent 85%);
 }
 .mcm-page.home-v2 .hero h1 {
-  font-size: 34px;
-  letter-spacing: -0.05em;
+  font-size: 33px;
+  letter-spacing: -0.048em;
   line-height: 1.05;
-  color: #fdf6ef;
+  color: var(--ink, #0d1526);
 }
 .mcm-page.home-v2 .hero p {
   margin-top: 9px;
   font-size: 14px;
   line-height: 1.55;
   max-width: 72ch;
-  color: rgba(253, 246, 239, 0.62);
+  color: var(--ink-2, #4a5568);
 }
 .mcm-page.home-v2 .hero-right {
   align-items: center;
   align-self: flex-start;
   gap: 10px;
 }
+/* the freshness chip is a reading, not a control — it sits with the buttons
+   but keeps a quieter weight and its own divider */
 .mcm-page.home-v2 .hero-right .fchip {
   margin-right: 3px;
   padding-right: 12px;
-  border-right: 1px solid rgba(253, 246, 239, 0.18);
+  border-right: 1px solid var(--line, #efe4d6);
   border-radius: 0;
   background: none;
-  color: rgba(253, 246, 239, 0.66);
-}
-/* a ghost button on a dark ground reads as a hole unless it is given glass */
-.mcm-page.home-v2 .hero-right .btn.ghost {
-  background: rgba(253, 246, 239, 0.08);
-  border-color: rgba(253, 246, 239, 0.16);
-  color: #fdf6ef;
-}
-.mcm-page.home-v2 .hero-right .btn.ghost:hover {
-  background: rgba(253, 246, 239, 0.14);
-  border-color: rgba(253, 246, 239, 0.28);
-}
-.mcm-page.home-v2 .hero-right .btn.primary {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 10px 24px -10px rgba(242, 153, 74, 0.85);
 }
 
 /* ── verdict: the state colours the whole card, not a 3px edge ─────────── */
