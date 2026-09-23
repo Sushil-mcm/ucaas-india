@@ -25,6 +25,11 @@ interface IGREETINGPROPS {
   onGreetingUploadStart?: () => void;
   onGreetingUploadSuccess?: () => void;
   width?: string;
+  /* Which side the preview player opens on. 'right' by default, which is what
+     the narrow two-column forms want (see the PopoverContent below). A screen
+     that lays these out side by side passes 'bottom', where opening rightwards
+     would put the player over the neighbouring card. */
+  previewSide?: 'top' | 'right' | 'bottom' | 'left';
   /* Keeps the add button available after a recording has been chosen, and
      selects whatever gets made. Off by default: the forms that embed this
      control - IVR keys, queue settings, a person's phone tab - lay it out in a
@@ -47,6 +52,7 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
   selectCustomClass = '',
   selectCustomClassSecond = '',
   width = '',
+  previewSide = 'right',
   isRefetchable = true,
   refetch = () => {},
   onGreetingUploadStart = () => {},
@@ -116,11 +122,15 @@ const SelectGreeting: FC<IGREETINGPROPS> = ({
                 landed above/overlapping the row below for the other --
                 same trigger, inconsistent placement. Pinning it to the
                 right at a fixed offset makes every row behave the same. */}
+            {/* Collision avoidance stays off only for the pinned-right case the
+                note above describes. On any other side the panel is free to
+                shift back into view, which is what a screen asking for
+                'bottom' needs near the foot of the page. */}
             <PopoverContent
               align="center"
-              side="right"
+              side={previewSide}
               sideOffset={8}
-              avoidCollisions={false}
+              avoidCollisions={previewSide === 'right' ? false : undefined}
               className="w-[300px] rounded-xl border-0 bg-white p-1 shadow-lg"
             >
               <AudioPreviewPlayer

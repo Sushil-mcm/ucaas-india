@@ -187,6 +187,9 @@ const GreetingSlots = () => {
           <div className="mcm-gslot-pick">
             <SelectGreeting
               name={slot.pickerName}
+              /* These slots sit three across, so the player's default
+                 right-hand placement opened it over the next card. */
+              previewSide="bottom"
               isShowUpload={slot.canUpload}
               onGreetingUploadStart={preserve}
               onGreetingUploadSuccess={restore}
