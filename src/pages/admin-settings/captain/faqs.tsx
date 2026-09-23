@@ -11,6 +11,11 @@ import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
 import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
 import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
+import {
+  CAPTAIN_SEARCH_ICON,
+  CAPTAIN_SEARCH_INPUT,
+  CAPTAIN_SEARCH_WRAP,
+} from './field-styles';
 
 
 type Faq = {
@@ -245,18 +250,14 @@ const CaptainFaqs = () => {
         </Button>
       </div>
 
-      <div className="relative w-full max-w-sm">
-        {/* `z-10` because the shared Input wraps its field in a positioned div
-            of its own. Both that wrapper and this icon sit at `z-index: auto`,
-            so they paint in tree order and the wrapper's background — coming
-            second — washed the icon out from underneath. */}
-        <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
-        <Input
+      <div className={`${CAPTAIN_SEARCH_WRAP} w-full max-w-sm`}>
+        <Search className={CAPTAIN_SEARCH_ICON} />
+        <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search FAQs..."
-          className="pl-9"
+          className={CAPTAIN_SEARCH_INPUT}
         />
       </div>
 

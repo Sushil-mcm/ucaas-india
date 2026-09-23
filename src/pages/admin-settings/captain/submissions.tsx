@@ -9,6 +9,10 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { handleAlert } from '@/lib/utils';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
+import {
+  CAPTAIN_FILTER,
+  CAPTAIN_FILTER_CHEVRON,
+} from './field-styles';
 
 const PER_PAGE = 25;
 
@@ -214,13 +218,13 @@ export default function CaptainSubmissions() {
           <select
             value={kind}
             onChange={(e) => handleKindChange(e.target.value as KindFilter)}
-            className="h-9 appearance-none rounded-lg border border-gray-200 bg-gray-50 pl-3 pr-8 text-sm text-gray-900 outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white cursor-pointer"
+            className={CAPTAIN_FILTER}
           >
             <option value="">All</option>
             <option value="lead">Lead</option>
             <option value="form">Form</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-neutral-400" />
+          <ChevronDown className={CAPTAIN_FILTER_CHEVRON} />
         </div>
         <div className="flex items-center gap-1.5">
           <input

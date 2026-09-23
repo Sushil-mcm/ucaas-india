@@ -15,6 +15,13 @@ import { buildStarterWidgetConfig, NEW_WIDGET_DEFAULT_TITLE } from './widget/hel
 import { draftStore } from './widget/helpers/draft-store';
 import type { CustomTool } from './widget/helpers/types';
 import { AdminHeadActions } from '@/pages/admin-settings/admin-page-head';
+import {
+  CAPTAIN_FILTER,
+  CAPTAIN_FILTER_CHEVRON,
+  CAPTAIN_SEARCH_ICON,
+  CAPTAIN_SEARCH_INPUT,
+  CAPTAIN_SEARCH_WRAP,
+} from './field-styles';
 
 const PER_PAGE = 25;
 const BUILDER_PATH = '/admin-settings/captain/widgets';
@@ -193,26 +200,26 @@ export default function CaptainWidgets() {
       </AdminHeadActions>
 
       <div className="flex items-center gap-2">
-        <div className="mcm-widget-search flex h-9 w-72 items-center gap-2 rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted px-3 sm:w-96">
-          <Search className="size-4 shrink-0 text-gray-400 dark:text-muted-foreground" />
+        <div className={`${CAPTAIN_SEARCH_WRAP} w-72 sm:w-96`}>
+          <Search className={CAPTAIN_SEARCH_ICON} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search templates..."
-            className="min-w-0 flex-1 bg-transparent text-sm text-gray-900 dark:text-foreground placeholder:text-gray-400 dark:placeholder:text-muted-foreground outline-none"
+            className={CAPTAIN_SEARCH_INPUT}
           />
         </div>
         <div className="relative">
           <select
             value={connection}
             onChange={(e) => setConnection(e.target.value as ConnectionFilter)}
-            className="mcm-widget-filter h-9 appearance-none rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted pl-3 pr-8 text-sm text-gray-900 dark:text-foreground outline-none cursor-pointer"
+            className={CAPTAIN_FILTER}
           >
             <option value="">All</option>
             <option value="connected">Connected</option>
             <option value="not_connected">Not connected</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
+          <ChevronDown className={CAPTAIN_FILTER_CHEVRON} />
         </div>
       </div>
 

@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { handleAlert } from '@/lib/utils';
 import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
 import { useSelectedAssistant } from './assistant-switcher';
@@ -13,6 +12,11 @@ import InboxDetail, { InboxSummary } from './inbox-detail';
 import AddInboxWizard from './add-inbox-wizard';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
+import {
+  CAPTAIN_SEARCH_ICON,
+  CAPTAIN_SEARCH_INPUT,
+  CAPTAIN_SEARCH_WRAP,
+} from './field-styles';
 
 
 type ChannelToggle = { channel_type: string; enabled: boolean };
@@ -187,11 +191,9 @@ const CaptainInboxes = () => {
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <div className="relative w-full max-w-xs">
-          {/* z-10: the shared Input's own positioned wrapper paints later and
-              would otherwise lay its background over this icon. */}
-          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
-          <Input type="text" value={inboxSearch} onChange={(e) => setInboxSearch(e.target.value)} placeholder="Search inboxes..." className="pl-9" />
+        <div className={`${CAPTAIN_SEARCH_WRAP} w-full max-w-xs`}>
+          <Search className={CAPTAIN_SEARCH_ICON} />
+          <input type="text" value={inboxSearch} onChange={(e) => setInboxSearch(e.target.value)} placeholder="Search inboxes..." className={CAPTAIN_SEARCH_INPUT} />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-400 dark:text-muted-foreground">{inboxes.length} inbox{inboxes.length === 1 ? '' : 'es'}</span>

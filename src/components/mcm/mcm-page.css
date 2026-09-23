@@ -3220,28 +3220,28 @@
   border-color: var(--accent) !important;
 }
 
-/* Widgets' search field is a bordered wrapper around a borderless input, so
+/* A Captain search field is a bordered wrapper around a borderless input, so
    the admin outline drew its ring inside an edge that was already there.
    The wrapper's own border lights instead — the input carries no border to
    colour, so the affordance has to live on the parent. */
-.mcm-admin .mcm-widget-search input:focus,
-.mcm-admin .mcm-widget-search input:focus-visible {
+.mcm-admin .mcm-captain-search input:focus,
+.mcm-admin .mcm-captain-search input:focus-visible {
   outline: none !important;
 }
-.mcm-admin .mcm-widget-search:focus-within {
+.mcm-admin .mcm-captain-search:focus-within {
   border-color: var(--accent);
 }
 
 /* The type filter beside it, matched. This one carries its own border, so the
    colour goes straight on the element rather than on a parent. */
-.mcm-admin .mcm-widget-filter:focus,
-.mcm-admin .mcm-widget-filter:focus-visible {
+.mcm-admin .mcm-captain-filter:focus,
+.mcm-admin .mcm-captain-filter:focus-visible {
   outline: none !important;
   border-color: var(--accent) !important;
 }
 
 /* The fill for these two lives beside the glass-card rule that was tinting
-   them — see `.mcm-widget-search` further down this file. */
+   them — see `.mcm-captain-search` further down this file. */
 
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
@@ -4913,7 +4913,7 @@
   border-color: var(--glass-line);
 }
 
-/* A form control is not a card. Widgets' search field and type filter are
+/* A form control is not a card. The Captain list controls are
    `rounded-lg` + `bg-white`, so the glass rule above caught them and filled
    them with translucent warm cream (`--glass-surface`, 85% over a cream
    page) — which is why they read cream however white the utility said.
@@ -4921,13 +4921,13 @@
    Same specificity as that rule, placed after it so order decides; anything
    weaker simply loses. Dark mode is spelled out too, since the glass rule
    keys on the `bg-white` class and matches there as well. */
-.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-search,
-.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-filter {
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-search,
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-filter {
   background: #ffffff;
   border-color: var(--color-gray-200);
 }
-.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-search,
-.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-widget-filter {
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-search,
+.dark .mcm-page [class*='rounded-']:not([class*='rounded-full']).mcm-captain-filter {
   background: var(--muted);
   border-color: var(--border);
 }

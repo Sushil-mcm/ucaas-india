@@ -2,11 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Play, Wrench, Search, Plug, Zap, ChevronLeft, ChevronRight, ChevronDown, Users, ClipboardList, MousePointerClick, Bot, Paperclip, Mic, Volume2, ThumbsUp, ThumbsDown, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AssistantSwitcher, useSelectedAssistant } from './assistant-switcher';
 import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
+import {
+  CAPTAIN_FILTER,
+  CAPTAIN_SEARCH_ICON,
+  CAPTAIN_SEARCH_INPUT,
+  CAPTAIN_SEARCH_WRAP,
+} from './field-styles';
 
 
 type Param = { name: string; type: string; description: string; required: boolean };
@@ -33,9 +38,6 @@ type Tool = {
 
 type Toolkit = { slug: string; name: string; description: string; logo: string | null; tools_count: number; categories: string[]; auth_schemes?: string[] };
 type Connection = { id: string; toolkit_slug: string; toolkit_name: string; connected_account_id: string; status: string; logo?: string | null };
-
-const fieldClass =
-  'min-h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-primary';
 
 
 
@@ -535,13 +537,11 @@ const CaptainActions = () => {
       {mainTab === 'my-actions' && (
         <>
           <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              {/* z-10: the shared Input's own positioned wrapper paints later
-                  and would otherwise lay its background over this icon. */}
-              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
-              <Input type="text" value={actionsSearch} onChange={(e) => setActionsSearch(e.target.value)} placeholder="Search your actions..." className="pl-9" />
+            <div className={`${CAPTAIN_SEARCH_WRAP} flex-1`}>
+              <Search className={CAPTAIN_SEARCH_ICON} />
+              <input type="text" value={actionsSearch} onChange={(e) => setActionsSearch(e.target.value)} placeholder="Search your actions..." className={CAPTAIN_SEARCH_INPUT} />
             </div>
-            <select value={myActionsTypeFilter} onChange={(e) => setMyActionsTypeFilter(e.target.value as any)} className={`${fieldClass} w-40`}>
+            <select value={myActionsTypeFilter} onChange={(e) => setMyActionsTypeFilter(e.target.value as any)} className={`${CAPTAIN_FILTER} w-40`}>
               <option value="all">All types</option>
               <option value="app">Apps</option>
               <option value="custom_tool">Custom tools</option>
@@ -745,11 +745,9 @@ const CaptainActions = () => {
           )}
 
           <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              {/* z-10: the shared Input's own positioned wrapper paints later
-                  and would otherwise lay its background over this icon. */}
-              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-              <Input
+            <div className={`${CAPTAIN_SEARCH_WRAP} flex-1`}>
+              <Search className={CAPTAIN_SEARCH_ICON} />
+              <input
                 type="text"
                 value={toolkitSearch}
                 onChange={(e) => {
@@ -761,7 +759,7 @@ const CaptainActions = () => {
                   searchDebounce.current = setTimeout(() => searchToolkits(q, categoryFilter, ''), 300);
                 }}
                 placeholder="Search apps — Gmail, Slack, GitHub, Notion..."
-                className="pl-9"
+                className={CAPTAIN_SEARCH_INPUT}
               />
             </div>
             <select
@@ -772,7 +770,7 @@ const CaptainActions = () => {
                 setPageIndex(0);
                 searchToolkits(toolkitSearch, e.target.value, '');
               }}
-              className={`${fieldClass} w-48`}
+              className={`${CAPTAIN_FILTER} w-48`}
             >
               <option value="all">All categories</option>
               {categories.map((c) => (

@@ -12,6 +12,11 @@ import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { BulkSelectBar } from '@/components/captain/BulkSelectBar';
 import { BulkDeleteDialog } from '@/components/captain/BulkDeleteDialog';
 import { DeleteConfirmDialog } from '@/components/captain/DeleteConfirmDialog';
+import {
+  CAPTAIN_SEARCH_ICON,
+  CAPTAIN_SEARCH_INPUT,
+  CAPTAIN_SEARCH_WRAP,
+} from './field-styles';
 
 const HIDE_SUGGESTIONS_KEY = 'captain_scenarios_hide_suggestions';
 
@@ -346,16 +351,14 @@ const CaptainScenarios = () => {
       )}
 
       {selectedId && (
-        <div className="relative w-full max-w-sm">
-          {/* z-10: the shared Input's own positioned wrapper paints later and
-              would otherwise lay its background over this icon. */}
-          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-gray-400 dark:text-muted-foreground" />
-          <Input
+        <div className={`${CAPTAIN_SEARCH_WRAP} w-full max-w-sm`}>
+          <Search className={CAPTAIN_SEARCH_ICON} />
+          <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search scenarios..."
-            className="pl-9"
+            className={CAPTAIN_SEARCH_INPUT}
           />
         </div>
       )}
