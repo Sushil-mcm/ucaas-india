@@ -247,7 +247,13 @@ export const SparkBars = ({
           fill={color}
           fillOpacity={fillOpacity}
           radius={[2, 2, 0, 0]}
-          minPointSize={minBar}
+          /* recharts drops a zero-value bar entirely when minPointSize is a
+             plain number -- the floor only applies to bars it already decided
+             to draw. Passing a function makes it render them, which is the
+             whole point here: a quiet hour should read as a flat row of marks,
+             not as a card with no chart. Kept as a number when minBar is 0 so
+             the Performance tiles behave exactly as before. */
+          minPointSize={minBar > 0 ? () => minBar : 0}
           isAnimationActive
         />
       </BarChart>

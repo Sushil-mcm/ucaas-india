@@ -887,6 +887,7 @@ const Home = () => {
                   color={attention.length ? 'var(--crit, #d32f2f)' : 'var(--live)'}
                   height={28}
                   fillOpacity={0.8}
+                  minBar={2}
                 />
               </div>
               <span className="src live pc-right">
