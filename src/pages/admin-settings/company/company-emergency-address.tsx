@@ -570,7 +570,10 @@ const CompanyEmergencyAddress = () => {
             </p>
           </div>
 
-          <div className="flex items-start gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3">
+          {/* Solid white rather than the translucent warm fill this carried:
+              the blur went with it, since it buys nothing behind an opaque
+              background and costs a compositor layer. */}
+          <div className="flex items-start gap-3 rounded-xl border border-[rgba(225,200,165,0.9)] bg-white px-4 py-3">
             <Checkbox
               id="emergency-address-acknowledgement"
               checked={acknowledged}
@@ -589,17 +592,22 @@ const CompanyEmergencyAddress = () => {
 
           {canEdit && (
             <div className="cs-savebar">
-              <BackButton />
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                className="cs-save"
-                disabled={isSaving}
-              >
-                {isSaving ? <Loader variant="white" size="xs" /> : null}
-                Save settings
-              </Button>
+              {/* The shared savebar stacks its children — it is built to carry
+                  a note above the buttons, which nine screens rely on. Rowing
+                  the pair here keeps them on one line without changing that. */}
+              <div className="flex flex-wrap items-center gap-3">
+                <BackButton />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  className="cs-save"
+                  disabled={isSaving}
+                >
+                  {isSaving ? <Loader variant="white" size="xs" /> : null}
+                  Save settings
+                </Button>
+              </div>
             </div>
           )}
         </form>
