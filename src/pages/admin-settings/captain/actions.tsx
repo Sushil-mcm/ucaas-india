@@ -8,6 +8,7 @@ import { CAPTAIN_API_BASE, captainFetch } from '@/lib/captain-api';
 import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import {
   CAPTAIN_FILTER,
+  CAPTAIN_FILTER_CHEVRON,
   CAPTAIN_SEARCH_ICON,
   CAPTAIN_SEARCH_INPUT,
   CAPTAIN_SEARCH_WRAP,
@@ -541,11 +542,14 @@ const CaptainActions = () => {
               <Search className={CAPTAIN_SEARCH_ICON} />
               <input type="text" value={actionsSearch} onChange={(e) => setActionsSearch(e.target.value)} placeholder="Search your actions..." className={CAPTAIN_SEARCH_INPUT} />
             </div>
-            <select value={myActionsTypeFilter} onChange={(e) => setMyActionsTypeFilter(e.target.value as any)} className={`${CAPTAIN_FILTER} w-40`}>
-              <option value="all">All types</option>
-              <option value="app">Apps</option>
-              <option value="custom_tool">Custom tools</option>
-            </select>
+            <div className="relative">
+              <select value={myActionsTypeFilter} onChange={(e) => setMyActionsTypeFilter(e.target.value as any)} className={`${CAPTAIN_FILTER} w-40`}>
+                <option value="all">All types</option>
+                <option value="app">Apps</option>
+                <option value="custom_tool">Custom tools</option>
+              </select>
+              <ChevronDown className={CAPTAIN_FILTER_CHEVRON} />
+            </div>
             <AssistantSwitcher assistants={assistants} selectedId={selectedId} onSelect={selectAssistant} />
           </div>
 
@@ -762,21 +766,24 @@ const CaptainActions = () => {
                 className={CAPTAIN_SEARCH_INPUT}
               />
             </div>
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                setCursorHistory(['']);
-                setPageIndex(0);
-                searchToolkits(toolkitSearch, e.target.value, '');
-              }}
-              className={`${CAPTAIN_FILTER} w-48`}
-            >
-              <option value="all">All categories</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCursorHistory(['']);
+                  setPageIndex(0);
+                  searchToolkits(toolkitSearch, e.target.value, '');
+                }}
+                className={`${CAPTAIN_FILTER} w-48`}
+              >
+                <option value="all">All categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <ChevronDown className={CAPTAIN_FILTER_CHEVRON} />
+            </div>
           </div>
 
           <h3 className="text-sm font-bold text-gray-950 dark:text-gray-100">Browse apps to connect</h3>
