@@ -249,20 +249,31 @@ const TrustedDevices = () => {
 
   return (
     <>
-      <Card
-        title="Two-step sign-in"
-        badge={twoStepBadge}
-        intro={
-          isLoading
-            ? 'Checking…'
-            : absent
-              ? 'This server does not report the rule yet. Sign-in still asks for a code emailed to you.'
-              : isError
-                ? describeListError(error)
-                : twoStep?.reason ||
-                  'Every sign-in needs your password and a code emailed to you, unless the device is trusted.'
-        }
-      />
+      {/* Built from `mcm-seccard`, not the Card below it: this one shares a
+          row with "Password" and the two were visibly different boxes -
+          different padding, radius and title size, and no icon on this side.
+          Same parts, same order, so the pair reads as one row. */}
+      <article className="mcm-seccard">
+        <span className="mcm-seccard-ico" aria-hidden="true">
+          <ShieldCheck className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="mcm-seccard-t flex flex-wrap items-center gap-2">
+            Two-step sign-in
+            {twoStepBadge}
+          </h2>
+          <p className="mcm-seccard-d">
+            {isLoading
+              ? 'Checking…'
+              : absent
+                ? 'This server does not report the rule yet. Sign-in still asks for a code emailed to you.'
+                : isError
+                  ? describeListError(error)
+                  : twoStep?.reason ||
+                    'Every sign-in needs your password and a code emailed to you, unless the device is trusted.'}
+          </p>
+        </div>
+      </article>
 
       <Card
         title="Trusted devices"
