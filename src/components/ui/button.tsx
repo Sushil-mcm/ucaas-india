@@ -22,7 +22,12 @@ const buttonVariants = cva(
           'bg-white border border-primary text-primary shadow-xs hover:bg-primary/90 hover:text-white cursor-pointer min-h-10',
         secondary:
           'bg-gray-100 border border-gray-200 text-gray-900 shadow-xs hover:bg-gray-100/90 cursor-pointer min-h-10',
-        ghost: 'hover:bg-accent hover:text-accent dark:hover:bg-accent/50',
+        /* `hover:text-accent-foreground`, not `hover:text-accent`: the latter
+           painted the label the same token as the background beside it, so a
+           ghost button's text vanished into its own fill on hover. Inside the
+           console `--accent` is locked to the brand orange, which made it a
+           solid orange pill with nothing on it. */
+        ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
         transparent: 'text-gray-700 hover:text-primary cursor-pointer',
       },
