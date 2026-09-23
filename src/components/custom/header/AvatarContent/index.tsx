@@ -156,7 +156,7 @@ const AvatarContent = ({ setProfileState }: any) => {
           an Edit shortcut straight into the same profile page the menu item
           below opens — the two used to be the only way in, this is the
           quicker one for the most common edit. */}
-      <div className="relative -mx-3 -mt-3 px-4 pt-4 pb-4 bg-ucass-primary-200/50 rounded-t-md">
+      <div className="relative -mx-3 -mt-3 px-4 pt-3.5 pb-3.5 bg-ucass-primary-200/50 rounded-t-md">
         <button
           type="button"
           onClick={goToProfile}
@@ -168,7 +168,7 @@ const AvatarContent = ({ setProfileState }: any) => {
         <div className="flex items-center gap-3">
           <CustomAvatar
             name={fullName}
-            size="56"
+            size="48"
             extension={user?.user_info?.extension}
             image={user?.user_info?.profile}
             isActivityInfo={false}
@@ -188,12 +188,12 @@ const AvatarContent = ({ setProfileState }: any) => {
       {/* Availability — the same presence popover as before, now a
           full-width row that reads as "current status, tap to change"
           instead of a small chip tucked into the banner. */}
-      <div className="px-1 pt-3">
+      <div className="px-1 pt-2.5">
         <Popover open={showPresence} onOpenChange={(val) => setShowPresence(val)}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-lg bg-green-50 dark:bg-mcm-surface-3 px-3 py-2.5 cursor-pointer transition-colors hover:bg-green-100/70"
+              className="flex w-full items-center gap-3 rounded-lg bg-green-50 dark:bg-mcm-surface-3 px-3 py-2 cursor-pointer transition-colors hover:bg-green-100/70"
             >
               <div className="w-3.5 h-3.5 shrink-0">
                 {statusImageLookup[effectiveSocketStatus] ?? statusImageLookup['online']}
@@ -242,13 +242,13 @@ const AvatarContent = ({ setProfileState }: any) => {
       {/* Contact details, each with its own copy button — the old version
           only ever showed these as read-only text, so getting the extension
           or DID into a dialer meant retyping it by hand. */}
-      <div className="flex flex-col mx-1 mt-3 mb-1 px-3 py-2.5 rounded-lg bg-gray-50 dark:bg-mcm-surface-3">
+      <div className="flex flex-col mx-1 mt-2.5 mb-1 px-3 py-2 rounded-lg bg-gray-50 dark:bg-mcm-surface-3">
         {contactRows.map(({ icon: RowIcon, label, value }, index) => (
           <div key={label}>
-            {index > 0 && <DropdownMenuSeparator className="my-2.5" />}
+            {index > 0 && <DropdownMenuSeparator className="my-2" />}
             <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <RowIcon className="w-4 h-4" />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <RowIcon className="w-3.5 h-3.5" />
               </span>
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-[11px] uppercase tracking-wide leading-none text-gray-500 dark:text-mcm-ink-3">
@@ -278,12 +278,12 @@ const AvatarContent = ({ setProfileState }: any) => {
         {menuItems.map(({ icon: ItemIcon, title, onClick, prefetch }) => (
           <div
             key={title}
-            className="flex items-center gap-3 rounded-lg px-2.5 py-2 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
+            className="flex items-center gap-3 rounded-lg px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-ucass-primary-200/60"
             {...(prefetch ? getRoutePrefetchHandlers(prefetch) : {})}
             onClick={onClick}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <ItemIcon className="w-4 h-4" />
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ItemIcon className="w-3.5 h-3.5" />
             </span>
             <span className="text-sm font-semibold text-gray-900 dark:text-mcm-ink min-w-0 truncate">
               {title}
@@ -295,17 +295,16 @@ const AvatarContent = ({ setProfileState }: any) => {
         <button
           type="button"
           onClick={logoutDevice}
-          className="mt-1 flex w-full items-center gap-3 rounded-lg px-2.5 py-2 cursor-pointer transition-colors bg-red-50 hover:bg-red-100"
+          className="mt-1 flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 cursor-pointer transition-colors bg-red-50 hover:bg-red-100"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
-            <LogOut className="w-4 h-4" />
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
+            <LogOut className="w-3.5 h-3.5" />
           </span>
           <span className="text-sm font-semibold text-red-600">Sign out</span>
           <ChevronRight className="w-4 h-4 ml-auto shrink-0 text-red-300" />
         </button>
       </div>
-      <DropdownMenuSeparator className="my-1.5" />
-      <p className="text-[11px] text-gray-400 dark:text-mcm-ink-3 text-right px-2 pb-0.5">v{packageJson.version}</p>
+      <p className="mt-1 text-[11px] text-gray-400 dark:text-mcm-ink-3 text-right px-2">v{packageJson.version}</p>
     </div>
   );
 };
