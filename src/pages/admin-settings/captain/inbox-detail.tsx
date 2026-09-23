@@ -478,7 +478,7 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
               Radix moves focus to the trigger on activation, so it showed on a
               plain click, not only on keyboard. A filled pill carries the
               current tab on its own and the row scrolls rather than wraps. */}
-          <TabsList className="mcm-tabpills h-auto w-full shrink-0 justify-start gap-1 overflow-x-auto rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+          <TabsList className="mcm-tabpills h-auto w-full shrink-0 flex-wrap justify-start gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
             {TABS.map((t) => (
               <TabsTrigger
                 key={t.key}
@@ -1111,7 +1111,11 @@ const InboxDetail = ({ inboxId, assistants, onBack }: { inboxId: string; assista
           </div>
         </Tabs>
 
-        <div className="flex w-full shrink-0 flex-col rounded-2xl bg-white dark:bg-[#1a1b1e] border border-gray-200 dark:border-white/10 p-5 text-gray-900 dark:text-white shadow-xl relative min-h-[500px]">
+        {/* `min-h` clears the 540px widget mock plus this panel's padding and
+            its own tab row; at 500px the mock was taller than the box holding
+            it and, being absolutely positioned and centred, spilled out of the
+            top over the tabs. `overflow-hidden` keeps it in regardless. */}
+        <div className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#1a1b1e] border border-gray-200 dark:border-white/10 p-5 text-gray-900 dark:text-white shadow-xl relative min-h-[640px]">
           <div className="flex items-center justify-between">
             <div className="flex gap-4">
               <button

@@ -5026,6 +5026,23 @@
   border-radius: 8px;
 }
 
+/* The track: `bg-gray-100` is retinted to `--surface-3` by this file, which is
+   a warm tan — so the strip read as a solid band rather than a rail the pills
+   sit on. A near-white neutral instead, light enough that the lit pill is the
+   thing you see. */
+.mcm-page .mcm-tabpills {
+  background: #f4f5f7;
+}
+
+/* The lit pill. `.mcm-page button[data-slot='tabs-trigger']` sets
+   `background: none` at a higher specificity than any utility on the element,
+   so `data-[state=active]:bg-white` never took and the current tab had no fill
+   at all — only its text colour, which is why it did not read as selected. */
+.mcm-page .mcm-tabpills [data-slot='tabs-trigger'][data-state='active'] {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
 /* A row that is not a row: an empty state or a loading line spanning the whole
    table. The shared hover says "this is selectable", which is a promise a
    placeholder cannot keep, so it keeps whatever is behind it. */
