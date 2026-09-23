@@ -4245,14 +4245,22 @@
   border-radius: 14px;
   background: linear-gradient(175deg, #fff 0%, var(--surface-2) 100%);
   border: 1px solid var(--line);
-  box-shadow: 0 2px 5px rgba(120, 72, 20, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  /* Nothing outside the border. The drop shadow that used to sit here read
+     as a smudge around every key rather than as depth -- twelve of them in a
+     grid this tight is a lot of haze. The inset highlight stays: it is
+     inside the key, and it is what keeps the face looking lit. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease,
     background 0.15s ease;
 }
+/* Hover says so with the tint, the border and the lift -- it does not need a
+   halo as well. The 2px spread ring sat entirely outside the border, which is
+   the "shadow outside the button" it looked like, and the glow under it
+   widened the smudge. Both gone; the key still clearly responds. */
 .mcm-console .col.stage .stage-inner .key:hover {
   background: linear-gradient(175deg, #fff 0%, var(--accent-wash) 100%);
   border-color: var(--accent-edge);
-  box-shadow: 0 0 0 2px rgba(242, 153, 74, 0.18), 0 6px 12px rgba(234, 124, 30, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transform: translateY(-2px) scale(1.05);
 }
 .mcm-console .col.stage .stage-inner .key:active {
