@@ -411,7 +411,7 @@ const CaptainAssistants = () => {
   // ═══════════════════════════════════════════════════════════════════
   if (viewMode === 'editor') {
     return (
-      <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-white dark:bg-[#0f0f11] text-gray-900 dark:text-gray-100 p-6 md:p-8">
+      <div className="mcm-assistant-editor flex h-full min-h-0 w-full flex-col overflow-y-auto bg-white dark:bg-[#0f0f11] text-gray-900 dark:text-gray-100 p-6 md:p-8">
         <div className="mx-auto w-full max-w-3xl flex flex-col gap-6 pb-24">
           {/* Header with Assistant Switcher & Title */}
           <div className="flex items-center gap-3 relative">
@@ -579,7 +579,7 @@ const CaptainAssistants = () => {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, 200) }))}
                 rows={3}
                 placeholder="What does this assistant do?"
-                className="mcm-assistant-desc w-full resize-none bg-transparent p-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none dark:text-gray-100"
+                className="w-full resize-none bg-transparent p-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none dark:text-gray-100"
               />
 
               <div className="flex justify-end px-3 py-1.5 text-xs text-gray-400 font-mono">

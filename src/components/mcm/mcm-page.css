@@ -3204,12 +3204,20 @@
   outline-offset: 1px;
 }
 
-/* The Assistants description sits inside its own bordered card with a
-   toolbar above it, so the shared admin focus outline drew a second ring
-   inside that card's border. The card is the focus affordance here. */
-.mcm-admin textarea.mcm-assistant-desc:focus,
-.mcm-admin textarea.mcm-assistant-desc:focus-visible {
+/* Every field in the Assistants editor is drawn as its own bordered card, so
+   the offset admin outline above painted a second ring around a box that
+   already had an edge.
+
+   The border takes the focus job instead of simply dropping the outline: the
+   `.mcm-admin input[type='text']` border-colour rule further up outranks each
+   field's own `focus:border-*` utility, so removing the outline alone would
+   leave a keyboard user with no focus indicator at all. */
+.mcm-admin .mcm-assistant-editor input:focus,
+.mcm-admin .mcm-assistant-editor input:focus-visible,
+.mcm-admin .mcm-assistant-editor textarea:focus,
+.mcm-admin .mcm-assistant-editor textarea:focus-visible {
   outline: none !important;
+  border-color: var(--accent) !important;
 }
 
 /* Pagination strip at the foot of Admin tables. */
