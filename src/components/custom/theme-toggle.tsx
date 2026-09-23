@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
-import CustomTooltip from './custom-tooltip';
 
 const STORAGE_KEY = 'mcm-theme';
 
@@ -48,18 +47,21 @@ const ThemeToggle = () => {
     });
   }, []);
 
+  /* No tooltip. A sun or a moon in a header is a convention people already
+     read, and the label only restated the icon.
+
+     aria-label stays: the button's only content is an icon, so without it
+     screen readers announce an unnamed button. It is not shown on screen. */
   return (
-    <CustomTooltip text={theme === 'dark' ? 'Switch to light' : 'Switch to dark'} side="bottom">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        aria-pressed={theme === 'dark'}
-        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/70 bg-white/70 shadow-sm text-black transition-colors hover:bg-ucass-primary-100 hover:border-ucass-primary-200 hover:text-ucass-active"
-      >
-        {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-      </button>
-    </CustomTooltip>
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-pressed={theme === 'dark'}
+      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/70 bg-white/70 shadow-sm text-black transition-colors hover:bg-ucass-primary-100 hover:border-ucass-primary-200 hover:text-ucass-active"
+    >
+      {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+    </button>
   );
 };
 
