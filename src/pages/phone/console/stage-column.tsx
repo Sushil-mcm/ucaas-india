@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatDialNumber } from '@/components/custom/number-with-flag';
+import {
+  filterPhoneNumber,
+  formatDialNumber,
+  isDiallableNumber,
+} from '@/components/custom/number-with-flag';
 import { toast } from 'react-toastify';
 import DialpadMaxiTabDispositions from '@/components/dialpad/components/dialpad-maxi-tab-dispositions';
 import DialpadEndedScreen from '@/components/dialpad/components/dialpad-ended-screen';
@@ -24,6 +28,7 @@ import CallRecord from './call-record';
 import { isTerminalSession, mmss, type ConsoleCallState } from './use-console-call';
 import { placeTwilioCall, TWILIO_CALLER_ID, TWILIO_CALLER_ID_OPTION } from '@/lib/twilio-voice-device';
 import CountryFlag, { flagCodeFor } from '@/components/custom/country-flag';
+import { toE164 } from '@/lib/utils';
 import { isIndiaCallerIdOption } from '@/lib/india-caller-ids';
 import type { Call as TwilioCall } from '@twilio/voice-sdk';
 import ParkedCallsStrip from './parked-calls-strip';
@@ -884,8 +889,27 @@ const StageColumn = ({
               ) : null}
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
+              {/* A flag, and nothing else.
+
+                  This passed `isFlagOnly` to NumberWithFlag, a prop that
+                  component does not have -- its signature is
+                  { number, isFlag, className }. So the flag was ignored and
+                  the full component rendered: for anything not diallable it
+                  returns the raw value as a span, so typing letters printed
+                  the whole string into this 22px slot and it spilled out past
+                  the edge of the card.
+
+                  The flag is rendered directly instead, from the same helpers
+                  NumberWithFlag uses internally, and only when there is a real
+                  number to find a country for. Letters and part-typed numbers
+                  get nothing, which is the honest answer. */}
               <span className="dial-flag-slot">
-                {dial ? <NumberWithFlag number={dial} isFlagOnly /> : null}
+                {isDiallableNumber(dial) ? (
+                  <CountryFlag
+                    code={flagCodeFor(toE164(dial) || filterPhoneNumber(dial))}
+                    className="w-4 flex-shrink-0"
+                  />
+                ) : null}
               </span>
               <input
                 className="dial-display num"

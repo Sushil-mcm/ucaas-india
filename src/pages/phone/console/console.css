@@ -1162,12 +1162,21 @@
   font-size: 15px;
   letter-spacing: normal;
 }
+/* 22px, and it clips. This slot is for a country flag, but it was handed a
+   component that prints the typed value as text when that value is not a
+   diallable number -- and with overflow visible a long string escaped the
+   slot, the row and the card, landing outside the panel entirely.
+
+   The call site now renders a flag or nothing, which is the real fix; this
+   clip is the backstop, so whatever ends up in here can never paint outside
+   its own 22px again. */
 .mcm-console .dial-flag-slot {
   width: 22px;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .mcm-console .panel {
   display: flex;
