@@ -4966,6 +4966,16 @@
   border: 1px solid var(--glass-border);
 }
 
+/* Messaging's reply field already draws its own edge, so the shared admin
+   focus outline added a second ring outside it. The field's own
+   `focus-visible:outline-0` cannot win — that rule selects on the element,
+   which outranks a utility class — so the override lives here. */
+.mcm-admin textarea.mcm-msg-field:focus,
+.mcm-admin textarea.mcm-msg-field:focus-visible {
+  outline: none !important;
+  border-color: var(--accent);
+}
+
 /* ---- dialogs ---- */
 .mcm-page [role='dialog'],
 [role='dialog'].mcm-glass {
