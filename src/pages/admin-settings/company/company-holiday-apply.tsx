@@ -774,7 +774,10 @@ const CompanyHolidayApply = () => {
 
                 return (
                   <div key={group.type} className="rounded-lg border border-[#EEE7DD]">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEE7DD] bg-[#FBE2C8]/45 p-3">
+                    {/* The group band carries the warm tone at full strength;
+                        at `#FBE2C8/45` it was too faint to separate a section
+                        from the rows under it. */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEE7DD] bg-primary/30 p-3">
                       <label className="flex cursor-pointer items-center gap-2">
                         <Checkbox
                           checked={allOn}
@@ -803,14 +806,13 @@ const CompanyHolidayApply = () => {
                           return (
                             <label
                               key={line.key}
-                              /* Hover has to clear the group header's fill,
-                                 `#FBE2C8/45`, which composites to rgb(253,242,
-                                 230) on white. `primary/30` lands on rgb(251,
-                                 224,201) — far enough to read as a highlight
-                                 rather than another header. `/10` was only 11
-                                 apart across all three channels, which is why
-                                 it looked identical. */
-                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-primary/30"
+                              /* Neutral grey, so hover cannot be mistaken for
+                                 the warm group band: rgb(243,244,246) sits 73
+                                 from the band and 32 from the white row, far
+                                 enough from both to read on its own. gray-50
+                                 would be only 15 from white — too faint to
+                                 notice. */
+                              className="flex cursor-pointer items-center justify-between gap-3 border-b border-gray-100 p-2.5 last:border-b-0 hover:bg-gray-100"
                             >
                               <span className="flex min-w-0 items-center gap-2">
                                 <Checkbox
