@@ -14,7 +14,9 @@
  * on), so the page's schema and payload builder read exactly what they did.
  */
 
+import type { ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
+import ErrorTooltip from '@/components/custom/error-tooltip';
 import { Label } from '@/components/ui/label';
 import CustomSelect from '@/components/custom/custom-select';
 import { NotAppliedFlag } from '@/pages/settings/not-applied-note';
@@ -31,15 +33,50 @@ import {
    rejects the whole row rather than trimming it. */
 export const JOB_TITLE_MAX = 30;
 
-const ReadOnly = ({ label, value, note }: { label: string; value?: string; note?: string }) => (
+/* Every field on this page is built from this, so each one is the same three
+   parts in the same order: a label row, the control, an optional note.
+ 
+   The editable fields used to hand their label to `Input`, which renders it
+   inside its own wrapper, while the read-only ones rendered a label beside a
+   "Read only" chip and then the control. Two structures in one grid meant two
+   different heights above the box, so a pair on the same row did not line up.
+   The error is shown here too, for the same reason: passing it to `Input`
+   makes it draw a header row of its own. */
+const Field = ({
+  label,
+  note,
+  error,
+  aside,
+  children,
+}: {
+  label: string;
+  note?: ReactNode;
+  error?: string;
+  aside?: ReactNode;
+  children: ReactNode;
+}) => (
   <div className="mcm-fitem">
     <div className="mcm-field-h">
       <Label>{label}</Label>
-      <span className="mcm-lock">Read only</span>
+      {error ? <ErrorTooltip text={error} /> : aside}
     </div>
-    <Input placeholder="—" disabled value={value || ''} readOnly />
-    {note ? <span className="mcm-field-note">{note}</span> : null}
+    {children}
+    {note ? (
+      <span className="mcm-field-note" aria-live="polite">
+        {note}
+      </span>
+    ) : null}
   </div>
+);
+
+/* Red edge without handing the message to `Input`, which would add a second
+   label row above the one `Field` has already drawn. */
+const errorEdge = (error?: string) => (error ? 'border-red-500 focus:border-red-500' : '');
+
+const ReadOnly = ({ label, value, note }: { label: string; value?: string; note?: string }) => (
+  <Field label={label} note={note} aside={<span className="mcm-lock">Read only</span>}>
+    <Input placeholder="—" disabled value={value || ''} readOnly />
+  </Field>
 );
 
 /* `selfProfile` says whether this server can save pronouns and language:
@@ -70,37 +107,37 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
           </div>
         </div>
         <div className="mcm-fgrid">
-          <div className="mcm-fitem">
+          <Field label="First Name" error={fieldErrors?.first_name?.message}>
             <Input
-              label="First Name"
               placeholder="Enter first name"
+              className={errorEdge(fieldErrors?.first_name?.message)}
               {...register('basic.first_name')}
-              error={fieldErrors?.first_name?.message}
               maxLength={50}
             />
-          </div>
-          <div className="mcm-fitem">
+          </Field>
+          <Field label="Last Name" error={fieldErrors?.last_name?.message}>
             <Input
-              label="Last Name"
               placeholder="Enter last name"
+              className={errorEdge(fieldErrors?.last_name?.message)}
               {...register('basic.last_name')}
-              error={fieldErrors?.last_name?.message}
               maxLength={50}
             />
-          </div>
-          <div className="mcm-fitem wide">
-            <Input
-              label="Job Title"
-              placeholder="e.g. Support Team Lead"
-              {...register('basic.job_title')}
-              error={fieldErrors?.job_title?.message}
-              maxLength={JOB_TITLE_MAX}
-            />
+          </Field>
+          <div className="wide">
             {/* The counter is the only warning a person gets before the limit
                 stops their typing; without it the field just goes quiet. */}
-            <span className="mcm-field-note" aria-live="polite">
-              {jobTitle.length}/{JOB_TITLE_MAX} characters
-            </span>
+            <Field
+              label="Job Title"
+              error={fieldErrors?.job_title?.message}
+              note={`${jobTitle.length}/${JOB_TITLE_MAX} characters`}
+            >
+              <Input
+                placeholder="e.g. Support Team Lead"
+                className={errorEdge(fieldErrors?.job_title?.message)}
+                {...register('basic.job_title')}
+                maxLength={JOB_TITLE_MAX}
+              />
+            </Field>
           </div>
         </div>
       </section>
@@ -119,20 +156,19 @@ const ProfileForm = ({ selfProfile = null }: { selfProfile?: boolean | null }) =
           </span>
         ) : null}
         <div className="mcm-fgrid">
-          <div className="mcm-fitem">
+          <Field
+            label="Pronouns"
+            error={fieldErrors?.pronouns?.message}
+            note={`Optional. Shown next to your name where colleagues see it. ${pronouns.length}/${PRONOUNS_MAX} characters`}
+          >
             <Input
-              label="Pronouns"
               placeholder={PRONOUNS_PLACEHOLDER}
+              className={errorEdge(fieldErrors?.pronouns?.message)}
               {...register('basic.pronouns')}
-              error={fieldErrors?.pronouns?.message}
               maxLength={PRONOUNS_MAX}
               disabled={aboutLocked}
             />
-            <span className="mcm-field-note" aria-live="polite">
-              Optional. Shown next to your name where colleagues see it. {pronouns.length}/
-              {PRONOUNS_MAX} characters
-            </span>
-          </div>
+          </Field>
           <div className="mcm-fitem">
             <div className="mcm-field-h">
               <Label>Interface language</Label>
