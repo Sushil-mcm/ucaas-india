@@ -45,12 +45,18 @@ const Fact = ({
   value?: string;
   hint: string;
 }) => (
-  <div className="rounded-lg border border-gray-200 bg-white p-3">
+  <div className="mcm-solid-card min-w-0 rounded-lg border border-gray-200 bg-white p-3">
     <div className="flex items-center gap-2">
-      <span className="text-primary">{icon}</span>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+      <span className="shrink-0 text-primary">{icon}</span>
+      <p className="min-w-0 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
     </div>
-    <p className="mt-1 text-sm font-semibold text-gray-900">{value?.trim() ? value : '—'}</p>
+    {/* `break-words`: a phone number is one unbroken string, so without it
+        there is nowhere to wrap and it ran straight past the card's edge. */}
+    <p className="mt-1 break-words text-sm font-semibold text-gray-900">
+      {value?.trim() ? value : '—'}
+    </p>
     <p className="mt-0.5 text-xs text-gray-500">{hint}</p>
   </div>
 );
@@ -92,7 +98,11 @@ const HowCallsReachYou = ({ userInfo }: HowCallsReachYouProps) => {
         Where a call comes in, and what happens if you do not pick it up.
       </p>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {/* One column. Those breakpoints read the viewport, not this rail, so on a
+          wide screen a narrow sidebar was still being told to fit three cards
+          across — which is what wrapped every label onto two lines and left
+          the number no room. */}
+      <div className="mt-3 grid gap-2">
         <Fact
           icon={<Hash className="h-4 w-4" />}
           label="Extension"
