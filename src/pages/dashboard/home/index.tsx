@@ -33,7 +33,7 @@ import RecentCalls from './ops/recent-calls';
 import { buildAttentionItems } from './attention';
 import QuickActions from './quick-actions';
 import CommunicationOverview from './communication-overview';
-import { LinearMeter, RadialGauge, SparkBars, SparkLine, StatusDonut } from './charts';
+import { LinearMeter, RadialGauge, SparkBars, StatusDonut } from './charts';
 import { useKpiHistory } from './use-kpi-history';
 import '@/components/mcm/mcm-page.css';
 import '@/pages/dashboard/dashboard.css';
@@ -515,8 +515,15 @@ const Home = () => {
      second, the cards hold figures scoped to the day. Service level sits
      with the day because it is "calls answered in target today", not a
      reading of the floor right now. */
-  const LIVE_KEYS = ['waiting', 'longest', 'onqueue', 'agentsOnCall'];
-  const TODAY_KEYS = ['sla', 'answered', 'abandon', 'aht'];
+  /* Four, not eight. Eight tiles at equal weight is a wall to scan rather
+     than a state to read, and the four dropped ones all live a click away on
+     Performance. What survives answers the four questions a shift actually
+     turns on: is anyone waiting, how bad is the worst wait, are we keeping
+     our promise, and is anyone there to take the next call — demand, risk,
+     promise, supply. Answered Today, Abandon Rate, Avg Handle Time and On a
+     Call Now are all retrospective or derived, and none of them changes what
+     you do in the next minute. */
+  const LIVE_KEYS = ['waiting', 'longest', 'sla', 'onqueue'];
 
   const kpis: Kpi[] = [
     {
@@ -754,7 +761,7 @@ const Home = () => {
 
         {/* ── Right now — live state, no history behind these ───────────── */}
         <div className="sect-rule">
-          <h4>Right now</h4>
+          <h4>The floor</h4>
           <span className="sect-line" />
           <span className="note">
             <span className="dot green" /> live
@@ -793,85 +800,20 @@ const Home = () => {
                     </span>
                   ) : null}
                 </div>
+                {/* Service level is the one figure with a target, so it keeps
+                    its meter — the number alone does not say how far from the
+                    goal it sits. The other three are counts and a clock, with
+                    nothing to plot them against. */}
+                {kpi.chartType === 'meter' && kpi.meter ? (
+                  <LinearMeter
+                    value={kpi.meter.value}
+                    target={kpi.meter.target}
+                    color={KPI_CHART_COLOR[kpi.color] || kpi.color}
+                  />
+                ) : null}
                 {kpi.sub ? <div className="rail-d">{kpi.sub}</div> : null}
               </div>
             ))}
-        </div>
-
-        {/* ── Today so far — figures scoped to the day ──────────────────── */}
-        <div className="sect-rule">
-          <h4>Today so far</h4>
-          <span className="sect-line" />
-          <span className="note">since midnight</span>
-        </div>
-
-        <div className="kcards">
-          {kpis
-            .filter((kpi) => TODAY_KEYS.includes(kpi.key))
-            .map((kpi) => {
-              const trend = getTrend(kpi.key);
-              const trendGood = trend ? trend.direction === kpi.goodDirection : true;
-              const series = getHistory(kpi.key);
-              const showChart =
-                kpi.chartType === 'meter'
-                  ? Boolean(kpi.meter)
-                  : (kpi.chartType === 'bar' || kpi.chartType === 'line') && series.length > 1;
-              return (
-                <div key={kpi.key} className={`kcard${kpi.tone === 'bad' ? ' alert' : ''}`}>
-                  <div className="kcard-body">
-                    <div className="kcard-head">
-                      <span
-                        className="kcard-ic"
-                        style={{ background: `${kpi.color}1f`, color: kpi.color }}
-                      >
-                        <Ic n={kpi.icon} size={17} />
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <div className="kcard-k">{kpi.title}</div>
-                        <div className="kcard-sub">{kpi.subtitle}</div>
-                      </div>
-                    </div>
-                    <div className="kcard-row">
-                      <div className={`kcard-v num${kpi.tone ? ` ${kpi.tone}` : ''}`}>{kpi.value}</div>
-                      {trend ? (
-                        <span className={`kpi-trend${trendGood ? ' is-good' : ' is-bad'}`}>
-                          <Ic n={trend.direction === 'down' ? 'down' : 'up'} size={10} />
-                          {trend.pct}%<small>vs last 30 min</small>
-                        </span>
-                      ) : null}
-                    </div>
-                    {kpi.sub ? <div className="kcard-d">{kpi.sub}</div> : null}
-                  </div>
-                  {showChart ? (
-                    <div className="kcard-chart">
-                      {kpi.chartType === 'bar' ? (
-                        <SparkBars
-                          data={series}
-                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                          height={58}
-                        />
-                      ) : null}
-                      {kpi.chartType === 'line' ? (
-                        <SparkLine
-                          data={series}
-                          color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                          height={58}
-                        />
-                      ) : null}
-                      {kpi.chartType === 'meter' && kpi.meter ? (
-                        <div className="kcard-meter">
-                          <LinearMeter
-                            value={kpi.meter.value}
-                            target={kpi.meter.target}
-                            color={KPI_CHART_COLOR[kpi.color] || kpi.color}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
         </div>
 
         {/* ── needs you now, full width on its own row ─────────────────── */}
