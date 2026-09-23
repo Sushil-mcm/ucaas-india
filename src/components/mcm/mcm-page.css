@@ -3220,6 +3220,18 @@
   border-color: var(--accent) !important;
 }
 
+/* Widgets' search field is a bordered wrapper around a borderless input, so
+   the admin outline drew its ring inside an edge that was already there.
+   The wrapper's own border lights instead — the input carries no border to
+   colour, so the affordance has to live on the parent. */
+.mcm-admin .mcm-widget-search input:focus,
+.mcm-admin .mcm-widget-search input:focus-visible {
+  outline: none !important;
+}
+.mcm-admin .mcm-widget-search:focus-within {
+  border-color: var(--accent);
+}
+
 /* Pagination strip at the foot of Admin tables. */
 .mcm-admin .rounded-full {
   border-radius: 999px;

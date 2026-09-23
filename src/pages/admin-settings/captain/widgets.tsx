@@ -193,7 +193,7 @@ export default function CaptainWidgets() {
       </AdminHeadActions>
 
       <div className="flex items-center gap-2">
-        <div className="flex h-9 w-72 items-center gap-2 rounded-lg border border-gray-200 dark:border-border bg-gray-50 dark:bg-muted px-3 sm:w-96">
+        <div className="mcm-widget-search flex h-9 w-72 items-center gap-2 rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted px-3 sm:w-96">
           <Search className="size-4 shrink-0 text-gray-400 dark:text-muted-foreground" />
           <input
             value={search}
@@ -206,7 +206,7 @@ export default function CaptainWidgets() {
           <select
             value={connection}
             onChange={(e) => setConnection(e.target.value as ConnectionFilter)}
-            className="h-9 appearance-none rounded-lg border border-gray-200 dark:border-border bg-gray-50 dark:bg-muted pl-3 pr-8 text-sm text-gray-900 dark:text-foreground outline-none cursor-pointer"
+            className="h-9 appearance-none rounded-lg border border-gray-200 dark:border-border bg-white dark:bg-muted pl-3 pr-8 text-sm text-gray-900 dark:text-foreground outline-none cursor-pointer"
           >
             <option value="">All</option>
             <option value="connected">Connected</option>
