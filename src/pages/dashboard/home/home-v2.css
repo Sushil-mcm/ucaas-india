@@ -2714,3 +2714,16 @@
 .home-v2 .agents-tbl td:nth-child(n + 4) {
   text-align: right;
 }
+
+/* When a name is too long for its column, the name gives way -- not the
+   extension. The ellipsis was on the wrapping span, so it trimmed from the
+   end and ate the number: "Queenet Graphic · 994…". The extension is the
+   identifying field and two of fifteen rows were losing it. */
+.home-v2 .agents-tbl .tbl-row-name > span:not(.num) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-v2 .agents-tbl .tbl-row-name > .num {
+  flex: none;
+}
