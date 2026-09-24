@@ -247,13 +247,23 @@ const SendWhatsappMessage = ({
             ) : (
               <div className="flex flex-col gap-2 mt-2">
                 {!selectedTemplate?.components && <Label>Please Select Template</Label>}
-                <div className="grid w-full grid-cols-3 gap-2">
+                {/* A flex row, not `grid-cols-3`.
+
+                    This was a three-column grid holding one child, so the
+                    select and its button were squeezed into a third of the
+                    dialog and the template name clipped mid-word -- the other
+                    two thirds were empty. `flex-column` went with it: that is
+                    Bootstrap's name, Tailwind's is `flex-col`, so it never
+                    did anything. Row is what this wants anyway. */}
+                <div className="flex w-full items-center gap-2">
                   {isLoadingOmniChannels || isLoadingWhatsAppTemplates ? (
-                    <p>Please Wait...</p>
+                    <p className="text-sm text-[#9A948F]">Loading templates…</p>
                   ) : (
-                    <div className="flex flex-column items-center gap-2">
+                    <div className="flex w-full min-w-0 items-center gap-2">
+                      {/* min-w-0 so the select can shrink inside the flex row
+                          instead of forcing its own content width. */}
+                      <div className="min-w-0 flex-1">
                       <CustomSelect
-                        // label={'Select Template'}
                         placeholder={
                           !whatsappNumberAppId
                             ? 'WhatsApp channel unavailable'
@@ -273,7 +283,9 @@ const SendWhatsappMessage = ({
                         value={selectedTemplate}
                         inputClass={selectClassName}
                       />
+                      </div>
                       <Button
+                        className="shrink-0"
                         onClick={() => {
                           if (!selectedTemplate?.value) return;
                           setIsTemplate(true);

@@ -347,7 +347,7 @@ const NotesWidget = ({
 
   if (!readOnly && isLoading) {
     return (
-      <div className="bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] rounded-xl overflow-hidden flex-1 flex min-h-0">
+      <div className="bg-[rgba(251,249,246,0.88)] border border-[rgba(225,200,165,0.9)] rounded-xl overflow-hidden flex-1 flex min-h-0">
         <div className="w-full h-full bg-ucass-active-bg flex items-center justify-center text-[#2E2D35] p-4 text-center">
           <Loader variant="blue" size="sm" />
         </div>
@@ -357,7 +357,7 @@ const NotesWidget = ({
 
   return (
     <section
-      className={`w-full flex flex-col overflow-hidden rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] ${customClass}`}
+      className={`w-full flex flex-col overflow-hidden rounded-xl border border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] ${customClass}`}
     >
       <header className="flex items-center justify-between gap-3 border-b border-[#EEE7DD] bg-ucass-active-bg px-4 py-3">
         <div className="flex flex-col">
@@ -368,7 +368,7 @@ const NotesWidget = ({
         </span>
       </header>
 
-      <div className="w-full min-h-0 flex-1 overflow-y-auto bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] px-4 py-3" ref={scrollNoteRef}>
+      <div className="w-full min-h-0 flex-1 overflow-y-auto bg-[rgba(251,249,246,0.88)] px-4 py-3" ref={scrollNoteRef}>
         {renderedNotes && renderedNotes?.length ? (
           <ul className="w-full flex flex-col gap-3">
             {renderedNotes?.map((item: any, index: number) => item?.kind === 'script_answers' ? (
@@ -410,11 +410,23 @@ const NotesWidget = ({
             ))}
           </ul>
         ) : (
-          <div className="flex h-full min-h-[220px] items-center justify-center rounded-xl border border-dashed border-[#EEE7DD] bg-ucass-active-bg px-4">
-            <div className="text-center">
-              <p className="text-sm font-semibold text-[#2E2D35]">No notes yet</p>
-              <p className="mt-1 text-xs text-[#9A948F]">
-                Capture call highlights and follow-ups here.
+          /* Was a 220px dashed slab filled solid beige -- the emptiest thing
+             on the screen was also the largest and the loudest. A mark, a
+             line, and an example of what belongs here, at a size that
+             matches having nothing to show. */
+          <div className="flex min-h-[132px] items-center justify-center px-4 py-6">
+            <div className="max-w-[260px] text-center">
+              <span className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#f5e3cd] text-[#a86a25]">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5V15l-5 5H5.5A1.5 1.5 0 0 1 4 18.5z" />
+                  <path d="M15 20v-3.5a1.5 1.5 0 0 1 1.5-1.5H20" />
+                  <path d="M8 9h8M8 13h5" />
+                </svg>
+              </span>
+              <p className="text-[13.5px] font-semibold text-[#2E2D35]">No notes yet</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#9A948F]">
+                Anything you write here stays with this contact — what they
+                asked for, what you promised, when to follow up.
               </p>
             </div>
           </div>
@@ -422,7 +434,7 @@ const NotesWidget = ({
       </div>
 
       {!readOnly && (
-        <footer className="border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] p-3">
+        <footer className="border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-3">
           <div className="flex items-center gap-2">
             <div className="w-full rounded-xl border border-[#EEE7DD] bg-ucass-active-bg px-3 py-2">
               <textarea
