@@ -380,8 +380,14 @@ const AddUsers: FC<AddUsersProps> = ({
             onSubmit={handleSubmit(onSubmit)}
             className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
           >
-            <div className="min-h-0 flex-1 overflow-y-auto">{stepLookUp?.[currentStep]}</div>
-            <div className="mt-2 shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] pt-4 lg:mt-0 lg:border-t-0 lg:bg-transparent lg:pt-0">
+            {/* pb-5 so the last field ends short of the footer instead of
+                being sliced flush against it -- the cut landed mid-label
+                ("Email *", "Phone *") with nothing to say more followed. */}
+            <div className="min-h-0 flex-1 overflow-y-auto pb-5">{stepLookUp?.[currentStep]}</div>
+            {/* No blur: the panel behind it is a form, and frosting it made
+                the fields under the footer look smeared rather than
+                scrolled. A solid band reads as a floor. */}
+            <div className="mt-2 shrink-0 border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.96)] pt-4 lg:mt-0 lg:border-t-0 lg:bg-transparent lg:pt-0">
               <div className="flex min-w-max flex-nowrap justify-start gap-2 overflow-x-auto overflow-y-hidden sm:justify-end lg:min-w-0 lg:justify-end lg:overflow-visible">
                 <button
                   onClick={() => {

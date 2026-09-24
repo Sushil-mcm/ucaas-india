@@ -1303,3 +1303,17 @@
   align-items: center;
   gap: 6px;
 }
+
+/* The stepper is a count, not a text field.
+
+   It sat in a half-width grid column and stretched to fill it, so a single
+   digit floated in a box wide enough for a sentence with the minus and plus
+   pushed to opposite edges of the dialog. Capped, it reads as one control:
+   button, number, button. */
+.gp-invite-dialog .mcm-count-stepper {
+  max-width: 148px;
+}
+.gp-invite-dialog .mcm-count-stepper input {
+  text-align: center;
+  font-weight: 600;
+}
