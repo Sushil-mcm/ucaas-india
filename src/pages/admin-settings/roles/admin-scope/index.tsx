@@ -37,6 +37,7 @@ import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { AreaNav } from '@/pages/admin-settings/roles/area-nav';
 import { roleDisplayName } from '@/pages/admin-settings/roles/role-names';
 import { handleAlert } from '@/lib/utils';
@@ -256,6 +257,11 @@ const AdminScopePage = () => {
   const canSave = Boolean(draft) && isScopeSaveable(problems) && chosenDecision.allowed;
   const reach = draft ? reachOf(draft, roster) : null;
 
+  useSetAdminPageMeta({
+    description:
+      'A role says what an administrator may do. This says who they may do it to: a location, the whole company, or chosen groups.',
+  });
+
   const setLevel = (level: ScopeLevel) =>
     setDraft((current) => (current ? { ...current, level } : current));
 
@@ -263,10 +269,18 @@ const AdminScopePage = () => {
     <AdminPage
       section="People"
       title="Admin scope"
-      description="A role says what an administrator may do. This says who they may do it to: a location, the whole company, or chosen groups."
+      /* `hideHead`: the Admin head above already prints this title, so the
+         screen opened on it twice, three lines apart. The description moves
+         to the info button beside that title (`useSetAdminPageMeta`), and
+         the tour strip is forwarded up there with it.
+         `bareBody`: the children are cards already. Without it they sat
+         inside another card, which drew a white frame around them and a
+         band of nothing below the last one. */
+      hideHead
+      bareBody
       actions={<AreaNav current="/admin-settings/admin-scope" />}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         {scopesLoading || peopleLoading ? (
           <Loader />
         ) : (

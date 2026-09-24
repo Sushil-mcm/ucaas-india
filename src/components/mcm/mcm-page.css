@@ -4300,7 +4300,14 @@
   padding: 13px 16px 11px;
   border-bottom: 1px solid var(--line);
 }
+/* `flex: 1`. The header is `space-between` with the icon, the title block
+   and an optional aside as its items - so with an icon and no aside, the
+   two items went to opposite ends and the title sat against the right
+   edge of the card, half a screen from the mark that introduces it. The
+   title block takes the space between them, which is what puts the icon
+   beside its heading and leaves an aside at the far right. */
 .mcm-setcard-ht {
+  flex: 1 1 auto;
   min-width: 0;
 }
 .mcm-setcard-h h3 {
