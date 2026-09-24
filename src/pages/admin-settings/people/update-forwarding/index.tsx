@@ -1012,7 +1012,14 @@ const UpdateForwarding: FC<UpdateForwardingProps> = ({ setDrawerState, data, set
 
   return (
     <FormProvider {...formInstance}>
-      <form onSubmit={formInstance.handleSubmit(onSubmit)} className="mcm-page mcm-userform h-full">
+      <form
+        onSubmit={formInstance.handleSubmit(onSubmit)}
+        /* `mcm-userform-person` scopes this editor's chrome. The wizard
+           shell is shared with the number, department and queue editors,
+           so the restyling below is opted into by the person editor
+           rather than changed underneath all of them. */
+        className="mcm-page mcm-userform mcm-userform-person h-full"
+      >
         {isFetched ? (
           <>
             <Tabs

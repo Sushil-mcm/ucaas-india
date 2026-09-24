@@ -10448,3 +10448,101 @@
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+
+/* ==================================================================
+   The person editor (People > Edit)
+   ------------------------------------------------------------------
+   Same wizard, drawn as one thing rather than four. The head was a
+   tinted band, the six steps were underlined tabs that read as a
+   second title bar, and the footer mixed a filled button, a bare one
+   and an orange one at three apparent weights. Everything below is
+   opted into by the person editor alone: the wizard shell is shared
+   with the number, department and queue editors.
+   ================================================================== */
+.mcm-page.mcm-userform-person {
+  gap: 14px;
+}
+
+/* ---- who you are editing ---- */
+.mcm-page.mcm-userform-person .mcm-personhead {
+  gap: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.mcm-page.mcm-userform-person .mcm-personhead-name {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+/* The e-mail sits on the same line as the chips and is the one part of
+   it that can be any length, so it is the part that gives way. */
+.mcm-page.mcm-userform-person .mcm-personhead-meta .mcm-field-note {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- the six steps ---- */
+/* A rail of pills on a track, not underlined tabs. Underlined tabs read
+   as a second title bar directly beneath the first, and the active one
+   was told apart only by a 2px line at the bottom. */
+.mcm-page.mcm-userform-person .mcm-steps {
+  /* Wrapping, not scrolling sideways: six labels of this length do not
+     fit a drawer, and the scroll was silent - no bar, no shadow, so the
+     later steps simply appeared not to exist. */
+  flex-wrap: wrap;
+  overflow-x: visible;
+  gap: 4px;
+  padding: 4px;
+  background: #f4f5f7;
+  border: none;
+  border-radius: 14px;
+}
+.mcm-page.mcm-userform-person .mcm-step {
+  padding: 8px 12px;
+  margin-bottom: 0;
+  border-bottom: none;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mcm-page.mcm-userform-person .mcm-step:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink);
+}
+.mcm-page.mcm-userform-person .mcm-step.on {
+  background: #ffffff;
+  color: var(--accent-ink);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+.mcm-page.mcm-userform-person .mcm-step-n {
+  width: 20px;
+  height: 20px;
+  font-size: 10.5px;
+}
+
+/* ---- the footer ---- */
+.mcm-page.mcm-userform-person .mcm-formfoot {
+  gap: 8px;
+  padding-top: 12px;
+}
+.mcm-page.mcm-userform-person .mcm-formfoot .btn {
+  height: 38px;
+  padding: 0 16px;
+}
+/* "Back" and "Next" carry no modifier, so they were drawing a
+   transparent box with a transparent border - two words floating
+   between a filled Cancel and an orange Save. They are outlined
+   buttons, one weight below the primary. */
+.mcm-page.mcm-userform-person .mcm-formfoot .btn:not(.primary):not(.ghost) {
+  background: #ffffff;
+  border-color: var(--line);
+  color: var(--ink-2);
+}
+.mcm-page.mcm-userform-person .mcm-formfoot .btn:not(.primary):not(.ghost):hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
