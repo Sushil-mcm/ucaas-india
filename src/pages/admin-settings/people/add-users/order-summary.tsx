@@ -100,7 +100,7 @@ const OrderSummary = ({
         <div className="flex flex-1 flex-col justify-center">
         <ul className="flex flex-col gap-2 pt-3 text-sm text-gray-800 dark:text-mcm-ink-2">
           <li className="flex items-center justify-between gap-2">
-            <span className="font-semibold">Monthly License Cost:</span>
+            <span className="text-gray-600 dark:text-mcm-ink-3">Monthly License Cost:</span>
 
             {isLoading ? (
               <Skeleton className="h-3 w-[60px] bg-gray-200" />
@@ -109,7 +109,7 @@ const OrderSummary = ({
             )}
           </li>
           <li className="flex items-center justify-between gap-2">
-            <span className="font-semibold">
+            <span className="text-gray-600 dark:text-mcm-ink-3">
               Prorated Period
               {hasValidExpiration ? ` (${today.format('MMM D')} – ${expirationDate.format('MMM D')})` : ''}
               :
@@ -117,7 +117,7 @@ const OrderSummary = ({
             {hasValidExpiration ? `${remainingDays} days` : '—'}
           </li>
           <li className="flex items-center justify-between gap-2">
-            <span className="font-semibold">Prorated Charge for {totalPayableUnit} Licenses:</span>{' '}
+            <span className="text-gray-600 dark:text-mcm-ink-3">Prorated Charge for {totalPayableUnit} Licenses:</span>{' '}
             {isLoading ? (
               <Skeleton className="h-3 w-[150px] bg-gray-200" />
             ) : (
@@ -128,7 +128,7 @@ const OrderSummary = ({
             )}
           </li>
           <li className="flex items-center justify-between gap-2">
-            <span className="font-semibold">Total Tax:</span>
+            <span className="text-gray-600 dark:text-mcm-ink-3">Total Tax:</span>
             {isLoading ? (
               <Skeleton className="h-3 w-[90px] bg-gray-200" />
             ) : (
@@ -138,13 +138,22 @@ const OrderSummary = ({
               </div>
             )}
           </li>
-          <li className="flex items-center justify-between gap-2">
-            <span className="font-semibold">Total Amount:</span>
+          {/* The one figure the step exists for. It was set exactly like the
+              three lines above it, so the summary read as four equal facts
+              with no answer at the end. A rule above it and a heavier,
+              accent-coloured figure make it the total rather than another
+              row. */}
+          <li className="mt-1 flex items-center justify-between gap-2 border-t border-gray-200 pt-3 dark:border-mcm-line">
+            <span className="text-[13.5px] font-semibold text-gray-900 dark:text-mcm-ink">
+              Total Amount
+            </span>
 
             {isLoading ? (
-              <Skeleton className="h-3 w-[60px] bg-gray-200" />
+              <Skeleton className="h-4 w-[70px] bg-gray-200" />
             ) : (
-              <>₹{getTaxes?.total_amount || 0}</>
+              <span className="text-base font-bold text-[#c96f1f] dark:text-mcm-accent">
+                ₹{getTaxes?.total_amount || 0}
+              </span>
             )}
           </li>
         </ul>

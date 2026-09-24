@@ -284,7 +284,17 @@ const SavedCards = ({ cards, selectedCard, setSelectedCard }: any) => {
               </div>
             </label>
           ))
-        : 'No saved card '}
+        : /* Was the bare string 'No saved card ' — trailing space included —
+             sitting unstyled where a list of cards would be, which read as
+             text left behind rather than as a state. */
+          (
+            <div className="flex flex-col items-center gap-1 rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-gray-700">No saved cards</p>
+              <p className="text-xs text-gray-500">
+                Add one on the New Card tab and it will be kept for next time.
+              </p>
+            </div>
+          )}
     </div>
   );
 };
