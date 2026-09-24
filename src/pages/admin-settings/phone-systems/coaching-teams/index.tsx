@@ -72,8 +72,14 @@ const CoachingTeamsPage = () => {
   const names = (people: { name: string }[] = []) =>
     people.length ? people.map((p) => p.name).join(', ') : 'Nobody yet';
 
-  useSetAdminPageMeta({
-    description: (
+  /* Memoised, and that is not optional. `description` is a dependency of
+     the effect inside `useSetAdminPageMeta`, so JSX written inline here is
+     a new object on every render: set state, re-render, new object, set
+     state again - the loop the hook's own comment warns about for
+     `actions`. An empty dependency list keeps one element for the life of
+     the screen. */
+  const headDescription = useMemo(
+    () => (
       <>
         Coaches and the people they train. Coaches use the{' '}
         <Link to="/coaching" className="underline underline-offset-2">
@@ -82,7 +88,9 @@ const CoachingTeamsPage = () => {
         to watch and listen to their trainees&rsquo; calls.
       </>
     ),
-  });
+    [],
+  );
+  useSetAdminPageMeta({ description: headDescription });
 
   return (
     <div className="mcm-page flex h-full min-h-0 flex-col">
