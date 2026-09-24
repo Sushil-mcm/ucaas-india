@@ -163,17 +163,20 @@
   z-index: 1;
 }
 .gp-external td {
-  /* This set a colour for a border that had no width, so it drew nothing and
-     the rows ran together into one block -- most of why the table read as
-     congested. Declared properly now.
+  /* Vertical room only. 11px against a 12.5px two-line name cell left the
+     rows touching each other's content; 14px takes the row from 60px to 66px.
 
-     The extra vertical padding is the other half: 11px against a 12.5px
-     two-line name cell left the rows touching each other's content. 14px
-     takes the row from 60px to 66px, which is the breathing room the density
-     was missing. Horizontal padding stays at 12px -- the nine columns already
-     fill the table's width exactly, so widening the gutters would only push
-     text into truncation. */
-  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+     Horizontal padding stays at 12px deliberately -- the nine columns already
+     total 1132px inside a 1133px table, so widening the gutters would buy air
+     by pushing text into truncation.
+
+     No border here. The rule that used to sit at this spot set a
+     border-bottom COLOUR with no width, which drew nothing, and I read that
+     as the missing row separator. It was not: the line between rows comes
+     from `tr.border-b`, and `.gp-contact-table td` kills cell borders with
+     !important on purpose so only that one shows. Declaring a border here
+     would be overridden anyway -- dead code of exactly the kind that misled
+     me. */
   padding-top: 14px;
   padding-bottom: 14px;
 }
