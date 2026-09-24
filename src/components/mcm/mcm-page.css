@@ -10819,3 +10819,34 @@
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+
+/* ==================================================================
+   Checkboxes inside any dialog
+   ------------------------------------------------------------------
+   A dialog is portalled to <body>, which puts it outside `.mcm-page` -
+   and `--accent` is only the brand orange inside that scope. Out here
+   it resolves to the shadcn theme's own `--accent`, a near-white, so
+   the checkbox's `data-[state=checked]:bg-[var(--accent)]` painted a
+   white box with a white tick in it and a ticked row looked untouched.
+
+   In `@layer base`, because the colour it has to beat comes from a
+   Tailwind utility carrying `!important`, and a layered important
+   cannot be beaten from outside a layer however specific the selector.
+   For important declarations the layer order runs backwards, which puts
+   `base` ahead of `utilities`.
+   ================================================================== */
+@layer base {
+  [data-slot='dialog-content'] [data-slot='checkbox'][data-state='checked'] {
+    background: #f2994a !important;
+    border-color: #f2994a !important;
+    color: #ffffff !important;
+  }
+  [data-slot='dialog-content'] [data-slot='checkbox'][data-state='checked'] svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+  [data-slot='dialog-content'] [data-slot='checkbox'][data-state='indeterminate'] {
+    border-color: #f2994a !important;
+    color: #f2994a !important;
+  }
+}

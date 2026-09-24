@@ -312,7 +312,15 @@ const QueueNumbersPanel: FC<QueueNumbersPanelProps> = ({
             <Button type="button" variant="outline" onClick={closePicker}>
               Cancel
             </Button>
-            <Button type="button" disabled={ticked.length === 0} onClick={addTicked}>
+            {/* `primary`: this is the action the dialog exists for, and the
+                default variant is a pale wash with orange text on it - beside
+                an outlined Cancel the two read as the same weight. */}
+            <Button
+              type="button"
+              variant="primary"
+              disabled={ticked.length === 0}
+              onClick={addTicked}
+            >
               {ticked.length > 1 ? `Add ${ticked.length} numbers` : 'Add number'}
             </Button>
           </DialogFooter>
