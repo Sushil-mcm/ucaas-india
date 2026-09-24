@@ -11179,34 +11179,39 @@
    card's border; ACTION was centred over buttons read from the left;
    and the pager underneath was a cream strip pressed against the
    table rather than a card of its own.
+
+   Written as `.mcm-mediapage`, not `.mcm-admin .mcm-mediapage`: both
+   classes sit on the same <section>, and a descendant combinator asks
+   for one INSIDE the other - so the first version of this block matched
+   nothing at all.
    ================================================================== */
-.mcm-admin .mcm-mediapage table tbody td {
+.mcm-mediapage table tbody td {
   background: #ffffff;
   border-bottom: 1px solid var(--line-2);
 }
-.mcm-admin .mcm-mediapage table tbody tr:last-child td {
+.mcm-mediapage table tbody tr:last-child td {
   border-bottom: none;
 }
-.mcm-admin .mcm-mediapage table tbody tr:hover td {
+.mcm-mediapage table tbody tr:hover td {
   background: #faf9fb;
 }
-.mcm-admin .mcm-mediapage table th:first-child,
-.mcm-admin .mcm-mediapage table td:first-child {
+.mcm-mediapage table th:first-child,
+.mcm-mediapage table td:first-child {
   padding-left: 22px;
 }
-.mcm-admin .mcm-mediapage table th:last-child,
-.mcm-admin .mcm-mediapage table td:last-child {
+.mcm-mediapage table th:last-child,
+.mcm-mediapage table td:last-child {
   padding-right: 22px;
 }
 /* `@layer base` and `!important`: TableManager gives an `action` column
    the `!text-center` utility, and a layered important cannot be beaten
    from outside a layer however specific the selector. */
 @layer base {
-  .mcm-admin .mcm-mediapage table th:last-child {
+  .mcm-mediapage table th:last-child {
     text-align: right !important;
   }
 }
-.mcm-admin .mcm-mediapage table td:last-child {
+.mcm-mediapage table td:last-child {
   text-align: right;
 }
 
@@ -11226,12 +11231,30 @@
    table above it: it was a cream strip whose contents started 8px from
    its own edge while the table's started at 22px, so the two boxes did
    not share a single vertical line down either side. */
-.mcm-admin .mcm-mediapage .mcm-pagerbar,
-.mcm-admin .mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur'] {
+.mcm-mediapage .mcm-pagerbar,
+.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur'] {
   padding-left: 18px;
   padding-right: 18px;
   background: #ffffff;
   border-color: var(--line);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+/* The pager sat directly against the table above it, so the table's
+   bottom border and the pager's top border met as one thick line and
+   the pager's rounded corners cut into it. A gap, and the two boxes
+   read as two boxes. */
+.mcm-mediapage .mcm-acct-body > div > div:last-child {
+  margin-top: 12px;
+}
+/* A little more room per row: at 24 files the list was a wall of text
+   with the lines closer to each other than to their own column heading. */
+.mcm-mediapage table tbody td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+.mcm-mediapage table tbody td:first-child {
+  font-weight: 600;
+  color: var(--ink);
 }
