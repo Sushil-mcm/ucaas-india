@@ -73,34 +73,30 @@ export const DirectoryPage = ({
           <CustomTooltip
             text={description}
             side="bottom"
-            /* `[text-wrap:wrap]` is the one that matters.
+            /* A narrow box with balanced lines.
 
-               TooltipContent's base class combines `w-fit`, a max-width and
-               `text-balance`, and those three together leave a gap. The box
-               takes its width first — max-content clamped to the max-width,
-               so the full 384px for a sentence this long. Balancing then
-               re-wraps the text to even out the lines, which makes every line
-               narrower than the box it already sized. The leftover is dead
-               space down the right-hand edge, about 100px of it, and it reads
-               as padding because there is nothing else it could be.
+               The gap people see is beside the SHORTEST line — the ragged
+               right edge — not unused width at the box's edge. I optimised
+               the wrong one of those for two rounds: I turned off the base
+               class's `text-balance`, which made Contacts look right by luck
+               (its two lines happen to come out even) and made every other
+               Directory page far worse.
 
-               Balancing is right for a two-word label and wrong for a
-               sentence. Wrapping normally lets the text use the width the box
-               already claimed.
+               Measured across all seven descriptions at this font, worst gap
+               beside the shortest line:
 
-               The width goes back to max-w-xs, which is where it started.
-               Widening it was the wrong move: measured across all seven
-               Directory descriptions at this font, 320px leaves a mean of 7px
-               unused with a worst case of 17px, where 384px leaves 18px and
-               33px and 360px leaves 21px and 50px. Every width keeps these to
-               two lines, so the narrowest is simply the tightest fit. CSS
-               cannot size a box to the longest line its text wraps to, so
-               some slack is unavoidable; this is the least of it.
+                 320px, balance off   mean 123px, worst 173px
+                 320px, balance on    mean  71px, worst  97px
+                 260px, balance on    mean  38px, worst  84px
 
-               Also: tighter leading, and one notch less horizontal padding,
-               since the base px-3 is sized for a label rather than a
-               sentence. */
-            className="max-w-xs px-2.5 py-1.5 leading-snug [text-wrap:wrap]"
+               Balancing is what evens the lines; the narrow box is what stops
+               the balancer leaving room over. Per page at 260px the gap falls
+               to 7-37px everywhere except Contacts, whose description is much
+               the longest and lands at 59px over three balanced lines rather
+               than its current lucky 16px over two. One width cannot be ideal
+               for seven sentences of different lengths; this is the best of
+               them by both mean and worst case. */
+            className="max-w-[260px] px-2.5 py-1.5 leading-snug"
           >
             <button type="button" className="page-head-info" aria-label={`About ${title}`}>
               <Info size={15} aria-hidden="true" />
