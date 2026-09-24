@@ -29,6 +29,7 @@ import { FileAudio2, FileText, FileVideo2, Paperclip, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useSmsRateCredits } from '@/hooks/use-sms-rate-credits';
 import { useMessagingPermissions } from '@/hooks/use-messaging-permissions';
+import { formatMoney } from '@/lib/billing-money';
 
 export const validationSchema = yup.object().shape({
   from: yup
@@ -227,7 +228,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
           <>
             Remaining SMS: {Math.max(0, freeSms - (sms_used + (smsCountData?.messages || 0)))}
             <br />
-            SMS Charges: ${chargeableAmount.toFixed(2)}
+            SMS Charges: {formatMoney(chargeableAmount) ?? '₹0.00'}
           </>
         ),
       });
@@ -354,7 +355,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
         </div>
       </div>
       <div className="flex min-h-0 w-full flex-1 flex-col gap-2 justify-between">
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
+        {/* gap-5, not gap-4: the DID, the recipient and the composer were
+            evenly spaced with the message block, so "who it is from", "who it
+            goes to" and "what it says" read as one undifferentiated stack
+            rather than three decisions. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1">
           <CustomSelect
             label="Choose a DID to send message"
             inputClass="mcm-did-select"
@@ -408,25 +413,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
               <div
                 className={`mcm-sms-editor flex items-center w-full rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
               >
-                <div className="flex min-h-[126px] w-full flex-col justify-between gap-2 p-3">
-                  <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <span className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-2">
-                      <p className="text-sm leading-normal font-medium">
-                        Chars Used -{' '}
-                        <span className="text-gray-500 font-normal">{smsCountData.length}</span>
-                      </p>
-                      <p className="text-sm leading-normal font-medium">
-                        Chars in SMS -{' '}
-                        <span className="text-gray-500 font-normal">
-                          {smsCountData.characterPerMessage}
-                        </span>
-                      </p>
-                    </span>
-                    <p className="text-sm leading-normal font-medium">
-                      SMS Count (max 5):{' '}
-                      <span className="text-gray-500 font-normal">{smsCountData.messages}</span>
-                    </p>
-                  </div>
+                {/* The counters used to sit here, above the text, inside the
+                    same box — so "Chars Used - 0  Chars in SMS - 160" read as
+                    the first line of the message you were writing. They are
+                    metadata about the draft, so they belong under it. */}
+                <div className="flex min-h-[126px] w-full flex-col justify-between p-0">
                   <textarea
                     name="sms"
                     id=""
@@ -438,9 +429,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                     }}
                     maxLength={700}
                     placeholder="Write a message..."
-                    className="min-h-[120px] border-none text-sm outline-0 resize-none placeholder:text-gray-700 sm:min-h-[140px]"
+                    className="min-h-[120px] resize-none border-none px-3 pt-3 text-sm outline-0 placeholder:text-gray-400 sm:min-h-[140px]"
                   />
-                  <div className="flex min-h-6 flex-wrap items-center gap-3">
+                  {/* A toolbar, ruled off from the text above it, rather than
+                      two rows sharing one undivided box. */}
+                  <div className="flex min-h-6 flex-wrap items-center gap-3 border-t border-gray-200 px-3 py-2">
                     <div className="relative cursor-pointer">
                       <div
                         className="emoji-container absolute bottom-[2.5rem] !left-0 z-20 max-w-[calc(100vw-3rem)] sm:left-auto sm:right-0 sm:max-w-none"
@@ -546,11 +539,35 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                   </div>
                 </div>
               ) : null}
-              {!isMMSMode ? (
-                <p className="text-xs">
-                  SMS Charges: <span className="text-red-500">${smsCredits.toFixed(2)}</span>
-                </p>
-              ) : null}
+              {/* Everything the draft costs you, on one line under the box:
+                  how much you have typed, how many messages that becomes, and
+                  the charge. Currency through formatMoney like every other
+                  figure in the app -- this printed a literal "$" while the
+                  platform bills in rupees. */}
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-0.5 text-xs text-gray-500">
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span>
+                    <span className="font-medium text-gray-700">{smsCountData.length}</span>
+                    {' / '}
+                    {smsCountData.characterPerMessage} chars
+                  </span>
+                  <span aria-hidden="true" className="text-gray-300">
+                    ·
+                  </span>
+                  <span>
+                    <span className="font-medium text-gray-700">{smsCountData.messages}</span>{' '}
+                    {smsCountData.messages === 1 ? 'SMS' : 'SMS'} (max 5)
+                  </span>
+                </span>
+                {!isMMSMode ? (
+                  <span>
+                    Charge{' '}
+                    <span className="font-semibold text-gray-700">
+                      {formatMoney(smsCredits) ?? '₹0.00'}
+                    </span>
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
