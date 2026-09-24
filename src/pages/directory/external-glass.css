@@ -696,8 +696,11 @@
   min-width: 0;
 }
 .gp-contact-toolbar input.gp-contact-search {
-  height: 33px !important;
-  min-height: 33px !important;
+  /* 36px, matching the view toggle, Sync With Google, Group and Tag --
+     every other control in this row is 36 and the search sat 3px short,
+     so it read as dropped rather than aligned. */
+  height: 36px !important;
+  min-height: 36px !important;
   width: 100% !important;
   max-width: none !important;
   border-radius: 20px !important;
