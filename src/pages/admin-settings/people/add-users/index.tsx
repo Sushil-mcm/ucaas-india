@@ -157,6 +157,47 @@ const AddUsers: FC<AddUsersProps> = ({
     return undefined;
   };
 
+  /* The first field with a message in a react-hook-form error tree, as a
+     dotted path ("users.0.email"). The tree is nested per field array, so a
+     flat Object.keys only ever reaches "users". */
+  const firstErrorPath = (node: any, base = ''): string => {
+    if (!node || typeof node !== 'object') return '';
+    if (typeof node.message === 'string' && node.message) return base;
+    for (const key of Object.keys(node)) {
+      const path = base ? `${base}.${key}` : key;
+      const found = firstErrorPath(node[key], path);
+      if (found) return found;
+    }
+    return '';
+  };
+
+  /* Take the user to the first problem.
+
+     Submitting an invalid form did nothing visible: the errors render beside
+     their labels, and on a form this tall the offending field is usually
+     scrolled out of sight, so the button read as dead. React Hook Form's own
+     `shouldFocusError` cannot help here — it focuses through the ref a field
+     registers, and the selects and phone input in this form are custom
+     components that register no ref, so it silently does nothing.
+
+     Finding the field in the DOM by its name covers both kinds. */
+  const goToFirstError = (formErrors: any) => {
+    const path = firstErrorPath(formErrors);
+    window.requestAnimationFrame(() => {
+      const escaped =
+        path && typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(path) : path;
+      const target =
+        (escaped && document.querySelector<HTMLElement>(`[name="${escaped}"]`)) ||
+        document.querySelector<HTMLElement>('.border-red-500, [aria-invalid="true"]');
+      if (!target) return;
+      target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      /* preventScroll so the focus does not fight the smooth scroll above. */
+      if (typeof (target as HTMLInputElement).focus === 'function') {
+        (target as HTMLInputElement).focus({ preventScroll: true });
+      }
+    });
+  };
+
   const formInstance = useForm<any>({
     defaultValues: formInitialState,
     resolver: getResolver(currentStep, typeOfPassword),
@@ -377,7 +418,7 @@ const AddUsers: FC<AddUsersProps> = ({
             panelFooter={currentStep === 1 ? licenseStats : null}
           />
           <form
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, goToFirstError)}
             className="h-full min-h-0 w-full flex flex-1 flex-col justify-between gap-4 overflow-hidden"
           >
             {/* pb-5 so the last field ends short of the footer instead of
