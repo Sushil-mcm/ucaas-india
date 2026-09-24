@@ -15,8 +15,8 @@ import './groups-glass.css';
 import './external-glass.css';
 import SendWhatsappMessage from '@/pages/messenger/drawers/send-whatsapp-message';
 import { Icon } from '@/assets/icons/icon';
-import { SearchLine } from '@/assets/icons';
 import { DirectoryPage } from './page-shell';
+import { Ic } from '@/components/mcm/icons';
 import AllNewContactsList from '@/pages/new-contact/all-contacts-list';
 import CreateContactNew from '@/pages/new-contact/create-new-contact';
 import NotesWidget from '@/components/notes';
@@ -305,7 +305,17 @@ const ExternalInner = () => {
                 IconPosition="left-0 pl-3 inset-y-0"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                Icon={<SearchLine className="gp-contact-search-icon text-[#8a7a67] w-4 h-4" />}
+                /* Directory's own search glyph, not `SearchLine`.
+
+                   SearchLine's handle starts at 14.583 on a circle whose edge
+                   is at 14.59 -- the tail grows straight out of the ring with
+                   no gap, and the round cap overlaps it. The glyph the rest of
+                   Directory uses starts its handle at 16.5 against an edge at
+                   15.95, so the tail reads as a separate handle the way a
+                   magnifier actually looks. Same reason as the dropdowns: this
+                   page was reaching for a different icon set than its
+                   neighbours. */
+                Icon={<Ic n="search" size={16} className="gp-contact-search-icon text-[#8a7a67]" />}
               />
             </div>
             {tabName === CONTACT_TABS_CONST.CONTACT_LIST && (
