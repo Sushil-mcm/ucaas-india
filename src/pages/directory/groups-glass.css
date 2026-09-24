@@ -674,7 +674,13 @@
    of its own, so matched here by its literal Tailwind class combination
    rather than editing the shared component. Scoped to this dialog only. */
 .gp-create-group-body p.font-semibold.truncate.text-md {
-  font-size: 17px !important;
+  /* 14px, down from 17px. 17 was set to make these titles read clearly, but
+     it also made each settings row 85px tall so only three of the six were
+     ever on screen. At the wizard's own body scale the title still leads its
+     row -- it is the only semibold thing in it -- without costing the height
+     that hid half the step. */
+  font-size: 14px !important;
+  line-height: 1.35 !important;
 }
 /* The "Set how you'd like your calls to be handled..." line under "If no
    one answer" -- a plain unclassed `<p>`, same bump for consistency with
@@ -1492,10 +1498,6 @@
   border-color: rgba(225, 200, 165, 0.55) !important;
   box-shadow: none !important;
   align-items: center;
-}
-.gp-wiz-settings .grid > div p.font-semibold {
-  font-size: 14px !important;
-  line-height: 1.35;
 }
 .gp-wiz-settings .grid > div p.text-sm {
   font-size: 12.5px !important;
