@@ -10780,3 +10780,16 @@
 .mcm-queueform table tbody tr:hover td {
   background: #faf9fb;
 }
+
+/* The table's corner cells round themselves to match the box that clips
+   them (they have to: a sticky header cannot inherit an ancestor's
+   corner clip in Chromium). They were given the wrapper's OUTER radius,
+   but they sit inside its 1px border - so they curve away a pixel early
+   and a sliver of the wrapper showed at each top corner. One pixel less,
+   and the header meets the border it sits against. */
+.mcm-queueform thead th:first-child {
+  border-top-left-radius: 11px;
+}
+.mcm-queueform thead th:last-child {
+  border-top-right-radius: 11px;
+}

@@ -463,9 +463,13 @@ const SourceTabs = ({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
+            /* `mcm-solid-card` on the lit pill: rounded plus `bg-white` is
+               what the console's glass rule matches, so the one tab that is
+               meant to be white was being painted the same cream as the
+               track it sits on - and the pair read as one flat box. */
             className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
               isActive
-                ? 'bg-white font-semibold text-primary shadow-sm'
+                ? 'mcm-solid-card bg-white font-semibold text-primary shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
