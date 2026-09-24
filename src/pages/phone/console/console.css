@@ -499,7 +499,13 @@
      to swallow most of the screen on a narrower window instead of
      leaving room for the stage/panel columns to show at all. */
   flex: 1 1 380px;
-  min-width: 380px;
+  /* 320, not 380. The three columns' floors used to total 1260px inside a
+     grid that is only 1200 wide at a 1280px window -- the panel column ran
+     60px past the right edge and `overflow-x: hidden` clipped the Copilot
+     pane rather than scrolling it. The floors now total 1080, so the
+     columns shrink to fit and `flex-basis` still sizes them on wide
+     screens. */
+  min-width: 320px;
   max-width: 420px;
 }
 .mcm-console .col.stage {
@@ -512,7 +518,7 @@
      a wide copilot panel are still just fine, so letting them grow
      freely is what actually gets rid of the gap instead of shrinking it. */
   flex: 1 1 520px;
-  min-width: 420px;
+  min-width: 360px;
   /* Rounded, so the dialler reads as its own pane rather than a cream block
      butting square against the header and the columns either side. It
      already clips (`.col` sets overflow: hidden), so the curve cuts its
@@ -530,7 +536,10 @@
      scroll, cutting "Contact" off at the edge. See .col.stage above for
      why this one has no max-width either. */
   flex: 1 1 540px;
-  min-width: 460px;
+  /* The six tabs no longer all fit in one row at this floor, but a tab
+     strip that scrolls is recoverable and a pane clipped by the viewport
+     is not. */
+  min-width: 400px;
 }
 .mcm-console .col {
   display: flex;
@@ -2501,15 +2510,17 @@
 @media (max-width: 1240px) {
   .mcm-console .col.calls {
     flex-basis: 360px;
-    min-width: 360px;
+    min-width: 300px;
   }
   .mcm-console .col.stage {
     flex-basis: 460px;
-    min-width: 380px;
+    min-width: 340px;
   }
   .mcm-console .col.panel-col {
     flex-basis: 480px;
-    min-width: 440px;
+    /* 360+380+440 came to 1180 in the 1160 this breakpoint actually has, so
+       the step meant to fix the overflow was still 20px over its budget. */
+    min-width: 380px;
   }
 }
 @media (max-width: 900px) {
@@ -4914,4 +4925,33 @@
 }
 .mcm-console .record-head-actions .btn.primary {
   flex: 1 1 auto;
+}
+
+
+/* ---- call record header, sizing ---------------------------------------
+   The three actions sat at 40px with 18px of side padding and a 56px
+   avatar beside them -- in a 420px column that is most of the card's
+   height spent on chrome. Down a step: the row is a set of controls under
+   a name, not the subject of the card. */
+.mcm-console .record-head .btn {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 12.5px;
+  gap: 6px;
+  border-radius: 9px;
+}
+.mcm-console .record-head .btn.sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 11.5px;
+}
+.mcm-console .record-head .btn svg {
+  width: 14px;
+  height: 14px;
+}
+.mcm-console .record-head .record-av {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 13px;
+  font-size: 14px;
 }
