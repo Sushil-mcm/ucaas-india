@@ -341,7 +341,12 @@
   background: #ffffff;
   border-color: rgba(242, 153, 74, 0.3);
   padding: 0;
-  max-height: 85vh;
+  /* A bare 85vh cannot tell a short window from a tall one. On a 585px-tall
+     window it held the dialog to 497px with the New location form running
+     626px inside a 352px region, so the last field was sliced at the footer
+     while ~90px of screen sat unused below the dialog. The px ceiling keeps
+     tall screens from growing a short form into a tall box. */
+  max-height: min(92vh, 760px);
   display: flex;
   flex-direction: column;
   overflow: hidden;

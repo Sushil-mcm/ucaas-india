@@ -168,7 +168,7 @@ const SiteInfo = ({ formInstance }: any) => {
           <h5 className="font-semibold text-gray-900 text-md">Physical Address</h5>
           <p className="text-gray-500 text-sm">Enter the geographical address for this site.</p>
         </div>
-        <div className="flex flex-col gap-5 sm:gap-6">
+        <div className="flex flex-col gap-4 sm:gap-5">
           <div className="flex w-full items-center gap-3">
             <div className="relative flex w-full gap-1">
               <div className="flex w-full flex-col gap-1.5">
@@ -179,7 +179,10 @@ const SiteInfo = ({ formInstance }: any) => {
                 <textarea
                   placeholder="Enter address"
                   {...register('address')}
-                  rows={3}
+                  /* 2, not 3: this is the street line only -- city, state and
+                     postcode are their own fields below it -- so the third row
+                     was 19px of empty box in a form that already overflows. */
+                  rows={2}
                   className={`border w-full ${errors?.address?.message ? 'border-red-500' : 'border-gray-300'} rounded-xl text-sm resize-none p-3 hover:border-primary focus:border-primary focus-visible:border-primary focus-visible:outline-none text-gray-700`}
                 />
               </div>
