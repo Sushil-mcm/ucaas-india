@@ -10764,3 +10764,19 @@
 .mcm-queueform > .mcm-userform > * {
   max-width: none;
 }
+
+/* Add member, inside the queue editor. The rows carried no fill of their
+   own, so the cream of the panel behind showed through them and six
+   people read as one block; and with nothing between them, a name sat as
+   close to the row below as to its own extension. White rows, a hairline
+   between, and a hover a shade off white rather than another colour. */
+.mcm-queueform table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line-2);
+}
+.mcm-queueform table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mcm-queueform table tbody tr:hover td {
+  background: #faf9fb;
+}
