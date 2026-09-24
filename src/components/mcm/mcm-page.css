@@ -10546,3 +10546,21 @@
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+
+/* The head's "Add people" button.
+   Its variant hovers to `bg-primary/90` - the brand orange at 90% alpha,
+   which over the console's cream ground composites to a muddy brown, and
+   then puts white text on it. The label came out dim against a colour
+   that is neither the wash it left nor the orange it was meant to reach.
+   Hover lands on the solid accent instead: one flat colour, white text
+   at full contrast, and a darker shade while the button is held. */
+.mcm-page .mcm-people-add:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+.mcm-page .mcm-people-add:active:not(:disabled) {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: #ffffff;
+}

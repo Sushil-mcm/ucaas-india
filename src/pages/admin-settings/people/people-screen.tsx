@@ -285,7 +285,7 @@ const PeopleScreen: FC = () => {
             slot, on the title's line, and the description into its tooltip. */}
         <AdminHeadActions>
           {isAdministrator && (
-            <Button className="gap-2" onClick={() => setDrawerState({ addUser: true })}>
+            <Button className="mcm-people-add gap-2" onClick={() => setDrawerState({ addUser: true })}>
               <Plus className="w-4 h-4" /> Add people
             </Button>
           )}
