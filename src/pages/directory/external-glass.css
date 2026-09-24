@@ -187,8 +187,8 @@
      !important on purpose so only that one shows. Declaring a border here
      would be overridden anyway -- dead code of exactly the kind that misled
      me. */
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-top: 17px;
+  padding-bottom: 17px;
 }
 /* Same wash Performance ▸ Calls uses for its own row hover
    (--ic-row-hover in interactions-theme.css). */
@@ -1165,20 +1165,4 @@
 .gp-contact-list-table th:nth-child(9),
 .gp-contact-list-table td:nth-child(9) {
   width: 78px;
-}
-
-/* ── Row separators you can actually see ───────────────────────────────────
-   The line between rows was 0.67px of rgb(238,231,221) — cream on a
-   near-white row, which reads as no line at all. That is why the table looked
-   like one block of text no matter how much padding the rows were given:
-   without a visible edge, nothing tells the eye where a row ends.
-
-   A full pixel, and the warm brown already used for hairlines in this file,
-   at an alpha that renders. This is a colour change and the only one here —
-   the tone of a separator, not the brand palette.
-
-   On `.gp-contact-table` so both tabs match; they sit behind the same
-   toggle. */
-.gp-contact-table tbody tr {
-  border-bottom: 1px solid rgba(150, 100, 50, 0.16);
 }
