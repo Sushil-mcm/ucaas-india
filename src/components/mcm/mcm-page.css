@@ -11243,10 +11243,26 @@
 
 /* The pager sat directly against the table above it, so the table's
    bottom border and the pager's top border met as one thick line and
-   the pager's rounded corners cut into it. A gap, and the two boxes
-   read as two boxes. */
-.mcm-mediapage .mcm-acct-body > div > div:last-child {
+   the pager's corners cut into it. Keyed on the pager's own classes:
+   TableManager returns a fragment, so the table and the pager are
+   siblings of whatever wraps the component and there is no element in
+   between to put a gap on. */
+.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur'] {
   margin-top: 12px;
+}
+
+/* The header band stopped short of both ends of the table. The scroll
+   box rounds its own corners - it has to, because a sticky header
+   cannot rely on an ancestor's corner clip in Chromium - and the square
+   header cells inside it were cut by that curve, leaving the box's own
+   paler surface showing at each top corner. The corner cells take the
+   curve themselves, a pixel inside the border, so the band runs the
+   full width of the table. */
+.mcm-mediapage table thead th:first-child {
+  border-top-left-radius: 15px;
+}
+.mcm-mediapage table thead th:last-child {
+  border-top-right-radius: 15px;
 }
 /* A little more room per row: at 24 files the list was a wall of text
    with the lines closer to each other than to their own column heading. */
