@@ -251,6 +251,15 @@
   background: #fff6e9;
   border-bottom: 1px solid rgba(242, 153, 74, 0.2);
 }
+/* The shared body is `padding: 0 20px 18px` -- no top padding at all. Every
+   other dialog using it supplies its own (`pt-3` on the form inside
+   new-department, etc.); `SendWhatsappMessage` supplies none, so the "From"
+   label's top edge landed exactly on the header's bottom edge, measured at a
+   0.0px gap. It read as one merged block rather than a heading over a form.
+   18px here matches the body's own bottom padding. */
+.gp-whatsapp-dialog .gp-create-group-body {
+  padding-top: 18px;
+}
 
 /* `.mcm-field`, `.mini` and `.ic` normally read `--line`/`--surface`/
    `--ink-2`/`--ai` etc, tokens defined only within `.mcm-page` — this
