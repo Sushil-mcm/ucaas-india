@@ -11037,3 +11037,81 @@
   border-radius: 16px;
   text-align: center;
 }
+
+/* ==================================================================
+   The people pickers in a coaching team
+   ------------------------------------------------------------------
+   Two of these sit side by side. Each was four loose blocks - heading,
+   chips, search, list - with nothing holding them together, so at a
+   glance the dialog was eight stacked things rather than two columns.
+   One panel each, with the list scrolling inside it.
+   ================================================================== */
+.mcm-picker {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #eee7dd;
+  border-radius: 14px;
+}
+.mcm-picker-h {
+  padding: 10px 12px;
+  background: #fbfaf8;
+  border-bottom: 1px solid #eee7dd;
+}
+/* Holds its height with nobody in it, so the two columns do not jump a
+   row apart the moment one of them gets its first person. */
+.mcm-picker-chips {
+  display: flex;
+  min-height: 38px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0e4d3;
+}
+.mcm-picker-b {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.mcm-picker-list {
+  max-height: 184px;
+  overflow-y: auto;
+  border: 1px solid #eee7dd;
+  border-radius: 10px;
+  background: #ffffff;
+}
+.mcm-picker-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid #f5f1ea;
+  transition: background-color 0.15s ease;
+}
+.mcm-picker-row:last-child {
+  border-bottom: none;
+}
+.mcm-picker-row:hover {
+  background: #faf9fb;
+}
+/* "Add" was three words of accent text at the end of a row; as a chip it
+   reads as the button the whole row already is. */
+.mcm-picker-add {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid #ffd9ad;
+  background: #fff6ec;
+  font-size: 11px;
+  font-weight: 700;
+  color: #c96f1f;
+}
+.mcm-picker-row:hover .mcm-picker-add {
+  border-color: #f2994a;
+}

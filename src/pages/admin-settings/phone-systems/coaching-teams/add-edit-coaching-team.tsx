@@ -86,22 +86,35 @@ const AddEditCoachingTeam: FC<Props> = ({ team, onClose }) => {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <div>
-            <p className="text-base font-semibold text-gray-900">
+      <DialogContent
+        /* Wider and taller than it was: two people pickers side by side
+           need the room, and at `max-h-[70vh]` on the body the recording
+           rule's explanation was cut off mid-sentence. */
+        className="flex h-[min(88vh,860px)] w-[min(920px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
+        overlayClassName="bg-black/10 backdrop-blur-[0.5px]"
+        onInteractOutside={(e) => e.preventDefault()}
+        showCloseButton={false}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-[#EEE7DD] px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-[#2E2D35]">
               {form.uuid ? 'Edit coaching team' : 'New coaching team'}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="mt-0.5 text-xs text-[#9A948F]">
               Coaches can watch their trainees&rsquo; calls, listen in, and have them recorded for
               review.
             </p>
           </div>
-          <button type="button" aria-label="Close" onClick={onClose} className="text-gray-400 hover:text-gray-700">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="mcm-rowact flex shrink-0 items-center justify-center"
+          >
             <CloseIcon className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-4 py-4 flex flex-col gap-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="coaching-name">Team name</Label>
@@ -124,7 +137,9 @@ const AddEditCoachingTeam: FC<Props> = ({ team, onClose }) => {
               />
             </div>
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+          {/* `items-start` so one column growing does not stretch the
+              other into matching it. */}
+          <div className="grid items-start gap-4 md:grid-cols-2">
             <PeoplePicker
               label="Coaches"
               hint="They see the trainees' live calls on the Coaching page and can listen, whisper or barge."
@@ -142,7 +157,7 @@ const AddEditCoachingTeam: FC<Props> = ({ team, onClose }) => {
               onChange={(trainees) => setForm((f) => ({ ...f, trainees }))}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 rounded-xl border border-[#EEE7DD] bg-white p-4">
             <Label>Recording of trainees&rsquo; own calls</Label>
             <CustomSelect
               options={RECORD_RULES}
@@ -152,13 +167,13 @@ const AddEditCoachingTeam: FC<Props> = ({ team, onClose }) => {
               }
               className="w-full max-w-md"
             />
-            <p className="text-xs text-gray-500">
+            <p className="mt-0.5 text-xs leading-relaxed text-[#9A948F]">
               Read by the call switch for calls straight to a trainee and calls they dial. It adds
               to the company recording policy and never switches recording off. Calls through a
               queue or a group follow the company policy. The usual recording notice plays.
             </p>
           </div>
-          <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 p-3">
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-[#EEE7DD] bg-white p-4">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900">Also record the trainees&rsquo; screens</p>
               <p className="text-xs text-gray-600">
@@ -176,7 +191,7 @@ const AddEditCoachingTeam: FC<Props> = ({ team, onClose }) => {
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-4 py-3">
+        <div className="flex justify-end gap-2 border-t border-[#EEE7DD] px-5 py-3">
           <Button type="button" variant="transparent" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
