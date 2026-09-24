@@ -4933,19 +4933,23 @@
    avatar beside them -- in a 420px column that is most of the card's
    height spent on chrome. Down a step: the row is a set of controls under
    a name, not the subject of the card. */
-.mcm-console .record-head .btn {
+/* Through `.col.stage .stage-inner`, because that is the depth the call
+   screen's own button rules use (`.stage-inner .btn.primary/.ghost`, 44px
+   pills). A plain `.record-head .btn` is two classes short of them and
+   lost silently -- the avatar shrank and the buttons did not. */
+.mcm-console .col.stage .stage-inner .record-head .btn {
   height: 34px;
   padding: 0 13px;
   font-size: 12.5px;
   gap: 6px;
   border-radius: 9px;
 }
-.mcm-console .record-head .btn.sm {
+.mcm-console .col.stage .stage-inner .record-head .btn.sm {
   height: 30px;
   padding: 0 10px;
   font-size: 11.5px;
 }
-.mcm-console .record-head .btn svg {
+.mcm-console .col.stage .stage-inner .record-head .btn svg {
   width: 14px;
   height: 14px;
 }
