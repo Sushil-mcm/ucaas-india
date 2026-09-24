@@ -3304,3 +3304,139 @@
     box-shadow: inset 0 0 0 5px rgba(37, 99, 235, 0.4);
   }
 }
+
+@layer components {
+  /* ── Recipient field (Inbox ▸ New Message ▸ "Send message to") ───────────
+     Every class `recipient-field.tsx` renders — mcm-addr-input, -flag,
+     -suggest, -opt, -opt-n, -opt-m, -none, -who, -err — had no styles
+     anywhere in the repo. The only `.mcm-addr-*` rules that exist are scoped
+     to `.mcm-inbox` and belong to a different, react-select based address
+     row, so none of them reached this component.
+
+     The result was a field with no field: no border, no background, no
+     dropdown panel, just a placeholder floating on the dialog with the
+     suggestions unstyled beneath it. These are the missing styles, matched
+     to the dialog's other inputs (10px radius, the same tan hairline, accent
+     border on focus). */
+  .mcm-addr-box {
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid rgba(225, 200, 165, 0.9);
+    border-radius: 10px;
+    background: #fff;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .mcm-addr-box:focus-within {
+    border-color: #f2994a;
+  }
+  /* The flag only occupies space once there is a number to have a country. */
+  .mcm-addr-flag {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+  }
+  .mcm-addr-flag:empty {
+    display: none;
+  }
+  .mcm-addr-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: #1a1a1a;
+  }
+  .mcm-addr-input::placeholder {
+    color: #9a948f;
+  }
+  .mcm-addr-input.is-error {
+    color: #b42318;
+  }
+  /* The resolved contact's name, once a typed number matches one. */
+  .mcm-addr-who {
+    flex: none;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c96f1f;
+  }
+  .mcm-addr-err {
+    flex: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #b42318;
+  }
+  .mcm-addr-err.warn {
+    color: #b06a12;
+  }
+
+  /* The suggestion list. Anchored to the field, not the dialog, so it opens
+     against the input rather than wherever the dialog happens to be. */
+  .mcm-addr-suggest {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    max-height: 232px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid rgba(225, 200, 165, 0.9);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow:
+      0 16px 40px rgba(160, 95, 30, 0.18),
+      0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  .mcm-addr-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      color 0.12s;
+  }
+  .mcm-addr-opt:hover:not(:disabled) {
+    background: #fff1e0;
+  }
+  .mcm-addr-opt:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .mcm-addr-opt-n {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+  .mcm-addr-opt-m {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11.5px;
+    color: #8a7a67;
+  }
+  .mcm-addr-none {
+    padding: 10px 8px;
+    font-size: 12.5px;
+    color: #8a7a67;
+  }
+}

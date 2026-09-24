@@ -127,7 +127,11 @@ const RecipientField = ({
   const resolvedName = parsed.value ? nameForNumber(parsed.value) : '';
 
   return (
-    <div className="relative flex min-w-0 flex-1 items-center gap-2">
+    /* `mcm-addr-box` is the field itself: flag and input share one bordered
+       box, the way the To: line does in the WhatsApp dialog. Without it the
+       input had no container of its own and the row read as loose placeholder
+       text floating on the dialog. */
+    <div className="mcm-addr-box relative flex min-w-0 flex-1 items-center gap-2">
       {/* The country of the number being typed, same as the From: line above. */}
       <span className="mcm-addr-flag">
         {parsed.value ? <Flag phoneNumber={toFlagNumber(parsed.value)} /> : null}
