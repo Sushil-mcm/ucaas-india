@@ -3,6 +3,8 @@ import PendingReleasePanel from './pending-release-panel';
 import SwapNumberDialog from './swap-number-dialog';
 import { parseForwardActions } from '@/lib/call-standard';
 import TableManager from '@/components/custom/table-manager';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import { AdminPage } from '@/pages/admin-settings/page-shell';
 import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import { useUser } from '@/hooks/use-user';
@@ -776,17 +778,45 @@ const NumberList = () => {
             </>
           )}
 
-          {openDrawer && (
-            <SideDrawer
-              width="min(1040px, 84vw)"
-              title="Add Number"
-              isOpen={openDrawer}
-              isTab={false}
-              enableResponsive
-              handleClose={() => setOpenDrawer(false)}
-              content={<AddNumber handleClose={() => setOpenDrawer(false)} />}
-            />
-          )}
+          {/* Centred, not a drawer. Picking one number from a short list is
+              not a panel's worth of work: at 84vw the content sat in the top
+              left of an empty sheet with the page it came from greyed out
+              behind it. A dialog the width of its own content, over a lightly
+              veiled page. The backdrop does not close it - a mis-click while
+              scanning a price list should not throw the choice away. */}
+          <Dialog
+            open={openDrawer}
+            onOpenChange={(next) => {
+              if (!next) setOpenDrawer(false);
+            }}
+          >
+            <DialogContent
+              className="flex max-h-[82vh] w-[min(680px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
+              overlayClassName="bg-black/20 backdrop-blur-[1.5px]"
+              onInteractOutside={(e) => e.preventDefault()}
+              showCloseButton={false}
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-[#EEE7DD] px-5 py-4">
+                <div className="min-w-0">
+                  <DialogTitle className="text-base font-semibold text-[#2E2D35]">
+                    Add a number
+                  </DialogTitle>
+                  <p className="mt-0.5 text-sm text-[#9A948F]">
+                    Numbers already provisioned for your account. Pick one to add it.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  className="mcm-rowact flex items-center justify-center"
+                  onClick={() => setOpenDrawer(false)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <AddNumber handleClose={() => setOpenDrawer(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </AdminPage>
 
