@@ -501,9 +501,17 @@ export const LogContent = ({
                                 of pushing the date out. */}
                             <div className="flex min-w-0 flex-1 flex-col gap-1">
                               <div className="flex gap-2 items-center justify-between">
-                                <div className="bg-white gap-2 flex">
-                                  <p className="font-semibold text-sm">
-                                    {isOutbound ? 'Called By :' : 'Received By :'}
+                                {/* The two labels set their values' left edge,
+                                    and they are different lengths -- "Called
+                                    by" against "Via DID" -- so each row began
+                                    at a different x and the pair read as
+                                    ragged. A shared min-width puts both
+                                    values on one column.
+
+                                    Also drops the space before the colon. */}
+                                <div className="flex min-w-0 gap-2 bg-white">
+                                  <p className="min-w-[92px] shrink-0 text-sm font-semibold">
+                                    {isOutbound ? 'Called by:' : 'Received by:'}
                                   </p>
                                   {selectedUser ? (
                                     <div className=" flex items-center justify-center">
@@ -532,9 +540,11 @@ export const LogContent = ({
                                 <p className="font-medium text-sm">{formattedStartStamp}</p>
                               </div>
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1">
-                                  <p className="font-semibold text-sm">Via DID:</p>
-                                  <p className="text-sm">{viaDid}</p>
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <p className="min-w-[92px] shrink-0 text-sm font-semibold">
+                                    Via DID:
+                                  </p>
+                                  <p className="truncate text-sm">{viaDid}</p>
                                 </div>
                                 <div className="flex gap-0.5 justify-end items-center">
                                   <p className="text-black/50 flex items-center gap-0.5 text-xs">
