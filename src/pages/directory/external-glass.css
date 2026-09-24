@@ -155,12 +155,17 @@
   background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
-  /* 1.5px, not 3px. A 3px bar was the heaviest line on the page and it sat
-     directly above the lightest ones (the row separators are under 1px), so
-     the head shouted and the rows below it mumbled. Half the weight still
-     separates the head clearly and stops it competing with the content.
-     Thickness only -- the colour is untouched. */
-  border-bottom: 1.5px solid rgba(242, 153, 74, 0.4);
+  /* No border-bottom here. There used to be `3px solid rgba(242,153,74,0.4)`
+     and it never drew: `.gp-contact-table th` further down this file strips
+     th and td borders with !important, on purpose, so the only line in the
+     table is `tr.border-b`. I halved that 3px thinking it was the heavy rule
+     above the rows; it was not rendering either way.
+
+     That makes three dead border declarations found in this one file — the
+     same pattern each time: a border written on `.gp-external th/td` while
+     `.gp-contact-table` removes it. Anything to do with borders on this
+     table has to go through that rule, not around it. The head is separated
+     by its own background instead. */
   height: 42px;
   font-size: 11.5px;
   position: sticky;
