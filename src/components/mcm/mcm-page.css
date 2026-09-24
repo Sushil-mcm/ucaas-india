@@ -10793,3 +10793,14 @@
 .mcm-queueform thead th:last-child {
   border-top-right-radius: 11px;
 }
+
+/* The Media tab of the queue editor. The slot list ships on the console's
+   cream glass, which inside a white dialog reads as a tinted slab with
+   five switches on it rather than as a list of settings. White, with the
+   same edge the cards on the other tabs carry. */
+.mcm-queueform .mcm-medialist {
+  background: #ffffff;
+  border-color: var(--line);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

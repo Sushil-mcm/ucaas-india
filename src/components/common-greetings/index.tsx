@@ -105,16 +105,25 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
 
   return (
     <div className={`w-full ${customClass} overflow-y-auto`}>
-      <div className="flex flex-col gap-4 p-4 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] ">
+      {/* `mcm-medialist` is a hook for the screens that want this list on a
+          plain surface rather than the glass one; it changes nothing on its
+          own. */}
+      <div className="mcm-medialist flex flex-col gap-4 p-4 rounded-xl bg-[rgba(251,249,246,0.88)] backdrop-blur-[12px] border border-[rgba(225,200,165,0.9)] ">
         <div className="w-full">
           {/* `lockNote` marks a row the company rule has frozen on a person's
               own Greetings page: the switch and the picker are greyed out and
               the sentence says why, so a disabled control is not mistaken for
               a broken one. Admin screens never pass it. */}
           {visibleMediaOptions.map(({ name, label, placeholder, icon, iconClass, disabled, lockNote }, index) => (
+            /* One row per slot, with a line between them. The rows used to
+               run together with nothing but padding, so a switch sat as
+               close to the row beneath it as to its own label - and on a
+               slot with nothing chosen, the empty control wrapper below
+               still took a `gap-4`, which made some rows taller than
+               others for no visible reason. */
             <div
               key={`${name}-${index}`}
-              className="flex flex-col gap-4 w-full py-2 first:pt-0 last:pb-0"
+              className="flex w-full flex-col gap-3 border-b border-[#EEE7DD] py-3 first:pt-0 last:border-b-0 last:pb-0"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center flex-wrap gap-1">
@@ -145,12 +154,16 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
                 )}
               </div>
               {lockNote ? <p className="text-xs text-gray-500">{lockNote}</p> : null}
-              <div className="flex flex-col gap-2 w-1/2 template-greeting-control-wrap">
-                <div
-                  className={`w-80 template-greeting-control${lockNote ? ' pointer-events-none opacity-60' : ''}`}
-                  aria-disabled={lockNote ? true : undefined}
-                >
-                  {watchMedia?.[name]?.enabled && (
+              {/* Rendered only when the slot is on. It used to be two empty
+                  divs otherwise - `w-1/2` holding a `w-80` - which is where
+                  the stray space under a switched-off row came from, and
+                  why the picker was 320px wide whatever it sat in. */}
+              {watchMedia?.[name]?.enabled ? (
+                <div className="w-full max-w-[380px] template-greeting-control-wrap">
+                  <div
+                    className={`w-full template-greeting-control${lockNote ? ' pointer-events-none opacity-60' : ''}`}
+                    aria-disabled={lockNote ? true : undefined}
+                  >
                     <>
                       <SelectGreeting
                         name={
@@ -191,9 +204,9 @@ const CommonGreetingNotification: FC<IGREETINGPROPS> = ({
                         }
                       />
                     </>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
           ))}
         </div>
