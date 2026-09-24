@@ -10743,7 +10743,8 @@
    Keyed on the utility the shared TableManager writes; if that class
    ever changes the empty state simply goes back to filling its box,
    which is the behaviour every other screen has. */
-.mcm-admin .mcm-idpage .h-\[calc\(100\%_-_45px\)\] {
+.mcm-admin .mcm-idpage .h-\[calc\(100\%_-_45px\)\],
+.mcm-admin .mcm-ivrpage .h-\[calc\(100\%_-_45px\)\] {
   height: auto;
   min-height: 0;
   padding-top: 40px;
@@ -11114,4 +11115,38 @@
 }
 .mcm-picker-row:hover .mcm-picker-add {
   border-color: #f2994a;
+}
+
+/* ==================================================================
+   Phone System › IVR menus
+   ------------------------------------------------------------------
+   The note and the search sat loose on the page ground between two
+   cards - the head above and the table below - so the row had no edge
+   of its own and nothing to line up with. Given the same card the
+   other Admin screens' filter rows carry, and the table's rows the
+   white the rest of the console uses.
+   ================================================================== */
+.mcm-admin .mcm-ivrpage .mcm-listbar {
+  padding: 12px 18px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.mcm-admin .mcm-ivrpage table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line-2);
+}
+.mcm-admin .mcm-ivrpage table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mcm-admin .mcm-ivrpage table tbody tr:hover td {
+  background: #faf9fb;
+}
+/* The actions column is read from the right edge, like every other list. */
+.mcm-admin .mcm-ivrpage table th:last-child,
+.mcm-admin .mcm-ivrpage table td:last-child {
+  text-align: right;
+}
+.mcm-admin .mcm-ivrpage table td:last-child > div {
+  justify-content: flex-end;
 }

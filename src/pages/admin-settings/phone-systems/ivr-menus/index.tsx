@@ -133,6 +133,7 @@ const IvrMenus: FC = () => {
   return (
     <>
       <AdminPage
+        className="mcm-ivrpage"
         hideHead
         bareBody
         section="Phone System"

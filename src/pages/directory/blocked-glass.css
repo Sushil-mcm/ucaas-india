@@ -232,6 +232,9 @@
 }
 .gp-blocked td:last-child .mini {
   gap: 4px;
+  /* Same Directory row-action ink as Contacts/People/Favourites; the
+     fallback here was `.mcm-page .mini`'s cool `--ink-2` (#3d4a63). */
+  color: rgba(46, 45, 53, 0.8);
 }
 
 /* ---- "Block a number" dialog. Portaled to `document.body` (outside

@@ -1,1 +1,0 @@
-import{u as i,jy as u}from"./index-CRf_2yVb.js";const a=["userInfo"],r=e=>{var s,t;return(t=(s=e==null?void 0:e.data)==null?void 0:s.data)==null?void 0:t.result},l=()=>i({queryKey:a,queryFn:u,select:r,staleTime:6e4}),c=e=>{e!=null&&e.invalidateQueries&&(e.invalidateQueries({queryKey:a}),e.invalidateQueries({queryKey:["getUsersDetails"]}))};export{c as i,l as u};

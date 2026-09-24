@@ -259,6 +259,12 @@
   justify-content: center;
   background: transparent;
   border-color: transparent;
+  /* The one ink every Directory row action uses -- Contacts' and People's
+     "..." triggers both compute `rgba(46,45,53,.8)`. Left alone these fall
+     back to `.mcm-page .mini`'s `--ink-2` (#3d4a63), a cool blue-grey that
+     reads as a different colour beside the others' warm near-black.
+     The starred button keeps `--warn` via `.mcm-fav-on`, hence the :not(). */
+  color: rgba(46, 45, 53, 0.8);
   box-shadow: none;
   transition:
     background-color 0.16s ease,
