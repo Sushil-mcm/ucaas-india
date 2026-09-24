@@ -163,9 +163,16 @@ const SendWhatsappMessage = ({
 
   useClickOutside({ current: [emojiContainerRef.current] }, () => setEmojiOpen(false));
   return (
-    <div className="flex flex-col bg-white ">
+    <div className="flex h-full flex-col bg-white">
       {/* <div className="flex flex-col gap-4 xxl:h-[calc(100vh_-_7.5rem)] xl:h-[calc(100vh_-_7.6rem)] lg:h-[calc(100vh_-_7.1rem)] md:h-[calc(100vh_-_6.9rem)] sm:h-[calc(100vh_-_6.9rem)] xs:h-[calc(100vh_-_6.9rem)] overflow-auto"> */}
-      <div className="flex flex-col gap-4 h-[calc(100vh-11.5rem)] overflow-y-auto">
+      {/* Fills the drawer instead of measuring the window.
+
+          This was `h-[calc(100vh-11.5rem)]` — a fixed height derived from the
+          viewport, inside a drawer that already has a height of its own. The
+          two disagreed, so the scroll area was taller than the space it sat
+          in and the scrollbar ran long past the content. flex-1 takes the
+          room the drawer actually leaves. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
         <div className="flex flex-col gap-4">
           {/* Says why it is empty. With no WhatsApp channel on the account
               this rendered as a blank grey box that ignores clicks, which
@@ -190,8 +197,18 @@ const SendWhatsappMessage = ({
             />
           </div>
           <div className="flex flex-col gap-2">
+            {/* One option, so it reads as a statement rather than a choice.
+
+                "Custom Message" is commented out below, which left a bordered
+                box holding a single pre-selected radio — a control that
+                cannot be operated. The RadioGroup stays so restoring the
+                second option is uncommenting it, but until then it presents
+                as the selected mode: WhatsApp requires an approved template
+                outside the 24-hour customer-service window, so template is
+                not a preference here, it is the only route. */}
+            <Label>Message type</Label>
             <RadioGroup
-              className="border border-gray-200 rounded-xl flex gap-4 p-3 min-h-10"
+              className="flex min-h-10 items-center gap-4 rounded-xl border border-[rgba(242,153,74,0.35)] bg-[#fff8f0] px-3 py-2.5"
               value={radioOption}
               onValueChange={(value) => {
                 setRadioOption(value);
@@ -225,7 +242,7 @@ const SendWhatsappMessage = ({
                     }}
                     maxLength={700}
                     placeholder="Write a message..."
-                    className="border-none outline-0 text-sm resize-none placeholder:text-gray-700"
+                    className="border-none outline-0 text-sm resize-none placeholder:text-gray-400"
                   />
                   <div className="flex items-center gap-4">
                     <div className="relative cursor-pointer">
