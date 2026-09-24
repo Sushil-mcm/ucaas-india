@@ -298,7 +298,18 @@ const ExternalInner = () => {
               Sync With Google
             </Button>
 
-            <div className="gp-contact-search-wrap" style={{ flex: '2 1 200px', minWidth: 140 }}>
+            {/* Capped, or it swallows the row on the Contact Group tab.
+
+                Group and Tag only render for Contact view, so on the other
+                tab this was the one growable child left and took everything
+                they had been using — 286px on one tab and about 680px on the
+                other, for the same control. The cap keeps it the width it
+                already is beside them, so switching tabs no longer resizes
+                it. */}
+            <div
+              className="gp-contact-search-wrap"
+              style={{ flex: '2 1 200px', minWidth: 140, maxWidth: 320 }}
+            >
               <Input
                 placeholder="Search"
                 className="gp-contact-search h-9 min-h-9 w-full rounded-lg border-[rgba(225,200,165,0.9)] bg-white/70 pl-10 shadow-sm focus:shadow"
