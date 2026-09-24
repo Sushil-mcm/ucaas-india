@@ -436,7 +436,9 @@ const NotesWidget = ({
       {!readOnly && (
         <footer className="border-t border-[rgba(225,200,165,0.9)] bg-[rgba(251,249,246,0.88)] p-3">
           <div className="flex items-center gap-2">
-            <div className="w-full rounded-xl border border-[#EEE7DD] bg-ucass-active-bg px-3 py-2">
+            {/* White, not peach. It is a field you type into, and the peach
+                fill made it read as another panel rather than an input. */}
+            <div className="w-full rounded-xl border border-[#EEE7DD] bg-white px-3 py-2">
               <textarea
                 className="w-full min-h-[36px] max-h-[96px] resize-none border-0 bg-transparent text-sm leading-6 text-[#2E2D35] placeholder:text-[#9A948F] focus:outline-none"
                 value={note}

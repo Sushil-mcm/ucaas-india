@@ -959,10 +959,13 @@
     border: 1px solid rgba(225, 200, 165, 0.9) !important;
     box-shadow: none !important;
   }
+  /* The border says focused; it does not need a halo saying it again. The
+     3px spread sat entirely outside the control, which read as a glow round
+     the field rather than as part of it. */
   .mcm-did-select.custom-react-select__control:hover,
   .mcm-did-select.custom-react-select__control--is-focused {
     border-color: #f2994a !important;
-    box-shadow: 0 0 0 3px rgba(242, 153, 74, 0.15) !important;
+    box-shadow: none !important;
   }
   /* Add / Edit Campaign form: same thin tan border + orange focus ring as
      its plain inputs, instead of the global gray-300 / 0.8rem control. */

@@ -39,7 +39,22 @@ const ContactActivity = ({
   const state = activityState ?? routerState;
   const contactId = contactIdProp ?? searchParams.get('contactId');
   const isLeadList = searchParams.get('isLeadList') === 'true';
-  const goBack = onClose ?? (() => navigate(-1));
+  /* `navigate(-1)` alone dead-ends when this page is the first entry in the
+     session -- opened from a link, a refresh, or pasted straight into the
+     bar. There is no previous entry, so the button does nothing at all and
+     looks broken. React Router tracks its position in history.state.idx; at
+     0 there is nothing behind us, so go to the list this contact came from
+     instead. */
+  const goBack =
+    onClose ??
+    (() => {
+      const idx = (window.history.state as { idx?: number } | null)?.idx;
+      if (typeof idx === 'number' && idx > 0) {
+        navigate(-1);
+        return;
+      }
+      navigate('/directory/external');
+    });
   const [showDialer, setShowDialer] = useState(false);
   const [numberToAdd, setNumberToAdd] = useState('');
   // Pre-fill for a new contact, sent by the browser extension's "Save to

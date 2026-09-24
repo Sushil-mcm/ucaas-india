@@ -552,12 +552,17 @@ const NewContact: FC = () => {
           isOpen={notesOpen}
           title={`Contact Notes (${selectedContact?.name?.first || ''} ${selectedContact?.name?.last || ''})`}
           handleClose={() => setNotesOpen(false)}
+          /* Padded, so the panel does not run into the drawer's own edges --
+             its border and the drawer's were touching, which made the two
+             read as one mis-drawn box. */
           content={
-            <NotesWidget
-              customClass="h-full"
-              extraPayload={{ phone: selectedContact?.contact?.phone }}
-              contactId={selectedContact?._id || ''}
-            />
+            <div className="h-full p-3">
+              <NotesWidget
+                customClass="h-full"
+                extraPayload={{ phone: selectedContact?.contact?.phone }}
+                contactId={selectedContact?._id || ''}
+              />
+            </div>
           }
         />
       )}
