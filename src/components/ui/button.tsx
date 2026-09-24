@@ -9,16 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /* Hover goes to the deep orange, not the brand orange. Two reasons,
-           and the first one is measurable: white on #f2994a is a contrast
-           ratio of 2.2:1, which is below any legibility floor - the label
-           was there and simply could not be read. (It started as
-           `bg-primary/90`, orange at 90% alpha, which also composited
-           against the cream page into a muddy brown.) #b3601a carries
-           white at 4.6:1, and it is the shade the console's own hand-built
-           buttons already hover to. */
+        /* Hover fills with #c96f1f - the console's own accent-ink, the shade
+           its hand-built buttons already hover to. It started as
+           `bg-primary/90`, the brand orange at 90% alpha, which composited
+           against the cream page into a muddy brown; plain #f2994a was no
+           better, carrying white at a contrast ratio of 2.2:1, below any
+           legibility floor. This one carries white at 3.6:1 and still
+           reads as orange rather than brown. */
         default:
-          'bg-ucass-primary-200 border border-primary text-primary shadow-xs hover:bg-[#b3601a] hover:border-[#b3601a] hover:text-white active:bg-[#98510f] active:border-[#98510f] cursor-pointer min-h-10',
+          'bg-ucass-primary-200 border border-primary text-primary shadow-xs hover:bg-[#c96f1f] hover:border-[#c96f1f] hover:text-white active:bg-[#a85a14] active:border-[#a85a14] cursor-pointer min-h-10',
         primary:
           'bg-primary border border-primary text-white shadow-xs hover:bg-primary/90 cursor-pointer min-h-10',
         variantIcon: 'bg-primary text-primary shadow-xs hover:bg-primary/90 cursor-pointer',
@@ -29,7 +28,7 @@ const buttonVariants = cva(
         /* Same shade, same reason as `default` above: a white label needs a
            dark enough fill under it to be read at all. */
         outline:
-          'bg-white border border-primary text-primary shadow-xs hover:bg-[#b3601a] hover:border-[#b3601a] hover:text-white cursor-pointer min-h-10',
+          'bg-white border border-primary text-primary shadow-xs hover:bg-[#c96f1f] hover:border-[#c96f1f] hover:text-white cursor-pointer min-h-10',
         secondary:
           'bg-gray-100 border border-gray-200 text-gray-900 shadow-xs hover:bg-gray-100/90 cursor-pointer min-h-10',
         /* `hover:text-accent-foreground`, not `hover:text-accent`: the latter

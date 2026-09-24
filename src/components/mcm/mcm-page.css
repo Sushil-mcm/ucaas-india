@@ -3370,6 +3370,16 @@
 .mcm-admin .text-primary {
   color: var(--accent-ink);
 }
+/* ...except where a button has asked for a white label on hover. That
+   rule above is unlayered and Tailwind's `hover:text-white` lives in
+   `@layer utilities`, and an unlayered rule beats a layered one at equal
+   specificity - so inside Admin every button that fills in on hover kept
+   its orange text and the label disappeared into its own background.
+   Matched on the utility class itself, so it reaches exactly the buttons
+   that asked for white and leaves `link` and `ghost` alone. */
+.mcm-admin [data-slot='button'].hover\:text-white:hover {
+  color: #ffffff;
+}
 .mcm-admin .border-primary {
   border-color: var(--accent);
 }
