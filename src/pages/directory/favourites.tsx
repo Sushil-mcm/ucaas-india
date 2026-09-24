@@ -155,7 +155,7 @@ const Favourites = () => {
       <div className="gp-favourites">
       <DirectoryPage
         title="Favourites"
-        description="The people you reach most, colleagues and outside contacts together, one click from here."
+        description="The people you reach most, in one place."
         filters={
           <>
             <FilterChip

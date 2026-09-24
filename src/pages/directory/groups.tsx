@@ -304,7 +304,7 @@ const Groups = () => {
     <div className="gp-groups">
       <DirectoryPage
         title="Groups"
-        description="Everyone routes through a group — see who's in each one and who manages it."
+        description="How calls route, and who is in each group."
         actions={
           <>
             <button

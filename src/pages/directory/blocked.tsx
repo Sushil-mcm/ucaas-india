@@ -170,7 +170,7 @@ const Blocked = () => {
     <div className="gp-dirlist">
     <DirectoryPage
       title="Blocked Numbers"
-      description="Everyone you have stopped hearing from, and one place to block someone new."
+      description="Numbers you have stopped hearing from."
       actions={
         <span className="flex items-center gap-2">
           <button type="button" className="btn ghost" onClick={exportCsv} disabled={!visible.length}>

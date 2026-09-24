@@ -225,7 +225,7 @@ const ExternalInner = () => {
       <div className="gp-external">
       <DirectoryPage
         title="External Contacts"
-        description="People outside the organisation — who they work for, how to reach them, and every channel you can use."
+        description="Everyone outside the organisation you deal with."
         actions={
           <div className="flex items-center gap-2">
             {canAddContact && (

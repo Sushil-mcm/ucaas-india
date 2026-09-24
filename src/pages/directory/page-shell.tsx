@@ -73,30 +73,19 @@ export const DirectoryPage = ({
           <CustomTooltip
             text={description}
             side="bottom"
-            /* A narrow box with balanced lines.
+            /* Wide enough that these descriptions never wrap.
 
-               The gap people see is beside the SHORTEST line — the ragged
-               right edge — not unused width at the box's edge. I optimised
-               the wrong one of those for two rounds: I turned off the base
-               class's `text-balance`, which made Contacts look right by luck
-               (its two lines happen to come out even) and made every other
-               Directory page far worse.
+               Chasing this with CSS alone was the wrong tree. No rule sizes a
+               box to the longest line its text wraps to: the box takes its
+               width first, the text then wraps narrower, and the difference
+               shows as a gap down one edge. Balancing the lines changes how
+               that gap is shared out; it cannot remove it.
 
-               Measured across all seven descriptions at this font, worst gap
-               beside the shortest line:
-
-                 320px, balance off   mean 123px, worst 173px
-                 320px, balance on    mean  71px, worst  97px
-                 260px, balance on    mean  38px, worst  84px
-
-               Balancing is what evens the lines; the narrow box is what stops
-               the balancer leaving room over. Per page at 260px the gap falls
-               to 7-37px everywhere except Contacts, whose description is much
-               the longest and lands at 59px over three balanced lines rather
-               than its current lucky 16px over two. One width cannot be ideal
-               for seven sentences of different lengths; this is the best of
-               them by both mean and worst case. */
-            className="max-w-[260px] px-2.5 py-1.5 leading-snug"
+               Text that fits on one line has no gap at all, because the box
+               is then exactly as wide as the text. The seven descriptions
+               were shortened to suit, and measured: each renders on one line
+               at 249-293px, so 320px clears all of them with room spare. */
+            className="max-w-[320px] px-2.5 py-1.5 leading-snug"
           >
             <button type="button" className="page-head-info" aria-label={`About ${title}`}>
               <Info size={15} aria-hidden="true" />

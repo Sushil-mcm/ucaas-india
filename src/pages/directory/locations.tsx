@@ -137,7 +137,7 @@ const Locations = () => {
       <div className="gp-locations">
       <DirectoryPage
         title="Locations"
-        description="The sites your organisation operates from — address, timezone and who works there."
+        description="The sites your organisation operates from."
         actions={
           canAdd ? (
             <button type="button" className="btn primary" onClick={() => setCreating(true)}>

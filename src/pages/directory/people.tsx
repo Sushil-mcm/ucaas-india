@@ -370,7 +370,7 @@ const People = () => {
       <div className="gp-people">
       <DirectoryPage
         title="People"
-        description="Everyone in the organisation, with live presence, skills and one-click contact."
+        description="Everyone in the organisation, with live presence."
         actions={
           <>
             <button

@@ -166,7 +166,7 @@ const Roles = () => {
     <div className="gp-roles">
       <DirectoryPage
         title="Roles"
-        description="What each person sees in this app — and how many people hold each role."
+        description="What each person can see and do in this app."
         /* Honest about where the gate is. The tick boxes decide what this app
            shows and hides, and the server reads the same tree on the People
            routes, media, devices and company settings, plus admin scope on
