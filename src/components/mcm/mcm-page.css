@@ -11258,11 +11258,20 @@
    paler surface showing at each top corner. The corner cells take the
    curve themselves, a pixel inside the border, so the band runs the
    full width of the table. */
+/* 17px, one inside the scroll box's own 18px (`--r-lg`) - I guessed 15
+   first and the two curves simply disagreed by two pixels, which is the
+   pale strip that was left above the band. And the table is pinned to
+   the top of the box: `.table-scroll table` is centred with `margin:
+   auto`, which is what put a sliver of the box's own surface above the
+   first row of cells. */
 .mcm-mediapage table thead th:first-child {
-  border-top-left-radius: 15px;
+  border-top-left-radius: 17px;
 }
 .mcm-mediapage table thead th:last-child {
-  border-top-right-radius: 15px;
+  border-top-right-radius: 17px;
+}
+.mcm-mediapage .table-scroll table {
+  margin: 0;
 }
 /* A little more room per row: at 24 files the list was a wall of text
    with the lines closer to each other than to their own column heading. */
