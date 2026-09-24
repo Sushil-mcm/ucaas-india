@@ -1,0 +1,1 @@
+import{r as t,m as s,e9 as i,j as r}from"./index-wtkqumFO.js";const d=({startTime:e=""})=>{const[n,o]=t.useState("00:00");return t.useEffect(()=>{const c=setInterval(()=>{const a=s().diff(e?s(e):s(),"seconds");o(i(a))},1e3);return()=>clearInterval(c)},[e]),r.jsx(r.Fragment,{children:n})};export{d as T};

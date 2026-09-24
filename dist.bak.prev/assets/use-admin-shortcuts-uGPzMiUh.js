@@ -1,0 +1,1 @@
+import{ad as c,r as s}from"./index-wtkqumFO.js";import{c as a}from"./local-list-store-CtLut8v0.js";const e=a("mcm-admin-recent",24),i=()=>{const{pathname:t}=c();s.useEffect(()=>{!t.startsWith("/admin-settings")||t==="/admin-settings"||e.push(t)},[t])},m=()=>{const t=e.use(),r=s.useCallback(()=>e.clear(),[]);return{recent:t,clearRecent:r}};export{m as a,i as u};

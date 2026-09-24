@@ -462,8 +462,17 @@
    consistency. Trimmed to 70vh so every step's dialog is more compact
    overall; steps with more content (Add Members, ...) already scroll
    inside their own area regardless of the dialog's height. */
+/* 2026-09-24: 70vh was trimmed from 85vh because 85 left dead space under
+   short steps -- but that dead space only appears on a *tall* window, and
+   a bare vh cannot tell the two cases apart. On a 585px-tall window 70vh
+   pinned the dialog to 409px and left 176px of screen unused while the
+   Department Information form was still 135px taller than the space it
+   was given, so the field list was sliced mid-line at the footer edge.
+   A vh with a px ceiling separates the two: short windows get the room
+   they were missing, tall ones stop growing at 620px, which is what the
+   85vh complaint was actually about. */
 .gp-create-group-dialog:has(.gp-department-rail) {
-  height: 70vh;
+  height: min(88vh, 620px);
 }
 /* The other half of that gap is the dialog's own `gap-4` (16px) between its
    two children -- the title bar and this body. Nothing else sits between
