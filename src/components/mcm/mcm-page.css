@@ -11322,9 +11322,10 @@
 }
 
 /* ==================================================================
-   Phone System lists, drawn the way Directory › Groups draws its own
+   Phone System and Numbers lists, drawn the way Groups draws its own
    ------------------------------------------------------------------
-   Call queues, IVR menus and Media Files are all TableManager on the
+   Call queues, IVR menus, Media Files, All numbers and Identities &
+   addresses are all TableManager on the
    console's glass shell, while Groups - the table this was asked to
    match - is a solid card with a cream header under an accent rule,
    white rows on a hairline, and a bar down the left of whichever row
@@ -11337,7 +11338,9 @@
    ================================================================== */
 .mcm-queuepage .table-scroll,
 .mcm-ivrpage .table-scroll,
-.mcm-mediapage .table-scroll {
+.mcm-mediapage .table-scroll,
+.mcm-numpage .table-scroll,
+.mcm-idpage .table-scroll {
   border-radius: 11px;
   background: #ffffff;
   box-shadow: none;
@@ -11349,7 +11352,9 @@
    rather than by being a shade paler than them. */
 .mcm-queuepage .table-scroll table thead th,
 .mcm-ivrpage .table-scroll table thead th,
-.mcm-mediapage .table-scroll table thead th {
+.mcm-mediapage .table-scroll table thead th,
+.mcm-numpage .table-scroll table thead th,
+.mcm-idpage .table-scroll table thead th {
   height: 40px;
   background: #fff6e9;
   border-bottom: 3px solid rgba(242, 153, 74, 0.4);
@@ -11361,12 +11366,16 @@
 }
 .mcm-queuepage table thead th:first-child,
 .mcm-ivrpage table thead th:first-child,
-.mcm-mediapage table thead th:first-child {
+.mcm-mediapage table thead th:first-child,
+.mcm-numpage table thead th:first-child,
+.mcm-idpage table thead th:first-child {
   border-top-left-radius: 11px;
 }
 .mcm-queuepage table thead th:last-child,
 .mcm-ivrpage table thead th:last-child,
-.mcm-mediapage table thead th:last-child {
+.mcm-mediapage table thead th:last-child,
+.mcm-numpage table thead th:last-child,
+.mcm-idpage table thead th:last-child {
   border-top-right-radius: 11px;
 }
 
@@ -11379,13 +11388,17 @@
    `.mcm-admin table tbody td` rule rather than tying with it. */
 .mcm-queuepage .table-scroll table tbody td,
 .mcm-ivrpage .table-scroll table tbody td,
-.mcm-mediapage .table-scroll table tbody td {
+.mcm-mediapage .table-scroll table tbody td,
+.mcm-numpage .table-scroll table tbody td,
+.mcm-idpage .table-scroll table tbody td {
   background: #ffffff;
   border-bottom: 1px solid var(--line);
 }
 .mcm-queuepage .table-scroll table tbody tr:last-child td,
 .mcm-ivrpage .table-scroll table tbody tr:last-child td,
-.mcm-mediapage .table-scroll table tbody tr:last-child td {
+.mcm-mediapage .table-scroll table tbody tr:last-child td,
+.mcm-numpage .table-scroll table tbody tr:last-child td,
+.mcm-idpage .table-scroll table tbody tr:last-child td {
   border-bottom: none;
 }
 /* Hover: a neutral fill and an accent bar down the left edge, which is
@@ -11393,12 +11406,16 @@
    row - a `<tr>` cannot be relied on to paint its own box-shadow. */
 .mcm-queuepage .table-scroll table tbody tr:hover td,
 .mcm-ivrpage .table-scroll table tbody tr:hover td,
-.mcm-mediapage .table-scroll table tbody tr:hover td {
+.mcm-mediapage .table-scroll table tbody tr:hover td,
+.mcm-numpage .table-scroll table tbody tr:hover td,
+.mcm-idpage .table-scroll table tbody tr:hover td {
   background: #faf9fb;
 }
 .mcm-queuepage table tbody tr:hover td:first-child,
 .mcm-ivrpage table tbody tr:hover td:first-child,
-.mcm-mediapage table tbody tr:hover td:first-child {
+.mcm-mediapage table tbody tr:hover td:first-child,
+.mcm-numpage table tbody tr:hover td:first-child,
+.mcm-idpage table tbody tr:hover td:first-child {
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
@@ -11408,7 +11425,11 @@
 .mcm-ivrpage table th:first-child,
 .mcm-ivrpage table td:first-child,
 .mcm-mediapage table th:first-child,
-.mcm-mediapage table td:first-child {
+.mcm-mediapage table td:first-child,
+.mcm-numpage table th:first-child,
+.mcm-numpage table td:first-child,
+.mcm-idpage table th:first-child,
+.mcm-idpage table td:first-child {
   padding-left: 22px;
 }
 .mcm-queuepage table th:last-child,
@@ -11416,7 +11437,11 @@
 .mcm-ivrpage table th:last-child,
 .mcm-ivrpage table td:last-child,
 .mcm-mediapage table th:last-child,
-.mcm-mediapage table td:last-child {
+.mcm-mediapage table td:last-child,
+.mcm-numpage table th:last-child,
+.mcm-numpage table td:last-child,
+.mcm-idpage table th:last-child,
+.mcm-idpage table td:last-child {
   padding-right: 22px;
 }
 
@@ -11427,17 +11452,56 @@
 @layer base {
   .mcm-queuepage table th:last-child,
   .mcm-ivrpage table th:last-child,
-  .mcm-mediapage table th:last-child {
+  .mcm-mediapage table th:last-child,
+  .mcm-numpage table th:last-child,
+  .mcm-idpage table th:last-child {
     text-align: right !important;
   }
 }
 .mcm-queuepage table td:last-child,
 .mcm-ivrpage table td:last-child,
-.mcm-mediapage table td:last-child {
+.mcm-mediapage table td:last-child,
+.mcm-numpage table td:last-child,
+.mcm-idpage table td:last-child {
   text-align: right;
 }
 .mcm-queuepage table td:last-child > div,
 .mcm-ivrpage table td:last-child > div,
-.mcm-mediapage table td:last-child > div {
+.mcm-mediapage table td:last-child > div,
+.mcm-numpage table td:last-child > div,
+.mcm-idpage table td:last-child > div {
   justify-content: flex-end;
+}
+
+/* Call coverage writes its three tabs as plain `<table>`s rather than
+   through TableManager, so there is no `.table-scroll` to hang the rules
+   above on - the same treatment, said again for a bare table. */
+.mcm-coverpage table thead th {
+  height: 40px;
+  background: #fff6e9;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.mcm-coverpage table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+.mcm-coverpage table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mcm-coverpage table tbody tr:hover td {
+  background: #faf9fb;
+}
+.mcm-coverpage table tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.mcm-coverpage table th:first-child,
+.mcm-coverpage table td:first-child {
+  padding-left: 22px;
+}
+.mcm-coverpage table th:last-child,
+.mcm-coverpage table td:last-child {
+  padding-right: 22px;
 }

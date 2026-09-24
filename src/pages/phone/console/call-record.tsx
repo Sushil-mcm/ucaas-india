@@ -201,10 +201,6 @@ const CallRecord = ({
       {/* ---- one header ---- */}
       <div className="card record-head">
         <div className="record-head-top">
-          <button type="button" className="btn ghost sm" onClick={onBack}>
-            <Ic n="chev" size={13} className="flip" />
-            Dialer
-          </button>
           <div className="caller-av record-av">
             {initialsOf(savedContact?.name || row.name) || <Ic n="user" size={18} />}
           </div>
@@ -241,6 +237,14 @@ const CallRecord = ({
               </span>
             </div>
           </div>
+          {/* Last in the row, so it sits on the right: it is a way out of this
+              record, not a label for the person in it, and on the left it was
+              the first thing read before the name it belongs to. DOM order
+              follows the visual order so tabbing reaches the identity first. */}
+          <button type="button" className="btn ghost sm record-head-back" onClick={onBack}>
+            <Ic n="chev" size={13} className="flip" />
+            Dialer
+          </button>
         </div>
         {/* Actions get their own row along the bottom rather than squeezing
             onto the identity row — that row already has the back button,

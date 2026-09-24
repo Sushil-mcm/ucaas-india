@@ -4884,3 +4884,30 @@
 .mcm-console .col.calls .panel-tabs.source-tabs .ptab {
   padding: 8px 8px 7px;
 }
+
+/* ---- call record header -------------------------------------------------
+   The back button now closes the identity row instead of opening it, so it
+   must not stretch or shrink with the name beside it. */
+.mcm-console .record-head-back {
+  flex: none;
+  align-self: flex-start;
+}
+
+/* The avatar carried `0 4px 12px rgba(59, 111, 224, .28)` -- a blue glow,
+   left from the console's pre-warm palette, on the one element in this card
+   that sits against a peach panel. Warm and lighter: the disc already has a
+   fill of its own and did not need lifting off the card as well. */
+.mcm-console .record-av {
+  box-shadow: 0 2px 8px rgba(150, 100, 50, 0.16) !important;
+}
+
+/* `Add to contacts` and `Call` each took `flex: 1`, so the secondary action
+   was exactly as wide as the primary one and the row read as two equal
+   choices. The primary keeps the room it needs; the secondary takes its own
+   width. */
+.mcm-console .record-head-actions .btn.ghost {
+  flex: 0 1 auto;
+}
+.mcm-console .record-head-actions .btn.primary {
+  flex: 1 1 auto;
+}
