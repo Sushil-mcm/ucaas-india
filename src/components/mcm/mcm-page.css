@@ -11290,8 +11290,10 @@
   margin: 0;
 }
 /* The band itself: opaque, so it does not take the colour of whatever
-   scrolls under it, and running the full width of the table. */
-.mcm-mediapage table thead th {
+   scrolls under it. Written through `.table-scroll` to match the
+   specificity of `.mcm-admin .table-scroll table thead th`, which sets
+   the translucent one - a shorter selector here would simply lose. */
+.mcm-mediapage .table-scroll table thead th {
   background: #fbf6ef;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
