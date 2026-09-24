@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import CustomSelect from '@/components/custom/custom-select';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { handleAlert } from '@/lib/utils';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
@@ -32,6 +33,14 @@ const SwapNumberDialog = ({ open, number, onClose }: SwapNumberDialogProps) => {
     enabled: open,
   });
   const options = useMemo(() => spare.filter((row) => row.did_number && row.did_number !== number?.did_number), [spare, number]);
+  const selectOptions = useMemo(
+    () =>
+      options.map((row) => ({
+        label: `${row.did_number}${row.did_name ? ` · ${row.did_name}` : ''}`,
+        value: row.did_number,
+      })),
+    [options],
+  );
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -57,22 +66,33 @@ const SwapNumberDialog = ({ open, number, onClose }: SwapNumberDialogProps) => {
           Give {personName} a different number. {number?.did_number} comes off them and goes to
           Numbers › Unused; it is not released.
         </p>
+        {/* The app's own dropdown, not a native `<select>`. A native one is
+            drawn by the operating system: the open list was Windows blue, and
+            Windows put it wherever it liked - on top of the Swap button
+            underneath. This one is drawn by the page, in the console's own
+            colours, and anchored to the field it belongs to. */}
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">New number</span>
-          <select
-            className="min-h-10 rounded-lg border border-gray-200 px-3"
-            value={chosen}
-            onChange={(e) => setChosen(e.target.value)}
-            disabled={isLoading}
-          >
-            <option value="">{isLoading ? 'Loading spare numbers…' : options.length ? 'Choose a spare number…' : 'No spare numbers — buy one first'}</option>
-            {options.map((row) => (
-              <option key={row.uuid} value={row.did_number}>
-                {row.did_number}
-                {row.did_name ? ` · ${row.did_name}` : ''}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            inputClass="mcm-people-opt"
+            isSearchable={false}
+            /* Rendered inside the dialog rather than portalled to <body>:
+               a modal dialog blocks pointer events outside its own content,
+               so a menu that lands on the body cannot be clicked. */
+            menuPortalTarget={false}
+            menuPlacement="auto"
+            isDisabled={isLoading}
+            placeholder={
+              isLoading
+                ? 'Loading spare numbers…'
+                : options.length
+                  ? 'Choose a spare number…'
+                  : 'No spare numbers — buy one first'
+            }
+            options={selectOptions}
+            value={selectOptions.find((option) => option.value === chosen) || null}
+            handleChange={(option: any) => setChosen(option?.value || '')}
+          />
         </label>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
