@@ -73,12 +73,25 @@ export const DirectoryPage = ({
           <CustomTooltip
             text={description}
             side="bottom"
-            /* max-w-xs wrapped these sentences into three short lines inside a
-               box whose padding then dwarfed them. A wider measure takes most
-               of them to two, tighter leading closes the gap between those
-               lines, and the horizontal padding comes in a notch — the base
-               px-3 is sized for a two-word label, not a sentence. */
-            className="max-w-sm px-2.5 py-1.5 leading-snug"
+            /* `[text-wrap:wrap]` is the one that matters.
+
+               TooltipContent's base class combines `w-fit`, a max-width and
+               `text-balance`, and those three together leave a gap. The box
+               takes its width first — max-content clamped to the max-width,
+               so the full 384px for a sentence this long. Balancing then
+               re-wraps the text to even out the lines, which makes every line
+               narrower than the box it already sized. The leftover is dead
+               space down the right-hand edge, about 100px of it, and it reads
+               as padding because there is nothing else it could be.
+
+               Balancing is right for a two-word label and wrong for a
+               sentence. Wrapping normally lets the text use the width the box
+               already claimed.
+
+               The rest: a wider measure, tighter leading, and one notch less
+               horizontal padding, since the base px-3 is also sized for a
+               label rather than a sentence. */
+            className="max-w-sm px-2.5 py-1.5 leading-snug [text-wrap:wrap]"
           >
             <button type="button" className="page-head-info" aria-label={`About ${title}`}>
               <Info size={15} aria-hidden="true" />
