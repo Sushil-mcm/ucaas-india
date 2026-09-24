@@ -11228,11 +11228,15 @@
 }
 
 /* The pager, given the same white card and the same gutters as the
-   table above it: it was a cream strip whose contents started 8px from
+   table above it. `:not(.table-scroll)` matters: the table's own scroll
+   box carries `rounded-xl` and `backdrop-blur-[12px]` too, so without it
+   these rules hit the table as well - which is how the 12px meant to sit
+   under the table ended up above it, pushing it away from the tabs.
+   Original note: it was a cream strip whose contents started 8px from
    its own edge while the table's started at 22px, so the two boxes did
    not share a single vertical line down either side. */
 .mcm-mediapage .mcm-pagerbar,
-.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur'] {
+.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur']:not(.table-scroll) {
   padding-left: 18px;
   padding-right: 18px;
   background: #ffffff;
@@ -11247,7 +11251,7 @@
    TableManager returns a fragment, so the table and the pager are
    siblings of whatever wraps the component and there is no element in
    between to put a gap on. */
-.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur'] {
+.mcm-mediapage [class*='rounded-xl'][class*='backdrop-blur']:not(.table-scroll) {
   margin-top: 12px;
 }
 
