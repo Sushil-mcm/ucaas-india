@@ -70,7 +70,16 @@ export const DirectoryPage = ({
       <div className="page-head-title">
         <h1>{title}</h1>
         {description ? (
-          <CustomTooltip text={description} side="bottom" className="max-w-xs">
+          <CustomTooltip
+            text={description}
+            side="bottom"
+            /* max-w-xs wrapped these sentences into three short lines inside a
+               box whose padding then dwarfed them. A wider measure takes most
+               of them to two, tighter leading closes the gap between those
+               lines, and the horizontal padding comes in a notch — the base
+               px-3 is sized for a two-word label, not a sentence. */
+            className="max-w-sm px-2.5 py-1.5 leading-snug"
+          >
             <button type="button" className="page-head-info" aria-label={`About ${title}`}>
               <Info size={15} aria-hidden="true" />
             </button>

@@ -1041,3 +1041,39 @@
 .gp-external .mcm-pager > .mcm-pager-btn:last-child {
   display: none !important;
 }
+
+/* ── Group / Tag filter hover ──────────────────────────────────────────────
+   These two filters are styled in index.css beside the rest of the control,
+   and the hover text colour took there — but the fill and the border did
+   not. The element matches the rule (verified with `matches()` on the live
+   page), the rule carries !important, and it is more specific than the base
+   rule it should beat. Something further down the cascade still ties with it
+   and wins on order; I could not find which, and hunting it further was
+   costing more than it was worth.
+
+   Document order settles it instead. This is the page's own stylesheet and
+   Vite appends it after the entry CSS, so these land last. The whole hover
+   state lives here now rather than half here and half in index.css. */
+.gp-external
+  .gp-contact-toolbar
+  .contact-toolbar-select.custom-react-select__control:hover,
+.gp-external
+  .gp-contact-toolbar
+  .contact-toolbar-select.custom-react-select__control--is-focused,
+.gp-external
+  .gp-contact-toolbar
+  .contact-toolbar-select.custom-react-select__control--menu-is-open {
+  background-color: #fff !important;
+  border-color: var(--accent-edge, #f7c896) !important;
+  box-shadow: none !important;
+}
+.gp-external
+  .gp-contact-toolbar
+  .contact-toolbar-select.custom-react-select__control:hover
+  .custom-react-select__dropdown-indicator,
+.gp-external
+  .gp-contact-toolbar
+  .contact-toolbar-select.custom-react-select__control--menu-is-open
+  .custom-react-select__dropdown-indicator {
+  color: var(--accent-ink, #c96f1f) !important;
+}
