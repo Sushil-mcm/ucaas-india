@@ -88,10 +88,19 @@ export const DirectoryPage = ({
                sentence. Wrapping normally lets the text use the width the box
                already claimed.
 
-               The rest: a wider measure, tighter leading, and one notch less
-               horizontal padding, since the base px-3 is also sized for a
-               label rather than a sentence. */
-            className="max-w-sm px-2.5 py-1.5 leading-snug [text-wrap:wrap]"
+               The width goes back to max-w-xs, which is where it started.
+               Widening it was the wrong move: measured across all seven
+               Directory descriptions at this font, 320px leaves a mean of 7px
+               unused with a worst case of 17px, where 384px leaves 18px and
+               33px and 360px leaves 21px and 50px. Every width keeps these to
+               two lines, so the narrowest is simply the tightest fit. CSS
+               cannot size a box to the longest line its text wraps to, so
+               some slack is unavoidable; this is the least of it.
+
+               Also: tighter leading, and one notch less horizontal padding,
+               since the base px-3 is sized for a label rather than a
+               sentence. */
+            className="max-w-xs px-2.5 py-1.5 leading-snug [text-wrap:wrap]"
           >
             <button type="button" className="page-head-info" aria-label={`About ${title}`}>
               <Info size={15} aria-hidden="true" />
