@@ -36,6 +36,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -655,132 +656,127 @@ const People = () => {
                     ) : null}
                   </td>
                   <td onClick={(event) => event.stopPropagation()}>
-                    <span className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className={`mini${isFavourite('person', row.uuid) ? ' mcm-fav-on' : ''}`}
-                        title={
-                          isFavourite('person', row.uuid)
-                            ? `Remove ${row.name} from favourites`
-                            : `Add ${row.name} to favourites`
-                        }
-                        aria-label={
-                          isFavourite('person', row.uuid)
-                            ? `Remove ${row.name} from favourites`
-                            : `Add ${row.name} to favourites`
-                        }
-                        aria-pressed={isFavourite('person', row.uuid)}
-                        onClick={() => toggleFavourite('person', row.uuid)}
-                      >
-                        <Ic n="star" size={16} fill={isFavourite('person', row.uuid)} />
-                      </button>
-                      <button
-                        type="button"
-                        className="mini"
-                        title={`Call ${row.name}`}
-                        aria-label={`Call ${row.name}`}
-                        disabled={!row.extension}
-                        onClick={() =>
-                          row.extension && dial(row.extension, { forceRefreshContactInfo: true })
-                        }
-                      >
-                        <Ic n="phone" size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="mini"
-                        title={`Message ${row.name}`}
-                        aria-label={`Message ${row.name}`}
-                        onClick={() => navigate(`/messenger?chatId=${row.uuid}&chatType=chat`)}
-                      >
-                        <Ic n="chat" size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="mini"
-                        title={`Start video with ${row.name}`}
-                        aria-label={`Start video with ${row.name}`}
-                        disabled={isStarting}
-                        onClick={() =>
-                          startVideoCall(
-                            { user_uuid: row.uuid, name: row.name, email: row.email },
-                            `Call with ${row.name}`,
-                          )
-                        }
-                      >
-                        <Ic n="video" size={16} />
-                      </button>
-                      {(canEdit ||
-                        isAdmin ||
-                        canChangeRoleOf(row) ||
-                        (canAssignCallerId && row.callerId) ||
-                        (canDelete && row.uuid !== myUuid) ||
-                        canAssignCallerId) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className="mini"
-                              title={`More actions for ${row.name}`}
-                              aria-label={`More actions for ${row.name}`}
+                    {/* Every row action behind one menu, the way Contacts
+                        does it.
+
+                        Four icon buttons sat loose in this cell — favourite,
+                        call, message, video — with the overflow menu after
+                        them, and that menu only appeared if the viewer held
+                        one of its permissions. So the column showed four
+                        glyphs to some people and five to others, none of them
+                        labelled, in the widest action cell in Directory.
+
+                        They are menu items now: named, in one place, and the
+                        cell is a single button whatever the viewer can do.
+                        Nothing is removed and no action changes what it
+                        does — the same handlers, moved. */}
+                    <span className="flex items-center justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="mini"
+                            title={`Actions for ${row.name}`}
+                            aria-label={`Actions for ${row.name}`}
+                          >
+                            <MoreVertical size={15} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="gp-person-menu">
+                          <DropdownMenuItem onClick={() => toggleFavourite('person', row.uuid)}>
+                            <Ic n="star" size={15} fill={isFavourite('person', row.uuid)} />
+                            {isFavourite('person', row.uuid)
+                              ? 'Remove from favourites'
+                              : 'Add to favourites'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!row.extension}
+                            onClick={() =>
+                              row.extension && dial(row.extension, { forceRefreshContactInfo: true })
+                            }
+                          >
+                            <Ic n="phone" size={15} />
+                            Call
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/messenger?chatId=${row.uuid}&chatType=chat`)}
+                          >
+                            <Ic n="chat" size={15} />
+                            Message
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={isStarting}
+                            onClick={() =>
+                              startVideoCall(
+                                { user_uuid: row.uuid, name: row.name, email: row.email },
+                                `Call with ${row.name}`,
+                              )
+                            }
+                          >
+                            <Ic n="video" size={15} />
+                            Start video
+                          </DropdownMenuItem>
+                          {/* The rule below only draws when the viewer can do
+                              something beyond the four above, so it never
+                              leaves a line at the foot of the menu. */}
+                          {canEdit ||
+                          isAdmin ||
+                          canChangeRoleOf(row) ||
+                          (canAssignCallerId && row.callerId) ||
+                          canAssignCallerId ||
+                          (canEdit && row.state === 'PENDING') ||
+                          (canDelete && row.uuid !== myUuid) ? (
+                            <DropdownMenuSeparator />
+                          ) : null}
+                          {canEdit ? (
+                            <DropdownMenuItem onClick={() => setEditing(row)}>
+                              <Ic n="sliders" size={15} />
+                              Edit
+                            </DropdownMenuItem>
+                          ) : null}
+                          {isAdmin ? (
+                            <DropdownMenuItem onClick={() => navigate(`/activity/${row.uuid}`)}>
+                              <Ic n="clock" size={15} />
+                              Activity
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canChangeRoleOf(row) ? (
+                            <DropdownMenuItem onClick={() => setChangingRole(row)}>
+                              <Ic n="shield" size={15} />
+                              Change role
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canAssignCallerId && row.callerId ? (
+                            <DropdownMenuItem onClick={() => setUnassigning(row)}>
+                              <Ic n="x" size={15} />
+                              Remove caller ID
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canAssignCallerId ? (
+                            <DropdownMenuItem onClick={() => setAssigningCallerId(row)}>
+                              <Ic n="grid" size={15} />
+                              Assign caller ID
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canEdit && row.state === 'PENDING' ? (
+                            <DropdownMenuItem
+                              disabled={isResendingInvite}
+                              onClick={() => resendInviteTo(row.uuid)}
                             >
-                              <MoreVertical size={15} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="gp-person-menu">
-                            {canEdit ? (
-                              <DropdownMenuItem onClick={() => setEditing(row)}>
-                                <Ic n="sliders" size={15} />
-                                Edit
-                              </DropdownMenuItem>
-                            ) : null}
-                            {isAdmin ? (
-                              <DropdownMenuItem onClick={() => navigate(`/activity/${row.uuid}`)}>
-                                <Ic n="clock" size={15} />
-                                Activity
-                              </DropdownMenuItem>
-                            ) : null}
-                            {canChangeRoleOf(row) ? (
-                              <DropdownMenuItem onClick={() => setChangingRole(row)}>
-                                <Ic n="shield" size={15} />
-                                Change role
-                              </DropdownMenuItem>
-                            ) : null}
-                            {canAssignCallerId && row.callerId ? (
-                              <DropdownMenuItem onClick={() => setUnassigning(row)}>
-                                <Ic n="x" size={15} />
-                                Remove caller ID
-                              </DropdownMenuItem>
-                            ) : null}
-                            {canAssignCallerId ? (
-                              <DropdownMenuItem onClick={() => setAssigningCallerId(row)}>
-                                <Ic n="grid" size={15} />
-                                Assign caller ID
-                              </DropdownMenuItem>
-                            ) : null}
-                            {canEdit && row.state === 'PENDING' ? (
-                              <DropdownMenuItem
-                                disabled={isResendingInvite}
-                                onClick={() => resendInviteTo(row.uuid)}
-                              >
-                                <Ic n="send" size={15} />
-                                Resend invite
-                              </DropdownMenuItem>
-                            ) : null}
-                            {/* Admins can remove a person; never yourself, and
-                                never another admin unless you are one. */}
-                            {canDelete && row.uuid !== myUuid ? (
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setDeleting(row)}
-                              >
-                                <Ic n="trash" size={15} />
-                                Remove
-                              </DropdownMenuItem>
-                            ) : null}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                              <Ic n="send" size={15} />
+                              Resend invite
+                            </DropdownMenuItem>
+                          ) : null}
+                          {/* Admins can remove a person; never yourself, and
+                              never another admin unless you are one. */}
+                          {canDelete && row.uuid !== myUuid ? (
+                            <DropdownMenuItem variant="destructive" onClick={() => setDeleting(row)}>
+                              <Ic n="trash" size={15} />
+                              Remove
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </span>
                   </td>
                 </tr>
