@@ -11392,10 +11392,16 @@
 .mcm-numpage .table-scroll table tbody td,
 .mcm-idpage .table-scroll table tbody td {
   background: #ffffff;
-  /* A neutral hairline, not `--line`. That token is a warm #eee7dd, which
-     against a white row is close enough to white to disappear - the rows
-     still ran together with nothing between them. */
-  border-bottom: 1px solid rgba(20, 20, 20, 0.09);
+  /* A neutral hairline, not `--line`. That token is a warm #eee7dd,
+     which against a white row is close enough to white to disappear; 9%
+     black was still too quiet to read as a divider at a glance. 16% is a
+     line you see without the table turning into a grid.
+
+     It has to be on the cell: TableManager asks for `divide-y` on the
+     body, which puts the line on the `<tr>` - and a table with
+     `border-collapse: separate`, which this one has, does not paint
+     borders on rows at all. */
+  border-bottom: 1px solid rgba(20, 20, 20, 0.16);
 }
 .mcm-queuepage .table-scroll table tbody tr:last-child td,
 .mcm-ivrpage .table-scroll table tbody tr:last-child td,
@@ -11489,7 +11495,7 @@
 }
 .mcm-coverpage table tbody td {
   background: #ffffff;
-  border-bottom: 1px solid rgba(20, 20, 20, 0.09);
+  border-bottom: 1px solid rgba(20, 20, 20, 0.16);
 }
 .mcm-coverpage table tbody tr:last-child td {
   border-bottom: none;
