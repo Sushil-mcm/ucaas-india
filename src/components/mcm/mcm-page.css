@@ -8670,7 +8670,7 @@
 .mcm-admin .mcm-numsearch {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   flex: 1 1 160px;
   max-width: 320px;
   min-width: 0;
@@ -8696,12 +8696,27 @@
 .mcm-admin .mcm-numsearch input {
   width: 100%;
   min-width: 0;
+  /* The caret sat hard against the magnifier - a 7px gap, and a caret is
+     drawn on the very first pixel of the field - so it read as a stray
+     mark on the icon rather than as a cursor waiting for a name. A little
+     air in front of it, and the caret takes the brand colour instead of
+     the browser's black, which is what the rest of the console does. */
+  padding-left: 3px;
   border: 0;
   outline: none;
   background: transparent;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
+  caret-color: var(--accent);
+}
+/* A search input in Chrome carries its own clear button, which sits on
+   the right edge of the field over the rounded corner. It is drawn by
+   the browser in its own grey and cannot be styled, so it is dropped in
+   favour of the field's own emptiness being the signal. */
+.mcm-admin .mcm-numsearch input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* The billing note. One quiet line with the full wording behind it, instead of
