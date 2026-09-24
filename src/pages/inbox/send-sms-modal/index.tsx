@@ -354,12 +354,19 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
           New Message
         </div>
       </div>
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2 justify-between">
-        {/* gap-5, not gap-4: the DID, the recipient and the composer were
+      <div className="flex min-h-0 w-full flex-auto flex-col justify-between gap-2">
+        {/* `flex-auto`, not `flex-1`: `flex-1` bases the region at 0, so it
+            contributed nothing to the dialog's natural height and the dialog
+            settled shorter than its own contents -- the counters line under
+            the composer was sliced in half by the scroll edge even with room
+            to spare. Based on its content instead, the dialog grows to fit up
+            to its cap and only then starts scrolling.
+
+            gap-5, not gap-4: the DID, the recipient and the composer were
             evenly spaced with the message block, so "who it is from", "who it
             goes to" and "what it says" read as one undifferentiated stack
             rather than three decisions. */}
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1">
+        <div className="flex min-h-0 flex-auto flex-col gap-5 overflow-y-auto pr-1">
           <CustomSelect
             label="Choose a DID to send message"
             inputClass="mcm-did-select"
