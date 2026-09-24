@@ -163,7 +163,19 @@
   z-index: 1;
 }
 .gp-external td {
-  border-bottom-color: rgba(150, 100, 50, 0.1);
+  /* This set a colour for a border that had no width, so it drew nothing and
+     the rows ran together into one block -- most of why the table read as
+     congested. Declared properly now.
+
+     The extra vertical padding is the other half: 11px against a 12.5px
+     two-line name cell left the rows touching each other's content. 14px
+     takes the row from 60px to 66px, which is the breathing room the density
+     was missing. Horizontal padding stays at 12px -- the nine columns already
+     fill the table's width exactly, so widening the gutters would only push
+     text into truncation. */
+  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 /* Same wash Performance ▸ Calls uses for its own row hover
    (--ic-row-hover in interactions-theme.css). */
