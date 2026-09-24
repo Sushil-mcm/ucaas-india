@@ -556,7 +556,7 @@ const NewContact: FC = () => {
              its border and the drawer's were touching, which made the two
              read as one mis-drawn box. */
           content={
-            <div className="h-full p-3">
+            <div className="mcm-drawer-body h-full px-3 pt-4 pb-3">
               <NotesWidget
                 customClass="h-full"
                 extraPayload={{ phone: selectedContact?.contact?.phone }}
@@ -574,11 +574,16 @@ const NewContact: FC = () => {
           isOpen={whatsappDrawerOpen}
           title="Send WhatsApp Message"
           handleClose={() => setWhatsappDrawerOpen(false)}
+          /* Same inset as the notes drawer: "From" sat hard against the
+             header's bottom rule with nothing between them, so the label
+             read as part of the title bar. */
           content={
+            <div className="mcm-drawer-body h-full px-3 pt-4 pb-3">
             <SendWhatsappMessage
               handleClose={() => setWhatsappDrawerOpen(false)}
               initialNumber={selectedContact?.contact?.phone}
             />
+            </div>
           }
         />
       )}

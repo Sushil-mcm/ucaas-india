@@ -400,8 +400,13 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                   {errors?.sms?.message && <ErrorTooltip text={errors?.sms?.message || ''} />}
                 </div>
               </div>
+              {/* `mcm-sms-editor`: the focus ring moves to this box. The
+                  global `.mcm-admin textarea:focus-visible` draws a 2px
+                  accent outline with a 1px offset, which landed inside this
+                  container's own border — two edges round one field, the
+                  inner one floating clear of the outer. */}
               <div
-                className={`flex items-center w-full rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
+                className={`mcm-sms-editor flex items-center w-full rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
               >
                 <div className="flex min-h-[126px] w-full flex-col justify-between gap-2 p-3">
                   <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

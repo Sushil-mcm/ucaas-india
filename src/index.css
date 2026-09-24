@@ -3522,3 +3522,45 @@
     font-size: 12.5px;
   }
 }
+
+@layer components {
+  /* The SMS composer's focus ring belongs on the box, not inside it.
+
+     `.mcm-admin textarea:focus-visible` (mcm-page.css) draws a 2px accent
+     outline at a 1px offset. Inside this container's own border that renders
+     as two edges around one field, the inner one floating clear of the outer.
+     !important because that rule is more specific than this one and the
+     assistant editor already solves it the same way. */
+  .mcm-sms-editor textarea:focus-visible,
+  .mcm-sms-editor textarea:focus {
+    outline: none !important;
+  }
+  .mcm-sms-editor:focus-within {
+    border-color: var(--accent, #f2994a);
+  }
+
+  /* Drawer bodies (Contact Notes, Send WhatsApp): the slim bar the rest of
+     the app uses rather than the browser default, which is roughly twice the
+     width and grey against a warm panel. */
+  .mcm-drawer-body,
+  .mcm-drawer-body * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(194, 111, 31, 0.3) transparent;
+  }
+  .mcm-drawer-body ::-webkit-scrollbar,
+  .mcm-drawer-body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .mcm-drawer-body ::-webkit-scrollbar-track,
+  .mcm-drawer-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .mcm-drawer-body ::-webkit-scrollbar-thumb,
+  .mcm-drawer-body::-webkit-scrollbar-thumb {
+    background: rgba(194, 111, 31, 0.3);
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+}
