@@ -54,7 +54,17 @@ const AddUsers: FC<AddUsersProps> = ({
      stays null and nothing changes. */
   const [licenseStats, setLicenseStats] = useState<ReactNode>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [typeOfPassword, setTypeOfPassword] = useState('common');
+  /* Seeded from the form's own default, not a second opinion about it.
+     `formInitialState.password_type` is 'email' (the invite link, and the
+     option the step opens on), while this state used to start at 'common'.
+     The two only ever agreed once the person clicked one of the three
+     options; until then `getResolver(2, 'common')` handed step 2 the
+     password schema, which requires `password` and `confirm_password` --
+     fields the invite-link option never renders. Submit therefore failed
+     validation on two invisible fields, `goToFirstError` tried to focus a
+     `password` input that was not in the DOM, and the button did nothing at
+     all, with nothing on screen to say why. */
+  const [typeOfPassword, setTypeOfPassword] = useState(formInitialState.password_type);
   const [isUserValidatorError, setIsUserValidatorError] = useState(false);
   const [alertAssignNumber, setAlertAssignNumber] = useState(false);
   const [showAssignNumber, setShowAssignNumber] = useState(false);
@@ -123,6 +133,9 @@ const AddUsers: FC<AddUsersProps> = ({
        here on shouldn't ask "discard changes?" about data that no longer
        exists to lose. */
     formInstance.reset(formInitialState);
+    /* Reset restores `password_type` to the default, so this has to come
+       back with it or the next invite reopens desynced again. */
+    setTypeOfPassword(formInitialState.password_type);
     queryClient.invalidateQueries(['fetchUsersList'], { exact: true });
     queryClient.invalidateQueries(['getMyPlanDetails'], { exact: true });
     invalidateGlobalUsersDirectory(queryClient);
