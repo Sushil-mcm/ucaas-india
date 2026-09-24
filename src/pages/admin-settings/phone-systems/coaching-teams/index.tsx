@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Icon } from '@/assets/icons/icon';
 import { SearchLine } from '@/assets/icons';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
@@ -18,6 +17,10 @@ import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/ad
    from the Coaching page, and so the switch records trainees' calls for
    review when the team asks for it. Stored per tenant (coaching_teams,
    created on first use). */
+/* One template for the header and the rows. Two copies of it is how a
+   header ends up a column out from the data under it. */
+const COLS = 'md:grid-cols-[1.3fr_1fr_1.5fr_0.9fr_auto]';
+
 const CoachingTeamsPage = () => {
   const queryClient: any = useQueryClient();
   const { features } = useCompanyFeatures();
@@ -118,29 +121,29 @@ const CoachingTeamsPage = () => {
             not have this feature yet.
           </p>
         ) : visible.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
-            <p className="text-sm font-medium text-gray-900">
+          <div className="mcm-coachempty">
+            <p className="text-sm font-semibold text-[#2E2D35]">
               {teams.length ? 'No team matches that search.' : 'No coaching teams yet.'}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mx-auto mt-1 max-w-prose text-xs text-[#9A948F]">
               A coaching team pairs coaches with trainees. It does not take calls: it lets coaches
               see, listen to and review their trainees&rsquo; calls.
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-            <div className="hidden md:grid grid-cols-[1.2fr_1fr_1.4fr_1fr_auto] gap-4 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-600">
+          <div className="mcm-coachcard">
+            {/* `COLS` on both the header and every row, so the two cannot
+                drift apart - they were two separate copies of the same
+                five-column template. */}
+            <div className={`mcm-coachhead ${COLS}`}>
               <span>Team</span>
               <span>Coaches</span>
               <span>Trainees</span>
               <span>Recording</span>
-              <span />
+              <span className="text-right">Actions</span>
             </div>
             {visible.map((team) => (
-              <div
-                key={team.uuid}
-                className="grid grid-cols-1 gap-2 border-t border-gray-100 px-4 py-3 text-sm md:grid-cols-[1.2fr_1fr_1.4fr_1fr_auto] md:items-center md:gap-4"
-              >
+              <div key={team.uuid} className={`mcm-coachrow ${COLS}`}>
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-900">{team.name}</p>
                   {team.description ? <p className="truncate text-xs text-gray-500">{team.description}</p> : null}
@@ -159,23 +162,25 @@ const CoachingTeamsPage = () => {
                   {ruleLabel(team.record_calls)}
                   {team.record_screen ? ' · screens too' : ''}
                 </p>
-                <span className="flex items-center gap-2">
+                {/* The same square row buttons every other Admin list uses,
+                    rather than two filled discs in different colours. */}
+                <span className="mcm-numacts">
                   {canEdit && (
                     <span
-                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white"
+                      className="mcm-rowact flex cursor-pointer items-center justify-center"
                       title="Edit"
                       onClick={() => setEditing({ open: true, team })}
                     >
-                      <Icon name="EditStrokIcon" className="h-5 w-5" />
+                      <Icon name="EditStrokIcon" className="h-4 w-4" />
                     </span>
                   )}
                   {canDelete && (
                     <span
-                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white"
+                      className="mcm-rowact is-danger flex cursor-pointer items-center justify-center"
                       title="Delete"
                       onClick={() => setPendingDelete(team)}
                     >
-                      <Icon name="TrashBin" className="h-5 w-5" />
+                      <Icon name="TrashBin" className="h-4 w-4" />
                     </span>
                   )}
                 </span>

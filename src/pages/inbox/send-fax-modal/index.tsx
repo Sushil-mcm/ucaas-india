@@ -304,7 +304,7 @@ const SendFaxModal = ({
           </div>
         </div>
 
-        <div className="-mx-6 flex shrink-0 flex-col-reverse justify-end gap-2 border-t border-[#eee7dd] px-6 pt-3 sm:flex-row">
+        <div className="flex shrink-0 flex-col-reverse justify-end gap-2 pt-3 sm:flex-row">
           <Button
             variant="transparent"
             type="button"

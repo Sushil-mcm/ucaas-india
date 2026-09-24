@@ -1220,3 +1220,17 @@
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
+/* ---- row action trigger — matches People's own
+   (`.gp-people td:last-child .mini.gp-row-menu-trigger`, people-glass.css).
+   The markup asked for this tint with `bg-[#FBE2C8]/40`, but Tailwind never
+   emitted that class -- it appears 30-odd times across the app and resolves
+   to zero rules, so the dots sat on nothing while People's sat in a disc.
+   Scoped to `.gp-contact-table`, which only external.tsx applies, so the
+   two other screens sharing this component are untouched. */
+.gp-contact-table .gp-row-menu-trigger {
+  background: rgba(251, 226, 200, 0.4);
+}
+.gp-contact-table .gp-row-menu-trigger:hover {
+  background: #f0dfc5;
+}

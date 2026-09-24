@@ -10981,3 +10981,59 @@
   font-size: 12.5px;
   color: var(--ink-3);
 }
+
+/* ==================================================================
+   Phone System › Coaching teams
+   ------------------------------------------------------------------
+   The list was a rounded `bg-white` box - which the glass rule
+   repaints - with a grey header strip, rows that only became columns
+   at `md`, and two filled discs for actions where every other Admin
+   list uses square buttons.
+   ================================================================== */
+.mcm-admin .mcm-coachcard {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.mcm-admin .mcm-coachhead {
+  display: none;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #fbfaf8;
+  border-bottom: 1px solid var(--line);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-admin .mcm-coachrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-top: 1px solid var(--line-2);
+  font-size: 13px;
+  transition: background-color 0.15s ease;
+}
+.mcm-admin .mcm-coachrow:hover {
+  background: #faf9fb;
+}
+@media (min-width: 768px) {
+  .mcm-admin .mcm-coachhead {
+    display: grid;
+  }
+  .mcm-admin .mcm-coachrow {
+    align-items: center;
+    gap: 16px;
+  }
+}
+.mcm-admin .mcm-coachempty {
+  padding: 40px 16px;
+  background: #ffffff;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  text-align: center;
+}

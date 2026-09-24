@@ -770,7 +770,7 @@ const AllNewContactsList: FC<any> = ({
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <span className="cursor-pointer flex items-center justify-center rounded-full w-8 h-8 bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-[#F0DFC5]">
+              <span className="gp-row-menu-trigger cursor-pointer flex items-center justify-center rounded-full w-8 h-8 text-[#2E2D35]/80">
                 <MoreHorizontal className="w-5 h-5" />
               </span>
             </DropdownMenuTrigger>

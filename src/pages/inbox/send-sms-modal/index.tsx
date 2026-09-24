@@ -586,11 +586,9 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
           </div>
         </div>
         {/* <p>{!sms ? 'Maximum length: 180 characters' : `${String(sms).length}/180`}</p> */}
-        {/* Ruled off and pinned: the fields scroll under it, so the divider
-            marks where the form stops rather than drifting mid-content. The
-            negative margin lets the rule span the dialog's full width against
-            the body's 24px padding. */}
-        <div className="-mx-6 flex shrink-0 flex-col-reverse justify-end gap-2 border-t border-[#eee7dd] px-6 pt-3 sm:flex-row">
+        {/* Pinned, not ruled: the fields scroll under it. A divider here read
+            as a second edge inside an already-bordered dialog. */}
+        <div className="flex shrink-0 flex-col-reverse justify-end gap-2 pt-3 sm:flex-row">
           <Button
             variant="transparent"
             type="button"
