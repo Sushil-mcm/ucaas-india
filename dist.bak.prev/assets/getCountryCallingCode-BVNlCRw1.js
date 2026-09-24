@@ -1,0 +1,1 @@
+import{dH as t,h6 as a}from"./index-CRf_2yVb.js";function n(){return t(a,arguments)}export{n as g};

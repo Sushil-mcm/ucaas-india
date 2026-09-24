@@ -461,7 +461,7 @@ const People = () => {
           aria-label="People or removed people"
           style={{ padding: '8px 12px', borderBottom: '1px solid var(--line)' }}
         >
-          <div className="flex items-center gap-1">
+          <div className="gp-people-tabseg flex items-center gap-1">
             <button
               type="button"
               role="tab"

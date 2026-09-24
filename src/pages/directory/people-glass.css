@@ -548,17 +548,17 @@
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
-.gp-people .mini {
+.gp-people .mini:not(.gp-row-menu-trigger) {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.75);
   color: var(--accent, #f2994a) !important;
 }
-.gp-people .mini .ic,
-.gp-people .mini svg {
+.gp-people .mini:not(.gp-row-menu-trigger) .ic,
+.gp-people .mini:not(.gp-row-menu-trigger) svg {
   color: var(--accent, #f2994a) !important;
   stroke: var(--accent, #f2994a) !important;
 }
-.gp-people .mini:hover {
+.gp-people .mini:not(.gp-row-menu-trigger):hover {
   background: rgba(242, 153, 74, 0.12) !important;
   border-color: var(--accent) !important;
   color: var(--accent-ink, #c96f1f) !important;
@@ -1365,4 +1365,41 @@ input.gp-field-v:focus {
 }
 .gp-people td:last-child .mini.gp-row-menu-trigger:hover {
   background: #f0dfc5;
+}
+
+/* ---- People/Removed toggle — the same tray Contacts' "Contact view /
+   Contact Group" segment uses, measured off it: 36px tall, 4px padding,
+   10px radius, `rgba(255,255,255,.55)` on a `rgba(225,200,165,.7)` hairline,
+   with 26px/8px-radius segments inside. This was two loose `.mini` buttons
+   on no tray at all, so the same control read as a different component on
+   the two pages. Active stays solid accent; the idle one drops its white
+   fill and orange text for Contacts' transparent-on-near-black. */
+.gp-people .gp-people-tabseg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 4px;
+  border: 1px solid rgba(225, 200, 165, 0.7);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.gp-people .gp-people-tabseg .mini {
+  height: 26px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  background: transparent !important;
+  color: #252525 !important;
+}
+.gp-people .gp-people-tabseg .mini:hover:not(.solid) {
+  background: rgba(242, 153, 74, 0.12) !important;
+  color: var(--accent-ink, #c96f1f) !important;
+}
+.gp-people .gp-people-tabseg .mini.solid {
+  background: var(--accent, #f2994a) !important;
+  border-color: transparent !important;
+  color: #fff !important;
 }
