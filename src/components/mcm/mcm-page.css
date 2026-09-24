@@ -11142,11 +11142,31 @@
 .mcm-admin .mcm-ivrpage table tbody tr:hover td {
   background: #faf9fb;
 }
-/* The actions column is read from the right edge, like every other list. */
-.mcm-admin .mcm-ivrpage table th:last-child,
+/* The actions column is read from the right edge, like every other list.
+   The heading needs `@layer base` and `!important` of its own: the shared
+   TableManager gives an `action` column the `!text-center` utility, and a
+   layered important cannot be beaten from outside a layer - so the word
+   ACTIONS sat centred over buttons that had moved to the right. */
+@layer base {
+  .mcm-admin .mcm-ivrpage table th:last-child {
+    text-align: right !important;
+  }
+}
 .mcm-admin .mcm-ivrpage table td:last-child {
   text-align: right;
 }
 .mcm-admin .mcm-ivrpage table td:last-child > div {
   justify-content: flex-end;
+}
+
+/* Air at both ends of a row. The first column started 9px from the card's
+   edge and the last finished as close to it, so names and buttons were
+   pressed against the border rather than sitting inside the card. */
+.mcm-admin .mcm-ivrpage table th:first-child,
+.mcm-admin .mcm-ivrpage table td:first-child {
+  padding-left: 22px;
+}
+.mcm-admin .mcm-ivrpage table th:last-child,
+.mcm-admin .mcm-ivrpage table td:last-child {
+  padding-right: 22px;
 }
