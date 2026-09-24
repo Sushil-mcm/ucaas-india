@@ -487,7 +487,19 @@ export const LogContent = ({
                       >
                         <div className="flex flex-col gap-2">
                           <div className="flex justify-between gap-3">
-                            <div className="flex flex-col gap-1 w-5/6 lg:w-4/6 xl:w-3/6">
+                            {/* Takes the space up to the action buttons rather
+                                than stopping at half the card.
+
+                                This was `w-5/6 lg:w-4/6 xl:w-3/6`, so on a wide
+                                card the whole block ended at the 50% mark: the
+                                date and the duration right-aligned to the
+                                middle of the row while the buttons sat at the
+                                far edge, with nothing in between. Now the two
+                                rows span to the buttons, so the date sits over
+                                the duration and both line up against the same
+                                edge. min-w-0 so a long name ellipsises instead
+                                of pushing the date out. */}
+                            <div className="flex min-w-0 flex-1 flex-col gap-1">
                               <div className="flex gap-2 items-center justify-between">
                                 <div className="bg-white gap-2 flex">
                                   <p className="font-semibold text-sm">

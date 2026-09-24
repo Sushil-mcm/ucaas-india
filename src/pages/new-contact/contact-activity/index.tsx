@@ -226,7 +226,11 @@ const ContactActivity = ({
                 </div>
               </div>
             ) : (
-              <div className="h-full min-h-0 overflow-hidden">
+              /* Scrolls rather than clips. With overflow-hidden the form was
+                 cut off at the column's bottom edge, which is where its
+                 Submit button lives -- on a short viewport you could not
+                 reach it at all. */
+              <div className="h-full min-h-0 overflow-y-auto">
                 <CreateContactNew
                   contactData={contactData}
                   isDisable={false}
