@@ -183,10 +183,18 @@
   display: table;
   table-layout: fixed;
   width: 100%;
-  /* 236px (Action's own floor, see below) / 20% (its share) -- the width
-     below which that share would resolve under 236px and start wrapping
-     icons regardless of how the space is split. */
-  min-width: 1180px;
+  /* Derived from the Action column, and it moved.
+
+     This was 1180px: 236px (Action's floor when it held five icon buttons)
+     divided by 20% (its share), the width below which that share would
+     resolve under its floor and start wrapping icons. The actions are one
+     menu button now, so the floor is 64px at a 6% share -- 64 / 0.06 = 1067px.
+
+     The stale 1180 was the horizontal scroll on this page: the table itself
+     measures 1137px, so the rows were being held 43px wider than the table
+     that contains them, and the wrapper scrolled to cover the difference.
+     Rounded up a little for headroom. */
+  min-width: 1080px;
 }
 /* (A `width: calc(100% - 12px)` used to sit here to compensate for the
    body's scrollbar, which made the body row narrower than the header and
@@ -256,13 +264,19 @@
 .gp-people td:nth-child(3) {
   width: 8%;
 }
-/* Groups was the column wrapping: "web-dev-test, web-dev" broke across two
-   lines at 118px, which set the row's height. It needs 88px of text and now
-   has room for it on one line. Location keeps its two lines on purpose --
-   company above city -- so it is widened for comfort, not to unwrap it. */
+/* Groups wraps to two lines on purpose.
+
+   I widened this to 14% so "web-dev-test, web-dev" sat on one line, which cut
+   the row height. Asked for two lines instead, so it goes back to a narrow
+   share: a list of group names is easier to read stacked than run together,
+   and Location beside it is already two lines, so the row costs nothing extra
+   in height for it.
+
+   The width this gives up also buys back most of the horizontal overflow,
+   which is why the side padding above could return from 9px to 11px. */
 .gp-people th:nth-child(4),
 .gp-people td:nth-child(4) {
-  width: 14%;
+  width: 10%;
 }
 .gp-people th:nth-child(5),
 .gp-people td:nth-child(5) {
