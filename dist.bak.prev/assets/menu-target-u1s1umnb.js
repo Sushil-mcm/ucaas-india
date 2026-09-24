@@ -1,0 +1,1 @@
+const i=n=>{const r=String(n??"").trim(),t=r.indexOf("~");return t<0?{target:r,skill:""}:{target:r.slice(0,t).trim(),skill:r.slice(t+1).trim()}},s=(n,r)=>{const t=String(n??"").trim(),e=String(r??"").trim();return t&&e?`${t}~${e}`:t};export{s as j,i as s};

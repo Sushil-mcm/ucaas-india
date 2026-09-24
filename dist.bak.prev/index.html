@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- These links are the tab icon, full stop. organization-context.tsx used to
+         rewrite them from the org API's fav_icon once the branding call
+         returned; that block is gone (see the comment where it stood) because
+         the org record holds an older cloud-only mark and a single icon, so it
+         replaced whatever shipped here a moment after load and collapsed the
+         light/dark pair. Nothing overwrites these at runtime any more.
+
+         Two icons, picked by the browser's own theme: the wordmark is dark, so
+         on a dark tab strip it disappears, and fav-dark.ico is the same logo
+         with the wordmark in white. The unconditional link comes first as the
+         fallback for browsers that ignore `media` here.
+
+         The ?v= is a cache-buster, not decoration. Cloudflare fronts this site
+         and the nginx rule for .ico sends `max-age=2592000, immutable`, so the
+         edge holds a copy for 30 days and a replaced fav.ico on the origin is
+         not served until it expires. Unlike the hashed build assets this
+         filename never changes, so the version has to be carried here. Bump it
+         whenever public/fav.ico is replaced. -->
+    <link rel="icon" type="image/x-icon" href="/fav.ico?v=4" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="/fav-dark.ico?v=3"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Authenticated console: nothing here should be indexed. Pairs with
+         public/robots.txt — robots.txt asks a crawler not to fetch, this tells
+         one that already has the page not to list it, which is the half that
+         actually removes an already-indexed URL. Link-preview tags (og:*,
+         twitter:*) are set at runtime from the org record and are not affected. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Jost:ital,wght@0,100..900;1,100..900&display=block"
+      rel="stylesheet"
+    />
+    <!-- MCM Unified Console type: Plus Jakarta Sans for UI, IBM Plex Mono for figures -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Title set from org API (fav_title); leave empty to avoid flash before API loads -->
+    <!-- <title>Acepeak</title> -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-Cka87De0.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C0EyjZwv.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

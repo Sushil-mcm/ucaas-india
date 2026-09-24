@@ -10850,3 +10850,13 @@
     color: #f2994a !important;
   }
 }
+
+/* The same search field, sitting in the page head beside the buttons.
+   `.mcm-numsearch` carries `margin-left: auto` so that on a list bar it
+   takes the free space and pushes itself to the right end; in the head
+   it is already at the right end, and that margin only opened a gap
+   between it and the buttons it belongs with. */
+.mcm-admin .mcm-adminhead-actions .mcm-headsearch {
+  flex: 0 1 260px;
+  margin-left: 0;
+}

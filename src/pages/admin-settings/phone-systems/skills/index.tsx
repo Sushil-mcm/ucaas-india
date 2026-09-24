@@ -164,6 +164,19 @@ const Skills = () => {
           `bg-gray-200/15` wash was a cool grey painted over it. */}
       <section className="w-full flex flex-col h-full">
         <AdminHeadActions>
+          {/* Search sits with the two buttons on the head's own line rather
+              than alone on a strip below it: one control on a whole row of
+              its own left the list starting a long way down, and the row had
+              no left edge to line up with anything. */}
+          <label className="mcm-numsearch mcm-headsearch">
+            <SearchLine />
+            <input
+              type="search"
+              placeholder="Search skills"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
           {Boolean(phoneAccess?.add) && (
             <>
               <Button
@@ -187,17 +200,6 @@ const Skills = () => {
         </AdminHeadActions>
 
         <div className="w-full p-3 flex flex-col gap-3">
-          <div className="mcm-listbar">
-            <label className="mcm-numsearch">
-              <SearchLine />
-              <input
-                type="search"
-                placeholder="Search skills"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-          </div>
           {loading ? (
             <div className="text-sm text-gray-500 p-3">Loading skills…</div>
           ) : skillsAbsent ? (

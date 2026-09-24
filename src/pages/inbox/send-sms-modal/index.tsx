@@ -397,9 +397,9 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
               />
             </div>
           </div>
-          <div className="flex flex-col gap-2.5 w-full">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between">
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5">
+            <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+              <div className="flex shrink-0 justify-between">
                 <Label>Message</Label>
                 <div className="flex justify-end">
                   {errors?.sms?.message && <ErrorTooltip text={errors?.sms?.message || ''} />}
@@ -411,13 +411,13 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                   container's own border — two edges round one field, the
                   inner one floating clear of the outer. */}
               <div
-                className={`mcm-sms-editor flex items-center w-full rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
+                className={`mcm-sms-editor flex min-h-0 w-full flex-1 items-stretch rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
               >
                 {/* The counters used to sit here, above the text, inside the
                     same box — so "Chars Used - 0  Chars in SMS - 160" read as
                     the first line of the message you were writing. They are
                     metadata about the draft, so they belong under it. */}
-                <div className="flex min-h-[126px] w-full flex-col justify-between p-0">
+                <div className="flex min-h-0 w-full flex-1 flex-col justify-between p-0">
                   <textarea
                     name="sms"
                     id=""
@@ -429,11 +429,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                     }}
                     maxLength={700}
                     placeholder="Write a message..."
-                    className="min-h-[120px] resize-none border-none px-3 pt-3 text-sm outline-0 placeholder:text-gray-400 sm:min-h-[140px]"
+                    className="min-h-[72px] flex-1 resize-none border-none px-3 pt-3 text-sm outline-0 placeholder:text-gray-400"
                   />
                   {/* A toolbar, ruled off from the text above it, rather than
                       two rows sharing one undivided box. */}
-                  <div className="flex min-h-6 flex-wrap items-center gap-3 border-t border-gray-200 px-3 py-2">
+                  <div className="flex min-h-6 shrink-0 flex-wrap items-center gap-3 border-t border-gray-200 px-3 py-2">
                     <div className="relative cursor-pointer">
                       <div
                         className="emoji-container absolute bottom-[2.5rem] !left-0 z-20 max-w-[calc(100vw-3rem)] sm:left-auto sm:right-0 sm:max-w-none"
@@ -544,7 +544,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
                   the charge. Currency through formatMoney like every other
                   figure in the app -- this printed a literal "$" while the
                   platform bills in rupees. */}
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-0.5 text-xs text-gray-500">
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-0.5 text-xs text-gray-500">
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>
                     <span className="font-medium text-gray-700">{smsCountData.length}</span>

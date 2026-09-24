@@ -1,0 +1,1 @@
+const r=n=>{if(n==null||n==="")return null;if(Array.isArray(n))return n.map(r);if(typeof n=="object"){const t={};return Object.keys(n).sort().forEach(o=>{const s=r(n[o]);s!==null&&(t[o]=s)}),t}return n},i=n=>JSON.stringify(r(n)),c=(n,t)=>i(n)===i(t);export{c as i};
