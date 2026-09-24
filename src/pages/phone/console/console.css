@@ -895,7 +895,11 @@
   font-size: 18px;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(150deg, #3b6fe0, #7c3aed);
+  /* Was `linear-gradient(150deg, #3b6fe0, #7c3aed)` -- a blue-to-purple disc
+     from the console's pre-warm palette, and the only cool object left in a
+     card that is otherwise peach. The stage's own avatar ring already uses
+     the accent gradient (`.caller-av-ring`), so this follows it. */
+  background: linear-gradient(150deg, var(--accent, #f2994a), var(--accent-ink, #c96f1f));
 }
 .mcm-console .caller-name {
   font-size: 19px;

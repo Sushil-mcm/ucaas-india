@@ -1587,3 +1587,13 @@
 .gp-create-group-body .gp-department-rail ol li > span {
   background: rgba(225, 200, 165, 0.7) !important;
 }
+
+/* The column headings, in near-black. `.gp-groups th` already asks for
+   #1a1a1a, but `.mcm-page th` asks for `--ink-4` at the same specificity
+   and lands later in the bundle, so the headings were coming out the
+   muted grey that token carries. Through `table thead` it wins outright
+   rather than on file order. */
+.gp-groups table thead th {
+  color: #1a1a1a;
+  font-weight: 800;
+}
