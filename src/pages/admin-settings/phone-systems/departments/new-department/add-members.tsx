@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { forwardActionType } from '@/services/api';
 import { useCallback, useState, useMemo, memo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Search } from 'lucide-react';
 import useDebounce from '@/hooks/use-debounce';
 import { SearchLine } from '@/assets/icons';
 
@@ -312,8 +311,13 @@ const AddMembers = () => {
       )}
 
       {/* Search Input */}
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Full width, matching the table under it: at `max-w-sm` this sat 399px
+          short of the table's 783px and read as belonging to nothing.
+
+          The standalone `<Search>` that used to sit here is gone -- `Input`
+          already draws its own magnifier from the `Icon` prop, so the two
+          rendered 4px apart and the glyph came out doubled. */}
+      <div className="relative w-full">
         <Input
           type="text"
           placeholder="Search by name, email, or extension..."

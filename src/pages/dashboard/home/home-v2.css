@@ -1562,10 +1562,16 @@
   color: var(--ink-4, #93a0b8);
   white-space: nowrap;
 }
-.home-v2 .sect-rule .rule {
+/* NOT `.rule` — mcm-page.css:1801 defines that as a padded, bordered card,
+   and this element is inside .mcm-page, so the shared rule won and turned a
+   hairline divider into a full-width beige pill. Renamed to something the
+   base stylesheet does not claim. */
+.home-v2 .sect-rule .sect-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, var(--line), transparent);
+  border: 0;
+  padding: 0;
+  background: linear-gradient(90deg, var(--line-strong, #ded4c6), transparent);
 }
 .home-v2 .sect-rule .note {
   display: inline-flex;
@@ -1640,7 +1646,6 @@
 .home-v2 .rail-d {
   font-size: 11px;
   color: var(--ink-4, #93a0b8);
-  margin-top: auto;
 }
 
 /* ── today cards: figure, trend, and a chart on the bottom edge ───────── */
@@ -1718,10 +1723,14 @@
   line-height: 1;
   letter-spacing: -0.045em;
 }
+/* Not `margin-top: auto`. The grid row stretches every card to match its
+   tallest sibling — Service Level, which carries a meter — and pinning the
+   caption to the bottom of that stretched box opened a dead band between the
+   number and its caption. Keeping them together reads as one reading with
+   trailing padding instead of two things separated by a gap. */
 .home-v2 .kcard-d {
   font-size: 11px;
   color: var(--ink-4, #93a0b8);
-  margin-top: auto;
 }
 .home-v2 .kcard-chart {
   display: block;

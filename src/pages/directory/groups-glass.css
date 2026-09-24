@@ -1541,3 +1541,13 @@
 .gp-members-table-wrap thead th {
   vertical-align: top !important;
 }
+
+/* The member table sat as a bare grid against the pane -- square corners, no
+   edge -- while every other surface in this wizard is a rounded, outlined
+   card. `overflow: hidden` is what actually clips the sticky header's own
+   corners to the radius; without it the header squares off the top two. */
+.gp-members-table-wrap {
+  border: 1px solid rgba(225, 200, 165, 0.55);
+  border-radius: 12px;
+  overflow: hidden;
+}

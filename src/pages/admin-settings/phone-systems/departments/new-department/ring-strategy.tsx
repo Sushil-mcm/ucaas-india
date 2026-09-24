@@ -24,7 +24,7 @@ const RingStrategy = () => {
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-4 px-1 sm:px-3 lg:flex-row lg:items-start lg:gap-5">
         <p className="text-sm text-gray-800 lg:max-w-xs">
-          Set how you'd like to answer calls when conditions are met.{' '}
+          How calls are shared out across the group.{' '}
         </p>
         <div className="w-full">
           <CustomSelect
@@ -47,9 +47,7 @@ const RingStrategy = () => {
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">Call waiting for members</p>
           <p className="text-xs text-gray-600">
-            On — a member already on a call still gets this group&rsquo;s calls as a second call.
-            Off — members on a call are skipped, and the call goes to whoever is free (or to the
-            fallback when everyone is busy).
+            Off, members already on a call are skipped until they are free.
           </p>
         </div>
         <Switch
