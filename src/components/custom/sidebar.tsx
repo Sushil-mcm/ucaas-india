@@ -121,7 +121,14 @@ export const navList = (features: any, IS_ADMIN: boolean): NavItem[] =>
       id: 12,
       name: 'Agent Chat',
       link: '/agent-chat',
-      icon: 'MessageIcon',
+      /* Not `MessageIcon`: Chat above uses that exact glyph, so the two rail
+         items were the same speech bubble one under the other and the label
+         was the only thing telling them apart. `AIChatIcon` is already this
+         app's glyph for AI agents (Captain ▸ Assistants, Knowledge base ▸ AI
+         agent, the dashboard's AI tile), and this item is gated on
+         `plan_features.ai`, so it follows that convention rather than
+         inventing a third. */
+      icon: 'AIChatIcon',
       enabled: Boolean(features?.plan_features?.ai?.IS_SHOW),
       visible: Boolean(features?.plan_features?.ai?.action?.agent?.view),
     },
