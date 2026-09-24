@@ -1556,3 +1556,34 @@
   border-radius: 12px;
   overflow: hidden;
 }
+
+/* ---- wizard footer and rail -------------------------------------------
+   The three footer actions rendered at two heights -- Cancel 34px against
+   Prev and Next at 38 -- so the row had no common baseline. One height for
+   all three. (Next's promotion from outline to primary is in the markup:
+   it and Prev were both outlines, so the forward action carried no more
+   weight than going back, and the last step's Submit was the only filled
+   button in the whole wizard.) */
+.gp-create-group-body .gp-department-rail + div > .border-t button {
+  height: 38px;
+  min-height: 38px;
+}
+
+/* The rail held 490px of steps in a 465px column, so the fifth step sat
+   past the bottom edge on a short window. The space is in the gaps, not
+   the text: a 56px floor under each step where its title and caption need
+   39, 12px between steps, and 22px under the panel head. */
+.gp-create-group-body .gp-department-rail .mcm-stepper-panel-head {
+  margin-bottom: 14px !important;
+}
+.gp-create-group-body .gp-department-rail ol {
+  gap: 6px !important;
+}
+.gp-create-group-body .gp-department-rail ol li > div {
+  min-height: 44px !important;
+}
+/* The connector between steps was `bg-gray-200`, a cool grey line down a
+   warm panel. */
+.gp-create-group-body .gp-department-rail ol li > span {
+  background: rgba(225, 200, 165, 0.7) !important;
+}

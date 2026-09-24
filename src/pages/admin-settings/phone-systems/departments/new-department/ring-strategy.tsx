@@ -43,7 +43,7 @@ const RingStrategy = () => {
           whoever is free - and to the group's fallback when nobody is. On, the
           call rings every member, and someone on a call sees it as a second
           call. */}
-      <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 bg-white p-3">
+      <div className="flex items-start justify-between gap-4 rounded-xl border border-[rgba(225,200,165,0.55)] bg-white p-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">Call waiting for members</p>
           <p className="text-xs text-gray-600">
@@ -96,9 +96,9 @@ const RingStrategy = () => {
             only the leading drag-handle column (linear order needs one, the
             others don't) and the body's row source differ. */}
         <div className="w-full">
-          <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
+          <div className="flex flex-col gap-2 overflow-hidden rounded-xl border border-[rgba(225,200,165,0.55)]">
             <Table className="w-full text-sm text-gray-700 h-full ">
-              <TableHeader className="bg-gray-100/40 text-gray-90/80">
+              <TableHeader className="bg-[#fff6e9] text-gray-90/80">
                 <TableRow>
                   {isLinear ? <TableHead className="px-4 py-2 font-medium text-left" /> : null}
                   <TableHead className="px-4 py-2 font-medium text-left text-text-gray-90/80">

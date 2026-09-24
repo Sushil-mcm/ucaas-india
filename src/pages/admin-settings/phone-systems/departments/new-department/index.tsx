@@ -625,7 +625,7 @@ const NewDepartment = ({
                         Prev
                       </Button>
                       {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
-                        <Button variant={'outline'} type="button" onClick={handleNext}>
+                        <Button variant={'primary'} type="button" onClick={handleNext}>
                           Next
                         </Button>
                       )}
@@ -657,7 +657,7 @@ const NewDepartment = ({
                       </Button>
                       {currentStep !== DEPARTMENT_TAB_CONSTANT.GREETING_NOTIFICATION && (
                         <Button
-                          variant={'outline'}
+                          variant={'primary'}
                           type="button"
                           onClick={handleNext}
                           className="shrink-0"
