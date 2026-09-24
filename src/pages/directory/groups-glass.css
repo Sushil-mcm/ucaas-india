@@ -1308,3 +1308,100 @@
   border-bottom-color: var(--mcm-accent, #ffab5e) !important;
   box-shadow: none !important;
 }
+
+/* ==================================================================
+   Groups: the same corrections Roles got, plus this table's own
+   ------------------------------------------------------------------
+   Written last so it settles the rules above.
+   ================================================================== */
+
+/* One height, one radius, one fill across the toolbar. The chips were
+   33px on a bar padded for 40 at a 20px radius - a lozenge rather than a
+   control - and the count chip was a different height again, so nothing
+   in the row shared a line. */
+.gp-groups .tbar {
+  gap: 10px;
+  padding: 12px 18px;
+}
+.gp-groups .tbar .fchip,
+.gp-groups .fchip.live {
+  height: 38px;
+  padding-left: 14px;
+  padding-right: 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border-color: rgba(150, 100, 50, 0.16);
+  box-shadow: none;
+}
+.gp-groups .tbar .fchip:has(input) {
+  flex: 1 1 280px !important;
+  max-width: 420px !important;
+}
+.gp-groups .tbar .fchip:hover {
+  background: #ffffff;
+  border-color: var(--accent);
+}
+.gp-groups .fchip.live {
+  border-color: rgba(150, 100, 50, 0.16) !important;
+}
+
+/* The card wore a 34px brown glow, which on a cream page reads as a
+   smudge under its bottom edge rather than as depth, and the last row
+   drew a divider directly above that edge. */
+.gp-groups .panel-card {
+  box-shadow: none;
+}
+.gp-groups tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* A row here opens the group, so it keeps a hover - but a neutral one.
+   The warm tint it had was two shades off the card and read as a
+   selection rather than as the pointer; the accent bar down the left is
+   what marks the row. */
+.gp-groups .gp-group-row:hover {
+  background: #faf9fb;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* The actions sat left in a column 22% wide, so "Open" floated in the
+   middle of the card with a hand's width of nothing to its right while
+   the header above it said ACTION over empty space. Read from the right
+   edge, the way every other list in the console does it. */
+.gp-groups th:nth-child(5),
+.gp-groups td:nth-child(5) {
+  text-align: right;
+}
+.gp-groups td:nth-child(5) > span {
+  justify-content: flex-end;
+}
+.gp-groups th:nth-child(5) {
+  padding-right: 22px;
+}
+.gp-groups td:nth-child(5) {
+  padding-right: 22px;
+}
+
+/* The count of people. It was a square orange chip the size of a single
+   digit, which at two digits went oval and at three wrapped; a pill sized
+   to its own content holds any of them. */
+.gp-groups td:nth-child(3) .tag.acc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* An extension is a number read digit by digit, so it gets the figures
+   that line up rather than the body font's proportional ones. */
+.gp-groups td:nth-child(4) {
+  font-variant-numeric: tabular-nums;
+}
