@@ -195,7 +195,6 @@ const GreetingContent: FC = () => {
             onClick: () => {
               handleOpenAudio(srcUrl);
             },
-            className: ' bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
             tooltipText: 'Play',
             access: true,
           },
@@ -205,7 +204,6 @@ const GreetingContent: FC = () => {
               setGreetingData(data);
               setModalState({ isEdit: true });
             },
-            className: 'bg-gray-100 text-gray-900/80 hover:bg-primary hover:text-white',
             tooltipText: 'Edit',
             access: !data?.is_default,
           },
@@ -215,13 +213,18 @@ const GreetingContent: FC = () => {
               setGreetingData(data);
               setModalState({ isDelete: true });
             },
-            className: 'bg-red-100 text-red-500 hover:bg-red-500 hover:text-white',
+            danger: true,
             tooltipText: 'Delete',
             access: !data?.is_default,
           },
         ]?.filter(Boolean);
         return (
-          <div className="flex items-center gap-2">
+          /* The square row buttons every other Admin list uses, rather than
+             filled discs - and the console retints `bg-gray-100` to its warm
+             surface, so those discs were cream on cream anyway. A button that
+             cannot be used (a default file cannot be edited or deleted) is
+             dimmed rather than merely uncoloured. */
+          <div className="mcm-numacts">
             {/* The key belonged on the mapped element, which is the tooltip,
                 not on the div inside it. React warned on every render and
                 reused rows by position, so deleting a file could leave the
@@ -229,17 +232,16 @@ const GreetingContent: FC = () => {
             {actions?.map((action, index) => (
               <CustomTooltip key={index} text={action.tooltipText} side="top">
                 <div
-                  className={`${action?.access ? `cursor-pointer  ${action.className}` : 'cursor-not-allowed  bg-gray-100 text-gray-900/80'}  flex items-center justify-center rounded-full w-8 h-8 `}
+                  className={`mcm-rowact flex items-center justify-center${
+                    action.danger ? ' is-danger' : ''
+                  }${action?.access ? ' cursor-pointer' : ' is-off cursor-not-allowed'}`}
                   onClick={() => {
                     if (action?.access) {
                       action.onClick();
                     }
                   }}
                 >
-                  <Icon
-                    name={action.icon as IconName}
-                    className={`w-5 h-5 ${action?.access ? '' : 'text-gray-400'}`}
-                  />
+                  <Icon name={action.icon as IconName} className="w-4 h-4" />
                 </div>
               </CustomTooltip>
             ))}
@@ -255,7 +257,7 @@ const GreetingContent: FC = () => {
   const inAccount = pathname.includes('/account/');
 
   return (
-    <section className="mcm-page mcm-admin mcm-acct">
+    <section className="mcm-page mcm-admin mcm-acct mcm-mediapage">
       <div className="mcm-acct-body">
         {/* The four libraries as a tab strip in the body rather than a row of
             pills wedged under the title. It also used to sit inside a <p>,

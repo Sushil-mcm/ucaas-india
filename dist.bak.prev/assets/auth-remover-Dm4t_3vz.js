@@ -1,1 +1,0 @@
-import{a as n,h8 as s,j as t,nk as u,k9 as i}from"./index-wtkqumFO.js";function l({children:a}){const{user:e,loader:r}=n(),o=typeof window<"u"?localStorage.getItem(s)==="true":!1;return r?t.jsx(u,{}):!(e!=null&&e.token)||o?a:t.jsx(i,{to:"/dashboard",replace:!0})}export{l as default};
