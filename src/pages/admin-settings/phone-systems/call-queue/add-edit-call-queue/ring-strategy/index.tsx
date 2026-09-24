@@ -642,11 +642,16 @@ const RingStrategy = () => {
         </SettingNest>
       </SettingCard>
 
+      {/* Full width. This block was capped at `lg:w-2/3`, and `lg` measures
+          the window, not the panel the table is in - so inside the editor it
+          was always on, and the members table stopped two thirds across with
+          a column of nothing beside it while every card above it ran the
+          full width. */}
       <div className="w-full">
         <p className="font-semibold text-gray-900 truncate text-md mb-2">Call Queue Members</p>
         {watch('settings.ring_strategy.value')?.value === 'top-down' ? (
           <>
-            <div className="w-full lg:w-2/3">
+            <div className="w-full">
               <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
                 <Table className="w-full text-sm text-gray-700 h-full ">
                   <TableHeader className="bg-gray-100/40 text-gray-90/80">
@@ -675,7 +680,7 @@ const RingStrategy = () => {
             </div>
           </>
         ) : (
-          <div className="w-full lg:w-2/3">
+          <div className="w-full">
             <div className="flex flex-col gap-2 overflow-auto border border-gray-200 rounded-xl">
               <Table className="w-full text-sm text-gray-700 h-full ">
                 <TableHeader className="bg-gray-100/40 text-gray-90/80">
