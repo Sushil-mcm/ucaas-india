@@ -16,10 +16,10 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, SearchLine } from '@/assets/icons';
-import { ChevronDown, Pencil } from 'lucide-react';
+import { ChevronDown, Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +59,10 @@ import usePeopleRows, {
 import RemovedPeople from '@/pages/directory/people-removed';
 import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import AddUsers from './add-users';
+/* The dialog shell these classes come from - see the Add people dialog
+   below. Imported here so this screen does not depend on another page
+   having pulled the stylesheet in. */
+import '@/pages/directory/groups-glass.css';
 import UpdateForwarding from './update-forwarding';
 import RoleChangeModal from './role-change-modal';
 import AssignCallerIdModal from './add-users/assign-caller-id-modal';
@@ -521,10 +525,40 @@ const PeopleScreen: FC = () => {
         )}
       </section>
 
-      {drawerState.addUser && (
-        <SideDrawer isOpen={drawerState.addUser} title="Add people" width="min(765px, 94vw)" isTab={false} handleClose={() => setDrawerState({ addUser: false })}
-          content={<AddUsers setDrawerState={(val) => setDrawerState((prev: any) => ({ ...prev, addUser: val }))} />} />
-      )}
+      {/* Centred, not a side drawer. The flow is a two-column wizard - a
+          step rail beside a three-across form - and 765px of drawer had it
+          folding onto itself. This is the same shell Directory opens the
+          same flow in (`gp-invite-dialog`), so the two agree, with the page
+          behind blurred so the form is the only thing in focus. Clicking
+          the backdrop does not close it: half a roster typed in is too
+          easy to lose to a stray click. */}
+      <Dialog open={Boolean(drawerState.addUser)} onOpenChange={(open) => { if (!open) setDrawerState({ addUser: false }); }}>
+        <DialogContent
+          className="gp-create-group-dialog gp-invite-dialog sm:max-w-[600px] lg:max-w-[1120px]"
+          overlayClassName="bg-black/40 backdrop-blur-[3px]"
+          onInteractOutside={(e) => e.preventDefault()}
+          showCloseButton={false}
+        >
+          <DialogTitle className="sr-only">Add people</DialogTitle>
+          <div className="gp-create-group-head gp-create-group-head--bare">
+            <button
+              type="button"
+              aria-label="Close"
+              className="gp-create-group-close"
+              onClick={() => setDrawerState({ addUser: false })}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="gp-create-group-body">
+            <AddUsers
+              setDrawerState={(val) => setDrawerState((prev: any) => ({ ...prev, addUser: val }))}
+              railTitle="Add people"
+              railSubtitle="Add team members and give them access to your workspace."
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       {drawerState.updateForwarding && (
         <SideDrawer isOpen={drawerState.updateForwarding} title={`${capitalizeFirstLetter(selectedUser?.first_name || '')} ${selectedUser?.last_name || ''}`} isTab={false} handleClose={() => setDrawerState({ updateForwarding: false })}
           content={<UpdateForwarding drawerState={drawerState.updateForwarding} setDrawerState={(val) => setDrawerState((prev: any) => ({ ...prev, updateForwarding: val }))} data={selectedUser} />} />
