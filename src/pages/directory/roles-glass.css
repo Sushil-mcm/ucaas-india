@@ -472,3 +472,61 @@
 .dark .gp-roles .tbar .fchip input::placeholder {
   color: var(--mcm-ink, #eef2f9) !important;
 }
+
+/* ==================================================================
+   Roles: the toolbar, the hover and the card's edge
+   ------------------------------------------------------------------
+   Three things the screen got wrong, all of them about the eye being
+   able to find an edge. Written last so it settles the rules above.
+   ================================================================== */
+
+/* The chips were 33px on a bar padded for 40, at a 20px radius that made
+   a short chip read as a lozenge, and the count chip was a different
+   height again - so nothing in the row shared a line. One height, one
+   radius, one fill; the search grows and the count sits at the end. */
+.gp-roles .tbar {
+  gap: 10px;
+  padding: 12px 18px;
+}
+.gp-roles .tbar .fchip,
+.gp-roles .fchip.live {
+  height: 38px;
+  padding-left: 14px;
+  padding-right: 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border-color: rgba(150, 100, 50, 0.16);
+  box-shadow: none;
+}
+.gp-roles .tbar .fchip:has(input) {
+  flex: 1 1 280px !important;
+  max-width: 420px !important;
+}
+.gp-roles .tbar .fchip:hover {
+  background: #ffffff;
+  border-color: var(--accent);
+}
+.gp-roles .fchip.live {
+  border-color: rgba(150, 100, 50, 0.16) !important;
+  background: rgba(220, 245, 241, 0.75) !important;
+}
+
+/* The hover was peach at 55% over an off-white card - about two shades
+   of difference, which is nothing on a screen in daylight. The accent
+   bar down the left stays; the fill behind it is now actually a fill. */
+.gp-roles tbody tr:hover {
+  background: #fff3e6;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* The card wore a 34px brown glow, which on the cream page read as a
+   smudge under its bottom edge rather than as depth. The border is
+   what separates the card from the page; it does not need help. */
+.gp-roles .panel-card {
+  box-shadow: none;
+}
+/* ...and the last row drew a divider directly above that edge, so the
+   card closed on two lines a pixel apart. */
+.gp-roles tbody tr:last-child td {
+  border-bottom: none;
+}
