@@ -791,7 +791,7 @@ const NumberList = () => {
             }}
           >
             <DialogContent
-              className="flex max-h-[82vh] w-[min(680px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
+              className="flex max-h-[86vh] w-[min(860px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
               overlayClassName="bg-black/20 backdrop-blur-[1.5px]"
               onInteractOutside={(e) => e.preventDefault()}
               showCloseButton={false}
