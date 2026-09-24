@@ -1176,3 +1176,44 @@
 .gp-contact-list-table td:nth-child(9) {
   width: 78px;
 }
+
+/* ── Add / Edit Contact dialog: give it a height and let the body scroll ────
+   The dialog had no max-height, so it grew with the form and ran off the
+   bottom of the screen -- "Select Group" sat on the viewport edge and the
+   Submit button below it was unreachable. `.gp-create-group-body` carries no
+   rule in this page's stylesheet either (its styles live in groups-,
+   roles- and locations-glass.css, each scoped to their own dialog), so
+   nothing was making it scroll.
+
+   Capped and scrolling: the head stays put, the fields scroll under it, and
+   Submit is always reachable. */
+.gp-contact-form-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 880px);
+  overflow: hidden;
+}
+.gp-contact-form-dialog .gp-create-group-head {
+  flex: none;
+}
+.gp-contact-form-dialog .gp-create-group-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* the same slim bar the rest of Directory uses, rather than the default */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(194, 111, 31, 0.35) transparent;
+  padding-bottom: 4px;
+}
+.gp-contact-form-dialog .gp-create-group-body::-webkit-scrollbar {
+  width: 7px;
+}
+.gp-contact-form-dialog .gp-create-group-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-contact-form-dialog .gp-create-group-body::-webkit-scrollbar-thumb {
+  background: rgba(194, 111, 31, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
