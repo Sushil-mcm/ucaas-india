@@ -19,7 +19,8 @@ import NumberWithFlag from '@/components/custom/number-with-flag';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Plus, SearchLine } from '@/assets/icons';
-import SideDrawer from '@/components/custom/side-drawer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
 import useDebounce from '@/hooks/use-debounce';
@@ -404,19 +405,40 @@ const CallQueues: FC = () => {
         </div>
       </AdminPage>
 
-      {drawerState && (
-        <SideDrawer
-          width="min(1040px, 84vw)"
-          isOpen={drawerState}
-          title={
-            selectedCallQueue
-              ? `Update Call Queue${selectedCallQueue?.name ? ` (${selectedCallQueue.name})` : ''}`
-              : 'Add Call Queue'
-          }
-          isTab={false}
-          enableResponsive
-          handleClose={closeQueue}
-          content={
+      {/* Centred, not a side panel. This is a six-step form, not an
+          inspector on the row behind it - as a drawer it left the list
+          half-visible down the left edge with nothing to do, and pushed
+          its own tab strip and buttons against the right edge of the
+          screen. The page behind is lightly veiled, and the backdrop does
+          not close it: a half-filled queue should not go to a stray click. */}
+      <Dialog
+        open={Boolean(drawerState)}
+        onOpenChange={(next) => {
+          if (!next) closeQueue();
+        }}
+      >
+        <DialogContent
+          className="flex h-[min(86vh,760px)] w-[min(1040px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
+          overlayClassName="bg-black/10 backdrop-blur-[0.5px]"
+          onInteractOutside={(e) => e.preventDefault()}
+          showCloseButton={false}
+        >
+          <div className="flex items-center justify-between gap-4 border-b border-[#EEE7DD] px-5 py-3.5">
+            <DialogTitle className="min-w-0 truncate text-base font-semibold text-[#2E2D35]">
+              {selectedCallQueue
+                ? `Update call queue${selectedCallQueue?.name ? ` (${selectedCallQueue.name})` : ''}`
+                : 'Add call queue'}
+            </DialogTitle>
+            <button
+              type="button"
+              aria-label="Close"
+              className="mcm-rowact flex items-center justify-center"
+              onClick={closeQueue}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mcm-queueform flex min-h-0 flex-1 flex-col px-5 pb-4">
             <AddCallQueue
               {...{
                 drawerState,
@@ -425,9 +447,9 @@ const CallQueues: FC = () => {
                 tabSlug,
               }}
             />
-          }
-        />
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
       {modalState?.open && (
         <AgentDetailsModal modalState={modalState} setModalState={setModalState} />
       )}

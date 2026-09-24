@@ -10753,3 +10753,14 @@
 .mcm-admin .mcm-queuepage table tbody tr:hover td {
   background: #faf9fb;
 }
+
+/* The queue editor in a dialog rather than a drawer. `.mcm-userform`
+   pads itself for the drawer it used to live in, and the dialog already
+   pads its own body - so without this the form sat in twice the gutter
+   on both sides and its tab strip stopped short of the panel's edges. */
+.mcm-queueform > .mcm-userform {
+  padding: 0;
+}
+.mcm-queueform > .mcm-userform > * {
+  max-width: none;
+}
