@@ -66,7 +66,13 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
           </p>
         </div>
       )}
-      <div className="flex w-full flex-col justify-between gap-4 lg:flex-row">
+      {/* One grid for all four fields. They used to be two flex rows, and
+          the second row sized its halves at `lg:w-[49%]` while the first
+          let them share the space - so the right-hand column started at a
+          different place on each row, and `lg` measures the window rather
+          than the dialog they sit in. Two columns, four cells, one set of
+          edges. */}
+      <div className="grid w-full gap-x-5 gap-y-4 md:grid-cols-2">
         <Input
           label="IVR Name"
           required
@@ -86,10 +92,11 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
           error={(errors.site?.message as string) || undefined}
           isLoading={isLoading}
         />
-      </div>
 
-      <div className="flex w-full flex-col justify-between gap-4 lg:flex-row">
-        <div className="flex w-full items-end gap-2 lg:w-[49%]">
+        {/* `items-end`, so the refresh button sits on the field's line and
+            not on the label's, whether or not the field is showing an
+            error above itself. */}
+        <div className="flex w-full items-end gap-2">
           <Input
             label="IVR Extension"
             required
@@ -102,24 +109,23 @@ const IvrBasicInfo = ({ initialData, onRestorePrevious, restoreRequested }: any)
           />
           {!initialData?.uuid && (
             <Button
-              className="cursor-pointer flex items-center justify-center rounded-xl w-10 h-10 bg-white border border-primary hover:bg-primary hover:text-white text-primary"
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-primary bg-white text-primary hover:bg-primary hover:text-white"
               type="button"
+              title="Suggest another extension"
               onClick={generateNewExtension}
             >
-              <Icon name="Refresh" className="w-5 h-5" />
+              <Icon name="Refresh" className="w-4 h-4" />
             </Button>
           )}
         </div>
 
-        <div className="flex w-full lg:w-[49%]">
-          <Input
-            label="Description"
-            placeholder="Enter description"
-            {...register('description')}
-            error={errors.description?.message}
-            maxLength={501}
-          />
-        </div>
+        <Input
+          label="Description"
+          placeholder="Enter description"
+          {...register('description')}
+          error={errors.description?.message}
+          maxLength={501}
+        />
       </div>
     </div>
   );

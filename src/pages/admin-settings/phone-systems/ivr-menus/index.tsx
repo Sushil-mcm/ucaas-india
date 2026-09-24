@@ -9,7 +9,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { handleAlert } from '@/lib/utils';
 import AlertConfirm from '@/components/custom/alert-confirm';
 import { Plus, SearchLine } from '@/assets/icons';
-import SideDrawer from '@/components/custom/side-drawer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 import { IVR_PATH, IVR_DEFAULT_TAB } from './ivr-tabs';
 import CustomTooltip from '@/components/custom/custom-tooltip';
 import { Icon, IconName } from '@/assets/icons/icon';
@@ -197,22 +198,43 @@ const IvrMenus: FC = () => {
           />
         </div>
       </AdminPage>
-      {drawerState && (
-        <SideDrawer
-          width="min(1040px, 84vw)"
-          isOpen={drawerState}
-          isTab={false}
-          enableResponsive
-          title={
-            ivrNotFound
-              ? 'IVR menu'
-              : selectedIvr
-                ? `Update IVR (${selectedIvr?.name})`
-                : 'Add IVR Menu'
-          }
-          handleClose={closeIvr}
-          content={
-            ivrNotFound ? (
+      {/* Centred, not a side panel. This is a four-step form, and as a
+          drawer it left the list half-visible down the left with nothing
+          to do on it while its own tabs and buttons pressed against the
+          right edge of the screen. The page behind is lightly veiled, and
+          the backdrop does not close it: a half-filled menu should not go
+          to a stray click. */}
+      <Dialog
+        open={Boolean(drawerState)}
+        onOpenChange={(next) => {
+          if (!next) closeIvr();
+        }}
+      >
+        <DialogContent
+          className="flex h-[min(86vh,760px)] w-[min(1040px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
+          overlayClassName="bg-black/10 backdrop-blur-[0.5px]"
+          onInteractOutside={(e) => e.preventDefault()}
+          showCloseButton={false}
+        >
+          <div className="flex items-center justify-between gap-4 border-b border-[#EEE7DD] px-5 py-3.5">
+            <DialogTitle className="min-w-0 truncate text-base font-semibold text-[#2E2D35]">
+              {ivrNotFound
+                ? 'IVR menu'
+                : selectedIvr
+                  ? `Update IVR (${selectedIvr?.name})`
+                  : 'Add IVR menu'}
+            </DialogTitle>
+            <button
+              type="button"
+              aria-label="Close"
+              className="mcm-rowact flex items-center justify-center"
+              onClick={closeIvr}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mcm-queueform flex min-h-0 flex-1 flex-col px-5 pb-4">
+            {ivrNotFound ? (
               <div className="p-6">
                 <p className="text-sm font-semibold text-gray-900">
                   This IVR menu is not on the current page of results
@@ -231,10 +253,10 @@ const IvrMenus: FC = () => {
                 initialData={selectedIvr}
                 tabSlug={tabSlug}
               />
-            )
-          }
-        />
-      )}
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {!!deleteIVRMenu && (
         <AlertConfirm
