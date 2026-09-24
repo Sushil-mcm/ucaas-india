@@ -1076,11 +1076,50 @@
      option list is a separate BEM part (`__menu`) with its own border
      from the base `.custom-react-select__menu` rule, which this control
      fix never touched. */
+  /* Matched to `.gp-filter-menu` (directory/page-shell.css), the panel every
+     other Directory filter opens — People's Groups/Location chips are the
+     reference. These two were the odd ones out: an 8px panel with no padding,
+     a cool grey drop shadow, and a grey `#f4f5f7` hover from the base
+     react-select rules, sitting next to Directory panels that are 14px, inset
+     6px, warm-shadowed and highlight in orange.
+
+     Everything here is a compound selector carrying `contact-toolbar-select`,
+     so only Contacts' Group and Tag filters change; every other CustomSelect
+     in the app keeps the base look. */
   .contact-toolbar-select.custom-react-select__menu {
     border: none !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
     box-shadow:
-      0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+      0 16px 40px rgba(160, 95, 30, 0.18),
+      0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  }
+  .contact-toolbar-select.custom-react-select__option {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+  /* The grey hover was the loudest difference — every other Directory
+     dropdown answers the pointer in orange. */
+  .contact-toolbar-select.custom-react-select__option:hover,
+  .contact-toolbar-select.custom-react-select__option--is-focused,
+  .contact-toolbar-select.custom-react-select__option--is-selected {
+    background-color: #fff1e0 !important;
+    color: #c96f1f !important;
+  }
+  .dark .contact-toolbar-select.custom-react-select__menu {
+    box-shadow:
+      0 16px 40px rgba(0, 0, 0, 0.45),
+      0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+  .dark .contact-toolbar-select.custom-react-select__option:hover,
+  .dark .contact-toolbar-select.custom-react-select__option--is-focused,
+  .dark .contact-toolbar-select.custom-react-select__option--is-selected {
+    background-color: var(--mcm-accent-wash, #1a2733) !important;
+    color: var(--mcm-accent-ink, #ff8a2a) !important;
   }
 
   /* Any CustomSelect opted in via `inputClass="gp-borderless-select"` --
