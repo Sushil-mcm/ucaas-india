@@ -574,14 +574,15 @@
   background: rgba(255, 241, 235, 0.55) !important;
   box-shadow: inset 3px 0 0 var(--accent);
 }
-/* Action column's "..." menu trigger (`AllNewContactsList`'s own markup,
-   not a `.mini` button) — no chrome at rest, pale rounded-square wash on
-   hover, matching People's own action buttons exactly
-   (`.gp-people td:last-child .mini:not(.mcm-fav-on)`, people-glass.css)
-   instead of the outlined circle this used to carry at rest.
+/* Anything else round-and-32px in this table. The "..." trigger is excluded
+   by name: this block was written to match People's action button back when
+   People's was flat, and People has since been given a peach disc
+   (`.gp-people td:last-child .mini.gp-row-menu-trigger`, people-glass.css).
+   Its `background: transparent !important` was the thing beating the disc
+   out of the Contacts trigger.
    (interactions-theme.css uses this identical `[rounded-full][w-8]`
    selector pattern for the same reason: no stable class to hook.) */
-.gp-contact-table [class*='rounded-full'][class*='w-8'] {
+.gp-contact-table [class*='rounded-full'][class*='w-8']:not(.gp-row-menu-trigger) {
   background: transparent !important;
   border: 1px solid transparent;
   box-shadow: none;
@@ -590,7 +591,7 @@
     color 0.16s ease,
     box-shadow 0.16s ease;
 }
-.gp-contact-table [class*='rounded-full'][class*='w-8']:hover {
+.gp-contact-table [class*='rounded-full'][class*='w-8']:not(.gp-row-menu-trigger):hover {
   background: #FEF8F1 !important;
   border: 1px solid rgba(242, 153, 74, 0.35);
   border-radius: 14px !important;
