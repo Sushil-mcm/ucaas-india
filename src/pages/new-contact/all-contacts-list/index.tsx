@@ -945,14 +945,46 @@ const AllNewContactsList: FC<any> = ({
         headerText="Please confirm"
         onConfirm={handleTagUpdate}
         apiLoading={isApiLoading}
+        /* Says which contact and what changes, rather than "this contact".
+
+           It was a 64px question mark over one vague line, centred in a lot of
+           air — the question was whether you had the right row, and the dialog
+           could not answer it. It names the person, shows the number, and
+           spells out the tag it is moving from and to. Same confirmation, and
+           now it is checkable. */
         descriptionTextComp={
-          <div className="flex flex-col items-center justify-center gap-4 py-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ucass-active-bg text-ucass-active">
-              <Icon name="QuestionIcon" className="h-8 w-8" />
+          <div className="flex flex-col gap-3 py-1">
+            <div className="flex items-center gap-3 rounded-lg border border-[rgba(150,100,50,0.14)] bg-[rgba(251,246,239,0.7)] px-3 py-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f5e3cd] text-[13px] font-semibold text-[#a86a25]">
+                {`${tagUpdateState?.contact?.name?.first || ''} ${
+                  tagUpdateState?.contact?.name?.last || ''
+                }`
+                  .trim()
+                  .split(' ')
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part: string) => part[0]?.toUpperCase())
+                  .join('') || '?'}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[13.5px] font-semibold text-[#1a1a1a]">
+                  {`${tagUpdateState?.contact?.name?.first || ''} ${
+                    tagUpdateState?.contact?.name?.last || ''
+                  }`.trim() || 'Unnamed contact'}
+                </span>
+                <span className="block truncate text-[11.5px] text-[#8a7a67]">
+                  {tagUpdateState?.contact?.contact?.phone || 'No number on file'}
+                </span>
+              </span>
             </div>
-            <p className="text-center text-[#9A948F]">
-              Are you sure, you want to {tagUpdateState?.tag === 'STANDARD' ? 'remove' : 'make'}{' '}
-              this contact {tagUpdateState?.label}?
+            <p className="text-[13px] leading-relaxed text-[#5a5550]">
+              Their tag changes to{' '}
+              <span className="font-semibold text-[#1a1a1a]">{tagUpdateState?.label}</span>
+              {tagUpdateState?.tag === 'BLOCK'
+                ? ' — calls and messages from this number stop reaching you.'
+                : tagUpdateState?.tag === 'DNC'
+                  ? ' — they are excluded from campaign dialling.'
+                  : '.'}
             </p>
           </div>
         }
