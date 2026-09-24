@@ -916,6 +916,16 @@
      here. The chosen row carries the warm orange, which says "this is
      the one" rather than "your pointer is here", and deepens a shade
      when it actually is pointed at. */
+  /* The chevron turns over while the list is open, so the field says
+     which way it is going rather than pointing down at an open menu. */
+  .mcm-people-opt .custom-react-select__dropdown-indicator {
+    transition: transform 0.16s ease;
+  }
+  .mcm-people-opt.custom-react-select__control--menu-is-open
+    .custom-react-select__dropdown-indicator {
+    transform: rotate(180deg);
+  }
+
   .mcm-people-opt.custom-react-select__option--is-focused {
     background-color: transparent !important;
     color: var(--color-gray-900) !important;
@@ -1059,18 +1069,100 @@
      own prefix (via `CustomSelect`'s `inputClass` prop) so only these two
      dropdowns on this one page pick up the warm, rounded look matching the
      rest of that toolbar (Search input, tabs). */
+  /* Shaped like `.fchip`, the pill every other Directory filter uses (People's
+     Groups/Location chips are the reference). These two were borderless
+     10px boxes at the base 14px weight-400 type, so against a white toolbar
+     they read as empty space with a chevron rather than as controls.
+
+     Pill radius, the chip's own hairline and translucent fill, and the chip's
+     12px/700 type. Height stays 36px rather than the chip's 30px: these sit
+     in a row with this page's Search input and Sync button, and matching the
+     neighbours they actually stand beside matters more than matching a chip
+     on another page to the pixel.
+
+     The border is deliberately back. A previous pass removed it here as a
+     fix; the ask now is for these to look like the Directory chips, and the
+     chip's edge is most of what makes it read as one. */
   .contact-toolbar-select.custom-react-select__control {
     height: 36px !important;
     min-height: 36px !important;
-    border-radius: 10px !important;
-    /* Borderless — was `border-color: rgba(225, 200, 165, 0.9)`. This
-       rule (loaded globally) is the actual source that kept winning over
-       a more specific, page-scoped attempt to remove it in
-       external-glass.css; fixed at the source instead of fighting it from
-       elsewhere. */
-    border: none !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(150, 100, 50, 0.12) !important;
     box-shadow: none !important;
-    background-color: rgba(255, 255, 255, 0.7) !important;
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--ink-2, #3d4a63) !important;
+    transition:
+      border-color 0.15s,
+      background 0.15s !important;
+  }
+  /* Same hover the chip gives: it firms up and picks up the accent edge. */
+  /* Scoped through the page and toolbar as well, which takes this to (0,5,0).
+     At (0,3,0) the text inside the control turned orange but the fill and the
+     border did not, so something in the cascade was tying with it and winning
+     on order. Rather than keep hunting that rule, this puts the question
+     beyond doubt -- and the selector still only reaches these two filters. */
+  .gp-external .gp-contact-toolbar .contact-toolbar-select.custom-react-select__control:hover,
+  .gp-external .gp-contact-toolbar .contact-toolbar-select.custom-react-select__control--is-focused,
+  .gp-external
+    .gp-contact-toolbar
+    .contact-toolbar-select.custom-react-select__control--menu-is-open,
+  .contact-toolbar-select.custom-react-select__control:hover,
+  .contact-toolbar-select.custom-react-select__control--is-focused,
+  .contact-toolbar-select.custom-react-select__control--menu-is-open {
+    background-color: #fff !important;
+    border-color: var(--accent-edge, #f7c896) !important;
+    box-shadow: none !important;
+  }
+  /* The chip's leading label sits quieter than its value — the placeholder is
+     this control's equivalent, so it takes the quiet weight and the chosen
+     value takes the loud one. */
+  /* 700, like the chip. `FilterChip` renders its label as a bare text node
+     inside a 700-weight button, so label and value carry the same weight
+     there -- no lighter label to imitate. */
+  .contact-toolbar-select.custom-react-select__placeholder {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--ink-3, #6b7891) !important;
+  }
+  .contact-toolbar-select.custom-react-select__single-value {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: var(--ink-2, #3d4a63) !important;
+  }
+  /* The chip turns orange on hover -- all of it. `.gp-dirlist .tbar .fchip:hover`
+     only swaps background and border, but the base `.mcm-page .fchip:hover`
+     sets `color: var(--accent-ink)`, and because FilterChip's label is a bare
+     text node the whole chip inherits it.
+
+     react-select gives the placeholder, the value and the chevron their own
+     colours, so none of them inherit anything from the control -- each has to
+     be told. Without this the box lit up on hover and the text inside it
+     stayed grey, which is the mismatch. */
+  .contact-toolbar-select.custom-react-select__control:hover
+    .contact-toolbar-select.custom-react-select__placeholder,
+  .contact-toolbar-select.custom-react-select__control:hover
+    .contact-toolbar-select.custom-react-select__single-value,
+  .contact-toolbar-select.custom-react-select__control:hover
+    .contact-toolbar-select.custom-react-select__dropdown-indicator,
+  .contact-toolbar-select.custom-react-select__control--menu-is-open
+    .contact-toolbar-select.custom-react-select__placeholder,
+  .contact-toolbar-select.custom-react-select__control--menu-is-open
+    .contact-toolbar-select.custom-react-select__single-value,
+  .contact-toolbar-select.custom-react-select__control--menu-is-open
+    .contact-toolbar-select.custom-react-select__dropdown-indicator {
+    color: var(--accent-ink, #c96f1f) !important;
+  }
+
+  /* 14px chevron, like the chip's, instead of react-select's larger default. */
+  .contact-toolbar-select.custom-react-select__dropdown-indicator {
+    padding: 0 8px 0 2px !important;
+    color: var(--ink-3, #6b7891) !important;
+  }
+  .contact-toolbar-select.custom-react-select__dropdown-indicator svg {
+    width: 15px !important;
+    height: 15px !important;
   }
   /* The CONTROL's border was the only thing fixed above — the opened
      option list is a separate BEM part (`__menu`) with its own border
