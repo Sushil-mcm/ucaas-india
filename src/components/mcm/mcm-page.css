@@ -10860,3 +10860,124 @@
   flex: 0 1 260px;
   margin-left: 0;
 }
+
+/* ==================================================================
+   Phone System › Skills
+   ------------------------------------------------------------------
+   A category was a rounded `bg-white` box - which the glass rule
+   repaints cream - with a grey strip on top, and its rows mixed a
+   truncating name, an underlined link and a row of icon buttons. Three
+   kinds of control on one line, none of them lining up with the line
+   above. One card, one header, one row shape.
+   ================================================================== */
+.mcm-admin .mcm-skillcard {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.mcm-admin .mcm-skillcard.is-stray {
+  border-color: #fcd9a4;
+}
+.mcm-admin .mcm-skillcard-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 16px;
+  background: #fbfaf8;
+  border-bottom: 1px solid var(--line);
+}
+.mcm-admin .mcm-skillcard.is-stray .mcm-skillcard-h {
+  background: #fff8ed;
+  border-bottom-color: #fcd9a4;
+}
+/* What kind of list this is - said once, on the header, in the shape
+   every other status chip in the console uses. */
+.mcm-admin .mcm-skill-kind {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-wash);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+/* ---- one skill ---- */
+/* Three columns: what it is, who holds it, what you can do to it. The
+   middle two are sized to their contents, so the buttons sit on one
+   right edge down the whole card whatever the names run to. */
+.mcm-admin .mcm-skillrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line-2);
+  transition: background-color 0.15s ease;
+}
+.mcm-admin .mcm-skillrow:last-child {
+  border-bottom: none;
+}
+.mcm-admin .mcm-skillrow:hover {
+  background: #faf9fb;
+}
+.mcm-admin .mcm-skill-code {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1f2f4;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* Who holds the skill. It was an underlined word between two icon
+   buttons; a chip says it is a control without having to be underlined,
+   and amber when nobody holds it yet, which is the one state an
+   administrator is meant to act on. */
+.mcm-admin .mcm-skill-people {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.mcm-admin .mcm-skill-people:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.mcm-admin .mcm-skill-people.is-empty {
+  border-color: #fcd9a4;
+  background: #fff8ed;
+  color: #92400e;
+}
+.mcm-admin .mcm-skill-people.is-empty:hover {
+  border-color: var(--accent);
+}
+
+.mcm-admin .mcm-skill-empty {
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}

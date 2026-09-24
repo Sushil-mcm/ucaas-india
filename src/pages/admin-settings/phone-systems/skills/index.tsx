@@ -99,44 +99,42 @@ const Skills = () => {
   const renderSkill = (skill: any) => {
     const count = Number(skill?.peopleCount || 0);
     return (
-      <div
-        key={String(skill?._id)}
-        className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-2.5 border-b last:border-b-0 border-gray-100"
-      >
+      /* One row, three zones: what the skill is, who holds it, what you can
+         do to it. They used to be a truncating name, an underlined link and
+         a row of icon buttons - three different kinds of control, none of
+         them lining up with the row above. */
+      <div key={String(skill?._id)} className="mcm-skillrow">
         <div className="min-w-0">
-          <div className="font-medium text-gray-900 truncate">
-            {skill?.name}
-            {skill?.code ? <span className="ml-2 text-[10px] uppercase tracking-wide text-gray-500">{skill.code}</span> : null}
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm font-semibold text-[#2E2D35]">{skill?.name}</span>
+            {skill?.code ? <span className="mcm-skill-code">{skill.code}</span> : null}
           </div>
-          {skill?.description ? <div className="text-xs text-gray-500 truncate">{skill.description}</div> : null}
+          {skill?.description ? (
+            <div className="mt-0.5 truncate text-xs text-[#9A948F]">{skill.description}</div>
+          ) : null}
         </div>
+
         {/* The count is the way in: an admin who sees "Nobody yet" wants to
-            fix it from here, not from twenty profiles. */}
+            fix it from here, not from twenty profiles. A chip rather than an
+            underlined word, so it reads as the button it has always been. */}
         <button
           type="button"
           onClick={() => setPeopleFor(skill)}
-          className={`text-sm underline underline-offset-2 hover:text-primary whitespace-nowrap ${
-            count ? 'text-gray-900' : 'text-amber-600'
-          }`}
+          className={`mcm-skill-people${count ? '' : ' is-empty'}`}
           title={canEditPeople ? 'Add or rate people on this skill' : 'See who has this skill'}
         >
+          <Icon name="UsersIcon" className="h-3.5 w-3.5" />
           {count ? (count === 1 ? '1 person' : `${count} people`) : 'Nobody yet'}
         </button>
-        <span className="flex gap-2 items-center">
-          <span
-            className="mcm-rowact cursor-pointer flex items-center justify-center"
-            title="People"
-            onClick={() => setPeopleFor(skill)}
-          >
-            <Icon name="UsersIcon" className="w-5 h-5" />
-          </span>
+
+        <span className="mcm-numacts">
           {Boolean(phoneAccess?.edit) && (
             <span
               className="mcm-rowact cursor-pointer flex items-center justify-center"
               title="Edit"
               onClick={() => setModalState({ selected: skill, isModalOpen: true })}
             >
-              <Icon name="EditStrokIcon" className="w-5 h-5" />
+              <Icon name="EditStrokIcon" className="w-4 h-4" />
             </span>
           )}
           {Boolean(phoneAccess?.delete ?? phoneAccess?.edit) && (
@@ -145,7 +143,7 @@ const Skills = () => {
               title="Delete"
               onClick={() => setPendingDelete(skill)}
             >
-              <Icon name="TrashBin" className="w-5 h-5" />
+              <Icon name="TrashBin" className="w-4 h-4" />
             </span>
           )}
         </span>
@@ -224,43 +222,46 @@ const Skills = () => {
           ) : (
             <>
               {groups.map(({ category, skills: inCategory }) => (
-                <div key={category._id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  <div className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border-b border-gray-200">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-semibold text-gray-900 truncate">{category.name}</span>
-                      <span className="text-[10px] uppercase tracking-wide text-gray-500 border border-gray-200 rounded-full px-1.5">
+                <section key={category._id} className="mcm-skillcard">
+                  <header className="mcm-skillcard-h">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <h2 className="truncate text-sm font-bold text-[#2E2D35]">{category.name}</h2>
+                      <span className="mcm-skill-kind">
                         {category.kind === 'language' ? 'Languages' : 'Skills'}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-[#9A948F]">
                         {inCategory.length === 1 ? '1 skill' : `${inCategory.length} skills`}
                       </span>
                     </div>
+                    {/* A button, not an underlined word. It does the same job
+                        as "Add skill" in the head and should look like it. */}
                     {Boolean(phoneAccess?.add) && (
-                      <button
-                        type="button"
-                        className="text-xs text-primary underline underline-offset-2 whitespace-nowrap"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="whitespace-nowrap"
                         onClick={() => setModalState({ selected: null, isModalOpen: true, category })}
                       >
                         Add {category.kind === 'language' ? 'language' : 'skill'}
-                      </button>
+                      </Button>
                     )}
-                  </div>
+                  </header>
                   {inCategory.length ? (
                     inCategory.map(renderSkill)
                   ) : (
-                    <div className="px-4 py-3 text-xs text-gray-500">
+                    <p className="mcm-skill-empty">
                       {needle ? 'Nothing here matches your search.' : 'Nothing here yet.'}
-                    </div>
+                    </p>
                   )}
-                </div>
+                </section>
               ))}
               {strays.length > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-sm font-semibold text-amber-800">
-                    Without a category
-                  </div>
+                <section className="mcm-skillcard is-stray">
+                  <header className="mcm-skillcard-h">
+                    <h2 className="text-sm font-bold text-[#92400E]">Without a category</h2>
+                  </header>
                   {strays.map(renderSkill)}
-                </div>
+                </section>
               )}
             </>
           )}
