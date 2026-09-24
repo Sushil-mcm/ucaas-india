@@ -1,7 +1,6 @@
 import { Label } from '@/components/ui/label';
 import { GreetingItem, useGetGreetings } from '@/hooks/common';
 import { useIsStarterPlan } from '@/hooks/use-is-starter-plan';
-import { capitalizeFirstLetter } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SelectGreeting from '@/components/custom/greeting-select';
 import { ISELECTVALUE } from '@/interfaces/api-interfaces';
@@ -29,16 +28,22 @@ const Media = () => {
       name: 'welcome',
       placeholder: 'Welcome',
       label: 'welcome',
+      title: 'Welcome message',
+      hint: 'Plays to the caller before anyone in the group is rung.',
     },
     {
       name: 'hold',
       placeholder: 'On Hold Music',
       label: 'on hold music',
+      title: 'On-hold music',
+      hint: 'Plays while the caller waits to be connected.',
     },
   ].filter(({ name }) => !isStarterPlan || !['hold', 'on_hold_music'].includes(name)) as {
     name: string;
     placeholder: string;
     label: string;
+    title: string;
+    hint: string;
   }[];
 
   const onChangeMedia = (name: string, status: boolean) => {
@@ -55,17 +60,26 @@ const Media = () => {
       <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
         <div className="flex w-full flex-col gap-4 pr-1 sm:pr-2">
           <div className="flex w-full flex-col gap-4">
-            <div className="flex w-full flex-col gap-3 lg:w-1/2">
+            <div className="flex w-full flex-col gap-3">
               <h5 className="font-semibold text-gray-900 text-md my-2">Media</h5>
               <div className="flex flex-col gap-4 pt-2">
-                <div className="divide-y divide-gray-200">
-                  {mediaOptionsGreetingNotifications.map(({ name, label }) => {
+                <div className="flex flex-col gap-3">
+                  {mediaOptionsGreetingNotifications.map(({ name, label, title, hint }) => {
                     return (
+                      /* A titled setting row rather than a bare question with
+                         a divider under it. The old copy ("Do you want to add
+                         \"Welcome message\" ?") asked what the control already
+                         answers, and said nothing about when the caller
+                         actually hears it -- which is the part you need to
+                         decide Yes or No. */
                       <div
                         key={name}
-                        className="flex flex-col gap-2 w-full py-2 first:pt-0 last:pb-0"
+                        className="flex w-full flex-col gap-2 rounded-xl border border-[rgba(225,200,165,0.55)] p-3"
                       >
-                        <p className="text-gray-900 text-sm">{`Do you want to add "${capitalizeFirstLetter(label)} message" ?`}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900">{title}</p>
+                          <p className="text-xs text-gray-600">{hint}</p>
+                        </div>
                         <div className="flex min-h-10 flex-col items-start gap-3 md:flex-row md:items-center">
                           <RadioGroup
                             value={watchMedia?.[name]?.enabled?.toString()}
