@@ -10682,3 +10682,46 @@
   white-space: nowrap;
   text-align: right;
 }
+
+/* ==================================================================
+   Numbers: the controls bar, and an empty table that knows its size
+   ------------------------------------------------------------------
+   The tabs and the search were 30px pills on a 20px radius, which at
+   that height reads as a lozenge rather than a control, and the search
+   sat a few pixels off the tabs' own line. Both Numbers screens share
+   this bar on purpose, so both get the same correction.
+   ================================================================== */
+.mcm-admin .mcm-numtab,
+.mcm-admin .mcm-numsearch {
+  height: 36px;
+  border-radius: 12px;
+}
+.mcm-admin .mcm-numtab {
+  padding: 0 15px;
+  font-size: 12.5px;
+}
+.mcm-admin .mcm-numsearch {
+  flex: 1 1 220px;
+  max-width: 340px;
+  padding: 0 14px;
+}
+.mcm-admin .mcm-numsearch svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The empty state stretches to the height of the scroll box it sits in,
+   which on a page with nothing in it is most of the screen - so "No
+   identities yet" arrived in the middle of a card the size of a window.
+   Here it takes the height of what it actually says, with enough air
+   around it to still read as a state rather than a stray line.
+
+   Keyed on the utility the shared TableManager writes; if that class
+   ever changes the empty state simply goes back to filling its box,
+   which is the behaviour every other screen has. */
+.mcm-admin .mcm-idpage .h-\[calc\(100\%_-_45px\)\] {
+  height: auto;
+  min-height: 0;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}

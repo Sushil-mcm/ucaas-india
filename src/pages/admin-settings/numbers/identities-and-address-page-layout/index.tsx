@@ -58,6 +58,10 @@ const IdentitiesAndAddressesPageLayout = () => {
   return (
     <>
       <AdminPage
+        /* `mcm-card-bar`: the tabs and search sit on a white card like the
+           head above them, instead of floating on the page ground with no
+           edge of their own. `mcm-idpage` carries the rest. */
+        className="mcm-card-bar mcm-idpage"
         hideHead
         bareBody
         filters={

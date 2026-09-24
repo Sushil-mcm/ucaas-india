@@ -693,7 +693,9 @@ const NumberList = () => {
         </AdminHeadActions>
       ) : null}
       <AdminPage
-        className="mcm-numpage"
+        /* Same bar, same treatment as Identities & addresses: one card for
+           the controls, so the two Numbers screens still read as one. */
+        className="mcm-card-bar mcm-numpage"
         hideHead
         bareBody
         filters={
