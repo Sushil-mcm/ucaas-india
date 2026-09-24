@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, ShieldCheck, Timer, Mail } from 'lucide-react';
 import { SettingCard, SettingRow } from '@/components/mcm/setting-card';
+import { useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 import Loader from '@/components/custom/loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +51,13 @@ const toGreetingsObject = (raw: any): Record<string, any> => {
   }
   return typeof raw === 'object' ? raw : {};
 };
+
+/* One shape for every value the page hands to an identity provider, and
+   one for every line it refuses on. Written once here rather than spelled
+   out at each of the four places they appear. */
+const CODE_LINE =
+  'block w-full break-all rounded-lg border border-[#EEE7DD] bg-[#FBFAF8] px-3 py-2 font-mono text-xs leading-relaxed text-[#2E2D35]';
+const ERROR_LINE = 'text-sm font-medium text-red-600';
 
 const AuthenticationPage = () => {
   const queryClient: any = useQueryClient();
@@ -124,6 +132,13 @@ const AuthenticationPage = () => {
     handleAlert({ type: 'success', text: 'Provisioning switched off. The old token no longer works.' });
   };
 
+  /* Above the early returns: the loading branch returns before this point,
+     so a hook called after it runs on some renders and not others. */
+  useSetAdminPageMeta({
+    description:
+      'How people sign in and how they are provisioned. Every rule here applies to the whole company.',
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center py-10">
@@ -134,13 +149,12 @@ const AuthenticationPage = () => {
   if (isError) return <p className="p-4 text-destructive">Could not load the company settings. Try again.</p>;
 
   return (
-    <div className="flex flex-col gap-4 p-3">
-      <div>
-        <h2 className="text-xl font-semibold">Authentication</h2>
-        <p className="text-sm text-muted-foreground max-w-[80ch]">
-          How people sign in and how they are provisioned. Every rule here applies to the whole company.
-        </p>
-      </div>
+    /* `w-full`: the screen is a flex item in the Admin shell's row, and
+       without a width it shrank to fit its widest sentence - which is why
+       every card stopped two thirds across the page with nothing beside
+       it. `mcm-spaced-cards` gives the stacked blocks inside a card
+       (a row, an error line, a button) air between them. */
+    <div className="mcm-spaced-cards flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-4 sm:px-5">
 
       <SettingCard
         title="Single sign-on"
@@ -155,8 +169,15 @@ const AuthenticationPage = () => {
         <SettingRow
           label="Metadata for your provider"
           description="Give this to the identity provider when you set the application up."
-          control={<code className="text-xs break-all">{`${apiBase.replace(/\/+$/, '')}/api/auth/sso/saml/${companyUuid}/metadata`}</code>}
-        />
+        >
+          {/* Full width, under the label, rather than squeezed into the
+              control slot on the right: this URL is 80 characters of
+              identifier and it was breaking across three ragged lines
+              against the card's right edge. */}
+          <code className={CODE_LINE}>
+            {`${apiBase.replace(/\/+$/, '')}/api/auth/sso/saml/${companyUuid}/metadata`}
+          </code>
+        </SettingRow>
       </SettingCard>
 
       <SettingCard
@@ -168,14 +189,14 @@ const AuthenticationPage = () => {
           label="Inactivity timeout"
           description={`Between ${IDLE_MIN_MINUTES} minutes and ${IDLE_MAX_MINUTES / 60} hours. Background requests count as activity, the way established platforms count them.`}
           control={
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2.5">
               <Switch checked={idleEnabled} onCheckedChange={(v) => setIdleEnabled(Boolean(v))} aria-label="Inactivity timeout" />
-              <Input className="w-24" inputMode="numeric" value={idleMinutes} disabled={!idleEnabled} onChange={(e) => setIdleMinutes(e.target.value)} aria-label="Minutes" />
-              <span className="text-sm text-muted-foreground">minutes</span>
+              <Input className="w-20 text-center" inputMode="numeric" value={idleMinutes} disabled={!idleEnabled} onChange={(e) => setIdleMinutes(e.target.value)} aria-label="Minutes" />
+              <span className="text-sm text-[#9A948F]">minutes</span>
             </div>
           }
         />
-        {!idleValid && <p className="text-sm text-destructive">Enter a whole number of minutes between {IDLE_MIN_MINUTES} and {IDLE_MAX_MINUTES}.</p>}
+        {!idleValid && <p className={ERROR_LINE}>Enter a whole number of minutes between {IDLE_MIN_MINUTES} and {IDLE_MAX_MINUTES}.</p>}
         <SettingRow
           label="Sign out everywhere"
           description="An administrator can end every session of one person from Admin › People (row menu). Suspending or removing a person does the same automatically."
@@ -192,7 +213,7 @@ const AuthenticationPage = () => {
           description="Comma or space separated, e.g. mycompany.com, mycompany.co.uk"
           control={<Input className="w-80" value={domainsText} onChange={(e) => setDomainsText(e.target.value)} placeholder="mycompany.com" aria-label="Allowed domains" />}
         />
-        {badDomains.length > 0 && <p className="text-sm text-destructive">Not a domain: {badDomains.join(', ')}</p>}
+        {badDomains.length > 0 && <p className={ERROR_LINE}>Not a domain: {badDomains.join(', ')}</p>}
         <div className="flex justify-end pt-2">
           <Button onClick={saveSessionsAndDomains} disabled={isSaving || !idleValid || badDomains.length > 0}>Save sessions and domains</Button>
         </div>
@@ -203,7 +224,9 @@ const AuthenticationPage = () => {
         icon={<KeyRound className="w-4 h-4" />}
         description="Let your identity provider create, update and deactivate people automatically. Works with any provider that speaks SCIM 2.0 (Okta, Entra ID, JumpCloud, OneLogin). A person created this way gets an invite and the Agent role unless the provider sends another; the owner role can never be provisioned."
       >
-        <SettingRow label="Base URL" description="Enter this in the provider's provisioning settings." control={<code className="text-xs">{scimBaseUrl(apiBase)}</code>} />
+        <SettingRow label="Base URL" description="Enter this in the provider's provisioning settings.">
+          <code className={CODE_LINE}>{scimBaseUrl(apiBase)}</code>
+        </SettingRow>
         <SettingRow
           label="Token"
           description={current.scimEnabled ? `Issued ${current.scimCreatedAt ? current.scimCreatedAt.slice(0, 10) : ''} · ends in …${current.scimTokenHint}. Issuing a new one replaces it.` : 'No token issued. Provisioning is off until one is.'}
@@ -215,9 +238,9 @@ const AuthenticationPage = () => {
           }
         />
         {freshToken && (
-          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
-            <div className="font-medium text-amber-900">Copy this token now. It is shown once and stored only as a hash.</div>
-            <code className="block break-all mt-1 text-xs">{freshToken}</code>
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-3">
+            <div className="text-sm font-semibold text-amber-900">Copy this token now. It is shown once and stored only as a hash.</div>
+            <code className={`${CODE_LINE} mt-2 border-amber-200 bg-white`}>{freshToken}</code>
           </div>
         )}
         <SettingRow label="What the provider may do" description="Create a person (invite sent, next free extension picked), change name or e-mail, deactivate (suspend: sessions ended, queues left) and reactivate, remove (72-hour restore applies). Everything goes through the same checks as Admin › People." />
