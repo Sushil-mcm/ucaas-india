@@ -511,11 +511,12 @@
   background: rgba(220, 245, 241, 0.75) !important;
 }
 
-/* The hover was peach at 55% over an off-white card - about two shades
-   of difference, which is nothing on a screen in daylight. The accent
-   bar down the left stays; the fill behind it is now actually a fill. */
+/* No fill on hover. A row here is not a target - there is nothing to
+   click on the row itself, only the buttons at its end - so tinting the
+   whole width said "this is selected" about a row the pointer merely
+   crossed. The accent bar down the left edge is the whole cue. */
 .gp-roles tbody tr:hover {
-  background: #fff3e6;
+  background: transparent;
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
@@ -529,4 +530,25 @@
    card closed on two lines a pixel apart. */
 .gp-roles tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* ---- New/Update role dialog: a dialog, not a full-height sheet ----
+   Two scroll regions were stacked. The shared shell scrolls its own body,
+   and this form scrolls the permission tree inside it, so a long tree
+   grew the body first - taking the dialog to its 85vh ceiling and
+   carrying Cancel and Save off the bottom with it. The body stops
+   scrolling and hands the job to the form, which keeps its footer
+   pinned, and the dialog takes one settled height rather than whatever
+   the tree happens to be that day. */
+.gp-role-form-dialog {
+  height: min(680px, 82vh);
+}
+.gp-role-form-dialog .gp-create-group-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.gp-role-form-dialog .gp-create-group-body > form {
+  flex: 1;
+  min-height: 0;
 }
