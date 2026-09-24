@@ -397,27 +397,34 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
               />
             </div>
           </div>
-          <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5">
-            <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+          <div className="flex w-full flex-1 flex-col gap-2.5">
+            <div className="flex flex-1 flex-col gap-1.5">
               <div className="flex shrink-0 justify-between">
                 <Label>Message</Label>
                 <div className="flex justify-end">
                   {errors?.sms?.message && <ErrorTooltip text={errors?.sms?.message || ''} />}
                 </div>
               </div>
-              {/* `mcm-sms-editor`: the focus ring moves to this box. The
+              {/* No `min-h-0` anywhere in this chain: `min-h-0` removes a flex
+                  item's content-based floor, which let this box shrink under
+                  its own textarea + toolbar until the toolbar spilled out over
+                  the counter line below it. The floor stays automatic, so the
+                  box grows into spare room but never collapses into itself --
+                  the scroll region above is the one item allowed to shrink.
+
+                  `mcm-sms-editor`: the focus ring moves to this box. The
                   global `.mcm-admin textarea:focus-visible` draws a 2px
                   accent outline with a 1px offset, which landed inside this
                   container's own border — two edges round one field, the
                   inner one floating clear of the outer. */}
               <div
-                className={`mcm-sms-editor flex min-h-0 w-full flex-1 items-stretch rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
+                className={`mcm-sms-editor flex w-full flex-1 items-stretch rounded-xl ${errors?.sms?.message ? 'border border-red-500' : 'border border-gray-300'}`}
               >
                 {/* The counters used to sit here, above the text, inside the
                     same box — so "Chars Used - 0  Chars in SMS - 160" read as
                     the first line of the message you were writing. They are
                     metadata about the draft, so they belong under it. */}
-                <div className="flex min-h-0 w-full flex-1 flex-col justify-between p-0">
+                <div className="flex w-full flex-1 flex-col justify-between p-0">
                   <textarea
                     name="sms"
                     id=""
