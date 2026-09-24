@@ -11372,23 +11372,28 @@
 
 /* The rows: white, on the same hairline Groups uses, and the last one
    closing on the card rather than drawing a line beside its edge. */
-.mcm-queuepage table tbody td,
-.mcm-ivrpage table tbody td,
-.mcm-mediapage table tbody td {
+/* `--line`, not the 10%-brown Groups inherits: on a white row that
+   tint is barely a line at all, and the rows ran together. This is the
+   same hairline the console's own cards divide with, and it is stated
+   through `.table-scroll` so it beats the shared
+   `.mcm-admin table tbody td` rule rather than tying with it. */
+.mcm-queuepage .table-scroll table tbody td,
+.mcm-ivrpage .table-scroll table tbody td,
+.mcm-mediapage .table-scroll table tbody td {
   background: #ffffff;
-  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+  border-bottom: 1px solid var(--line);
 }
-.mcm-queuepage table tbody tr:last-child td,
-.mcm-ivrpage table tbody tr:last-child td,
-.mcm-mediapage table tbody tr:last-child td {
+.mcm-queuepage .table-scroll table tbody tr:last-child td,
+.mcm-ivrpage .table-scroll table tbody tr:last-child td,
+.mcm-mediapage .table-scroll table tbody tr:last-child td {
   border-bottom: none;
 }
 /* Hover: a neutral fill and an accent bar down the left edge, which is
    the mark Groups uses. The bar goes on the first cell rather than the
    row - a `<tr>` cannot be relied on to paint its own box-shadow. */
-.mcm-queuepage table tbody tr:hover td,
-.mcm-ivrpage table tbody tr:hover td,
-.mcm-mediapage table tbody tr:hover td {
+.mcm-queuepage .table-scroll table tbody tr:hover td,
+.mcm-ivrpage .table-scroll table tbody tr:hover td,
+.mcm-mediapage .table-scroll table tbody tr:hover td {
   background: #faf9fb;
 }
 .mcm-queuepage table tbody tr:hover td:first-child,
