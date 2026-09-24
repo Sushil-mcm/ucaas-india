@@ -119,7 +119,7 @@ const DepartmentInfo = ({
 
           <div className="flex w-full flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <h5 className="font-semibold text-gray-900 text-md my-2">Response Time Settings</h5>
+              <h5 className="gp-wiz-section font-semibold text-gray-900 text-md">Response Time Settings</h5>
               <div className="flex w-full gap-1">
                 <div className="relative flex w-full gap-1 sm:max-w-[320px]">
                   <CustomSelect

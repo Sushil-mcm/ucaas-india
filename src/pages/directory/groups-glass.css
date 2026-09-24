@@ -1445,23 +1445,23 @@
   padding-block: 2px;
 }
 
-/* Step 1 section headings ("Response Time Settings"): `my-2` gave the same
-   space above as below, so the heading floated between the two groups
-   instead of belonging to the one under it. Ruled off and pushed down, it
-   reads as the start of a section. */
+/* Step headings: one weight and size across the wizard. `my-2` gave equal
+   space above and below, so a heading floated between two groups rather
+   than belonging to the one beneath it. */
 .gp-create-group-body h5 {
-  margin: 18px 0 2px !important;
-  padding-top: 14px;
-  border-top: 1px solid rgba(225, 200, 165, 0.55);
+  margin: 0 0 2px !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em;
   color: #2a2733 !important;
 }
-/* ...unless it is the first thing in the pane, where a rule would sit
-   directly under the dialog head as a second edge. */
-.gp-create-group-body h5:first-child {
-  margin-top: 0 !important;
-  padding-top: 0;
-  border-top: 0;
+/* Only a heading that starts a section *mid-pane* gets the rule. Carried by
+   an explicit class, not `:first-child`: the step 1 heading is the first
+   child of its own wrapper while still sitting below two field rows, so
+   `:first-child` exempted exactly the one heading that needed the rule.
+   Step 5's "Media" heading opens its pane and so goes without. */
+.gp-create-group-body h5.gp-wiz-section {
+  margin-top: 18px !important;
+  padding-top: 14px;
+  border-top: 1px solid rgba(225, 200, 165, 0.55);
 }
