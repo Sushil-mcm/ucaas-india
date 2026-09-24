@@ -911,17 +911,18 @@
   /* Admin > People's filters.
      react-select marks the chosen row `--is-focused` the moment the menu
      opens, and the shared rule above paints anything focused with the
-     hover grey - so the list opened with a row already lit up under a
-     pointer that was nowhere near it. Here a background means the
-     pointer, and nothing else: what is chosen is said in orange text
-     instead, and gains the warm fill only when actually pointed at. */
+     hover grey - so the list opened with a row apparently under a
+     pointer that was nowhere near it. Focus on its own paints nothing
+     here. The chosen row carries the warm orange, which says "this is
+     the one" rather than "your pointer is here", and deepens a shade
+     when it actually is pointed at. */
   .mcm-people-opt.custom-react-select__option--is-focused {
     background-color: transparent !important;
     color: var(--color-gray-900) !important;
   }
   .mcm-people-opt.custom-react-select__option--is-selected,
   .mcm-people-opt.custom-react-select__option--is-selected.custom-react-select__option--is-focused {
-    background-color: #ffffff !important;
+    background-color: #fdebd9 !important;
     color: #c96f1f !important;
     font-weight: 600;
   }
@@ -929,8 +930,10 @@
     background-color: #f4f5f7 !important;
     color: var(--color-gray-900) !important;
   }
+  /* Pointing at the chosen row must not demote it to the hover grey, so
+     it deepens instead - the two-step the rest of the app already uses. */
   .mcm-people-opt.custom-react-select__option--is-selected:hover {
-    background-color: #fdebd9 !important;
+    background-color: #fbdcc0 !important;
     color: #c96f1f !important;
   }
 
