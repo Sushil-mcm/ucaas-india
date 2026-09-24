@@ -11392,7 +11392,10 @@
 .mcm-numpage .table-scroll table tbody td,
 .mcm-idpage .table-scroll table tbody td {
   background: #ffffff;
-  border-bottom: 1px solid var(--line);
+  /* A neutral hairline, not `--line`. That token is a warm #eee7dd, which
+     against a white row is close enough to white to disappear - the rows
+     still ran together with nothing between them. */
+  border-bottom: 1px solid rgba(20, 20, 20, 0.09);
 }
 .mcm-queuepage .table-scroll table tbody tr:last-child td,
 .mcm-ivrpage .table-scroll table tbody tr:last-child td,
@@ -11486,7 +11489,7 @@
 }
 .mcm-coverpage table tbody td {
   background: #ffffff;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(20, 20, 20, 0.09);
 }
 .mcm-coverpage table tbody tr:last-child td {
   border-bottom: none;
