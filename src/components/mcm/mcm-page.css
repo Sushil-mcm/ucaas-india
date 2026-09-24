@@ -5019,10 +5019,21 @@
    reason and was tinted by the same rule — Holidays' "Choose lines" is one.
 
    `.bg-white` has to stay in the selector: without it this matches every
-   rounded button and repaints the solid ones, turning a primary button white.
-   `:not(:hover)` leaves the variant's own hover to take over. */
-.mcm-page [class*='rounded-']:not([class*='rounded-full']).bg-white[data-slot='button']:not(:hover) {
+   rounded button and repaints the solid ones, turning a primary button white. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).bg-white[data-slot='button'] {
   background: #ffffff;
+}
+/* The hover has to be spelled out here too. `:not(:hover)` above was not
+   enough: dropping out on hover only handed the button back to the glass
+   rule, which is unlayered and beats the variant's own `hover:bg-*` -
+   that lives in Tailwind's utilities layer, and a layered rule loses to an
+   unlayered one at any specificity. So an outline button hovered to cream
+   under a label that had just turned white, and read as empty. Accent-ink
+   is what the variant asks for and what every other button here does. */
+.mcm-page [class*='rounded-']:not([class*='rounded-full']).bg-white[data-slot='button']:hover:not(:disabled) {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: #ffffff;
 }
 
 /* Holidays' First/Last day triggers carry the same edge as the Name input
