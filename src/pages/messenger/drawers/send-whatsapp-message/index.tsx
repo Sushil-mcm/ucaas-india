@@ -167,7 +167,20 @@ const SendWhatsappMessage = ({
       {/* <div className="flex flex-col gap-4 xxl:h-[calc(100vh_-_7.5rem)] xl:h-[calc(100vh_-_7.6rem)] lg:h-[calc(100vh_-_7.1rem)] md:h-[calc(100vh_-_6.9rem)] sm:h-[calc(100vh_-_6.9rem)] xs:h-[calc(100vh_-_6.9rem)] overflow-auto"> */}
       <div className="flex flex-col gap-4 h-[calc(100vh-11.5rem)] overflow-y-auto">
         <div className="flex flex-col gap-4">
-          <Input label="From" value={whatsappNumber} disabled />
+          {/* Says why it is empty. With no WhatsApp channel on the account
+              this rendered as a blank grey box that ignores clicks, which
+              reads as broken rather than as unavailable. It is correctly
+              disabled -- there is no number to choose -- so it explains
+              itself instead of sitting mute. The template select below
+              already does this ("WhatsApp channel unavailable"). */}
+          <Input
+            label="From"
+            value={whatsappNumber}
+            placeholder={
+              whatsappNumber ? '' : 'No WhatsApp number connected to this account'
+            }
+            disabled
+          />
           <div className="flex flex-col gap-2">
             <Label>To</Label>
             <PhoneInput

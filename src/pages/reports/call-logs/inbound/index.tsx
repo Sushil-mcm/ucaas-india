@@ -472,7 +472,7 @@ const Inbound = ({
                 <Button
                   size="sm"
                   onClick={() => {
-                    navigate(`/inbox?formState=contact&number=${number}`);
+                    navigate(`/inbox?formState=contact&number=${encodeURIComponent(number || '')}`);
                   }}
                   className="rounded-full w-8 h-8 bg-primary/20 border-none text-primary hover:bg-primary hover:text-white"
                 >

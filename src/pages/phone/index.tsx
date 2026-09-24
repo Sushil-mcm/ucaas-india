@@ -403,7 +403,7 @@ export const LogContent = ({
                     <span
                       onClick={() => {
                         if (!canCallOrMessage) return;
-                        navigate(`/inbox?formState=contact&number=${normalizedContactNumber}`);
+                        navigate(`/inbox?formState=contact&number=${encodeURIComponent(normalizedContactNumber || '')}`);
                       }}
                       role="button"
                       className={`${canCallOrMessage ? 'cursor-pointer bg-[#FBE2C8]/40 text-black/80 hover:bg-primary hover:text-white' : 'cursor-not-allowed bg-[#F0DFC5] text-black/50'} flex items-center justify-center rounded-full w-8 h-8`}

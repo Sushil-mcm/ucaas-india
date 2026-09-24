@@ -1347,7 +1347,12 @@ input.gp-field-v:focus {
    target rather than a bare icon, so the hit area is visible before you
    reach it. Contacts builds the same shape inline
    (new-contact/all-contacts-list); this is the People table's copy of it. */
-.gp-people .gp-row-menu-trigger {
+/* Scoped through `td:last-child .mini` to clear
+   `.gp-people td:last-child .mini:not(.mcm-fav-on) { background: transparent }`
+   further up. That rule was written to flatten the four loose icons that used
+   to sit in this cell; they are gone, so it now catches only this trigger and
+   was stripping its tint. */
+.gp-people td:last-child .mini.gp-row-menu-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1358,6 +1363,6 @@ input.gp-field-v:focus {
   color: rgba(46, 45, 53, 0.8);
   border: none;
 }
-.gp-people .gp-row-menu-trigger:hover {
+.gp-people td:last-child .mini.gp-row-menu-trigger:hover {
   background: #f0dfc5;
 }

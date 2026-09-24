@@ -794,7 +794,7 @@ const AllNewContactsList: FC<any> = ({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
-                      navigate(`/inbox?formState=contact&number=${contact?.contact?.phone || ''}`)
+                      navigate(`/inbox?formState=contact&number=${encodeURIComponent(contact?.contact?.phone || '')}`)
                     }
                   >
                     Message

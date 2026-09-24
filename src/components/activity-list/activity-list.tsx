@@ -665,7 +665,7 @@ const ActivityList = ({
                       <CustomTooltip text="SMS" side="top">
                         <Button
                           size="sm"
-                          onClick={() => navigate(`/inbox?formState=contact&number=${number}`)}
+                          onClick={() => navigate(`/inbox?formState=contact&number=${encodeURIComponent(number || '')}`)}
                           className="rounded-full w-8 h-8 bg-primary/20 border-none text-primary hover:bg-primary hover:text-white"
                         >
                           <Icon name="MessageStrokIcon" className="w-4 h-4" />

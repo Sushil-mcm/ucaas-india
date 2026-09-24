@@ -203,7 +203,7 @@ const ContactActivity = ({
         <button
           type="button"
           disabled={!fallbackHeaderNumber}
-          onClick={() => navigate(`/inbox?formState=contact&number=${fallbackHeaderNumber}`)}
+          onClick={() => navigate(`/inbox?formState=contact&number=${encodeURIComponent(fallbackHeaderNumber || '')}`)}
           className={`flex items-center justify-center rounded-full w-8 h-8 ${
             fallbackHeaderNumber
               ? 'bg-[#FBE2C8]/40 text-[#2E2D35]/80 hover:bg-primary hover:text-white cursor-pointer'

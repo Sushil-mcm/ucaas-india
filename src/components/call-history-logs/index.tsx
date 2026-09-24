@@ -268,7 +268,7 @@ const CallHistoryLogs = ({ data }: ActivityListProps) => {
               {reportsActionAccess?.sms ? (
                 <CustomTooltip text="SMS" side="top">
                   <div
-                    onClick={() => navigate(`/inbox?formState=contact&number=${number}`)}
+                    onClick={() => navigate(`/inbox?formState=contact&number=${encodeURIComponent(number || '')}`)}
                     className="text-primary bg-primary/20 hover:bg-primary hover:text-white cursor-pointer flex items-center justify-center rounded-full w-8 h-8"
                   >
                     <Icon name="MessageStrokIcon" className="w-4 h-4" />
