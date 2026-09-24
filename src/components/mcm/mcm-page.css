@@ -8822,9 +8822,18 @@
   min-width: 150px;
 }
 
-.mcm-admin .mcm-numselect [class*='control'] {
-  min-height: 30px;
-  border-radius: 20px;
+/* Inside `@layer base`, and naming the class rather than matching on it:
+   the shared `.custom-react-select__control` sets its own height and
+   radius there with `!important`, and a layered important cannot be
+   beaten from outside a layer however specific the selector. Same layer,
+   more specific, so this one decides - which is what finally puts the
+   site filter on the same line as the search box beside it. */
+@layer base {
+  .mcm-admin .mcm-numselect .custom-react-select__control {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 12px !important;
+  }
 }
 
 /* The row above a list's table: what the screen is for on the left, the
@@ -10724,4 +10733,23 @@
   min-height: 0;
   padding-top: 40px;
   padding-bottom: 40px;
+}
+
+/* ==================================================================
+   Phone System › Call queues
+   ------------------------------------------------------------------
+   The rows were transparent, so the cream page showed through them and
+   two queues read as one block of background with text on it. White
+   rows, a hairline between them, and a hover that is a shade rather
+   than another colour.
+   ================================================================== */
+.mcm-admin .mcm-queuepage table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line-2);
+}
+.mcm-admin .mcm-queuepage table tbody tr:last-child td {
+  border-bottom: none;
+}
+.mcm-admin .mcm-queuepage table tbody tr:hover td {
+  background: #faf9fb;
 }

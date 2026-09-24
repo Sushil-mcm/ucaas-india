@@ -216,7 +216,7 @@ const CallQueues: FC = () => {
                 <CustomTooltip text={username} side="top">
                   <div
                     key={index}
-                    className="w-9 h-9 flex items-center justify-center border border-white rounded-full bg-gray-200 dark:border-gray-800 capitalizes cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center border-2 border-white rounded-full bg-white dark:border-gray-800 capitalizes cursor-pointer"
                   >
                     {imageUrl ? (
                       <img
@@ -226,7 +226,10 @@ const CallQueues: FC = () => {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center rounded-full border border-gray-400 bg-gray-100 text-gray-600 text-xs capitalize">
+                      /* Stated in hex, not `bg-gray-100`: the console retints
+                         every grey utility to its warm surface tokens, so these
+                         came out tan-on-cream - the initials barely there. */
+                      <div className="w-full h-full flex items-center justify-center rounded-full bg-[#EEF1F5] text-[#41506B] text-xs font-semibold capitalize">
                         {getInitials(username)}
                       </div>
                     )}
@@ -239,7 +242,7 @@ const CallQueues: FC = () => {
                 onClick={() => {
                   setModalState({ open: true, data: members || [], type: 'Total Members' });
                 }}
-                className="w-9 h-9 flex items-center justify-center border border-gray-500 !space-x-10 rounded-full bg-gray-500 text-white font-medium cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center border-2 border-white !space-x-10 rounded-full bg-[#41506B] text-white text-xs font-semibold cursor-pointer"
               >
                 +{members?.length - 5}
               </div>
@@ -312,6 +315,7 @@ const CallQueues: FC = () => {
   return (
     <>
       <AdminPage
+        className="mcm-queuepage"
         hideHead
         bareBody
         section="Phone System"
