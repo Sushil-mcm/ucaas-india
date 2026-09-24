@@ -1044,7 +1044,11 @@
   background: var(--mcm-surface);
   display: flex;
   flex-direction: column;
-  max-height: min(78vh, 720px);
+  /* 88vh, matching Add Contact's own cap. At 78vh a 529px-tall window
+     capped the dialog at 412px while the form wanted 465 and left 117px of
+     screen unused below it -- so it scrolled, and the scroll edge sliced the
+     counters line under the composer in half. 88vh spends that margin. */
+  max-height: min(88vh, 720px);
   overflow: hidden;
   padding: 22px 24px 20px;
 }

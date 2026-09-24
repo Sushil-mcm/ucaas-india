@@ -10,6 +10,7 @@ import { useCompanyFeatures } from '@/hooks/rbac';
 import { handleAlert } from '@/lib/utils';
 import { deleteCoachingTeam, listCoachingTeams } from '@/services/api';
 import AddEditCoachingTeam, { COACHING_TEAMS_QUERY_KEY, CoachingTeam, RECORD_RULES } from './add-edit-coaching-team';
+import { AdminHeadActions, useSetAdminPageMeta } from '@/pages/admin-settings/admin-page-head';
 
 /* Coaching teams: the third kind of team. A group is somewhere calls ring, a
    queue is somewhere calls wait; a coaching team routes nothing. It says who
@@ -68,36 +69,46 @@ const CoachingTeamsPage = () => {
   const names = (people: { name: string }[] = []) =>
     people.length ? people.map((p) => p.name).join(', ') : 'Nobody yet';
 
+  useSetAdminPageMeta({
+    description: (
+      <>
+        Coaches and the people they train. Coaches use the{' '}
+        <Link to="/coaching" className="underline underline-offset-2">
+          Coaching page
+        </Link>{' '}
+        to watch and listen to their trainees&rsquo; calls.
+      </>
+    ),
+  });
+
   return (
     <div className="mcm-page flex h-full min-h-0 flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3">
-        <div>
-          <p className="text-lg font-semibold text-gray-900">Coaching Teams</p>
-          <p className="text-xs text-gray-500">
-            Coaches and the people they train. Coaches use the{' '}
-            <Link to="/coaching" className="text-primary underline underline-offset-2">
-              Coaching page
-            </Link>{' '}
-            to watch and listen to their trainees&rsquo; calls.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <SearchLine className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-            <Input
-              className="h-9 w-56 pl-8 text-sm"
-              placeholder="Search teams or people"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          {canEdit && (
-            <Button variant="primary" size="sm" onClick={() => setEditing({ open: true, team: null })}>
-              New coaching team
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* The head above already prints "Coaching Teams" and holds the
+          sentence on its info button, so this screen printed the pair a
+          second time three lines down. Search and the button go up to that
+          head, where they sit on the title's line - and at one height: the
+          search was the shared Input's 40px while the button was `size=sm`,
+          32px, which is why the two never matched. */}
+      <AdminHeadActions>
+        <label className="mcm-numsearch mcm-headsearch">
+          <SearchLine />
+          <input
+            type="search"
+            placeholder="Search teams or people"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+        {canEdit && (
+          <Button
+            variant="primary"
+            className="min-h-9 h-9"
+            onClick={() => setEditing({ open: true, team: null })}
+          >
+            New coaching team
+          </Button>
+        )}
+      </AdminHeadActions>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {teamsQuery.isLoading ? (
           <p className="text-sm text-gray-500">Loading…</p>
