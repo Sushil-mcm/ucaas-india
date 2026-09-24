@@ -1533,3 +1533,11 @@
   font-weight: 400 !important;
   line-height: 1.3;
 }
+/* The MEMBERS header stacks its select-all checkbox under the word, making
+   that cell two lines tall; MANAGER and NAME are one. Centred as whole
+   cells, the three labels landed on different baselines (MEMBERS 13px above
+   its neighbours). Aligning the cells to the top puts the labels on one
+   line and lets the checkbox hang below, where it belongs. */
+.gp-members-table-wrap thead th {
+  vertical-align: top !important;
+}
