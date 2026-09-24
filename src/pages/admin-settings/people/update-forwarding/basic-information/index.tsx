@@ -96,6 +96,10 @@ const BasicInformation: FC<any> = ({
       {/* Identity is the only part of this step the platform lets you change;
           everything below it is provisioned elsewhere. Splitting them makes
           that obvious instead of leaving three greyed boxes unexplained. */}
+      {/* `mcm-fitem`, not `mcm-field`: `.mcm-field` is also the bare-input
+          class that gives a native input its own border and padding, so a
+          wrapper wearing it drew a second box around the Input's own - every
+          field on this step was a box inside a box. */}
       <section className="mcm-fsec">
         <div className="mcm-fsec-h">
           <div className="mcm-fsec-t">Identity</div>
@@ -104,7 +108,7 @@ const BasicInformation: FC<any> = ({
           </div>
         </div>
         <div className="mcm-fgrid">
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <Input
               label="First Name"
               placeholder={firstNamePlaceholder}
@@ -113,7 +117,7 @@ const BasicInformation: FC<any> = ({
               maxLength={50}
             />
           </div>
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <Input
               label="Last Name"
               placeholder={lastNamePlaceholder}
@@ -124,7 +128,7 @@ const BasicInformation: FC<any> = ({
           </div>
           {/* The save payload has always carried job_title and the server
               returns it, but no screen ever offered a way to set it. */}
-          <div className="mcm-field wide">
+          <div className="mcm-fitem wide">
             <Input
               label="Job Title"
               placeholder="e.g. Support Team Lead"
@@ -145,7 +149,7 @@ const BasicInformation: FC<any> = ({
           </div>
         </div>
         <div className="mcm-fgrid">
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <div className="mcm-field-h">
               <Label>Location</Label>
             </div>
@@ -164,7 +168,7 @@ const BasicInformation: FC<any> = ({
               error={(errors.basic as any)?.site?.value?.message}
             />
           </div>
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <div className="mcm-field-h">
               <Label>Extension</Label>
               <span className="mcm-lock">Read only</span>
@@ -184,14 +188,14 @@ const BasicInformation: FC<any> = ({
           </div>
         </div>
         <div className="mcm-fgrid">
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <div className="mcm-field-h">
               <Label>Phone</Label>
               <span className="mcm-lock">Read only</span>
             </div>
             <PhoneInput country={'in'} value={watch(`basic.phone`)} disabled />
           </div>
-          <div className="mcm-field">
+          <div className="mcm-fitem">
             <div className="mcm-field-h">
               <Label>Email</Label>
               <span className="mcm-lock">Read only</span>
@@ -211,7 +215,7 @@ const BasicInformation: FC<any> = ({
             </div>
           </div>
           <div className="mcm-fgrid">
-            <div className="mcm-field">
+            <div className="mcm-fitem">
               <div className="mcm-field-h">
                 <span className="mcm-field-l">Use an existing template?</span>
               </div>
@@ -243,7 +247,7 @@ const BasicInformation: FC<any> = ({
               </RadioGroup>
             </div>
             {chooseTemplate?.isChooseTemplate === 'Yes' && (
-              <div className="mcm-field">
+              <div className="mcm-fitem">
                 <div className="mcm-field-h">
                   <Label>Template</Label>
                 </div>
