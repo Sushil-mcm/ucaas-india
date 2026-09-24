@@ -10575,3 +10575,110 @@
   color: var(--accent-ink);
 }
 
+
+/* ==================================================================
+   Admin › Numbers: the table
+   ------------------------------------------------------------------
+   Every column here was built on its own. "Forwarded to" drew a
+   bordered pill for an extension, two lines of bare text for a queue
+   and a third thing for a phone number, so no two rows started on the
+   same line; the links that stand in for an empty cell were three
+   different greys and oranges; and the row buttons were spaced by a
+   utility that did not match the one the next column used. Below is
+   one set of shapes for all of it.
+   ================================================================== */
+
+/* ---- where a number goes ---- */
+.mcm-admin .mcm-numfwd {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.mcm-admin .mcm-numfwd-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid var(--accent-edge);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.mcm-admin .mcm-numfwd-t {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+/* The kind of destination is the small print; what it actually is, is
+   not. They were the other way round on the rows that had no pill. */
+.mcm-admin .mcm-numfwd-k {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.mcm-admin .mcm-numfwd-v {
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- a cell that offers an action instead of holding a value ---- */
+.mcm-admin .mcm-numlink {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  cursor: pointer;
+  text-underline-offset: 3px;
+}
+.mcm-admin .mcm-numlink:hover {
+  text-decoration: underline;
+}
+.mcm-admin .mcm-numlink.is-off {
+  color: var(--ink-4);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* ---- the buttons at the end of a row ---- */
+/* Fixed gap and right-aligned, so the column reads as one straight edge
+   however many buttons a row happens to earn. */
+.mcm-admin .mcm-numacts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ---- the columns ---- */
+/* Sized to their contents rather than shared out equally: a number, a
+   type and a site are all short and fixed, so the space belongs to the
+   label, the person and the destination. */
+.mcm-admin .mcm-numpage table th,
+.mcm-admin .mcm-numpage table td {
+  vertical-align: middle;
+}
+.mcm-admin .mcm-numpage table th:first-child,
+.mcm-admin .mcm-numpage table td:first-child {
+  white-space: nowrap;
+}
+.mcm-admin .mcm-numpage table th:last-child,
+.mcm-admin .mcm-numpage table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}

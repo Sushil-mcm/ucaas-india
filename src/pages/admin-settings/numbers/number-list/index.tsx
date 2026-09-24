@@ -391,10 +391,7 @@ const NumberList = () => {
           const label = labelOf(data);
           if (label) return label;
           return canEditLabel(data).ok && virtualNumberAccess?.action?.update_forwarding ? (
-            <span
-              className="text-primary cursor-pointer"
-              onClick={() => handleNumberState(data, 'editLabel')}
-            >
+            <span className="mcm-numlink" onClick={() => handleNumberState(data, 'editLabel')}>
               Add label
             </span>
           ) : (
@@ -413,14 +410,14 @@ const NumberList = () => {
           const canAssign =
             !row?.original?.forward_call_actions && virtualNumberAccess?.action?.set_forwarding;
           return canAssign ? (
-            <p
-              className="text-primary cursor-pointer"
+            <span
+              className="mcm-numlink"
               onClick={() => handleNumberState(row?.original, 'assignDID')}
             >
               Assign to extension
-            </p>
+            </span>
           ) : (
-            <p className="text-grey cursor-not-allowed">Assign to extension</p>
+            <span className="mcm-numlink is-off">Assign to extension</span>
           );
         },
       },
@@ -437,48 +434,47 @@ const NumberList = () => {
              entire table rather than that single cell. */
           const parsedForwardTo = parseForwardActions(data?.forward_call_actions);
           const forwardedValue = parsedForwardTo?.call_handling?.business_hours || '';
-          return (
-            <div>
-              {FORWARD_TYPES_WITH_EXTENSION.includes(forwardedValue?.type) ? (
-                <div className="flex">
-                  <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-2.5 py-1 w-auto">
-                    <div className="w-7 h-7 rounded-lg border border-primary/30 bg-white flex items-center justify-center text-primary text-base font-semibold leading-none">
-                      #
-                    </div>
-                    <div className="flex flex-col gap-1 leading-tight">
-                      <div className="text-[9px] font-semibold tracking-[0.08em] text-gray-500 uppercase">
-                        {capitalizeFirstLetter(forwardedValue?.type)}
-                      </div>
-                      <small className="text-gray-900 text-xs font-semibold leading-none">
-                        {forwardedValue?.name}
-                        {forwardedValue?.value ? ` (${forwardedValue.value})` : ''}
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              ) : FORWARD_TYPES_WITH_NAME.includes(forwardedValue?.type) ? (
-                <div className="flex flex-col items-start">
-                  {capitalizeFirstLetter(forwardedValue?.type)}
-                  <small>{forwardedValue?.name}</small>
-                </div>
-              ) : FORWARD_TYPES_WITH_PHONE.includes(forwardedValue?.type) ? (
-                <div className="flex flex-col items-start">
-                  {capitalizeFirstLetter(forwardedValue?.type)}
-                  <small>
-                    <NumberWithFlag number={`+${forwardedValue?.name}`} />
-                  </small>
-                </div>
-              ) : data?.User || !virtualNumberAccess?.action?.set_forwarding ? (
-                <p className="text-grey cursor-not-allowed">Set Forwarding</p>
-              ) : (
-                <p
-                  className="text-primary cursor-pointer"
-                  onClick={() => handleNumberState(data, 'updateForwarding')}
-                >
-                  Set Forwarding
-                </p>
-              )}
-            </div>
+          /* One shape for every destination. An extension used to be a
+             bordered pill while a queue was two lines of bare text and a
+             phone number a third thing again - so no two rows of this
+             column started on the same line or ended at the same width.
+             Now: a glyph, the kind of destination above, and what it is
+             below, whatever the destination happens to be. */
+          const kind = capitalizeFirstLetter(forwardedValue?.type);
+          const destination = FORWARD_TYPES_WITH_EXTENSION.includes(forwardedValue?.type)
+            ? {
+                glyph: '#',
+                value: `${forwardedValue?.name ?? ''}${forwardedValue?.value ? ` (${forwardedValue.value})` : ''}`,
+              }
+            : FORWARD_TYPES_WITH_NAME.includes(forwardedValue?.type)
+              ? { glyph: '⇢', value: forwardedValue?.name }
+              : FORWARD_TYPES_WITH_PHONE.includes(forwardedValue?.type)
+                ? { glyph: '⇢', value: <NumberWithFlag number={`+${forwardedValue?.name}`} /> }
+                : null;
+
+          if (destination) {
+            return (
+              <div className="mcm-numfwd">
+                <span className="mcm-numfwd-ico" aria-hidden="true">
+                  {destination.glyph}
+                </span>
+                <span className="mcm-numfwd-t">
+                  <span className="mcm-numfwd-k">{kind}</span>
+                  <span className="mcm-numfwd-v">{destination.value}</span>
+                </span>
+              </div>
+            );
+          }
+
+          return data?.User || !virtualNumberAccess?.action?.set_forwarding ? (
+            <span className="mcm-numlink is-off">Set forwarding</span>
+          ) : (
+            <span
+              className="mcm-numlink"
+              onClick={() => handleNumberState(data, 'updateForwarding')}
+            >
+              Set forwarding
+            </span>
           );
         },
       },
@@ -657,7 +653,7 @@ const NumberList = () => {
         if (actions?.length === 0) return '---';
 
         return (
-          <div className="flex items-center justify-end w-full gap-2">
+          <div className="mcm-numacts">
             {actions?.map((action: any) => (
               <CustomTooltip key={action.id} text={action.tooltipText} side="top">
                 <div
@@ -695,6 +691,7 @@ const NumberList = () => {
         </AdminHeadActions>
       ) : null}
       <AdminPage
+        className="mcm-numpage"
         hideHead
         bareBody
         filters={
