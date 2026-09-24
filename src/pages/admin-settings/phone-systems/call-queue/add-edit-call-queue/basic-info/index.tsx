@@ -50,24 +50,43 @@ const BasicInformation: FC<IAddMembersProps> = ({ queueDetails }) => {
                  not a type. Putting the word in the name is what carries the
                  distinction into reports and transfer lists, which a badge on
                  this one screen would not reach. */
+              /* The error is rendered here, under the pair, rather than
+                 handed to the Input. The Input draws its own error row
+                 *above* the field - so the moment a name was typed and then
+                 emptied, the field dropped by a row while the prefix beside
+                 it kept the full height, and the two came apart. Same
+                 radius and the same 40px on both halves, so they read as
+                 one control whatever state it is in. */
               <div className="flex w-full flex-col gap-1">
-                <div className="flex w-full items-stretch">
-                  <span className="flex items-center whitespace-nowrap rounded-l-md border border-r-0 border-gray-200 bg-gray-50 px-3 text-sm text-gray-600">
+                <div className="flex w-full">
+                  <span
+                    className={`flex h-10 shrink-0 items-center whitespace-nowrap rounded-l-xl border border-r-0 px-3 text-sm font-medium text-[#6B645E] ${
+                      errors?.name?.message
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300 bg-[#FBFAF8]'
+                    }`}
+                  >
                     {FULL_PREFIX.trim()}
                   </span>
                   <Input
-                    className="rounded-l-none"
+                    className={`rounded-l-none ${
+                      errors?.name?.message ? 'border-red-500 focus:border-red-500' : ''
+                    }`}
                     placeholder="Sales Team"
+                    aria-invalid={errors?.name?.message ? true : undefined}
                     value={stripInboundPrefix(watch('name'))}
                     onChange={(event) =>
                       setValue('name', buildQueueName(event.target.value), {
                         shouldValidate: true,
                       })
                     }
-                    error={errors?.name?.message}
                   />
                 </div>
-                {stripInboundPrefix(watch('name')) ? (
+                {errors?.name?.message ? (
+                  <p className="text-xs font-medium text-red-600">
+                    {String(errors.name.message)}
+                  </p>
+                ) : stripInboundPrefix(watch('name')) ? (
                   <p className="text-xs text-gray-500">
                     Saved and reported as <strong>{buildQueueName(watch('name'))}</strong>
                   </p>
