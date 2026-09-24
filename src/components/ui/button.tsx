@@ -9,8 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        /* `hover:bg-primary`, not `bg-primary/90`. The brand orange at 90%
+           alpha composites against whatever is behind the button, and the
+           console's pages are cream - so the hover landed on a muddy brown
+           that is neither the wash it left nor the orange it was heading
+           for, with white text going dim on top of it. Solid, then a
+           darker solid while it is held. */
         default:
-          'bg-ucass-primary-200 border border-primary text-primary shadow-xs hover:bg-primary/90 hover:text-white cursor-pointer min-h-10',
+          'bg-ucass-primary-200 border border-primary text-primary shadow-xs hover:bg-primary hover:border-primary hover:text-white active:bg-[#c96f1f] active:border-[#c96f1f] cursor-pointer min-h-10',
         primary:
           'bg-primary border border-primary text-white shadow-xs hover:bg-primary/90 cursor-pointer min-h-10',
         variantIcon: 'bg-primary text-primary shadow-xs hover:bg-primary/90 cursor-pointer',
@@ -18,8 +24,10 @@ const buttonVariants = cva(
           'bg-destructive border border-destructive text-white shadow-xs hover:bg-destructive/90 cursor-pointer min-h-10',
         destructiveOutline:
           'bg-red-50 border border-red-200 text-red-600 shadow-xs  cursor-pointer min-h-10',
+        /* Same reason as `default` above: this one hovers from white, where
+           a 90% fill reads as a washed-out orange rather than the brand. */
         outline:
-          'bg-white border border-primary text-primary shadow-xs hover:bg-primary/90 hover:text-white cursor-pointer min-h-10',
+          'bg-white border border-primary text-primary shadow-xs hover:bg-primary hover:text-white cursor-pointer min-h-10',
         secondary:
           'bg-gray-100 border border-gray-200 text-gray-900 shadow-xs hover:bg-gray-100/90 cursor-pointer min-h-10',
         /* `hover:text-accent-foreground`, not `hover:text-accent`: the latter
