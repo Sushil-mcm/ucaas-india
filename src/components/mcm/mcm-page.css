@@ -11320,3 +11320,119 @@
   font-weight: 600;
   color: var(--ink);
 }
+
+/* ==================================================================
+   Phone System lists, drawn the way Directory › Groups draws its own
+   ------------------------------------------------------------------
+   Call queues, IVR menus and Media Files are all TableManager on the
+   console's glass shell, while Groups - the table this was asked to
+   match - is a solid card with a cream header under an accent rule,
+   white rows on a hairline, and a bar down the left of whichever row
+   the pointer is on. These bring the three into line with it.
+
+   Written through `.table-scroll` so the header rule matches the
+   specificity of `.mcm-admin .table-scroll table thead th`, which sets
+   the translucent band; a shorter selector would simply lose. Last in
+   the file, so it settles anything the per-page blocks above said.
+   ================================================================== */
+.mcm-queuepage .table-scroll,
+.mcm-ivrpage .table-scroll,
+.mcm-mediapage .table-scroll {
+  border-radius: 11px;
+  background: #ffffff;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* The header: cream, and separated from the rows by an accent rule
+   rather than by being a shade paler than them. */
+.mcm-queuepage .table-scroll table thead th,
+.mcm-ivrpage .table-scroll table thead th,
+.mcm-mediapage .table-scroll table thead th {
+  height: 40px;
+  background: #fff6e9;
+  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #1a1a1a;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.mcm-queuepage table thead th:first-child,
+.mcm-ivrpage table thead th:first-child,
+.mcm-mediapage table thead th:first-child {
+  border-top-left-radius: 11px;
+}
+.mcm-queuepage table thead th:last-child,
+.mcm-ivrpage table thead th:last-child,
+.mcm-mediapage table thead th:last-child {
+  border-top-right-radius: 11px;
+}
+
+/* The rows: white, on the same hairline Groups uses, and the last one
+   closing on the card rather than drawing a line beside its edge. */
+.mcm-queuepage table tbody td,
+.mcm-ivrpage table tbody td,
+.mcm-mediapage table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(150, 100, 50, 0.1);
+}
+.mcm-queuepage table tbody tr:last-child td,
+.mcm-ivrpage table tbody tr:last-child td,
+.mcm-mediapage table tbody tr:last-child td {
+  border-bottom: none;
+}
+/* Hover: a neutral fill and an accent bar down the left edge, which is
+   the mark Groups uses. The bar goes on the first cell rather than the
+   row - a `<tr>` cannot be relied on to paint its own box-shadow. */
+.mcm-queuepage table tbody tr:hover td,
+.mcm-ivrpage table tbody tr:hover td,
+.mcm-mediapage table tbody tr:hover td {
+  background: #faf9fb;
+}
+.mcm-queuepage table tbody tr:hover td:first-child,
+.mcm-ivrpage table tbody tr:hover td:first-child,
+.mcm-mediapage table tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Air at both ends of a row, the 22px Groups gives its own. */
+.mcm-queuepage table th:first-child,
+.mcm-queuepage table td:first-child,
+.mcm-ivrpage table th:first-child,
+.mcm-ivrpage table td:first-child,
+.mcm-mediapage table th:first-child,
+.mcm-mediapage table td:first-child {
+  padding-left: 22px;
+}
+.mcm-queuepage table th:last-child,
+.mcm-queuepage table td:last-child,
+.mcm-ivrpage table th:last-child,
+.mcm-ivrpage table td:last-child,
+.mcm-mediapage table th:last-child,
+.mcm-mediapage table td:last-child {
+  padding-right: 22px;
+}
+
+/* Actions read from the right edge. The heading needs `@layer base` and
+   `!important` of its own: TableManager gives an `action` column the
+   `!text-center` utility, and a layered important cannot be beaten from
+   outside a layer however specific the selector. */
+@layer base {
+  .mcm-queuepage table th:last-child,
+  .mcm-ivrpage table th:last-child,
+  .mcm-mediapage table th:last-child {
+    text-align: right !important;
+  }
+}
+.mcm-queuepage table td:last-child,
+.mcm-ivrpage table td:last-child,
+.mcm-mediapage table td:last-child {
+  text-align: right;
+}
+.mcm-queuepage table td:last-child > div,
+.mcm-ivrpage table td:last-child > div,
+.mcm-mediapage table td:last-child > div {
+  justify-content: flex-end;
+}
