@@ -193,7 +193,7 @@ const SendFaxModal = ({
 
   return (
     <>
-      <div className="flex min-h-11 items-center justify-between text-gray-900">
+      <div className="flex min-h-11 shrink-0 items-center justify-between text-gray-900">
         <div className="truncate text-xl font-semibold">New Fax</div>
       </div>
       <form
@@ -304,7 +304,7 @@ const SendFaxModal = ({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row">
+        <div className="-mx-6 flex shrink-0 flex-col-reverse justify-end gap-2 border-t border-[#eee7dd] px-6 pt-3 sm:flex-row">
           <Button
             variant="transparent"
             type="button"

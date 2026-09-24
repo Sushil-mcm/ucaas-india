@@ -1033,10 +1033,19 @@
 
 /* Plain white body, matching every other form dialog in the app -- the
    tint step here was the one thing that made this look off-theme. */
+/* The body caps the dialog's height, but it must not be the thing that
+   scrolls. Both modals inside it are built as a column with their own
+   `flex-1 min-h-0 overflow-y-auto` field region and an action row below it;
+   scrolling here instead carried the title and the Cancel/Send row away with
+   the fields, so on a short viewport the buttons sat below the fold with
+   nothing to suggest they were there. Column + hidden hands the scrolling
+   back to the region that was written to do it, and pins the rest. */
 .mcm-formdialog .mcm-formdialog-body {
   background: var(--mcm-surface);
+  display: flex;
+  flex-direction: column;
   max-height: min(78vh, 720px);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 22px 24px 20px;
 }
 

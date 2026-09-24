@@ -349,7 +349,7 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
 
   return (
     <>
-      <div className="flex flex-col text-gray-900">
+      <div className="flex shrink-0 flex-col text-gray-900">
         <div className="font-semibold truncate text-xl flex items-center justify-between  min-h-11 ">
           New Message
         </div>
@@ -572,7 +572,11 @@ const SendSMSModal = ({ handleClose = () => null, defaultNumber, selectedDID }: 
           </div>
         </div>
         {/* <p>{!sms ? 'Maximum length: 180 characters' : `${String(sms).length}/180`}</p> */}
-        <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row">
+        {/* Ruled off and pinned: the fields scroll under it, so the divider
+            marks where the form stops rather than drifting mid-content. The
+            negative margin lets the rule span the dialog's full width against
+            the body's 24px padding. */}
+        <div className="-mx-6 flex shrink-0 flex-col-reverse justify-end gap-2 border-t border-[#eee7dd] px-6 pt-3 sm:flex-row">
           <Button
             variant="transparent"
             type="button"
