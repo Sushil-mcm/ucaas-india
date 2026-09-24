@@ -400,7 +400,12 @@ const ExternalInner = () => {
             setDrawerState={setDrawerState}
             setShowDeleteConfirmation={canDeleteContact ? setShowDeleteConfirmation : () => void 0}
             payloadExtraParams={payloadExtraParams}
-            tableWrapperClassName="gp-contact-table"
+            /* `gp-contact-list-table` marks this one specifically. Both tables
+               on this page carry `gp-contact-table`, and the two have
+               different columns -- nine here, five on the group tab -- so
+               per-column widths need a hook only the contact list answers
+               to. */
+            tableWrapperClassName="gp-contact-table gp-contact-list-table"
             splitStickyHeader
             showRecordRange
             avatarSize="38"

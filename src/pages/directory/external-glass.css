@@ -155,8 +155,13 @@
   background: #fff6e9;
   color: #1a1a1a;
   font-weight: 800;
-  border-bottom: 3px solid rgba(242, 153, 74, 0.4);
-  height: 40px;
+  /* 1.5px, not 3px. A 3px bar was the heaviest line on the page and it sat
+     directly above the lightest ones (the row separators are under 1px), so
+     the head shouted and the rows below it mumbled. Half the weight still
+     separates the head clearly and stops it competing with the content.
+     Thickness only -- the colour is untouched. */
+  border-bottom: 1.5px solid rgba(242, 153, 74, 0.4);
+  height: 42px;
   font-size: 11.5px;
   position: sticky;
   top: 0;
@@ -1091,4 +1096,68 @@
   .contact-toolbar-select.custom-react-select__control--menu-is-open
   .custom-react-select__dropdown-indicator {
   color: var(--accent-ink, #c96f1f) !important;
+}
+
+/* ── Contact list column widths ────────────────────────────────────────────
+   The nine columns were not short of room, they were sharing it badly.
+   Measured against what each column's content actually occupies:
+
+     column          had    needed
+     checkbox         64        40
+     Created date    154       130
+     Name            219       195
+     Phone           111       104
+     Groups          103        79
+     Assign group    161       125
+     Tag              89        94   <- narrower than its own content
+     Updated by      135       111
+     Action           97        73
+
+   951px of content in 1133px of table, so there was 182px of slack — and Tag,
+   the one column actually being squeezed, was not getting any of it. That is
+   what made the row feel tight: nothing had a comfortable margin and one
+   thing was overflowing.
+
+   Widths below take the surplus off the columns holding a date, a checkbox or
+   a single button, and give it to Tag, Name and Phone, which hold the content
+   people read. Nothing is removed.
+
+   Set on both tables: `splitStickyHeader` renders the header and the body as
+   two separate tables, so their columns only line up if both are told the
+   same thing. */
+.gp-contact-list-table th:nth-child(1),
+.gp-contact-list-table td:nth-child(1) {
+  width: 48px;
+}
+.gp-contact-list-table th:nth-child(2),
+.gp-contact-list-table td:nth-child(2) {
+  width: 132px;
+}
+.gp-contact-list-table th:nth-child(3),
+.gp-contact-list-table td:nth-child(3) {
+  width: 250px;
+}
+.gp-contact-list-table th:nth-child(4),
+.gp-contact-list-table td:nth-child(4) {
+  width: 124px;
+}
+.gp-contact-list-table th:nth-child(5),
+.gp-contact-list-table td:nth-child(5) {
+  width: 92px;
+}
+.gp-contact-list-table th:nth-child(6),
+.gp-contact-list-table td:nth-child(6) {
+  width: 146px;
+}
+.gp-contact-list-table th:nth-child(7),
+.gp-contact-list-table td:nth-child(7) {
+  width: 106px;
+}
+.gp-contact-list-table th:nth-child(8),
+.gp-contact-list-table td:nth-child(8) {
+  width: 124px;
+}
+.gp-contact-list-table th:nth-child(9),
+.gp-contact-list-table td:nth-child(9) {
+  width: 78px;
 }
