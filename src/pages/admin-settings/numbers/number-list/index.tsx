@@ -782,7 +782,9 @@ const NumberList = () => {
               not a panel's worth of work: at 84vw the content sat in the top
               left of an empty sheet with the page it came from greyed out
               behind it. A dialog the width of its own content, over a lightly
-              veiled page. The backdrop does not close it - a mis-click while
+              veiled page - a tenth of black and half a pixel of blur, just
+              enough to sit the page back without frosting it. The backdrop
+              does not close it - a mis-click while
               scanning a price list should not throw the choice away. */}
           <Dialog
             open={openDrawer}
@@ -792,7 +794,7 @@ const NumberList = () => {
           >
             <DialogContent
               className="flex max-h-[86vh] w-[min(860px,94vw)] max-w-none flex-col gap-0 overflow-hidden p-0"
-              overlayClassName="bg-black/20 backdrop-blur-[1.5px]"
+              overlayClassName="bg-black/10 backdrop-blur-[0.5px]"
               onInteractOutside={(e) => e.preventDefault()}
               showCloseButton={false}
             >
