@@ -560,16 +560,29 @@
    `data-[state=checked]:bg-[var(--accent)]` painted a white box with a
    white tick in it: ticked rows looked untouched. The tick is told the
    colour outright rather than through a token that does not reach here. */
-.gp-assign-users-dialog [data-slot='checkbox'][data-state='checked'],
-.gp-role-form-dialog [data-slot='checkbox'][data-state='checked'] {
-  background: var(--primary, #f2994a) !important;
-  border-color: var(--primary, #f2994a) !important;
-  color: #ffffff !important;
-}
-.gp-assign-users-dialog [data-slot='checkbox'][data-state='indeterminate'],
-.gp-role-form-dialog [data-slot='checkbox'][data-state='indeterminate'] {
-  border-color: var(--primary, #f2994a) !important;
-  color: var(--primary, #f2994a) !important;
+/* Inside `@layer base`, not unlayered. The checkbox's own colour comes
+   from a Tailwind utility carrying `!important`, and an important
+   declaration inside a layer beats an important one outside every layer
+   however specific the selector - so the unlayered version of this rule
+   lost and the box stayed white. For important declarations the layer
+   order runs backwards, which puts `base` ahead of `utilities`. */
+@layer base {
+  .gp-assign-users-dialog [data-slot='checkbox'][data-state='checked'],
+  .gp-role-form-dialog [data-slot='checkbox'][data-state='checked'] {
+    background: #f2994a !important;
+    border-color: #f2994a !important;
+    color: #ffffff !important;
+  }
+  .gp-assign-users-dialog [data-slot='checkbox'][data-state='checked'] svg,
+  .gp-role-form-dialog [data-slot='checkbox'][data-state='checked'] svg {
+    color: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+  .gp-assign-users-dialog [data-slot='checkbox'][data-state='indeterminate'],
+  .gp-role-form-dialog [data-slot='checkbox'][data-state='indeterminate'] {
+    border-color: #f2994a !important;
+    color: #f2994a !important;
+  }
 }
 
 /* The description box drew a 2px offset ring on focus, which around an
