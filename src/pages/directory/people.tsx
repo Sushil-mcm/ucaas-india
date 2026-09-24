@@ -31,7 +31,7 @@ import AddUsers from '@/pages/admin-settings/people/add-users';
 import { invalidateNumberLists } from '@/lib/number-list-cache';
 import { buildRosterCsv, rosterFileName, toExportRow } from '@/lib/user-roster-export';
 import { Icon } from '@/assets/icons/icon';
-import { MoreVertical } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -673,13 +673,19 @@ const People = () => {
                     <span className="flex items-center justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
+                          {/* Horizontal dots in a round tinted button, the
+                              same trigger Contacts uses
+                              (new-contact/all-contacts-list). This was a
+                              vertical ellipsis on a plain `mini` button, so
+                              the two tables asked for the same thing with
+                              different glyphs. */}
                           <button
                             type="button"
-                            className="mini"
+                            className="mini gp-row-menu-trigger"
                             title={`Actions for ${row.name}`}
                             aria-label={`Actions for ${row.name}`}
                           >
-                            <MoreVertical size={15} />
+                            <MoreHorizontal size={18} />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="gp-person-menu">

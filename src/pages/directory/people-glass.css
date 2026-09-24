@@ -1342,3 +1342,22 @@ input.gp-field-v:focus {
   border-color: transparent;
   color: var(--warn);
 }
+
+/* The row-menu trigger, matched to the one Contacts uses: a round tinted
+   target rather than a bare icon, so the hit area is visible before you
+   reach it. Contacts builds the same shape inline
+   (new-contact/all-contacts-list); this is the People table's copy of it. */
+.gp-people .gp-row-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(251, 226, 200, 0.4);
+  color: rgba(46, 45, 53, 0.8);
+  border: none;
+}
+.gp-people .gp-row-menu-trigger:hover {
+  background: #f0dfc5;
+}
