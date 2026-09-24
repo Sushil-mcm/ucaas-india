@@ -19,6 +19,13 @@ import {
   roleDisplayName,
 } from '@/pages/admin-settings/roles/role-names';
 import { DirectoryPage, EmptyRow, FilterChip, SearchChip } from './page-shell';
+/* The dialogs on this screen are built from the shared `gp-create-group-*`
+   shell, which is defined in groups-glass.css. Without this import the
+   screen only looked right when some other Directory page had already
+   pulled that file in: on a cold load straight to Roles the New role
+   dialog had no head layout (its close button fell under the title) and
+   no height of its own. */
+import './groups-glass.css';
 import './roles-glass.css';
 
 /**

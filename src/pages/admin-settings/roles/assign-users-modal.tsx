@@ -268,9 +268,10 @@ const AssignUsersModal: FC<AssignUsersModalProps> = ({ open, roleData, setOpen, 
                   className={`w-full rounded-xl px-2 text-sm py-1 flex items-center justify-between border border-transparent ${
                     isDisabled
                       ? 'opacity-60 cursor-not-allowed'
-                      : isSelected
-                        ? 'bg-gray-50'
-                        : 'hover:bg-gray-50'
+                      : /* No fill for a picked row: the tick is what says it is
+                           picked, and a tinted row said it twice - and said it
+                           in the same colour the pointer uses. */
+                        'hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
