@@ -529,13 +529,15 @@ const PeopleScreen: FC = () => {
           step rail beside a three-across form - and 765px of drawer had it
           folding onto itself. This is the same shell Directory opens the
           same flow in (`gp-invite-dialog`), so the two agree, with the page
-          behind blurred so the form is the only thing in focus. Clicking
+          behind dimmed just enough to sit back - a light veil, not frosted
+          glass; at a heavier blur the console read as out of focus rather
+          than behind something. Clicking
           the backdrop does not close it: half a roster typed in is too
           easy to lose to a stray click. */}
       <Dialog open={Boolean(drawerState.addUser)} onOpenChange={(open) => { if (!open) setDrawerState({ addUser: false }); }}>
         <DialogContent
           className="gp-create-group-dialog gp-invite-dialog sm:max-w-[600px] lg:max-w-[1120px]"
-          overlayClassName="bg-black/40 backdrop-blur-[3px]"
+          overlayClassName="bg-black/20 backdrop-blur-[1.5px]"
           onInteractOutside={(e) => e.preventDefault()}
           showCloseButton={false}
         >
