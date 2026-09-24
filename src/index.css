@@ -3440,3 +3440,39 @@
     color: #8a7a67;
   }
 }
+
+@layer components {
+  /* ── Contact View scrollbars ──────────────────────────────────────────────
+     This page had none, so every pane fell back to the browser's default bar
+     — about twice the width of the slim ones Contacts uses, and grey against
+     a warm page. Applied to every scroll container inside it (the form
+     column, the form's own body, the call list) so the page scrolls the same
+     way wherever you are in it. */
+  .gp-contact-view *::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+  .gp-contact-view *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .gp-contact-view *::-webkit-scrollbar-thumb {
+    background: rgba(194, 111, 31, 0.35);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .gp-contact-view *::-webkit-scrollbar-thumb:hover {
+    background: rgba(194, 111, 31, 0.55);
+    background-clip: padding-box;
+  }
+  /* Firefox has no ::-webkit pseudo-elements; these two properties are how it
+     takes the same instruction. */
+  .gp-contact-view * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(194, 111, 31, 0.35) transparent;
+  }
+  .dark .gp-contact-view *::-webkit-scrollbar-thumb {
+    background: rgba(255, 171, 94, 0.28);
+    background-clip: padding-box;
+  }
+}

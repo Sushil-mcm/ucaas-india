@@ -219,7 +219,10 @@ const ContactActivity = ({
   );
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full overflow-hidden bg-white flex flex-col mcm-warm-glass">
+    /* `gp-contact-view` is a hook for this page's scrollbars: its panes were
+       on the browser default, which is roughly twice the width of the slim
+       bars Contacts uses, so the same product scrolled two different ways. */
+    <div className="gp-contact-view h-[calc(100vh-64px)] w-full overflow-hidden bg-white flex flex-col mcm-warm-glass">
       <div className="bg-white overflow-hidden">{renderUnifiedHeader()}</div>
 
       <div className="grid grid-cols-1 md:grid-cols-[26rem_minmax(0,1fr)] flex-1 min-h-0">

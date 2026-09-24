@@ -108,8 +108,14 @@
   max-height: 100%;
   overflow-y: auto;
 }
+/* 7px, matching the table's own bar below. 10px against 8px meant the page
+   and the table it contains scrolled with two different-sized bars. */
 .gp-external::-webkit-scrollbar {
-  width: 10px;
+  width: 7px;
+}
+.gp-external {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(194, 111, 31, 0.35) transparent;
 }
 .gp-external::-webkit-scrollbar-track {
   background: transparent;
@@ -735,8 +741,12 @@
 .gp-contact-table {
   padding-right: 4px;
 }
+.gp-contact-table {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(194, 111, 31, 0.35) transparent;
+}
 .gp-contact-table::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 .gp-contact-table::-webkit-scrollbar-track {
   background: transparent;
