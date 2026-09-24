@@ -3476,3 +3476,43 @@
     background-clip: padding-box;
   }
 }
+
+@layer components {
+  /* ── Contact View typography ──────────────────────────────────────────────
+     This page ran a size and a weight above everything around it: 14px labels
+     in near-black beside a Directory table set at 11.5-13.5px, so the form
+     shouted while the list it came from murmured.
+
+     The placeholder was the worse half. The shared Input sets
+     `placeholder:text-gray-700` — the same colour as a real value — so an
+     empty form looked like a filled one. "Enter email" read as an address
+     until you tried to select it. Scoped here rather than changed on the
+     shared component, which every form in the app renders. */
+  .gp-contact-view label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6b5c4d;
+  }
+  .gp-contact-view input,
+  .gp-contact-view textarea,
+  .gp-contact-view select {
+    font-size: 13.5px;
+  }
+  .gp-contact-view input::placeholder,
+  .gp-contact-view textarea::placeholder {
+    color: #a99e91;
+    font-weight: 400;
+  }
+  /* The section caption and the header sit either side of the form; bringing
+     them onto the same scale stops the column reading as three type systems
+     stacked on top of each other. */
+  .gp-contact-view .page-section-caption {
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+  }
+  /* The call cards opposite: same drop, so the two columns read as one page
+     rather than two. */
+  .gp-contact-view .rc-log-card p {
+    font-size: 12.5px;
+  }
+}

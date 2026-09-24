@@ -483,7 +483,7 @@ export const LogContent = ({
                     return (
                       <div
                         key={logId}
-                        className=" border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] rounded-xl p-3 bg-white "
+                        className="rc-log-card border border-gray-100 shadow-[1px_1px_2px_rgba(0,0,0,0.05)] rounded-xl p-3 bg-white"
                       >
                         <div className="flex flex-col gap-2">
                           <div className="flex justify-between gap-3">

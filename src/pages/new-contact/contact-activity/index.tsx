@@ -227,7 +227,7 @@ const ContactActivity = ({
 
       <div className="grid grid-cols-1 md:grid-cols-[26rem_minmax(0,1fr)] flex-1 min-h-0">
         <div className="flex flex-col p-3 gap-2 min-h-0 border-r">
-          <p className="px-1 text-xs font-semibold tracking-wide text-[#9A948F] uppercase">
+          <p className="page-section-caption px-1 text-xs font-semibold tracking-wide text-[#9A948F] uppercase">
             Contact Details
           </p>
           {/* No white card around the form any more — just the fields on the
