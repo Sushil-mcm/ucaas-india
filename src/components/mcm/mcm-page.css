@@ -11268,24 +11268,31 @@
 
    Both are 11px now - 12px less the wrapper's border - and the scroller
    drops the cream glass for white, so even a sub-pixel of disagreement
-   is white on white rather than a visible seam. */
-.mcm-mediapage .table-scroll {
+   is white on white rather than a visible seam.
+
+   Shared with IVR menus, which is the same shell with the same seam. Any
+   other list built on TableManager can be added to these selectors. */
+.mcm-mediapage .table-scroll,
+.mcm-ivrpage .table-scroll {
   border-radius: 11px;
   background: #ffffff;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-.mcm-mediapage table thead th:first-child {
+.mcm-mediapage table thead th:first-child,
+.mcm-ivrpage table thead th:first-child {
   border-top-left-radius: 11px;
 }
-.mcm-mediapage table thead th:last-child {
+.mcm-mediapage table thead th:last-child,
+.mcm-ivrpage table thead th:last-child {
   border-top-right-radius: 11px;
 }
 /* `.table-scroll table` is centred with `margin: auto`, which centres it
    vertically too and leaves the box's surface showing above the first
    row of cells. Pinned to the top, and told to fill the width. */
-.mcm-mediapage .table-scroll table {
+.mcm-mediapage .table-scroll table,
+.mcm-ivrpage .table-scroll table {
   width: 100%;
   margin: 0;
 }
@@ -11293,7 +11300,8 @@
    scrolls under it. Written through `.table-scroll` to match the
    specificity of `.mcm-admin .table-scroll table thead th`, which sets
    the translucent one - a shorter selector here would simply lose. */
-.mcm-mediapage .table-scroll table thead th {
+.mcm-mediapage .table-scroll table thead th,
+.mcm-ivrpage .table-scroll table thead th {
   background: #fbf6ef;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
