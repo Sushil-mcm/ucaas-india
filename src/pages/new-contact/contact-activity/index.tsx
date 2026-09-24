@@ -232,6 +232,15 @@ const ContactActivity = ({
                  reach it at all. */
               <div className="h-full min-h-0 overflow-y-auto">
                 <CreateContactNew
+                  /* The beside-layout the Add/Edit Contact dialog already uses
+                     (directory/external.tsx passes the same). Without it the
+                     photo control is a lone 64px dashed circle owning a full
+                     row at the top of a narrow column -- the most prominent
+                     spot on the panel, given to the field least likely to be
+                     filled, and the first thing the scroll container clips.
+                     Beside its own buttons it costs a fraction of the
+                     height. */
+                  largeAvatar
                   contactData={contactData}
                   isDisable={false}
                   prefillPhone={numberToAdd}
