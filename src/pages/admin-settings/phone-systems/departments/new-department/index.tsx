@@ -353,7 +353,7 @@ const NewDepartment = ({
       <CommonSettingPermission
         isChooseTemplate={false}
         data={{ settings: forward_call_actions }}
-        customClass="h-full min-h-0"
+        customClass="gp-wiz-settings h-full min-h-0"
         origin="department"
       />
     ),

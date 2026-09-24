@@ -1468,3 +1468,66 @@
   padding-top: 14px;
   border-top: 1px solid rgba(225, 200, 165, 0.55);
 }
+
+/* ---- Step 2: Settings & Permissions -------------------------------------
+   Six settings, each in an 85px card with 16px padding, a 17px title, a
+   shadow and a 14px radius, separated by 12px -- about 570px of content for
+   a 298px window, so three of the six were visible and the rest were found
+   only by scrolling. The card treatment also repeated the panel the rows
+   already sit inside, so every setting read as its own object.
+
+   Flattened to rows: the border stays as a separator, the fill and shadow
+   go, and the type comes down to the wizard's own scale. Roughly 60px a row
+   instead of 97, so five of the six land in the same window.
+
+   `gp-wiz-settings` is passed only from this wizard's `customClass`
+   (new-department/index.tsx); `components/common-settings` is shared with
+   ten other screens and is not touched. */
+.gp-wiz-settings .grid {
+  gap: 8px !important;
+}
+.gp-wiz-settings .grid > div {
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  border-color: rgba(225, 200, 165, 0.55) !important;
+  box-shadow: none !important;
+  align-items: center;
+}
+.gp-wiz-settings .grid > div p.font-semibold {
+  font-size: 14px !important;
+  line-height: 1.35;
+}
+.gp-wiz-settings .grid > div p.text-sm {
+  font-size: 12.5px !important;
+  line-height: 1.35;
+}
+/* The action is secondary to the setting it belongs to; 40px made it the
+   tallest thing in the row. `:not([role='switch'])` leaves the toggles
+   alone -- Radix renders those as buttons too, and resizing them would
+   deform the switch. */
+.gp-wiz-settings .grid > div button:not([role='switch']) {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+}
+
+/* ---- Step 3: Add Members ------------------------------------------------
+   The email sat at 14px/600 -- the same size and weight as the person's
+   name directly above it -- so each row read as two names stacked, and at
+   67px a row only four of fifteen people fitted the window. Dropping the
+   email to secondary weight restores the name as the thing you scan, and
+   takes the row down with it. */
+.gp-members-table-wrap tbody td,
+.gp-members-table-wrap thead th {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+.gp-members-table-wrap tbody p.capitalize {
+  line-height: 1.3;
+}
+.gp-members-table-wrap tbody p.text-gray-500 {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.3;
+}
