@@ -11258,20 +11258,43 @@
    paler surface showing at each top corner. The corner cells take the
    curve themselves, a pixel inside the border, so the band runs the
    full width of the table. */
-/* 17px, one inside the scroll box's own 18px (`--r-lg`) - I guessed 15
-   first and the two curves simply disagreed by two pixels, which is the
-   pale strip that was left above the band. And the table is pinned to
-   the top of the box: `.table-scroll table` is centred with `margin:
-   auto`, which is what put a sliver of the box's own surface above the
-   first row of cells. */
+/* There are two nested rounded boxes here, not one. TableManager wraps
+   the scroller in `rounded-xl` (12px) with a 1px border, and
+   `.mcm-page .table-scroll` then rounds the scroller itself at 18px
+   (`--r-lg`). The inner curve is wider than the outer clip, so along the
+   top the outer box shows through between them - the strip above the
+   header band, and the notches at its ends. Chasing the header cells'
+   radius could not fix that; the two boxes had to agree.
+
+   Both are 11px now - 12px less the wrapper's border - and the scroller
+   drops the cream glass for white, so even a sub-pixel of disagreement
+   is white on white rather than a visible seam. */
+.mcm-mediapage .table-scroll {
+  border-radius: 11px;
+  background: #ffffff;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .mcm-mediapage table thead th:first-child {
-  border-top-left-radius: 17px;
+  border-top-left-radius: 11px;
 }
 .mcm-mediapage table thead th:last-child {
-  border-top-right-radius: 17px;
+  border-top-right-radius: 11px;
 }
+/* `.table-scroll table` is centred with `margin: auto`, which centres it
+   vertically too and leaves the box's surface showing above the first
+   row of cells. Pinned to the top, and told to fill the width. */
 .mcm-mediapage .table-scroll table {
+  width: 100%;
   margin: 0;
+}
+/* The band itself: opaque, so it does not take the colour of whatever
+   scrolls under it, and running the full width of the table. */
+.mcm-mediapage table thead th {
+  background: #fbf6ef;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 /* A little more room per row: at 24 files the list was a wall of text
    with the lines closer to each other than to their own column heading. */

@@ -453,3 +453,39 @@
   border-color: transparent;
   color: var(--warn);
 }
+
+/* ---- table columns and the action group -------------------------------
+   The email column was 161px holding 179px of text with `overflow: visible`
+   and no ellipsis, so the address ran straight under the Status badge
+   beside it ("...mcmbpo.cor Offline"). Name meanwhile held 287px for a
+   person's name. Width moves from one to the other, and the email cell
+   truncates instead of spilling. */
+.gp-favourites thead th:nth-child(1),
+.gp-favourites tbody td:nth-child(1) {
+  width: 210px;
+}
+.gp-favourites thead th:nth-child(6),
+.gp-favourites tbody td:nth-child(6) {
+  width: 240px;
+  max-width: 240px;
+}
+.gp-favourites tbody td:nth-child(6),
+.gp-favourites tbody td:nth-child(6) > * {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The favourite star is the odd one out in its own row: the rule that makes
+   these action buttons 36px circles is written `.mini:not(.mcm-fav-on)`, so
+   the star -- which carries `mcm-fav-on` while it is on -- kept the default
+   39x26 pill with a 7px radius and sat beside three 36px circles. Same box
+   as its neighbours now; its colour still comes from `.mcm-fav-on`. */
+.gp-favourites td:last-child .mini.mcm-fav-on {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 9999px;
+  flex: none;
+  justify-content: center;
+}
