@@ -256,37 +256,45 @@
 .gp-people td:nth-child(3) {
   width: 8%;
 }
+/* Groups was the column wrapping: "web-dev-test, web-dev" broke across two
+   lines at 118px, which set the row's height. It needs 88px of text and now
+   has room for it on one line. Location keeps its two lines on purpose --
+   company above city -- so it is widened for comfort, not to unwrap it. */
 .gp-people th:nth-child(4),
 .gp-people td:nth-child(4) {
-  width: 10%;
+  width: 14%;
 }
 .gp-people th:nth-child(5),
 .gp-people td:nth-child(5) {
-  width: 10%;
+  width: 13%;
 }
 .gp-people th:nth-child(6),
 .gp-people td:nth-child(6) {
-  width: 7%;
+  width: 8%;
 }
+/* ACD skills holds a dash for everyone here, so its width is set by its own
+   heading rather than its content. */
 .gp-people th:nth-child(7),
 .gp-people td:nth-child(7) {
-  width: 9%;
+  width: 8%;
 }
 .gp-people th:nth-child(8),
 .gp-people td:nth-child(8) {
-  width: 9%;
+  width: 8%;
 }
-/* Five 36px icon buttons with 6px gaps measure 204px, plus the cell's own
-   12px side padding = 228px minimum -- under that the last button wraps
-   onto a second line and doubles the row height (measured at 215px). A
-   pure percentage can shrink past that floor on a narrow card or a high
-   zoom level the way the other columns are meant to; `min-width` keeps
-   this one column from ever going there while it still grows past 236px
-   as a percentage on anything wider. */
+/* One button now, not five.
+
+   This was 20% with a 236px floor because five 36px icon buttons and their
+   gaps measured 228px, and under that the last one wrapped and doubled the
+   row height. The row actions moved into a single menu (people.tsx), so the
+   cell holds one 36px button and the old floor was reserving roughly 170px
+   of empty cell on every row — width the columns beside it were short of.
+
+   6% with a floor that fits the button and its padding. */
 .gp-people th:nth-child(9),
 .gp-people td:nth-child(9) {
-  width: 20%;
-  min-width: 236px;
+  width: 6%;
+  min-width: 64px;
 }
 /* This is the scrollbar that now actually starts where the rows do — same
    slim styling already used for External Contacts' table. */
