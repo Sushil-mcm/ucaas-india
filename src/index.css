@@ -3350,6 +3350,18 @@
     font-size: 13.5px;
     color: #1a1a1a;
   }
+  /* `.mcm-inbox :focus-visible` (inbox-theme.css) draws a 2px accent outline
+     at a 2px offset on anything focused in the Inbox. Inside this box that
+     rendered as a second orange ring floating within the box's own orange
+     border -- two edges for one field. The plain `outline: none` above loses
+     to it, since `.mcm-inbox :focus-visible` carries a pseudo-class and so
+     outranks a lone class; !important settles it, the same way the message
+     textarea already does. The focus cue stays on the box itself, via
+     `.mcm-addr-box:focus-within`. */
+  .mcm-addr-input:focus-visible,
+  .mcm-addr-input:focus {
+    outline: none !important;
+  }
   .mcm-addr-input::placeholder {
     color: #9a948f;
   }

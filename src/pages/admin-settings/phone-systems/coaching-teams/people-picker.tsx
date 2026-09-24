@@ -98,21 +98,30 @@ const PeoplePicker: FC<PeoplePickerProps> = ({
   const remove = (uuid: string) => onChange(value.filter((p) => p.user_uuid !== uuid));
 
   return (
-    <div className="flex flex-col gap-2">
-      <div>
-        <p className="text-sm font-semibold text-gray-900">{label}</p>
-        <p className="text-xs text-gray-500">{hint}</p>
+    /* A panel, not a loose stack. The two pickers sit side by side and
+       were four separate blocks each - a heading, a row of chips, a
+       search box and a list - with nothing tying them together, so the
+       eye could not tell where one column ended and the next began. */
+    <div className="mcm-picker">
+      <div className="mcm-picker-h">
+        <p className="text-sm font-semibold text-[#2E2D35]">
+          {label}
+          <span className="ml-2 text-xs font-medium text-[#9A948F]">
+            {value.length || 'none'}
+          </span>
+        </p>
+        <p className="mt-0.5 text-xs leading-snug text-[#9A948F]">{hint}</p>
       </div>
-      <div className="flex flex-wrap gap-1.5 min-h-8">
+      <div className="mcm-picker-chips">
         {value.length === 0 ? (
-          <span className="text-xs text-gray-400 self-center">Nobody yet</span>
+          <span className="text-xs text-[#9A948F]">Nobody yet</span>
         ) : (
           value.map((p) => {
             const person = byUuid.get(p.user_uuid);
             return (
               <span
                 key={p.user_uuid}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white pl-1 pr-2 py-0.5 text-xs"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#EEE7DD] bg-white py-0.5 pl-1 pr-2 text-xs"
               >
                 <CustomAvatar
                   name={p.name || personName(person)}
@@ -138,29 +147,24 @@ const PeoplePicker: FC<PeoplePickerProps> = ({
         )}
       </div>
       {!readOnly && (
-        <>
+        <div className="mcm-picker-b">
           <div className="relative">
-            <SearchLine className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+            <SearchLine className="pointer-events-none absolute left-3 top-1/2 z-[2] h-3.5 w-3.5 -translate-y-1/2 text-[#9A948F]" />
             <Input
-              className="pl-8 h-8 text-sm"
+              className="h-9 pl-9 text-sm"
               placeholder="Find a person by name, extension or email"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="max-h-44 overflow-y-auto rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+          <div className="mcm-picker-list">
             {candidates.length === 0 ? (
               <p className="px-3 py-2 text-xs text-gray-500">
                 {people.length ? 'Nobody matches.' : 'Loading people…'}
               </p>
             ) : (
               candidates.slice(0, LIST_LIMIT).map((p) => (
-                <button
-                  type="button"
-                  key={p.uuid}
-                  onClick={() => add(p)}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
-                >
+                <button type="button" key={p.uuid} onClick={() => add(p)} className="mcm-picker-row">
                   <CustomAvatar
                     name={personName(p)}
                     extension={p.extension}
@@ -173,17 +177,17 @@ const PeoplePicker: FC<PeoplePickerProps> = ({
                       {[p.extension && `Ext ${p.extension}`, p.email].filter(Boolean).join(' · ')}
                     </span>
                   </span>
-                  <span className="text-xs text-primary">Add</span>
+                  <span className="mcm-picker-add">Add</span>
                 </button>
               ))
             )}
             {candidates.length > LIST_LIMIT && (
-              <p className="px-3 py-1.5 text-[11px] text-gray-500">
+              <p className="px-3 py-1.5 text-[11px] text-[#9A948F]">
                 Showing {LIST_LIMIT} of {candidates.length}. Search to narrow the list.
               </p>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

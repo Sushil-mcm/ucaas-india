@@ -1,1 +1,0 @@
-import{r as n,j as r,bT as a}from"./index-BZFZF1ex.js";const e=n.createContext(null),i=e.Provider,x=({children:t})=>{const o=n.useContext(e);return o?a.createPortal(t,o):r.jsx(r.Fragment,{children:t})};export{x as M,i as a};
